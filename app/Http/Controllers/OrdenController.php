@@ -14,12 +14,12 @@ use App\Models\EstatusData; // Asegúrate de importar el modelo EstatusData
 use Carbon\Carbon; // Para manejo de
 use Illuminate\Support\Facades\Auth;
 use App\Models\InventarioSuministro; // Asegúrate de importar el modelo
-use App\Traits\GeneratesAlerts;
+use App\Traits\GenerateAlerts;
 
 class OrdenController extends BaseController
 {
 
-     use GeneratesAlerts;
+     use GenerateAlerts;
     /**
      * Muestra el dashboard de órdenes de trabajo.
      * @return \Illuminate\View\View
@@ -214,7 +214,7 @@ $estatusData = EstatusData::all()->keyBy('id_estatus');
                 }
             }
 
-        GeneratesAlerts::createAlert([
+        $this->createAlert([
             'id_usuario' => $userId, // ID del usuario responsable de la orden.
             'id_rel' => $orden->id, // ID de la orden.
             'observacion' => 'Se te ha asignado una nueva orden de trabajo: ' . $orden->nro_orden.' a '.$orden->resposable,

@@ -5,7 +5,7 @@ namespace App\Traits;
 use App\Models\Alerta;
 use Illuminate\Support\Facades\Log;
 
-trait GeneratesAlerts
+trait GenerateAlerts
 {
     /**
      * Genera y guarda una nueva alerta en la base de datos.
