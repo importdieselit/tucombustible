@@ -25,6 +25,7 @@
         <form action="{{ route('ordenes.store') }}" method="POST" id="orden-form">
             @csrf
             {{-- Datos de la Orden --}}
+           <input type="hidden" name="estatus"  value="1">
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="vehiculo_id" class="form-label">Vehículo</label>
@@ -37,17 +38,17 @@
                 </div>
                 <div class="col-md-6 mb-3">
                     <label for="nro_orden" class="form-label">Número de Orden</label>
-                    <input type="text" class="form-control" disabled id="nro_orden" name="nro_orden" value="{{ $nro_orden }}" required>
+                    <input type="text" class="form-control"  id="nro_orden" name="nro_orden" value="{{ $nro_orden }}" required>
                 </div>
             </div>
 
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="id_tipo_orden" class="form-label">Tipo de Orden</label>
-                    <select class="form-select" id="id_tipo_orden" name="id_tipo_orden" required>
+                    <select class="form-select" id="id_tipo_orden" name="tipo" required>
                         <option value="">Seleccione el tipo</option>
                         @foreach ($tipos as $tipo)
-                            <option value="{{ $tipo->id_tipo_orden }}">{{ $tipo->nombre }}</option>
+                            <option value="{{ $tipo->nombre }}">{{ $tipo->nombre }}</option>
                         @endforeach
                     </select>
                 </div>
