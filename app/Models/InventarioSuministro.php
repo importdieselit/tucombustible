@@ -55,6 +55,13 @@ class InventarioSuministro extends Model
         'id_emisor',
     ];
 
+    protected $casts = [
+        'fecha_solicitud' => 'datetime',
+        'fecha_aprobacion' => 'datetime',
+        'fecha_recepcion' => 'datetime',
+        'id_inventario' => 'bigint'
+    ];
+
     /**
      * Indica si el modelo debe manejar automáticamente los timestamps.
      * @var bool
