@@ -52,7 +52,7 @@ Route::middleware(['auth'])->group(function () {
 
 
 
-Route::get('/ordenes/search-supplies', [OrdenController::class, 'searchSupplies'])->name('ordenes.search-supplies');
+    Route::get('ordenes/search-supplies', [OrdenController::class, 'searchSupplies'])->name('ordenes.search-supplies');
     // Recursos principales
     $resourceControllers = [
         'vehiculos' => VehiculoController::class,
