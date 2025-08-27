@@ -31,11 +31,6 @@ class InventarioSuministro extends Model
      */
     public $incrementing = true;
 
-    /**
-     * El tipo de datos de la clave primaria.
-     * @var string
-     */
-    protected $keyType = 'bigint';
 
     /**
      * Los atributos que se pueden asignar masivamente.
@@ -55,12 +50,7 @@ class InventarioSuministro extends Model
         'id_emisor',
     ];
 
-    protected $casts = [
-        'fecha_solicitud' => 'datetime',
-        'fecha_aprobacion' => 'datetime',
-        'fecha_recepcion' => 'datetime',
-        'id_inventario' => 'bigint'
-    ];
+    
 
     /**
      * Indica si el modelo debe manejar automáticamente los timestamps.
