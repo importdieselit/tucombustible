@@ -1,0 +1,95 @@
+/* resources/css/app.css */
+
+/* Reset y tipografía */
+body {
+    background: #f4f6fa;
+    color: #222;
+    font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+/* Links */
+a {
+    color: #4e73df;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+a:hover, a:focus {
+    color: #24304e;
+    text-decoration: underline;
+}
+
+/* Botones */
+.btn-primary {
+    background: #4e73df;
+    border-color: #4e73df;
+}
+.btn-primary:hover, .btn-primary:focus {
+    background: #24304e;
+    border-color: #24304e;
+}
+
+/* Formularios */
+.form-control:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 0.2rem rgba(78,115,223,.15);
+}
+
+/* Tarjetas y paneles */
+.card {
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 8px rgba(30,40,90,0.07);
+    border: none;
+}
+
+/* Encabezados */
+h1, h2, h3, h4, h5, h6 {
+    color: #24304e;
+    font-weight: 600;
+}
+
+/* Tablas */
+.table {
+    background: #fff;
+    border-radius: 0.4rem;
+    overflow: hidden;
+}
+.table thead th {
+    background: #e9ecef;
+    color: #24304e;
+    font-weight: 600;
+}
+.table-striped tbody tr:nth-of-type(odd) {
+    background: #f8f9fc;
+}
+
+/* Sidebar (refuerzo) */
+.sidebar {
+    background: #1a233a;
+    color: #fff;
+}
+.sidebar .nav-link.active {
+    background: #4e73df;
+    color: #fff;
+}
+
+/* Footer */
+footer.footer {
+    background: #1a233a;
+    color: #bfc9da;
+    font-size: 0.95em;
+    padding: 1rem 0;
+    border-top: 1px solid #24304e;
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+    width: 8px;
+    background: #e9ecef;
+}
+::-webkit-scrollbar-thumb {
+    background: #4e73df;
+    border-radius: 4px;
+}
