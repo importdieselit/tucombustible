@@ -226,7 +226,7 @@ $estatusData = EstatusData::all()->keyBy('id_estatus');
         Session::flash('success', 'Orden de trabajo creada exitosamente.');
 
         // Redirige al listado
-        return Redirect::route(Str::plural($this->getModelNameLowerCase()) . '.list');
+        return Redirect::route('ordenes.list');
     }
 
 }
