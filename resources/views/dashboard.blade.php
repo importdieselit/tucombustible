@@ -40,7 +40,7 @@ $eficienciaFlota = 92;
 
 // Tabla de órdenes recientes
 $ordenesRecientes = Orden::orderBy('created_at', 'desc')->limit(3)->get();
-$alertasRecientes = Alerta::orderBy('id', 'desc')->limit(5)->get();
+$alertasRecientes = Alerta::orderBy('id_alerta', 'desc')->limit(5)->get();
 
 // Datos para el gráfico de órdenes por estatus
 $ordenesPorEstatus = Orden::select('estatus', DB::raw('count(*) as total'))
