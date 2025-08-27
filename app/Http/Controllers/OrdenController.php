@@ -18,6 +18,8 @@ use App\Traits\GeneratesAlerts;
 
 class OrdenController extends BaseController
 {
+
+     use GeneratesAlerts;
     /**
      * Muestra el dashboard de órdenes de trabajo.
      * @return \Illuminate\View\View
@@ -212,7 +214,7 @@ $estatusData = EstatusData::all()->keyBy('id_estatus');
                 }
             }
 
-        GeneratesAlerts::createAlert([
+        $this->createAlert([
             'id_usuario' => $userId, // ID del usuario responsable de la orden.
             'id_rel' => $orden->id, // ID de la orden.
             'observacion' => 'Se te ha asignado una nueva orden de trabajo: ' . $orden->nro_orden.' a '.$orden->resposable,
