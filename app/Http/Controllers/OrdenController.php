@@ -206,6 +206,7 @@ $estatusData = EstatusData::all()->keyBy('id_estatus');
         // Obtener el ID del usuario autenticado
             $userId = Auth::id();
         // Almacena en la DB
+        dd($request->all());
         $orden=$this->model->create($request->all());
          // 4. Procesar y guardar los suministros solicitados
             if ($request->has('supplies') && is_array($request->supplies)) {
