@@ -61,8 +61,8 @@
             <tbody>
                 @forelse ($insumos_usados as $insumo)
                     <tr>
-                        <td>{{ $insumo->inventario->codigo ?? 'N/A' }}</td>
-                        <td>{{ $insumo->inventario->descripcion ?? 'N/A' }}</td>
+                        <td>{{ $insumo->inventario()->codigo ?? 'N/A' }}</td>
+                        <td>{{ $insumo->inventario()->descripcion ?? 'N/A' }}</td>
                         <td>{{ $insumo->cantidad ?? 'N/A' }}</td>
                     </tr>
                 @empty
