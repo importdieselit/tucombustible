@@ -64,9 +64,9 @@ class Pedido extends Model
         return $query->where('estado', 'completado');
     }
 
-    public function scopePorCliente($query, $clienteId)
+    public function scopePorUsuario($query, $userId)
     {
-        return $query->where('cliente_id', $clienteId);
+        return $query->where('user_id', $userId);
     }
  public function getEstadoTextAttribute(): string
     {

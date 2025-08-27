@@ -116,6 +116,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Mecánico
     Route::get('/mecanico/estadisticas', [MecanicoController::class, 'getEstadisticas']);
     Route::get('/mecanico/depositos', [MecanicoController::class, 'getDepositos']);
+    Route::get('/mecanico/tanques', [MecanicoController::class, 'getTanques']);
     Route::get('/mecanico/vehiculos', [MecanicoController::class, 'getVehiculos']);
     Route::get('/mecanico/pedidos', [MecanicoController::class, 'getPedidos']);
     Route::get('/mecanico/proveedores', [MecanicoController::class, 'getProveedores']);

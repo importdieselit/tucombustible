@@ -32,7 +32,6 @@ class AuthController extends Controller
             'state' => 'nullable|string|max:255',
             'country' => 'nullable|string|max:255',
             'perfil_id' => 'nullable|exists:perfiles,id',
-            'id_cliente' => 'nullable|exists:clientes,id',
         ]);
 
         if ($validator->fails()) {
@@ -59,7 +58,6 @@ class AuthController extends Controller
             $user = User::create([
                 'id_perfil' => $request->perfil_id,
                 'id_persona' => $persona->id,
-                'id_cliente' => $request->id_cliente,
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),

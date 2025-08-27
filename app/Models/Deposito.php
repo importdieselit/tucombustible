@@ -53,12 +53,12 @@ class Deposito extends Model
     }           
 
     /**
-     * Relación con los movimientos de combustible por cliente.
+     * Relación con los movimientos de combustible por usuario.
      */
-    public function movimientosPorCliente(): HasMany
+    public function movimientosPorUsuario(): HasMany
     {
         return $this->hasMany(MovimientoCombustible::class, 'deposito_id')
-            ->whereNotNull('cliente_id');
+            ->whereNotNull('user_id');
     }
 
     
@@ -66,5 +66,11 @@ class Deposito extends Model
     {
         return $this->hasMany(MovimientoCombustible::class, 'deposito_id');
     }
+
+    public function movimientosCombustible(): HasMany
+    {
+        return $this->hasMany(MovimientoCombustible::class, 'deposito_id');
+    }
+
     
 }

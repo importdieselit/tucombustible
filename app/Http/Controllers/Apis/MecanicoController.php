@@ -87,15 +87,7 @@ class MecanicoController extends Controller
                 ], 401);
             }
 
-            // Verificar que el usuario tenga id_cliente
-            if (!$user->id_cliente) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Usuario no tiene cliente asignado'
-                ], 403);
-            }
-
-            // Obtener depósitos filtrados por cliente
+            // Obtener TODOS los depósitos (sin filtrar por cliente)
             $depositos = Deposito::select([
                 'depositos.id',
                 'depositos.serial',
@@ -106,12 +98,9 @@ class MecanicoController extends Controller
                 'depositos.created_at',
                 'depositos.updated_at'
             ])
-            ->join('movimientos_combustible', 'depositos.id', '=', 'movimientos_combustible.deposito_id')
-            ->where('movimientos_combustible.cliente_id', $user->id_cliente)
-            ->distinct()
             ->get();
 
-            \Log::info("Depósitos obtenidos para mecánico: " . $depositos->count() . " - Cliente: {$user->id_cliente}");
+            \Log::info("Depósitos obtenidos para mecánico: " . $depositos->count() . " - Usuario: {$user->id}");
 
             return response()->json([
                 'success' => true,
@@ -190,6 +179,52 @@ class MecanicoController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener vehículos: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener todos los tanques
+     */
+    public function getTanques(Request $request): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuario no autenticado'
+                ], 401);
+            }
+
+            // Obtener TODOS los tanques (sin filtrar por usuario)
+            $tanques = DB::table('tanques as t')
+                ->leftJoin('users as u', 't.id_us', '=', 'u.id')
+                ->select([
+                    't.id',
+                    't.id_us',
+                    't.serial',
+                    't.capacidad',
+                    't.producto',
+                    't.ubicacion',
+                    'u.name as usuario_nombre',
+                    'u.email as usuario_email',
+                    't.created_at',
+                    't.updated_at'
+                ])
+                ->get();
+
+            \Log::info("Tanques obtenidos para mecánico: " . $tanques->count() . " - Usuario: {$user->id}");
+
+            return response()->json([
+                'success' => true,
+                'data' => $tanques
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener tanques: ' . $e->getMessage()
             ], 500);
         }
     }

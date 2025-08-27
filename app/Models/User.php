@@ -5,17 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasApiTokens;
 
     protected $fillable = [
         'name',
         'email',
         'password',
-        'perfil_id',
-        'persona_id', // persona_id es ahora obligatorio
+        'id_perfil',
+        'id_persona',
+        'id_cliente',
     ];
 
     protected $hidden = [
@@ -36,7 +39,7 @@ class User extends Authenticatable
      */
     public function perfil()
     {
-        return $this->belongsTo(Perfil::class, 'perfil_id');
+        return $this->belongsTo(Perfil::class, 'id_perfil');
     }
 
     /**
@@ -44,7 +47,7 @@ class User extends Authenticatable
      */
     public function persona()
     {
-        return $this->belongsTo(Persona::class);
+        return $this->belongsTo(Persona::class, 'id_persona');
     }
 
     // ELIMINADO: La relación conductor() ya no va aquí, Conductor se relaciona con Persona.
@@ -111,5 +114,46 @@ class User extends Authenticatable
     public function stockCounts()
     {
         return $this->hasMany(StockCount::class, 'counted_by_user_id');
+    }
+
+    /**
+     * Get the cliente that owns the user.
+     * Los clientes son usuarios con id_perfil = 3 (cliente)
+     * La información del cliente está en la tabla personas relacionada
+     */
+    public function cliente()
+    {
+        return $this->belongsTo(Cliente::class, 'id_cliente');
+    }
+
+
+
+    /**
+     * Get the master user.
+     */
+    public function master(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'id_master');
+    }
+
+    
+
+    /**
+     * Get the full name of the user.
+     */
+    public function getFullNameAttribute(): string
+    {
+        if ($this->persona) {
+            return $this->persona->first_name . ' ' . $this->persona->last_name;
+        }
+        return $this->name;
+    }
+
+    /**
+     * Get the role of the user.
+     */
+    public function getRoleAttribute(): string
+    {
+        return $this->perfil ? $this->perfil->nombre : 'Usuario';
     }
 }

@@ -90,4 +90,19 @@ class Tanque extends Model
     {
         return $this->hasMany(RepostajeVehiculo::class, 'id_tanque', 'id');
     }
+
+
+    // Scope para filtrar por usuario
+    public function scopePorUsuario($query, $userId)
+    {
+        return $query->where('id_us', $userId);
+    }
+   // Scope para tanques activos (con datos válidos)
+   public function scopeActivos($query)
+   {
+       return $query->whereNotNull('serial')
+                   ->whereNotNull('capacidad')
+                   ->whereNotNull('producto');
+   }
+
 }
