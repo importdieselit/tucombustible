@@ -25,6 +25,7 @@
             @csrf
             {{-- Datos de la Orden --}}
            <input type="hidden" name="estatus"  value="1">
+           <input type="hidden" name="fecha_in"  value="{{ date('Y-m-d') }}">
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="vehiculo_id" class="form-label">Vehículo</label>

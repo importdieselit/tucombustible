@@ -11,7 +11,7 @@ class Orden extends Model
     protected $primaryKey = 'id';
     public $incrementing = true;
     protected $keyType = 'int';
-    public $timestamps = false; // La tabla 'ordenes' no tiene 'created_at' ni 'updated_at' en tu SQL
+    public $timestamps = true; // La tabla 'ordenes' no tiene 'created_at' ni 'updated_at' en tu SQL
 
     protected $fillable = [
         'id_usuario',
