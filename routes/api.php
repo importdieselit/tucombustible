@@ -12,6 +12,7 @@ use App\Http\Controllers\Apis\ProveedorController;
 use App\Http\Controllers\Apis\VehiculoController;
 use App\Http\Controllers\Apis\DespachoController;
 use App\Http\Controllers\Apis\PedidoController;
+use App\Http\Controllers\Apis\RecepcionController;
 use App\Http\Controllers\Apis\MecanicoController;
 
 /*
@@ -108,6 +109,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/pedidos', [PedidoController::class, 'crearPedido']);
     Route::post('/pedidos/{id}/calificar', [PedidoController::class, 'calificarPedido']);
     Route::post('/pedidos/{id}/cancelar', [PedidoController::class, 'cancelarPedido']);
+
+    // Recepciones
+    Route::post('/recepciones', [RecepcionController::class, 'registrarRecepcion']);
     
     // Mecánico
     Route::get('/mecanico/estadisticas', [MecanicoController::class, 'getEstadisticas']);

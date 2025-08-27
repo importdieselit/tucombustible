@@ -158,6 +158,10 @@ class MecanicoController extends Controller
                     'v.serial_motor',
                     'v.serial_carroceria',
                     'v.transmision',
+                    'v.disp', // Campo de disponibilidad
+                    'v.kilometraje',
+                    'v.anno',
+                    'v.color',
                     DB::raw('NULL as HP'), // Campo temporal
                     DB::raw('NULL as CC'), // Campo temporal
                     DB::raw('NULL as altura'), // Campo temporal
@@ -167,10 +171,15 @@ class MecanicoController extends Controller
                     'v.created_at',
                     'v.updated_at'
                 ])
-                ->where('v.estatus', 1) // Solo vehículos activos
+                // Sin filtro de estatus - mostrar TODOS los vehículos
                 ->get();
 
             \Log::info("Vehículos obtenidos para mecánico: " . $vehiculos->count() . " - Usuario: {$user->id}");
+            
+            // Log detallado de cada vehículo
+            foreach ($vehiculos as $vehiculo) {
+                \Log::info("Vehículo: {$vehiculo->placa} - Estatus: {$vehiculo->estatus} - Disp: {$vehiculo->disp}");
+            }
 
             return response()->json([
                 'success' => true,
@@ -486,18 +495,60 @@ class MecanicoController extends Controller
                 ], 422);
             }
 
-            // TODO: Implementar la lógica de check in/out
-            // Por ahora solo retornamos un resultado de ejemplo
+            // Buscar el vehículo
+            $vehiculo = DB::table('vehiculos')->where('id', $request->vehiculo_id)->first();
+            
+            if (!$vehiculo) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vehículo no encontrado'
+                ], 404);
+            }
+
+            \Log::info("Check {$request->tipo} - Vehículo encontrado: {$vehiculo->placa} - Estado actual: {$vehiculo->disp} - ID: {$vehiculo->id}");
+
+            $fechaActual = now();
+            $updateData = [];
+
+            if ($request->tipo === 'check_in') {
+                // Check-in: Vehículo entra al taller (queda en servicio)
+                $updateData = [
+                    'disp' => 'n', // No disponible (en servicio)
+                    'fecha_in' => $fechaActual->format('Y-m-d'),
+                    'observacion' => $request->observaciones ?: 'Check-in realizado - Vehículo entra al taller',
+                    'updated_at' => $fechaActual,
+                ];
+            } else {
+                // Check-out: Vehículo sale del taller (queda disponible)
+                $updateData = [
+                    'disp' => 'S', // Disponible
+                    'salida_fecha' => $fechaActual->format('Y-m-d'),
+                    'salida_motivo' => $request->observaciones ?: 'Check-out realizado - Vehículo sale del taller',
+                    'salida_id_usuario' => $user->id,
+                    'updated_at' => $fechaActual,
+                ];
+            }
+
+            // Actualizar el vehículo
+            $updated = DB::table('vehiculos')
+                ->where('id', $request->vehiculo_id)
+                ->update($updateData);
+
+            \Log::info("Check {$request->tipo} - Actualización realizada: " . ($updated ? 'SÍ' : 'NO') . " - Datos: " . json_encode($updateData));
+
             $resultado = [
                 'id' => uniqid(),
                 'vehiculo_id' => $request->vehiculo_id,
                 'tipo' => $request->tipo,
                 'observaciones' => $request->observaciones,
-                'fecha' => now(),
+                'fecha' => $fechaActual,
                 'mecanico_id' => $user->id,
+                'vehiculo_placa' => $vehiculo->placa,
+                'estado_anterior' => $request->tipo === 'check_in' ? 'S' : 'n',
+                'estado_nuevo' => $request->tipo === 'check_in' ? 'n' : 'S',
             ];
 
-            \Log::info("Check {$request->tipo} realizado por mecánico {$user->id} - Cliente: {$user->id_cliente}");
+            \Log::info("Check {$request->tipo} realizado por mecánico {$user->id} - Vehículo: {$vehiculo->placa} - Cliente: {$user->id_cliente}");
 
             return response()->json([
                 'success' => true,
