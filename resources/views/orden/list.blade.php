@@ -71,7 +71,19 @@
                                         <span class="badge bg-gray">Desconocido</span>
                                     @endif
                         </td>
-                        <td>{{ $orden->fecha_in->format('d/m/Y H:i a') }}</td>
+                        <td>
+                            @php
+                                        // Verifica si la variable existe y si no está vacía
+                                        if (isset($orden->created_at) && !empty($orden->created_at)) {
+                                            // Convierte la cadena de fecha a una marca de tiempo y luego la formatea
+                                            $fecha_formateada = date('Y-m-d', strtotime($orden->created_at));
+                                            echo $fecha_formateada;
+                                        } else {
+                                            // Si la fecha no existe, muestra 'N/A' o algún otro valor por defecto
+                                            echo 'N/A';
+                                        }
+                                    @endphp
+                        </td>
                     </tr>
                     @endforeach
                 </tbody>
