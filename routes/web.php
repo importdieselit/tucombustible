@@ -23,6 +23,7 @@ use App\Http\Controllers\DepositoController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\AlmacenController;
 use App\Http\Controllers\ChoferController;
+use App\Http\Controllers\AlertaController;
 
 // Agrega otros controladores según los modelos y tablas
 
@@ -112,6 +113,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/combustible/despacho', [MovimientoCombustibleController::class, 'createDespacho'])->name('combustible.despacho');
     Route::post('/combustible/despacho', [MovimientoCombustibleController::class, 'storeDespacho'])->name('combustible.storeDespacho');
 
+      Route::get('/alertas', [AlertaController::class, 'index'])->name('alertas.index');
+    Route::get('/alertas/read/{id}', [AlertaController::class, 'markAsRead'])->name('alertas.read');
 
     
     // Rutas para historial de mantenimiento

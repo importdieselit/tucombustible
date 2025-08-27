@@ -14,6 +14,7 @@ use App\Models\EstatusData; // Asegúrate de importar el modelo EstatusData
 use Carbon\Carbon; // Para manejo de
 use Illuminate\Support\Facades\Auth;
 use App\Models\InventarioSuministro; // Asegúrate de importar el modelo
+use App\Traits\GeneratesAlerts;
 
 class OrdenController extends BaseController
 {
@@ -144,6 +145,7 @@ class OrdenController extends BaseController
         $personal = Personal::all();
         $tipos = TipoOrden::all();
         $nro_orden = $this->generateOrdenCode();
+        
 
         return view('orden.create', compact('vehiculos', 'personal','tipos', 'nro_orden'));
     }
@@ -210,6 +212,13 @@ $estatusData = EstatusData::all()->keyBy('id_estatus');
                 }
             }
 
+        $this->createAlert([
+            'id_usuario' => $userId, // ID del usuario responsable de la orden.
+            'id_rel' => $orden->id, // ID de la orden.
+            'observacion' => 'Se te ha asignado una nueva orden de trabajo: ' . $orden->nro_orden.' a '.$orden->resposable,
+            'accion' => route('ordenes.show', $orden->id), // Ruta para ver la orden.
+            'dias' => 0,
+        ]);
         // Mensaje de éxito
         Session::flash('success', 'Orden de trabajo creada exitosamente.');
 
