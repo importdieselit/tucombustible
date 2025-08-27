@@ -27,26 +27,13 @@
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item"><strong>Vehículo:</strong> {{ $orden->vehiculo()->flota ?? 'N/A' }} ({{ $orden->vehiculo()->placa ?? 'N/A' }})</li>
                     <li class="list-group-item"><strong>Responsable Asignado:</strong> {{ $orden->responsable ?? 'N/A' }}</li>
-                    <li class="list-group-item"><strong>Tipo:</strong> {{ $orden->tipo_orden->descripcion ?? 'N/A' }}</li>
-                    <li class="list-group-item">
-                        <strong>Estatus:</strong>
-                       @php
-                                        $estatusInfo = $estatusData->get($orden->estatus);
-                                    @endphp
-                                    @if ($estatusInfo)
-                                        <span class="badge bg-{{ $estatusInfo->css }}" title="{{ $estatusInfo->descripcion }}">
-                                            <i class="mr-1 fa-solid {{ $estatusInfo->icon_orden }}"></i>
-                                            {{ $estatusInfo->orden }}
-                                        </span>
-                                    @else
-                                        <span class="badge bg-gray">Desconocido</span>
-                                    @endif
-                    </li>
+                    <li class="list-group-item"><strong>Kilometraje:</strong> {{ number_format($orden->kilometraje ?? 0, 0, ',', '.') }}</li>
+                    <li class="list-group-item"><strong>Tipo de Orden:</strong> {{ $orden->tipo_orden->nombre ?? 'N/A' }}</li>
+                    <li class="list-group-item"><strong>Estatus:</strong> <span class="badge bg-primary">{{ $orden->estatus_data->nombre ?? 'N/A' }}</span></li>
                 </ul>
             </div>
             <div class="col-md-6">
                 <ul class="list-group list-group-flush">
-                    <li class="list-group-item"><strong>Kilometraje:</strong> {{ number_format($orden->kilometraje ?? 0, 0, ',', '.') }} km</li>
                     <li class="list-group-item"><strong>Apertura:</strong> {{ $orden->fecha_in ?? 'N/A' }} a las {{ $orden->hora_in ?? 'N/A' }}</li>
                     <li class="list-group-item"><strong>Cierre:</strong> {{ $orden->fecha_out ?? 'N/A' }} a las {{ $orden->hora_out ?? 'N/A' }}</li>
                     {{-- <li class="list-group-item"><strong>Tiempo Promedio:</strong> {{ $orden->tiempo_promedio ?? 'N/A' }} días</li> --}}
@@ -66,24 +53,23 @@
         <table class="table table-striped">
             <thead>
                 <tr>
+                    <th>Código</th>
                     <th>Nombre</th>
                     <th>Cantidad</th>
-                    <th>Unidad</th>
                 </tr>
             </thead>
             <tbody>
-                {{-- @foreach ($insumos_usados as $insumo) --}}
-                <tr>
-                    <td>Aceite de motor</td>
-                    <td>5</td>
-                    <td>Litros</td>
-                </tr>
-                <tr>
-                    <td>Filtro de aceite</td>
-                    <td>1</td>
-                    <td>Unidad</td>
-                </tr>
-                {{-- @endforeach --}}
+                @forelse ($insumos_usados as $insumo)
+                    <tr>
+                        <td>{{ $insumo->inventario->codigo ?? 'N/A' }}</td>
+                        <td>{{ $insumo->inventario->descripcion ?? 'N/A' }}</td>
+                        <td>{{ $insumo->cantidad ?? 'N/A' }}</td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="3" class="text-center">No se han registrado insumos para esta orden.</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </div>
