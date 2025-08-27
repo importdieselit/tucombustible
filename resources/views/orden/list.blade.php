@@ -57,7 +57,7 @@
                         <td>{{ $orden->id }}</td>
                         <td>{{ $orden->nro_orden }}</td>
                         <td>{{ $orden->vehiculo()->placa }}</td>
-                        <td>{{ $orden->tipo()->nombre }}</td>
+                        <td>{{ $orden->tipo }}</td>
                         <td>
                             @php
                                         $estatusInfo = $estatusData->get($orden->estatus);
