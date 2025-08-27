@@ -42,6 +42,7 @@ class Orden extends Model
         'chfr',
         'responsable',
         'parent',
+        'id_vehiculo'
     ];
 
     protected $casts = [

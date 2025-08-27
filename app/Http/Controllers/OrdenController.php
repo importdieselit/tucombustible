@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\InventarioSuministro; // Asegúrate de importar el modelo
 use App\Traits\GenerateAlerts;
 use Illuminate\Support\Facades\Redirect;
+use App\Models\Inventario; // Asegúrate de importar el modelo Inventario
 
 class OrdenController extends BaseController
 {
@@ -78,6 +79,17 @@ class OrdenController extends BaseController
             'vehiculos_mas_fallas',
             'alertas_kilometraje'
         ));
+    }
+
+    public function searchSupplies(Request $request)
+    {
+        $search = $request->input('query');
+        
+        $suministros = Inventario::where('descripcion', 'LIKE', "%{$search}%")
+                                 ->orWhere('codigo', 'LIKE', "%{$search}%")
+                                 ->get();
+        
+        return response()->json($suministros);
     }
 
     /**
@@ -148,9 +160,10 @@ class OrdenController extends BaseController
         $personal = Personal::all();
         $tipos = TipoOrden::all();
         $nro_orden = $this->generateOrdenCode();
+        $suministros = Inventario::all();
         
 
-        return view('orden.create', compact('vehiculos', 'personal','tipos', 'nro_orden'));
+        return view('orden.create', compact('vehiculos', 'personal','tipos', 'nro_orden','suministros'));
     }
 
     /**

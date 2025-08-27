@@ -50,6 +50,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('choferes/importar', [ChoferController::class, 'showImportForm'])->name('choferes.show-import-form');
     Route::post('choferes/importar', [ChoferController::class, 'importar'])->name('choferes.importar');
 
+
+
+Route::get('/ordenes/search-supplies', [OrdenController::class, 'searchSupplies'])->name('ordenes.search-supplies');
     // Recursos principales
     $resourceControllers = [
         'vehiculos' => VehiculoController::class,
@@ -94,6 +97,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/inventario/import/excel', [InventarioController::class, 'import'])->name('inventario.import');
     Route::get('/inventario/export/excel', [InventarioController::class, 'export'])->name('inventario.export');
 
+    
     //Route::get('/ordenes/report/pdf', [OrdenController::class, 'reportPdf'])->name('ordenes.report.pdf');
     Route::get('/vehiculos/report/pdf', [VehiculoController::class, 'reportPdf'])->name('vehiculos.report.pdf');
 
