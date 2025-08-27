@@ -15,6 +15,7 @@ use Carbon\Carbon; // Para manejo de
 use Illuminate\Support\Facades\Auth;
 use App\Models\InventarioSuministro; // Asegúrate de importar el modelo
 use App\Traits\GenerateAlerts;
+use Illuminate\Support\Facades\Redirect;
 
 class OrdenController extends BaseController
 {
