@@ -54,7 +54,7 @@
                     </div>
                     <div>
                         <h5 class="card-title mb-0">Depositos</h5>
-                        <h2 class="fw-bold">3</h2>
+                        <h2 class="fw-bold">5</h2>
                         <small class="text-muted">Operativos</small>
                     </div>
                 </div>
