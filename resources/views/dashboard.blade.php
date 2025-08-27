@@ -40,6 +40,7 @@ $eficienciaFlota = 92;
 
 // Tabla de órdenes recientes
 $ordenesRecientes = Orden::orderBy('created_at', 'desc')->limit(3)->get();
+$alertasRecientes = Alerta::orderBy('id', 'desc')->limit(5)->get();
 
 // Datos para el gráfico de órdenes por estatus
 $ordenesPorEstatus = Orden::select('estatus', DB::raw('count(*) as total'))
@@ -210,22 +211,16 @@ $data = [
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
                         {{-- Aquí iría la lógica para mostrar alertas dinámicas --}}
+                          @foreach ($alertasRecientes as $alerta)
                         <li class="list-group-item d-flex align-items-center">
                             <i class="bi bi-exclamation-triangle text-warning me-2"></i>
-                            Mantenimiento pendiente en Vehículo #23
+                            {{ $alerta->observacion }}
                         </li>
-                        <li class="list-group-item d-flex align-items-center">
-                            <i class="bi bi-fuel-pump text-danger me-2"></i>
-                            Nivel bajo en Tanque Central
-                        </li>
-                        <li class="list-group-item d-flex align-items-center">
-                            <i class="bi bi-clipboard-check text-success me-2"></i>
-                            Nueva orden asignada a Juan Pérez
-                        </li>
-                        <li class="list-group-item d-flex align-items-center">
-                            <i class="bi bi-box-seam text-dark me-2"></i>
-                            Inventario crítico: Filtros de aceite
-                        </li>
+                        @endforeach
+                        @if($alertasRecientes->isEmpty())
+                        <li class="list-group-item">No hay alertas recientes.</li>
+                        @endif
+                        
                     </ul>
                 </div>
             </div>
