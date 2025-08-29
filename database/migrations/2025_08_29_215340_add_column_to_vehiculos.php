@@ -19,9 +19,8 @@ class AddColumnToVehiculos extends Migration
             $table->string('rcv')->nullable(); 
             $table->string('racda')->nullable(); 
             $table->string('semcamer')->nullable(); 
-            $table->string('homologacion_intt')->nullable(); 
-            $table->string('permiso_intt')->nullable(); 
-            
+            $table->string('homologacion_intt')->nullable();
+            $table->string('permiso_intt')->nullable();
         });
     }
 
