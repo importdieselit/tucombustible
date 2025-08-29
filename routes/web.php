@@ -50,6 +50,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('choferes/importar', [ChoferController::class, 'showImportForm'])->name('choferes.show-import-form');
     Route::post('choferes/importar', [ChoferController::class, 'importar'])->name('choferes.importar');
 
+    Route::get('/vehiculos/import', [VehiculoController::class, 'importForm'])->name('vehiculos.import');
+    Route::post('/vehiculos/import', [VehiculoController::class, 'importSave'])->name('vehiculos.import.save');
+
 
 
     Route::get('ordenes/search-supplies', [OrdenController::class, 'searchSupplies'])->name('ordenes.search-supplies');
