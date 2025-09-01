@@ -84,6 +84,16 @@ class InventarioSuministro extends Model
     {
         return $this->belongsTo(Orden::class, 'id_orden');  
     }
+
+    public function vehiculo()
+    {
+        return $this->belongsTo(Orden::class, 'id_orden')->first()->vehiculo();  
+    }
+
+    public function estatus()
+    {
+        return $this->belongsTo(EstatusData::class, 'estatus', 'id_estatus')->first();
+    }
     
 
 }

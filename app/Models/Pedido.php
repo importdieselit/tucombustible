@@ -16,6 +16,7 @@ class Pedido extends Model
     protected $fillable = [
         'cliente_id',
         'deposito_id',
+        'vehiculo_id',
         'cantidad_solicitada',
         'cantidad_aprobada',
         'estado',
@@ -140,5 +141,10 @@ class Pedido extends Model
         // Si el valor es null, no es una instancia de Carbon, o es inválido,
         // devolvemos 'N/A'.
         return 'N/A';
+    }
+
+    public function vehiculo(): BelongsTo
+    {
+        return $this->belongsTo(Vehiculo::class, 'vehiculo_id');
     }
 }

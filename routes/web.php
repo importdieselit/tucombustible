@@ -49,6 +49,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('invantario/adjustment', [InventarioController::class, 'adjustment'])->name('inventario.adjustment');
     Route::get('choferes/importar', [ChoferController::class, 'showImportForm'])->name('choferes.show-import-form');
     Route::post('choferes/importar', [ChoferController::class, 'importar'])->name('choferes.importar');
+    // Rutas para las solicitudes de insumos
+    Route::get('/inventario/solicitudes', [InventarioController::class, 'requests'])->name('inventario.requests');
+    Route::post('/inventario/solicitudes/{id}/approve', [InventarioController::class, 'approve'])->name('inventario.requests.approve');
+    Route::post('/inventario/solicitudes/{id}/reject', [InventarioController::class, 'reject'])->name('inventario.requests.reject');
+    Route::post('/inventario/solicitudes/{id}/dispatch', [InventarioController::class, 'dispatch'])->name('inventario.requests.dispatch');
 
 
     Route::get('/vehiculos/import', [VehiculoController::class, 'importForm'])->name('vehiculos.import');
@@ -123,7 +128,14 @@ Route::post('/ordenes/{orden}/reactivar', [OrdenController::class, 'reactivarOrd
     Route::get('/combustible/list', [MovimientoCombustibleController::class, 'list'])->name('combustible.list');
     Route::get('/combustible/despacholist', [MovimientoCombustibleController::class, 'despachoList'])->name('despachos.list');
     
-    
+    // Rutas de Combustible (Pedidos y Despachos)
+Route::prefix('combustible')->name('combustible.')->group(function () {
+    Route::get('/pedidos', [MovimientoCombustibleController::class, 'pedidos'])->name('pedidos');
+    Route::post('/pedidos/{id}/aprobar', [MovimientoCombustibleController::class, 'aprobar'])->name('aprobar');
+    Route::post('/pedidos/{id}/rechazar', [MovimientoCombustibleController::class, 'rechazar'])->name('rechazar');
+    Route::get('/aprobados', [MovimientoCombustibleController::class, 'despachos'])->name('aprobados');
+    Route::post('/despachos/{id}/despachar', [MovimientoCombustibleController::class, 'despachar'])->name('despachar');
+});
     // Nuevas rutas para el despacho de combustible
     Route::get('/combustible/despacho', [MovimientoCombustibleController::class, 'createDespacho'])->name('combustible.despacho');
     Route::post('/combustible/despacho', [MovimientoCombustibleController::class, 'storeDespacho'])->name('combustible.storeDespacho');

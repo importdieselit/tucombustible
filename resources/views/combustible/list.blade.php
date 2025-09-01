@@ -72,6 +72,7 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
                                         {{-- Lógica condicional para mostrar los detalles del movimiento --}}
+                                        {{ $movimiento->observaciones }}<br>
                                         @if($movimiento->tipo == 'despacho')
                                             @if($movimiento->cliente)
                                                 <p>Cliente: {{ $movimiento->cliente->nombre }}</p>

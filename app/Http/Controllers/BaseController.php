@@ -10,12 +10,17 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str; // Es necesario para la función Str::plural()
 use App\Models\EstatusData;
 use App\Traits\PluralizaEnEspanol;
+use App\Traits\GenerateAlerts;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 /**
  * Clase base para controladores de recursos CRUD que infiere el modelo.
  * Los controladores específicos que hereden de esta clase no necesitan constructor.
  */
 abstract class BaseController extends Controller
 {
+
+     use GenerateAlerts;
 
     use PluralizaEnEspanol;
     /**
