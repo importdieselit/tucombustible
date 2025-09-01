@@ -351,10 +351,11 @@ use App\Models\InventarioSuministro;
                     console.log(result);
                     if (result.success) {
                         const itemData = {
-                            id: itemId,
+                            id: result.supply.id_inventario_suministro,
                             db_id: result.supply.id_inventario_suministro, // ID del registro en la DB
                             codigo: row.cells[0].textContent,
                             descripcion: row.cells[1].textContent,
+                            costo: result.supply.inventario.costo,
                             estatus: 1, // Nuevo insumo siempre comienza como 'Solicitado'
                             existencia: parseInt(row.cells[2].textContent, 10),
                             cantidad: result.supply.cantidad

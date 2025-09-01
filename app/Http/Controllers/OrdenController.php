@@ -269,12 +269,13 @@ class OrdenController extends BaseController
                 'id_usuario' => $userId, // Usuario que registra el suministro
                 'id_auto' => $orden->id_vehiculo,
                 'id_emisor' => $userId,
-                'estatus' => 1, // 1 = 'Solicitado'
+                'estatus' => 2, // 2 = 'Solicitado'
             ]);
+            $result= InventarioSuministro::with('inventario')->where('id_inventario_suministro', $supply->id_inventario_suministro)->first();
     
             Session::flash('success', 'Suministro agregado exitosamente.');
 
-            return response()->json(['success' => true, 'supply' => $supply]);
+            return response()->json(['success' => true, 'supply' => $result]);
         } catch (ModelNotFoundException $e) {
             Session::flash('error', 'Orden no encontrada.');
             return response()->json(['success' => false, 'message' => 'Orden no encontrada'], 404);
