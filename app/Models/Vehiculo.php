@@ -97,6 +97,13 @@ class Vehiculo extends Model
         'largo',
         'consumo',
         'oil',
+        'rotc', // Ejemplo de agregar una nueva columna
+        'rotc_venc', 
+        'rcv', 
+        'racda', 
+        'semcamer', 
+        'homologacion_intt',
+        'permiso_intt'
     ];
     /**
      * The attributes that should be cast to native types.

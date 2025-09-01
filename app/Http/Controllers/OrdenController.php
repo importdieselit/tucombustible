@@ -178,12 +178,13 @@ class OrdenController extends BaseController
             $orden = $this->model->findOrFail($id);
 
             // Datos de prueba para la hoja técnica
-            $insumos_usados = [
-                (object)['nombre' => 'Aceite de motor', 'cantidad' => 5, 'unidad' => 'Litros'],
-                (object)['nombre' => 'Filtro de aceite', 'cantidad' => 1, 'unidad' => 'Unidad'],
-                (object)['nombre' => 'Pastillas de freno', 'cantidad' => 1, 'unidad' => 'Juego'],
-            ];
-$estatusData = EstatusData::all()->keyBy('id_estatus');
+            // $insumos_usados = [
+            //     (object)['nombre' => 'Aceite de motor', 'cantidad' => 5, 'unidad' => 'Litros'],
+            //     (object)['nombre' => 'Filtro de aceite', 'cantidad' => 1, 'unidad' => 'Unidad'],
+            //     (object)['nombre' => 'Pastillas de freno', 'cantidad' => 1, 'unidad' => 'Juego'],
+            // ];
+            $insumos_usados = InventarioSuministro::where('nro_orden', $orden->nro_orden)->get();
+            $estatusData = EstatusData::all()->keyBy('id_estatus');
 
             return view('orden.show', compact('orden', 'insumos_usados', 'estatusData'));
         } catch (ModelNotFoundException $e) {

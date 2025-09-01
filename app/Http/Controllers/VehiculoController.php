@@ -13,6 +13,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Redirect;
 
+
 class VehiculoController extends BaseController
 {
     /**
@@ -62,7 +63,7 @@ class VehiculoController extends BaseController
 
      public function importForm()
     {
-        return view('vehiculos.import');
+        return view('vehiculo.import');
     }
 
     /**
@@ -77,40 +78,39 @@ class VehiculoController extends BaseController
         $request->validate([
             'file' => 'required|mimes:xlsx,xls,csv'
         ]);
-
+        
         try {
-           
-             // Leer el archivo y procesar los datos
-                $rows = Excel::toArray(null, $request->file('file'))[0];
-                $header = array_map('trim', array_change_key_case($rows[0], CASE_LOWER));
-                $dataRows = array_slice($rows, 1);
-            
+            $rows = Excel::toArray(null, $request->file('file'))[0];
+            $header = array_map('trim', array_change_key_case($rows[0], CASE_LOWER));
+            $dataRows = array_slice($rows, 1);
 
-                // Recorrer las filas del archivo
-                foreach ($reader->all() as $row) {
-                        // Mapear los nombres de las columnas del Excel a los campos de la tabla
-                    $rowData = array_combine($header, $row);
+            foreach ($dataRows as $row) {
+                // Si la fila está vacía, la ignoramos para evitar errores
+                if (empty(array_filter($row))) {
+                    continue;
+                }
+                
+                $rowData = array_combine($header, $row);
 
-                    $marcaNombre = $rowData['marca'] ?? null;
-                    $modeloNombre = $rowData['modelo'] ?? null;
-                    $marcaId = null;
-                    $modeloId = null;
+                // Lógica de búsqueda y creación de marca y modelo
+                $marcaNombre = $rowData['marca'] ?? null;
+                $modeloNombre = $rowData['modelo'] ?? null;
+                $marcaId = null;
+                $modeloId = null;
 
-                    if ($marcaNombre) {
-                        // Buscar o crear la marca
-                        $marca = Marca::firstOrCreate(['nombre' => $marcaNombre]);
-                        $marcaId = $marca->id;
+                if ($marcaNombre) {
+                    $marca = Marca::firstOrCreate(['nombre' => $marcaNombre]);
+                    $marcaId = $marca->id;
 
-                        if ($modeloNombre && $marcaId) {
-                            // Buscar o crear el modelo asociado a la marca
-                            $modelo = Modelo::firstOrCreate(
-                                ['nombre' => $modeloNombre, 'id_marca' => $marcaId],
-                                ['id_marca' => $marcaId]
-                            );
-                            $modeloId = $modelo->id;
-                        }
+                    if ($modeloNombre && $marcaId) {
+                        $modelo = Modelo::firstOrCreate(
+                            ['nombre' => $modeloNombre, 'id_marca' => $marcaId],
+                            ['id_marca' => $marcaId]
+                        );
+                        $modeloId = $modelo->id;
                     }
-
+                }
+                 
                     // Preparar los datos del vehículo
                     $vehiculoData = [
                         'flota' => $rowData['vehiculo'] ?? null,
@@ -119,7 +119,14 @@ class VehiculoController extends BaseController
                         'id_marca' => $marcaId,
                         'id_modelo' => $modeloId,
                         'kilometraje' => $rowData['kilometraje'] ?? 0,
-                        'detalles' => $rowData['detalles'] ?? null,
+                        'observacion' => $rowData['detalles'] ?? null,
+                        'rotc_venc' => $rowData['rotc'], 
+                        'poliza_fecha' => $rowData['poliza de seguro'], 
+                        'rcv'=> $rowData['rcv'], 
+                        'racda' => $rowData['racda'], 
+                        'semcamer' => $rowData['semcamer'], 
+                        'homologacion_intt' => $rowData['homologacion_intt'],
+                        'permiso_intt' => $rowData['permiso_intt']
                         
                     ];
 

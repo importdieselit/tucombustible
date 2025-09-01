@@ -49,7 +49,7 @@ class Orden extends Model
         'id_usuario' => 'integer',
         'id_taller' => 'integer',
         'taller_externo' => 'integer',
-        'nro_orden' => 'integer',
+        'nro_orden' => 'string',
         'estatus' => 'string', // Asumiendo que es varchar de tu migración anterior
         'id_auto' => 'integer',
         'kilometraje' => 'integer',
@@ -96,6 +96,11 @@ class Orden extends Model
     public function usuarioCierre()
     {
         return $this->belongsTo(User::class, 'id_us_out', 'id');
+    }
+
+    public function estatus()
+    {
+        return $this->belongsTo(EstatusData::class, 'estatus', 'id_estatus')->first()->orden;
     }
 
     public function planMantenimiento()

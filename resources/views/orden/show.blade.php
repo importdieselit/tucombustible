@@ -34,8 +34,15 @@
             </div>
             <div class="col-md-6">
                 <ul class="list-group list-group-flush">
-                    <li class="list-group-item"><strong>Apertura:</strong> {{ $orden->fecha_in ?? 'N/A' }} a las {{ $orden->hora_in ?? 'N/A' }}</li>
-                    <li class="list-group-item"><strong>Cierre:</strong> {{ $orden->fecha_out ?? 'N/A' }} a las {{ $orden->hora_out ?? 'N/A' }}</li>
+                    <li class="list-group-item"><strong>Apertura:</strong> 
+                        @php
+                        use Carbon\Carbon;
+                        Carbon::setLocale('es');
+                        @endphp
+                           {{ Carbon::parse($orden->fecha_in)->format('d/m/Y') ?? 'N/A' }}
+                        a las 
+                        {{ Carbon::parse($orden->hora_in)->format('h:i a') ?? 'N/A' }}
+                     <li class="list-group-item"><strong>Cierre:</strong> {{ $orden->fecha_out ?? 'N/A' }} a las {{ $orden->hora_out ?? 'N/A' }}</li>
                     {{-- <li class="list-group-item"><strong>Tiempo Promedio:</strong> {{ $orden->tiempo_promedio ?? 'N/A' }} días</li> --}}
                 </ul>
             </div>
