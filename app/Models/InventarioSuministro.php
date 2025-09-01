@@ -31,11 +31,6 @@ class InventarioSuministro extends Model
      */
     public $incrementing = true;
 
-    /**
-     * El tipo de datos de la clave primaria.
-     * @var string
-     */
-    protected $keyType = 'bigint';
 
     /**
      * Los atributos que se pueden asignar masivamente.
@@ -46,14 +41,17 @@ class InventarioSuministro extends Model
     protected $fillable = [
         'estatus',
         'id_usuario',
-        'nro_orden',
+        'id_orden',
         'destino',
         'servicio',
         'id_auto',
         'id_inventario',
         'anulacion',
         'id_emisor',
+        'cantidad',
     ];
+
+    
 
     /**
      * Indica si el modelo debe manejar automáticamente los timestamps.
@@ -75,7 +73,7 @@ class InventarioSuministro extends Model
      */
     public function inventario()
     {
-        return $this->belongsTo(Inventario::class, 'id','id_inventario');   
+        return $this->belongsTo(Inventario::class, 'id_inventario');   
     }
 
     /**
@@ -84,7 +82,17 @@ class InventarioSuministro extends Model
      */
     public function orden()
     {
-        return $this->belongsTo(Orden::class, 'nro_orden', 'nro_orden');   
+        return $this->belongsTo(Orden::class, 'id_orden');  
+    }
+
+    public function vehiculo()
+    {
+        return $this->belongsTo(Orden::class, 'id_orden')->first()->vehiculo();  
+    }
+
+    public function estatus()
+    {
+        return $this->belongsTo(EstatusData::class, 'estatus', 'id_estatus')->first();
     }
     
 

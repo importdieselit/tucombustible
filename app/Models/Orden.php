@@ -11,7 +11,7 @@ class Orden extends Model
     protected $primaryKey = 'id';
     public $incrementing = true;
     protected $keyType = 'int';
-    public $timestamps = false; // La tabla 'ordenes' no tiene 'created_at' ni 'updated_at' en tu SQL
+    public $timestamps = true; // La tabla 'ordenes' no tiene 'created_at' ni 'updated_at' en tu SQL
 
     protected $fillable = [
         'id_usuario',
@@ -42,13 +42,14 @@ class Orden extends Model
         'chfr',
         'responsable',
         'parent',
+        'id_vehiculo'
     ];
 
     protected $casts = [
         'id_usuario' => 'integer',
         'id_taller' => 'integer',
         'taller_externo' => 'integer',
-        'nro_orden' => 'integer',
+        'nro_orden' => 'string',
         'estatus' => 'string', // Asumiendo que es varchar de tu migración anterior
         'id_auto' => 'integer',
         'kilometraje' => 'integer',
@@ -62,6 +63,8 @@ class Orden extends Model
         'facturacion_completa' => 'boolean',
         'origen' => 'integer',
         'parent' => 'integer',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     // Relaciones
@@ -93,6 +96,11 @@ class Orden extends Model
     public function usuarioCierre()
     {
         return $this->belongsTo(User::class, 'id_us_out', 'id');
+    }
+
+    public function estatus()
+    {
+        return $this->belongsTo(EstatusData::class, 'estatus', 'id_estatus')->first();
     }
 
     public function planMantenimiento()

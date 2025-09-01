@@ -14,9 +14,14 @@ use App\Models\EstatusData; // Asegúrate de importar el modelo EstatusData
 use Carbon\Carbon; // Para manejo de
 use Illuminate\Support\Facades\Auth;
 use App\Models\InventarioSuministro; // Asegúrate de importar el modelo
+use App\Traits\GenerateAlerts;
+use Illuminate\Support\Facades\Redirect;
+use App\Models\Inventario; // Asegúrate de importar el modelo Inventario
 
 class OrdenController extends BaseController
 {
+
+     use GenerateAlerts;
     /**
      * Muestra el dashboard de órdenes de trabajo.
      * @return \Illuminate\View\View
@@ -74,6 +79,17 @@ class OrdenController extends BaseController
             'vehiculos_mas_fallas',
             'alertas_kilometraje'
         ));
+    }
+
+    public function searchSupplies(Request $request)
+    {
+        $search = $request->input('query');
+        
+        $suministros = Inventario::where('descripcion', 'LIKE', "%{$search}%")
+                                 ->orWhere('codigo', 'LIKE', "%{$search}%")
+                                 ->get();
+        
+        return response()->json($suministros);
     }
 
     /**
@@ -144,8 +160,10 @@ class OrdenController extends BaseController
         $personal = Personal::all();
         $tipos = TipoOrden::all();
         $nro_orden = $this->generateOrdenCode();
+        $suministros = Inventario::all();
+        
 
-        return view('orden.create', compact('vehiculos', 'personal','tipos', 'nro_orden'));
+        return view('orden.create', compact('vehiculos', 'personal','tipos', 'nro_orden','suministros'));
     }
 
     /**
@@ -160,12 +178,13 @@ class OrdenController extends BaseController
             $orden = $this->model->findOrFail($id);
 
             // Datos de prueba para la hoja técnica
-            $insumos_usados = [
-                (object)['nombre' => 'Aceite de motor', 'cantidad' => 5, 'unidad' => 'Litros'],
-                (object)['nombre' => 'Filtro de aceite', 'cantidad' => 1, 'unidad' => 'Unidad'],
-                (object)['nombre' => 'Pastillas de freno', 'cantidad' => 1, 'unidad' => 'Juego'],
-            ];
-$estatusData = EstatusData::all()->keyBy('id_estatus');
+            // $insumos_usados = [
+            //     (object)['nombre' => 'Aceite de motor', 'cantidad' => 5, 'unidad' => 'Litros'],
+            //     (object)['nombre' => 'Filtro de aceite', 'cantidad' => 1, 'unidad' => 'Unidad'],
+            //     (object)['nombre' => 'Pastillas de freno', 'cantidad' => 1, 'unidad' => 'Juego'],
+            // ];
+            $insumos_usados = InventarioSuministro::with('inventario')->where('id_orden', $id)->get();
+            $estatusData = EstatusData::all()->keyBy('id_estatus');
 
             return view('orden.show', compact('orden', 'insumos_usados', 'estatusData'));
         } catch (ModelNotFoundException $e) {
@@ -198,7 +217,7 @@ $estatusData = EstatusData::all()->keyBy('id_estatus');
                     InventarioSuministro::create([
                         'estatus' => 1, // 1 = 'Solicitado'
                         'id_usuario' => $userId,
-                        'nro_orden' => $orden->nro_orden, // Usar el número de orden que acabamos de crear
+                        'id_orden' => $orden->id, // Usar el número de orden que acabamos de crear
                         'id_auto' => $request->id_vehiculo,
                         'id_inventario' => $supply['item_id'],
                         'id_emisor' => $userId,
@@ -210,11 +229,178 @@ $estatusData = EstatusData::all()->keyBy('id_estatus');
                 }
             }
 
+        $this->createAlert([
+            'id_usuario' => $userId, // ID del usuario responsable de la orden.
+            'id_rel' => $orden->id, // ID de la orden.
+            'observacion' => 'Se te ha asignado una nueva orden de trabajo: ' . $orden->nro_orden.' a '.$orden->resposable,
+            'accion' => route('ordenes.show', $orden->id), // Ruta para ver la orden.
+            'dias' => 0,
+        ]);
         // Mensaje de éxito
         Session::flash('success', 'Orden de trabajo creada exitosamente.');
 
         // Redirige al listado
-        return Redirect::route(Str::plural($this->getModelNameLowerCase()) . '.list');
+        return Redirect::route('ordenes.list');
     }
 
+
+    /**
+     * Almacena un nuevo suministro para una orden.
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function storeSupply(Request $request)
+    {
+        $request->validate([
+            'id_orden' => 'required|integer|exists:ordenes,id',
+            'id_inventario' => 'required|integer|exists:inventario,id',
+            'cantidad' => 'required|numeric|min:1',
+            // Puedes agregar más validaciones aquí
+        ]);
+    
+        try {
+            $userId = Auth::id();
+            $orden = Orden::findOrFail($request->id_orden);
+    
+            $supply = InventarioSuministro::create([
+                'id_orden' => $orden->id,
+                'id_inventario' => $request->id_inventario,
+                'cantidad' => $request->cantidad,
+                'id_usuario' => $userId, // Usuario que registra el suministro
+                'id_auto' => $orden->id_vehiculo,
+                'id_emisor' => $userId,
+                'estatus' => 2, // 2 = 'Solicitado'
+            ]);
+            $result= InventarioSuministro::with('inventario')->where('id_inventario_suministro', $supply->id_inventario_suministro)->first();
+    
+            Session::flash('success', 'Suministro agregado exitosamente.');
+
+            return response()->json(['success' => true, 'supply' => $result]);
+        } catch (ModelNotFoundException $e) {
+            Session::flash('error', 'Orden no encontrada.');
+            return response()->json(['success' => false, 'message' => 'Orden no encontrada'], 404);
+        } catch (\Exception $e) {
+            Session::flash('error', 'Error al agregar el suministro.');
+            return response()->json(['success' => false, 'message' => 'Error al agregar el suministro. '.$e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Actualiza un suministro existente.
+     * @param Request $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function updateSupply(Request $request, $id)
+    {
+        $request->validate([
+            'cantidad' => 'required|numeric|min:1',
+            // Puedes agregar más validaciones aquí
+        ]);
+
+        try {
+            $supply = InventarioSuministro::findOrFail($id);
+            $supply->update([
+                'cantidad' => $request->cantidad,
+                // Puedes actualizar otros campos aquí
+            ]);
+
+            Session::flash('success', 'Suministro actualizado exitosamente.');
+            return response()->json(['success' => true, 'supply' => $supply]);
+        } catch (ModelNotFoundException $e) {
+            Session::flash('error', 'Suministro no encontrado.');
+            return response()->json(['success' => false, 'message' => 'Suministro no encontrado'], 404);
+        } catch (\Exception $e) {
+            Session::flash('error', 'Error al actualizar el suministro.');
+            return response()->json(['success' => false, 'message' => 'Error al actualizar el suministro.'], 500);
+        }
+    }
+
+    /**
+     * Elimina un suministro.
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function deleteSupply($id)
+    {
+        try {
+            $supply = InventarioSuministro::findOrFail($id);
+            $supply->delete();
+
+            Session::flash('success', 'Suministro eliminado exitosamente.');
+            return response()->json(['success' => true, 'message' => 'Suministro eliminado.']);
+        } catch (ModelNotFoundException $e) {
+            Session::flash('error', 'Suministro no encontrado.');
+            return response()->json(['success' => false, 'message' => 'Suministro no encontrado'], 404);
+        } catch (\Exception $e) {
+            Session::flash('error', 'Error al eliminar el suministro.');
+            return response()->json(['success' => false, 'message' => 'Error al eliminar el suministro.'], 500);
+        }
+    }
+
+    public function cerrarOrden(Request $request, $id)
+    {
+        try {
+            $orden = Orden::findOrFail($id);
+            $orden->estatus = 1; // 1 = 'Cerrada'
+            $orden->fecha_out = Carbon::now()->toDateString();
+            $orden->hora_out = Carbon::now()->toTimeString();
+            $orden->id_us_out = Auth::id(); // Usuario que cierra la orden
+            $orden->save();
+
+            Session::flash('success', 'Orden de trabajo cerrada exitosamente.');
+            return response()->json(['success' => true, 'message' => 'Orden de trabajo cerrada exitosamente']);
+        } catch (ModelNotFoundException $e) {
+            Session::flash('error', 'Orden de trabajo no encontrada.');
+            return response()->json(['success' => false, 'message' => 'Orden de trabajo no encontrada.']);
+        } catch (\Exception $e) {
+            Session::flash('error', 'Error al cerrar la orden de trabajo: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Error al cerrar la orden de trabajo: ' . $e->getMessage()], 500);
+        }
+    }
+
+
+     public function anularOrden(Request $request, $id)
+    {
+        try {
+            $orden = Orden::findOrFail($id);
+            $orden->estatus = 4; // 4 = 'anulada'
+            $orden->fecha_out = Carbon::now()->toDateString();
+            $orden->hora_out = Carbon::now()->toTimeString();
+            $orden->anulacion = $request->input('anulacion'); // Guardar el motivo de anulación
+            $orden->id_us_out = Auth::id(); // Usuario que cierra la orden
+            $orden->save();
+
+            Session::flash('success', 'Orden de trabajo cerrada exitosamente.');
+                   return response()->json(['success' => true, 'message' => 'Orden de trabajo anulada exitosamente']);
+     
+        } catch (ModelNotFoundException $e) {
+            Session::flash('error', 'Orden de trabajo no encontrada.');
+            return response()->json(['success' => false, 'message' => 'Orden de trabajo no encontrada.']);
+        } catch (\Exception $e) {
+            Session::flash('error', 'Error al cerrar la orden de trabajo: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Error al anular la orden de trabajo: ' . $e->getMessage()], 500);
+        }
+    }
+     public function reactivarOrden(Request $request, $id)
+    {
+        try {
+            $orden = Orden::findOrFail($id);
+            $orden->estatus = 2; // 2 = 'Abierta'
+            $orden->fecha_out = null;
+            $orden->hora_out = null;
+            $orden->id_us_out =null; // Usuario que cierra la orden
+            $orden->save();
+
+            Session::flash('success', 'Orden de trabajo Reactivada exitosamente.');
+            return response()->json(['success' => true, 'message' => 'Orden de trabajo Reactivada exitosamente']);
+        } catch (ModelNotFoundException $e) {
+            Session::flash('error', 'Orden de trabajo no encontrada.');
+            return response()->json(['success' => false, 'message' => 'Orden de trabajo no encontrada.']);
+        } catch (\Exception $e) {
+            Session::flash('error', 'Error al cerrar la orden de trabajo: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Error al cerrar la orden de trabajo: ' . $e->getMessage()], 500);
+        }
+
+    }
 }

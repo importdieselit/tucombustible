@@ -23,6 +23,7 @@ use App\Http\Controllers\DepositoController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\AlmacenController;
 use App\Http\Controllers\ChoferController;
+use App\Http\Controllers\AlertaController;
 
 // Agrega otros controladores según los modelos y tablas
 
@@ -48,7 +49,28 @@ Route::middleware(['auth'])->group(function () {
     Route::get('invantario/adjustment', [InventarioController::class, 'adjustment'])->name('inventario.adjustment');
     Route::get('choferes/importar', [ChoferController::class, 'showImportForm'])->name('choferes.show-import-form');
     Route::post('choferes/importar', [ChoferController::class, 'importar'])->name('choferes.importar');
+    // Rutas para las solicitudes de insumos
+    Route::get('/inventario/solicitudes', [InventarioController::class, 'requests'])->name('inventario.requests');
+    Route::post('/inventario/solicitudes/{id}/approve', [InventarioController::class, 'approve'])->name('inventario.requests.approve');
+    Route::post('/inventario/solicitudes/{id}/reject', [InventarioController::class, 'reject'])->name('inventario.requests.reject');
+    Route::post('/inventario/solicitudes/{id}/dispatch', [InventarioController::class, 'dispatch'])->name('inventario.requests.dispatch');
 
+
+    Route::get('/vehiculos/import', [VehiculoController::class, 'importForm'])->name('vehiculos.import');
+    Route::post('/vehiculos/import', [VehiculoController::class, 'importSave'])->name('vehiculos.import.save');
+
+    Route::post('/inventario/import/excel', [InventarioController::class, 'import'])->name('inventario.import');
+    Route::get('/inventario/export/excel', [InventarioController::class, 'export'])->name('inventario.export');
+
+    Route::post('ordenes/supplies', [OrdenController::class, 'storeSupply'])->name('ordenes.supplies.store');
+    Route::put('ordenes/supplies/{id}', [OrdenController::class, 'updateSupply'])->name('ordenes.supplies.update');
+    Route::delete('ordenes/supplies/{id}', [OrdenController::class, 'deleteSupply'])->name('ordenes.supplies.delete');
+
+Route::post('/ordenes/{orden}/cerrar', [OrdenController::class, 'cerrarOrden'])->name('ordenes.cerrar');
+Route::post('/ordenes/{orden}/anular', [OrdenController::class, 'anularOrden'])->name('ordenes.anular');
+Route::post('/ordenes/{orden}/reactivar', [OrdenController::class, 'reactivarOrden'])->name('ordenes.reactivar');
+
+    Route::get('ordenes/search-supplies', [OrdenController::class, 'searchSupplies'])->name('ordenes.search-supplies');
     // Recursos principales
     $resourceControllers = [
         'vehiculos' => VehiculoController::class,
@@ -90,9 +112,8 @@ Route::middleware(['auth'])->group(function () {
        
     }
     // Ejemplo de rutas adicionales para importación/exportación, reportes, etc.
-    Route::post('/inventario/import/excel', [InventarioController::class, 'import'])->name('inventario.import');
-    Route::get('/inventario/export/excel', [InventarioController::class, 'export'])->name('inventario.export');
-
+    
+    
     //Route::get('/ordenes/report/pdf', [OrdenController::class, 'reportPdf'])->name('ordenes.report.pdf');
     Route::get('/vehiculos/report/pdf', [VehiculoController::class, 'reportPdf'])->name('vehiculos.report.pdf');
 
@@ -107,11 +128,20 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/combustible/list', [MovimientoCombustibleController::class, 'list'])->name('combustible.list');
     Route::get('/combustible/despacholist', [MovimientoCombustibleController::class, 'despachoList'])->name('despachos.list');
     
-    
+    // Rutas de Combustible (Pedidos y Despachos)
+Route::prefix('combustible')->name('combustible.')->group(function () {
+    Route::get('/pedidos', [MovimientoCombustibleController::class, 'pedidos'])->name('pedidos');
+    Route::post('/pedidos/{id}/aprobar', [MovimientoCombustibleController::class, 'aprobar'])->name('aprobar');
+    Route::post('/pedidos/{id}/rechazar', [MovimientoCombustibleController::class, 'rechazar'])->name('rechazar');
+    Route::get('/aprobados', [MovimientoCombustibleController::class, 'despachos'])->name('aprobados');
+    Route::post('/despachos/{id}/despachar', [MovimientoCombustibleController::class, 'despachar'])->name('despachar');
+});
     // Nuevas rutas para el despacho de combustible
     Route::get('/combustible/despacho', [MovimientoCombustibleController::class, 'createDespacho'])->name('combustible.despacho');
     Route::post('/combustible/despacho', [MovimientoCombustibleController::class, 'storeDespacho'])->name('combustible.storeDespacho');
 
+      Route::get('/alertas', [AlertaController::class, 'index'])->name('alertas.index');
+    Route::get('/alertas/read/{id}', [AlertaController::class, 'markAsRead'])->name('alertas.read');
 
     
     // Rutas para historial de mantenimiento
