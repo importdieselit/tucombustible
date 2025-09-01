@@ -28,13 +28,6 @@ class MecanicoController extends Controller
                 ], 401);
             }
 
-            // Verificar que el usuario tenga id_cliente
-            if (!$user->id_cliente) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Usuario no tiene cliente asignado'
-                ], 403);
-            }
 
             // Obtener fecha actual
             $hoy = now()->format('Y-m-d');
@@ -243,13 +236,7 @@ class MecanicoController extends Controller
                 ], 401);
             }
 
-            // Verificar que el usuario tenga id_cliente
-            if (!$user->id_cliente) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Usuario no tiene cliente asignado'
-                ], 403);
-            }
+        
 
             // Obtener pedidos aprobados del cliente
             $pedidos = DB::table('pedidos')

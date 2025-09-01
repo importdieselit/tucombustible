@@ -35,6 +35,7 @@ class ClienteController extends Controller
             'email' => 'nullable|email|max:50|unique:clientes',
             'rif' => 'nullable|string|max:255',
             'direccion' => 'nullable|string|max:255',
+            'disponible' => 'nullable|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -86,6 +87,7 @@ class ClienteController extends Controller
             'email' => 'nullable|email|max:50|unique:clientes,email,' . $cliente->id,
             'rif' => 'nullable|string|max:255',
             'direccion' => 'nullable|string|max:255',
+            'disponible' => 'nullable|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -131,6 +133,179 @@ class ClienteController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al eliminar cliente',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get the authenticated user's cliente information.
+     */
+    public function info(Request $request): JsonResponse
+    {
+        try {
+            // Obtener el usuario autenticado
+            $user = $request->user();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuario no autenticado'
+                ], 401);
+            }
+
+            // Verificar que el usuario tenga un cliente asociado
+            if (!$user->cliente_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuario no tiene cliente asociado'
+                ], 404);
+            }
+
+            // Obtener el cliente asociado al usuario usando la relación
+            $cliente = $user->cliente;
+            
+            if (!$cliente) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cliente no encontrado'
+                ], 404);
+            }
+
+            // Log para debug
+            \Log::info('Cliente obtenido para usuario', [
+                'user_id' => $user->id,
+                'user_name' => $user->name,
+                'cliente_id' => $user->cliente_id,
+                'cliente_nombre' => $cliente->nombre,
+                'cliente_disponible' => $cliente->disponible
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data' => $cliente
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error obteniendo información del cliente', [
+                'error' => $e->getMessage(),
+                'user_id' => $request->user()?->id
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener información del cliente',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get the authenticated user's cliente data.
+     */
+    public function misDatos(Request $request): JsonResponse
+    {
+        try {
+            // Obtener el usuario autenticado
+            $user = $request->user();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuario no autenticado'
+                ], 401);
+            }
+
+            // Verificar que el usuario tenga un cliente asociado
+            if (!$user->cliente_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuario no tiene cliente asociado'
+                ], 404);
+            }
+
+            // Obtener el cliente asociado al usuario usando la relación
+            $cliente = $user->cliente;
+            
+            if (!$cliente) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cliente no encontrado'
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Datos del cliente obtenidos exitosamente',
+                'data' => $cliente
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error obteniendo datos del cliente', [
+                'error' => $e->getMessage(),
+                'user_id' => $request->user()?->id
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener datos del cliente',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update the disponible amount for the authenticated user's cliente.
+     */
+    public function updateDisponible(Request $request): JsonResponse
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'disponible' => 'required|numeric|min:0',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error de validación',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // Obtener el usuario autenticado
+            $user = $request->user();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuario no autenticado'
+                ], 401);
+            }
+
+            // Obtener el cliente asociado al usuario usando la relación
+            $cliente = $user->cliente;
+            
+            if (!$cliente) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cliente no encontrado'
+                ], 404);
+            }
+
+            // Actualizar el saldo disponible
+            $cliente->disponible = $request->disponible;
+            $cliente->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Saldo disponible actualizado exitosamente',
+                'data' => $cliente
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar saldo disponible',
                 'error' => $e->getMessage()
             ], 500);
         }

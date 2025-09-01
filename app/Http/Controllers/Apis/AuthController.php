@@ -119,10 +119,14 @@ class AuthController extends Controller
 
         $user = User::with(['persona', 'perfil', 'cliente'])->where('email', $request->email)->first();
 
+        // Debug: Verificar que la relación se carga correctamente
+        \Log::info('User cliente_id: ' . $user->cliente_id);
+        \Log::info('User cliente relation: ' . ($user->cliente ? 'loaded' : 'null'));
+
         // Generar token
         $token = $user->createToken('auth_token')->plainTextToken;
 
-                    return response()->json([
+        return response()->json([
                 'success' => true,
                 'message' => 'Login exitoso',
                 'data' => [
@@ -185,7 +189,7 @@ class AuthController extends Controller
      */
     public function debugUser(Request $request): JsonResponse
     {
-        $user = User::with(['persona', 'perfil', 'cliente'])->where('email', 'admin@test.com')->first();
+        $user = User::with(['persona', 'perfil', 'cliente'])->where('email', 'cliente44@test.com')->first();
         
         if (!$user) {
             return response()->json([
@@ -198,9 +202,12 @@ class AuthController extends Controller
             'success' => true,
             'data' => [
                 'user' => $user,
+                'user_raw' => $user->getRawOriginal(),
+                'cliente_id' => $user->cliente_id,
+                'cliente_relation' => $user->cliente,
                 'perfil' => $user->perfil,
                 'perfil_id' => $user->id_perfil,
-                'nombre_perfil' => $user->perfil->nombre_perfil ?? 'null',
+                'nombre_perfil' => $user->perfil->nombre ?? 'null',
             ]
         ]);
     }

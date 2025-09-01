@@ -18,7 +18,7 @@ class User extends Authenticatable
         'password',
         'id_perfil',
         'id_persona',
-        'id_cliente',
+        'cliente_id',
     ];
 
     protected $hidden = [
@@ -123,7 +123,7 @@ class User extends Authenticatable
      */
     public function cliente()
     {
-        return $this->belongsTo(Cliente::class, 'id_cliente');
+        return $this->belongsTo(Cliente::class, 'cliente_id', 'id');
     }
 
 

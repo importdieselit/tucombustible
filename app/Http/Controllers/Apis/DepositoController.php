@@ -229,95 +229,118 @@ class DepositoController extends Controller
                 'user_name' => $user->name
             ];
             
-            // Si el usuario tiene un cliente asociado, obtener sus depósitos
-            if ($user->id_cliente) {
-                // Debug: Verificar movimientos del cliente
-                $movimientosCount = \App\Models\MovimientoCombustible::where('cliente_id', $user->id_cliente)->count();
-                $debugInfo['movimientos_count'] = $movimientosCount;
-                
-                // Obtener depósitos únicos que tienen movimientos asociados al cliente
-                $depositos = Deposito::whereHas('movimientosCombustible', function($query) use ($user) {
-                    $query->where('cliente_id', $user->id_cliente);
-                })->get();
-                
-                $debugInfo['depositos_count'] = $depositos->count();
-            } else {
-                // Si no tiene cliente asociado, devolver array vacío
-                $depositos = collect([]);
-                $debugInfo['depositos_count'] = 0;
-            }
+            // Obtener todos los depósitos disponibles
+            $depositos = Deposito::all();
+            
+            $debugInfo['depositos_count'] = $depositos->count();
+            $debugInfo['message'] = 'Mostrando todos los depósitos disponibles';
 
             return response()->json([
                 'success' => true,
                 'data' => $depositos,
-                'message' => $depositos->count() > 0 
-                    ? 'Depósitos encontrados' 
-                    : 'No tienes depósitos asignados',
+                'message' => 'Todos los depósitos disponibles',
                 'debug' => $debugInfo
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error al obtener tus depósitos',
+                'message' => 'Error al obtener depósitos',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Get depositos statistics for the authenticated user.
+     * Get depositos statistics for all available depositos.
      */
     public function getMisEstadisticas(Request $request): JsonResponse
     {
         try {
             $user = $request->user();
             
-            if (!$user->id_cliente) {
-                return response()->json([
-                    'success' => true,
-                    'data' => [
-                        'total_depositos' => 0,
-                        'en_alerta' => 0,
-                        'vacios' => 0,
-                        'total_capacidad_litros' => 0,
-                        'total_actual_litros' => 0,
-                        'porcentaje_promedio' => 0,
-                    ],
-                    'message' => 'No tienes depósitos asignados'
-                ]);
-            }
-
-            $depositos = Deposito::whereHas('movimientosCombustible', function($query) use ($user) {
-                $query->where('cliente_id', $user->id_cliente);
-            });
+            // Obtener todos los depósitos
+            $depositos = Deposito::all();
             
             $totalDepositos = $depositos->count();
-            $depositosEnAlerta = $depositos->whereRaw('nivel_actual_litros <= nivel_alerta_litros')->count();
+            $depositosEnAlerta = $depositos->filter(function($deposito) {
+                return $deposito->nivel_actual_litros <= $deposito->nivel_alerta_litros;
+            })->count();
             $depositosVacios = $depositos->where('nivel_actual_litros', 0)->count();
             $totalCapacidad = $depositos->sum('capacidad_litros');
             $totalActual = $depositos->sum('nivel_actual_litros');
             $porcentajePromedio = $totalCapacidad > 0 ? ($totalActual / $totalCapacidad) * 100 : 0;
 
+            // Estadísticas adicionales para el dashboard
+            $estadisticas = [
+                'totalDepositos' => $totalDepositos,
+                'totalCapacidad' => $totalCapacidad,
+                'totalDisponible' => $totalActual,
+                'despachosHoy' => 0, // Por ahora en 0, se puede implementar después
+                'recargasHoy' => 0,  // Por ahora en 0, se puede implementar después
+                'vehiculosActivos' => 0, // Por ahora en 0, se puede implementar después
+                'totalClientes' => 0, // Por ahora en 0, se puede implementar después
+                'despachosMes' => 0,  // Por ahora en 0, se puede implementar después
+                'recargasMes' => 0,   // Por ahora en 0, se puede implementar después
+                'en_alerta' => $depositosEnAlerta,
+                'vacios' => $depositosVacios,
+                'porcentaje_promedio' => round($porcentajePromedio, 2),
+            ];
+
             return response()->json([
                 'success' => true,
-                'data' => [
-                    'total_depositos' => $totalDepositos,
-                    'en_alerta' => $depositosEnAlerta,
-                    'vacios' => $depositosVacios,
-                    'total_capacidad_litros' => $totalCapacidad,
-                    'total_actual_litros' => $totalActual,
-                    'porcentaje_promedio' => round($porcentajePromedio, 2),
-                ],
-                'message' => 'Estadísticas de tus depósitos'
+                'data' => $estadisticas,
+                'message' => 'Estadísticas de todos los depósitos'
             ]);
 
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error al obtener estadísticas',
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-}
+                         return response()->json([
+                 'success' => false,
+                 'message' => 'Error al obtener estadísticas',
+                 'error' => $e->getMessage()
+             ], 500);
+         }
+     }
+
+     /**
+      * Get all depositos for admin (no restrictions).
+      */
+     public function getAllDepositos(Request $request): JsonResponse
+     {
+         try {
+             $user = $request->user();
+             
+             // Debug: Verificar información del usuario
+             $debugInfo = [
+                 'user_id' => $user->id,
+                 'perfil_id' => $user->perfil_id ?? 'N/A',
+                 'user_name' => $user->name
+             ];
+             
+             // Obtener todos los depósitos sin restricciones
+             $depositos = Deposito::all();
+             
+             $debugInfo['depositos_count'] = $depositos->count();
+             $debugInfo['message'] = 'Mostrando todos los depósitos para administrador';
+             
+             // Debug: Verificar estructura de los depósitos
+             if ($depositos->count() > 0) {
+                 $debugInfo['sample_deposito'] = $depositos->first()->toArray();
+             }
+
+             return response()->json([
+                 'success' => true,
+                 'data' => $depositos,
+                 'message' => 'Todos los depósitos disponibles para administrador',
+                 'debug' => $debugInfo
+             ]);
+
+         } catch (\Exception $e) {
+             return response()->json([
+                 'success' => false,
+                 'message' => 'Error al obtener depósitos',
+                 'error' => $e->getMessage()
+             ], 500);
+         }
+     }
+ }

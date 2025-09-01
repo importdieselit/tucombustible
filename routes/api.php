@@ -48,6 +48,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/clientes', [ClienteController::class, 'store']);
     Route::put('/clientes/{id}', [ClienteController::class, 'update']);
     Route::delete('/clientes/{id}', [ClienteController::class, 'destroy']);
+    Route::get('/cliente/info', [ClienteController::class, 'info']);
+    Route::get('/cliente/mis-datos', [ClienteController::class, 'misDatos']);
+    Route::put('/cliente/disponible', [ClienteController::class, 'updateDisponible']);
     
     // Depósitos
     Route::get('/depositos/mis-depositos', [DepositoController::class, 'getMisDepositos']);
@@ -55,6 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/depositos/cliente/{clienteId}', [DepositoController::class, 'getByCliente']);
     Route::get('/depositos/en-alerta', [DepositoController::class, 'getEnAlerta']);
     Route::get('/depositos/estadisticas', [DepositoController::class, 'getEstadisticas']);
+    Route::get('/depositos/admin', [DepositoController::class, 'getAllDepositos']);
     Route::get('/depositos', [DepositoController::class, 'index']);
     Route::get('/depositos/{id}', [DepositoController::class, 'show']);
     Route::post('/depositos', [DepositoController::class, 'store']);
@@ -102,7 +106,14 @@ Route::middleware('auth:sanctum')->group(function () {
     // Despachos
     Route::get('/despachos', [DespachoController::class, 'index']);
     
-    // Pedidos
+    // Pedidos - Administrador (deben ir ANTES que las rutas con {id})
+    Route::get('/pedidos/pendientes', [PedidoController::class, 'getPedidosPendientes']);
+    Route::get('/pedidos/todos', [PedidoController::class, 'getTodosLosPedidos']);
+    Route::patch('/pedidos/{id}/aprobar', [PedidoController::class, 'aprobarPedido']);
+    Route::patch('/pedidos/{id}/rechazar', [PedidoController::class, 'rechazarPedido']);
+    Route::patch('/pedidos/{id}', [PedidoController::class, 'actualizarPedido']);
+    
+    // Pedidos - Clientes
     Route::get('/pedidos/mis-pedidos', [PedidoController::class, 'getMisPedidos']);
     Route::get('/pedidos/estadisticas', [PedidoController::class, 'getEstadisticasPedidos']);
     Route::get('/pedidos/{id}', [PedidoController::class, 'getPedido']);

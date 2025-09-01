@@ -53,7 +53,7 @@ class RecepcionController extends Controller
             }
 
             // Verificar que el pedido pertenece al cliente del usuario
-            if ($pedido->cliente_id !== $user->id_cliente) {
+            if ($pedido->cliente_id !== $user->cliente_id) {
                 return response()->json([
                     'success' => false,
                     'message' => 'El pedido no pertenece a su cliente'
@@ -68,17 +68,18 @@ class RecepcionController extends Controller
                 ], 422);
             }
 
-            // Verificar que el depósito pertenece al cliente del usuario
-            $deposito = Deposito::whereHas('movimientosCombustible', function($query) use ($user) {
-                $query->where('cliente_id', $user->id_cliente);
-            })->find($pedido->deposito_id);
+            // Verificar que el depósito existe y obtenerlo
+            $deposito = Deposito::find($pedido->deposito_id);
 
             if (!$deposito) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Depósito no encontrado o no pertenece a su cliente'
+                    'message' => 'Depósito no encontrado'
                 ], 404);
             }
+
+            // Verificar que el pedido pertenece al cliente del usuario (ya verificado arriba)
+            // El depósito se obtiene del pedido que ya fue verificado que pertenece al cliente
 
             // Verificar que la cantidad recibida no exceda la capacidad del depósito
             $nuevoNivel = $deposito->nivel_actual_litros + $request->cantidad_recibida;
@@ -98,7 +99,7 @@ class RecepcionController extends Controller
                 $movimiento = MovimientoCombustible::create([
                     'tipo_movimiento' => 'entrada',
                     'deposito_id' => $pedido->deposito_id,
-                    'cliente_id' => $user->id_cliente,
+                    'cliente_id' => $user->cliente_id,
                     'cantidad_litros' => $request->cantidad_recibida,
                     'observaciones' => "Recepción de pedido #{$pedido->id}. " . ($request->observaciones ?? ''),
                 ]);
@@ -129,7 +130,7 @@ class RecepcionController extends Controller
                     'nuevo_nivel_deposito' => $nuevoNivel,
                 ];
 
-                \Log::info("Recepción registrada por usuario {$user->id} - Cliente: {$user->id_cliente} - Pedido: {$pedido->id}");
+                \Log::info("Recepción registrada por usuario {$user->id} - Cliente: {$user->cliente_id} - Pedido: {$pedido->id}");
 
                 return response()->json([
                     'success' => true,

@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Pedido;
 use App\Models\Deposito;
 use App\Models\User;
+use App\Models\Cliente;
+use App\Models\MovimientoCombustible;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -21,7 +23,7 @@ class PedidoController extends Controller
     {
         try {
             $user = Auth::user();
-            if (!$user || !$user->id_cliente) {
+            if (!$user || !$user->cliente_id) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Usuario no tiene cliente asociado'
@@ -29,7 +31,7 @@ class PedidoController extends Controller
             }
 
             $query = Pedido::with(['deposito'])
-                ->where('cliente_id', $user->id_cliente);
+                ->where('cliente_id', $user->cliente_id);
 
             // Filtrar por mes si se proporciona
             if ($request->has('year') && $request->has('month')) {
@@ -67,7 +69,7 @@ class PedidoController extends Controller
         try {
             $user = Auth::user();
             
-            if (!$user || !$user->id_cliente) {
+            if (!$user || !$user->cliente_id) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Usuario no tiene cliente asociado'
@@ -76,7 +78,7 @@ class PedidoController extends Controller
 
             $pedido = Pedido::with(['deposito'])
                 ->where('id', $id)
-                ->where('cliente_id', $user->id_cliente)
+                ->where('cliente_id', $user->cliente_id)
                 ->first();
 
             if (!$pedido) {
@@ -107,7 +109,7 @@ class PedidoController extends Controller
         try {
             $user = Auth::user();
             
-            if (!$user || !$user->id_cliente) {
+            if (!$user || !$user->cliente_id) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Usuario no tiene cliente asociado'
@@ -128,15 +130,13 @@ class PedidoController extends Controller
                 ], 422);
             }
 
-            // Verificar que el depósito pertenece al cliente
-            $deposito = Deposito::whereHas('movimientosCombustible', function($query) use ($user) {
-                $query->where('cliente_id', $user->id_cliente);
-            })->where('id', $request->deposito_id)->first();
+            // Verificar que el depósito existe
+            $deposito = Deposito::where('id', $request->deposito_id)->first();
 
             if (!$deposito) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Depósito no encontrado o no pertenece al cliente'
+                    'message' => 'Depósito no encontrado'
                 ], 404);
             }
 
@@ -161,7 +161,7 @@ class PedidoController extends Controller
 
             // Crear el pedido
             $pedido = Pedido::create([
-                'cliente_id' => $user->id_cliente,
+                'cliente_id' => $user->cliente_id,
                 'deposito_id' => $request->deposito_id,
                 'cantidad_solicitada' => $request->cantidad_solicitada,
                 'observaciones' => $request->observaciones,
@@ -193,7 +193,7 @@ class PedidoController extends Controller
         try {
             $user = Auth::user();
             
-            if (!$user || !$user->id_cliente) {
+            if (!$user || !$user->cliente_id) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Usuario no tiene cliente asociado'
@@ -214,7 +214,7 @@ class PedidoController extends Controller
             }
 
             $pedido = Pedido::where('id', $id)
-                ->where('cliente_id', $user->id_cliente)
+                ->where('cliente_id', $user->cliente_id)
                 ->first();
 
             if (!$pedido) {
@@ -258,7 +258,7 @@ class PedidoController extends Controller
         try {
             $user = Auth::user();
             
-            if (!$user || !$user->id_cliente) {
+            if (!$user || !$user->cliente_id) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Usuario no tiene cliente asociado'
@@ -266,7 +266,7 @@ class PedidoController extends Controller
             }
 
             $pedido = Pedido::where('id', $id)
-                ->where('cliente_id', $user->id_cliente)
+                ->where('cliente_id', $user->cliente_id)
                 ->first();
 
             if (!$pedido) {
@@ -309,7 +309,7 @@ class PedidoController extends Controller
         try {
             $user = Auth::user();
             
-            if (!$user || !$user->id_cliente) {
+            if (!$user || !$user->cliente_id) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Usuario no tiene cliente asociado'
@@ -317,7 +317,7 @@ class PedidoController extends Controller
             }
 
             // Base query para el cliente
-            $baseQuery = Pedido::where('cliente_id', $user->id_cliente);
+            $baseQuery = Pedido::where('cliente_id', $user->cliente_id);
 
             // Filtrar por mes si se proporciona
             if ($request->has('year') && $request->has('month')) {
@@ -342,7 +342,7 @@ class PedidoController extends Controller
                     ->avg('calificacion'),
             ];
 
-            \Log::info("Estadísticas calculadas para cliente {$user->id_cliente}");
+            \Log::info("Estadísticas calculadas para cliente {$user->cliente_id}");
 
             return response()->json([
                 'success' => true,
@@ -353,6 +353,399 @@ class PedidoController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener estadísticas: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener todos los pedidos pendientes (para administradores)
+     */
+    public function getPedidosPendientes(Request $request): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuario no autenticado'
+                ], 401);
+            }
+
+            // Verificar que el usuario es administrador (id_perfil = 2)
+            if ($user->id_perfil != 2) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acceso denegado. Solo administradores pueden ver todos los pedidos'
+                ], 403);
+            }
+
+            $pedidos = Pedido::with(['cliente', 'deposito'])
+                ->where('estado', 'pendiente')
+                ->orderBy('fecha_solicitud', 'asc')
+                ->get();
+
+
+
+            return response()->json([
+                'success' => true,
+                'data' => $pedidos
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener pedidos pendientes: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener todos los pedidos (para administradores)
+     */
+    public function getTodosLosPedidos(Request $request): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuario no autenticado'
+                ], 401);
+            }
+
+            // Verificar que el usuario es administrador (id_perfil = 2)
+            if ($user->id_perfil != 2) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acceso denegado. Solo administradores pueden ver todos los pedidos'
+                ], 403);
+            }
+
+            $query = Pedido::with(['cliente', 'deposito']);
+
+            // Filtrar por estado si se proporciona
+            if ($request->has('estado') && $request->estado !== 'todos') {
+                $query->where('estado', $request->estado);
+            }
+
+            // Filtrar por cliente si se proporciona
+            if ($request->has('cliente_id')) {
+                $query->where('cliente_id', $request->cliente_id);
+            }
+
+            $pedidos = $query->orderBy('fecha_solicitud', 'desc')->get();
+
+
+
+            return response()->json([
+                'success' => true,
+                'data' => $pedidos
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener pedidos: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Aprobar un pedido (para administradores)
+     */
+    public function aprobarPedido(Request $request, $id): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuario no autenticado'
+                ], 401);
+            }
+
+            // Verificar que el usuario es administrador (id_perfil = 2)
+            if ($user->id_perfil != 2) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acceso denegado. Solo administradores pueden aprobar pedidos'
+                ], 403);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'cantidad_aprobada' => 'required|numeric|min:0.01',
+                'observaciones_admin' => 'nullable|string|max:500',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error de validación',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $pedido = Pedido::with(['cliente', 'deposito'])->find($id);
+
+            if (!$pedido) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Pedido no encontrado'
+                ], 404);
+            }
+
+            if ($pedido->estado !== 'pendiente') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Solo se pueden aprobar pedidos pendientes'
+                ], 422);
+            }
+
+            // Verificar que la cantidad aprobada no exceda la solicitada
+            if ($request->cantidad_aprobada > $pedido->cantidad_solicitada) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La cantidad aprobada no puede exceder la cantidad solicitada'
+                ], 422);
+            }
+
+            // Verificar disponibilidad del cliente
+            $cliente = Cliente::find($pedido->cliente_id);
+            
+            // Si el cliente no tiene disponibilidad registrada, verificar en movimientosCombustible
+            if (!$cliente || $cliente->disponible === null) {
+                // Buscar movimientos de combustible para este cliente
+                $movimientosCliente = \App\Models\MovimientoCombustible::where('cliente_id', $pedido->cliente_id)->get();
+                
+                if ($movimientosCliente->isEmpty()) {
+                    // No hay movimientos registrados para este cliente
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'El cliente no tiene historial de movimientos de combustible. Contacte al administrador para configurar disponibilidad inicial.'
+                    ], 422);
+                }
+                
+                // Calcular disponibilidad basada en movimientos
+                $disponibilidadCalculada = $movimientosCliente->sum(function($movimiento) {
+                    return $movimiento->tipo_movimiento === 'entrada' ? $movimiento->cantidad_litros : -$movimiento->cantidad_litros;
+                });
+                
+                if ($disponibilidadCalculada < $request->cantidad_aprobada) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'El cliente no tiene suficiente disponibilidad. Disponible: ' . $disponibilidadCalculada . ' litros'
+                    ], 422);
+                }
+            } else {
+                // Usar disponibilidad del modelo Cliente
+                if ($cliente->disponible < $request->cantidad_aprobada) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'El cliente no tiene suficiente disponibilidad. Disponible: ' . $cliente->disponible . ' litros'
+                    ], 422);
+                }
+            }
+
+            // Iniciar transacción para asegurar consistencia
+            DB::beginTransaction();
+            
+            try {
+                // Actualizar el pedido
+                $pedido->update([
+                    'estado' => 'aprobado',
+                    'cantidad_aprobada' => $request->cantidad_aprobada,
+                    'observaciones_admin' => $request->observaciones_admin,
+                    'fecha_aprobacion' => now(),
+                ]);
+
+                // Descontar de la disponibilidad del cliente
+                if ($cliente && $cliente->disponible !== null) {
+
+                    // Actualizar disponibilidad en el modelo Cliente
+                    $cliente->update([
+                        'disponible' => $cliente->disponible - $request->cantidad_aprobada
+                    ]);
+                } else {
+                    // Crear un movimiento de salida en movimientosCombustible
+                    MovimientoCombustible::create([
+                        'tipo_movimiento' => 'salida',
+                        'deposito_id' => $pedido->deposito_id,
+                        'cliente_id' => $pedido->cliente_id,
+                        'cantidad_litros' => $request->cantidad_aprobada,
+                        'observaciones' => 'Descuento por aprobación de pedido #' . $pedido->id,
+                        'fecha_movimiento' => now(),
+                    ]);
+                }
+
+                DB::commit();
+                \Log::info("Pedido {$pedido->id} aprobado por admin {$user->id}");
+            } catch (\Exception $e) {
+                DB::rollback();
+                throw $e;
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pedido aprobado exitosamente',
+                'data' => $pedido->fresh(['cliente', 'deposito'])
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al aprobar pedido: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Rechazar un pedido (para administradores)
+     */
+    public function rechazarPedido(Request $request, $id): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuario no autenticado'
+                ], 401);
+            }
+
+            // Verificar que el usuario es administrador (id_perfil = 2)
+            if ($user->id_perfil != 2) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acceso denegado. Solo administradores pueden rechazar pedidos'
+                ], 403);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'motivo' => 'required|string|max:500',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error de validación',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $pedido = Pedido::with(['cliente', 'deposito'])->find($id);
+
+            if (!$pedido) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Pedido no encontrado'
+                ], 404);
+            }
+
+            if ($pedido->estado !== 'pendiente') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Solo se pueden rechazar pedidos pendientes'
+                ], 422);
+            }
+
+            $pedido->update([
+                'estado' => 'rechazado',
+                'observaciones_admin' => $request->motivo,
+                'fecha_aprobacion' => now(),
+            ]);
+
+            \Log::info("Pedido {$pedido->id} rechazado por admin {$user->id}");
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pedido rechazado exitosamente',
+                'data' => $pedido->fresh(['cliente', 'deposito'])
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al rechazar pedido: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Actualizar un pedido (para administradores)
+     */
+    public function actualizarPedido(Request $request, $id): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuario no autenticado'
+                ], 401);
+            }
+
+            // Verificar que el usuario es administrador (id_perfil = 2)
+            if ($user->id_perfil != 2) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Acceso denegado. Solo administradores pueden actualizar pedidos'
+                ], 403);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'estado' => 'sometimes|in:pendiente,aprobado,rechazado,en_proceso,completado,cancelado',
+                'cantidad_aprobada' => 'sometimes|numeric|min:0.01',
+                'observaciones_admin' => 'sometimes|string|max:500',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error de validación',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $pedido = Pedido::with(['cliente', 'deposito'])->find($id);
+
+            if (!$pedido) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Pedido no encontrado'
+                ], 404);
+            }
+
+            $updateData = $request->only(['estado', 'cantidad_aprobada', 'observaciones_admin']);
+
+            // Si se está aprobando, agregar fecha de aprobación
+            if (isset($updateData['estado']) && $updateData['estado'] === 'aprobado') {
+                $updateData['fecha_aprobacion'] = now();
+            }
+
+            // Si se está completando, agregar fecha de completado
+            if (isset($updateData['estado']) && $updateData['estado'] === 'completado') {
+                $updateData['fecha_completado'] = now();
+            }
+
+            $pedido->update($updateData);
+
+            \Log::info("Pedido {$pedido->id} actualizado por admin {$user->id}");
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pedido actualizado exitosamente',
+                'data' => $pedido->fresh(['cliente', 'deposito'])
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar pedido: ' . $e->getMessage()
             ], 500);
         }
     }

@@ -10,6 +10,10 @@ class Cliente extends Model
 {
     use HasFactory;
 
+    protected $casts = [
+        'disponible' => 'float',
+    ];
+
     protected $fillable = [
         'nombre',
         'rif',
@@ -17,7 +21,8 @@ class Cliente extends Model
         'cedula',
         'direccion',
         'telefono',
-        'email'
+        'email',
+        'disponible'
     ];
 
     /**
