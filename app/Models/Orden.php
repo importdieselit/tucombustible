@@ -100,7 +100,7 @@ class Orden extends Model
 
     public function estatus()
     {
-        return $this->belongsTo(EstatusData::class, 'estatus', 'id_estatus')->first()->orden;
+        return $this->belongsTo(EstatusData::class, 'estatus', 'id_estatus')->first();
     }
 
     public function planMantenimiento()

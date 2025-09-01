@@ -50,10 +50,20 @@ Route::middleware(['auth'])->group(function () {
     Route::get('choferes/importar', [ChoferController::class, 'showImportForm'])->name('choferes.show-import-form');
     Route::post('choferes/importar', [ChoferController::class, 'importar'])->name('choferes.importar');
 
+
     Route::get('/vehiculos/import', [VehiculoController::class, 'importForm'])->name('vehiculos.import');
     Route::post('/vehiculos/import', [VehiculoController::class, 'importSave'])->name('vehiculos.import.save');
 
+    Route::post('/inventario/import/excel', [InventarioController::class, 'import'])->name('inventario.import');
+    Route::get('/inventario/export/excel', [InventarioController::class, 'export'])->name('inventario.export');
 
+    Route::post('ordenes/supplies', [OrdenController::class, 'storeSupply'])->name('ordenes.supplies.store');
+    Route::put('ordenes/supplies/{id}', [OrdenController::class, 'updateSupply'])->name('ordenes.supplies.update');
+    Route::delete('ordenes/supplies/{id}', [OrdenController::class, 'deleteSupply'])->name('ordenes.supplies.delete');
+
+Route::post('/ordenes/{orden}/cerrar', [OrdenController::class, 'cerrarOrden'])->name('ordenes.cerrar');
+Route::post('/ordenes/{orden}/anular', [OrdenController::class, 'anularOrden'])->name('ordenes.anular');
+Route::post('/ordenes/{orden}/reactivar', [OrdenController::class, 'reactivarOrden'])->name('ordenes.reactivar');
 
     Route::get('ordenes/search-supplies', [OrdenController::class, 'searchSupplies'])->name('ordenes.search-supplies');
     // Recursos principales
@@ -97,9 +107,7 @@ Route::middleware(['auth'])->group(function () {
        
     }
     // Ejemplo de rutas adicionales para importación/exportación, reportes, etc.
-    Route::post('/inventario/import/excel', [InventarioController::class, 'import'])->name('inventario.import');
-    Route::get('/inventario/export/excel', [InventarioController::class, 'export'])->name('inventario.export');
-
+    
     
     //Route::get('/ordenes/report/pdf', [OrdenController::class, 'reportPdf'])->name('ordenes.report.pdf');
     Route::get('/vehiculos/report/pdf', [VehiculoController::class, 'reportPdf'])->name('vehiculos.report.pdf');

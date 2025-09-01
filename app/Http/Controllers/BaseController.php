@@ -9,12 +9,15 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str; // Es necesario para la función Str::plural()
 use App\Models\EstatusData;
+use App\Traits\PluralizaEnEspanol;
 /**
  * Clase base para controladores de recursos CRUD que infiere el modelo.
  * Los controladores específicos que hereden de esta clase no necesitan constructor.
  */
 abstract class BaseController extends Controller
 {
+
+    use PluralizaEnEspanol;
     /**
      * Instancia del modelo de Eloquent.
      * @var Model
@@ -63,7 +66,9 @@ abstract class BaseController extends Controller
      */
     protected function getPluralModelNameLowerCase()
     {
-        return Str::plural($this->getModelNameLowerCase());
+        $singularName = $this->getModelNameLowerCase();
+        return $this->getSpanishPlural($singularName); // Usa la nueva función del Trait
+        // return Str::plural($singularName); --- IGNORE ---
     }
 
     /**

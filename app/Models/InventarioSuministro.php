@@ -41,13 +41,14 @@ class InventarioSuministro extends Model
     protected $fillable = [
         'estatus',
         'id_usuario',
-        'nro_orden',
+        'id_orden',
         'destino',
         'servicio',
         'id_auto',
         'id_inventario',
         'anulacion',
         'id_emisor',
+        'cantidad',
     ];
 
     
@@ -72,7 +73,7 @@ class InventarioSuministro extends Model
      */
     public function inventario()
     {
-        return $this->belongsTo(Inventario::class, 'id','id_inventario');   
+        return $this->belongsTo(Inventario::class, 'id_inventario');   
     }
 
     /**
@@ -81,7 +82,7 @@ class InventarioSuministro extends Model
      */
     public function orden()
     {
-        return $this->belongsTo(Orden::class, 'nro_orden', 'nro_orden');   
+        return $this->belongsTo(Orden::class, 'id_orden');  
     }
     
 
