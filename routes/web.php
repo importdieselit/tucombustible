@@ -70,6 +70,10 @@ Route::post('/ordenes/{orden}/cerrar', [OrdenController::class, 'cerrarOrden'])-
 Route::post('/ordenes/{orden}/anular', [OrdenController::class, 'anularOrden'])->name('ordenes.anular');
 Route::post('/ordenes/{orden}/reactivar', [OrdenController::class, 'reactivarOrden'])->name('ordenes.reactivar');
 
+Route::get('clientes/import', [ClienteController::class, 'import'])->name('clientes.import');
+Route::post('clientes/handle', [ClienteController::class, 'handleImport'])->name('clientes.handleImport');
+
+
     Route::get('ordenes/search-supplies', [OrdenController::class, 'searchSupplies'])->name('ordenes.search-supplies');
     // Recursos principales
     $resourceControllers = [

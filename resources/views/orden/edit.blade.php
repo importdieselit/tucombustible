@@ -360,7 +360,7 @@ use App\Models\InventarioSuministro;
                             existencia: parseInt(row.cells[2].textContent, 10),
                             cantidad: result.supply.cantidad
                         };
-                        selectedSupplies[itemData.db_id] = itemData;
+                        selectedSupplies[itemData.id] = itemData;
                         renderSuppliesTable();
 
                           // ** FIX: Usar getOrCreateInstance para asegurar que el objeto no es nulo **
