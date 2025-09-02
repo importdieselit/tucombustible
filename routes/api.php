@@ -14,6 +14,7 @@ use App\Http\Controllers\Apis\DespachoController;
 use App\Http\Controllers\Apis\PedidoController;
 use App\Http\Controllers\Apis\RecepcionController;
 use App\Http\Controllers\Apis\MecanicoController;
+use App\Http\Controllers\Apis\TestFcmController;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,6 +36,8 @@ Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::get('/auth/perfiles', [AuthController::class, 'getPerfiles']);
 Route::get('/auth/debug-user', [AuthController::class, 'debugUser']);
+
+Route::post('/test-fcm-notification', [TestFcmController::class, 'sendFcmNotification']);
 
 // Rutas protegidas por autenticación
 Route::middleware('auth:sanctum')->group(function () {
@@ -140,4 +143,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/despachos', [DespachoController::class, 'store']);
     Route::put('/despachos/{id}', [DespachoController::class, 'update']);
     Route::delete('/despachos/{id}', [DespachoController::class, 'destroy']);
+
+
+    
+    // FCM - Notificaciones Push
+    Route::post('/auth/update-fcm-token', [\App\Http\Controllers\Apis\FcmController::class, 'updateToken']);
+    Route::get('/auth/fcm-token', [\App\Http\Controllers\Apis\FcmController::class, 'getToken']);
+    Route::delete('/auth/fcm-token', [\App\Http\Controllers\Apis\FcmController::class, 'removeToken']);
+
+
+    
 }); 
+

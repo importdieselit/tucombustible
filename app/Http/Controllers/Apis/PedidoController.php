@@ -8,6 +8,7 @@ use App\Models\Deposito;
 use App\Models\User;
 use App\Models\Cliente;
 use App\Models\MovimientoCombustible;
+use App\Services\FcmNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -30,7 +31,7 @@ class PedidoController extends Controller
                 ], 403);
             }
 
-            $query = Pedido::with(['deposito'])
+            $query = Pedido::with(['deposito', 'cliente'])
                 ->where('cliente_id', $user->cliente_id);
 
             // Filtrar por mes si se proporciona
@@ -76,7 +77,7 @@ class PedidoController extends Controller
                 ], 403);
             }
 
-            $pedido = Pedido::with(['deposito'])
+            $pedido = Pedido::with(['deposito', 'cliente'])
                 ->where('id', $id)
                 ->where('cliente_id', $user->cliente_id)
                 ->first();
@@ -117,7 +118,6 @@ class PedidoController extends Controller
             }
 
             $validator = Validator::make($request->all(), [
-                'deposito_id' => 'required|exists:depositos,id',
                 'cantidad_solicitada' => 'required|numeric|min:0.01',
                 'observaciones' => 'nullable|string|max:500',
             ]);
@@ -130,46 +130,50 @@ class PedidoController extends Controller
                 ], 422);
             }
 
-            // Verificar que el depósito existe
-            $deposito = Deposito::where('id', $request->deposito_id)->first();
+            // Obtener datos del cliente
+            $cliente = Cliente::where('id', $user->cliente_id)->first();
 
-            if (!$deposito) {
+            if (!$cliente) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Depósito no encontrado'
+                    'message' => 'Cliente no encontrado'
                 ], 404);
             }
 
-            // Calcular capacidad disponible
-            $capacidadTotal = $deposito->capacidad_litros;
-            $nivelActual = $deposito->nivel_actual_litros ?? 0;
-            $capacidadDisponible = $capacidadTotal - $nivelActual;
+            // Verificar disponible del cliente
+            $disponible = $cliente->disponible ?? 0;
             
             // Debug: Log de valores para verificar
-            \Log::info('Debug Pedido - Depósito ID: ' . $deposito->id);
-            \Log::info('Debug Pedido - Capacidad Total: ' . $capacidadTotal);
-            \Log::info('Debug Pedido - Nivel Actual: ' . $nivelActual);
-            \Log::info('Debug Pedido - Capacidad Disponible: ' . $capacidadDisponible);
+            \Log::info('Debug Pedido - Cliente ID: ' . $cliente->id);
+            \Log::info('Debug Pedido - Cliente Nombre: ' . $cliente->nombre);
+            \Log::info('Debug Pedido - Disponible: ' . $disponible);
             \Log::info('Debug Pedido - Cantidad Solicitada: ' . $request->cantidad_solicitada);
 
-            if ($request->cantidad_solicitada > $capacidadDisponible) {
+            if ($request->cantidad_solicitada > $disponible) {
                 return response()->json([
                     'success' => false,
-                    'message' => "La cantidad solicitada excede la capacidad disponible. Máximo permitido: {$capacidadDisponible} litros"
+                    'message' => "La cantidad solicitada excede tu disponible. Máximo permitido: {$disponible} litros"
                 ], 422);
             }
 
-            // Crear el pedido
+            // Crear el pedido (sin depósito específico)
             $pedido = Pedido::create([
                 'cliente_id' => $user->cliente_id,
-                'deposito_id' => $request->deposito_id,
+                'deposito_id' => null, // Ya no se asigna un depósito específico
                 'cantidad_solicitada' => $request->cantidad_solicitada,
                 'observaciones' => $request->observaciones,
                 'estado' => 'pendiente',
                 'fecha_solicitud' => now(),
             ]);
 
-            $pedido->load('deposito');
+            // Enviar notificación FCM de confirmación al cliente
+            try {
+                FcmNotificationService::sendNewPedidoNotification($pedido);
+                \Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por nuevo pedido");
+            } catch (\Exception $e) {
+                \Log::error("Error enviando notificación FCM: " . $e->getMessage());
+                // No fallar la operación principal por error en notificación
+            }
 
             return response()->json([
                 'success' => true,
@@ -549,42 +553,31 @@ class PedidoController extends Controller
                 }
             }
 
-            // Iniciar transacción para asegurar consistencia
-            DB::beginTransaction();
+            // Guardar el estado anterior para la notificación
+            $oldStatus = $pedido->estado;
             
+            // Actualizar el pedido (sin descontar del disponible del cliente)
+            $pedido->update([
+                'estado' => 'aprobado',
+                'cantidad_aprobada' => $request->cantidad_aprobada,
+                'observaciones_admin' => $request->observaciones_admin,
+                'fecha_aprobacion' => now(),
+            ]);
+
+            \Log::info("Pedido {$pedido->id} aprobado por admin {$user->id} - Sin descuento de disponible");
+
+            // Enviar notificación FCM al cliente
             try {
-                // Actualizar el pedido
-                $pedido->update([
-                    'estado' => 'aprobado',
-                    'cantidad_aprobada' => $request->cantidad_aprobada,
-                    'observaciones_admin' => $request->observaciones_admin,
-                    'fecha_aprobacion' => now(),
-                ]);
-
-                // Descontar de la disponibilidad del cliente
-                if ($cliente && $cliente->disponible !== null) {
-
-                    // Actualizar disponibilidad en el modelo Cliente
-                    $cliente->update([
-                        'disponible' => $cliente->disponible - $request->cantidad_aprobada
-                    ]);
-                } else {
-                    // Crear un movimiento de salida en movimientosCombustible
-                    MovimientoCombustible::create([
-                        'tipo_movimiento' => 'salida',
-                        'deposito_id' => $pedido->deposito_id,
-                        'cliente_id' => $pedido->cliente_id,
-                        'cantidad_litros' => $request->cantidad_aprobada,
-                        'observaciones' => 'Descuento por aprobación de pedido #' . $pedido->id,
-                        'fecha_movimiento' => now(),
-                    ]);
-                }
-
-                DB::commit();
-                \Log::info("Pedido {$pedido->id} aprobado por admin {$user->id}");
+                FcmNotificationService::sendPedidoStatusNotification(
+                    $pedido,
+                    $oldStatus,
+                    'aprobado',
+                    $request->observaciones_admin
+                );
+                \Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por aprobación de pedido");
             } catch (\Exception $e) {
-                DB::rollback();
-                throw $e;
+                \Log::error("Error enviando notificación FCM: " . $e->getMessage());
+                // No fallar la operación principal por error en notificación
             }
 
             return response()->json([
@@ -652,6 +645,9 @@ class PedidoController extends Controller
                 ], 422);
             }
 
+            // Guardar el estado anterior para la notificación
+            $oldStatus = $pedido->estado;
+            
             $pedido->update([
                 'estado' => 'rechazado',
                 'observaciones_admin' => $request->motivo,
@@ -659,6 +655,20 @@ class PedidoController extends Controller
             ]);
 
             \Log::info("Pedido {$pedido->id} rechazado por admin {$user->id}");
+
+            // Enviar notificación FCM al cliente
+            try {
+                FcmNotificationService::sendPedidoStatusNotification(
+                    $pedido,
+                    $oldStatus,
+                    'rechazado',
+                    $request->motivo
+                );
+                \Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por rechazo de pedido");
+            } catch (\Exception $e) {
+                \Log::error("Error enviando notificación FCM: " . $e->getMessage());
+                // No fallar la operación principal por error en notificación
+            }
 
             return response()->json([
                 'success' => true,
@@ -732,9 +742,28 @@ class PedidoController extends Controller
                 $updateData['fecha_completado'] = now();
             }
 
+            // Guardar el estado anterior para la notificación
+            $oldStatus = $pedido->estado;
+            
             $pedido->update($updateData);
 
             \Log::info("Pedido {$pedido->id} actualizado por admin {$user->id}");
+
+            // Enviar notificación FCM si cambió el estatus
+            if (isset($updateData['estado']) && $updateData['estado'] !== $oldStatus) {
+                try {
+                    FcmNotificationService::sendPedidoStatusNotification(
+                        $pedido,
+                        $oldStatus,
+                        $updateData['estado'],
+                        $updateData['observaciones_admin'] ?? null
+                    );
+                    \Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por cambio de estatus a {$updateData['estado']}");
+                } catch (\Exception $e) {
+                    \Log::error("Error enviando notificación FCM: " . $e->getMessage());
+                    // No fallar la operación principal por error en notificación
+                }
+            }
 
             return response()->json([
                 'success' => true,

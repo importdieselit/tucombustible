@@ -32,6 +32,8 @@ class RecepcionController extends Controller
                 'pedido_id' => 'required|exists:pedidos,id',
                 'cantidad_recibida' => 'required|numeric|min:0.01',
                 'observaciones' => 'nullable|string|max:500',
+                'calificacion' => 'nullable|integer|min:1|max:5',
+                'comentario_calificacion' => 'nullable|string|max:500',
             ]);
 
             if ($validator->fails()) {
@@ -43,7 +45,7 @@ class RecepcionController extends Controller
             }
 
             // Obtener el pedido
-            $pedido = Pedido::find($request->pedido_id);
+            $pedido = Pedido::with('cliente')->find($request->pedido_id);
             
             if (!$pedido) {
                 return response()->json([
@@ -68,26 +70,23 @@ class RecepcionController extends Controller
                 ], 422);
             }
 
-            // Verificar que el depósito existe y obtenerlo
-            $deposito = Deposito::find($pedido->deposito_id);
-
-            if (!$deposito) {
+            // Obtener datos del cliente
+            $cliente = $pedido->cliente;
+            
+            if (!$cliente) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Depósito no encontrado'
+                    'message' => 'Cliente no encontrado'
                 ], 404);
             }
 
-            // Verificar que el pedido pertenece al cliente del usuario (ya verificado arriba)
-            // El depósito se obtiene del pedido que ya fue verificado que pertenece al cliente
-
-            // Verificar que la cantidad recibida no exceda la capacidad del depósito
-            $nuevoNivel = $deposito->nivel_actual_litros + $request->cantidad_recibida;
+            // Verificar que el cliente tenga suficiente disponible
+            $disponible = $cliente->disponible ?? 0;
             
-            if ($nuevoNivel > $deposito->capacidad_litros) {
+            if ($disponible < $request->cantidad_recibida) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'La cantidad recibida excede la capacidad del depósito'
+                    'message' => "No tiene suficiente disponible. Disponible: {$disponible} litros, Solicitado: {$request->cantidad_recibida} litros"
                 ], 422);
             }
 
@@ -95,42 +94,38 @@ class RecepcionController extends Controller
             DB::beginTransaction();
 
             try {
-                // Registrar el movimiento en la tabla movimientos_combustible
-                $movimiento = MovimientoCombustible::create([
-                    'tipo_movimiento' => 'entrada',
-                    'deposito_id' => $pedido->deposito_id,
-                    'cliente_id' => $user->cliente_id,
-                    'cantidad_litros' => $request->cantidad_recibida,
-                    'observaciones' => "Recepción de pedido #{$pedido->id}. " . ($request->observaciones ?? ''),
+                // Descontar del disponible del cliente
+                $cliente->update([
+                    'disponible' => $disponible - $request->cantidad_recibida
                 ]);
 
-                // Actualizar el nivel del depósito
-                $deposito->update([
-                    'nivel_actual_litros' => $nuevoNivel
-                ]);
-
-                // Actualizar el estado del pedido a 'completado' (igual que en mecánico)
-                DB::table('pedidos')
-                    ->where('id', $request->pedido_id)
-                    ->update([
-                        'estado' => 'completado',
-                        'fecha_completado' => now(),
-                        'updated_at' => now(),
-                    ]);
+                // Actualizar el estado del pedido a 'completado' y calificación si se proporciona
+                $updateData = [
+                    'estado' => 'completado',
+                    'fecha_completado' => now(),
+                ];
+                
+                // Si se proporciona calificación, agregarla
+                if ($request->has('calificacion') && $request->calificacion !== null) {
+                    $updateData['calificacion'] = $request->calificacion;
+                    $updateData['comentario_calificacion'] = $request->comentario_calificacion;
+                }
+                
+                $pedido->update($updateData);
 
                 DB::commit();
 
                 $resultado = [
-                    'id' => $movimiento->id,
                     'pedido_id' => $pedido->id,
-                    'deposito_id' => $pedido->deposito_id,
                     'cantidad_recibida' => $request->cantidad_recibida,
                     'observaciones' => $request->observaciones,
-                    'fecha' => $movimiento->created_at,
-                    'nuevo_nivel_deposito' => $nuevoNivel,
+                    'fecha' => now(),
+                    'nuevo_disponible_cliente' => $disponible - $request->cantidad_recibida,
+                    'calificacion' => $request->calificacion ?? null,
+                    'comentario_calificacion' => $request->comentario_calificacion ?? null,
                 ];
 
-                \Log::info("Recepción registrada por usuario {$user->id} - Cliente: {$user->cliente_id} - Pedido: {$pedido->id}");
+                \Log::info("Recepción registrada por usuario {$user->id} - Cliente: {$user->cliente_id} - Pedido: {$pedido->id} - Disponible descontado: {$request->cantidad_recibida}");
 
                 return response()->json([
                     'success' => true,

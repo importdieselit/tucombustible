@@ -19,6 +19,7 @@ class User extends Authenticatable
         'id_perfil',
         'id_persona',
         'cliente_id',
+        'fcm_token',
     ];
 
     protected $hidden = [
