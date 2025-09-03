@@ -9,7 +9,15 @@
         <p class="text-muted">Información clave y monitoreo en tiempo real para la gestión de combustible.</p>
     </div>
 </div>
-
+<div class="col-12 d-flex justify-content-between align-items-center">
+        <h1 class="mb-2">Depósitos de Combustible</h1>
+        <div>
+            <!-- Botón para abrir el modal de creación de depósito -->
+            <a href="{{ route('depositos.list') }}" type="button" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Ver Depositos
+            </a>
+        </div>
+    </div>
 <div class="row g-4 mb-4">
     <div class="col-lg-3 col-md-6">
         <div class="card p-3 h-100 d-flex align-items-center justify-content-center">

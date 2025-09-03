@@ -84,6 +84,17 @@
                 </span>
                 Despachos
             </a>
+
+            <!-- Botón para Despachos -->
+            <a href="{{ route('depositos.list') }}" class="w-full sm:w-1/2 p-4 rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-md">
+                <span class="block mb-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2m-3 0a2 2 0 002 2h0a2 2 0 002-2V7m-3 0a2 2 0 002 2h0a2 2 0 002-2V7M9 5a2 2 0 012-2h0a2 2 0 012 2v0m-3 0V3m0 0v2m0-2v2" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-4 4m0-4l4 4" />
+                    </svg>
+                </span>
+                Listado
+            </a>
         </div>
         
         <!-- Sección de Visualización Gráfica -->
@@ -126,7 +137,6 @@
 @endsection
 
 @push('scripts')
-<script defer src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <script>
     const depositos = @json($data);
 
