@@ -24,6 +24,49 @@ class ClienteController extends BaseController
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
+
+    public function index()
+    {
+        // 1. Indicadores de clientes
+        // Obtenemos todos los clientes con parent 0.
+        $clientesPadre = Cliente::where('parent', 0)
+                                ->select('nombre', 'disponible', 'cupo')
+                                ->get();
+        
+        // 2. Gráficas de disponibilidad de clientes.
+        // Los datos para la gráfica los podemos pasar directamente del controlador a la vista.
+        $disponibilidadData = $clientesPadre->map(function ($cliente) {
+            return [
+                'nombre' => $cliente->nombre,
+                'disponible' => $cliente->disponible,
+                'cupo' => $cliente->cupo,
+            ];
+        });
+
+        // 3. Indicadores de pedidos pendientes y en proceso.
+        $pedidosPendientes = Pedido::where('estado', 'pendiente')->count();
+        $pedidosEnProceso = Pedido::where('estado', 'en_proceso')->count();
+
+        // 4. Niveles de los depósitos.
+        $depositos = Deposito::all();
+
+        // 5. Camiones cargados.
+        // Asumimos que tienes un campo 'estado' en la tabla de vehículos o una relación
+        // que te permite saber si un camión está cargado.
+        // Por ejemplo, un estado 'cargado' o 'en_ruta_con_combustible'.
+        $camionesCargados = Vehiculo::where('estado', 'cargado')->count();
+
+        // Pasamos todos los datos a la vista.
+        return view('combustible.dashboard', compact(
+            'clientesPadre', 
+            'disponibilidadData',
+            'pedidosPendientes', 
+            'pedidosEnProceso', 
+            'depositos', 
+            'camionesCargados'
+        ));
+    }
+
     public function store(Request $request)
     {
         // Validamos los datos manualmente usando las reglas de ClienteRequest

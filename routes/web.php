@@ -144,6 +144,11 @@ Route::prefix('combustible')->name('combustible.')->group(function () {
     Route::get('/combustible/despacho', [MovimientoCombustibleController::class, 'createDespacho'])->name('combustible.despacho');
     Route::post('/combustible/despacho', [MovimientoCombustibleController::class, 'storeDespacho'])->name('combustible.storeDespacho');
 
+    // Nuevas rutas para el despacho de combustible
+    Route::get('/combustible/precarga', [MovimientoCombustibleController::class, 'createPrecarga'])->name('combustible.precarga');
+    Route::post('/combustible/precarga', [MovimientoCombustibleController::class, 'storePrecarga'])->name('combustible.storePrecarga');
+    Route::post('/combustible/aprobado', [MovimientoCombustibleController::class, 'storeAprobado'])->name('combustible.storeAprobado');
+
       Route::get('/alertas', [AlertaController::class, 'index'])->name('alertas.index');
     Route::get('/alertas/read/{id}', [AlertaController::class, 'markAsRead'])->name('alertas.read');
 

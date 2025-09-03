@@ -17,7 +17,13 @@
             </div>
         </div>
     </div>
-
+<div class="card shadow-sm">
+        <div class="card-body text-center">
+            <h5 class="card-title">Precarga de Cisterna</h5>
+            <p class="card-text">Si necesita cargar combustible en una cisterna para un futuro despacho.</p>
+            <a href="{{ route('combustible.precarga') }}" class="btn btn-outline-info">Realizar Precarga</a>
+        </div>
+    </div>
     <div class="card shadow-sm">
         <div class="card-header bg-white">
             <h5 class="card-title m-0">Registrar Nuevo Despacho</h5>
@@ -35,7 +41,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             @endif
-
+ 
             <form action="{{ route('combustible.storeDespacho') }}" method="POST">
                 @csrf
 
@@ -71,11 +77,11 @@
                         <div class="d-flex">
                             <div class="form-check me-4">
                                 <input class="form-check-input" type="radio" name="tipo_despacho" id="tipoVehiculo" value="vehiculo" {{ old('tipo_despacho') == 'vehiculo' ? 'checked' : '' }}>
-                                <label class="form-check-label" for="tipoVehiculo">Vehículo Propio</label>
+                                <label class="form-check-label" for="tipoVehiculo">Vehículo Particular</label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="tipo_despacho" id="tipoCliente" value="cliente" {{ old('tipo_despacho') == 'cliente' ? 'checked' : '' }}>
-                                <label class="form-check-label" for="tipoCliente">Cliente</label>
+                                <label class="form-check-label" for="tipoCliente">Cisterna</label>
                             </div>
                         </div>
                         @error('tipo_despacho')

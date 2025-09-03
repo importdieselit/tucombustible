@@ -8,6 +8,7 @@ use App\Models\Proveedor;
 use App\Models\Cliente;
 use App\Models\Vehiculo;
 use App\Models\Pedido;
+use App\Models\VehiculoPrecargado;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
@@ -24,6 +25,202 @@ use Illuminate\Support\Facades\Auth;
 class MovimientoCombustibleController extends Controller
 {
     use GenerateAlerts;
+
+
+
+    public function index()
+    {
+        // 1. Indicadores de clientes
+        // Obtenemos todos los clientes con parent 0.
+        $clientesPadre = Cliente::where('parent', 0)
+                                ->select('nombre', 'disponible', 'cupo')
+                                ->get();
+        
+        // 2. Gráficas de disponibilidad de clientes.
+        // Los datos para la gráfica los podemos pasar directamente del controlador a la vista.
+        $disponibilidadData = $clientesPadre->map(function ($cliente) {
+            return [
+                'nombre' => $cliente->nombre,
+                'disponible'=>round(($cliente->disponible / $cliente->cupo) * 100,2),
+            ];
+        });
+
+        // 3. Indicadores de pedidos pendientes y en proceso.
+        $pedidosPendientes = Pedido::where('estado', 'pendiente')->count();
+        $pedidosEnProceso = Pedido::where('estado', 'en_proceso')->count();
+
+        // 4. Niveles de los depósitos.
+        $tipoDeposito = Deposito::select('producto')->distinct()->get();
+        foreach($tipoDeposito as $t){
+            $t->total = Deposito::where('producto',$t->producto)->sum('nivel_actual_litros');
+            $t->producto = $t->producto;
+            $t->capacidad = Deposito::where('producto',$t->producto)->sum('capacidad_litros');
+            $t->nivel = $t->capacidad > 0 ? round(($t->total / $t->capacidad) * 100,2) : 0;
+            $t->depositos = Deposito::where('producto',$t->producto)->get();
+            foreach($t->depositos as $d){
+                $d->nivel = $d->capacidad_litros > 0 ? round(($d->nivel_actual_litros / $d->capacidad_litros) * 100,2) : 0;
+            }
+        }
+       // dd($tipoDeposito);
+        $totalCombustible = Deposito::sum('nivel_actual_litros');
+        $capacidadTotal = Deposito::sum('capacidad_litros');
+        $nivelPromedio = $capacidadTotal > 0 ? ($totalCombustible / $capacidadTotal) * 100 : 0;
+        $nivelPromedio = round($nivelPromedio, 2);
+
+
+        // 5. Camiones cargados.
+        // Asumimos que tienes un campo 'estado' en la tabla de vehículos o una relación
+        // que te permite saber si un camión está cargado.
+        // Por ejemplo, un estado 'cargado' o 'en_ruta_con_combustible'.
+        $camionesCargados = VehiculoPrecargado::where('estatus', 0)->count();
+
+        // Pasamos todos los datos a la vista.
+        return view('combustible.index', compact(
+            'clientesPadre', 
+            'disponibilidadData',
+            'pedidosPendientes', 
+            'pedidosEnProceso', 
+            'tipoDeposito', 
+            'camionesCargados',
+            'totalCombustible',
+            'capacidadTotal',
+            'nivelPromedio'
+        ));
+    }
+
+
+    public function storeAprobado(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $validatedData = $request->validate([
+                'cliente_id' => 'required|exists:clientes,id',
+                'cantidad_aprobada' => 'required|numeric|min:0.01',
+                'observaciones_admin' => 'nullable|string',
+            ]);
+
+            // Obtener el cliente
+            $cliente = Cliente::findOrFail($request->cliente_id);
+
+            // Verificar si el cliente tiene saldo suficiente (opcional, pero recomendado)
+            if ($validatedData['cantidad_aprobada'] > $cliente->disponible) {
+                return Redirect::back()->withInput()->withErrors(['cantidad_aprobada' => 'La cantidad aprobada excede el saldo disponible del cliente.']);
+            }
+
+            // Crear el nuevo pedido con estado 'aprobado'
+            $pedido = Pedido::create([
+                'cliente_id' => $validatedData['cliente_id'],
+                'cantidad_solicitada' => $validatedData['cantidad_aprobada'], // En este caso, solicitada es igual a aprobada
+                'cantidad_aprobada' => $validatedData['cantidad_aprobada'],
+                'estado' => 'aprobado',
+                'observaciones' => 'Pedido creado y aprobado directamente por el administrador.',
+                'observaciones_admin' => $validatedData['observaciones_admin'],
+                'fecha_solicitud' => now(),
+                'fecha_aprobacion' => now(),
+            ]);
+
+            // Actualizar el saldo del cliente (se resta la cantidad aprobada)
+            $cliente->disponible -= $validatedData['cantidad_aprobada'];
+            $cliente->save();
+
+            DB::commit();
+            Session::flash('success', 'Pedido creado y aprobado exitosamente para el cliente ' . $cliente->nombre . '.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error al crear y aprobar el pedido: " . $e->getMessage());
+            Session::flash('error', 'Error al crear y aprobar el pedido. Por favor, revisa los logs.');
+        }
+
+        return redirect()->route('combustible.aprobados'); // Redireccionar a la lista de pedidos
+    }
+
+public function createPrecarga()
+    {
+        $depositos = Deposito::all();
+        $vehiculos_cisterna = Vehiculo::all();//where('es_cisterna', 1)->get();
+        return view('combustible.precarga', compact('depositos', 'vehiculos_cisterna'));
+    }
+    
+    /**
+     * Almacena una nueva precarga de combustible.
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function storePrecarga(Request $request)
+    {
+        DB::beginTransaction();
+
+        try {
+            $request->validate([
+                'fecha_movimiento' => 'required|date',
+                'deposito_id' => 'required|exists:depositos,id',
+                'cantidad_litros' => 'required|numeric|min:0.01',
+                'vehiculo_id' => 'required|exists:vehiculos,id'
+            ]);
+            
+            $deposito = Deposito::findOrFail($request->input('deposito_id'));
+            $vehiculo = Vehiculo::findOrFail($request->input('vehiculo_id'));
+            $cantidad = $request->input('cantidad_litros');
+            $userId = Auth::id();
+
+            // Validar si la cantidad solicitada supera la disponible en el depósito
+            if ($cantidad > $deposito->nivel_actual_litros) {
+                Session::flash('error', 'La cantidad a cargar excede el inventario del depósito seleccionado.');
+                return Redirect::back();
+            }
+
+            // Registrar el movimiento de combustible
+            $movimiento = new MovimientoCombustible();
+            $movimiento->deposito_id = $deposito->id;
+            $movimiento->tipo_movimiento = 'precarga';
+            $movimiento->cantidad_litros = $cantidad;
+            $movimiento->observaciones = 'Precarga de combustible a cisterna ' . $vehiculo->placa;
+            $movimiento->save();
+
+            // Actualizar el saldo del depósito
+            $deposito->nivel_actual_litros -= $cantidad;
+            $deposito->save();
+            
+            // Crear registro en la tabla vehiculos_precargados
+            $precarga = new VehiculoPrecargado();
+            $precarga->id_vehiculo = $vehiculo->id;
+            $precarga->cantidad_cargada = $cantidad;
+            $precarga->fecha_hora_carga = now();
+            $precarga->estatus = 0; // 0 = cargada
+            $precarga->tipo_producto = substr($deposito->producto,0,1); // Tipo de producto
+            $precarga->save();
+
+            // Generar alerta si el nivel del depósito es bajo
+            if ($deposito->nivel_actual_litros / $deposito->capacidad_litros < 0.1) {
+                $this->createAlert([
+                    'id_usuario' => $userId,
+                    'id_rel' => $deposito->id,
+                    'observacion' => 'El nivel del depósito \"' . $deposito->nombre . '\" es crítico: ' . $deposito->nivel_actual_litros . ' L restantes.',
+                    'accion' => route('deposito.show', $deposito->id),
+                    'dias' => 0,
+                ]);
+            } elseif ($deposito->nivel_actual_litros / $deposito->capacidad_litros < 0.25) {
+                $this->createAlert([
+                    'id_usuario' => $userId,
+                    'id_rel' => $deposito->id,
+                    'observacion' => 'El nivel del depósito \"' . $deposito->nombre . '\" es bajo: ' . $deposito->nivel_actual_litros . ' L restantes.',
+                    'accion' => route('deposito.show', $deposito->id),
+                    'dias' => 0,
+                ]);
+            }
+
+            DB::commit();
+            Session::flash('success', 'Precarga realizada exitosamente.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error al realizar la precarga: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Session::flash('error', 'Error al realizar la precarga. Por favor, revisa los logs de la aplicación.');
+        }
+
+        return Redirect::back();
+    }
+
     /**
      * Muestra el formulario para registrar una recarga de combustible.
      * @return \Illuminate\View\View
@@ -204,12 +401,14 @@ class MovimientoCombustibleController extends Controller
      */
     public function pedidos()
     {
+        $clientes = Cliente::all();
+        
         $pedidos = Pedido::with(['cliente'])
             ->whereIn('estado', ['pendiente'])
             ->orderBy('fecha_solicitud', 'desc')    
             ->get();
 
-        return view('combustible.pedidos', compact('pedidos'));
+        return view('combustible.pedidos', compact('pedidos', 'clientes'));
     }
 
     /**
