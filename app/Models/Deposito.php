@@ -16,10 +16,12 @@ class Deposito extends Model
     protected $table = 'depositos';
 
     protected $fillable = [
-        'nombre',
         'capacidad_litros',
         'nivel_actual_litros',
-        'nivel_alerta_litros'
+        'nivel_alerta_litros',
+        'ubicacion', 
+        'serial',
+        'producto'
     ];
     protected $casts = [
         'capacidad_litros' => 'float',
