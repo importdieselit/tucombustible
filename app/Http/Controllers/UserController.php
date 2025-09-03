@@ -4,9 +4,23 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Perfil; // CAMBIADO: Usar tu modelo Perfil
+use App\Models\Persona;
+use App\Models\Cliente;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+
 
 class UserController extends Controller
 {
@@ -16,7 +30,7 @@ class UserController extends Controller
     public function index()
     {
         $users = User::with('perfil')->paginate(10); // CAMBIADO: Cargar la relación 'perfil'
-        return view('users.index', compact('users'));
+   //     return view('users.index', compact('users'));
     }
 
     /**
@@ -25,7 +39,7 @@ class UserController extends Controller
     public function create()
     {
         $perfiles = Perfil::all(); // CAMBIADO: Obtener perfiles
-        return view('users.create', compact('perfiles')); // CAMBIADO: Pasar 'perfiles'
+        //return view('users.create', compact('perfiles')); // CAMBIADO: Pasar 'perfiles'
     }
 
     /**
@@ -47,7 +61,7 @@ class UserController extends Controller
             'perfil_id' => $request->perfil_id, // CAMBIADO: a perfil_id
         ]);
 
-        return redirect()->route('users.index')->with('success', 'Usuario creado exitosamente.');
+        //return redirect()->route('users.index')->with('success', 'Usuario creado exitosamente.');
     }
 
     /**
@@ -55,7 +69,7 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        return redirect()->route('users.edit', $user);
+       // return redirect()->route('users.edit', $user);
     }
 
     /**
@@ -64,7 +78,7 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $perfiles = Perfil::all(); // CAMBIADO: Obtener perfiles
-        return view('users.edit', compact('user', 'perfiles')); // CAMBIADO: Pasar 'perfiles'
+       // return view('users.edit', compact('user', 'perfiles')); // CAMBIADO: Pasar 'perfiles'
     }
 
     /**
@@ -97,5 +111,129 @@ class UserController extends Controller
     {
         $user->delete();
         return redirect()->route('users.index')->with('success', 'Usuario eliminado exitosamente.');
+    }
+
+     public function import()
+    {
+        return view('usuario.import');
+    }
+
+    /**
+     * Procesa el archivo subido e importa los usuarios.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function handleImport(Request $request)
+    {
+       // Validación crucial: comprueba si el archivo realmente fue subido.
+        if (!$request->hasFile('file')) {
+            Session::flash('error', 'No se ha seleccionado ningún archivo para subir.');
+            return Redirect::back();
+        }
+
+        // Validación para asegurar que el archivo es del tipo correcto.
+        $validator = Validator::make($request->all(), [
+            'file' => 'required|mimes:csv,txt|max:32768', // Máximo 32MB. Asegúrate de que este valor coincida con la configuración de PHP.
+        ]);
+
+        if ($validator->fails()) {
+            Session::flash('error', 'El archivo no tiene el formato correcto o excede el tamaño máximo permitido.');
+            return Redirect::back();
+        }
+
+        $file = $request->file('file');
+        Log::info('Archivo recibido', ['file_name' => $file->getClientOriginalName()]);
+        ;
+        try {
+            DB::beginTransaction();
+
+            // 2. Obtener la primera hoja del archivo como una colección.
+            $coleccion = Excel::toCollection(null, $request->file('file'))->first();
+
+            // 3. Validar que la colección no esté vacía.
+            if ($coleccion->isEmpty() || count($coleccion) < 2) {
+                throw new \Exception("El archivo está vacío o la hoja de datos no contiene registros.");
+            }
+
+            // 4. Omitir la primera fila (encabezados) para empezar con los datos.
+            $filas = $coleccion->skip(1);
+            
+            // 5. Recorrer cada fila para procesar los datos.
+            foreach ($filas as $fila) {
+                // Si la fila está vacía, la saltamos.
+                if ($fila->filter()->isEmpty()) {
+                    continue;
+                }
+
+                // Mapeamos los datos de la fila a las variables.
+                // Asegúrate de que los índices coincidan con tu archivo CSV.
+                $nombre_persona = (string) ($fila[5] ?? '');
+                $dni_persona = (string) ($fila[4] ?? '');
+                $nombre_empresa = (string) ($fila[2] ?? '');
+                $rif_empresa = (string) ($fila[1] ?? '');
+
+                // Lógica de validación básica.
+                if (empty($dni_persona) || empty($nombre_persona) || empty($rif_empresa)) {
+                    Log::warning("Fila omitida por datos de Cédula, Nombre o RIF faltantes.", ['fila' => $fila]);
+                    continue;
+                }
+                
+                // 6. Encontrar o crear la empresa (Cliente).
+                $cliente = Cliente::firstOrCreate(
+                    ['rif' => $rif_empresa],
+                    [
+                        'nombre' => $nombre_empresa,
+                        // Añadir más campos del cliente si están disponibles en el archivo de importación.
+                    ]
+                );
+
+                // 7. Encontrar o crear la persona.
+                $persona = Persona::firstOrCreate(
+                    ['dni' => $fila[3].$dni_persona],
+                    [
+                        'nombre' => $nombre_persona,
+                        // Añadir más campos de la persona.
+                    ]
+                );
+                $validateUser = User::where('id_cliente', $cliente->id)->where('id_master',0)->first();
+                if($validateUser){
+                    $masterUser = $validateUser->id;
+                }else{
+                    $masterUser = 0; // ID del usuario master por defecto
+                }
+                // 8. Encontrar o crear el usuario y vincularlo.
+                // Usamos la cédula como nombre de usuario (email) y contraseña por defecto.
+                $user = User::firstOrCreate(
+                    ['id_persona' => $persona->id],
+                    [
+                        'name' => $nombre_persona,
+                        'email' => str_replace('.','',$dni_persona) . '@tucombustible.com', // Correo por defecto, debe ser único
+                        'password' => bcrypt(123456789), // Contraseña por defecto
+                        'id_perfil' => 3, // Asignamos el perfil de cliente (ajustar si es necesario)
+                        'id_cliente' => $cliente->id,
+                        'id_master' => $masterUser // Asignar un master por defecto o según la lógica de tu aplicación
+                    ]
+                );
+
+                // Si el usuario ya existe, actualizamos sus datos para asegurar la consistencia.
+                $user->update([
+                    'name' => $nombre_persona,
+                    'id_cliente' => $cliente->id,
+                ]);
+
+            }
+
+            DB::commit();
+
+            Session::flash('success', '¡Usuarios importados exitosamente!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error al importar los usuarios: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Session::flash('error', 'Hubo un error al importar los usuarios: ' . $e->getMessage());
+        }
+
+        return Redirect::back();
+
     }
 }

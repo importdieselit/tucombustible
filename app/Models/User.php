@@ -18,8 +18,10 @@ class User extends Authenticatable
         'password',
         'id_perfil',
         'id_persona',
-        'cliente_id',
+        'id_cliente',
         'fcm_token',
+        'id_master'
+
     ];
 
     protected $hidden = [

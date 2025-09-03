@@ -66,13 +66,16 @@ Route::middleware(['auth'])->group(function () {
     Route::put('ordenes/supplies/{id}', [OrdenController::class, 'updateSupply'])->name('ordenes.supplies.update');
     Route::delete('ordenes/supplies/{id}', [OrdenController::class, 'deleteSupply'])->name('ordenes.supplies.delete');
 
-Route::post('/ordenes/{orden}/cerrar', [OrdenController::class, 'cerrarOrden'])->name('ordenes.cerrar');
-Route::post('/ordenes/{orden}/anular', [OrdenController::class, 'anularOrden'])->name('ordenes.anular');
-Route::post('/ordenes/{orden}/reactivar', [OrdenController::class, 'reactivarOrden'])->name('ordenes.reactivar');
+    Route::post('/ordenes/{orden}/cerrar', [OrdenController::class, 'cerrarOrden'])->name('ordenes.cerrar');
+    Route::post('/ordenes/{orden}/anular', [OrdenController::class, 'anularOrden'])->name('ordenes.anular');
+    Route::post('/ordenes/{orden}/reactivar', [OrdenController::class, 'reactivarOrden'])->name('ordenes.reactivar');
 
-Route::get('clientes/import', [ClienteController::class, 'import'])->name('clientes.import');
-Route::post('clientes/handle', [ClienteController::class, 'handleImport'])->name('clientes.handleImport');
+    Route::get('clientes/import', [ClienteController::class, 'import'])->name('clientes.import');
+    Route::post('clientes/handle', [ClienteController::class, 'handleImport'])->name('clientes.handleImport');
 
+    Route::get('/usuarios/importar', [UserController::class, 'import'])->name('usuarios.importar');
+    Route::post('/usuarios/importarP', [UserController::class, 'handleImport'])->name('usuarios.importarprocess');
+   
 
     Route::get('ordenes/search-supplies', [OrdenController::class, 'searchSupplies'])->name('ordenes.search-supplies');
     // Recursos principales
