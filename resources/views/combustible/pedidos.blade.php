@@ -73,7 +73,7 @@
                             </td>
                             <td class="text-center">
                                 @if ($pedido->estado === 'pendiente')
-                                    <form action="{{ route('pedidos.aprobar', $pedido->id) }}" method="POST" class="d-inline-block aprobar-pedido-form">
+                                    <form action="{{ route('combustible.aprobar', $pedido->id) }}" method="POST" class="d-inline-block aprobar-pedido-form">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-success" data-cantidad-solicitada="{{ $pedido->cantidad_solicitada }}">
                                             <i class="bi bi-check-circle"></i> Aprobar

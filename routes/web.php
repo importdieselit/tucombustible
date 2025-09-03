@@ -135,7 +135,7 @@ Route::post('clientes/handle', [ClienteController::class, 'handleImport'])->name
     // Rutas de Combustible (Pedidos y Despachos)
 Route::prefix('combustible')->name('combustible.')->group(function () {
     Route::get('/pedidos', [MovimientoCombustibleController::class, 'pedidos'])->name('pedidos');
-    Route::post('/pedidos/{id}/aprobar', [MovimientoCombustibleController::class, 'aprobar'])->name('pedido.aprobar');
+    Route::post('/pedidos/{id}/aprobar', [MovimientoCombustibleController::class, 'aprobar'])->name('aprobar');
     Route::post('/pedidos/{id}/rechazar', [MovimientoCombustibleController::class, 'rechazar'])->name('rechazar');
     Route::get('/aprobados', [MovimientoCombustibleController::class, 'despachos'])->name('aprobados');
     Route::post('/despachos/{id}/despachar', [MovimientoCombustibleController::class, 'despachar'])->name('despachar');
