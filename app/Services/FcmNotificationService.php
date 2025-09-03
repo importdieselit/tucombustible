@@ -196,7 +196,56 @@ class FcmNotificationService
     }
 
     /**
-     * Enviar notificación de nuevo pedido creado
+     * Enviar notificación de nuevo pedido creado AL ADMINISTRADOR
+     */
+    public static function sendNewPedidoNotificationToAdmin(Pedido $pedido): bool
+    {
+        try {
+            // Buscar usuarios administradores (superadmin id=1 y administrador id=2)
+            $admins = User::whereIn('id_perfil', [1, 2])->get();
+            
+            if ($admins->isEmpty()) {
+                Log::warning("No se encontraron usuarios administradores para enviar notificación");
+                return false;
+            }
+
+            $title = '🆕 Nuevo Pedido Creado';
+            $body = "El cliente {$pedido->cliente->nombre} ha creado un nuevo pedido #{$pedido->id} por {$pedido->cantidad_solicitada} litros.";
+            
+            $data = [
+                'pedido_id' => $pedido->id,
+                'cliente_nombre' => $pedido->cliente->nombre,
+                'cantidad_solicitada' => $pedido->cantidad_solicitada,
+                'fecha_solicitud' => $pedido->fecha_solicitud->format('Y-m-d H:i'),
+                'tipo_notificacion' => 'nuevo_pedido_admin',
+            ];
+
+            $successCount = 0;
+            $totalAdmins = $admins->count();
+
+            // Enviar notificación a todos los administradores
+            foreach ($admins as $admin) {
+                if ($admin->fcm_token) {
+                    if (self::sendFcmNotification($admin->fcm_token, $title, $body, $data)) {
+                        $successCount++;
+                        Log::info("Notificación enviada al administrador: {$admin->email}");
+                    }
+                } else {
+                    Log::warning("Administrador {$admin->email} no tiene token FCM");
+                }
+            }
+
+            Log::info("Notificaciones enviadas: {$successCount}/{$totalAdmins} administradores");
+            return $successCount > 0;
+
+        } catch (\Exception $e) {
+            Log::error("Error enviando notificación de nuevo pedido al administrador: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Enviar notificación de nuevo pedido creado (para el cliente - mantenido por compatibilidad)
      */
     public static function sendNewPedidoNotification(Pedido $pedido): bool
     {

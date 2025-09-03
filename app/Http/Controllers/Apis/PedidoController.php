@@ -166,12 +166,12 @@ class PedidoController extends Controller
                 'fecha_solicitud' => now(),
             ]);
 
-            // Enviar notificación FCM de confirmación al cliente
+            // Enviar notificación FCM al administrador sobre el nuevo pedido
             try {
-                FcmNotificationService::sendNewPedidoNotification($pedido);
-                \Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por nuevo pedido");
+                FcmNotificationService::sendNewPedidoNotificationToAdmin($pedido);
+                \Log::info("Notificación FCM enviada al administrador sobre nuevo pedido del cliente {$pedido->cliente_id}");
             } catch (\Exception $e) {
-                \Log::error("Error enviando notificación FCM: " . $e->getMessage());
+                \Log::error("Error enviando notificación FCM al administrador: " . $e->getMessage());
                 // No fallar la operación principal por error en notificación
             }
 
