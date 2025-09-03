@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;  
 use App\Traits\GenerateAlerts;
 use Illuminate\Support\Facades\Auth;
+use App\Services\FcmNotificationService;
 
 /**
  * Controlador para gestionar los movimientos de combustible (recarga y despacho).
@@ -120,6 +121,18 @@ class MovimientoCombustibleController extends Controller
                 'fecha_aprobacion' => now(),
             ]);
 
+            try {
+                FcmNotificationService::sendPedidoStatusNotification(
+                    $pedido,
+                    'pendiente',
+                    'aprobado',
+                    $validatedData['observaciones_admin']
+                );
+                \Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por aprobación de pedido");
+            } catch (\Exception $e) {
+                \Log::error("Error enviando notificación FCM: " . $e->getMessage());
+                // No fallar la operación principal por error en notificación
+            }
             // Actualizar el saldo del cliente (se resta la cantidad aprobada)
             $cliente->disponible -= $validatedData['cantidad_aprobada'];
             $cliente->save();
@@ -429,6 +442,20 @@ public function createPrecarga()
             $pedido->save();
 
             Session::flash('success', 'Pedido de combustible aprobado exitosamente.');
+
+            try {
+                FcmNotificationService::sendPedidoStatusNotification(
+                    $pedido,
+                    'pendiente',
+                    'aprobado',
+                    $pedido->observaciones_admin
+                );
+                \Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por aprobación de pedido");
+            } catch (\Exception $e) {
+                \Log::error("Error enviando notificación FCM: " . $e->getMessage());
+                // No fallar la operación principal por error en notificación
+            }
+
         } catch (\Exception $e) {
             Session::flash('error', 'Error al aprobar el pedido: ' . $e->getMessage());
         }
@@ -553,6 +580,7 @@ public function createPrecarga()
             $deposito->save();
             $movimiento->save();
 
+
             // 7. Generar alertas si es necesario
             if ($deposito->nivel_actual_litros / $deposito->capacidad_litros < 0.1) {
                 $this->createAlert([
@@ -570,6 +598,19 @@ public function createPrecarga()
                     'accion' => route('deposito.show', $deposito->id),
                     'dias' => 0,
                 ]);
+            }
+
+            try {
+                FcmNotificationService::sendPedidoStatusNotification(
+                    $pedido,
+                    'aprobado',
+                    'en_proceso',
+                    $pedido->observaciones_admin
+                );
+                \Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por aprobación de pedido");
+            } catch (\Exception $e) {
+                \Log::error("Error enviando notificación FCM: " . $e->getMessage());
+                // No fallar la operación principal por error en notificación
             }
 
             DB::commit();
