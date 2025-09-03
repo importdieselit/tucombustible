@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Controlador para gestionar los clientes.
@@ -86,5 +88,112 @@ class ClienteController extends BaseController
             Session::flash('error', 'Hubo un error al eliminar el cliente.');
             return Redirect::back();
         }
+
+    }
+
+    public function import()
+    {
+        return view('cliente.import');
+    }
+
+    /**
+     * Procesa el archivo subido e importa los clientes.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function handleImport(Request $request)
+    {
+        // 1. Validar que se haya subido un archivo.
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // 2. Obtener la primera hoja del archivo Excel como una colección.
+            // Esto lee todo el archivo de una vez.
+            $coleccion = Excel::toCollection(null, $request->file('file'))->first();
+            if ($coleccion->isEmpty()) {
+                throw new \Exception("El archivo está vacío o la hoja de datos no se encontró.");
+            }
+
+            // 3. Omitir la primera fila (encabezados) para empezar con los datos.
+            $filas = $coleccion->skip(1);
+            
+            // Un array para rastrear los clientes 'padre' ya creados en esta importación.
+            $ciiuParents = [];
+
+            // 4. Recorrer cada fila de la colección y aplicar la lógica.
+            foreach ($filas as $fila) {
+                // Si la fila está vacía, la saltamos.
+                if ($fila->filter()->isEmpty()) {
+                    continue;
+                }
+
+                // Limpiamos y mapeamos los datos de la fila según tu lógica y la estructura del Excel.
+                // Usamos índices numéricos ya que toCollection no usa los encabezados de columna.
+                $ciiu = (int) ($fila[13] ?? 0);
+                $rif = (string) ($fila[11] ?? '');
+                $nombre = (string) ($fila[1] ?? '');
+                $cupo = (float) ($fila[2] ?? 0.0);
+                $sector = (string) ($fila[7] ?? '');
+                $disponible = (float) ($fila[6] ?? 0.0);
+
+                // Validación básica de tu código.
+                if (empty($ciiu) || empty($rif)) {
+                    Log::warning("Fila omitida por datos de CIIU o RIF faltantes.", ['fila' => $fila]);
+                    continue;
+                }
+                
+                // Lógica para determinar el periodo.
+                $periodo = 'M';
+                if (isset($fila[3]) && strtoupper($fila[3]) === 'SI') {
+                    $periodo = 'D';
+                } elseif (isset($fila[4]) && strtoupper($fila[4]) === 'SI') {
+                    $periodo = 'S';
+                }
+                // Si la fila 5 (mensual) es 'SI', el periodo ya es 'M', no hace falta un elseif.
+
+                // Lógica para encontrar o asignar el padre.
+                $parent = 0;
+                    // Si no, buscamos en la base de datos un cliente con parent=0.
+                    $existingParent = Cliente::where('ciiu', $ciiu)->where('parent', 0)->first();
+                    if ($existingParent) {
+                        if (strtoupper($nombre) == strtoupper($existingParent->nombre)) {
+                            Log::warning("Fila omitida: coincide con el nombre del cliente padre.", ['fila' => $fila]);
+                            continue;
+                        }       // Si ya existe, lo usamos como el padre.
+                        $parent = $existingParent->id;
+                    }
+            
+                
+
+                $clientePadre = Cliente::create([
+                        'nombre' => $nombre,
+                        'contacto' => $fila[9] ?? null,
+                        'dni' => $fila[10] ?? null,
+                        'rif' => $rif,
+                        'direccion' => $fila[12] ?? null,
+                        'disponible' => $disponible,
+                        'cupo' => $cupo,
+                        'ciiu' => $ciiu,
+                        'parent' => $parent,
+                        'periodo' => $periodo,
+                        'sector' => $sector,
+                    ]);
+                
+            }
+
+            DB::commit();
+
+            Session::flash('success', '¡Clientes importados exitosamente!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Session::flash('error', 'Hubo un error al importar los clientes: ' . $e->getMessage());
+        }
+
+        return Redirect::back();
     }
 }

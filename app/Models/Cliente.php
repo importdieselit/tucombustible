@@ -18,11 +18,17 @@ class Cliente extends Model
         'nombre',
         'rif',
         'contacto',
-        'cedula',
+        'dni',
         'direccion',
         'telefono',
         'email',
-        'disponible'
+        'disponible',
+        'cupo',
+        'ciiu',
+        'parent',
+        'sector',
+        'periodo',
+
     ];
 
     /**
