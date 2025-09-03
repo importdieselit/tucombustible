@@ -104,6 +104,7 @@ class MovimientoCombustibleController extends Controller
 
             // Verificar si el cliente tiene saldo suficiente (opcional, pero recomendado)
             if ($validatedData['cantidad_aprobada'] > $cliente->disponible) {
+                 Session::flash('error', 'La cantidad aprobada excede el saldo disponible del cliente.');
                 return Redirect::back()->withInput()->withErrors(['cantidad_aprobada' => 'La cantidad aprobada excede el saldo disponible del cliente.']);
             }
 
