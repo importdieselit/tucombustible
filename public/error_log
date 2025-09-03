@@ -1,0 +1,1 @@
+[27-Aug-2025 19:12:37 UTC] PHP Fatal error:  Trait "App\Traits\GeneratesAlerts" not found in /home/impormot/public_html/tucombustible/app/Http/Controllers/OrdenController.php on line 19
