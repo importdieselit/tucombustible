@@ -196,7 +196,7 @@ class UserController extends Controller
                         // Añadir más campos de la persona.
                     ]
                 );
-                $validateUser = User::where('id_cliente', $cliente->id)->where('id_master',0)->first();
+                $validateUser = User::where('cliente_id', $cliente->id)->where('id_master',0)->first();
                 if($validateUser){
                     $masterUser = $validateUser->id;
                 }else{
@@ -211,7 +211,7 @@ class UserController extends Controller
                         'email' => str_replace('.','',$dni_persona) . '@tucombustible.com', // Correo por defecto, debe ser único
                         'password' => bcrypt(123456789), // Contraseña por defecto
                         'id_perfil' => 3, // Asignamos el perfil de cliente (ajustar si es necesario)
-                        'id_cliente' => $cliente->id,
+                        'cliente_id' => $cliente->id,
                         'id_master' => $masterUser // Asignar un master por defecto o según la lógica de tu aplicación
                     ]
                 );
@@ -219,7 +219,7 @@ class UserController extends Controller
                 // Si el usuario ya existe, actualizamos sus datos para asegurar la consistencia.
                 $user->update([
                     'name' => $nombre_persona,
-                    'id_cliente' => $cliente->id,
+                    'cliente_id' => $cliente->id,
                 ]);
 
             }
