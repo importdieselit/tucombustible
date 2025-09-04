@@ -121,6 +121,7 @@ class PedidoController extends Controller
             $validator = Validator::make($request->all(), [
                 'cantidad_solicitada' => 'required|numeric|min:0.01',
                 'observaciones' => 'nullable|string|max:500',
+                'cliente_id' => 'nullable|integer|exists:clientes,id',
             ]);
 
             if ($validator->fails()) {
@@ -131,8 +132,35 @@ class PedidoController extends Controller
                 ], 422);
             }
 
+            // Determinar el cliente a usar
+            $clienteId = $request->cliente_id ?? $user->cliente_id;
+            
+            // Verificar que el usuario tiene permisos para crear pedidos para este cliente
+            if ($clienteId != $user->cliente_id) {
+                // Si es diferente, verificar que el cliente seleccionado es una sucursal del usuario
+                $clientePrincipal = Cliente::where('id', $user->cliente_id)->first();
+                if (!$clientePrincipal || $clientePrincipal->parent != 0) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'No tienes permisos para crear pedidos para este cliente'
+                    ], 403);
+                }
+                
+                // Verificar que el cliente seleccionado es una sucursal del cliente principal
+                $clienteSeleccionado = Cliente::where('id', $clienteId)
+                    ->where('parent', $user->cliente_id)
+                    ->first();
+                    
+                if (!$clienteSeleccionado) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'No tienes permisos para crear pedidos para este cliente'
+                    ], 403);
+                }
+            }
+
             // Obtener datos del cliente
-            $cliente = Cliente::where('id', $user->cliente_id)->first();
+            $cliente = Cliente::where('id', $clienteId)->first();
 
             if (!$cliente) {
                 return response()->json([
@@ -159,7 +187,7 @@ class PedidoController extends Controller
 
             // Crear el pedido (sin depósito específico)
             $pedido = Pedido::create([
-                'cliente_id' => $user->cliente_id,
+                'cliente_id' => $clienteId, // Usar el cliente seleccionado
                 'deposito_id' => null, // Ya no se asigna un depósito específico
                 'cantidad_solicitada' => $request->cantidad_solicitada,
                 'observaciones' => $request->observaciones,
@@ -174,6 +202,25 @@ class PedidoController extends Controller
             } catch (\Exception $e) {
                 \Log::error("Error enviando notificación FCM al administrador: " . $e->getMessage());
                 // No fallar la operación principal por error en notificación
+            }
+
+            // Si el pedido es para una sucursal diferente al usuario actual, notificar al usuario de la sucursal
+            if ($pedido->cliente_id != $user->cliente_id) {
+                try {
+                    // Buscar el usuario asociado a la sucursal
+                    $sucursalUser = User::where('cliente_id', $pedido->cliente_id)->first();
+                    
+                    if ($sucursalUser && $sucursalUser->fcm_token) {
+                        // Enviar notificación al usuario de la sucursal
+                        FcmNotificationService::sendPedidoNotificationToSucursal($pedido, $sucursalUser);
+                        \Log::info("Notificación FCM enviada al usuario de sucursal {$sucursalUser->id} sobre nuevo pedido del cliente {$pedido->cliente_id}");
+                    } else {
+                        \Log::warning("No se encontró usuario con FCM token para la sucursal {$pedido->cliente_id}");
+                    }
+                } catch (\Exception $e) {
+                    \Log::error("Error enviando notificación FCM a la sucursal: " . $e->getMessage());
+                    // No fallar la operación principal por error en notificación
+                }
             }
 
             return response()->json([

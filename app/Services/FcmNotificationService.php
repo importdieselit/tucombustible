@@ -273,4 +273,40 @@ class FcmNotificationService
             return false;
         }
     }
+
+    /**
+     * Enviar notificación a sucursal cuando se crea un pedido para ella
+     */
+    public static function sendPedidoNotificationToSucursal(Pedido $pedido, User $sucursalUser): bool
+    {
+        try {
+            if (!$sucursalUser->fcm_token) {
+                Log::warning("No se encontró token FCM para el usuario de sucursal {$sucursalUser->id}");
+                return false;
+            }
+
+            // Obtener información del cliente
+            $cliente = $pedido->cliente;
+            $clienteNombre = $cliente ? $cliente->nombre : 'Cliente';
+
+            $title = '📦 Nuevo Pedido para tu Sucursal';
+            $body = "Se ha creado un pedido #{$pedido->id} para {$clienteNombre} por {$pedido->cantidad_solicitada} litros.";
+            
+            $data = [
+                'pedido_id' => $pedido->id,
+                'cliente_id' => $pedido->cliente_id,
+                'cliente_nombre' => $clienteNombre,
+                'cantidad_solicitada' => $pedido->cantidad_solicitada,
+                'fecha_solicitud' => $pedido->fecha_solicitud->format('Y-m-d H:i'),
+                'estado' => $pedido->estado,
+                'tipo_notificacion' => 'pedido_sucursal',
+            ];
+
+            return self::sendFcmNotification($sucursalUser->fcm_token, $title, $body, $data);
+
+        } catch (\Exception $e) {
+            Log::error("Error enviando notificación a sucursal: " . $e->getMessage());
+            return false;
+        }
+    }
 }

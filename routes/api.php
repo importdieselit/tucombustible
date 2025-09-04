@@ -15,6 +15,7 @@ use App\Http\Controllers\Apis\PedidoController;
 use App\Http\Controllers\Apis\RecepcionController;
 use App\Http\Controllers\Apis\MecanicoController;
 use App\Http\Controllers\Apis\TestFcmController;
+use App\Http\Controllers\Apis\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,6 +45,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
+    
+    // Profile
+    Route::get('/profile/data', [ProfileController::class, 'getProfileData']);
+    Route::put('/profile/update-persona', [ProfileController::class, 'updatePersona']);
+    Route::put('/profile/change-password', [ProfileController::class, 'changePassword']);
+    Route::get('/profile/available-clients', [ProfileController::class, 'getAvailableClients']);
+    Route::get('/profile/current-user', [ProfileController::class, 'getCurrentUser']);
     
     // Clientes
     Route::get('/clientes', [ClienteController::class, 'index']);

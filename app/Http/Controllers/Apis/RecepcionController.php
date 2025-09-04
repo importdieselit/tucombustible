@@ -94,10 +94,42 @@ class RecepcionController extends Controller
             DB::beginTransaction();
 
             try {
-                // Descontar del disponible del cliente
-                $cliente->update([
-                    'disponible' => $disponible - $request->cantidad_recibida
-                ]);
+                // Lógica para sucursales: descontar tanto de la sucursal como del cliente padre
+                if ($cliente->parent > 0) {
+                    // Es una sucursal - descontar de la sucursal y del cliente padre
+                    \Log::info("Procesando recepción para sucursal ID: {$cliente->id}, Parent: {$cliente->parent}");
+                    
+                    // 1. Descontar de la sucursal
+                    $cliente->update([
+                        'disponible' => $disponible - $request->cantidad_recibida
+                    ]);
+                    
+                    // 2. Descontar del cliente padre
+                    $clientePadre = \App\Models\Cliente::find($cliente->parent);
+                    if ($clientePadre) {
+                        $disponiblePadre = $clientePadre->disponible ?? 0;
+                        $clientePadre->update([
+                            'disponible' => $disponiblePadre - $request->cantidad_recibida
+                        ]);
+                        
+                        \Log::info("Descontado de sucursal {$cliente->id}: {$request->cantidad_recibida} litros");
+                        \Log::info("Descontado de cliente padre {$clientePadre->id}: {$request->cantidad_recibida} litros");
+                        \Log::info("Nuevo disponible sucursal: " . ($disponible - $request->cantidad_recibida));
+                        \Log::info("Nuevo disponible padre: " . ($disponiblePadre - $request->cantidad_recibida));
+                    } else {
+                        \Log::warning("No se encontró el cliente padre con ID: {$cliente->parent}");
+                    }
+                } else {
+                    // Es un cliente principal - solo descontar de él
+                    \Log::info("Procesando recepción para cliente principal ID: {$cliente->id}");
+                    
+                    $cliente->update([
+                        'disponible' => $disponible - $request->cantidad_recibida
+                    ]);
+                    
+                    \Log::info("Descontado de cliente principal {$cliente->id}: {$request->cantidad_recibida} litros");
+                    \Log::info("Nuevo disponible: " . ($disponible - $request->cantidad_recibida));
+                }
 
                 // Actualizar el estado del pedido a 'completado' y calificación si se proporciona
                 $updateData = [
@@ -123,6 +155,8 @@ class RecepcionController extends Controller
                     'nuevo_disponible_cliente' => $disponible - $request->cantidad_recibida,
                     'calificacion' => $request->calificacion ?? null,
                     'comentario_calificacion' => $request->comentario_calificacion ?? null,
+                    'es_sucursal' => $cliente->parent > 0,
+                    'cliente_padre_id' => $cliente->parent > 0 ? $cliente->parent : null,
                 ];
 
                 \Log::info("Recepción registrada por usuario {$user->id} - Cliente: {$user->cliente_id} - Pedido: {$pedido->id} - Disponible descontado: {$request->cantidad_recibida}");
