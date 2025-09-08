@@ -98,7 +98,7 @@ class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|string|email',
+            'email' => 'required|string',
             'password' => 'required|string',
         ]);
 
@@ -110,14 +110,29 @@ class AuthController extends Controller
             ], 422);
         }
 
-        if (!Auth::attempt($request->only('email', 'password'))) {
+        $emailOrName = $request->email;
+        $password = $request->password;
+
+        // Intentar autenticación por email primero
+        $user = null;
+        if (filter_var($emailOrName, FILTER_VALIDATE_EMAIL)) {
+            // Es un email válido, intentar autenticación por email
+            if (Auth::attempt(['email' => $emailOrName, 'password' => $password])) {
+                $user = User::with(['persona', 'perfil', 'cliente'])->where('email', $emailOrName)->first();
+            }
+        } else {
+            // No es un email válido, intentar autenticación por name
+            if (Auth::attempt(['name' => $emailOrName, 'password' => $password])) {
+                $user = User::with(['persona', 'perfil', 'cliente'])->where('name', $emailOrName)->first();
+            }
+        }
+
+        if (!$user) {
             return response()->json([
                 'success' => false,
                 'message' => 'Credenciales inválidas'
             ], 401);
         }
-
-        $user = User::with(['persona', 'perfil', 'cliente'])->where('email', $request->email)->first();
 
         // Debug: Verificar que la relación se carga correctamente
         \Log::info('User cliente_id: ' . $user->cliente_id);

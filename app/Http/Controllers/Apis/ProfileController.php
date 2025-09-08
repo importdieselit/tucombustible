@@ -21,6 +21,7 @@ class ProfileController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'persona_id' => 'required|integer|min:0',
+            'name' => 'nullable|string|max:255',
             'nombre' => 'nullable|string|max:255',
             'dni' => 'nullable|string|max:255',
             'telefono' => 'nullable|string|max:255',
@@ -78,6 +79,11 @@ class ProfileController extends Controller
             if ($request->has('country')) $updateData['country'] = $request->country;
 
             $persona->update($updateData);
+
+            // Actualizar el campo 'name' del usuario si se proporciona
+            if ($request->has('name') && $request->name !== null) {
+                $user->update(['name' => $request->name]);
+            }
 
             // Recargar el usuario con todas las relaciones
             $user = User::with(['persona', 'perfil', 'cliente'])->find($user->id);
