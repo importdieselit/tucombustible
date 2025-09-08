@@ -42,6 +42,13 @@ class UserController extends Controller
         //return view('users.create', compact('perfiles')); // CAMBIADO: Pasar 'perfiles'
     }
 
+    public function list()
+    {
+        $data = User::all(); // CAMBIADO: Obtener perfiles
+        return view('usuario.list', compact('data')); // CAMBIADO: Pasar 'perfiles'
+    }
+
+
     /**
      * Store a newly created resource in storage.
      */

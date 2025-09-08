@@ -1,10 +1,29 @@
 @php
+    use App\Models\Acceso;
+    use Illuminate\Support\Facades\Auth;
     use App\Models\Modulo;
+    // Obtener el usuario autenticado
+    $user = Auth::user();
 
-    // Obtener los módulos principales (id_padre = 0)
-    $modulos = Modulo::where('id_padre', 0)->where('visible', 1)->orderBy('orden')->get();
+    if ($user && $user->id_perfil == 1) {
+        // Si el usuario es super usuario (id_perfil = 1), obtener todos los módulos visibles
+        $modulos = Modulo::where('id_padre', 0)
+            ->where('visible', 1)
+            ->orderBy('orden')
+            ->get();
+    } else {// Obtener los IDs de los módulos permitidos para el usuario actual
+        $modulosPermitidosIds = Acceso::where('id_usuario', Auth::id())
+                                    ->where('read', 1)
+                                    ->pluck('id_modulo');
+
+        // Obtener los módulos principales (id_padre = 0) que el usuario tiene permitido ver
+        $modulos = App\Models\Modulo::where('id_padre', 0)
+            ->where('visible', 1)
+            ->whereIn('id', $modulosPermitidosIds)
+            ->orderBy('orden')
+            ->get();
+    }
 @endphp
-
 <style>
 /* Sidebar profesional */
 .sidebar {
@@ -86,6 +105,12 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <div class="col-md-3 col-lg-2 d-md-block sidebar ">
+    <div class="d-flex flex-column align-items-center mb-4">
+          <img src="img/logomini.png" alt="Logo de la empresa" class="img-fluid rounded-circle mb-3 border border-3 border-secondary" style="max-width: 100px;">
+            
+            <p class=" text-center mt-1">Panel de Administración</p>
+
+        </div>
     <div class="position-sticky pt-3">
         <ul class="nav flex-column">
             {{-- Enlace del Dashboard, siempre visible --}}
@@ -98,8 +123,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
             @foreach($modulos as $modulo)
                 @php
-                    $secciones = Modulo::where('id_padre', $modulo->id)->where('visible', 1)->orderBy('orden')->get();
-                    $hasSubmenu = !$secciones->isEmpty();
+   // Obtener los submódulos (hijos) permitidos para este usuario y módulo padre
+                    $secciones = App\Models\Modulo::where('id_padre', $modulo->id)
+                        ->where('visible', 1);
+                        if(!($user && $user->id_perfil == 1)) {
+                            $secciones = $secciones->whereIn('id', $modulosPermitidosIds);
+                        }
+                        $secciones = $secciones->orderBy('orden')
+                        ->get();
+
+
+                   $hasSubmenu = !$secciones->isEmpty();
                 @endphp
                 
                 <li class="nav-item {{ $hasSubmenu ? 'dropdown' : '' }}">

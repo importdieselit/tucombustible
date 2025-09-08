@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\Pedido;
+use App\Models\Cliente;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -36,6 +37,33 @@ class FcmNotificationService
             return false;
         }
     }
+
+    public static function sendCustomNotification(Pedido $pedido, Cliente $cliente, string $title, string $text): bool
+    {
+        try {
+            // Buscar el usuario cliente asociado al pedido
+            //$clienteU = User::where('cliente_id', $cliente->cliente_id)->first();
+            
+            if (!$cliente || !$cliente->fcm_token) {
+                Log::warning("No se encontró token FCM para el cliente {$cliente->cliente_id}");
+                return false;
+            }
+
+            // Preparar datos de la notificación
+            $title = $title;
+            $body = $text;
+            $data = self::prepareAlertData($pedido, $cliente);
+
+            // Enviar notificación
+            return self::sendFcmNotification($cliente->fcm_token, $title, $body, $data);
+
+        } catch (\Exception $e) {
+            Log::error("Error enviando notificación de cambio de estatus: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    
 
     /**
      * Obtener título de la notificación según el cambio de estatus
@@ -102,6 +130,20 @@ class FcmNotificationService
             $data['observaciones'] = $observaciones;
         }
 
+        return $data;
+    }
+
+
+    private static function prepareAlertData(Cliente $Cliente, Pedido $pedido ): array
+    {
+        $data = [
+            'cantidad_solicitada' => $pedido->cantidad_solicitada,
+            'disponible' => $Cliente->disponible-$pedido->cantidad_solicitada,
+            'cupo' => $Cliente->cupo,
+        ];
+
+        
+        
         return $data;
     }
 
