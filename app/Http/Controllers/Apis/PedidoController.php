@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\DB;
 class PedidoController extends Controller
 {
     /**
-     * Obtener todos los pedidos del cliente autenticado
+     * Obtener todos los pedidos del cliente autenticado y sus sucursales
      */
     public function getMisPedidos(Request $request): JsonResponse
     {
@@ -32,8 +32,29 @@ class PedidoController extends Controller
                 ], 403);
             }
 
+            // Obtener el cliente principal del usuario
+            $clientePrincipal = Cliente::where('id', $user->cliente_id)->first();
+            
+            if (!$clientePrincipal) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cliente no encontrado'
+                ], 404);
+            }
+
+            // Determinar qué clientes incluir en la consulta
+            $clientesIds = [$user->cliente_id]; // Siempre incluir el cliente del usuario
+            
+            // Si es cliente padre (parent = 0), incluir también las sucursales
+            if ($clientePrincipal->parent == 0) {
+                $sucursales = Cliente::where('parent', $user->cliente_id)->pluck('id')->toArray();
+                $clientesIds = array_merge($clientesIds, $sucursales);
+                
+                \Log::info("Cliente padre {$user->cliente_id} - Incluyendo sucursales: " . implode(', ', $sucursales));
+            }
+
             $query = Pedido::with(['deposito', 'cliente'])
-                ->where('cliente_id', $user->cliente_id);
+                ->whereIn('cliente_id', $clientesIds);
 
             // Filtrar por mes si se proporciona
             if ($request->has('year') && $request->has('month')) {
@@ -48,7 +69,7 @@ class PedidoController extends Controller
 
             $pedidos = $query->orderBy('fecha_solicitud', 'desc')->get();
 
-            \Log::info("Pedidos encontrados: " . $pedidos->count());
+            \Log::info("Pedidos encontrados para cliente(s) " . implode(', ', $clientesIds) . ": " . $pedidos->count());
 
             return response()->json([
                 'success' => true,
@@ -78,9 +99,28 @@ class PedidoController extends Controller
                 ], 403);
             }
 
+            // Obtener el cliente del usuario
+            $clienteUsuario = Cliente::where('id', $user->cliente_id)->first();
+            
+            if (!$clienteUsuario) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cliente del usuario no encontrado'
+                ], 404);
+            }
+
+            // Determinar qué clientes puede ver
+            $clientesIds = [$user->cliente_id]; // Siempre incluir el cliente del usuario
+            
+            // Si es cliente padre, incluir también las sucursales
+            if ($clienteUsuario->parent == 0) {
+                $sucursales = Cliente::where('parent', $user->cliente_id)->pluck('id')->toArray();
+                $clientesIds = array_merge($clientesIds, $sucursales);
+            }
+
             $pedido = Pedido::with(['deposito', 'cliente'])
                 ->where('id', $id)
-                ->where('cliente_id', $user->cliente_id)
+                ->whereIn('cliente_id', $clientesIds)
                 ->first();
 
             if (!$pedido) {
@@ -265,8 +305,27 @@ class PedidoController extends Controller
                 ], 422);
             }
 
+            // Obtener el cliente del usuario
+            $clienteUsuario = Cliente::where('id', $user->cliente_id)->first();
+            
+            if (!$clienteUsuario) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cliente del usuario no encontrado'
+                ], 404);
+            }
+
+            // Determinar qué clientes puede calificar
+            $clientesIds = [$user->cliente_id]; // Siempre incluir el cliente del usuario
+            
+            // Si es cliente padre, incluir también las sucursales
+            if ($clienteUsuario->parent == 0) {
+                $sucursales = Cliente::where('parent', $user->cliente_id)->pluck('id')->toArray();
+                $clientesIds = array_merge($clientesIds, $sucursales);
+            }
+
             $pedido = Pedido::where('id', $id)
-                ->where('cliente_id', $user->cliente_id)
+                ->whereIn('cliente_id', $clientesIds)
                 ->first();
 
             if (!$pedido) {
@@ -317,8 +376,27 @@ class PedidoController extends Controller
                 ], 403);
             }
 
+            // Obtener el cliente del usuario
+            $clienteUsuario = Cliente::where('id', $user->cliente_id)->first();
+            
+            if (!$clienteUsuario) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cliente del usuario no encontrado'
+                ], 404);
+            }
+
+            // Determinar qué clientes puede cancelar
+            $clientesIds = [$user->cliente_id]; // Siempre incluir el cliente del usuario
+            
+            // Si es cliente padre, incluir también las sucursales
+            if ($clienteUsuario->parent == 0) {
+                $sucursales = Cliente::where('parent', $user->cliente_id)->pluck('id')->toArray();
+                $clientesIds = array_merge($clientesIds, $sucursales);
+            }
+
             $pedido = Pedido::where('id', $id)
-                ->where('cliente_id', $user->cliente_id)
+                ->whereIn('cliente_id', $clientesIds)
                 ->first();
 
             if (!$pedido) {
@@ -354,7 +432,7 @@ class PedidoController extends Controller
     }
 
     /**
-     * Obtener estadísticas de pedidos del cliente
+     * Obtener estadísticas de pedidos del cliente y sus sucursales
      */
     public function getEstadisticasPedidos(Request $request): JsonResponse
     {
@@ -368,8 +446,29 @@ class PedidoController extends Controller
                 ], 403);
             }
 
-            // Base query para el cliente
-            $baseQuery = Pedido::where('cliente_id', $user->cliente_id);
+            // Obtener el cliente principal del usuario
+            $clientePrincipal = Cliente::where('id', $user->cliente_id)->first();
+            
+            if (!$clientePrincipal) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cliente no encontrado'
+                ], 404);
+            }
+
+            // Determinar qué clientes incluir en la consulta
+            $clientesIds = [$user->cliente_id]; // Siempre incluir el cliente del usuario
+            
+            // Si es cliente padre (parent = 0), incluir también las sucursales
+            if ($clientePrincipal->parent == 0) {
+                $sucursales = Cliente::where('parent', $user->cliente_id)->pluck('id')->toArray();
+                $clientesIds = array_merge($clientesIds, $sucursales);
+                
+                \Log::info("Estadísticas - Cliente padre {$user->cliente_id} - Incluyendo sucursales: " . implode(', ', $sucursales));
+            }
+
+            // Base query para los clientes (principal + sucursales si aplica)
+            $baseQuery = Pedido::whereIn('cliente_id', $clientesIds);
 
             // Filtrar por mes si se proporciona
             if ($request->has('year') && $request->has('month')) {
@@ -394,7 +493,7 @@ class PedidoController extends Controller
                     ->avg('calificacion'),
             ];
 
-            \Log::info("Estadísticas calculadas para cliente {$user->cliente_id}");
+            \Log::info("Estadísticas calculadas para cliente(s) " . implode(', ', $clientesIds));
 
             return response()->json([
                 'success' => true,
