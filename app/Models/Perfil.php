@@ -12,8 +12,8 @@ class Perfil extends Model
     protected $table = 'perfiles'; // Nombre explícito de la tabla
 
     protected $fillable = [
-        'name',
-        'description',
+        'nombre',
+        'descripcion',
         'activo',
     ];
 

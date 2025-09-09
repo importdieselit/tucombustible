@@ -24,6 +24,7 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\AlmacenController;
 use App\Http\Controllers\ChoferController;
 use App\Http\Controllers\AlertaController;
+use App\Http\Controllers\AccesoController;
 
 // Agrega otros controladores según los modelos y tablas
 
@@ -76,6 +77,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/usuarios/importar', [UserController::class, 'import'])->name('usuarios.importar');
     Route::post('/usuarios/importarP', [UserController::class, 'handleImport'])->name('usuarios.importarprocess');
    
+  Route::get('/permisos', [AccesoController::class, 'index'])->name('permisos.index');
+    
+    // Las rutas de la API para obtener y actualizar permisos
+    Route::get('/api/permisos/{user}/get', [AccesoController::class, 'getPermissionsForUser'])->name('permisos.get');
+    Route::post('/api/permisos/{user}/update', [AccesoController::class, 'updatePermissions'])->name('permisos.update');
 
     Route::get('ordenes/search-supplies', [OrdenController::class, 'searchSupplies'])->name('ordenes.search-supplies');
     // Recursos principales

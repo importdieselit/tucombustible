@@ -558,7 +558,7 @@ public function createPrecarga()
             $vehiculo->estatus = 2;
 
             // Actualizar el saldo del cliente
-            $cliente->disponible -= $cantidadDespachar;
+           // $cliente->disponible -= $cantidadDespachar;
 
             // Actualizar el nivel actual del depósito
             $deposito->nivel_actual_litros -= $cantidadDespachar;
@@ -576,7 +576,7 @@ public function createPrecarga()
             // 6. Guardar todos los modelos y el movimiento de manera atómica
             $pedido->save();
             $vehiculo->save();
-            $cliente->save();
+            //$cliente->save();
             $deposito->save();
             $movimiento->save();
 
@@ -611,6 +611,23 @@ public function createPrecarga()
             } catch (\Exception $e) {
                 \Log::error("Error enviando notificación FCM: " . $e->getMessage());
                 // No fallar la operación principal por error en notificación
+            }
+
+            if(($cliente->disponible - $cantidadDespachar)<($cliente->cupo*0.1)){
+            try {
+                FcmNotificationService::sendCustomNotification(
+                    $pedido,
+                    $cliente, 
+                    'Baja Disponibilidad', 
+                    'Estimado cliente su disponibilidad actual es de '.($cliente->disponible - $cantidadDespachar).' Litros de su cupo de '.$cliente->cupo.' se recomienda tomar previsiones'
+                );
+                \Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por aprobación de pedido");
+            } catch (\Exception $e) {
+                \Log::error("Error enviando notificación FCM: " . $e->getMessage());
+                // No fallar la operación principal por error en notificación
+            }
+
+
             }
 
             DB::commit();
