@@ -40,10 +40,18 @@ class MovimientoCombustibleController extends Controller
         // 2. Gráficas de disponibilidad de clientes.
         // Los datos para la gráfica los podemos pasar directamente del controlador a la vista.
         $disponibilidadData = $clientesPadre->map(function ($cliente) {
+            if($cliente->cupo>0){
+                $disponible=round(($cliente->disponible / $cliente->cupo) * 100,2);
+                
+            }else{
+                $disponible=0;
+                
+            }
+
             return [
-                'nombre' => $cliente->nombre,
-                'disponible'=>round(($cliente->disponible / $cliente->cupo) * 100,2),
-            ];
+                    'nombre' => $cliente->nombre,
+                    'disponible'=>$disponible,
+                ];
         });
 
         // 3. Indicadores de pedidos pendientes y en proceso.
