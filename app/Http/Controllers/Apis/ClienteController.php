@@ -15,6 +15,7 @@ class ClienteController extends Controller
      */
     public function index(): JsonResponse
     {
+        
         $clientes = Cliente::all();
 
         return response()->json([
@@ -172,14 +173,7 @@ class ClienteController extends Controller
                 ], 404);
             }
 
-            // Log para debug
-            \Log::info('Cliente obtenido para usuario', [
-                'user_id' => $user->id,
-                'user_name' => $user->name,
-                'cliente_id' => $user->cliente_id,
-                'cliente_nombre' => $cliente->nombre,
-                'cliente_disponible' => $cliente->disponible
-            ]);
+        
 
             return response()->json([
                 'success' => true,
@@ -310,4 +304,92 @@ class ClienteController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Obtener clientes que tienen vehículos registrados
+     */
+    public function getClientesConVehiculos(): JsonResponse
+    {   
+        try {
+            
+            // Consulta directa con DB para debug
+            $clientes = \DB::table('clientes as c')
+                ->join('vehiculos as v', 'c.id', '=', 'v.id_cliente')
+                ->select([
+                    'c.id',
+                    'c.nombre',
+                    'c.contacto',
+                    'c.telefono',
+                    'c.email',
+                    'c.rif',
+                    'c.direccion',
+                    'c.disponible',
+                    'c.parent',
+                    'c.created_at',
+                    'c.updated_at'
+                ])
+                ->distinct()
+                ->orderBy('c.nombre')
+                ->get();
+
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Clientes con vehículos obtenidos exitosamente',
+                'data' => $clientes
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('getClientesConVehiculos: Error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener clientes con vehículos',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Método de prueba para verificar que el endpoint funciona
+     */
+    public function testClientesConVehiculos(): JsonResponse
+    {
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Método de prueba funcionando',
+            'data' => [
+                [
+                    'id' => 1,
+                    'nombre' => 'Prueba',
+                    'contacto' => 'Test',
+                    'telefono' => '123456789',
+                    'email' => 'test@test.com',
+                    'rif' => 'V-12345678-9',
+                    'direccion' => 'Dirección de prueba',
+                    'disponible' => 1000.00,
+                    'parent' => null,
+                    'created_at' => '2025-01-01 00:00:00',
+                    'updated_at' => '2025-01-01 00:00:00'
+                ]
+            ]
+        ]);
+    }
+
+    /**
+     * Método de prueba simple sin usar modelos
+     */
+    public function testSimple(): JsonResponse
+    {
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Método simple funcionando',
+            'data' => [
+                'test' => 'funcionando'
+            ]
+        ]);
+    }
+
+   
 }

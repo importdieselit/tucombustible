@@ -22,11 +22,11 @@ class VehiculoController extends Controller
                 ->leftJoin('marcas as m', 'v.marca', '=', 'm.id')
                 ->select([
                     'v.id',
-                    'v.id_usuario',
+                    'v.id_cliente',
                     'v.estatus',
                     'v.flota',
                     'v.marca',
-                    'm.nombre as marca_nombre',
+                    'm.marca as marca_nombre',
                     'v.modelo',
                     'v.placa',
                     'v.tipo',
@@ -39,7 +39,7 @@ class VehiculoController extends Controller
                     'v.altura',
                     'v.ancho',
                     'v.largo',
-                    'v.consumo_promedio',
+                    'v.consumo',
                     'v.created_at',
                     'v.updated_at'
                 ])
@@ -73,11 +73,11 @@ class VehiculoController extends Controller
                 ->leftJoin('marcas as m', 'v.marca', '=', 'm.id')
                 ->select([
                     'v.id',
-                    'v.id_usuario',
+                    'v.id_cliente',
                     'v.estatus',
                     'v.flota',
                     'v.marca',
-                    'm.nombre as marca_nombre',
+                    'm.marca as marca_nombre',
                     'v.modelo',
                     'v.placa',
                     'v.tipo',
@@ -90,12 +90,12 @@ class VehiculoController extends Controller
                     'v.altura',
                     'v.ancho',
                     'v.largo',
-                    'v.consumo_promedio',
+                    'v.consumo',
                     'v.created_at',
                     'v.updated_at'
                 ])
                 ->where('v.id', $id)
-                ->where('v.id_usuario', $user->id)
+                ->where('v.id_cliente', $user->id_cliente)
                 ->first();
 
             if (!$vehiculo) {
@@ -155,7 +155,7 @@ class VehiculoController extends Controller
             $user = $request->user();
             
             $vehiculoId = DB::table('vehiculos')->insertGetId([
-                'id_usuario' => $user->id,
+                'id_cliente' => $user->id_cliente,
                 'estatus' => 1, // Activo
                 'flota' => $request->flota,
                 'marca' => $request->marca,
@@ -229,7 +229,7 @@ class VehiculoController extends Controller
             
             $vehiculo = DB::table('vehiculos')
                 ->where('id', $id)
-                ->where('id_usuario', $user->id)
+                ->where('id_cliente', $user->id_cliente)
                 ->first();
 
             if (!$vehiculo) {
@@ -287,7 +287,7 @@ class VehiculoController extends Controller
             
             $vehiculo = DB::table('vehiculos')
                 ->where('id', $id)
-                ->where('id_usuario', $user->id)
+                ->where('id_cliente', $user->id_cliente)
                 ->first();
 
             if (!$vehiculo) {
@@ -350,11 +350,11 @@ class VehiculoController extends Controller
             ->leftJoin('marcas as m', 'v.marca', '=', 'm.id')
             ->select([
                 'v.id',
-                'v.id_usuario',
+                'v.id_cliente',
                 'v.estatus',
                 'v.flota',
                 'v.marca',
-                'm.nombre as marca_nombre',
+                'm.marca as marca_nombre',
                 'v.modelo',
                 'v.placa',
                 'v.tipo',
@@ -373,5 +373,176 @@ class VehiculoController extends Controller
             ])
             ->where('v.id', $id)
             ->first();
+    }
+
+    /**
+     * Obtener vehículos por cliente (para admin/super admin)
+     */
+    public function getByCliente(Request $request, $idCliente): JsonResponse
+    {
+        try {
+            $vehiculos = DB::table('vehiculos as v')
+                ->leftJoin('marcas as m', 'v.marca', '=', 'm.id')
+                ->leftJoin('clientes as c', 'v.id_cliente', '=', 'c.id')
+                ->select([
+                    'v.id',
+                    'v.id_cliente',
+                    'v.estatus',
+                    'v.flota',
+                    'v.marca',
+                    'm.marca as marca_nombre',
+                    'v.modelo',
+                    'v.placa',
+                    'v.tipo',
+                    'v.tipo_diagrama',
+                    'v.serial_motor',
+                    'v.serial_carroceria',
+                    'v.transmision',
+                    'v.HP',
+                    'v.CC',
+                    'v.altura',
+                    'v.ancho',
+                    'v.largo',
+                    'v.consumo',
+                    'v.created_at',
+                    'v.updated_at',
+                    'c.nombre as cliente_nombre'
+                ])
+                ->where('v.id_cliente', $idCliente)
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Vehículos del cliente obtenidos exitosamente',
+                'data' => $vehiculos
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener vehículos del cliente',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Buscar vehículo por placa (para admin/super admin)
+     */
+    public function getByPlaca(Request $request, $placa): JsonResponse
+    {
+        try {
+            // Buscar vehículo sin filtrar por estatus
+            $vehiculo = DB::table('vehiculos')
+                ->select([
+                    'id',
+                    'id_cliente',
+                    'estatus',
+                    'flota',
+                    'marca',
+                    'modelo',
+                    'placa',
+                    'tipo',
+                    'tipo_diagrama',
+                    'serial_motor',
+                    'serial_carroceria',
+                    'transmision',
+                    'HP',
+                    'CC',
+                    'altura',
+                    'ancho',
+                    'largo',
+                    'consumo',
+                    'created_at',
+                    'updated_at'
+                ])
+                ->where('placa', $placa)
+                ->first();
+
+            if (!$vehiculo) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vehículo no encontrado con la placa: ' . $placa
+                ], 404);
+            }
+
+            // Agregar información de marca y cliente por separado
+            $marca = null;
+            if ($vehiculo->marca) {
+                $marca = DB::table('marcas')->where('id', $vehiculo->marca)->first();
+            }
+
+            $cliente = null;
+            if ($vehiculo->id_cliente) {
+                $cliente = DB::table('clientes')->where('id', $vehiculo->id_cliente)->first();
+            }
+
+            // Agregar campos adicionales
+            $vehiculo->marca_nombre = $marca ? $marca->marca : null;
+            $vehiculo->cliente_nombre = $cliente ? $cliente->nombre : null;
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Vehículo encontrado exitosamente',
+                'data' => $vehiculo
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al buscar vehículo',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener todos los vehículos (para admin/super admin)
+     */
+    public function getAll(Request $request): JsonResponse
+    {
+        try {
+            $vehiculos = DB::table('vehiculos as v')
+                ->leftJoin('marcas as m', 'v.marca', '=', 'm.id')
+                ->leftJoin('clientes as c', 'v.id_cliente', '=', 'c.id')
+                ->select([
+                    'v.id',
+                    'v.id_cliente',
+                    'v.estatus',
+                    'v.flota',
+                    'v.marca',
+                    'm.marca as marca_nombre',
+                    'v.modelo',
+                    'v.placa',
+                    'v.tipo',
+                    'v.tipo_diagrama',
+                    'v.serial_motor',
+                    'v.serial_carroceria',
+                    'v.transmision',
+                    'v.HP',
+                    'v.CC',
+                    'v.altura',
+                    'v.ancho',
+                    'v.largo',
+                    'v.consumo',
+                    'v.created_at',
+                    'v.updated_at',
+                    'c.nombre as cliente_nombre'
+                ])
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Todos los vehículos obtenidos exitosamente',
+                'data' => $vehiculos
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener vehículos',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

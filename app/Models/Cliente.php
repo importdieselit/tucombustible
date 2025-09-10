@@ -38,10 +38,11 @@ class Cliente extends Model
      * @var array
      */
     protected $appends = [
-        'consumo_mensual_promedio',
-        'historico_compras',
-        'proxima_compra_prediccion',
-        'dias_faltantes_proxima_compra'
+        // Comentado temporalmente para evitar que se añadan automáticamente
+        // 'consumo_mensual_promedio',
+        // 'historico_compras',
+        // 'proxima_compra_prediccion',
+        // 'dias_faltantes_proxima_compra'
     ];
 
     /**
@@ -102,5 +103,13 @@ class Cliente extends Model
         // --- Lógica de prueba ---
         $proximaCompra = $this->getProximaCompraPrediccionAttribute();
         return Carbon::parse($proximaCompra['fecha'])->diffInDays(Carbon::now());
+    }
+
+    /**
+     * Relación con los vehículos del cliente
+     */
+    public function vehiculos()
+    {
+        return $this->hasMany(\App\Models\Vehiculo::class, 'id_cliente');
     }
 }

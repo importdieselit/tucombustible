@@ -18,6 +18,7 @@ use App\Http\Controllers\Apis\TestFcmController;
 use App\Http\Controllers\Apis\ProfileController;
 use App\Http\Controllers\Apis\UserController;
 use App\Http\Controllers\Apis\AdminController;
+use App\Http\Controllers\Apis\AdminDespachoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -72,6 +73,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/reportes/depositos', [AdminController::class, 'getReporteDepositos']);
     Route::get('/admin/reportes/consumo', [AdminController::class, 'getReporteConsumo']);
     
+    // Administrador - Despacho de Combustible
+    Route::post('/admin/despacho/realizar', [AdminDespachoController::class, 'realizarDespacho']);
+    Route::get('/admin/despacho/historial', [AdminDespachoController::class, 'getHistorialDespachos']);
+    
     // Clientes
     Route::get('/clientes', [ClienteController::class, 'index']);
     Route::get('/clientes/{id}', [ClienteController::class, 'show']);
@@ -81,6 +86,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/cliente/info', [ClienteController::class, 'info']);
     Route::get('/cliente/mis-datos', [ClienteController::class, 'misDatos']);
     Route::put('/cliente/disponible', [ClienteController::class, 'updateDisponible']);
+    
+    // Rutas temporales sin autenticación para pruebas
+    Route::get('/test/clientes/con-vehiculos', [ClienteController::class, 'getClientesConVehiculos'])->withoutMiddleware('auth:sanctum');
     
     // Depósitos
     Route::get('/depositos/mis-depositos', [DepositoController::class, 'getMisDepositos']);
@@ -133,6 +141,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/vehiculos/{id}', [VehiculoController::class, 'update']);
     Route::delete('/vehiculos/{id}', [VehiculoController::class, 'destroy']);
     Route::get('/vehiculos/marcas', [VehiculoController::class, 'marcas']);
+    
+    // Vehículos - Admin/Super Admin
+    Route::get('/vehiculos/admin/todos', [VehiculoController::class, 'getAll']);
+    Route::get('/vehiculos/cliente/{idCliente}', [VehiculoController::class, 'getByCliente']);
+    Route::get('/vehiculos/placa/{placa}', [VehiculoController::class, 'getByPlaca']);
     
     // Despachos
     Route::get('/despachos', [DespachoController::class, 'index']);
