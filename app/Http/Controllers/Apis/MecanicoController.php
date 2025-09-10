@@ -35,11 +35,11 @@ class MecanicoController extends Controller
             // Estadísticas del día filtradas por cliente
             $estadisticas = [
                 'egresos_hoy' => MovimientoCombustible::where('tipo_movimiento', 'salida')
-                    ->where('cliente_id', $user->id_cliente)
+                    ->where('cliente_id', $user->cliente_id)
                     ->whereDate('created_at', $hoy)
                     ->count(),
                 'ingresos_hoy' => MovimientoCombustible::where('tipo_movimiento', 'entrada')
-                    ->where('cliente_id', $user->id_cliente)
+                    ->where('cliente_id', $user->cliente_id)
                     ->whereDate('created_at', $hoy)
                     ->count(),
                 'check_ins_hoy' => 0, // TODO: Implementar cuando se creen las tablas de check in/out
@@ -51,7 +51,7 @@ class MecanicoController extends Controller
                 'vehiculos_disponibles' => DB::table('vehiculos')->where('estatus', 1)->count(),
             ];
 
-            \Log::info("Estadísticas del mecánico obtenidas para usuario {$user->id} - Cliente: {$user->id_cliente}");
+            \Log::info("Estadísticas del mecánico obtenidas para usuario {$user->id} - Cliente: {$user->cliente_id}");
 
             return response()->json([
                 'success' => true,
@@ -128,7 +128,7 @@ class MecanicoController extends Controller
                 ->leftJoin('modelos as mo', 'v.modelo', '=', 'mo.id')
                 ->select([
                     'v.id',
-                    'v.id_usuario',
+                    'v.id_cliente',
                     'v.estatus',
                     'v.flota',
                     'v.marca',
@@ -240,12 +240,12 @@ class MecanicoController extends Controller
 
             // Obtener pedidos aprobados del cliente
             $pedidos = DB::table('pedidos')
-                ->where('cliente_id', $user->id_cliente)
+                ->where('cliente_id', $user->cliente_id)
                 ->where('estado', 'aprobado')
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            \Log::info("Pedidos obtenidos para mecánico {$user->id} - Cliente: {$user->id_cliente} - Total: {$pedidos->count()}");
+            \Log::info("Pedidos obtenidos para mecánico {$user->id} - Cliente: {$user->cliente_id} - Total: {$pedidos->count()}");
 
             return response()->json([
                 'success' => true,
@@ -312,7 +312,7 @@ class MecanicoController extends Controller
             $validator = Validator::make($request->all(), [
                 'deposito_id' => 'required|exists:depositos,id',
                 'cantidad' => 'required|numeric|min:0.01',
-                'vehiculo_id' => 'required|string',
+                'vehiculo_placa' => 'required|string',
                 'observaciones' => 'nullable|string|max:500',
             ]);
 
@@ -324,15 +324,25 @@ class MecanicoController extends Controller
                 ], 422);
             }
 
-            // Verificar que el depósito pertenece al cliente del usuario
-            $deposito = Deposito::whereHas('movimientosCombustible', function($query) use ($user) {
-                $query->where('cliente_id', $user->id_cliente);
-            })->find($request->deposito_id);
+            // Buscar el vehículo por placa para obtener su ID (sin filtrar por cliente)
+            $vehiculo = DB::table('vehiculos')
+                ->where('placa', $request->vehiculo_placa)
+                ->first();
+
+            if (!$vehiculo) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vehículo no encontrado'
+                ], 404);
+            }
+
+            // Verificar que el depósito existe
+            $deposito = Deposito::find($request->deposito_id);
 
             if (!$deposito) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Depósito no encontrado o no pertenece a su cliente'
+                    'message' => 'Depósito no encontrado'
                 ], 404);
             }
 
@@ -347,9 +357,10 @@ class MecanicoController extends Controller
             $movimiento = MovimientoCombustible::create([
                 'tipo_movimiento' => 'salida',
                 'deposito_id' => $request->deposito_id,
-                'cliente_id' => $user->id_cliente,
+                'cliente_id' => $vehiculo->id_cliente ?? null, // Permitir vehículos sin cliente
+                'vehiculo_id' => $vehiculo->id,
                 'cantidad_litros' => $request->cantidad,
-                'observaciones' => "Despacho a vehículo: {$request->vehiculo_id}. " . ($request->observaciones ?? ''),
+                'observaciones' => "Despacho a vehículo: {$request->vehiculo_placa}. " . ($request->observaciones ?? ''),
             ]);
 
             // Actualizar el nivel del depósito
@@ -361,14 +372,15 @@ class MecanicoController extends Controller
                 'id' => $movimiento->id,
                 'deposito_id' => $request->deposito_id,
                 'cantidad' => $request->cantidad,
-                'vehiculo_id' => $request->vehiculo_id,
+                'vehiculo_id' => $vehiculo->id,
+                'vehiculo_placa' => $vehiculo->placa,
                 'observaciones' => $request->observaciones,
                 'fecha' => $movimiento->created_at,
                 'mecanico_id' => $user->id,
                 'movimiento_id' => $movimiento->id,
             ];
 
-            \Log::info("Egreso/despacho realizado por mecánico {$user->id} - Cliente: {$user->id_cliente}");
+            \Log::info("Egreso/despacho realizado por mecánico {$user->id} - Cliente: {$user->cliente_id}");
 
             return response()->json([
                 'success' => true,
@@ -416,7 +428,7 @@ class MecanicoController extends Controller
 
             // Verificar que el depósito pertenece al cliente del usuario
             $deposito = Deposito::whereHas('movimientosCombustible', function($query) use ($user) {
-                $query->where('cliente_id', $user->id_cliente);
+                $query->where('cliente_id', $user->cliente_id);
             })->find($request->deposito_id);
 
             if (!$deposito) {
@@ -442,7 +454,7 @@ class MecanicoController extends Controller
             $movimiento = MovimientoCombustible::create([
                 'tipo_movimiento' => 'entrada',
                 'deposito_id' => $request->deposito_id,
-                'cliente_id' => $user->id_cliente,
+                'cliente_id' => $user->cliente_id,
                 'cantidad_litros' => $request->cantidad,
                 'observaciones' => "Recarga desde proveedor: {$proveedor->nombre}. " . ($request->observaciones ?? ''),
             ]);
@@ -473,7 +485,7 @@ class MecanicoController extends Controller
                 'movimiento_id' => $movimiento->id,
             ];
 
-            \Log::info("Ingreso/recarga realizado por mecánico {$user->id} - Cliente: {$user->id_cliente}");
+            \Log::info("Ingreso/recarga realizado por mecánico {$user->id} - Cliente: {$user->cliente_id}");
 
             return response()->json([
                 'success' => true,
@@ -546,7 +558,7 @@ class MecanicoController extends Controller
                     'disp' => 'S', // Disponible
                     'salida_fecha' => $fechaActual->format('Y-m-d'),
                     'salida_motivo' => $request->observaciones ?: 'Check-out realizado - Vehículo sale del taller',
-                    'salida_id_usuario' => $user->id,
+                    'salida_id_cliente' => $user->cliente_id,
                     'updated_at' => $fechaActual,
                 ];
             }
@@ -570,7 +582,7 @@ class MecanicoController extends Controller
                 'estado_nuevo' => $request->tipo === 'check_in' ? 'n' : 'S',
             ];
 
-            \Log::info("Check {$request->tipo} realizado por mecánico {$user->id} - Vehículo: {$vehiculo->placa} - Cliente: {$user->id_cliente}");
+            \Log::info("Check {$request->tipo} realizado por mecánico {$user->id} - Vehículo: {$vehiculo->placa} - Cliente: {$user->cliente_id}");
 
             return response()->json([
                 'success' => true,
