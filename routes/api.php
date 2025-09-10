@@ -16,6 +16,8 @@ use App\Http\Controllers\Apis\RecepcionController;
 use App\Http\Controllers\Apis\MecanicoController;
 use App\Http\Controllers\Apis\TestFcmController;
 use App\Http\Controllers\Apis\ProfileController;
+use App\Http\Controllers\Apis\UserController;
+use App\Http\Controllers\Apis\AdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -53,6 +55,23 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile/available-clients', [ProfileController::class, 'getAvailableClients']);
     Route::get('/profile/current-user', [ProfileController::class, 'getCurrentUser']);
     
+    // Usuarios (Solo para administradores)
+    Route::get('/users', [UserController::class, 'index']);
+    Route::get('/users/{id}', [UserController::class, 'show']);
+    Route::post('/users', [UserController::class, 'store']);
+    Route::put('/users/{id}', [UserController::class, 'update']);
+    Route::delete('/users/{id}', [UserController::class, 'destroy']);
+    Route::patch('/users/{id}/toggle-status', [UserController::class, 'toggleStatus']);
+    Route::get('/users/perfiles/disponibles', [UserController::class, 'getPerfiles']);
+    
+    // Administrador - Reportes y Estadísticas
+    Route::get('/admin/estadisticas-generales', [AdminController::class, 'getEstadisticasGenerales']);
+    Route::get('/admin/dashboard', [AdminController::class, 'getDashboard']);
+    Route::get('/admin/reportes/pedidos', [AdminController::class, 'getReportePedidos']);
+    Route::get('/admin/reportes/clientes', [AdminController::class, 'getReporteClientes']);
+    Route::get('/admin/reportes/depositos', [AdminController::class, 'getReporteDepositos']);
+    Route::get('/admin/reportes/consumo', [AdminController::class, 'getReporteConsumo']);
+    
     // Clientes
     Route::get('/clientes', [ClienteController::class, 'index']);
     Route::get('/clientes/{id}', [ClienteController::class, 'show']);
@@ -78,6 +97,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Movimientos de Combustible
     Route::get('/movimientos-combustible', [MovimientoCombustibleController::class, 'index']);
+    Route::get('/movimientos-combustible/deposito/{depositoId}', [MovimientoCombustibleController::class, 'getByDeposito']);
     Route::get('/movimientos-combustible/{id}', [MovimientoCombustibleController::class, 'show']);
     Route::post('/movimientos-combustible', [MovimientoCombustibleController::class, 'store']);
     Route::put('/movimientos-combustible/{id}', [MovimientoCombustibleController::class, 'update']);

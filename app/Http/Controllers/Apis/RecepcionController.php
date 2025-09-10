@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\MovimientoCombustible;
 use App\Models\Pedido;
 use App\Models\Deposito;
+use App\Models\Cliente;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -54,19 +55,42 @@ class RecepcionController extends Controller
                 ], 404);
             }
 
-            // Verificar que el pedido pertenece al cliente del usuario
-            if ($pedido->cliente_id !== $user->cliente_id) {
+            // Verificar que el pedido pertenece al cliente del usuario o a una de sus sucursales
+            $clienteUsuario = Cliente::where('id', $user->cliente_id)->first();
+            
+            if (!$clienteUsuario) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'El pedido no pertenece a su cliente'
+                    'message' => 'Cliente del usuario no encontrado'
+                ], 404);
+            }
+
+            $puedeMarcarRecepcion = false;
+            
+            // Verificar si el pedido pertenece directamente al usuario
+            if ($pedido->cliente_id === $user->cliente_id) {
+                $puedeMarcarRecepcion = true;
+            }
+            // Si es cliente padre, verificar si el pedido pertenece a una de sus sucursales
+            elseif ($clienteUsuario->parent == 0) {
+                $sucursales = Cliente::where('parent', $user->cliente_id)->pluck('id')->toArray();
+                if (in_array($pedido->cliente_id, $sucursales)) {
+                    $puedeMarcarRecepcion = true;
+                }
+            }
+
+            if (!$puedeMarcarRecepcion) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No tienes permisos para marcar recepción de este pedido'
                 ], 403);
             }
 
-            // Verificar que el pedido esté aprobado o en proceso
-            if (!in_array($pedido->estado, ['aprobado', 'en_proceso'])) {
+            // Verificar que el pedido esté en proceso (solo se puede marcar recepción en este estado)
+            if ($pedido->estado !== 'en_proceso') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'El pedido debe estar aprobado o en proceso para registrar la recepción'
+                    'message' => 'Solo se puede marcar recepción cuando el pedido está en proceso'
                 ], 422);
             }
 
@@ -135,6 +159,7 @@ class RecepcionController extends Controller
                 $updateData = [
                     'estado' => 'completado',
                     'fecha_completado' => now(),
+                    'cantidad_recibida' => $request->cantidad_recibida,
                 ];
                 
                 // Si se proporciona calificación, agregarla
