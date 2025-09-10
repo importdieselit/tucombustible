@@ -60,6 +60,27 @@ class AdminDespachoController extends Controller
                 ], 400);
             }
 
+            // Obtener información del depósito
+            $deposito = DB::table('depositos')
+                ->select('id', 'serial', 'nivel_actual_litros', 'capacidad_litros')
+                ->where('id', 3)
+                ->first();
+
+            if (!$deposito) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Depósito no encontrado'
+                ], 404);
+            }
+
+            // Verificar que el depósito tenga suficiente combustible
+            if ($deposito->nivel_actual_litros < $request->cantidad_litros) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'El depósito no tiene suficiente combustible disponible. Disponible: ' . $deposito->nivel_actual_litros . ' L'
+                ], 400);
+            }
+
             // Crear el movimiento de combustible
             $movimientoId = DB::table('movimientos_combustible')->insertGetId([
                 'tipo_movimiento' => 'salida',
@@ -77,6 +98,11 @@ class AdminDespachoController extends Controller
                 ->where('id', $vehiculo->cliente_id)
                 ->decrement('disponible', $request->cantidad_litros);
 
+            // Descontar la cantidad del nivel actual del depósito
+            DB::table('depositos')
+                ->where('id', 3)
+                ->decrement('nivel_actual_litros', $request->cantidad_litros);
+
             DB::commit();
 
             return response()->json([
@@ -87,7 +113,13 @@ class AdminDespachoController extends Controller
                     'vehiculo' => $vehiculo->placa,
                     'cliente' => $vehiculo->cliente_nombre,
                     'cantidad_despachada' => $request->cantidad_litros,
-                    'disponible_restante' => $vehiculo->disponible - $request->cantidad_litros,
+                    'disponible_restante_cliente' => $vehiculo->disponible - $request->cantidad_litros,
+                    'deposito' => [
+                        'id' => $deposito->id,
+                        'serial' => $deposito->serial,
+                        'nivel_actual_restante' => $deposito->nivel_actual_litros - $request->cantidad_litros,
+                        'capacidad_maxima' => $deposito->capacidad_litros,
+                    ]
                 ]
             ]);
 
