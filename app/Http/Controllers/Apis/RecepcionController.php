@@ -159,6 +159,7 @@ class RecepcionController extends Controller
                 $updateData = [
                     'estado' => 'completado',
                     'fecha_completado' => now(),
+                    'cantidad_recibida' => $request->cantidad_recibida,
                 ];
                 
                 // Si se proporciona calificación, agregarla

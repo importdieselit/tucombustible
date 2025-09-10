@@ -19,6 +19,7 @@ class Pedido extends Model
         'vehiculo_id',
         'cantidad_solicitada',
         'cantidad_aprobada',
+        'cantidad_recibida',
         'estado',
         'observaciones',
         'observaciones_admin',
@@ -32,6 +33,7 @@ class Pedido extends Model
     protected $casts = [
         'cantidad_solicitada' => 'decimal:2',
         'cantidad_aprobada' => 'decimal:2',
+        'cantidad_recibida' => 'decimal:2',
         'fecha_solicitud' => 'datetime',
         'fecha_aprobacion' => 'datetime',
         'fecha_completado' => 'datetime',
