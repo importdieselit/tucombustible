@@ -10,13 +10,14 @@ use App\Models\Cliente;
 use App\Models\Pedido;
 use App\Models\MovimientoCombustible;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Auth;
 class DashboardController extends Controller
 {
     public function index()
     {
 
-
+        $userId=Auth::id();
+        $user=User::find($userId);
         // Redirigir a la vista de cliente si el perfil es 3
             if ($user->id_perfil == 3) {
                    // 1. Indicadores de clientes
