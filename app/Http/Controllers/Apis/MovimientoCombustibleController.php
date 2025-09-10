@@ -26,6 +26,30 @@ class MovimientoCombustibleController extends Controller
     }
 
     /**
+     * Get movements by deposito ID
+     */
+    public function getByDeposito($depositoId): JsonResponse
+    {
+        try {
+            $movimientos = MovimientoCombustible::with(['deposito', 'proveedor', 'cliente'])
+                ->where('deposito_id', $depositoId)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $movimientos
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener movimientos del depósito',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request): JsonResponse

@@ -75,34 +75,68 @@ class DepositoController extends Controller
 
     /**
      * Update the specified resource in storage.
+     * Solo permite editar el nombre (serial) y la cantidad disponible actual.
      */
-    public function update(Request $request, Deposito $deposito): JsonResponse
+    public function update(Request $request, $id): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'serial' => 'required|string|max:50|unique:depositos,serial,' . $deposito->id,
-            'capacidad_litros' => 'required|integer|min:1',
-            'nivel_actual_litros' => 'required|integer|min:0',
-            'nivel_alerta_litros' => 'required|integer|min:0',
-            'producto' => 'nullable|string|max:255',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error de validación',
-                'errors' => $validator->errors()
-            ], 422);
-        }
+        // Debug: Log de datos recibidos
 
         try {
-            $deposito->update($request->all());
+            // Buscar el depósito por ID
+            $deposito = Deposito::findOrFail($id);
+            
+            $validator = Validator::make($request->all(), [
+                'serial' => 'sometimes|string|max:50|unique:depositos,serial,' . $deposito->id,
+                'nivel_actual_litros' => 'sometimes|integer|min:0|max:' . $deposito->capacidad_litros,
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error de validación',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // Solo actualizar los campos permitidos
+            $updateData = [];
+            
+            if ($request->has('serial')) {
+                $updateData['serial'] = $request->serial;
+            }
+            
+            if ($request->has('nivel_actual_litros')) {
+                $updateData['nivel_actual_litros'] = $request->nivel_actual_litros;
+            }
+
+
+            // Verificar que hay datos para actualizar
+            if (empty($updateData)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No hay datos para actualizar'
+                ], 400);
+            }
+
+            // Actualizar el depósito
+            $resultado = $deposito->update($updateData);
+            
+
+            // Verificar que se actualizó correctamente
+            $depositoActualizado = Deposito::find($id);
+
 
             return response()->json([
                 'success' => true,
                 'message' => 'Depósito actualizado exitosamente',
-                'data' => $deposito
+                'data' => $depositoActualizado
             ]);
 
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Depósito no encontrado'
+            ], 404);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
