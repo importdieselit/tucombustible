@@ -77,6 +77,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/admin/despacho/realizar', [AdminDespachoController::class, 'realizarDespacho']);
     Route::get('/admin/despacho/historial', [AdminDespachoController::class, 'getHistorialDespachos']);
     
+    // Administrador - Historial de Despachos
+    Route::get('/admin/movimientos/historial', [MovimientoCombustibleController::class, 'getHistorialAdmin']);
+    Route::get('/admin/movimientos/historial/estadisticas', [MovimientoCombustibleController::class, 'getEstadisticasHistorialAdmin']);
+    Route::get('/admin/movimientos/{id}/detalle', [MovimientoCombustibleController::class, 'getDetalleAdmin']);
+    Route::get('/admin/clientes', [ClienteController::class, 'getClientesAdmin']);
+    Route::get('/admin/vehiculos', [VehiculoController::class, 'getVehiculosAdmin']);
+    
     // Clientes
     Route::get('/clientes', [ClienteController::class, 'index']);
     Route::get('/clientes/{id}', [ClienteController::class, 'show']);
@@ -106,7 +113,14 @@ Route::middleware('auth:sanctum')->group(function () {
     // Movimientos de Combustible
     Route::get('/movimientos-combustible', [MovimientoCombustibleController::class, 'index']);
     Route::get('/movimientos-combustible/deposito/{depositoId}', [MovimientoCombustibleController::class, 'getByDeposito']);
-    Route::get('/movimientos-combustible/{id}', [MovimientoCombustibleController::class, 'show']);
+    
+    // Historial de Movimientos para Clientes (deben ir ANTES de las rutas con {id})
+    Route::get('/movimientos/mi-historial', [MovimientoCombustibleController::class, 'getMiHistorial']);
+    Route::get('/movimientos/mi-historial/estadisticas', [MovimientoCombustibleController::class, 'getEstadisticasMiHistorial']);
+    Route::get('/movimientos/{id}/detalle', [MovimientoCombustibleController::class, 'getDetalle']);
+    
+    // Rutas con parámetros (deben ir DESPUÉS de las rutas específicas)
+    // Route::get('/movimientos-combustible/{id}', [MovimientoCombustibleController::class, 'show']); // No se usa en la app
     Route::post('/movimientos-combustible', [MovimientoCombustibleController::class, 'store']);
     Route::put('/movimientos-combustible/{id}', [MovimientoCombustibleController::class, 'update']);
     Route::delete('/movimientos-combustible/{id}', [MovimientoCombustibleController::class, 'destroy']);
@@ -136,11 +150,14 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Vehículos
     Route::get('/vehiculos', [VehiculoController::class, 'index']);
+    Route::get('/vehiculos/marcas', [VehiculoController::class, 'marcas']);
+    Route::get('/vehiculos/mis-vehiculos', [VehiculoController::class, 'getMisVehiculos']);
+    
+    // Rutas con parámetros (deben ir DESPUÉS de las rutas específicas)
     Route::get('/vehiculos/{id}', [VehiculoController::class, 'show']);
     Route::post('/vehiculos', [VehiculoController::class, 'store']);
     Route::put('/vehiculos/{id}', [VehiculoController::class, 'update']);
     Route::delete('/vehiculos/{id}', [VehiculoController::class, 'destroy']);
-    Route::get('/vehiculos/marcas', [VehiculoController::class, 'marcas']);
     
     // Vehículos - Admin/Super Admin
     Route::get('/vehiculos/admin/todos', [VehiculoController::class, 'getAll']);

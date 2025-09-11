@@ -545,4 +545,111 @@ class VehiculoController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Obtener vehículos del cliente autenticado
+     */
+    public function getMisVehiculos(Request $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            $clienteId = $user->cliente_id;
+
+            if (!$clienteId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuario no tiene cliente asociado'
+                ], 403);
+            }
+
+            $vehiculos = DB::table('vehiculos as v')
+                ->leftJoin('marcas as m', 'v.marca', '=', 'm.id')
+                ->select([
+                    'v.id',
+                    'v.id_cliente',
+                    'v.estatus',
+                    'v.flota',
+                    'v.marca',
+                    'm.marca as marca_nombre',
+                    'v.modelo',
+                    'v.placa',
+                    'v.tipo',
+                    'v.tipo_diagrama',
+                    'v.serial_motor',
+                    'v.serial_carroceria',
+                    'v.transmision',
+                    'v.HP',
+                    'v.CC',
+                    'v.altura',
+                    'v.ancho',
+                    'v.largo',
+                    'v.consumo',
+                    'v.created_at',
+                    'v.updated_at'
+                ])
+                ->where('v.id_cliente', $clienteId)
+                ->where('v.estatus', 1) // Solo vehículos activos
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Vehículos del cliente obtenidos exitosamente',
+                'data' => $vehiculos
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener vehículos del cliente',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get vehículos para el admin (para filtros) - TODOS los vehículos del sistema
+     */
+    public function getVehiculosAdmin(): JsonResponse
+    {
+        try {
+            // Primero obtener todos los vehículos sin join para asegurar que funcione
+            $vehiculos = DB::table('vehiculos')
+                ->select([
+                    'id',
+                    'placa',
+                    'marca',
+                    'modelo',
+                    'id_cliente',
+                    'marca as marca_nombre' // Usar el campo marca directamente como marca_nombre
+                ])
+                ->orderBy('placa', 'asc')
+                ->get();
+
+            // Luego obtener los nombres de clientes por separado
+            $clientes = DB::table('clientes')
+                ->select(['id', 'nombre'])
+                ->get()
+                ->keyBy('id');
+
+            // Combinar los datos
+            $vehiculosConClientes = $vehiculos->map(function ($vehiculo) use ($clientes) {
+                $vehiculo->cliente_nombre = $vehiculo->id_cliente ? 
+                    ($clientes[$vehiculo->id_cliente]->nombre ?? 'Cliente no encontrado') : 
+                    'Sin cliente asignado';
+                return $vehiculo;
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $vehiculosConClientes
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener vehículos',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

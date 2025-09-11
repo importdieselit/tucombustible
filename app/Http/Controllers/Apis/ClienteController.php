@@ -391,5 +391,29 @@ class ClienteController extends Controller
         ]);
     }
 
+    /**
+     * Get clientes para el admin (para filtros)
+     */
+    public function getClientesAdmin(): JsonResponse
+    {
+        try {
+            $clientes = Cliente::select(['id', 'nombre', 'contacto', 'telefono', 'email'])
+                ->orderBy('nombre', 'asc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $clientes
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener clientes',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
    
 }
