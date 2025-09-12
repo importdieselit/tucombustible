@@ -7,6 +7,7 @@ use App\Models\Marca;
 use App\Models\Modelo;
 use App\Models\User;
 use App\Models\TipoVehiculo;
+use App\Models\Cliente;
 use Illuminate\Http\Request;
 use App\Http\Requests\VehiculoStoreRequest;
 use Maatwebsite\Excel\Facades\Excel;
@@ -24,11 +25,11 @@ class VehiculoController extends BaseController
     {
         $marcas = Marca::pluck('marca', 'id');
         $modelos = Modelo::pluck('modelo', 'id');
-        $usuarios = User::pluck('name', 'id');
+        $clientes = Cliente::pluck('name', 'id');
         $tiposVehiculo = TipoVehiculo::pluck('tipo', 'id');
         
         // La lógica de la vista se hereda del BaseController, pero con los datos adicionales.
-        return view($this->getModelNameLowerCase() . '.create', compact('marcas', 'modelos', 'usuarios', 'tiposVehiculo'));
+        return view($this->getModelNameLowerCase() . '.create', compact('marcas', 'modelos', 'clientes', 'tiposVehiculo'));
     }
 
     /**
@@ -43,11 +44,11 @@ class VehiculoController extends BaseController
 
         $marcas = Marca::pluck('nombre', 'id');
         $modelos = Modelo::pluck('nombre', 'id');
-        $usuarios = User::pluck('name', 'id');
+        $clientes = Cliente::pluck('name', 'id');
         $tiposVehiculo = TipoVehiculo::pluck('nombre', 'id');
 
         // Se pasa el vehículo y los datos adicionales a la vista.
-        return view($this->getModelNameLowerCase() . '.edit', compact('item', 'marcas', 'modelos', 'usuarios', 'tiposVehiculo'));
+        return view($this->getModelNameLowerCase() . '.edit', compact('item', 'marcas', 'modelos', 'clientes', 'tiposVehiculo'));
     }
 
 

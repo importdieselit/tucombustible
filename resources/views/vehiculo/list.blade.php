@@ -44,8 +44,8 @@
                 <thead>
                     <tr>
                         <th width="5%">#</th>
-                     
                         <th>Flota</th>
+                        <th>Cliente</th>
                         <th>Clase</th>
                         <th>Marca/Modelo</th>
                         <th>Año</th>
@@ -60,8 +60,8 @@
                     @foreach ($data as $index => $vehiculo)
                     <tr class="clickable-row" data-id="{{ $vehiculo->id }}">
                         <td>{{ $index + 1 }}</td>
-                        
                         <td>{{ $vehiculo->flota ?? 'N/A' }}</td>
+                        <td>{{ $vehiculo->cliente->nombre ?? 'N/A' }}</td>
                         <td>{{ $vehiculo->clase ?? 'N/A' }}</td>
                         <td>{{ $vehiculo->marca()->marca ?? 'N/A' }} / {{ $vehiculo->modelo()->modelo ?? 'N/A' }}</td>
                         <td>{{ $vehiculo->anno }}</td>
@@ -69,19 +69,18 @@
                         <td>{{ $vehiculo->tipoVehiculo->tipo ?? 'N/A' }}</td>
                         <td>{{ number_format($vehiculo->kilometraje ?? 0, 0, ',', '.') }} km</td>
                         <td>
-                             @php
-                                        $estatusInfo = $estatusData->get($vehiculo->estatus);
-                                    @endphp
-                                    @if ($estatusInfo)
-                                        <span class="badge bg-{{ $estatusInfo->css }}" title="{{ $estatusInfo->descripcion }}">
-                                            <i class="mr-1 fa-solid {{ $estatusInfo->icon_auto }}"></i>
-                                            {{ $estatusInfo->auto }}
-                                        </span>
-                                    @else
-                                        <span class="badge bg-gray">Desconocido</span>
-                                    @endif
+                            @php
+                                $estatusInfo = $estatusData->get($vehiculo->estatus);
+                            @endphp
+                            @if ($estatusInfo)
+                                <span class="badge bg-{{ $estatusInfo->css }}" title="{{ $estatusInfo->descripcion }}">
+                                    <i class="mr-1 fa-solid {{ $estatusInfo->icon_auto }}"></i>
+                                    {{ $estatusInfo->auto }}
+                                </span>
+                            @else
+                                <span class="badge bg-gray">Desconocido</span>
+                            @endif
                         </td>
-
                         <td>{{ !is_null($vehiculo->created_at)?$vehiculo->created_at->format('d/m/Y'): 'N/A' }}</td>
                     </tr>
                     @endforeach
@@ -95,7 +94,6 @@
 @push('scripts')
     <!-- Script de jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
     <!-- Script de DataTables -->
     <script src="https://cdn.datatables.net/2.0.7/js/dataTables.js"></script>
     <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>

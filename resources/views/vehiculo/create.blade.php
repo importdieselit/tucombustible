@@ -252,7 +252,7 @@
                                         <label for="id_usuario" class="form-label text-primary">Usuario Asignado</label>
                                         <select name="id_usuario" id="id_usuario" class="form-control">
                                             <option value="">Seleccione un usuario</option>
-                                            @foreach($usuarios as $id => $usuario)
+                                            @foreach($clientes as $id => $usuario)
                                                 <option value="{{ $id }}" {{ old('id_usuario', $item->id_usuario ?? '') == $id ? 'selected' : '' }}>{{ $usuario }}</option>
                                             @endforeach
                                         </select>
