@@ -65,7 +65,7 @@
                                 <td>{{ $user->name }}</td>
                                 <td>{{$user->perfil()->first()->nombre}}</td>
 
-                                <td>{{ !is_null($user->cliente_id)?dd($user->cliente()):'N/A' }} {{$user->id_master==0?'(P)':''}}</td>
+                                <td>{{ !is_null($user->cliente_id)?dd($user->cliente()->first()):'N/A' }} {{$user->id_master==0?'(P)':''}}</td>
                                  {{-- $user->cliente()->first()->nombre --}}
                                 <td>
                                     <a href="{{ route('usuarios.show', $user->id) }}" class="btn btn-sm btn-info text-white" title="Ver Detalle">
