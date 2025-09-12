@@ -1,6 +1,12 @@
 @extends('layouts.app')
 
 @section('title', 'Listado de usuarios')
+@push('scripts')
+<!-- jQuery para manejar las llamadas AJAX -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Bootstrap JS para el modal -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+@endpush
 @push('css')
 <style>
     /* Estilos para el panel de permisos */
