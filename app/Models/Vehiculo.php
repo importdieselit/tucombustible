@@ -7,6 +7,7 @@ use App\Models\User; // Asegúrate de que el modelo User esté correctamente imp
 use App\Models\Marca; // Asegúrate de que el modelo Marca esté correctamente importado
 use App\Models\Modelo; // Asegúrate de que el modelo Modelo esté correctamente importado
 use App\Models\TipoVehiculo; // Asegúrate de que el modelo  
+use App\Models\Cliente;
 
 class Vehiculo extends Model
 {
@@ -52,7 +53,7 @@ class Vehiculo extends Model
      * @var array
      */
     protected $fillable = [
-        'id_usuario',
+        'id_cliente',
         'estatus',
         'flota',
         'marca',
@@ -143,9 +144,9 @@ class Vehiculo extends Model
     /**
      * Get the user that owns the vehiculo.
      */
-    public function usuario()
+    public function cliente()
     {
-        return $this->belongsTo(User::class, 'id_usuario', 'id'); // Ajusta 'App\User::class' al nombre de tu modelo de Usuario/User
+        return $this->belongsTo(Cliente::class, 'id_cliente', 'id'); // Ajusta 'App\User::class' al nombre de tu modelo de Usuario/User
     }
 
     /**

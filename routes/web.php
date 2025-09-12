@@ -25,6 +25,7 @@ use App\Http\Controllers\AlmacenController;
 use App\Http\Controllers\ChoferController;
 use App\Http\Controllers\AlertaController;
 use App\Http\Controllers\AccesoController;
+use App\Models\Deposito;
 
 // Agrega otros controladores según los modelos y tablas
 
@@ -76,6 +77,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/usuarios/importar', [UserController::class, 'import'])->name('usuarios.importar');
     Route::post('/usuarios/importarP', [UserController::class, 'handleImport'])->name('usuarios.importarprocess');
+    Route::post('/depositos/ajuste', [DepositoController::class, 'ajuste'])->name('deposito.ajuste');
+                
    
   Route::get('/permisos', [AccesoController::class, 'index'])->name('permisos.index');
     

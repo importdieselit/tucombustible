@@ -9,8 +9,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Session;
 use App\Http\Controllers\BaseController;
 use Illuminate\Support\Facades\Log;
-
-
+use App\Models\MovimientoCombustible;
 
 class DepositoController extends BaseController
 {
@@ -57,6 +56,27 @@ class DepositoController extends BaseController
         }
 
         $deposito->update($validator->validated());
+
+        Session::flash('success', 'Depósito actualizado exitosamente.');
+        return redirect()->route('depositos.index');
+    }
+
+     public function ajuste(Request $request)
+    {
+        $deposito=Deposito::find($request->id);
+        $variacion=$deposito->nivel_actual_litros - $request->nivel_actual_litros;
+        $deposito->nivel_actual_litros= $request->nivel_actual_litros;
+        $deposito->save();
+
+        // 3. Crear el registro del movimiento
+            $movimiento = new MovimientoCombustible();
+            $movimiento->created_at = date('Y-m-d H:i '); // Asignar la fecha del formulario
+            $movimiento->tipo_movimiento = 'ajuste';
+            $movimiento->deposito_id = $request->deposito_id;
+            $movimiento->cantidad_litros = abs($variacion);
+            $movimiento->observaciones = $request->observacion;
+            $movimiento->save();
+
 
         Session::flash('success', 'Depósito actualizado exitosamente.');
         return redirect()->route('depositos.index');
