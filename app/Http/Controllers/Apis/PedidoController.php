@@ -362,7 +362,7 @@ class PedidoController extends Controller
     }
 
     /**
-     * Cancelar un pedido (solo si está pendiente)
+     * Cancelar un pedido (solo si está pendiente o aprobado)
      */
     public function cancelarPedido(Request $request, $id): JsonResponse
     {
@@ -406,10 +406,11 @@ class PedidoController extends Controller
                 ], 404);
             }
 
-            if ($pedido->estado !== 'pendiente') {
+            // Permitir cancelar pedidos en estado 'pendiente' o 'aprobado'
+            if (!in_array($pedido->estado, ['pendiente', 'aprobado'])) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Solo se pueden cancelar pedidos pendientes'
+                    'message' => 'Solo se pueden cancelar pedidos pendientes o aprobados'
                 ], 422);
             }
 
