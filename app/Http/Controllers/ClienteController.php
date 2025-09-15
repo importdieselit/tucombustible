@@ -33,7 +33,7 @@ class ClienteController extends BaseController
 
         $user = auth()->user();
         dd($user);
-        $cliente = Cliente::find($user->id_cliente);
+        $cliente = Cliente::find($user->cliente_id);
         dd($cliente);
         // 1. Indicadores de clientes
         // Obtenemos todos los clientes con parent 0.
@@ -42,7 +42,7 @@ class ClienteController extends BaseController
         $disponibilidadData = [];
         if($user->id_perfil==3) {
             if($cliente->parent==0) {
-                $sucursales = Cliente::where('parent', $user->id_cliente)
+                $sucursales = Cliente::where('parent', $user->cliente_id)
                                 ->select('nombre', 'disponible', 'cupo')
                                 ->get();
             } 
@@ -79,20 +79,20 @@ class ClienteController extends BaseController
         
         if($user->id_perfil==3) {
             if($cliente->parent==0) {
-                $sucursalesIds = Cliente::where('parent', $user->id_cliente)->pluck('id')->toArray();
+                $sucursalesIds = Cliente::where('parent', $user->cliente_id)->pluck('id')->toArray();
                 $pedidosPendientes = $pedidosPendientes->whereIn('id_cliente', $sucursalesIds);
             } else {
-                $pedidosPendientes = $pedidosPendientes->where('id_cliente', $user->id_cliente);
+                $pedidosPendientes = $pedidosPendientes->where('id_cliente', $user->cliente_id);
             }
         }
         $pedidosPendientes = $pedidosPendientes->count();
         $pedidosEnProceso = Pedido::where('estado', 'en_proceso');
         if($user->id_perfil==3) {
             if($cliente->parent==0) {
-                $sucursalesIds = Cliente::where('parent', $user->id_cliente)->pluck('id')->toArray();
+                $sucursalesIds = Cliente::where('parent', $user->cliente_id)->pluck('id')->toArray();
                 $pedidosEnProceso = $pedidosEnProceso->whereIn('id_cliente', $sucursalesIds);
             } else {
-                $pedidosEnProceso = $pedidosEnProceso->where('id_cliente', $user->id_cliente);
+                $pedidosEnProceso = $pedidosEnProceso->where('id_cliente', $user->cliente_id);
             }
         }
         $pedidosEnProceso = $pedidosEnProceso->count();
@@ -109,11 +109,11 @@ class ClienteController extends BaseController
         // Por ejemplo, un estado 'cargado' o 'en_ruta_con_combustible'.
         if($user->id_perfil==3) {
             if($cliente->parent==0) {
-                $sucursalesIds = Cliente::where('parent', $user->id_cliente)->pluck('id')->toArray();
+                $sucursalesIds = Cliente::where('parent', $user->cliente_id)->pluck('id')->toArray();
                 $camionesCargados = Vehiculo::whereIn('id_cliente', $sucursalesIds)
                                     ->count();
             } else {
-                $camionesCargados = Vehiculo::where('id_cliente', $user->id_cliente)
+                $camionesCargados = Vehiculo::where('id_cliente', $user->cliente_id)
                                     ->count();
             }
         } else {
