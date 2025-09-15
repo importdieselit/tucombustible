@@ -132,7 +132,7 @@
 
 @section('content')
     <div class="container-fluid">
-        <h1 class="display-5 fw-bold mb-4 text-center text-white">Dashboard de Cliente</h1>
+        <h1 class="display-5 fw-bold mb-4 text-center text-black">Dashboard de Cliente</h1>
         {{-- En una aplicación real, esta información vendría del usuario autenticado --}}
         <p class="text-center text-sm mb-5" id="user-role-info">Rol: Cliente Principal</p>
 
@@ -151,8 +151,8 @@
                 $pedidos = [['id' => 'p1', 'estado' => 'En proceso'], ['id' => 'p2', 'estado' => 'Pendiente']];
                 $solicitudes = [['id' => 's1', 'estado' => 'Pendiente'], ['id' => 's2', 'estado' => 'Aprobada']];
                 $notificaciones = [['id' => 'n1', 'leido' => false], ['id' => 'n2', 'leido' => true]];
-                $sucursales = [['id' => 'branch-A', 'nombre' => 'Sucursal Principal'], ['id' => 'branch-B', 'nombre' => 'Sucursal Sur']];
-
+                //$sucursales = [['id' => 'branch-A', 'nombre' => 'Sucursal Principal'], ['id' => 'branch-B', 'nombre' => 'Sucursal Sur']];
+dd($sucursales);
                 $filteredDeposits = collect($depositos)->filter(function ($deposito) use ($currentUserRole, $currentUserBranchId) {
                     return $currentUserRole === 'principal' || $deposito['branch_id'] === $currentUserBranchId;
                 });
@@ -165,9 +165,9 @@
             <div class="d-flex align-items-center">
                 <i class="fas fa-warehouse text-info me-3" style="font-size: 3rem;"></i>
                 <div>
-                    <h2 class="h4 fw-bold text-white mb-0" id="main-title">
+                    <h2 class="h4 fw-bold text-black mb-0" id="main-title">
                         @if ($currentUserRole == 'principal')
-                            Estado de Inventario General
+                            Estado de Cupo General
                         @else
                             Estado de tu Sucursal
                         @endif
