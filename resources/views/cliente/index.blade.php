@@ -131,7 +131,7 @@
 
 @section('content')
     <div class="container-fluid">
-        <h1 class="display-8 fw-bold mb-5 text-center text-black">{{ ucword(Auth::user()->name)}}</h1>
+        <h1 class="display-8 fw-bold mb-5 text-center text-black">{{ ucwords(Auth::user()->name)}}</h1>
         {{-- En una aplicación real, esta información vendría del usuario autenticado --}}
          <p class="text-center text-sm mb-5" id="user-role-info">  </p>
 
