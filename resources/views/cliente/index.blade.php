@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard de Cliente')
+@section('title', 'TuCombustible - {{ Auth::user()->name }}')
 
 @push('styles')
         <style>

@@ -29,7 +29,7 @@
                     @else
                         @include('layouts.sidebar')
                     @endif
-                    <main class="col ms-sm-auto col-lg-10 px-md-4 py-4">
+                    <main class="col ms-sm-auto col-lg-10 px-md-4 py-4 z-1">
                         @yield('content')
                     </main>
                 </div>
