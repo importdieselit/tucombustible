@@ -33,7 +33,6 @@ class ClienteController extends BaseController
 
         $user = auth()->user();
        $cliente = Cliente::find($user->cliente_id);
-        dd($cliente);
         // 1. Indicadores de clientes
         // Obtenemos todos los clientes con parent 0.
         $sucursales = [];
