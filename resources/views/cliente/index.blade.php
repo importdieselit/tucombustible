@@ -141,25 +141,20 @@
                 // Simulación de datos pasados desde el controlador
                 $currentUserRole = 'principal'; // 'principal' o 'sucursal'
                 $currentUserBranchId = 'branch-A';
-                $depositos = [
-                    ['id' => '1', 'serial' => 'D-001', 'producto' => 'Gasolina', 'capacidad_litros' => 10000, 'nivel_actual_litros' => 8500, 'nivel_alerta_litros' => 1000, 'branch_id' => 'branch-A'],
-                    ['id' => '2', 'serial' => 'D-002', 'producto' => 'Diésel', 'capacidad_litros' => 15000, 'nivel_actual_litros' => 1200, 'nivel_alerta_litros' => 1500, 'branch_id' => 'branch-A'],
-                    ['id' => '3', 'serial' => 'D-003', 'producto' => 'Kerosene', 'capacidad_litros' => 5000, 'nivel_actual_litros' => 4500, 'nivel_alerta_litros' => 500, 'branch_id' => 'branch-B'],
-                    ['id' => '4', 'serial' => 'D-004', 'producto' => 'Gas Natural', 'capacidad_litros' => 8000, 'nivel_actual_litros' => 600, 'nivel_alerta_litros' => 800, 'branch_id' => 'branch-B'],
-                ];
+
                 $pedidos = [['id' => 'p1', 'estado' => 'En proceso'], ['id' => 'p2', 'estado' => 'Pendiente']];
                 $solicitudes = [['id' => 's1', 'estado' => 'Pendiente'], ['id' => 's2', 'estado' => 'Aprobada']];
                 $notificaciones = [['id' => 'n1', 'leido' => false], ['id' => 'n2', 'leido' => true]];
                 //$sucursales = [['id' => 'branch-A', 'nombre' => 'Sucursal Principal'], ['id' => 'branch-B', 'nombre' => 'Sucursal Sur']];
 
-                $filteredDeposits = collect($depositos)->filter(function ($deposito) use ($currentUserRole, $currentUserBranchId) {
+                $filteredDeposits = collect($sucurssales)->filter(function ($deposito) use ($currentUserRole, $currentUserBranchId) {
                     return $currentUserRole === 'principal' || $deposito['branch_id'] === $currentUserBranchId;
                 });
 
-                $totalCapacity = $filteredDeposits->sum('capacidad_litros');
-                $totalCurrent = $filteredDeposits->sum('nivel_actual_litros');
+                $totalCapacity = $cliente->cupo;
+                $totalCurrent = $cliente->disponible;
                 $percentage = $totalCapacity > 0 ? ($totalCurrent / $totalCapacity) * 100 : 0;
-                $isAlert = $totalCurrent <= $filteredDeposits->sum('nivel_alerta_litros');
+                $isAlert = $totalCurrent <= ($totalCapacity * 0.1);
             @endphp
             <div class="d-flex align-items-center">
                 <i class="fas fa-warehouse text-info me-3" style="font-size: 3rem;"></i>
@@ -175,6 +170,7 @@
                         @if ($currentUserRole == 'principal')
                             Resumen de todas las sucursales
                         @else
+                        {{ dd($sucursales)}}
                             {{ collect($sucursales)->firstWhere('id', $currentUserBranchId)['nombre'] }}
                         @endif
                     </p>
