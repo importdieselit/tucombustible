@@ -147,9 +147,9 @@
                 $notificaciones = [['id' => 'n1', 'leido' => false], ['id' => 'n2', 'leido' => true]];
                 //$sucursales = [['id' => 'branch-A', 'nombre' => 'Sucursal Principal'], ['id' => 'branch-B', 'nombre' => 'Sucursal Sur']];
 
-                $filteredDeposits = collect($sucurssales)->filter(function ($deposito) use ($currentUserRole, $currentUserBranchId) {
-                    return $currentUserRole === 'principal' || $deposito['branch_id'] === $currentUserBranchId;
-                });
+                // $filteredDeposits = collect($sucursales)->filter(function ($deposito) use ($currentUserRole, $currentUserBranchId) {
+                //     return $currentUserRole === 'principal' || $deposito['branch_id'] === $currentUserBranchId;
+                // });
 
                 $totalCapacity = $cliente->cupo;
                 $totalCurrent = $cliente->disponible;
