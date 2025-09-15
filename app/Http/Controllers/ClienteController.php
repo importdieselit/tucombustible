@@ -32,6 +32,7 @@ class ClienteController extends BaseController
     {
 
         $user = auth()->user();
+        dd($user);
         $cliente = Cliente::find($user->id_cliente);
         dd($cliente);
         // 1. Indicadores de clientes
