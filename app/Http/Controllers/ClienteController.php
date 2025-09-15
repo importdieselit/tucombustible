@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\DB;
+use App\Models\Pedido;
+use App\Models\Deposito;
+use App\Models\Vehiculo;
 
 /**
  * Controlador para gestionar los clientes.
@@ -27,35 +30,113 @@ class ClienteController extends BaseController
 
     public function index()
     {
+
+        $user = auth()->user();
+        $cliente = Cliente::find($user->id_cliente);
         // 1. Indicadores de clientes
         // Obtenemos todos los clientes con parent 0.
-        $clientesPadre = Cliente::where('parent', 0)
+        $sucursales = [];
+        $clientesPadre= null;
+        $disponibilidadData = [];
+        if($user->id_perfil==3) {
+            if($cliente->id_master==0) {
+                $sucursales = Cliente::where('parent', $user->id_cliente)
                                 ->select('nombre', 'disponible', 'cupo')
                                 ->get();
+            } 
+       }
+       if($user->id_perfil<3) {
+            $clientesPadre = Cliente::where('parent', 0)
+                                ->select('nombre', 'disponible', 'cupo')
+                                ->get();
+       }
         
         // 2. Gráficas de disponibilidad de clientes.
         // Los datos para la gráfica los podemos pasar directamente del controlador a la vista.
-        $disponibilidadData = $clientesPadre->map(function ($cliente) {
-            return [
-                'nombre' => $cliente->nombre,
-                'disponible' => $cliente->disponible,
-                'cupo' => $cliente->cupo,
-            ];
-        });
+        if($user->id_perfil<3) {
+            $disponibilidadData = $clientesPadre->map(function ($cliente) {
+                return [
+                    'nombre' => $cliente->nombre,
+                    'disponible' => $cliente->disponible,
+                    'cupo' => $cliente->cupo,
+                ];
+            });
+        } elseif($user->id_perfil==3 && $cliente->id_master==0) {  
+            $disponibilidadData = $sucursales->map(function ($sucursal) {
+                return [
+                    'nombre' => $sucursal->nombre,
+                    'disponible' => $sucursal->disponible,
+                    'cupo' => $sucursal->cupo,
+                ];
+            });
+        }
 
         // 3. Indicadores de pedidos pendientes y en proceso.
-        $pedidosPendientes = Pedido::where('estado', 'pendiente')->count();
-        $pedidosEnProceso = Pedido::where('estado', 'en_proceso')->count();
+        $pedidosPendientes = Pedido::where('estado', 'pendiente');
+        
+        
+        if($user->id_perfil==3) {
+            if($cliente->id_master==0) {
+                $sucursalesIds = Cliente::where('parent', $user->id_cliente)->pluck('id')->toArray();
+                $pedidosPendientes = $pedidosPendientes->whereIn('id_cliente', $sucursalesIds);
+            } else {
+                $pedidosPendientes = $pedidosPendientes->where('id_cliente', $user->id_cliente);
+            }
+        }
+        $pedidosPendientes = $pedidosPendientes->count();
+        $pedidosEnProceso = Pedido::where('estado', 'en_proceso');
+        if($user->id_perfil==3) {
+            if($cliente->id_master==0) {
+                $sucursalesIds = Cliente::where('parent', $user->id_cliente)->pluck('id')->toArray();
+                $pedidosEnProceso = $pedidosEnProceso->whereIn('id_cliente', $sucursalesIds);
+            } else {
+                $pedidosEnProceso = $pedidosEnProceso->where('id_cliente', $user->id_cliente);
+            }
+        }
+        $pedidosEnProceso = $pedidosEnProceso->count();
 
         // 4. Niveles de los depósitos.
-        $depositos = Deposito::all();
+        $depositos = [];
+        if($user->id_perfil<3) {    
+            $depositos = Deposito::all();
+        }
 
         // 5. Camiones cargados.
         // Asumimos que tienes un campo 'estado' en la tabla de vehículos o una relación
         // que te permite saber si un camión está cargado.
         // Por ejemplo, un estado 'cargado' o 'en_ruta_con_combustible'.
-        $camionesCargados = Vehiculo::where('estado', 'cargado')->count();
-
+        if($user->id_perfil==3) {
+            if($cliente->id_master==0) {
+                $sucursalesIds = Cliente::where('parent', $user->id_cliente)->pluck('id')->toArray();
+                $camionesCargados = Vehiculo::whereIn('id_cliente', $sucursalesIds)
+                                    ->count();
+            } else {
+                $camionesCargados = Vehiculo::where('id_cliente', $user->id_cliente)
+                                    ->count();
+            }
+        } else {
+            $camionesCargados = Vehiculo::where('estado', 'cargado')->count();
+        }
+    
+        if($user->id_perfil==2) {
+            return view('combustible.dashboard', compact(
+                'clientesPadre', 
+                'disponibilidadData',
+                'pedidosPendientes', 
+                'pedidosEnProceso', 
+                'depositos', 
+                'camionesCargados'
+            ));
+        } elseif($user->id_perfil==3) {
+            
+            return view('clientes.index', compact(
+                'clientesPadre', 
+                'disponibilidadData',
+                'pedidosPendientes', 
+                'pedidosEnProceso', 
+                'sucursales'
+            ));
+        }
         // Pasamos todos los datos a la vista.
         return view('combustible.dashboard', compact(
             'clientesPadre', 
