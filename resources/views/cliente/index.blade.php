@@ -243,13 +243,12 @@
                 <div class="card p-4 mb-4">
                     <h4 class="fw-bold mb-3">Resumen de Sucursales</h4>
                     <div class="row g-4" id="branches-list">
-                        @foreach ($sucursales as $sucursal)
+                        @foreach ($disponibilidadData as $sucursal)
                             @php
-                                $branchDeposits = collect($depositos)->filter(fn($d) => $d['branch_id'] === $sucursal['id']);
-                                $branchTotalCapacity = $branchDeposits->sum('capacidad_litros');
-                                $branchTotalCurrent = $branchDeposits->sum('nivel_actual_litros');
+                                $branchTotalCapacity = $sucursal->cupo;
+                                $branchTotalCurrent = $sucursal->disponible;
                                 $fillPercentage = $branchTotalCapacity > 0 ? ($branchTotalCurrent / $branchTotalCapacity) * 100 : 0;
-                                $isAlert = $branchTotalCurrent <= $branchDeposits->sum('nivel_alerta_litros');
+                                $isAlert = $branchTotalCurrent <= ($branchTotalCapacity * 0.1);
                             @endphp
                             <div class="col-12 col-md-6 col-lg-4 card-hover">
                                 <div class="card p-4 rounded-3 shadow-lg h-100">
