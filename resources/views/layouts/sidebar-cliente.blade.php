@@ -18,6 +18,7 @@
     left: 0;
     width: 250px;
     padding-top: 5rem; /* Ajusta el padding superior para no solapar con el navbar */
+    z-index: 0; 
 }
 .sidebar .nav-link {
     color: #bfc9da;

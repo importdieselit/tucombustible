@@ -36,7 +36,7 @@
             </div>
             @else
                 <!-- Si la ruta es login, logout, etc., solo se muestra el contenido principal -->
-                <main class="container-fluid py-4">
+                <main class="container-fluid py-4 z-1">
                     @yield('content')
                 </main>
             @endif
