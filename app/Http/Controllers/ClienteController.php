@@ -61,7 +61,7 @@ class ClienteController extends BaseController
                     'cupo' => $cliente->cupo,
                 ];
             });
-        } elseif($user->id_perfil==3 && $cliente->id_master==0) {  
+        } elseif($user->id_perfil==3 && $cliente->parent==0) {  
             $disponibilidadData = $sucursales->map(function ($sucursal) {
                 return [
                     'nombre' => $sucursal->nombre,
@@ -76,7 +76,7 @@ class ClienteController extends BaseController
         
         
         if($user->id_perfil==3) {
-            if($cliente->id_master==0) {
+            if($cliente->parent==0) {
                 $sucursalesIds = Cliente::where('parent', $user->id_cliente)->pluck('id')->toArray();
                 $pedidosPendientes = $pedidosPendientes->whereIn('id_cliente', $sucursalesIds);
             } else {
@@ -86,7 +86,7 @@ class ClienteController extends BaseController
         $pedidosPendientes = $pedidosPendientes->count();
         $pedidosEnProceso = Pedido::where('estado', 'en_proceso');
         if($user->id_perfil==3) {
-            if($cliente->id_master==0) {
+            if($cliente->parent==0) {
                 $sucursalesIds = Cliente::where('parent', $user->id_cliente)->pluck('id')->toArray();
                 $pedidosEnProceso = $pedidosEnProceso->whereIn('id_cliente', $sucursalesIds);
             } else {
@@ -106,7 +106,7 @@ class ClienteController extends BaseController
         // que te permite saber si un camión está cargado.
         // Por ejemplo, un estado 'cargado' o 'en_ruta_con_combustible'.
         if($user->id_perfil==3) {
-            if($cliente->id_master==0) {
+            if($cliente->parent==0) {
                 $sucursalesIds = Cliente::where('parent', $user->id_cliente)->pluck('id')->toArray();
                 $camionesCargados = Vehiculo::whereIn('id_cliente', $sucursalesIds)
                                     ->count();
@@ -128,7 +128,7 @@ class ClienteController extends BaseController
                 'camionesCargados'
             ));
         } elseif($user->id_perfil==3) {
-            
+
             return view('clientes.index', compact(
                 'clientesPadre', 
                 'disponibilidadData',
