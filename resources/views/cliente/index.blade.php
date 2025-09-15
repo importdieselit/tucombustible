@@ -131,9 +131,9 @@
 
 @section('content')
     <div class="container-fluid">
-        <h1 class="display-8 fw-bold mb-4 text-center text-black">{{Auth::user()->name}}</h1>
+        <h1 class="display-8 fw-bold mb-5 text-center text-black">{{Auth::user()->name}}</h1>
         {{-- En una aplicación real, esta información vendría del usuario autenticado --}}
-        {{-- <p class="text-center text-sm mb-5" id="user-role-info">Rol: Cliente Principal</p> --}}
+         <p class="text-center text-sm mb-5" id="user-role-info">  </p>
 
         <!-- Sección de Visualización de Capacidad Total o de Sucursal -->
         <div class="card p-4 mb-5 main-hero-card">
