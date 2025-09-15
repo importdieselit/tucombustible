@@ -124,7 +124,7 @@
 
                 // Datos para el gráfico de Highcharts
                 $chartData = [];
-                if ($cliente->is_principal) {
+                if ($cliente->parent=0) {
                     foreach ($sucursales as $sucursal) {
                         $chartData[] = [
                             'name' => $sucursal['nombre'],
