@@ -78,9 +78,9 @@ class ClienteController extends BaseController
         if($user->id_perfil==3) {
             if($cliente->parent==0) {
                 $sucursalesIds = Cliente::where('parent', $user->cliente_id)->pluck('id')->toArray();
-                $pedidosPendientes = $pedidosPendientes->whereIn('id_cliente', $sucursalesIds);
+                $pedidosPendientes = $pedidosPendientes->whereIn('cliente_id', $sucursalesIds);
             } else {
-                $pedidosPendientes = $pedidosPendientes->where('id_cliente', $user->cliente_id);
+                $pedidosPendientes = $pedidosPendientes->where('cliente_id', $user->cliente_id);
             }
         }
         $pedidosPendientes = $pedidosPendientes->count();
@@ -88,9 +88,9 @@ class ClienteController extends BaseController
         if($user->id_perfil==3) {
             if($cliente->parent==0) {
                 $sucursalesIds = Cliente::where('parent', $user->cliente_id)->pluck('id')->toArray();
-                $pedidosEnProceso = $pedidosEnProceso->whereIn('id_cliente', $sucursalesIds);
+                $pedidosEnProceso = $pedidosEnProceso->whereIn('cliente_id', $sucursalesIds);
             } else {
-                $pedidosEnProceso = $pedidosEnProceso->where('id_cliente', $user->cliente_id);
+                $pedidosEnProceso = $pedidosEnProceso->where('cliente_id', $user->cliente_id);
             }
         }
         $pedidosEnProceso = $pedidosEnProceso->count();
