@@ -23,7 +23,12 @@
            @if (!Request::routeIs(['login', 'logout', 'register', 'password.*']))
             <div class="container-fluid">
                 <div class="row">
-                    @include('layouts.sidebar')
+                    @php($user = Auth::user())
+                    @if($user->id_perfil != 3)
+                        @include('layouts.sidebar-cliente')
+                    @else
+                        @include('layouts.sidebar')
+                    @endif
                     <main class="col ms-sm-auto col-lg-10 px-md-4 py-4">
                         @yield('content')
                     </main>
