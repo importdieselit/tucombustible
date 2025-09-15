@@ -243,6 +243,7 @@
                 <div class="card p-4 mb-4">
                     <h4 class="fw-bold mb-3">Resumen de Sucursales</h4>
                     <div class="row g-4" id="branches-list">
+                        {{dd($disponibilidadData)}}
                         @foreach ($disponibilidadData as $sucursal)
                             @php
                                 $branchTotalCapacity = $sucursal->cupo;
