@@ -39,7 +39,7 @@ class ClienteController extends BaseController
         $clientesPadre= null;
         $disponibilidadData = [];
         if($user->id_perfil==3) {
-            if($cliente->id_master==0) {
+            if($cliente->parent==0) {
                 $sucursales = Cliente::where('parent', $user->id_cliente)
                                 ->select('nombre', 'disponible', 'cupo')
                                 ->get();
