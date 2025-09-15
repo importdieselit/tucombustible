@@ -103,47 +103,11 @@ document.addEventListener('DOMContentLoaded', function () {
             </li>
             <hr class="text-white my-2">
 
-            @foreach($modulos as $modulo)
-                @php
-   // Obtener los submódulos (hijos) permitidos para este usuario y módulo padre
-                    $secciones = App\Models\Modulo::where('id_padre', $modulo->id)
-                        ->where('visible', 1);
-                        if(!($user && $user->id_perfil == 1)) {
-                            $secciones = $secciones->whereIn('id', $modulosPermitidosIds);
-                        }
-                        $secciones = $secciones->orderBy('orden')
-                        ->get();
-
-
-                   $hasSubmenu = !$secciones->isEmpty();
-                @endphp
+        
                 
-                <li class="nav-item {{ $hasSubmenu ? 'dropdown' : '' }}">
-                    @if($hasSubmenu)
-                        <a class="nav-link dropdown-toggle" href="#" title="{{ $modulo->descripcion }}">
-                            <i class="{{ $modulo->icono }}"></i> {{ $modulo->modulo }}
-                        </a>
-                        <ul class="nav flex-column submenu">
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route($modulo->ruta) }}" title="Listado de {{ $modulo->modulo }}">
-                                    <i class="bi bi-list"></i> Resumen
-                                </a>
-                            </li>
-                            @foreach($secciones as $seccion)
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route($seccion->ruta) }}" title="{{ $seccion->descripcion }}">
-                                        <i class="{{ $seccion->icono }}"></i> {{ $seccion->modulo }}
-                                    </a>
-                                </li>
-                            @endforeach
-                        </ul>
-                    @else
-                        <a class="nav-link {{ Request::routeIs($modulo->ruta . '*') ? 'active' : '' }}" href="{{ route($modulo->ruta ) }}" title="{{ $modulo->descripcion }}">
-                            <i class="{{ $modulo->icono }}"></i> {{ $modulo->modulo }}
-                        </a>
-                    @endif
+                <li class="nav-item ">
+                  
                 </li>
-            @endforeach
         </ul>
     </div>
 </div>
