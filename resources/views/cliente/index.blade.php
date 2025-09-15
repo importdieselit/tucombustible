@@ -213,7 +213,7 @@
 
         <!-- Secciones de Contenido Dinámico -->
         <div id="content-sections">
-             @if ($cliente->is_principal)
+             @if ($cliente->parent==0)
                 <div class="card p-4 mb-4">
                     <h4 class="fw-bold mb-3">Histórico de Cupo por Sucursal</h4>
                     <div id="chart-container"></div>
@@ -286,7 +286,7 @@
                 </div>
                 <div class="modal-body">
                     <form id="hacerPedidoForm">
-                        @if ($cliente->is_principal)
+                        @if ($cliente->parent==0)
                             <div class="mb-3">
                                 <label for="sucursalSelect" class="form-label">Seleccionar Sucursal</label>
                                 <select class="form-select" id="sucursalSelect" name="sucursal" required>
