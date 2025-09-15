@@ -5,7 +5,7 @@
 @push('styles')
     <style>
         :root {
-            --bg-dark: #1f2937;
+            --bg-dark: #eeddcd;
             --bg-card: #2d3748;
             --text-light: #e2e8f0;
             --primary-color: #3b82f6;
@@ -66,7 +66,7 @@
         }
 
         .main-hero-card {
-            background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+            background: linear-gradient(135deg, #8dace2 0%, #d3def1 100%);
         }
 
         /* Estilos para la visualización de los depósitos de sucursal */
@@ -74,10 +74,10 @@
             position: relative;
             width: 100%;
             height: 150px;
-            background-color: #334155;
+            background-color: #e4d4a1;
             border-radius: 0.5rem;
             overflow: hidden;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+            box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.822);
         }
 
         .tank-fill {
