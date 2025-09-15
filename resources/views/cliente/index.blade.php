@@ -109,8 +109,8 @@
                 ];
 
                 $sucursales = [
-                    ['id' => 'branch-A', 'nombre' => 'Sucursal Principal', 'cupo' => 25000, 'disponible' => 18000],
-                    ['id' => 'branch-B', 'nombre' => 'Sucursal Sur', 'cupo' => 25000, 'disponible' => 17000]
+                    ['id' => 'branch-A', 'nombre' => 'Sucursal Principal', 'cupo' => 25000, 'disponible' => 18000, 'direccion' => 'Calle Falsa 123', 'contacto' => 'Juan Pérez'],
+                    ['id' => 'branch-B', 'nombre' => 'Sucursal Sur', 'cupo' => 25000, 'disponible' => 17000, 'direccion' => 'Avenida Siempre Viva 742', 'contacto' => 'María López']
                 ];
 
                 $pedidos = [['id' => 'p1', 'estado' => 'En proceso'], ['id' => 'p2', 'estado' => 'Pendiente']];
@@ -217,6 +217,59 @@
                     <h4 class="fw-bold mb-3">Histórico de Cupo por Sucursal</h4>
                     <div id="chart-container"></div>
                 </div>
+
+                <div class="mt-5">
+                    <h4 class="fw-bold mb-3">Administración de Sucursales</h4>
+                    <div class="accordion" id="sucursalesAccordion">
+                        @foreach ($sucursales as $sucursal)
+                        <div class="accordion-item card shadow-sm mb-3">
+                            <h2 class="accordion-header" id="heading-{{ $sucursal['id'] }}">
+                                <button class="accordion-button collapsed fw-bold d-flex justify-content-between align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ $sucursal['id'] }}" aria-expanded="false" aria-controls="collapse-{{ $sucursal['id'] }}">
+                                    <span>{{ $sucursal['nombre'] }}</span>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge rounded-pill bg-success me-2">Disponible: {{ number_format($sucursal['disponible'], 0) }} L</span>
+                                        <i class="fas fa-chevron-down ms-2"></i>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="collapse-{{ $sucursal['id'] }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ $sucursal['id'] }}" data-bs-parent="#sucursalesAccordion">
+                                <div class="accordion-body">
+                                    <p class="fw-bold mb-1">Información Básica:</p>
+                                    <ul>
+                                        <li><strong>Dirección:</strong> <span id="direccion-{{ $sucursal['id'] }}">{{ $sucursal['direccion'] }}</span></li>
+                                        <li><strong>Contacto:</strong> <span id="contacto-{{ $sucursal['id'] }}">{{ $sucursal['contacto'] }}</span></li>
+                                        <li><strong>Cupo Total:</strong> {{ number_format($sucursal['cupo'], 0) }} L</li>
+                                        <li><strong>Disponible:</strong> {{ number_format($sucursal['disponible'], 0) }} L</li>
+                                    </ul>
+                                    <h6 class="fw-bold mt-3 mb-2">Histórico de Pedidos y Despachos:</h6>
+                                    <ul class="list-group">
+                                        <li class="list-group-item">Pedido #XYZ - 1500 L - <span class="badge bg-success">Entregado</span></li>
+                                        <li class="list-group-item">Pedido #ABC - 2000 L - <span class="badge bg-warning text-dark">Pendiente</span></li>
+                                        <li class="list-group-item">Despacho #QWE - 500 L - <span class="badge bg-info">En Ruta</span></li>
+                                    </ul>
+                                    <div class="d-flex justify-content-end mt-4">
+                                        <button class="btn btn-outline-secondary me-2 edit-sucursal-btn"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#editarSucursalModal"
+                                                data-id="{{ $sucursal['id'] }}"
+                                                data-nombre="{{ $sucursal['nombre'] }}"
+                                                data-direccion="{{ $sucursal['direccion'] }}"
+                                                data-contacto="{{ $sucursal['contacto'] }}">
+                                            <i class="fas fa-edit me-1"></i> Editar
+                                        </button>
+                                        <button class="btn btn-primary-custom make-order-btn"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#hacerPedidoModal"
+                                                data-sucursal-id="{{ $sucursal['id'] }}">
+                                            <i class="fas fa-plus-circle me-1"></i> Hacer Pedido
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
              @endif
         </div>
 
@@ -258,6 +311,39 @@
                 <div class="modal-footer border-top-0">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-primary btn-primary-custom" id="btn-submit-pedido">Enviar Pedido</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Editar Sucursal -->
+    <div class="modal fade" id="editarSucursalModal" tabindex="-1" aria-labelledby="editarSucursalModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-card text-dark rounded-3 shadow-lg">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title" id="editarSucursalModalLabel">Editar Sucursal</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editarSucursalForm">
+                        <input type="hidden" id="editSucursalId" name="id">
+                        <div class="mb-3">
+                            <label for="editNombreSucursal" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="editNombreSucursal" name="nombre" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDireccionSucursal" class="form-label">Dirección</label>
+                            <input type="text" class="form-control" id="editDireccionSucursal" name="direccion">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editContactoSucursal" class="form-label">Persona de Contacto</label>
+                            <input type="text" class="form-control" id="editContactoSucursal" name="contacto">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary btn-primary-custom" id="btn-submit-edicion">Guardar Cambios</button>
                 </div>
             </div>
         </div>
@@ -341,9 +427,9 @@
             const pedidoModal = document.getElementById('hacerPedidoModal');
             const btnSubmitPedido = document.getElementById('btn-submit-pedido');
             const hacerPedidoForm = document.getElementById('hacerPedidoForm');
+            const sucursalSelect = document.getElementById('sucursalSelect');
 
             btnSubmitPedido.addEventListener('click', async () => {
-                // Aquí se validaría el formulario antes de enviar
                 if (!hacerPedidoForm.reportValidity()) {
                     return;
                 }
@@ -352,7 +438,6 @@
                 const pedidoData = Object.fromEntries(formData.entries());
 
                 try {
-                    // Endpoint simulado para enviar el pedido
                     const response = await fetch('/api/pedidos/store', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -363,7 +448,6 @@
 
                     if (response.ok && result.success) {
                         alert('Pedido realizado con éxito!');
-                        // Ocultar el modal y recargar la página
                         bootstrap.Modal.getInstance(pedidoModal).hide();
                         window.location.reload();
                     } else {
@@ -375,6 +459,72 @@
                     alert('Ocurrió un error inesperado. Intenta de nuevo.');
                 }
             });
+
+            // Lógica para preseleccionar la sucursal en el modal de pedidos
+            document.querySelectorAll('.make-order-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const sucursalId = e.currentTarget.dataset.sucursalId;
+                    if (sucursalSelect) {
+                        sucursalSelect.value = sucursalId;
+                    }
+                });
+            });
+
+            // Lógica para el modal de edición de sucursal
+            const editarSucursalModal = document.getElementById('editarSucursalModal');
+            const btnSubmitEdicion = document.getElementById('btn-submit-edicion');
+            const editarSucursalForm = document.getElementById('editarSucursalForm');
+
+            editarSucursalModal.addEventListener('show.bs.modal', (e) => {
+                const button = e.relatedTarget;
+                const id = button.getAttribute('data-id');
+                const nombre = button.getAttribute('data-nombre');
+                const direccion = button.getAttribute('data-direccion');
+                const contacto = button.getAttribute('data-contacto');
+
+                document.getElementById('editSucursalId').value = id;
+                document.getElementById('editNombreSucursal').value = nombre;
+                document.getElementById('editDireccionSucursal').value = direccion;
+                document.getElementById('editContactoSucursal').value = contacto;
+            });
+
+            btnSubmitEdicion.addEventListener('click', async () => {
+                if (!editarSucursalForm.reportValidity()) {
+                    return;
+                }
+
+                const formData = new FormData(editarSucursalForm);
+                const sucursalData = Object.fromEntries(formData.entries());
+
+                try {
+                    // Endpoint simulado para guardar la edición
+                    const response = await fetch('/api/sucursales/update', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(sucursalData)
+                    });
+                    
+                    const result = await response.json();
+
+                    if (response.ok && result.success) {
+                        alert('Cambios guardados con éxito!');
+                        bootstrap.Modal.getInstance(editarSucursalModal).hide();
+                        // Actualizar la UI sin recargar la página (mejor práctica)
+                        document.getElementById(`direccion-${sucursalData.id}`).textContent = sucursalData.direccion;
+                        document.getElementById(`contacto-${sucursalData.id}`).textContent = sucursalData.contacto;
+                        // También podrías actualizar el título del accordion
+                        // document.getElementById(`heading-${sucursalData.id}`).querySelector('span').textContent = sucursalData.nombre;
+
+                    } else {
+                        alert('Error al guardar los cambios: ' + result.message);
+                    }
+
+                } catch (error) {
+                    console.error('Error en la llamada a la API:', error);
+                    alert('Ocurrió un error inesperado. Intenta de nuevo.');
+                }
+            });
+
         });
     </script>
 @endpush
