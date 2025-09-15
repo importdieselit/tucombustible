@@ -86,6 +86,9 @@
         .highcharts-yaxis-labels text {
             fill: #6c757d;
         }
+        #editarSucursalModal .modal-dialog {
+            z-index: 1051;
+        }
     </style>
 @endpush
 
