@@ -1,6 +1,5 @@
 @extends('layouts.app')
-@php($nombreUsuario = Auth::user()->name)
-@section('title', 'TuCombustible - '.$nombreUsuario)
+@section('title', 'TuCombustible - '.Auth::user()->name)
 
 @push('styles')
         <style>
@@ -132,7 +131,7 @@
 
 @section('content')
     <div class="container-fluid">
-        <h1 class="display-8 fw-bold mb-4 text-center text-black">{{$nombreUsuario}}</h1>
+        <h1 class="display-8 fw-bold mb-4 text-center text-black">{{Auth::user()->name}}</h1>
         {{-- En una aplicación real, esta información vendría del usuario autenticado --}}
         {{-- <p class="text-center text-sm mb-5" id="user-role-info">Rol: Cliente Principal</p> --}}
 
