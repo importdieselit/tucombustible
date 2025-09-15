@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'TuCombustible - {{ Auth::user()->name }}')
+@section('title', 'TuCombustible - '.Auth::user()->name)
 
 @push('styles')
         <style>
