@@ -129,7 +129,7 @@ class ClienteController extends BaseController
             ));
         } elseif($user->id_perfil==3) {
 
-            return view('clientes.index', compact(
+            return view('cliente.index', compact(
                 'clientesPadre', 
                 'disponibilidadData',
                 'pedidosPendientes', 
