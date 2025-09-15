@@ -3,11 +3,12 @@
 @section('title', 'Dashboard de Cliente')
 
 @push('styles')
-    <style>
+        <style>
         :root {
-            --bg-dark: #eeddcd;
-            --bg-card: #2d3748;
-            --text-light: #e2e8f0;
+            --bg-light: #f4f6f8;
+            --bg-card: #ffffff;
+            --text-dark: #333333;
+            --text-muted: #6c757d;
             --primary-color: #3b82f6;
             --primary-dark: #2563eb;
             --secondary-color: #10b981;
@@ -16,20 +17,20 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-            background-color: var(--bg-dark);
-            color: var(--text-light);
+            background-color: var(--bg-light);
+            color: var(--text-dark);
         }
 
         .card {
             background-color: var(--bg-card);
             border: none;
             border-radius: 1rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
             transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
         }
         .card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.08);
         }
 
         .btn-primary-custom {
@@ -62,11 +63,16 @@
 
         .stat-card-icon {
             font-size: 2rem;
-            color: #d1d5db;
+            color: #495057;
         }
 
         .main-hero-card {
-            background: linear-gradient(135deg, #8dace2 0%, #d3def1 100%);
+            background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+            color: var(--text-dark);
+        }
+
+        .main-hero-card .text-muted {
+            color: #6c757d !important;
         }
 
         /* Estilos para la visualización de los depósitos de sucursal */
@@ -74,10 +80,10 @@
             position: relative;
             width: 100%;
             height: 150px;
-            background-color: #e4d4a1;
+            background-color: #e9ecef;
             border-radius: 0.5rem;
             overflow: hidden;
-            box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.822);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .tank-fill {
@@ -89,11 +95,11 @@
         }
 
         .tank-fill.normal {
-            background: linear-gradient(to top, #38bdf8, #0ea5e9);
+            background: linear-gradient(to top, #63b3ed, #4299e1);
         }
 
         .tank-fill.alert {
-            background: linear-gradient(to top, #f87171, #ef4444);
+            background: linear-gradient(to top, #fc8181, #e53e3e);
         }
 
         .tank-level-text {
@@ -101,18 +107,18 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: white;
+            color: var(--text-dark);
             font-size: 1.5rem;
             font-weight: bold;
             z-index: 10;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
         }
 
         .tank-capacity-label {
             position: absolute;
             top: 0.5rem;
             left: 0.5rem;
-            color: #94a3b8;
+            color: var(--text-muted);
             font-size: 0.875rem;
         }
 
