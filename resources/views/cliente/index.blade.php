@@ -152,7 +152,7 @@
                 $solicitudes = [['id' => 's1', 'estado' => 'Pendiente'], ['id' => 's2', 'estado' => 'Aprobada']];
                 $notificaciones = [['id' => 'n1', 'leido' => false], ['id' => 'n2', 'leido' => true]];
                 //$sucursales = [['id' => 'branch-A', 'nombre' => 'Sucursal Principal'], ['id' => 'branch-B', 'nombre' => 'Sucursal Sur']];
-dd($sucursales);
+
                 $filteredDeposits = collect($depositos)->filter(function ($deposito) use ($currentUserRole, $currentUserBranchId) {
                     return $currentUserRole === 'principal' || $deposito['branch_id'] === $currentUserBranchId;
                 });

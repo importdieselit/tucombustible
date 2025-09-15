@@ -41,13 +41,14 @@ class ClienteController extends BaseController
         if($user->id_perfil==3) {
             if($cliente->parent==0) {
                 $sucursales = Cliente::where('parent', $user->cliente_id)
-                                ->select('nombre', 'disponible', 'cupo')
+                                ->select('nombre', 'disponible', 'cupo', 'direccion', 'id')
                                 ->get();
             } 
        }
        if($user->id_perfil<3) {
             $clientesPadre = Cliente::where('parent', 0)
-                                ->select('nombre', 'disponible', 'cupo')
+                                ->select('nombre', 'disponible', 'cupo', 'direccion', 'id')
+                                ->with('sucursales')
                                 ->get();
        }
         
@@ -58,15 +59,29 @@ class ClienteController extends BaseController
                 return [
                     'nombre' => $cliente->nombre,
                     'disponible' => $cliente->disponible,
+                    'direccion' => $cliente->direccion,
                     'cupo' => $cliente->cupo,
+                    'sucursales' => $cliente->sucursales->map(function ($sucursal) {
+                        return [
+                            'id' => $sucursal->id,
+                            'nombre' => $sucursal->nombre,
+                            'direccion' => $sucursal->direccion,
+                            'disponible' => $sucursal->disponible,
+                            'cupo' => $sucursal->cupo,
+                        ];
+                    }),
                 ];
             });
+            
+
         } elseif($user->id_perfil==3 && $cliente->parent==0) {  
             $disponibilidadData = $sucursales->map(function ($sucursal) {
                 return [
                     'nombre' => $sucursal->nombre,
                     'disponible' => $sucursal->disponible,
+                    'direccion' => $sucursal->direccion,
                     'cupo' => $sucursal->cupo,
+                    'id' => $sucursal->id,
                 ];
             });
         }
@@ -130,11 +145,11 @@ class ClienteController extends BaseController
         } elseif($user->id_perfil==3) {
 
             return view('cliente.index', compact(
-                'clientesPadre', 
                 'disponibilidadData',
                 'pedidosPendientes', 
                 'pedidosEnProceso', 
-                'sucursales'
+                'sucursales',
+                'cliente',
             ));
         }
         // Pasamos todos los datos a la vista.

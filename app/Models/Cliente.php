@@ -112,4 +112,17 @@ class Cliente extends Model
     {
         return $this->hasMany(\App\Models\Vehiculo::class, 'id_cliente');
     }
+
+
+    public function sucursales() {
+          return $this->hasMany(Cliente::class, 'parent');
+    }
+    public function parentCliente() {
+          return $this->belongsTo(Cliente::class, 'parent');
+    }
+    
+    public function pedidos() {
+          return $this->hasMany(Pedido::class, 'cliente_id');
+    }
+  
 }
