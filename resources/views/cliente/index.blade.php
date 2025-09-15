@@ -246,8 +246,8 @@
                         {{dd($disponibilidadData)}}
                         @foreach ($disponibilidadData as $sucursal)
                             @php
-                                $branchTotalCapacity = $sucursal->cupo;
-                                $branchTotalCurrent = $sucursal->disponible;
+                                $branchTotalCapacity = $sucursal["cupo"];
+                                $branchTotalCurrent = $sucursal["disponible"];
                                 $fillPercentage = $branchTotalCapacity > 0 ? ($branchTotalCurrent / $branchTotalCapacity) * 100 : 0;
                                 $isAlert = $branchTotalCurrent <= ($branchTotalCapacity * 0.1);
                             @endphp
