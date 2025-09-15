@@ -102,16 +102,16 @@
                 $currentUserRole = 'principal'; // 'principal' o 'sucursal'
                 $currentUserBranchId = 'branch-A';
                 
-                $cliente = (object)[
-                    'cupo' => 50000,
-                    'disponible' => 35000,
-                    'is_principal' => $currentUserRole === 'principal'
-                ];
+                // $cliente = (object)[
+                //     'cupo' => 50000,
+                //     'disponible' => 35000,
+                //     'is_principal' => $currentUserRole === 'principal'
+                // ];
 
-                $sucursales = [
-                    ['id' => 'branch-A', 'nombre' => 'Sucursal Principal', 'cupo' => 25000, 'disponible' => 18000, 'direccion' => 'Calle Falsa 123', 'contacto' => 'Juan Pérez'],
-                    ['id' => 'branch-B', 'nombre' => 'Sucursal Sur', 'cupo' => 25000, 'disponible' => 17000, 'direccion' => 'Avenida Siempre Viva 742', 'contacto' => 'María López']
-                ];
+                // $sucursales = [
+                //     ['id' => 'branch-A', 'nombre' => 'Sucursal Principal', 'cupo' => 25000, 'disponible' => 18000, 'direccion' => 'Calle Falsa 123', 'contacto' => 'Juan Pérez'],
+                //     ['id' => 'branch-B', 'nombre' => 'Sucursal Sur', 'cupo' => 25000, 'disponible' => 17000, 'direccion' => 'Avenida Siempre Viva 742', 'contacto' => 'María López']
+                // ];
 
                 $pedidos = [['id' => 'p1', 'estado' => 'En proceso'], ['id' => 'p2', 'estado' => 'Pendiente']];
                 $solicitudes = [['id' => 's1', 'estado' => 'Pendiente'], ['id' => 's2', 'estado' => 'Aprobada']];
