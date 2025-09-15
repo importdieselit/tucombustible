@@ -24,7 +24,7 @@
             <div class="container-fluid">
                 <div class="row">
                     @php($user = Auth::user())
-                    @if($user->id_perfil != 3)
+                    @if($user->id_perfil == 3)
                         @include('layouts.sidebar-cliente')
                     @else
                         @include('layouts.sidebar')
