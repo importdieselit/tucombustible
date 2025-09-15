@@ -277,7 +277,7 @@
     </div>
 
     <!-- Modal para Hacer Pedido -->
-    <div class="modal fade" id="hacerPedidoModal" tabindex="-1" aria-labelledby="hacerPedidoModalLabel" aria-hidden="true">
+    <div class="modal fade z-100" id="hacerPedidoModal" tabindex="-1" aria-labelledby="hacerPedidoModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-card text-dark rounded-3 shadow-lg">
                 <div class="modal-header border-bottom-0">
