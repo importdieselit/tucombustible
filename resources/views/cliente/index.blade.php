@@ -289,6 +289,7 @@
                 </div>
                 <div class="modal-body">
                     <form id="hacerPedidoForm">
+                        @csrf
                         @if ($cliente->parent==0)
                             <div class="mb-3">
                                 <label for="sucursalSelect" class="form-label">Seleccionar Sucursal</label>
@@ -330,6 +331,7 @@
                 </div>
                 <div class="modal-body">
                     <form id="editarSucursalForm">
+                        @csrf
                         <input type="hidden" id="editSucursalId" name="id">
                         <div class="mb-3">
                             <label for="editNombreSucursal" class="form-label">Nombre</label>
