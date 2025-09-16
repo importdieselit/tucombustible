@@ -45,7 +45,7 @@
     @include('layouts.footer')
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="{{ mix('js/app.js') }}"></script>
-    <script src="{{ mix('js/alerts.js') }}"></script>
+    <script src="{{ assets('js/alerts.js') }}"></script>
     @stack('scripts')
 </body>
 </html>
