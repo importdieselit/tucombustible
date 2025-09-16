@@ -35,6 +35,9 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+Route::get('clientes/index', [DashboardController::class, 'index'])->name('clientes.index')->middleware('role:3');
+
+
 Route::middleware(['auth'])->group(function () {
     // Dashboard principal
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

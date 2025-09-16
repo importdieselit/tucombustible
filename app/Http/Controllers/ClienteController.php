@@ -20,7 +20,6 @@ use App\Models\Vehiculo;
  */
 class ClienteController extends BaseController
 {
-   
 
     /**
      * Almacena un nuevo cliente en la base de datos.
@@ -32,7 +31,7 @@ class ClienteController extends BaseController
     {
 
         $user = auth()->user();
-       $cliente = Cliente::find($user->cliente_id);
+        $cliente = Cliente::find($user->cliente_id);
         // 1. Indicadores de clientes
         // Obtenemos todos los clientes con parent 0.
         $sucursales = [];
