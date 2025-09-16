@@ -308,7 +308,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="observacionPedido" class="form-label">Observación (opcional)</label>
-                            <textarea class="form-control" id="observacionPedido" name="observacion" rows="3" placeholder="Detalles adicionales para el pedido."></textarea>
+                            <textarea class="form-control" id="observacionPedido" name="observaciones" rows="3" placeholder="Detalles adicionales para el pedido."></textarea>
                         </div>
                     </form>
                 </div>
