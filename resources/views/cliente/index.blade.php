@@ -471,6 +471,10 @@
                     if (sucursalSelect) {
                         sucursalSelect.value = sucursalId;
                     }
+                    const modalbackdrop = document.querySelector('.modal-backdrop');
+                        if (modalbackdrop) {   
+                            modalbackdrop.remove();
+                        }
                 });
             });
 
@@ -490,6 +494,7 @@
                 document.getElementById('editNombreSucursal').value = nombre;
                 document.getElementById('editDireccionSucursal').value = direccion;
                 document.getElementById('editContactoSucursal').value = contacto;
+
             });
 
             btnSubmitEdicion.addEventListener('click', async () => {
