@@ -439,7 +439,7 @@
             const btnSubmitPedido = document.getElementById('btn-submit-pedido');
             const hacerPedidoForm = document.getElementById('hacerPedidoForm');
             const sucursalSelect = document.getElementById('sucursalSelect');
-            const modalbackdrop = document.querySelector('.modal-backdrop');
+            let modalbackdrop = document.querySelector('.modal-backdrop');
                         if (modalbackdrop) {   
                             modalbackdrop.remove();
                         }
@@ -448,7 +448,7 @@
                 if (!hacerPedidoForm.reportValidity()) {
                     return;
                 }
-                 const modalbackdrop = document.querySelector('.modal-backdrop');
+                 let modalbackdrop = document.querySelector('.modal-backdrop');
                         if (modalbackdrop) {   
                             modalbackdrop.remove();
                         }
@@ -488,7 +488,7 @@
                     if (sucursalSelect) {
                         sucursalSelect.value = sucursalId;
                     }
-                    const modalbackdrop = document.querySelector('.modal-backdrop');
+                    let modalbackdrop = document.querySelector('.modal-backdrop');
                         if (modalbackdrop) {   
                             modalbackdrop.remove();
                         }
@@ -506,15 +506,15 @@
                 const nombre = button.getAttribute('data-nombre');
                 const direccion = button.getAttribute('data-direccion');
                 const contacto = button.getAttribute('data-contacto');
-                const modalbackdrop = document.querySelector('.modal-backdrop');
-                        if (modalbackdrop) {   
-                            modalbackdrop.remove();
-                        }
-
+                
                 document.getElementById('editSucursalId').value = id;
                 document.getElementById('editNombreSucursal').value = nombre;
                 document.getElementById('editDireccionSucursal').value = direccion;
                 document.getElementById('editContactoSucursal').value = contacto;
+                let modalbackdrop = document.querySelector('.modal-backdrop');
+                        if (modalbackdrop) {   
+                            modalbackdrop.remove();
+                        }
 
             });
 
