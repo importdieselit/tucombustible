@@ -102,8 +102,13 @@
             @php
                 // Simulación de datos pasados desde el controlador
                 // En una aplicación real, estos datos vendrían de la base de datos
-                $currentUserRole = 'principal'; // 'principal' o 'sucursal'
-                $currentUserBranchId = 'branch-A';
+                if($cliente->parent==0){
+                    $currentUserRole = 'principal'; // 'principal' o 'sucursal'
+                } else {
+                    $currentUserRole = 'sucursal'; // 'principal' o 'sucursal'
+                }
+
+                $currentUserBranchId = Auth::user()->cliente_id; // ID de la sucursal actual del usuario
                 
                 // $cliente = (object)[
                 //     'cupo' => 50000,
@@ -439,7 +444,10 @@
                 if (!hacerPedidoForm.reportValidity()) {
                     return;
                 }
-
+                 const modalbackdrop = document.querySelector('.modal-backdrop');
+                        if (modalbackdrop) {   
+                            modalbackdrop.remove();
+                        }
                 const formData = new FormData(hacerPedidoForm);
                 const pedidoData = Object.fromEntries(formData.entries());
 
@@ -454,7 +462,7 @@
 
                     if (response.ok && result.success) {
                         showSuccessAlert('Pedido realizado con éxito.',null, () => {
-                            
+
                             document.getElementById('hacerPedidoModal').style.display='none';
 
                             window.location.reload();
@@ -506,7 +514,10 @@
                 if (!editarSucursalForm.reportValidity()) {
                     return;
                 }
-
+                let modalbackdrop = document.querySelector('.modal-backdrop');
+                        if (modalbackdrop) {   
+                            modalbackdrop.remove();
+                        }
                 const formData = new FormData(editarSucursalForm);
                 const sucursalData = Object.fromEntries(formData.entries());
 
