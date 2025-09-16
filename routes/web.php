@@ -25,6 +25,7 @@ use App\Http\Controllers\AlmacenController;
 use App\Http\Controllers\ChoferController;
 use App\Http\Controllers\AlertaController;
 use App\Http\Controllers\AccesoController;
+use App\Http\Controllers\PedidoController;
 use App\Models\Deposito;
 
 // Agrega otros controladores según los modelos y tablas
@@ -52,7 +53,7 @@ Route::get('clientes/dashboard', [ClienteController::class, 'dashboard'])->name(
 
 
     Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('inventario.entry');
-    Route::get('invantario/adjustment', [InventarioController::class, 'adjustment'])->name('inventario.adjustment');
+    Route::get('inventario/adjustment', [InventarioController::class, 'adjustment'])->name('inventario.adjustment');
     Route::get('choferes/importar', [ChoferController::class, 'showImportForm'])->name('choferes.show-import-form');
     Route::post('choferes/importar', [ChoferController::class, 'importar'])->name('choferes.importar');
     // Rutas para las solicitudes de insumos
@@ -153,6 +154,7 @@ Route::prefix('combustible')->name('combustible.')->group(function () {
     Route::get('/despacholist', [MovimientoCombustibleController::class, 'despachoList'])->name('despachos.list');
     
     Route::get('/pedidos', [MovimientoCombustibleController::class, 'pedidos'])->name('pedidos');
+    Route::post('/pedidos', [PedidoController::class, 'crearPedido'])->name('pedidos.store');
     Route::post('/pedidos/{id}/aprobar', [MovimientoCombustibleController::class, 'aprobar'])->name('aprobar');
     Route::post('/pedidos/{id}/rechazar', [MovimientoCombustibleController::class, 'rechazar'])->name('rechazar');
     Route::get('/aprobados', [MovimientoCombustibleController::class, 'despachos'])->name('aprobados');

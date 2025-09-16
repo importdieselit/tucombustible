@@ -442,7 +442,7 @@
                 const pedidoData = Object.fromEntries(formData.entries());
 
                 try {
-                    const response = await fetch('/api/pedidos', {
+                    const response = await fetch('/pedidos', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(pedidoData)
@@ -507,7 +507,7 @@
 
                 try {
                     // Endpoint simulado para guardar la edición
-                    const response = await fetch('/api/sucursales/update', {
+                    const response = await fetch('/sucursales/update', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(sucursalData)
