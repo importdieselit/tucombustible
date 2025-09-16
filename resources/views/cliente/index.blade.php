@@ -292,19 +292,19 @@
                         @if ($cliente->parent==0)
                             <div class="mb-3">
                                 <label for="sucursalSelect" class="form-label">Seleccionar Sucursal</label>
-                                <select class="form-select" id="sucursalSelect" name="sucursal" required>
+                                <select class="form-select" id="sucursalSelect" name="cliente_id" required>
                                     @foreach ($sucursales as $sucursal)
                                         <option value="{{ $sucursal['id'] }}">{{ $sucursal['nombre'] }} (Disponible: {{ $sucursal['disponible'] }} L)</option>
                                     @endforeach
                                 </select>
                             </div>
                         @else
-                             <input type="hidden" name="sucursal" value="{{ $currentUserBranchId }}">
+                             <input type="hidden" name="cliente_id" value="{{ $currentUserBranchId }}">
                              <p><strong>Sucursal:</strong> {{ collect($sucursales)->firstWhere('id', $currentUserBranchId)['nombre'] }}</p>
                         @endif
                         <div class="mb-3">
                             <label for="cantidadPedido" class="form-label">Cantidad (Litros)</label>
-                            <input type="number" step="1" class="form-control" id="cantidadPedido" name="cantidad" required min="1">
+                            <input type="number" step="1" class="form-control" id="cantidadPedido" name="cantidad_solicitada" required min="1">
                         </div>
                         <div class="mb-3">
                             <label for="observacionPedido" class="form-label">Observación (opcional)</label>
@@ -442,7 +442,7 @@
                 const pedidoData = Object.fromEntries(formData.entries());
 
                 try {
-                    const response = await fetch('/api/pedidos/store', {
+                    const response = await fetch('/api/pedidos', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(pedidoData)
