@@ -453,7 +453,7 @@
                     const result = await response.json();
 
                     if (response.ok && result.success) {
-                        showSuccessAlert('Pedido realizado con éxito.', () => {
+                        showSuccessAlert('Pedido realizado con éxito.',null, () => {
                             bootstrap.Modal.getInstance(pedidoModal).hide();
                             window.location.reload();
                         });
