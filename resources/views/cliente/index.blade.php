@@ -454,7 +454,9 @@
 
                     if (response.ok && result.success) {
                         showSuccessAlert('Pedido realizado con éxito.',null, () => {
-                            document.getElementById('hacerPedidoModal').hide();
+                            
+                            document.getElementById('hacerPedidoModal').style.display='none';
+
                             window.location.reload();
                         });
                     } else {
@@ -521,7 +523,7 @@
                     if (response.ok && result.success) {   
 
                          showSuccessAlert('Cambios guardados con éxito!',null, () => {
-                            document.getElementById('editarSucursalModal').hide();
+                            document.getElementById('editarSucursalModal').style.display='none';
                             // Actualizar la UI sin recargar la página (mejor práctica)
                             document.getElementById(`direccion-${sucursalData.id}`).textContent = sucursalData.direccion;
                             document.getElementById(`contacto-${sucursalData.id}`).textContent = sucursalData.contacto;
