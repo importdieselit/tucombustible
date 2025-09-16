@@ -439,6 +439,10 @@
             const btnSubmitPedido = document.getElementById('btn-submit-pedido');
             const hacerPedidoForm = document.getElementById('hacerPedidoForm');
             const sucursalSelect = document.getElementById('sucursalSelect');
+            const modalbackdrop = document.querySelector('.modal-backdrop');
+                        if (modalbackdrop) {   
+                            modalbackdrop.remove();
+                        }
 
             btnSubmitPedido.addEventListener('click', async () => {
                 if (!hacerPedidoForm.reportValidity()) {
@@ -502,6 +506,10 @@
                 const nombre = button.getAttribute('data-nombre');
                 const direccion = button.getAttribute('data-direccion');
                 const contacto = button.getAttribute('data-contacto');
+                const modalbackdrop = document.querySelector('.modal-backdrop');
+                        if (modalbackdrop) {   
+                            modalbackdrop.remove();
+                        }
 
                 document.getElementById('editSucursalId').value = id;
                 document.getElementById('editNombreSucursal').value = nombre;
@@ -514,10 +522,7 @@
                 if (!editarSucursalForm.reportValidity()) {
                     return;
                 }
-                let modalbackdrop = document.querySelector('.modal-backdrop');
-                        if (modalbackdrop) {   
-                            modalbackdrop.remove();
-                        }
+
                 const formData = new FormData(editarSucursalForm);
                 const sucursalData = Object.fromEntries(formData.entries());
 
