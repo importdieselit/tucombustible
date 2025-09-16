@@ -92,8 +92,8 @@ class LoginController extends Controller
     protected function authenticated(Request $request, $user)
     {
         // Si el usuario tiene un perfil_id de 3, lo redirigimos a la ruta 'clientes/index'.
-        if ($user->perfil_id == 3) {
-            return redirect()->route('clientes.index');
+        if ($user->id_perfil == 3) {
+            return redirect()->route('clientes.dashboard');
         }
 
         // Para cualquier otro perfil, se mantiene la redirección por defecto.
