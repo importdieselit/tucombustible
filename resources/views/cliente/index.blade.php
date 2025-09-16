@@ -511,11 +511,12 @@
                 document.getElementById('editNombreSucursal').value = nombre;
                 document.getElementById('editDireccionSucursal').value = direccion;
                 document.getElementById('editContactoSucursal').value = contacto;
-                let modalbackdrop = document.querySelector('.modal-backdrop');
-                        if (modalbackdrop) {   
-                            modalbackdrop.remove();
-                        }
-
+                
+              
+                           const modalBackdrops = document.querySelectorAll('.modal-backdrop');
+                            modalBackdrops.forEach(backdrop => {
+                                backdrop.remove();
+                            });
             });
 
             btnSubmitEdicion.addEventListener('click', async () => {
