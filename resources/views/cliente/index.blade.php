@@ -454,7 +454,7 @@
 
                     if (response.ok && result.success) {
                         showSuccessAlert('Pedido realizado con éxito.',null, () => {
-                            bootstrap.Modal.getInstance(pedidoModal).hide();
+                            pedidoModal.hide();
                             window.location.reload();
                         });
                     } else {
@@ -463,7 +463,7 @@
 
                 } catch (error) {
                     console.error('Error en la llamada a la API:', error);
-                    alert('Ocurrió un error inesperado. Intenta de nuevo.');
+                    showErrorAlert('Ocurrió un error inesperado. Intenta de nuevo.');
                 }
             });
 
@@ -519,21 +519,23 @@
                     const result = await response.json();
 
                     if (response.ok && result.success) {
-                        alert('Cambios guardados con éxito!');
-                        bootstrap.Modal.getInstance(editarSucursalModal).hide();
-                        // Actualizar la UI sin recargar la página (mejor práctica)
-                        document.getElementById(`direccion-${sucursalData.id}`).textContent = sucursalData.direccion;
-                        document.getElementById(`contacto-${sucursalData.id}`).textContent = sucursalData.contacto;
+
+                         showSuccessAlert('Cambios guardados con éxito!',null, () => {
+                            editarSucursalModal.hide();
+                            // Actualizar la UI sin recargar la página (mejor práctica)
+                            document.getElementById(`direccion-${sucursalData.id}`).textContent = sucursalData.direccion;
+                            document.getElementById(`contacto-${sucursalData.id}`).textContent = sucursalData.contacto;
+                        });
                         // También podrías actualizar el título del accordion
                         // document.getElementById(`heading-${sucursalData.id}`).querySelector('span').textContent = sucursalData.nombre;
 
                     } else {
-                        alert('Error al guardar los cambios: ' + result.message);
+                        showErrorAlert('Error al guardar los cambios: ' + result.message);
                     }
 
                 } catch (error) {
                     console.error('Error en la llamada a la API:', error);
-                    alert('Ocurrió un error inesperado. Intenta de nuevo.');
+                    showErrorAlert('Ocurrió un error inesperado. Intenta de nuevo.');
                 }
             });
 
