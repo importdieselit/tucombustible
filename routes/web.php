@@ -140,7 +140,7 @@ Route::get('clientes/dashboard', [ClienteController::class, 'dashboard'])->name(
 
     // Rutas para gestión de perfiles y permisos
     Route::post('/perfiles/{perfil}/permisos', [PerfilController::class, 'updatePermisos'])->name('perfiles.updatePermisos'); 
-    
+    Route::post('/pedidos', [PedidoController::class, 'crearPedido'])->name('pedidos.store');
     // Rutas de Combustible (Pedidos y Despachos)
 Route::prefix('combustible')->name('combustible.')->group(function () {
     
@@ -154,7 +154,7 @@ Route::prefix('combustible')->name('combustible.')->group(function () {
     Route::get('/despacholist', [MovimientoCombustibleController::class, 'despachoList'])->name('despachos.list');
     
     Route::get('/pedidos', [MovimientoCombustibleController::class, 'pedidos'])->name('pedidos');
-    Route::post('/pedidos', [PedidoController::class, 'crearPedido'])->name('pedidos.store');
+    
     Route::post('/pedidos/{id}/aprobar', [MovimientoCombustibleController::class, 'aprobar'])->name('aprobar');
     Route::post('/pedidos/{id}/rechazar', [MovimientoCombustibleController::class, 'rechazar'])->name('rechazar');
     Route::get('/aprobados', [MovimientoCombustibleController::class, 'despachos'])->name('aprobados');
