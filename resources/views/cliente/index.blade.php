@@ -453,11 +453,12 @@
                     const result = await response.json();
 
                     if (response.ok && result.success) {
-                        alert('Pedido realizado con éxito!');
-                        bootstrap.Modal.getInstance(pedidoModal).hide();
-                        window.location.reload();
+                        showSuccessAlert('Pedido realizado con éxito.', () => {
+                            bootstrap.Modal.getInstance(pedidoModal).hide();
+                            window.location.reload();
+                        });
                     } else {
-                        alert('Error al realizar el pedido: ' + result.message);
+                        showErrorAlert('Error al realizar el pedido: ' + result.message);
                     }
 
                 } catch (error) {
