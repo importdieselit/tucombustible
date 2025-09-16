@@ -16,7 +16,7 @@ class CheckUserRole
     public function handle(Request $request, Closure $next, $roleId): Response
     {
         // Verifica si hay un usuario autenticado y si su perfil_id no coincide con el rol requerido.
-        if (!Auth::check() || Auth::user()->perfil_id != $roleId) {
+        if (!Auth::check() || Auth::user()->id_perfil != $roleId) {
             // Si el usuario no tiene el rol adecuado, puedes abortar con un error 403
             // o redirigirlo a una página de inicio.
             return abort(403, 'Acceso no autorizado.');
