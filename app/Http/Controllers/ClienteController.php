@@ -27,7 +27,7 @@ class ClienteController extends BaseController
      * @return \Illuminate\Http\RedirectResponse
      */
 
-    public function index()
+    public function dashboard()
     {
 
         $user = auth()->user();
