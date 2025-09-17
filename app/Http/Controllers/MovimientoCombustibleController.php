@@ -36,6 +36,7 @@ class MovimientoCombustibleController extends Controller
         $clientesPadre = Cliente::where('parent', 0)
                                 ->select('nombre', 'disponible', 'cupo')
                                 ->get();
+        $clientes = Cliente::all();
 
         // Preparar datos para la gráfica de consumo por cliente.
         $chartData = $clientesPadre->map(function ($cliente) {
