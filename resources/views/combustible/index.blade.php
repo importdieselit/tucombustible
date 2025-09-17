@@ -110,6 +110,7 @@
                 display: none !important;
             }
         }
+
     </style>
 @endpush
 
@@ -125,16 +126,16 @@
                 // Estos datos deben ser proporcionados por el controlador de Laravel.
                 // Se asume la siguiente estructura para los datos de los clientes y sus sucursales.
                 // $clientes es un array de objetos o un Collection de Eloquent.
-                // La lógica del drilldown se basa en el ID y el 'parent'.
+                // // La lógica del drilldown se basa en el ID y el 'parent'.
 
-                $clientes = collect([
-                    (object)['id' => 1, 'nombre' => 'Cliente A', 'parent' => 0, 'cupo' => 50000, 'disponible' => 25000, 'contacto' => 'Juan Perez', 'direccion' => 'Calle Falsa 123', 'telefono' => '555-1234'],
-                    (object)['id' => 2, 'nombre' => 'Cliente B', 'parent' => 0, 'cupo' => 75000, 'disponible' => 60000, 'contacto' => 'Maria Lopez', 'direccion' => 'Avenida Siempre Viva 742', 'telefono' => '555-5678'],
-                    (object)['id' => 3, 'nombre' => 'Sucursal A1', 'parent' => 1, 'cupo' => 30000, 'disponible' => 15000, 'contacto' => 'Pedro Gonzalez', 'direccion' => 'Las Acacias 101', 'telefono' => '555-0001'],
-                    (object)['id' => 4, 'nombre' => 'Sucursal A2', 'parent' => 1, 'cupo' => 20000, 'disponible' => 10000, 'contacto' => 'Ana Ramirez', 'direccion' => 'Los Robles 202', 'telefono' => '555-0002'],
-                    (object)['id' => 5, 'nombre' => 'Sucursal B1', 'parent' => 2, 'cupo' => 50000, 'disponible' => 40000, 'contacto' => 'Luis Hernandez', 'direccion' => 'Calle Principal 303', 'telefono' => '555-0003'],
-                    (object)['id' => 6, 'nombre' => 'Sucursal B2', 'parent' => 2, 'cupo' => 25000, 'disponible' => 20000, 'contacto' => 'Sofia Gomez', 'direccion' => 'Camino Real 404', 'telefono' => '555-0004'],
-                ]);
+                // $clientes = collect([
+                //     (object)['id' => 1, 'nombre' => 'Cliente A', 'parent' => 0, 'cupo' => 50000, 'disponible' => 25000, 'contacto' => 'Juan Perez', 'direccion' => 'Calle Falsa 123', 'telefono' => '555-1234'],
+                //     (object)['id' => 2, 'nombre' => 'Cliente B', 'parent' => 0, 'cupo' => 75000, 'disponible' => 60000, 'contacto' => 'Maria Lopez', 'direccion' => 'Avenida Siempre Viva 742', 'telefono' => '555-5678'],
+                //     (object)['id' => 3, 'nombre' => 'Sucursal A1', 'parent' => 1, 'cupo' => 30000, 'disponible' => 15000, 'contacto' => 'Pedro Gonzalez', 'direccion' => 'Las Acacias 101', 'telefono' => '555-0001'],
+                //     (object)['id' => 4, 'nombre' => 'Sucursal A2', 'parent' => 1, 'cupo' => 20000, 'disponible' => 10000, 'contacto' => 'Ana Ramirez', 'direccion' => 'Los Robles 202', 'telefono' => '555-0002'],
+                //     (object)['id' => 5, 'nombre' => 'Sucursal B1', 'parent' => 2, 'cupo' => 50000, 'disponible' => 40000, 'contacto' => 'Luis Hernandez', 'direccion' => 'Calle Principal 303', 'telefono' => '555-0003'],
+                //     (object)['id' => 6, 'nombre' => 'Sucursal B2', 'parent' => 2, 'cupo' => 25000, 'disponible' => 20000, 'contacto' => 'Sofia Gomez', 'direccion' => 'Camino Real 404', 'telefono' => '555-0004'],
+                // ]);
                 $clientesPrincipales = $clientes->where('parent', 0);
                 $sucursales = $clientes->where('parent', '!=', 0);
 
@@ -147,6 +148,7 @@
                     $chartData[] = [
                         'name' => $cliente->nombre,
                         'y' => $consumido,
+                        'id' => $cliente->id,
                         'disponible' => $cliente->disponible,
                         'cupo' => $cliente->cupo,
                         'drilldown' => 'sucursales-'. $cliente->id
@@ -158,6 +160,7 @@
                          $consumidoSucursal = $sucursal->cupo - $sucursal->disponible;
                          $sucursalesData[] = [
                             'name' => $sucursal->nombre,
+                            'id' => $sucursal->id,
                             'y' => $consumidoSucursal,
                             'disponible' => $sucursal->disponible,
                             'cupo' => $sucursal->cupo
@@ -593,7 +596,10 @@
                                 name: 'Consumo',
                                 data: consumoHistorico.data,
                                 color: '#3b82f6'
-                            }]
+                            }],
+                            credits: {
+                                enabled: false
+                            }
                         });
                         
                         const btnDetailsPedido = document.getElementById('btn-details-pedido');
