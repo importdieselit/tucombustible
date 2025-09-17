@@ -213,13 +213,15 @@
                     <p class="text-muted mb-0">{{ count(array_filter($notificaciones, fn($n) => !$n['leido'])) }} nuevas</p>
                 </div>
             </div>
-            <div class="col-12 col-md-6 col-lg-3">
-                <div class="card h-100 p-4 d-flex flex-column justify-content-center text-center" id="sucursales-card">
-                    <i class="fas fa-sitemap stat-card-icon mb-2 text-success"></i>
-                    <h5 class="fw-bold mb-1">Sucursales</h5>
-                    <p class="text-muted mb-0">{{ count($sucursales) }} activas</p>
+             @if ($cliente->parent==0)
+                 <div class="col-12 col-md-6 col-lg-3">
+                    <div class="card h-100 p-4 d-flex flex-column justify-content-center text-center sucursal-card-container" id="sucursales-card">
+                        <i class="fas fa-sitemap stat-card-icon mb-2 text-success"></i>
+                        <h5 class="fw-bold mb-1">Ver Sucursales</h5>
+                        <p class="text-muted mb-0">{{ count($sucursales) }} activas</p>
+                    </div>
                 </div>
-            </div>
+             @endif
         </div>
         
         <!-- Botón para Hacer Pedido -->
