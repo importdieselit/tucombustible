@@ -36,6 +36,40 @@ class MovimientoCombustibleController extends Controller
         $clientesPadre = Cliente::where('parent', 0)
                                 ->select('nombre', 'disponible', 'cupo')
                                 ->get();
+
+        // Preparar datos para la gráfica de consumo por cliente.
+        $chartData = $clientesPadre->map(function ($cliente) {
+            $consumido = $cliente->cupo - $cliente->disponible;
+            return [
+                'name' => $cliente->nombre,
+                'y' => $consumido,
+                'disponible' => $cliente->disponible,
+                'cupo' => $cliente->cupo,
+                'drilldown' => 'sucursales-'. $cliente->id
+            ];
+        });
+        // Preparar datos para el drilldown de sucursales.
+        $sucursalesData = [];   
+        foreach ($clientesPadre as $cliente) {
+            $sucursales = Cliente::where('parent', $cliente->id)->get();
+            $sucursalesDataForClient = $sucursales->map(function ($sucursal) {
+                $consumidoSucursal = $sucursal->cupo - $sucursal->disponible;
+                return [
+                    'name' => $sucursal->nombre,
+                    'y' => $consumidoSucursal,
+                    'disponible' => $sucursal->disponible,
+                    'cupo' => $sucursal->cupo
+                ];
+            });
+            $sucursalesData['sucursales-' . $cliente->id] = [
+                'name' => 'Sucursales de ' . $cliente->nombre,
+                'id' => 'sucursales-' . $cliente->id,
+                'data' => $sucursalesDataForClient
+            ];
+        }
+        $chartData = $chartData->toJson();
+        $sucursalesData = collect($sucursalesData)->values()->toJson();
+
         
         // 2. Gráficas de disponibilidad de clientes.
         // Los datos para la gráfica los podemos pasar directamente del controlador a la vista.
@@ -93,7 +127,8 @@ class MovimientoCombustibleController extends Controller
             'camionesCargados',
             'totalCombustible',
             'capacidadTotal',
-            'nivelPromedio'
+            'nivelPromedio',
+            'chartData',
         ));
     }
 

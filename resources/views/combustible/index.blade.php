@@ -136,43 +136,7 @@
                 //     (object)['id' => 5, 'nombre' => 'Sucursal B1', 'parent' => 2, 'cupo' => 50000, 'disponible' => 40000, 'contacto' => 'Luis Hernandez', 'direccion' => 'Calle Principal 303', 'telefono' => '555-0003'],
                 //     (object)['id' => 6, 'nombre' => 'Sucursal B2', 'parent' => 2, 'cupo' => 25000, 'disponible' => 20000, 'contacto' => 'Sofia Gomez', 'direccion' => 'Camino Real 404', 'telefono' => '555-0004'],
                 // ]);
-                $clientesPrincipales = $clientes->where('parent', 0);
-                $sucursales = $clientes->where('parent', '!=', 0);
-
-                // Prepara los datos para la gráfica de Highcharts
-                $chartData = [];
-                $drilldownSeries = [];
-
-                foreach ($clientesPrincipales as $cliente) {
-                    $consumido = $cliente->cupo - $cliente->disponible;
-                    $chartData[] = [
-                        'name' => $cliente->nombre,
-                        'y' => $consumido,
-                        'id' => $cliente->id,
-                        'disponible' => $cliente->disponible,
-                        'cupo' => $cliente->cupo,
-                        'drilldown' => 'sucursales-'. $cliente->id
-                    ];
-                    
-                    $sucursalesCliente = $sucursales->where('parent', $cliente->id);
-                    $sucursalesData = [];
-                    foreach ($sucursalesCliente as $sucursal) {
-                         $consumidoSucursal = $sucursal->cupo - $sucursal->disponible;
-                         $sucursalesData[] = [
-                            'name' => $sucursal->nombre,
-                            'id' => $sucursal->id,
-                            'y' => $consumidoSucursal,
-                            'disponible' => $sucursal->disponible,
-                            'cupo' => $sucursal->cupo
-                         ];
-                    }
-
-                    $drilldownSeries[] = [
-                        'id' => 'sucursales-'. $cliente->id,
-                        'name' => 'Sucursales de '.$cliente->nombre,
-                        'data' => $sucursalesData,
-                    ];
-                }
+               
 
                 $totalCapacity = $clientesPrincipales->sum('cupo');
                 $totalCurrent = $clientesPrincipales->sum('disponible');
