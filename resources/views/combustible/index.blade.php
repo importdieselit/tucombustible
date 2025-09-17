@@ -137,6 +137,19 @@
                 //     (object)['id' => 6, 'nombre' => 'Sucursal B2', 'parent' => 2, 'cupo' => 25000, 'disponible' => 20000, 'contacto' => 'Sofia Gomez', 'direccion' => 'Camino Real 404', 'telefono' => '555-0004'],
                 // ]);
                 $clientesPrincipales = $clientes->where('parent', 0);
+                $sucursales = $clientes->where('parent', '!=', 0);
+
+                // Prepara los datos para la gráfica de Highcharts
+                $drilldownSeries = [];
+
+                foreach ($clientesPrincipales as $cliente) {
+                    $drilldownSeries[] = [
+                        'id' => 'sucursales-'. $cliente->id,
+                        'name' => 'Sucursales de '.$cliente->nombre,
+                        'data' => $sucursalesData,
+                    ];
+                }
+
                 $totalCapacity = $clientesPrincipales->sum('cupo');
                 $totalCurrent = $clientesPrincipales->sum('disponible');
                 $percentage = $totalCapacity > 0 ? ($totalCurrent / $totalCapacity) * 100 : 0;
