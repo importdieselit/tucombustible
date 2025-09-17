@@ -141,6 +141,7 @@
 
                 // Prepara los datos para la gráfica de Highcharts
                 $drilldownSeries = [];
+                dd($chartData);
 
                 foreach ($clientesPrincipales as $cliente) {
                   
