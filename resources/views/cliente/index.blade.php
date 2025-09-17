@@ -541,7 +541,7 @@
             if (backToDashboardBtn2) {
                 backToDashboardBtn2.addEventListener('click', () => {
                     sucursalesListContainer.classList.add('hidden');
-                    dashboardMainView.classList.add('hidden');
+                    sucursalDetailsContainer.classList.add('hidden');
                     dashboardMainView.classList.remove('hidden');
                 });
             }
