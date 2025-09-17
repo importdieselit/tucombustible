@@ -465,7 +465,7 @@
                                 click: function (e) {
                                     // Simular el click en la tarjeta de la sucursal
                                     const sucursalName = this.value;
-                                    alert('Hiciste clic en la sucursal: ' + sucursalName);
+                                    console.log('Sucursal clickeada desde gráfico:', sucursalName);
                                     const sucursal = chartData.find(s => s.id === sucursalName);
 
                                     if (sucursal) {
@@ -500,7 +500,7 @@
                         shadow: false
                     },
                     tooltip: {
-                        headerFormat: '<b>{point.name}</b><br/>',
+                        headerFormat: '<b>{point.name} {point.id}</b><br/>',
                         pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
                     },
                     plotOptions: {
@@ -516,6 +516,7 @@
                                     click: function () {
                                         // Obtener el ID de la sucursal de la columna clickeada
                                         const sucursalId = this.options.id;
+                                        console.log('Sucursal ID clickeada desde gráfico:', sucursalId);
                                         // Buscar y hacer clic en la tarjeta de la sucursal correspondiente
                                         const card = document.querySelector(`.sucursal-card-container[data-id="${sucursalId}"]`);
                                         if (card) {
