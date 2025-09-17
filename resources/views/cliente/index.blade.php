@@ -415,7 +415,6 @@
             const currentUserRole = '{!! $currentUserRole !!}';
 
              const sucursales = {!! json_encode($sucursales) !!};
-            console.log('Sucursales cargadas:', sucursales);
             
             // Referencias a los contenedores
             const sucursalesListContainer = document.getElementById('sucursales-list-container');
@@ -521,6 +520,8 @@
             document.querySelectorAll('.sucursal-card-container').forEach(card => {
                 card.addEventListener('click', (e) => {
                     const sucursalId = e.currentTarget.dataset.id;
+                    console.log('Sucursal ID clickeada:', sucursalId);
+                    console.log('Lista de sucursales:', sucursales);
                     const sucursal = sucursales.find(s => s.id === sucursalId);
                     console.log('Sucursal seleccionada:', sucursal);
                     if (sucursal) {
