@@ -130,6 +130,7 @@ class MovimientoCombustibleController extends Controller
             'capacidadTotal',
             'nivelPromedio',
             'chartData',
+            'sucursalesData'
         ));
     }
 

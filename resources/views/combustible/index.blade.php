@@ -143,6 +143,7 @@
                 $drilldownSeries = [];
 
                 foreach ($clientesPrincipales as $cliente) {
+                  
                     $drilldownSeries[] = [
                         'id' => 'sucursales-'. $cliente->id,
                         'name' => 'Sucursales de '.$cliente->nombre,
