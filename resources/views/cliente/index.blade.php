@@ -321,8 +321,6 @@
              @endif
         </div>
 
-    </div>
-
 
     </div>
 
