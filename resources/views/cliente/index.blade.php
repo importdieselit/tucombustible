@@ -466,7 +466,7 @@
                                     const sucursalName = this.value;
                                     const sucursal = chartData.find(s => s.name === sucursalName);
                                     if (sucursal) {
-                                        const card = document.querySelector(`.sucursal-card-container[data-sucursal-id="${sucursal.id}"]`);
+                                        const card = document.querySelector(`.sucursal-card-container[data-id="${sucursal.id}"]`);
                                         if (card) {
                                             card.click();
                                         }
@@ -514,7 +514,7 @@
                                         // Obtener el ID de la sucursal de la columna clickeada
                                         const sucursalId = this.options.id;
                                         // Buscar y hacer clic en la tarjeta de la sucursal correspondiente
-                                        const card = document.querySelector(`.sucursal-card-container[data-sucursal-id="${sucursalId}"]`);
+                                        const card = document.querySelector(`.sucursal-card-container[data-id="${sucursalId}"]`);
                                         if (card) {
                                             card.click();
                                         }
