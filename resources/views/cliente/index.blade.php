@@ -244,7 +244,7 @@
                     <div class="row g-4" id="sucursales-cards">
                         @foreach ($sucursales as $sucursal)
                         <div class="col-12 col-md-6 col-lg-4">
-                            <div class="card h-100 p-4 sucursal-card-container" data-sucursal-id="{{ $sucursal['id'] }}">
+                            <div class="card h-100 p-4 sucursal-card-container" data-id="{{ $sucursal['id'] }}">
                                 <h5 class="fw-bold mb-1">{{ $sucursal['nombre'] }}</h5>
                                 <p class="text-muted mb-0">Contacto: {{ $sucursal['contacto'] }}</p>
                                 <div class="mt-3">
@@ -415,6 +415,7 @@
             const currentUserRole = '{!! $currentUserRole !!}';
 
              const sucursales = {!! json_encode($sucursales) !!};
+            console.log('Sucursales cargadas:', sucursales);
             
             // Referencias a los contenedores
             const sucursalesListContainer = document.getElementById('sucursales-list-container');
@@ -519,7 +520,7 @@
             // Lógica para mostrar los detalles de la sucursal al hacer clic en la tarjeta
             document.querySelectorAll('.sucursal-card-container').forEach(card => {
                 card.addEventListener('click', (e) => {
-                    const sucursalId = e.currentTarget.dataset.sucursalId;
+                    const sucursalId = e.currentTarget.dataset.id;
                     const sucursal = sucursales.find(s => s.id === sucursalId);
                     console.log('Sucursal seleccionada:', sucursal);
                     if (sucursal) {
