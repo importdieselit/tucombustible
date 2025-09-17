@@ -154,6 +154,7 @@
                         $chartData[] = [
                             'name' => $sucursal['nombre'],
                             'cupo' => $sucursal['cupo'],
+                            'id' => $sucursal['id'],
                             'disponible' => $sucursal['disponible'],
                             'consumido' => $sucursal['cupo'] - $sucursal['disponible']
                         ];
@@ -163,6 +164,7 @@
                      $chartData[] = [
                         'name' => $sucursalActual['nombre'],
                         'cupo' => $sucursalActual['cupo'],
+                        'id' => $sucursalActual['id'],
                         'disponible' => $sucursalActual['disponible'],
                         'consumido' => $sucursalActual['cupo'] - $sucursalActual['disponible']
                     ];
@@ -452,7 +454,26 @@
                         align: 'center'
                     },
                     xAxis: {
-                        categories: categories
+                        categories: categories,
+                        // Configurar los puntos del eje X para que sean interactivos
+                        labels: {
+                            style: {
+                                cursor: 'pointer'
+                            },
+                            events: {
+                                click: function (e) {
+                                    // Simular el click en la tarjeta de la sucursal
+                                    const sucursalName = this.value;
+                                    const sucursal = chartData.find(s => s.name === sucursalName);
+                                    if (sucursal) {
+                                        const card = document.querySelector(`.sucursal-card-container[data-sucursal-id="${sucursal.id}"]`);
+                                        if (card) {
+                                            card.click();
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     },
                     yAxis: {
                         min: 0,
@@ -485,15 +506,29 @@
                             dataLabels: {
                                 enabled: true
                             }
-                        }
+                        },
+                           // Configuración para hacer las columnas clickeables
+                            point: {
+                                events: {
+                                    click: function () {
+                                        // Obtener el ID de la sucursal de la columna clickeada
+                                        const sucursalId = this.options.id;
+                                        // Buscar y hacer clic en la tarjeta de la sucursal correspondiente
+                                        const card = document.querySelector(`.sucursal-card-container[data-sucursal-id="${sucursalId}"]`);
+                                        if (card) {
+                                            card.click();
+                                        }
+                                    }
+                                }
+                            }
                     },
                     series: [{
                         name: 'Consumido',
-                        data: consumidoData,
+                        data: chartData.map(d => ({ name: d.name, y: d.consumido, id: d.id })),
                         color: '#ef4444' // Rojo para lo consumido
                     }, {
                         name: 'Disponible',
-                        data: chartData.map(d => d.disponible),
+                        data: chartData.map(d => ({ name: d.name, y: d.disponible, id: d.id })),
                         color: '#10b981' // Verde para lo disponible
                     }]
                 });
