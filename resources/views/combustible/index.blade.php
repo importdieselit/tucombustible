@@ -136,9 +136,9 @@
                 //     (object)['id' => 5, 'nombre' => 'Sucursal B1', 'parent' => 2, 'cupo' => 50000, 'disponible' => 40000, 'contacto' => 'Luis Hernandez', 'direccion' => 'Calle Principal 303', 'telefono' => '555-0003'],
                 //     (object)['id' => 6, 'nombre' => 'Sucursal B2', 'parent' => 2, 'cupo' => 25000, 'disponible' => 20000, 'contacto' => 'Sofia Gomez', 'direccion' => 'Camino Real 404', 'telefono' => '555-0004'],
                 // ]);
-                
-                $totalCapacity = $clientesPadre->sum('cupo');
-                $totalCurrent = $clientesPadre->sum('disponible');
+                $clientesPrincipales = $clientes->where('parent', 0);
+                $totalCapacity = $clientesPrincipales->sum('cupo');
+                $totalCurrent = $clientesPrincipales->sum('disponible');
                 $percentage = $totalCapacity > 0 ? ($totalCurrent / $totalCapacity) * 100 : 0;
                 $isAlert = $totalCurrent <= ($totalCapacity * 0.1);
 
@@ -202,7 +202,7 @@
                 <div class="card h-100 p-4 d-flex flex-column justify-content-center text-center sucursal-card-container" id="sucursales-card">
                     <i class="fas fa-sitemap stat-card-icon mb-2 text-success"></i>
                     <h5 class="fw-bold mb-1">Ver Clientes</h5>
-                    <p class="text-muted mb-0">{{ count($clientesPadre) }} activos</p>
+                    <p class="text-muted mb-0">{{ count($clientesPrincipales) }} activos</p>
                 </div>
             </div>
         </div>
@@ -224,7 +224,7 @@
                     </button>
                 </div>
                 <div class="row g-4" id="clientes-cards">
-                    @foreach ($clientesPadre as $cliente)
+                    @foreach ($clientesPrincipales as $cliente)
                     <div class="col-12 col-md-6 col-lg-4">
                         <div class="card h-100 p-4 sucursal-card-container" data-sucursal-id="{{ $cliente->id }}">
                             <h5 class="fw-bold mb-1">{{ $cliente->nombre }}</h5>

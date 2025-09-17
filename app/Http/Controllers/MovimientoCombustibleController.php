@@ -120,7 +120,7 @@ class MovimientoCombustibleController extends Controller
 
         // Pasamos todos los datos a la vista.
         return view('combustible.index', compact(
-            'clientesPadre', 
+            'clientes', 
             'disponibilidadData',
             'pedidosPendientes', 
             'pedidosEnProceso', 
