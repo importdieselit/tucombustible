@@ -519,7 +519,7 @@
             // Lógica para mostrar los detalles de la sucursal al hacer clic en la tarjeta
             document.querySelectorAll('.sucursal-card-container').forEach(card => {
                 card.addEventListener('click', (e) => {
-                    const sucursalId = e.currentTarget.dataset.id;
+                    const sucursalId = parseInt(e.currentTarget.dataset.id, 10); 
                     console.log('Sucursal ID clickeada:', sucursalId);
                     console.log('Lista de sucursales:', sucursales);
                     let sucursal = sucursales.find(s => s.id === sucursalId);
