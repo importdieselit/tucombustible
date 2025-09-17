@@ -44,6 +44,7 @@ class MovimientoCombustibleController extends Controller
             return [
                 'name' => $cliente->nombre,
                 'y' => $consumido,
+                'id' => $cliente->id,
                 'disponible' => $cliente->disponible,
                 'cupo' => $cliente->cupo,
                 'drilldown' => 'sucursales-'. $cliente->id
@@ -57,6 +58,7 @@ class MovimientoCombustibleController extends Controller
                 $consumidoSucursal = $sucursal->cupo - $sucursal->disponible;
                 return [
                     'name' => $sucursal->nombre,
+                    'id' => $sucursal->id,
                     'y' => $consumidoSucursal,
                     'disponible' => $sucursal->disponible,
                     'cupo' => $sucursal->cupo
@@ -64,7 +66,7 @@ class MovimientoCombustibleController extends Controller
             });
             $sucursalesData['sucursales-' . $cliente->id] = [
                 'name' => 'Sucursales de ' . $cliente->nombre,
-                'id' => 'sucursales-' . $cliente->id,
+                'id' => $cliente->id,
                 'data' => $sucursalesDataForClient
             ];
         }
