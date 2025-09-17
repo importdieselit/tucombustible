@@ -34,7 +34,7 @@ class MovimientoCombustibleController extends Controller
         // 1. Indicadores de clientes
         // Obtenemos todos los clientes con parent 0.
         $clientesPadre = Cliente::where('parent', 0)
-                                ->select('nombre', 'disponible', 'cupo')
+                                ->select('nombre', 'disponible', 'cupo','id')
                                 ->get();
         $clientes = Cliente::all();
 
