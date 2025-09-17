@@ -269,7 +269,7 @@
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h4 class="fw-bold mb-0" id="sucursal-details-title"></h4>
                         <button class="btn btn-outline-secondary" id="back-to-list-btn">
-                            <i class="fas fa-arrow-left me-1"></i> Ver todas las sucursales
+                            <i class="fas fa-arrow-left"></i> Ver todas las sucursales
                         </button>
                         <button class="btn btn-outline-secondary" id="back-to-dashboard2-btn">
                             <i class="fas fa-arrow-left me-1"></i> Volver al Dashboard
@@ -541,6 +541,7 @@
             if (backToDashboardBtn2) {
                 backToDashboardBtn2.addEventListener('click', () => {
                     sucursalesListContainer.classList.add('hidden');
+                    dashboardMainView.classList.add('hidden');
                     dashboardMainView.classList.remove('hidden');
                 });
             }
