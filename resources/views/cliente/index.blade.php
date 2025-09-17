@@ -462,7 +462,7 @@
                                 cursor: 'pointer'
                             },
                             events: {
-                                click: function (e) {
+                                click: function () {
                                     // Simular el click en la tarjeta de la sucursal
                                     const sucursalName = this.value;
                                     console.log('Sucursal clickeada desde gráfico:', sucursalName);
@@ -515,7 +515,7 @@
                                 events: {
                                     click: function () {
                                         // Obtener el ID de la sucursal de la columna clickeada
-                                        const sucursalId = this.options.id;
+                                        let sucursalId = this.options.id;
                                         console.log('Sucursal ID clickeada desde gráfico:', sucursalId);
                                         // Buscar y hacer clic en la tarjeta de la sucursal correspondiente
                                         const card = document.querySelector(`.sucursal-card-container[data-id="${sucursalId}"]`);
@@ -753,6 +753,18 @@
                 }
             });
 
+         // Lógica para manejar los backdrops de los modales (si se quedan)
+            const allModals = document.querySelectorAll('.modal');
+            allModals.forEach(modal => {
+                modal.addEventListener('hidden.bs.modal', function() {
+                    const backdrops = document.querySelectorAll('.modal-backdrop');
+                    backdrops.forEach(backdrop => {
+                        backdrop.remove();
+                    });
+                });
+            });
         });
+
+        
     </script>
 @endpush
