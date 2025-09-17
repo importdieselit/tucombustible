@@ -2,7 +2,7 @@
 @section('title', 'TuCombustible - '.Auth::user()->name)
 
 @push('styles')
-        <style>
+                <style>
         :root {
             --bg-light: #f4f6f8;
             --bg-card: #ffffff;
@@ -88,6 +88,16 @@
         }
         #editarSucursalModal .modal-dialog {
             z-index: 1051;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .sucursal-card-container {
+            cursor: pointer;
+            transition: transform 0.2s ease-in-out;
+        }
+        .sucursal-card-container:hover {
+            transform: translateY(-5px);
         }
     </style>
 @endpush
@@ -222,65 +232,97 @@
         <!-- Secciones de Contenido Dinámico -->
         <div id="content-sections">
              @if ($cliente->parent==0)
-                <div class="card p-4 mb-4">
-                    <h4 class="fw-bold mb-3">Histórico de Cupo por Sucursal</h4>
-                    <div id="chart-container"></div>
-                </div>
-
-                <div class="mt-5">
-                    <h4 class="fw-bold mb-3">Administración de Sucursales</h4>
-                    <div class="accordion" id="sucursalesAccordion">
+                <div id="sucursales-list-container" class="hidden">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="fw-bold mb-0">Sucursales</h4>
+                        <button class="btn btn-outline-secondary" id="back-to-dashboard-btn">
+                            <i class="fas fa-arrow-left me-1"></i> Volver al Dashboard
+                        </button>
+                    </div>
+                    <div class="row g-4" id="sucursales-cards">
                         @foreach ($sucursales as $sucursal)
-                        <div class="accordion-item card shadow-sm mb-3">
-                            <h2 class="accordion-header" id="heading-{{ $sucursal['id'] }}">
-                                <button class="accordion-button collapsed fw-bold d-flex justify-content-between align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ $sucursal['id'] }}" aria-expanded="false" aria-controls="collapse-{{ $sucursal['id'] }}">
-                                    <span>{{ $sucursal['nombre'] }}</span>
-                                    <div class="d-flex align-items-center">
-                                        <span class="badge rounded-pill bg-success me-2">Disponible: {{ number_format($sucursal['disponible'], 0) }} L</span>
-                                        <i class="fas fa-chevron-down ms-2"></i>
-                                    </div>
-                                </button>
-                            </h2>
-                            <div id="collapse-{{ $sucursal['id'] }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ $sucursal['id'] }}" data-bs-parent="#sucursalesAccordion">
-                                <div class="accordion-body">
-                                    <p class="fw-bold mb-1">Información Básica:</p>
-                                    <ul>
-                                        <li><strong>Dirección:</strong> <span id="direccion-{{ $sucursal['id'] }}">{{ $sucursal['direccion'] }}</span></li>
-                                        <li><strong>Contacto:</strong> <span id="contacto-{{ $sucursal['id'] }}">{{ $sucursal['contacto'] }}</span></li>
-                                        <li><strong>Cupo Total:</strong> {{ number_format($sucursal['cupo'], 0) }} L</li>
-                                        <li><strong>Disponible:</strong> {{ number_format($sucursal['disponible'], 0) }} L</li>
-                                    </ul>
-                                    <h6 class="fw-bold mt-3 mb-2">Histórico de Pedidos y Despachos:</h6>
-                                    <ul class="list-group">
-                                        <li class="list-group-item">Pedido #XYZ - 1500 L - <span class="badge bg-success">Entregado</span></li>
-                                        <li class="list-group-item">Pedido #ABC - 2000 L - <span class="badge bg-warning text-dark">Pendiente</span></li>
-                                        <li class="list-group-item">Despacho #QWE - 500 L - <span class="badge bg-info">En Ruta</span></li>
-                                    </ul>
-                                    <div class="d-flex justify-content-end mt-4">
-                                        <button class="btn btn-outline-secondary me-2 edit-sucursal-btn"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#editarSucursalModal"
-                                                data-id="{{ $sucursal['id'] }}"
-                                                data-nombre="{{ $sucursal['nombre'] }}"
-                                                data-direccion="{{ $sucursal['direccion'] }}"
-                                                data-contacto="{{ $sucursal['contacto'] }}">
-                                            <i class="fas fa-edit me-1"></i> Editar
-                                        </button>
-                                        <button class="btn btn-primary-custom make-order-btn"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#hacerPedidoModal"
-                                                data-sucursal-id="{{ $sucursal['id'] }}">
-                                            <i class="fas fa-plus-circle me-1"></i> Hacer Pedido
-                                        </button>
-                                    </div>
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <div class="card h-100 p-4 sucursal-card-container" data-sucursal-id="{{ $sucursal['id'] }}">
+                                <h5 class="fw-bold mb-1">{{ $sucursal['nombre'] }}</h5>
+                                <p class="text-muted mb-0">Contacto: {{ $sucursal['contacto'] }}</p>
+                                <div class="mt-3">
+                                    <p class="fw-bold mb-1">Disponible: <span class="text-success">{{ number_format($sucursal['disponible'], 0) }} L</span></p>
+                                    <p class="fw-bold mb-0">Cupo: <span class="text-muted">{{ number_format($sucursal['cupo'], 0) }} L</span></p>
                                 </div>
                             </div>
                         </div>
                         @endforeach
                     </div>
                 </div>
+
+                <div id="sucursal-details-container" class="hidden">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="fw-bold mb-0" id="sucursal-details-title"></h4>
+                        <button class="btn btn-outline-secondary" id="back-to-list-btn">
+                            <i class="fas fa-arrow-left me-1"></i> Ver todas las sucursales
+                        </button>
+                    </div>
+                    
+                    <div class="card p-4 mb-4">
+                        <h5 class="fw-bold mb-3">Información General</h5>
+                        <ul class="list-unstyled">
+                            <li><strong>Dirección:</strong> <span id="details-direccion"></span></li>
+                            <li><strong>Persona de Contacto:</strong> <span id="details-contacto"></span></li>
+                            <li><strong>Teléfono:</strong> <span id="details-telefono"></span></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="card p-4 mb-4">
+                        <h5 class="fw-bold mb-3">Estado de Cupo</h5>
+                        <p class="fw-bold mb-2">Disponible / Cupo</p>
+                        <div class="d-flex align-items-center mb-2">
+                            <h3 class="fw-bold mb-0 me-2" id="details-disponible"></h3>
+                            <p class="text-muted mb-0" id="details-cupo"></p>
+                        </div>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar" role="progressbar" id="details-progress-bar"></div>
+                        </div>
+                    </div>
+
+                    <div class="card p-4 mb-4">
+                        <h5 class="fw-bold mb-3">Histórico de Consumo Semanal</h5>
+                        <div id="consumo-chart-container"></div>
+                    </div>
+
+                    <div class="d-flex justify-content-center gap-2 mt-4">
+                        <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#hacerPedidoModal" id="btn-details-pedido">
+                            <i class="fas fa-plus-circle me-1"></i> Hacer Pedido
+                        </button>
+                        <button class="btn btn-secondary-custom" data-bs-toggle="modal" data-bs-target="#editarSucursalModal" id="btn-details-edicion">
+                            <i class="fas fa-edit me-1"></i> Editar Datos
+                        </button>
+                        <button class="btn btn-info text-white" id="btn-send-message">
+                            <i class="fas fa-envelope me-1"></i> Enviar Mensaje
+                        </button>
+                    </div>
+                     <div class="d-flex justify-content-center gap-2 mt-4">
+                        <button class="btn btn-warning text-white" id="btn-create-user">
+                            <i class="fas fa-user-plus me-1"></i> Crear Usuario
+                        </button>
+                        <button class="btn btn-warning text-white" id="btn-assign-user">
+                            <i class="fas fa-user-check me-1"></i> Asignar Usuario
+                        </button>
+                    </div>
+
+                </div>
+
+                <div id="dashboard-main-view">
+                    <div class="card p-4 mb-4">
+                        <h4 class="fw-bold mb-3">Histórico de Cupo por Sucursal</h4>
+                        <div id="chart-container"></div>
+                    </div>
+                </div>
+                
              @endif
         </div>
+
+    </div>
+
 
     </div>
 
@@ -371,6 +413,23 @@
             // Datos simulados pasados desde PHP
             const chartData = {!! json_encode($chartData) !!};
             const currentUserRole = '{!! $currentUserRole !!}';
+
+             const sucursales = {!! json_encode($sucursales) !!};
+            
+            // Referencias a los contenedores
+            const sucursalesListContainer = document.getElementById('sucursales-list-container');
+            const sucursalDetailsContainer = document.getElementById('sucursal-details-container');
+            const dashboardMainView = document.getElementById('dashboard-main-view');
+
+            // Botones de navegación
+            const verSucursalesBtn = document.getElementById('sucursales-card');
+            const backToDashboardBtn = document.getElementById('back-to-dashboard-btn');
+            const backToListBtn = document.getElementById('back-to-list-btn');
+
+            // Ocultar vistas por defecto
+            sucursalesListContainer.classList.add('hidden');
+            sucursalDetailsContainer.classList.add('hidden');
+           
             
             // Lógica para el gráfico de Highcharts
             if (currentUserRole === 'principal') {
@@ -434,15 +493,104 @@
                 });
             }
 
+
+// Manejadores de eventos de navegación
+            if (verSucursalesBtn) {
+                verSucursalesBtn.addEventListener('click', () => {
+                    dashboardMainView.classList.add('hidden');
+                    sucursalesListContainer.classList.remove('hidden');
+                });
+            }
+
+            if (backToDashboardBtn) {
+                backToDashboardBtn.addEventListener('click', () => {
+                    sucursalesListContainer.classList.add('hidden');
+                    dashboardMainView.classList.remove('hidden');
+                });
+            }
+
+            if (backToListBtn) {
+                backToListBtn.addEventListener('click', () => {
+                    sucursalDetailsContainer.classList.add('hidden');
+                    sucursalesListContainer.classList.remove('hidden');
+                });
+            }
+
+            // Lógica para mostrar los detalles de la sucursal al hacer clic en la tarjeta
+            document.querySelectorAll('.sucursal-card-container').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    const sucursalId = e.currentTarget.dataset.sucursalId;
+                    const sucursal = sucursales.find(s => s.id === sucursalId);
+
+                    if (sucursal) {
+                        // Ocultar la lista y mostrar los detalles
+                        sucursalesListContainer.classList.add('hidden');
+                        sucursalDetailsContainer.classList.remove('hidden');
+
+                        // Llenar los datos de la sucursal
+                        document.getElementById('sucursal-details-title').textContent = sucursal.nombre;
+                        document.getElementById('details-direccion').textContent = sucursal.direccion;
+                        document.getElementById('details-contacto').textContent = sucursal.contacto;
+                        document.getElementById('details-telefono').textContent = sucursal.telefono || 'No especificado';
+                        document.getElementById('details-disponible').textContent = `${sucursal.disponible} L`;
+                        document.getElementById('details-cupo').textContent = `/ ${sucursal.cupo} L`;
+
+                        const percentage = (sucursal.disponible / sucursal.cupo) * 100;
+                        const progressBar = document.getElementById('details-progress-bar');
+                        progressBar.style.width = `${percentage}%`;
+                        progressBar.classList.remove('progress-bar-custom', 'progress-bar-danger');
+                        progressBar.classList.add(percentage < 10 ? 'progress-bar-danger' : 'progress-bar-custom');
+
+                        // Lógica para el gráfico de histórico de consumo (datos simulados)
+                        // Deberás reemplazar esto con datos reales de tu base de datos
+                        const consumoHistorico = {
+                            categorias: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+                            data: [1000, 800, 1200, 1500, 900, 1100, 1300]
+                        };
+
+                        Highcharts.chart('consumo-chart-container', {
+                            chart: {
+                                type: 'line'
+                            },
+                            title: {
+                                text: 'Histórico de Consumo Semanal'
+                            },
+                            xAxis: {
+                                categories: consumoHistorico.categorias
+                            },
+                            yAxis: {
+                                title: {
+                                    text: 'Litros Consumidos'
+                                }
+                            },
+                            series: [{
+                                name: 'Consumo',
+                                data: consumoHistorico.data,
+                                color: '#3b82f6'
+                            }]
+                        });
+                        
+                        // Configurar los botones de acción para el modal de pedidos y edición
+                        const btnDetailsPedido = document.getElementById('btn-details-pedido');
+                        const btnDetailsEdicion = document.getElementById('btn-details-edicion');
+                        
+                        btnDetailsPedido.setAttribute('data-sucursal-id', sucursalId);
+                        
+                        btnDetailsEdicion.setAttribute('data-id', sucursalId);
+                        btnDetailsEdicion.setAttribute('data-nombre', sucursal.nombre);
+                        btnDetailsEdicion.setAttribute('data-direccion', sucursal.direccion);
+                        btnDetailsEdicion.setAttribute('data-contacto', sucursal.contacto);
+                        btnDetailsEdicion.setAttribute('data-telefono', sucursal.telefono);
+                    }
+                });
+            });
+
             // Lógica para el modal de pedidos
             const pedidoModal = document.getElementById('hacerPedidoModal');
             const btnSubmitPedido = document.getElementById('btn-submit-pedido');
             const hacerPedidoForm = document.getElementById('hacerPedidoForm');
             const sucursalSelect = document.getElementById('sucursalSelect');
-            let modalbackdrop = document.querySelector('.modal-backdrop');
-                        if (modalbackdrop) {   
-                            modalbackdrop.remove();
-                        }
+            
 
             btnSubmitPedido.addEventListener('click', async () => {
                 if (!hacerPedidoForm.reportValidity()) {
