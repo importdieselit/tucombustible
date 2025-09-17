@@ -150,6 +150,7 @@
                         'data' => $sucursalesData,
                     ];
                 }
+                dd($drilldownSeries);
 
                 $totalCapacity = $clientesPrincipales->sum('cupo');
                 $totalCurrent = $clientesPrincipales->sum('disponible');
