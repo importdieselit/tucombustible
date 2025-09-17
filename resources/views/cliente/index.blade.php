@@ -21,6 +21,7 @@
         }
 
         .card {
+            z-index: 1;
             background-color: var(--bg-card);
             border: none;
             border-radius: 1rem;
@@ -92,7 +93,12 @@
         .hidden {
             display: none !important;
         }
+        .modal-backdrop.show {
+            opacity: 0.5;
+            z-index: 5;
+        }
         .sucursal-card-container {
+            z-index: 20;
             cursor: pointer;
             transition: transform 0.2s ease-in-out;
         }
@@ -327,7 +333,7 @@
     </div>
 
     <!-- Modal para Hacer Pedido -->
-    <div class="modal fade z-100" id="hacerPedidoModal" tabindex="-1" aria-labelledby="hacerPedidoModalLabel" aria-hidden="true">
+    <div class="modal fade z-100" id="hacerPedidoModal" tabindex="-1" aria-labelledby="hacerPedidoModalLabel" aria-hidden="true" style="z-index: 100">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-card text-dark rounded-3 shadow-lg">
                 <div class="modal-header border-bottom-0">
