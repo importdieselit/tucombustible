@@ -500,7 +500,7 @@
                         shadow: false
                     },
                     tooltip: {
-                        headerFormat: '<b>{point.name} {point.id}</b><br/>',
+                        headerFormat: '<b>{point.name}</b><br/>',
                         pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
                     },
                     plotOptions: {
