@@ -521,7 +521,7 @@
                 card.addEventListener('click', (e) => {
                     const sucursalId = e.currentTarget.dataset.sucursalId;
                     const sucursal = sucursales.find(s => s.id === sucursalId);
-
+                    console.log('Sucursal seleccionada:', sucursal);
                     if (sucursal) {
                         // Ocultar la lista y mostrar los detalles
                         sucursalesListContainer.classList.add('hidden');
@@ -544,7 +544,7 @@
                         // Lógica para el gráfico de histórico de consumo (datos simulados)
                         // Deberás reemplazar esto con datos reales de tu base de datos
                         const consumoHistorico = {
-                            categorias: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+                            categorias: ['Sem 30', 'Sem 31', 'Sem 32', 'Sem 33', 'Sem 34', 'Sem 36', 'Sem 37'],
                             data: [1000, 800, 1200, 1500, 900, 1100, 1300]
                         };
 
