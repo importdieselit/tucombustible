@@ -271,6 +271,9 @@
                         <button class="btn btn-outline-secondary" id="back-to-list-btn">
                             <i class="fas fa-arrow-left me-1"></i> Ver todas las sucursales
                         </button>
+                        <button class="btn btn-outline-secondary" id="back-to-dashboard2-btn">
+                            <i class="fas fa-arrow-left me-1"></i> Volver al Dashboard
+                        </button>
                     </div>
                     
                     <div class="card p-4 mb-4">
@@ -433,6 +436,7 @@
             // Botones de navegación
             const verSucursalesBtn = document.getElementById('sucursales-card');
             const backToDashboardBtn = document.getElementById('back-to-dashboard-btn');
+            const backToDashboardBtn2 = document.getElementById('back-to-dashboard2-btn');
             const backToListBtn = document.getElementById('back-to-list-btn');
 
             // Ocultar vistas por defecto
@@ -492,10 +496,8 @@
                             point: {
                                 events: {
                                     click: function () {
-                                        alert('Haz clickeado en la sucursal: ' + this.name);
                                         // Obtener el ID de la sucursal de la columna clickeada
                                         let sucursalId = this.options.id;
-                                        console.log('Sucursal ID clickeada desde gráfico:', sucursalId);
                                         // Buscar y hacer clic en la tarjeta de la sucursal correspondiente
                                         const card = document.querySelector(`.sucursal-card-container[data-id="${sucursalId}"]`);
                                         if (card) {
@@ -531,6 +533,13 @@
 
             if (backToDashboardBtn) {
                 backToDashboardBtn.addEventListener('click', () => {
+                    sucursalesListContainer.classList.add('hidden');
+                    dashboardMainView.classList.remove('hidden');
+                });
+            }
+
+            if (backToDashboardBtn2) {
+                backToDashboardBtn2.addEventListener('click', () => {
                     sucursalesListContainer.classList.add('hidden');
                     dashboardMainView.classList.remove('hidden');
                 });
