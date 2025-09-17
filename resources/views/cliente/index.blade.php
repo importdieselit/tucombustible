@@ -463,6 +463,7 @@
                             },
                             events: {
                                 click: function () {
+                                    alert('Haz clickeado en la sucursal: ' + this.value);
                                     // Simular el click en la tarjeta de la sucursal
                                     const sucursalName = this.value;
                                     console.log('Sucursal clickeada desde gráfico:', sucursalName);
@@ -472,7 +473,11 @@
                                         const card = document.querySelector(`.sucursal-card-container[data-id="${sucursal.id}"]`);
                                         if (card) {
                                             card.click();
+                                        } else {
+                                            console.warn('No se encontró la tarjeta para la sucursal:', sucursalName);
                                         }
+                                    }else {
+                                        console.warn('No se encontró la sucursal en los datos del gráfico:', sucursalName);
                                     }
                                 }
                             }
@@ -510,21 +515,24 @@
                                 enabled: true
                             }
                         },
-                           // Configuración para hacer las columnas clickeables
-                            point: {
-                                events: {
-                                    click: function () {
-                                        // Obtener el ID de la sucursal de la columna clickeada
-                                        let sucursalId = this.options.id;
-                                        console.log('Sucursal ID clickeada desde gráfico:', sucursalId);
-                                        // Buscar y hacer clic en la tarjeta de la sucursal correspondiente
-                                        const card = document.querySelector(`.sucursal-card-container[data-id="${sucursalId}"]`);
-                                        if (card) {
-                                            card.click();
-                                        }
+                        // Configuración para hacer las columnas clickeables
+                        point: {
+                            events: {
+                                click: function () {
+                                    alert('Haz clickeado en la sucursal: ' + this.name);
+                                    // Obtener el ID de la sucursal de la columna clickeada
+                                    let sucursalId = this.options.id;
+                                    console.log('Sucursal ID clickeada desde gráfico:', sucursalId);
+                                    // Buscar y hacer clic en la tarjeta de la sucursal correspondiente
+                                    const card = document.querySelector(`.sucursal-card-container[data-id="${sucursalId}"]`);
+                                    if (card) {
+                                        card.click();
+                                    }else {
+                                        console.warn('No se encontró la tarjeta para la sucursal ID:', sucursalId);
                                     }
                                 }
                             }
+                        }
                     },
                     series: [{
                         name: 'Consumido',
