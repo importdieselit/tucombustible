@@ -126,7 +126,7 @@
                 // Estos datos deben ser proporcionados por el controlador de Laravel.
                 // Se asume la siguiente estructura para los datos de los clientes y sus sucursales.
                 // $clientes es un array de objetos o un Collection de Eloquent.
-                // // La lógica del drilldown se basa en el ID y el 'parent'.
+                // La lógica del drilldown se basa en el ID y el 'parent'.
 
                 // $clientes = collect([
                 //     (object)['id' => 1, 'nombre' => 'Cliente A', 'parent' => 0, 'cupo' => 50000, 'disponible' => 25000, 'contacto' => 'Juan Perez', 'direccion' => 'Calle Falsa 123', 'telefono' => '555-1234'],
@@ -140,17 +140,37 @@
                 $sucursales = $clientes->where('parent', '!=', 0);
 
                 // Prepara los datos para la gráfica de Highcharts
+                $chartData = [];
                 $drilldownSeries = [];
 
                 foreach ($clientesPrincipales as $cliente) {
-                  
+                    $consumido = $cliente->cupo - $cliente->disponible;
+                    $chartData[] = [
+                        'name' => $cliente->nombre,
+                        'y' => $consumido,
+                        'disponible' => $cliente->disponible,
+                        'cupo' => $cliente->cupo,
+                        'drilldown' => 'sucursales-'. $cliente->id
+                    ];
+                    
+                    $sucursalesCliente = $sucursales->where('parent', $cliente->id);
+                    $sucursalesData = [];
+                    foreach ($sucursalesCliente as $sucursal) {
+                         $consumidoSucursal = $sucursal->cupo - $sucursal->disponible;
+                         $sucursalesData[] = [
+                            'name' => $sucursal->nombre,
+                            'y' => $consumidoSucursal,
+                            'disponible' => $sucursal->disponible,
+                            'cupo' => $sucursal->cupo
+                         ];
+                    }
+
                     $drilldownSeries[] = [
                         'id' => 'sucursales-'. $cliente->id,
                         'name' => 'Sucursales de '.$cliente->nombre,
                         'data' => $sucursalesData,
                     ];
                 }
-                dd($drilldownSeries);
 
                 $totalCapacity = $clientesPrincipales->sum('cupo');
                 $totalCurrent = $clientesPrincipales->sum('disponible');

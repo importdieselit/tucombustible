@@ -34,44 +34,9 @@ class MovimientoCombustibleController extends Controller
         // 1. Indicadores de clientes
         // Obtenemos todos los clientes con parent 0.
         $clientesPadre = Cliente::where('parent', 0)
-                                ->select('nombre', 'disponible', 'cupo','id')
+                                ->select('nombre', 'disponible', 'cupo','')
                                 ->get();
         $clientes = Cliente::all();
-
-        // Preparar datos para la gráfica de consumo por cliente.
-        $chartData = $clientesPadre->map(function ($cliente) {
-            $consumido = $cliente->cupo - $cliente->disponible;
-            return [
-                'name' => $cliente->nombre,
-                'y' => $consumido,
-                'id' => $cliente->id,
-                'disponible' => $cliente->disponible,
-                'cupo' => $cliente->cupo,
-                'drilldown' => 'sucursales-'. $cliente->id
-            ];
-        });
-        // Preparar datos para el drilldown de sucursales.
-        $sucursalesData = [];   
-        foreach ($clientesPadre as $cliente) {
-            $sucursales = Cliente::where('parent', $cliente->id)->get();
-            $sucursalesDataForClient = $sucursales->map(function ($sucursal) {
-                $consumidoSucursal = $sucursal->cupo - $sucursal->disponible;
-                return [
-                    'name' => $sucursal->nombre,
-                    'id' => $sucursal->id,
-                    'y' => $consumidoSucursal,
-                    'disponible' => $sucursal->disponible,
-                    'cupo' => $sucursal->cupo
-                ];
-            });
-            $sucursalesData['sucursales-' . $cliente->id] = [
-                'name' => 'Sucursales de ' . $cliente->nombre,
-                'id' => $cliente->id,
-                'data' => $sucursalesDataForClient
-            ];
-        }
-        $chartData = $chartData->toJson();
-        $sucursalesData = collect($sucursalesData)->values()->toJson();
 
         
         // 2. Gráficas de disponibilidad de clientes.
@@ -130,9 +95,7 @@ class MovimientoCombustibleController extends Controller
             'camionesCargados',
             'totalCombustible',
             'capacidadTotal',
-            'nivelPromedio',
-            'chartData',
-            'sucursalesData'
+            'nivelPromedio'
         ));
     }
 
