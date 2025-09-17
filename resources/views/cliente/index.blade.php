@@ -522,7 +522,7 @@
                     const sucursalId = e.currentTarget.dataset.id;
                     console.log('Sucursal ID clickeada:', sucursalId);
                     console.log('Lista de sucursales:', sucursales);
-                    const sucursal = sucursales.find(s => s.id === sucursalId);
+                    let sucursal = sucursales.find(s => s.id === sucursalId);
                     console.log('Sucursal seleccionada:', sucursal);
                     if (sucursal) {
                         // Ocultar la lista y mostrar los detalles
