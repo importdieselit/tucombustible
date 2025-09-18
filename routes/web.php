@@ -47,6 +47,7 @@ Route::middleware(['auth'])->group(function () {
 
 
 Route::get('clientes/dashboard', [ClienteController::class, 'dashboard'])->name('clientes.dashboard')->middleware('role:3');
+Route::get('combustible/dashboard', [MovimientoCombustibleController::class, 'index'])->name('combustible.dashboard')->middleware('role:2');
     
     // Rutas para la carga dinámica de modelos
     Route::get('/marcas/get-modelos', [MarcaController::class, 'getModelos'])->name('marcas.getModelos');

@@ -26,6 +26,8 @@
                     @php($user = Auth::user())
                     @if($user->id_perfil == 3)
                         @include('layouts.sidebar-cliente')
+                    @elseif($user->id_perfil == 2)
+                        @include('layouts.sidebar-cliente')
                     @else
                         @include('layouts.sidebar')
                     @endif
