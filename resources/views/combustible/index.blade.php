@@ -210,7 +210,7 @@
             </div>
 
 
-            <div class="d-flex align-items-center">
+            <div class="d-flex align-items-center mt-5">
                 <i class="fas fa-money-bill-wave text-info me-3" style="font-size: 3rem;"></i>
                 <div>
                     <h2 class="h4 fw-bold text-black mb-0" id="main-title">
@@ -224,8 +224,8 @@
             <div class="mt-4">
                 <p class="fw-bold mb-2">Total Disponible / Capacidad total</p>
                 <div class="d-flex align-items-center mb-2">
-                    <h3 class="fw-bold mb-0 me-2">{{ number_format($totalCurrent, 2) }} L</h3>
-                    <p class="text-muted mb-0">/ {{ $totalCapacity }} L</p>
+                    <h3 class="fw-bold mb-0 me-2">{{ number_format($totalCombustible, 2) }} L</h3>
+                    <p class="text-muted mb-0">/ {{ $capacidadTotal }} L</p>
                 </div>
                 <div class="progress" style="height: 10px;">
                     <div class="progress-bar {{ $isAlert ? 'progress-bar-danger' : 'progress-bar-custom' }}"
@@ -369,7 +369,7 @@
         </div>
 
     </div>
-
+<div class="row g-4 mb-5">
         @foreach ($tipoDeposito as $tipo )
     <div class="col-lg-6">        
         
@@ -420,7 +420,7 @@
 
 </div>
         @endforeach
-    
+</div>
     <!-- Modal para Hacer Pedido -->
     <div class="modal fade" id="hacerPedidoModal" tabindex="-1" aria-labelledby="hacerPedidoModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
