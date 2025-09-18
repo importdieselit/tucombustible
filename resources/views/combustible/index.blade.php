@@ -194,7 +194,7 @@
                 </div>
             </div>
             <div class="mt-4">
-                <p class="fw-bold mb-2">Total Disponible / Cupo</p>
+                <p class="fw-bold mb-2">Total Disponible / Cupo total SIAVCOM</p>
                 <div class="d-flex align-items-center mb-2">
                     <h3 class="fw-bold mb-0 me-2">{{ number_format($totalCurrent, 2) }} L</h3>
                     <p class="text-muted mb-0">/ {{ $totalCapacity }} L</p>
@@ -208,6 +208,36 @@
                          aria-valuemax="100"></div>
                 </div>
             </div>
+
+
+            <div class="d-flex align-items-center">
+                <i class="fas fa-money-bill-wave text-info me-3" style="font-size: 3rem;"></i>
+                <div>
+                    <h2 class="h4 fw-bold text-black mb-0" id="main-title">
+                        Estado General de los Depositos
+                    </h2>
+                    <p class="text-sm text-muted mb-0" id="main-subtitle">
+                        Resumen del cupo disponible de todos los depositos.
+                    </p>
+                </div>
+            </div>
+            <div class="mt-4">
+                <p class="fw-bold mb-2">Total Disponible / Capacidad total</p>
+                <div class="d-flex align-items-center mb-2">
+                    <h3 class="fw-bold mb-0 me-2">{{ number_format($totalCurrent, 2) }} L</h3>
+                    <p class="text-muted mb-0">/ {{ $totalCapacity }} L</p>
+                </div>
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar {{ $isAlert ? 'progress-bar-danger' : 'progress-bar-custom' }}"
+                         role="progressbar"
+                         style="width: {{ $percentage }}%;"
+                         aria-valuenow="{{ $percentage }}"
+                         aria-valuemin="0"
+                         aria-valuemax="100"></div>
+                </div>
+            </div>
+
+            
         </div>
 
         <!-- Secciones de Acciones y Vistas -->
@@ -340,6 +370,57 @@
 
     </div>
 
+        @foreach ($tipoDeposito as $tipo )
+    <div class="col-lg-6">        
+        
+        <div class="card shadow-sm p-4 h-100">
+            <div class="card-header bg-white">
+                <h5 class="card-title m-0">Niveles de Depósitos tipo {{ $tipo->producto }}</h5>
+            </div>
+            <div class="card-body bg-white">
+                <ul class="list-group list-group-flush">
+                    @foreach($tipo->depositos as $deposito)
+                        @php($percentage = $deposito->nivel)
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="m-0">{{ $deposito->serial }} ({{ $deposito->producto }})</h6>
+                                <p class="text-muted m-0"><small>Nivel: {{ $percentage }}%</small></p>
+                            </div>
+                            <div class="progress" style="width: 150px; height: 20px;">
+                                <div class="progress-bar" 
+                                     role="progressbar" 
+                                     style="width: {{  $percentage }}%; background-color: {{  $percentage > 50 ? '#28a745' : ( $percentage > 25 ? '#ffc107' : '#dc3545') }};" 
+                                     aria-valuenow="{{  $percentage }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    {{ $deposito->nivel_actual_litros }}L - {{  $percentage }}%
+                                </div>
+                            </div>
+                        </li>
+                    @endforeach
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="m-0">Total </h6>
+                                <p class="text-muted m-0"><small>Nivel: {{$tipo->nivel}}%</small></p>
+                            </div>
+                            <div class="progress" style="width: 150px; height: 20px;">
+                                <div class="progress-bar" 
+                                     role="progressbar" 
+                                     style="width: {{  $tipo->nivel }}%; background-color: {{  $tipo->nivel > 50 ? '#28a745' : ( $tipo->nivel > 25 ? '#ffc107' : '#dc3545') }};" 
+                                     aria-valuenow="{{  $tipo->nivel }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    {{ $tipo->total }}L / {{  $tipo->nivel }}%
+                                </div>
+                            </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+</div>
+        @endforeach
+    
     <!-- Modal para Hacer Pedido -->
     <div class="modal fade" id="hacerPedidoModal" tabindex="-1" aria-labelledby="hacerPedidoModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
