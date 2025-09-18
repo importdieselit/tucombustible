@@ -1,665 +1,240 @@
 @extends('layouts.app')
-@section('title', 'TuCombustible - Dashboard de Operaciones')
 
-@push('styles')
-        <style>
-        :root {
-            --bg-light: #f4f6f8;
-            --bg-card: #ffffff;
-            --text-dark: #333333;
-            --text-muted: #6c757d;
-            --primary-color: #3b82f6;
-            --primary-dark: #2563eb;
-            --secondary-color: #10b981;
-            --secondary-dark: #059669;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-            background-color: var(--bg-light);
-            color: var(--text-dark);
-        }
-
-        .card {
-            background-color: var(--bg-card);
-            border: none;
-            border-radius: 1rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
-            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.08);
-        }
-
-        .btn-primary-custom {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-
-        .btn-primary-custom:hover {
-            background-color: var(--primary-dark);
-            border-color: var(--primary-dark);
-        }
-
-        .btn-secondary-custom {
-            background-color: var(--secondary-color);
-            border-color: var(--secondary-color);
-        }
-
-        .btn-secondary-custom:hover {
-            background-color: var(--secondary-dark);
-            border-color: var(--secondary-dark);
-        }
-
-        .progress-bar-custom {
-            background-color: var(--primary-color);
-        }
-
-        .progress-bar-danger {
-            background-color: #ef4444;
-        }
-
-        .stat-card-icon {
-            font-size: 2rem;
-            color: #495057;
-        }
-
-        .main-hero-card {
-            background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
-            color: var(--text-dark);
-        }
-
-        .main-hero-card .text-muted {
-            color: #6c757d !important;
-        }
-        
-        .card-hover:hover {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            transform: translateY(-5px);
-            transition: all 0.3s ease-in-out;
-        }
-        .highcharts-yaxis-grid .highcharts-grid-line {
-            stroke-dasharray: 2px;
-        }
-
-        .highcharts-yaxis-labels text {
-            fill: #6c757d;
-        }
-        .hidden {
-            display: none !important;
-        }
-        .sucursal-card-container {
-            cursor: pointer;
-            transition: transform 0.2s ease-in-out;
-        }
-        .sucursal-card-container:hover {
-            transform: translateY(-5px);
-        }
-        .highcharts-color-0 {
-            fill: #3b82f6;
-            stroke: #3b82f6;
-        }
-        .highcharts-color-1 {
-            fill: #ef4444;
-            stroke: #ef4444;
-        }
-        /* Para ocultar el sidebar en la vista de operaciones, asumiendo un layout blade */
-        @media (min-width: 992px) {
-            body.sidebar-cliente .sidebar {
-                display: none !important;
-            }
-        }
-
-    </style>
-@endpush
+@section('title', 'Dashboard de Combustible')
 
 @section('content')
-    <div class="container-fluid">
-        <h1 class="display-8 fw-bold mb-5 text-center text-black">Dashboard de Operaciones</h1>
-        <p class="text-center text-sm mb-5" id="user-role-info">  </p>
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="mb-2">Dashboard de Combustible</h1>
+        <p class="text-muted">Información clave y monitoreo en tiempo real para la gestión de combustible.</p>
+    </div>
+</div>
 
-        <!-- Sección de Visualización de Cupo y Disponibilidad -->
-        <div class="card p-4 mb-5 main-hero-card">
-            @php
-                // --- SIMULACIÓN DE DATOS DESDE EL CONTROLADOR ---
-                // Estos datos deben ser proporcionados por el controlador de Laravel.
-                // Se asume la siguiente estructura para los datos de los clientes y sus sucursales.
-                // $clientes es un array de objetos o un Collection de Eloquent.
-                // La lógica del drilldown se basa en el ID y el 'parent'.
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card p-4 h-100">
+            <h2 class="h5 mb-3 text-primary">Clientes con Sucursales (con Desglose)</h2>
+            <canvas id="chartConSucursales"></canvas>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card p-4 h-100">
+            <h2 class="h5 mb-3 text-primary">Clientes sin Sucursales</h2>
+            <canvas id="chartSinSucursales"></canvas>
+        </div>
+    </div>
+</div>
 
-                // $clientes = collect([
-                //     (object)['id' => 1, 'nombre' => 'Cliente A', 'parent' => 0, 'cupo' => 50000, 'disponible' => 25000, 'contacto' => 'Juan Perez', 'direccion' => 'Calle Falsa 123', 'telefono' => '555-1234'],
-                //     (object)['id' => 2, 'nombre' => 'Cliente B', 'parent' => 0, 'cupo' => 75000, 'disponible' => 60000, 'contacto' => 'Maria Lopez', 'direccion' => 'Avenida Siempre Viva 742', 'telefono' => '555-5678'],
-                //     (object)['id' => 3, 'nombre' => 'Sucursal A1', 'parent' => 1, 'cupo' => 30000, 'disponible' => 15000, 'contacto' => 'Pedro Gonzalez', 'direccion' => 'Las Acacias 101', 'telefono' => '555-0001'],
-                //     (object)['id' => 4, 'nombre' => 'Sucursal A2', 'parent' => 1, 'cupo' => 20000, 'disponible' => 10000, 'contacto' => 'Ana Ramirez', 'direccion' => 'Los Robles 202', 'telefono' => '555-0002'],
-                //     (object)['id' => 5, 'nombre' => 'Sucursal B1', 'parent' => 2, 'cupo' => 50000, 'disponible' => 40000, 'contacto' => 'Luis Hernandez', 'direccion' => 'Calle Principal 303', 'telefono' => '555-0003'],
-                //     (object)['id' => 6, 'nombre' => 'Sucursal B2', 'parent' => 2, 'cupo' => 25000, 'disponible' => 20000, 'contacto' => 'Sofia Gomez', 'direccion' => 'Camino Real 404', 'telefono' => '555-0004'],
-                // ]);
-                $clientesPrincipales = $clientes->where('parent', 0);
-                $sucursales = $clientes->where('parent', '!=', 0);
-
-                // Prepara los datos para la gráfica de Highcharts
-                $chartData = [];
-                $drilldownSeries = [];
-
-                foreach ($clientesPrincipales as $cliente) {
-                    $consumido = $cliente->cupo - $cliente->disponible;
-                    $chartData[] = [
-                        'name' => $cliente->nombre,
-                        'y' => $consumido,
-                        'disponible' => $cliente->disponible,
-                        'cupo' => $cliente->cupo,
-                        'drilldown' => 'sucursales-'. $cliente->id
-                    ];
-                    
-                    $sucursalesCliente = $sucursales->where('parent', $cliente->id);
-                    $sucursalesData = [];
-                    foreach ($sucursalesCliente as $sucursal) {
-                         $consumidoSucursal = $sucursal->cupo - $sucursal->disponible;
-                         $sucursalesData[] = [
-                            'name' => $sucursal->nombre,
-                            'y' => $consumidoSucursal,
-                            'disponible' => $sucursal->disponible,
-                            'cupo' => $sucursal->cupo
-                         ];
-                    }
-
-                    $drilldownSeries[] = [
-                        'id' => 'sucursales-'. $cliente->id,
-                        'name' => 'Sucursales de '.$cliente->nombre,
-                        'data' => $sucursalesData,
-                    ];
-                }
-
-                $totalCapacity = $clientesPrincipales->sum('cupo');
-                $totalCurrent = $clientesPrincipales->sum('disponible');
-                $percentage = $totalCapacity > 0 ? ($totalCurrent / $totalCapacity) * 100 : 0;
-                $isAlert = $totalCurrent <= ($totalCapacity * 0.1);
-
-                $pedidos = [['id' => 'p1', 'estado' => 'En proceso'], ['id' => 'p2', 'estado' => 'Pendiente']];
-                $solicitudes = [['id' => 's1', 'estado' => 'Pendiente'], ['id' => 's2', 'estado' => 'Aprobada']];
-                $notificaciones = [['id' => 'n1', 'leido' => false], ['id' => 'n2', 'leido' => true]];
-
-            @endphp
+<div class="row g-4 mb-4">
+    <div class="col-lg-3 col-md-6">
+        <div class="card p-3 h-100 d-flex align-items-center justify-content-center">
             <div class="d-flex align-items-center">
-                <i class="fas fa-money-bill-wave text-info me-3" style="font-size: 3rem;"></i>
-                <div>
-                    <h2 class="h4 fw-bold text-black mb-0" id="main-title">
-                        Estado de Cupo General por Clientes
-                    </h2>
-                    <p class="text-sm text-muted mb-0" id="main-subtitle">
-                        Resumen del cupo disponible de todos los clientes principales.
-                    </p>
+                <div class="rounded-circle-icon bg-warning me-3 p-3">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-clock-fill text-white" viewBox="0 0 16 16">
+                         <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+                     </svg>
                 </div>
-            </div>
-            <div class="mt-4">
-                <p class="fw-bold mb-2">Total Disponible / Cupo</p>
-                <div class="d-flex align-items-center mb-2">
-                    <h3 class="fw-bold mb-0 me-2">{{ number_format($totalCurrent, 2) }} L</h3>
-                    <p class="text-muted mb-0">/ {{ $totalCapacity }} L</p>
-                </div>
-                <div class="progress" style="height: 10px;">
-                    <div class="progress-bar {{ $isAlert ? 'progress-bar-danger' : 'progress-bar-custom' }}"
-                         role="progressbar"
-                         style="width: {{ $percentage }}%;"
-                         aria-valuenow="{{ $percentage }}"
-                         aria-valuemin="0"
-                         aria-valuemax="100"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Secciones de Acciones y Vistas -->
-        <div class="row g-4 mb-5">
-            <div class="col-12 col-md-6 col-lg-3">
-                <div class="card h-100 p-4 d-flex flex-column justify-content-center text-center">
-                    <i class="fas fa-truck-ramp-box stat-card-icon mb-2 text-warning"></i>
-                    <h5 class="fw-bold mb-1">Pedidos</h5>
-                    <p class="text-muted mb-0">{{ count(array_filter($pedidos, fn($p) => $p['estado'] == 'En proceso' || $p['estado'] == 'Pendiente')) }} en proceso</p>
-                </div>
-            </div>
-            <div class="col-12 col-md-6 col-lg-3">
-                <div class="card h-100 p-4 d-flex flex-column justify-content-center text-center">
-                    <i class="fas fa-clipboard-list stat-card-icon mb-2 text-primary"></i>
-                    <h5 class="fw-bold mb-1">Solicitudes</h5>
-                    <p class="text-muted mb-0">{{ count(array_filter($solicitudes, fn($s) => $s['estado'] == 'Pendiente')) }} pendientes</p>
-                </div>
-            </div>
-            <div class="col-12 col-md-6 col-lg-3">
-                <div class="card h-100 p-4 d-flex flex-column justify-content-center text-center">
-                    <i class="fas fa-bell stat-card-icon mb-2 text-danger"></i>
-                    <h5 class="fw-bold mb-1">Notificaciones</h5>
-                    <p class="text-muted mb-0">{{ count(array_filter($notificaciones, fn($n) => !$n['leido'])) }} nuevas</p>
-                </div>
-            </div>
-            <div class="col-12 col-md-6 col-lg-3">
-                <div class="card h-100 p-4 d-flex flex-column justify-content-center text-center sucursal-card-container" id="sucursales-card">
-                    <i class="fas fa-sitemap stat-card-icon mb-2 text-success"></i>
-                    <h5 class="fw-bold mb-1">Ver Clientes</h5>
-                    <p class="text-muted mb-0">{{ count($clientesPrincipales) }} activos</p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Botón para Hacer Pedido -->
-        <div class="text-center my-5">
-            <button class="btn btn-primary-custom btn-lg rounded-pill px-5 py-3 shadow-lg fs-5" data-bs-toggle="modal" data-bs-target="#hacerPedidoModal">
-                <i class="fas fa-plus-circle me-2"></i> Hacer Pedido
-            </button>
-        </div>
-
-        <!-- Secciones de Contenido Dinámico -->
-        <div id="content-sections">
-            <div id="clientes-list-container" class="hidden">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="fw-bold mb-0">Clientes Principales</h4>
-                    <button class="btn btn-outline-secondary" id="back-to-dashboard-btn">
-                        <i class="fas fa-arrow-left me-1"></i> Volver al Dashboard
-                    </button>
-                </div>
-                <div class="row g-4" id="clientes-cards">
-                    @foreach ($clientesPrincipales as $cliente)
-                    <div class="col-12 col-md-6 col-lg-4">
-                        <div class="card h-100 p-4 sucursal-card-container" data-sucursal-id="{{ $cliente->id }}">
-                            <h5 class="fw-bold mb-1">{{ $cliente->nombre }}</h5>
-                            <p class="text-muted mb-0">Contacto: {{ $cliente->contacto }}</p>
-                            <div class="mt-3">
-                                <p class="fw-bold mb-1">Disponible: <span class="text-success">{{ number_format($cliente->disponible, 0) }} L</span></p>
-                                <p class="fw-bold mb-0">Cupo: <span class="text-muted">{{ number_format($cliente->cupo, 0) }} L</span></p>
-                            </div>
-                        </div>
-                    </div>
-                    @endforeach
-                </div>
-            </div>
-
-            <div id="sucursal-details-container" class="hidden">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="fw-bold mb-0" id="sucursal-details-title"></h4>
-                    <button class="btn btn-outline-secondary" id="back-to-list-btn">
-                        <i class="fas fa-arrow-left me-1"></i> Ver todos los Clientes
-                    </button>
-                </div>
-                
-                <div class="card p-4 mb-4">
-                    <h5 class="fw-bold mb-3">Información General</h5>
-                    <ul class="list-unstyled">
-                        <li><strong>Dirección:</strong> <span id="details-direccion"></span></li>
-                        <li><strong>Persona de Contacto:</strong> <span id="details-contacto"></span></li>
-                        <li><strong>Teléfono:</strong> <span id="details-telefono"></span></li>
-                    </ul>
-                </div>
-                
-                <div class="card p-4 mb-4">
-                    <h5 class="fw-bold mb-3">Estado de Cupo</h5>
-                    <p class="fw-bold mb-2">Disponible / Cupo</p>
-                    <div class="d-flex align-items-center mb-2">
-                        <h3 class="fw-bold mb-0 me-2" id="details-disponible"></h3>
-                        <p class="text-muted mb-0" id="details-cupo"></p>
-                    </div>
-                    <div class="progress" style="height: 10px;">
-                        <div class="progress-bar" role="progressbar" id="details-progress-bar"></div>
-                    </div>
-                </div>
-
-                <div class="card p-4 mb-4">
-                    <h5 class="fw-bold mb-3">Histórico de Consumo Semanal</h5>
-                    <div id="consumo-chart-container"></div>
-                </div>
-
-                <div class="d-flex justify-content-center gap-2 mt-4">
-                    <button class="btn btn-primary-custom" data-bs-toggle="modal" data-bs-target="#hacerPedidoModal" id="btn-details-pedido">
-                        <i class="fas fa-plus-circle me-1"></i> Hacer Pedido
-                    </button>
-                    <button class="btn btn-secondary-custom" data-bs-toggle="modal" data-bs-target="#editarSucursalModal" id="btn-details-edicion">
-                        <i class="fas fa-edit me-1"></i> Editar Datos
-                    </button>
-                    <button class="btn btn-info text-white" id="btn-send-message">
-                        <i class="fas fa-envelope me-1"></i> Enviar Mensaje
-                    </button>
-                </div>
-                 <div class="d-flex justify-content-center gap-2 mt-4">
-                    <button class="btn btn-warning text-white" id="btn-create-user">
-                        <i class="fas fa-user-plus me-1"></i> Crear Usuario
-                    </button>
-                    <button class="btn btn-warning text-white" id="btn-assign-user">
-                        <i class="fas fa-user-check me-1"></i> Asignar Usuario
-                    </button>
-                </div>
-
-            </div>
-
-            <div id="dashboard-main-view">
-                <div class="card p-4 mb-4">
-                    <h4 class="fw-bold mb-3">Consumo por Clientes</h4>
-                    <div id="chart-container"></div>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- Modal para Hacer Pedido -->
-    <div class="modal fade" id="hacerPedidoModal" tabindex="-1" aria-labelledby="hacerPedidoModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content bg-card text-dark rounded-3 shadow-lg">
-                <div class="modal-header border-bottom-0">
-                    <h5 class="modal-title" id="hacerPedidoModalLabel">Realizar Nuevo Pedido</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="hacerPedidoForm">
-                        @csrf
-                        <div class="mb-3">
-                            <label for="sucursalSelect" class="form-label">Seleccionar Cliente/Sucursal</label>
-                            <select class="form-select" id="sucursalSelect" name="cliente_id" required>
-                                @foreach ($clientes as $cliente)
-                                    <option value="{{ $cliente->id }}">{{ $cliente->nombre }} (Disponible: {{ $cliente->disponible }} L)</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="cantidadPedido" class="form-label">Cantidad (Litros)</label>
-                            <input type="number" step="1" class="form-control" id="cantidadPedido" name="cantidad_solicitada" required min="1">
-                        </div>
-                        <div class="mb-3">
-                            <label for="observacionPedido" class="form-label">Observación (opcional)</label>
-                            <textarea class="form-control" id="observacionPedido" name="observaciones" rows="3" placeholder="Detalles adicionales para el pedido."></textarea>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer border-top-0">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary btn-primary-custom" id="btn-submit-pedido">Enviar Pedido</button>
+                <div class="text-center">
+                    <h5 class="mb-1 text-secondary-emphasis">Próximas Vencimientos</h5>
+                    <p class="text-muted mb-0">9 Clientes</p>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Modal para Editar Sucursal -->
-    <div class="modal fade" id="editarSucursalModal" tabindex="-1" aria-labelledby="editarSucursalModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content bg-card text-dark rounded-3 shadow-lg">
-                <div class="modal-header border-bottom-0">
-                    <h5 class="modal-title" id="editarSucursalModalLabel">Editar Cliente/Sucursal</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="col-lg-3 col-md-6">
+        <div class="card p-3 h-100 d-flex align-items-center justify-content-center">
+            <div class="d-flex align-items-center">
+                <div class="rounded-circle-icon bg-success me-3 p-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-droplet-half text-white" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M7.646 4.97A.5.5 0 0 1 8 4.5v1.5H7.5a.5.5 0 0 1 0-1zM9 10.74V13.5a1.5 1.5 0 0 1-3 0v-2.768a1.5 1.5 0 0 1 1.5-1.5c.29 0 .546.166.75.385l.75.76V10.74z"/>
+                        <path fill-rule="evenodd" d="M4.5 9a.5.5 0 0 1-.5-.5V3a.5.5 0 0 1 1 0v5.5a.5.5 0 0 1-.5.5zm1.5 0a.5.5 0 0 1-.5-.5V3a.5.5 0 0 1 1 0v5.5a.5.5 0 0 1-.5.5zm1.5 0a.5.5 0 0 1-.5-.5V3a.5.5 0 0 1 1 0v5.5a.5.5 0 0 1-.5.5z"/>
+                        <path d="M8 1.5a1.5 1.5 0 0 0-1.5 1.5v2.5a.5.5 0 0 0 1 0v-2.5A.5.5 0 0 1 8 2.5a.5.5 0 0 0 .5-.5v-2.5a.5.5 0 0 0-1 0V.5a.5.5 0 0 0 1 0v1z"/>
+                    </svg>
                 </div>
-                <div class="modal-body">
-                    <form id="editarSucursalForm">
-                        @csrf
-                        <input type="hidden" id="editSucursalId" name="id">
-                        <div class="mb-3">
-                            <label for="editNombreSucursal" class="form-label">Nombre</label>
-                            <input type="text" class="form-control" id="editNombreSucursal" name="nombre" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="editDireccionSucursal" class="form-label">Dirección</label>
-                            <input type="text" class="form-control" id="editDireccionSucursal" name="direccion">
-                        </div>
-                        <div class="mb-3">
-                            <label for="editContactoSucursal" class="form-label">Persona de Contacto</label>
-                            <input type="text" class="form-control" id="editContactoSucursal" name="contacto">
-                        </div>
-                        <div class="mb-3">
-                            <label for="editTelefonoSucursal" class="form-label">Teléfono</label>
-                            <input type="text" class="form-control" id="editTelefonoSucursal" name="telefono">
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer border-top-0">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary btn-primary-custom" id="btn-submit-edicion">Guardar Cambios</button>
+                <div class="text-center">
+                    <h5 class="mb-1 text-secondary-emphasis">Depósitos Activos</h5>
+                    <p class="text-muted mb-0">3 Depósitos</p>
                 </div>
             </div>
         </div>
     </div>
-    
+    <div class="col-lg-3 col-md-6">
+        <div class="card p-3 h-100 d-flex align-items-center justify-content-center">
+            <div class="d-flex align-items-center">
+                <div class="rounded-circle-icon bg-info me-3 p-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-box-seam-fill text-white" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M15.22.25l-2.75 1.75c-.88-.56-1.92-.81-3-.71-.85-.08-1.7-.01-2.5.21-.83-.22-1.68-.29-2.53-.21-1.08-.1-2.07.16-2.92.71L.78.25A.5.5 0 0 0 0 .61v14.78a.5.5 0 0 0 .78.36l2.9-1.93c.8-.53 1.7-.76 2.6-.78.93-.03 1.8.14 2.6.46.8-.32 1.67-.49 2.6-.46.9.02 1.8.25 2.6.78l2.9 1.93a.5.5 0 0 0 .78-.36V.61a.5.5 0 0 0-.78-.36z"/>
+                    </svg>
+                </div>
+                <div class="text-center">
+                    <h5 class="mb-1 text-secondary-emphasis">Stock Disponible</h5>
+                    <p class="text-muted mb-0">12,500 Lts.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 col-md-6">
+        <div class="card p-3 h-100 d-flex align-items-center justify-content-center">
+            <div class="d-flex align-items-center">
+                <div class="rounded-circle-icon bg-danger me-3 p-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-clipboard-data-fill text-white" viewBox="0 0 16 16">
+                        <path d="M6.5 0h3a.5.5 0 0 1 .5.5v2.5a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5V.5a.5.5 0 0 1 .5-.5zM8 1.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 1 0v-1a.5.5 0 0 0-.5-.5z"/>
+                        <path fill-rule="evenodd" d="M0 4.5A1.5 1.5 0 0 1 1.5 3h13A1.5 1.5 0 0 1 16 4.5v10.5h-16V4.5zM3 8a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h.5a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5H3zm2.5 0a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h.5a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5H5.5zm2.5 0a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h.5a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5H8zm2.5 0a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h.5a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5H10.5zm2.5 0a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1h.5a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5H13z"/>
+                    </svg>
+                </div>
+                <div class="text-center">
+                    <h5 class="mb-1 text-secondary-emphasis">Reportes en Espera</h5>
+                    <p class="text-muted mb-0">5 Reportes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/modules/drilldown.js"></script>
-    <script src="https://code.highcharts.com/modules/exporting.js"></script>
-    <script src="https://code.highcharts.com/modules/export-data.js"></script>
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Datos simulados pasados desde PHP
-            const clientes = {!! json_encode($clientes) !!};
-            const chartData = {!! json_encode($chartData) !!};
-            const drilldownSeries = {!! json_encode($drilldownSeries) !!};
-            
-            // Referencias a los contenedores
-            const clientesListContainer = document.getElementById('clientes-list-container');
-            const sucursalDetailsContainer = document.getElementById('sucursal-details-container');
-            const dashboardMainView = document.getElementById('dashboard-main-view');
+            // Ejemplo de datos, deberías obtenerlos desde tu backend
+            // El campo `sucursales` se utiliza para la separación
+            const data = [
+                { id: 1, nombre: 'Cliente A', disponible: 85, cupo: 100, sucursales: ['Sucursal A1', 'Sucursal A2'] },
+                { id: 2, nombre: 'Cliente B', disponible: 95, cupo: 100, sucursales: [] },
+                { id: 3, nombre: 'Cliente C', disponible: 70, cupo: 100, sucursales: ['Sucursal C1'] },
+                { id: 4, nombre: 'Cliente D', disponible: 90, cupo: 100, sucursales: [] },
+                { id: 5, nombre: 'Cliente E', disponible: 60, cupo: 100, sucursales: ['Sucursal E1', 'Sucursal E2', 'Sucursal E3'] },
+            ];
 
-            // Botones de navegación
-            const verClientesBtn = document.getElementById('sucursales-card');
-            const backToDashboardBtn = document.getElementById('back-to-dashboard-btn');
-            const backToListBtn = document.getElementById('back-to-list-btn');
+            // 1. Separar los datos en dos grupos
+            const dataConSucursales = data.filter(d => d.sucursales && d.sucursales.length > 0);
+            const dataSinSucursales = data.filter(d => !d.sucursales || d.sucursales.length === 0);
 
-            // Ocultar vistas por defecto
-            clientesListContainer.classList.add('hidden');
-            sucursalDetailsContainer.classList.add('hidden');
+            // 2. Gráfico para clientes con sucursales (con drilldown)
+            const ctxConSucursales = document.getElementById('chartConSucursales').getContext('2d');
+            const labelsConSucursales = dataConSucursales.map(d => d.nombre);
+            const disponiblesConSucursales = dataConSucursales.map(d => d.disponible);
 
-            // Lógica para el gráfico de Highcharts con drilldown
-            Highcharts.chart('chart-container', {
-                chart: {
-                    type: 'column',
-                    events: {
-                        drilldown: function(e) {
-                            if (!e.seriesOptions) {
-                                let chart = this;
-                                chart.showLoading('Cargando sucursales de ' + e.point.name + '...');
-                                // Aquí se podría hacer una llamada AJAX para obtener los datos de sucursales
-                                // Para esta simulación, los datos ya están en el arreglo drilldownSeries
-                                setTimeout(function() {
-                                    chart.addSeriesAsDrilldown(e.point, {
-                                        name: 'Sucursales de ' + e.point.name,
-                                        data: drilldownSeries.find(s => s.id === e.point.drilldown).data.map(d => [d.name, d.y])
-                                    });
-                                    chart.hideLoading();
-                                }, 500);
+            new Chart(ctxConSucursales, {
+                type: 'bar',
+                data: {
+                    labels: labelsConSucursales,
+                    datasets: [{
+                        label: '% Disponibles',
+                        data: disponiblesConSucursales,
+                        backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Disponibilidad de Clientes con Sucursales'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: '%'
                             }
                         }
-                    }
-                },
-                title: {
-                    text: 'Consumo por Clientes Principales'
-                },
-                xAxis: {
-                    type: 'category'
-                },
-                yAxis: {
-                    title: {
-                        text: 'Litros Consumidos'
-                    }
-                },
-                legend: {
-                    enabled: false
-                },
-                tooltip: {
-                    pointFormat: 'Consumido: <b>{point.y:.2f} L</b>'
-                },
-                plotOptions: {
-                    column: {
-                        cursor: 'pointer',
-                        point: {
-                            events: {
-                                click: function() {
-                                    // Highcharts ya maneja el drilldown por sí solo, pero aquí se podría
-                                    // agregar lógica adicional si fuera necesario.
-                                    // Por ejemplo, para cambiar la vista de la UI.
-                                }
-                            }
+                    },
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const firstElement = elements[0];
+                            const index = firstElement.index;
+                            const clienteSeleccionado = dataConSucursales[index];
+                            
+                            // Aquí iría la lógica del "drilldown".
+                            // Por ejemplo, podrías mostrar un modal con las sucursales del cliente,
+                            // o redirigir a una nueva página con información detallada.
+                            // Puedes usar el ID del cliente para buscar más datos en tu backend.
+                            console.log('Cliente seleccionado para drilldown:', clienteSeleccionado);
+                            
+                            // Ejemplo: Alerta con las sucursales
+                            const sucursales = clienteSeleccionado.sucursales.join(', ');
+                            const message = `El cliente ${clienteSeleccionado.nombre} tiene las siguientes sucursales: ${sucursales}.`;
+                            showCustomModal('Detalle de Sucursales', message);
                         }
                     }
-                },
-                series: [{
-                    name: 'Consumido',
-                    colorByPoint: true,
-                    data: chartData.map(d => ({
-                        name: d.name,
-                        y: d.y,
-                        drilldown: d.drilldown,
-                        disponible: d.disponible,
-                        cupo: d.cupo
-                    }))
-                }],
-                drilldown: {
-                    allowPointDrilldown: false,
-                    series: drilldownSeries.map(s => ({
-                        id: s.id,
-                        name: s.name,
-                        data: s.data.map(d => ({
-                             name: d.name,
-                             y: d.y,
-                             disponible: d.disponible,
-                             cupo: d.cupo
-                        }))
-                    }))
                 }
             });
 
-            // Manejadores de eventos de navegación
-            if (verClientesBtn) {
-                verClientesBtn.addEventListener('click', () => {
-                    dashboardMainView.classList.add('hidden');
-                    clientesListContainer.classList.remove('hidden');
-                });
-            }
+            // 3. Gráfico para clientes sin sucursales
+            const ctxSinSucursales = document.getElementById('chartSinSucursales').getContext('2d');
+            const labelsSinSucursales = dataSinSucursales.map(d => d.nombre);
+            const disponiblesSinSucursales = dataSinSucursales.map(d => d.disponible);
 
-            if (backToDashboardBtn) {
-                backToDashboardBtn.addEventListener('click', () => {
-                    clientesListContainer.classList.add('hidden');
-                    dashboardMainView.classList.remove('hidden');
-                });
-            }
-
-            if (backToListBtn) {
-                backToListBtn.addEventListener('click', () => {
-                    sucursalDetailsContainer.classList.add('hidden');
-                    clientesListContainer.classList.remove('hidden');
-                });
-            }
-
-            // Lógica para mostrar los detalles de la sucursal al hacer clic en la tarjeta
-            document.querySelectorAll('.sucursal-card-container').forEach(card => {
-                card.addEventListener('click', (e) => {
-                    const sucursalId = parseInt(e.currentTarget.dataset.sucursalId, 10); 
-                    const sucursal = clientes.find(s => parseInt(s.id, 10) === sucursalId);
-
-                    if (sucursal) {
-                        clientesListContainer.classList.add('hidden');
-                        sucursalDetailsContainer.classList.remove('hidden');
-
-                        document.getElementById('sucursal-details-title').textContent = sucursal.nombre;
-                        document.getElementById('details-direccion').textContent = sucursal.direccion;
-                        document.getElementById('details-contacto').textContent = sucursal.contacto;
-                        document.getElementById('details-telefono').textContent = sucursal.telefono || 'No especificado';
-                        document.getElementById('details-disponible').textContent = `${sucursal.disponible} L`;
-                        document.getElementById('details-cupo').textContent = `/ ${sucursal.cupo} L`;
-
-                        const percentage = (sucursal.disponible / sucursal.cupo) * 100;
-                        const progressBar = document.getElementById('details-progress-bar');
-                        progressBar.style.width = `${percentage}%`;
-                        progressBar.classList.remove('progress-bar-custom', 'progress-bar-danger');
-                        progressBar.classList.add(percentage < 10 ? 'progress-bar-danger' : 'progress-bar-custom');
-
-                        const consumoHistorico = {
-                            categorias: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
-                            data: [1000, 800, 1200, 1500, 900, 1100, 1300]
-                        };
-
-                        Highcharts.chart('consumo-chart-container', {
-                            chart: {
-                                type: 'line'
-                            },
+            new Chart(ctxSinSucursales, {
+                type: 'bar',
+                data: {
+                    labels: labelsSinSucursales,
+                    datasets: [{
+                        label: '% Disponibles',
+                        data: disponiblesSinSucursales,
+                        backgroundColor: 'rgba(255, 99, 132, 0.8)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: true,
+                            text: 'Disponibilidad de Clientes sin Sucursales'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
                             title: {
-                                text: 'Histórico de Consumo Semanal'
-                            },
-                            xAxis: {
-                                categories: consumoHistorico.categorias
-                            },
-                            yAxis: {
-                                title: {
-                                    text: 'Litros Consumidos'
-                                }
-                            },
-                            series: [{
-                                name: 'Consumo',
-                                data: consumoHistorico.data,
-                                color: '#3b82f6'
-                            }],
-                            credits: {
-                                enabled: false
+                                display: true,
+                                text: '%'
                             }
-                        });
-                        
-                        const btnDetailsPedido = document.getElementById('btn-details-pedido');
-                        const btnDetailsEdicion = document.getElementById('btn-details-edicion');
-                        
-                        btnDetailsPedido.setAttribute('data-sucursal-id', sucursalId);
-                        
-                        btnDetailsEdicion.setAttribute('data-id', sucursalId);
-                        btnDetailsEdicion.setAttribute('data-nombre', sucursal.nombre);
-                        btnDetailsEdicion.setAttribute('data-direccion', sucursal.direccion);
-                        btnDetailsEdicion.setAttribute('data-contacto', sucursal.contacto);
-                        btnDetailsEdicion.setAttribute('data-telefono', sucursal.telefono);
+                        }
                     }
+                }
+            });
+
+            // Función para un modal personalizado, ya que alert() no se recomienda.
+            function showCustomModal(title, message) {
+                const modalHtml = `
+                    <div class="modal fade" id="customAlertModal" tabindex="-1" aria-labelledby="customAlertModalLabel" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="customAlertModalLabel">${title}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    ${message}
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                const modal = new bootstrap.Modal(document.getElementById('customAlertModal'));
+                modal.show();
+                document.getElementById('customAlertModal').addEventListener('hidden.bs.modal', function () {
+                    this.remove();
                 });
-            });
-
-            // Lógica para el modal de pedidos
-            const pedidoModal = document.getElementById('hacerPedidoModal');
-            const btnSubmitPedido = document.getElementById('btn-submit-pedido');
-            const hacerPedidoForm = document.getElementById('hacerPedidoForm');
-            const sucursalSelect = document.getElementById('sucursalSelect');
-            
-            // Lógica para preseleccionar la sucursal en el modal de pedidos
-            document.querySelectorAll('.make-order-btn, #btn-details-pedido').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const sucursalId = e.currentTarget.dataset.sucursalId;
-                    if (sucursalSelect) {
-                        sucursalSelect.value = sucursalId;
-                    }
-                });
-            });
-
-            // Lógica para el modal de edición de sucursal
-            const editarSucursalModal = document.getElementById('editarSucursalModal');
-            const btnSubmitEdicion = document.getElementById('btn-submit-edicion');
-            const editarSucursalForm = document.getElementById('editarSucursalForm');
-
-            editarSucursalModal.addEventListener('show.bs.modal', (e) => {
-                const button = e.relatedTarget;
-                const id = button.getAttribute('data-id');
-                const nombre = button.getAttribute('data-nombre');
-                const direccion = button.getAttribute('data-direccion');
-                const contacto = button.getAttribute('data-contacto');
-                const telefono = button.getAttribute('data-telefono');
-                
-                document.getElementById('editSucursalId').value = id;
-                document.getElementById('editNombreSucursal').value = nombre;
-                document.getElementById('editDireccionSucursal').value = direccion;
-                document.getElementById('editContactoSucursal').value = contacto;
-                document.getElementById('editTelefonoSucursal').value = telefono;
-            });
-
-            // Lógica para manejar los backdrops de los modales (si se quedan)
-            const allModals = document.querySelectorAll('.modal');
-            allModals.forEach(modal => {
-                modal.addEventListener('hidden.bs.modal', function() {
-                    const backdrops = document.querySelectorAll('.modal-backdrop');
-                    backdrops.forEach(backdrop => {
-                        backdrop.remove();
-                    });
-                });
-            });
+            }
         });
     </script>
 @endpush
