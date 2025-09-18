@@ -95,6 +95,9 @@ class LoginController extends Controller
         if ($user->id_perfil == 3) {
             return redirect()->route('clientes.dashboard');
         }
+        if ($user->id_perfil == 2) {
+            return redirect()->route('combustible.dashboard');
+        }
 
         // Para cualquier otro perfil, se mantiene la redirección por defecto.
         return redirect()->intended($this->redirectPath());
