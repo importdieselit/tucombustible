@@ -152,7 +152,7 @@
                 //     ['id' => 'branch-B', 'nombre' => 'Sucursal Sur', 'cupo' => 25000, 'disponible' => 17000, 'direccion' => 'Avenida Siempre Viva 742', 'contacto' => 'María López']
                 // ];
 
-                $pedidos = [['id' => 'p1', 'estado' => 'En proceso'], ['id' => 'p2', 'estado' => 'Pendiente']];
+                //$pedidos = [['id' => 'p1', 'estado' => 'En proceso'], ['id' => 'p2', 'estado' => 'Pendiente']];
                 $solicitudes = [['id' => 's1', 'estado' => 'Pendiente'], ['id' => 's2', 'estado' => 'Aprobada']];
                 $notificaciones = [['id' => 'n1', 'leido' => false], ['id' => 'n2', 'leido' => true]];
 
