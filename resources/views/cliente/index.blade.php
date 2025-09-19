@@ -525,7 +525,7 @@
             const sucursalDetailsContainer = document.getElementById('sucursal-details-container');
             const dashboardMainView = document.getElementById('dashboard-main-view');
 
- const detailSections = [
+            const detailSections = [
                 document.getElementById('pedidos-details'),
                 document.getElementById('solicitudes-details'),
                 document.getElementById('notificaciones-details')
@@ -533,99 +533,24 @@
 
 
               const pedidos = [
-            { id: 1, cliente: 'Empresa Alfa', cantidad: 5000, estado: 'Pendiente', fecha: '2024-10-26' },
-            { id: 2, cliente: 'Transportes Delta', cantidad: 800, estado: 'Pendiente', fecha: '2024-10-25' },
-            { id: 3, cliente: 'Distribuidora Beta', cantidad: 1000, estado: 'En Ruta', fecha: '2024-10-25' },
-            { id: 4, cliente: 'Empresa Alfa', cantidad: 2000, estado: 'Pendiente', fecha: '2024-10-24' },
-        ];
+                    { id: 1, cliente: 'Empresa Alfa', cantidad: 5000, estado: 'Pendiente', fecha: '2024-10-26' },
+                    { id: 2, cliente: 'Transportes Delta', cantidad: 800, estado: 'Pendiente', fecha: '2024-10-25' },
+                    { id: 3, cliente: 'Distribuidora Beta', cantidad: 1000, estado: 'En Ruta', fecha: '2024-10-25' },
+                    { id: 4, cliente: 'Empresa Alfa', cantidad: 2000, estado: 'Pendiente', fecha: '2024-10-24' },
+                ];
 
-        const solicitudes = [
-            { id: 1, cliente: 'Empresa Alfa', tipo: 'Mantenimiento', descripcion: 'Revisión de bomba de sucursal centro.', estado: 'En Proceso' },
-            { id: 2, cliente: 'Transportes Delta', tipo: 'Consulta', descripcion: 'Duda sobre la facturación de octubre.', estado: 'Pendiente' },
-            { id: 3, cliente: 'Distribuidora Beta', tipo: 'Actualización', descripcion: 'Actualizar contacto de gerencia.', estado: 'Completado' },
-        ];
+                const solicitudes = [
+                    { id: 1, cliente: 'Empresa Alfa', tipo: 'Mantenimiento', descripcion: 'Revisión de bomba de sucursal centro.', estado: 'En Proceso' },
+                    { id: 2, cliente: 'Transportes Delta', tipo: 'Consulta', descripcion: 'Duda sobre la facturación de octubre.', estado: 'Pendiente' },
+                    { id: 3, cliente: 'Distribuidora Beta', tipo: 'Actualización', descripcion: 'Actualizar contacto de gerencia.', estado: 'Completado' },
+                ];
         
         const notificaciones = [
             { id: 1, cliente: 'Transportes Delta', mensaje: 'El depósito de la sucursal 1 está por debajo del 10% de su capacidad.', fecha: '2024-10-26 09:30' },
             { id: 2, cliente: 'Empresa Alfa', mensaje: 'Cambio de horario en el envío programado de hoy.', fecha: '2024-10-26 08:15' },
         ];
 
-               // Funciones para manejar la vista del dashboard y los detalles
-        function hideAllDetails() {
-            detailSections.forEach(section => {
-                section.style.display = 'none';
-            });
-        }
-
-        function showDetails(sectionId) {
-            dashboardMainView.style.display = 'none';
-            hideAllDetails();
-            document.getElementById(sectionId).style.display = 'block';
-
-            // Lógica para renderizar los datos de cada sección
-            if (sectionId === 'pedidos-details') {
-                renderizarPedidos();
-            } else if (sectionId === 'solicitudes-details') {
-                renderizarSolicitudes();
-            } else if (sectionId === 'notificaciones-details') {
-                renderizarNotificaciones();
-            }
-        }
-
-        function showDashboard() {
-            hideAllDetails();
-            dashboardMainView.style.display = 'block';
-        }
-
-        function renderizarPedidos() {
-            const tbody = document.getElementById('pedidos-table-body');
-            tbody.innerHTML = '';
-            pedidos.forEach(pedido => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${pedido.id}</td>
-                    <td>${pedido.cliente}</td>
-                    <td>${pedido.cantidad} L</td>
-                    <td><span class="badge ${pedido.estado === 'Pendiente' ? 'bg-danger' : 'bg-success'}">${pedido.estado}</span></td>
-                    <td>${pedido.fecha}</td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-
-        function renderizarSolicitudes() {
-            const tbody = document.getElementById('solicitudes-table-body');
-            tbody.innerHTML = '';
-            solicitudes.forEach(solicitud => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${solicitud.id}</td>
-                    <td>${solicitud.cliente}</td>
-                    <td>${solicitud.tipo}</td>
-                    <td>${solicitud.descripcion}</td>
-                    <td><span class="badge ${solicitud.estado === 'Pendiente' ? 'bg-warning text-dark' : (solicitud.estado === 'Completado' ? 'bg-success' : 'bg-primary')}">${solicitud.estado}</span></td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-        
-        function renderizarNotificaciones() {
-            const listGroup = document.querySelector('#notificaciones-details .list-group');
-            listGroup.innerHTML = '';
-            notificaciones.forEach(notificacion => {
-                const item = document.createElement('a');
-                item.href = '#';
-                item.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-start';
-                item.innerHTML = `
-                    <div class="ms-2 me-auto">
-                        <div class="fw-bold">${notificacion.cliente}</div>
-                        ${notificacion.mensaje}
-                    </div>
-                    <span class="badge bg-secondary rounded-pill">${notificacion.fecha}</span>
-                `;
-                listGroup.appendChild(item);
-            });
-        }
+       
 
 
             // Botones de navegación
@@ -952,6 +877,82 @@
             });
         });
 
+            // Funciones para manejar la vista del dashboard y los detalles
+        function hideAllDetails() {
+            detailSections.forEach(section => {
+                section.style.display = 'none';
+            });
+        }
+
+        function showDetails(sectionId) {
+            dashboardMainView.style.display = 'none';
+            hideAllDetails();
+            document.getElementById(sectionId).style.display = 'block';
+
+            // Lógica para renderizar los datos de cada sección
+            if (sectionId === 'pedidos-details') {
+                renderizarPedidos();
+            } else if (sectionId === 'solicitudes-details') {
+                renderizarSolicitudes();
+            } else if (sectionId === 'notificaciones-details') {
+                renderizarNotificaciones();
+            }
+        }
+
+        function showDashboard() {
+            hideAllDetails();
+            dashboardMainView.style.display = 'block';
+        }
+
+        function renderizarPedidos() {
+            const tbody = document.getElementById('pedidos-table-body');
+            tbody.innerHTML = '';
+            pedidos.forEach(pedido => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${pedido.id}</td>
+                    <td>${pedido.cliente}</td>
+                    <td>${pedido.cantidad} L</td>
+                    <td><span class="badge ${pedido.estado === 'Pendiente' ? 'bg-danger' : 'bg-success'}">${pedido.estado}</span></td>
+                    <td>${pedido.fecha}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function renderizarSolicitudes() {
+            const tbody = document.getElementById('solicitudes-table-body');
+            tbody.innerHTML = '';
+            solicitudes.forEach(solicitud => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${solicitud.id}</td>
+                    <td>${solicitud.cliente}</td>
+                    <td>${solicitud.tipo}</td>
+                    <td>${solicitud.descripcion}</td>
+                    <td><span class="badge ${solicitud.estado === 'Pendiente' ? 'bg-warning text-dark' : (solicitud.estado === 'Completado' ? 'bg-success' : 'bg-primary')}">${solicitud.estado}</span></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        function renderizarNotificaciones() {
+            const listGroup = document.querySelector('#notificaciones-details .list-group');
+            listGroup.innerHTML = '';
+            notificaciones.forEach(notificacion => {
+                const item = document.createElement('a');
+                item.href = '#';
+                item.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-start';
+                item.innerHTML = `
+                    <div class="ms-2 me-auto">
+                        <div class="fw-bold">${notificacion.cliente}</div>
+                        ${notificacion.mensaje}
+                    </div>
+                    <span class="badge bg-secondary rounded-pill">${notificacion.fecha}</span>
+                `;
+                listGroup.appendChild(item);
+            });
+        }
         
     </script>
 @endpush
