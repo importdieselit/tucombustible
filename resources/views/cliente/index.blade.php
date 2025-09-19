@@ -513,13 +513,8 @@
     <script src="https://code.highcharts.com/modules/export-data.js"></script>
     <script src="https://code.highcharts.com/modules/accessibility.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Datos simulados pasados desde PHP
-            const chartData = {!! json_encode($chartData) !!};
-            const currentUserRole = '{!! $currentUserRole !!}';
 
-             const sucursales = {!! json_encode($sucursales) !!};
-            
+         
             // Referencias a los contenedores
             const sucursalesListContainer = document.getElementById('sucursales-list-container');
             const sucursalDetailsContainer = document.getElementById('sucursal-details-container');
@@ -530,6 +525,13 @@
                 document.getElementById('solicitudes-details'),
                 document.getElementById('notificaciones-details')
             ];
+        document.addEventListener('DOMContentLoaded', function () {
+            // Datos simulados pasados desde PHP
+            const chartData = {!! json_encode($chartData) !!};
+            const currentUserRole = '{!! $currentUserRole !!}';
+
+             const sucursales = {!! json_encode($sucursales) !!};
+           
 
 
               const pedidos = [
@@ -875,8 +877,9 @@
                     });
                 });
             });
-        
-           // Funciones para manejar la vista del dashboard y los detalles
+        });
+
+            // Funciones para manejar la vista del dashboard y los detalles
         function hideAllDetails() {
             detailSections.forEach(section => {
                 section.style.display = 'none';
@@ -952,10 +955,6 @@
                 listGroup.appendChild(item);
             });
         }
-        
-        });
-
-         
         
     </script>
 @endpush
