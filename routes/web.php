@@ -25,6 +25,8 @@ use App\Http\Controllers\AlmacenController;
 use App\Http\Controllers\ChoferController;
 use App\Http\Controllers\AlertaController;
 use App\Http\Controllers\AccesoController;
+use App\Http\Controllers\InspectionController;
+use App\Http\Controllers\PedidoController;
 use App\Models\Deposito;
 
 // Agrega otros controladores según los modelos y tablas
@@ -35,20 +37,27 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+//Route::get('clientes/dashboard', [ClienteController::class, 'dashboard'])->name('clientes.dashboard')->middleware('role:3');
+
+
 Route::middleware(['auth'])->group(function () {
     // Dashboard principal
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/home', [DashboardController::class, 'index'])->name('home');
 
+Route::get('/checklist-salida', [InspectionController::class, 'showChecklistForm'])->name('checklist.show');
+Route::post('/checklist-salida', [InspectionController::class, 'processChecklist'])->name('checklist.process');
 
 
+Route::get('clientes/dashboard', [ClienteController::class, 'dashboard'])->name('clientes.dashboard')->middleware('role:3');
+Route::get('combustible/dashboard', [MovimientoCombustibleController::class, 'index'])->name('combustible.dashboard')->middleware('role:2');
     
     // Rutas para la carga dinámica de modelos
     Route::get('/marcas/get-modelos', [MarcaController::class, 'getModelos'])->name('marcas.getModelos');
 
 
     Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('inventario.entry');
-    Route::get('invantario/adjustment', [InventarioController::class, 'adjustment'])->name('inventario.adjustment');
+    Route::get('inventario/adjustment', [InventarioController::class, 'adjustment'])->name('inventario.adjustment');
     Route::get('choferes/importar', [ChoferController::class, 'showImportForm'])->name('choferes.show-import-form');
     Route::post('choferes/importar', [ChoferController::class, 'importar'])->name('choferes.importar');
     // Rutas para las solicitudes de insumos
@@ -135,32 +144,36 @@ Route::middleware(['auth'])->group(function () {
 
     // Rutas para gestión de perfiles y permisos
     Route::post('/perfiles/{perfil}/permisos', [PerfilController::class, 'updatePermisos'])->name('perfiles.updatePermisos'); 
-    
-    // Rutas para los movimientos de combustible
-    Route::get('/combustible/recarga', [MovimientoCombustibleController::class, 'createRecarga'])->name('combustible.recarga');
-    Route::post('/combustible/recarga', [MovimientoCombustibleController::class, 'storeRecarga'])->name('combustible.storeRecarga');
-
-    Route::get('/combustible/index', [MovimientoCombustibleController::class, 'index'])->name('combustible.index');
-    Route::get('/combustible/list', [MovimientoCombustibleController::class, 'list'])->name('combustible.list');
-    Route::get('/combustible/despacholist', [MovimientoCombustibleController::class, 'despachoList'])->name('despachos.list');
-    
+    Route::post('/pedidos', [PedidoController::class, 'crearPedido'])->name('pedidos.store');
     // Rutas de Combustible (Pedidos y Despachos)
 Route::prefix('combustible')->name('combustible.')->group(function () {
+    
+    
+    // Rutas para los movimientos de combustible
+    Route::get('/recarga', [MovimientoCombustibleController::class, 'createRecarga'])->name('recarga');
+    Route::post('/recarga', [MovimientoCombustibleController::class, 'storeRecarga'])->name('\storeRecarga');
+
+    Route::get('/index', [MovimientoCombustibleController::class, 'index'])->name('index');
+    Route::get('/list', [MovimientoCombustibleController::class, 'list'])->name('list');
+    Route::get('/despacholist', [MovimientoCombustibleController::class, 'despachoList'])->name('despachos.list');
+    
     Route::get('/pedidos', [MovimientoCombustibleController::class, 'pedidos'])->name('pedidos');
+    
     Route::post('/pedidos/{id}/aprobar', [MovimientoCombustibleController::class, 'aprobar'])->name('aprobar');
     Route::post('/pedidos/{id}/rechazar', [MovimientoCombustibleController::class, 'rechazar'])->name('rechazar');
     Route::get('/aprobados', [MovimientoCombustibleController::class, 'despachos'])->name('aprobados');
     Route::post('/despachos/{id}/despachar', [MovimientoCombustibleController::class, 'despachar'])->name('despachar');
+ // Nuevas rutas para el despacho de combustible
+    Route::get('/despacho', [MovimientoCombustibleController::class, 'createDespacho'])->name('despacho');
+    Route::post('/despacho', [MovimientoCombustibleController::class, 'storeDespacho'])->name('storeDespacho');
+
+    // Nuevas rutas para el despacho de combustible
+    Route::get('/precarga', [MovimientoCombustibleController::class, 'createPrecarga'])->name('precarga');
+    Route::post('/precarga', [MovimientoCombustibleController::class, 'storePrecarga'])->name('storePrecarga');
+    Route::post('/aprobado', [MovimientoCombustibleController::class, 'storeAprobado'])->name('storeAprobado');
+
 });
-    // Nuevas rutas para el despacho de combustible
-    Route::get('/combustible/despacho', [MovimientoCombustibleController::class, 'createDespacho'])->name('combustible.despacho');
-    Route::post('/combustible/despacho', [MovimientoCombustibleController::class, 'storeDespacho'])->name('combustible.storeDespacho');
-
-    // Nuevas rutas para el despacho de combustible
-    Route::get('/combustible/precarga', [MovimientoCombustibleController::class, 'createPrecarga'])->name('combustible.precarga');
-    Route::post('/combustible/precarga', [MovimientoCombustibleController::class, 'storePrecarga'])->name('combustible.storePrecarga');
-    Route::post('/combustible/aprobado', [MovimientoCombustibleController::class, 'storeAprobado'])->name('combustible.storeAprobado');
-
+  
       Route::get('/alertas', [AlertaController::class, 'index'])->name('alertas.index');
     Route::get('/alertas/read/{id}', [AlertaController::class, 'markAsRead'])->name('alertas.read');
 

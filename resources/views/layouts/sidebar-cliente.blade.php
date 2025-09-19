@@ -5,29 +5,11 @@
     // Obtener el usuario autenticado
     $user = Auth::user();
 
-    if ($user && $user->id_perfil == 1) {
-        // Si el usuario es super usuario (id_perfil = 1), obtener todos los módulos visibles
-        $modulos = Modulo::where('id_padre', 0)
-            ->where('visible', 1)
-            ->orderBy('orden')
-            ->get();
-    } else {// Obtener los IDs de los módulos permitidos para el usuario actual
-        $modulosPermitidosIds = Acceso::where('id_usuario', Auth::id())
-                                    ->where('read', 1)
-                                    ->pluck('id_modulo');
-
-        // Obtener los módulos principales (id_padre = 0) que el usuario tiene permitido ver
-        $modulos = App\Models\Modulo::where('id_padre', 0)
-            ->where('visible', 1)
-            ->whereIn('id', $modulosPermitidosIds)
-            ->orderBy('orden')
-            ->get();
-    }
 @endphp
 <style>
 /* Sidebar profesional */
 .sidebar {
-    background: #1a233a;
+    background: #ffa045a6;
     min-height: 100vh;
     color: #fff;
     box-shadow: 2px 0 8px rgba(0,0,0,0.08);
@@ -36,6 +18,7 @@
     left: 0;
     width: 250px;
     padding-top: 5rem; /* Ajusta el padding superior para no solapar con el navbar */
+    z-index: 0; 
 }
 .sidebar .nav-link {
     color: #bfc9da;
@@ -105,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <div class="col-md-3 col-lg-2 d-md-block sidebar ">
-    <div class="d-flex flex-column align-items-center mb-4">
+    <div class="d-flex flex-column align-items-center mb-4" style="margin-top: -15%; margin-left: -45%;">
           <img src="{{ asset('img/logomini.png') }}" alt="Logo de la empresa" class="img-fluid rounded-circle mb-3 border border-3 border-secondary" style="max-width: 100px;background: white; padding: 10px;">
             
             <p class=" text-center mt-1"><strong>TuCombustible</strong></p>
@@ -122,47 +105,11 @@ document.addEventListener('DOMContentLoaded', function () {
             </li>
             <hr class="text-white my-2">
 
-            @foreach($modulos as $modulo)
-                @php
-   // Obtener los submódulos (hijos) permitidos para este usuario y módulo padre
-                    $secciones = App\Models\Modulo::where('id_padre', $modulo->id)
-                        ->where('visible', 1);
-                        if(!($user && $user->id_perfil == 1)) {
-                            $secciones = $secciones->whereIn('id', $modulosPermitidosIds);
-                        }
-                        $secciones = $secciones->orderBy('orden')
-                        ->get();
-
-
-                   $hasSubmenu = !$secciones->isEmpty();
-                @endphp
+        
                 
-                <li class="nav-item {{ $hasSubmenu ? 'dropdown' : '' }}">
-                    @if($hasSubmenu)
-                        <a class="nav-link dropdown-toggle" href="#" title="{{ $modulo->descripcion }}">
-                            <i class="{{ $modulo->icono }}"></i> {{ $modulo->modulo }}
-                        </a>
-                        <ul class="nav flex-column submenu">
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route($modulo->ruta) }}" title="Listado de {{ $modulo->modulo }}">
-                                    <i class="bi bi-list"></i> Resumen
-                                </a>
-                            </li>
-                            @foreach($secciones as $seccion)
-                                <li class="nav-item">
-                                    <a class="nav-link" href="{{ route($seccion->ruta) }}" title="{{ $seccion->descripcion }}">
-                                        <i class="{{ $seccion->icono }}"></i> {{ $seccion->modulo }}
-                                    </a>
-                                </li>
-                            @endforeach
-                        </ul>
-                    @else
-                        <a class="nav-link {{ Request::routeIs($modulo->ruta . '*') ? 'active' : '' }}" href="{{ route($modulo->ruta ) }}" title="{{ $modulo->descripcion }}">
-                            <i class="{{ $modulo->icono }}"></i> {{ $modulo->modulo }}
-                        </a>
-                    @endif
+                <li class="nav-item ">
+                  
                 </li>
-            @endforeach
         </ul>
     </div>
 </div>

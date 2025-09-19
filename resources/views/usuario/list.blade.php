@@ -1,6 +1,12 @@
 @extends('layouts.app')
 
 @section('title', 'Listado de usuarios')
+@push('scripts')
+<!-- jQuery para manejar las llamadas AJAX -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Bootstrap JS para el modal -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+@endpush
 @push('css')
 <style>
     /* Estilos para el panel de permisos */
@@ -64,7 +70,8 @@
                             <tr>
                                 <td>{{ $user->name }}</td>
                                 <td>{{$user->perfil()->first()->nombre}}</td>
-                                <td>{{ !is_null($user->cliente_id)?$user->cliente()->first()->nombre:'N/A' }} {{$user->id_master==0?'(P)':''}}</td>
+
+                                <td>{{ !is_null($user->cliente()->first())?$user->cliente()->first()->nombre:'N/A' }} {{$user->id_master==0?'(P)':''}}</td>
                                 
                                 <td>
                                     <a href="{{ route('usuarios.show', $user->id) }}" class="btn btn-sm btn-info text-white" title="Ver Detalle">
@@ -128,6 +135,7 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const permissionsModal = document.getElementById('permissionsModal');

@@ -34,8 +34,10 @@ class MovimientoCombustibleController extends Controller
         // 1. Indicadores de clientes
         // Obtenemos todos los clientes con parent 0.
         $clientesPadre = Cliente::where('parent', 0)
-                                ->select('nombre', 'disponible', 'cupo')
+                                ->select('nombre', 'disponible', 'cupo','id')
                                 ->get();
+        $clientes = Cliente::all();
+
         
         // 2. Gráficas de disponibilidad de clientes.
         // Los datos para la gráfica los podemos pasar directamente del controlador a la vista.
@@ -85,7 +87,7 @@ class MovimientoCombustibleController extends Controller
 
         // Pasamos todos los datos a la vista.
         return view('combustible.index', compact(
-            'clientesPadre', 
+            'clientes', 
             'disponibilidadData',
             'pedidosPendientes', 
             'pedidosEnProceso', 

@@ -113,14 +113,7 @@ class Cliente extends Model
         return $this->hasMany(\App\Models\Vehiculo::class, 'id_cliente');
     }
 
-    /**
-     * Relación con los pedidos del cliente
-     */
-    public function pedidos()
-    {
-        return $this->hasMany(\App\Models\Pedido::class, 'cliente_id');
-    }
-
+    
     /**
      * Relación con los movimientos de combustible del cliente
      */
@@ -128,4 +121,16 @@ class Cliente extends Model
     {
         return $this->hasMany(\App\Models\MovimientoCombustible::class, 'cliente_id');
     }
+
+    public function sucursales() {
+          return $this->hasMany(Cliente::class, 'parent');
+    }
+    public function parentCliente() {
+          return $this->belongsTo(Cliente::class, 'parent');
+    }
+    
+    public function pedidos() {
+          return $this->hasMany(Pedido::class, 'cliente_id');
+    }
+  
 }

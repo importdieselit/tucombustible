@@ -23,22 +23,31 @@
            @if (!Request::routeIs(['login', 'logout', 'register', 'password.*']))
             <div class="container-fluid">
                 <div class="row">
-                    @include('layouts.sidebar')
-                    <main class="col ms-sm-auto col-lg-10 px-md-4 py-4">
+                    @php($user = Auth::user())
+                    @if($user->id_perfil == 3)
+                        @include('layouts.sidebar-cliente')
+                    @elseif($user->id_perfil == 2)
+                        @include('layouts.sidebar-cliente')
+                    @else
+                        @include('layouts.sidebar')
+                    @endif
+                    <main class="col ms-sm-auto col-lg-10 px-md-4 py-4 z-1">
                         @yield('content')
                     </main>
                 </div>
             </div>
             @else
                 <!-- Si la ruta es login, logout, etc., solo se muestra el contenido principal -->
-                <main class="container-fluid py-4">
+                <main class="container-fluid py-4 z-1">
                     @yield('content')
                 </main>
             @endif
     </div>
 
     @include('layouts.footer')
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="{{ mix('js/app.js') }}"></script>
+    <script src="{{ asset('js/alerts.js') }}"></script>
     @stack('scripts')
 </body>
 </html>

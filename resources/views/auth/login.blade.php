@@ -13,7 +13,7 @@
                 <div class="card-body">
                     <!-- Logo y Título de la empresa -->
                     <div class="d-flex flex-column align-items-center mb-4">
-                        <img src="img/logomini.png" alt="Logo de la empresa" class="img-fluid rounded-circle mb-3 border border-3 border-secondary" style="max-width: 100px;">
+                        <img src="img/logomini.png" alt="Logo de la empresa" class="img-fluid rounded-circle mb-3 border border-3 border-secondary" style="max-width: 100px; padding: 10px;">
                         <h4 class="text-themecolor font-weight-bold mb-0">TuCombustible</h4>
                     </div>
 

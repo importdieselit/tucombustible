@@ -11,13 +11,15 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\DB;
+use App\Models\Pedido;
+use App\Models\Deposito;
+use App\Models\Vehiculo;
 
 /**
  * Controlador para gestionar los clientes.
  */
 class ClienteController extends BaseController
 {
-   
 
     /**
      * Almacena un nuevo cliente en la base de datos.
@@ -25,37 +27,130 @@ class ClienteController extends BaseController
      * @return \Illuminate\Http\RedirectResponse
      */
 
-    public function index()
+    public function dashboard()
     {
+
+        $user = auth()->user();
+        $cliente = Cliente::find($user->cliente_id);
         // 1. Indicadores de clientes
         // Obtenemos todos los clientes con parent 0.
-        $clientesPadre = Cliente::where('parent', 0)
-                                ->select('nombre', 'disponible', 'cupo')
+        $sucursales = [];
+        $clientesPadre= null;
+        $disponibilidadData = [];
+        if($user->id_perfil==3) {
+            if($cliente->parent==0) {
+                $sucursales = Cliente::where('parent', $user->cliente_id)
+                                ->select('nombre', 'disponible', 'cupo', 'direccion', 'id')
                                 ->get();
+            } 
+       }
+       if($user->id_perfil<3) {
+            $clientesPadre = Cliente::where('parent', 0)
+                                ->select('nombre', 'disponible', 'cupo', 'direccion', 'id')
+                                ->with('sucursales')
+                                ->get();
+       }
         
         // 2. Gráficas de disponibilidad de clientes.
         // Los datos para la gráfica los podemos pasar directamente del controlador a la vista.
-        $disponibilidadData = $clientesPadre->map(function ($cliente) {
-            return [
-                'nombre' => $cliente->nombre,
-                'disponible' => $cliente->disponible,
-                'cupo' => $cliente->cupo,
-            ];
-        });
+        if($user->id_perfil<3) {
+            $disponibilidadData = $clientesPadre->map(function ($cliente) {
+                return [
+                    'nombre' => $cliente->nombre,
+                    'disponible' => $cliente->disponible,
+                    'direccion' => $cliente->direccion,
+                    'cupo' => $cliente->cupo,
+                    'sucursales' => $cliente->sucursales->map(function ($sucursal) {
+                        return [
+                            'id' => $sucursal->id,
+                            'nombre' => $sucursal->nombre,
+                            'direccion' => $sucursal->direccion,
+                            'disponible' => $sucursal->disponible,
+                            'cupo' => $sucursal->cupo,
+                        ];
+                    }),
+                ];
+            });
+            
+
+        } elseif($user->id_perfil==3 && $cliente->parent==0) {  
+            $disponibilidadData = $sucursales->map(function ($sucursal) {
+                return [
+                    'nombre' => $sucursal->nombre,
+                    'disponible' => $sucursal->disponible,
+                    'direccion' => $sucursal->direccion,
+                    'cupo' => $sucursal->cupo,
+                    'id' => $sucursal->id,
+                ];
+            });
+        }
 
         // 3. Indicadores de pedidos pendientes y en proceso.
-        $pedidosPendientes = Pedido::where('estado', 'pendiente')->count();
-        $pedidosEnProceso = Pedido::where('estado', 'en_proceso')->count();
+        $pedidosPendientes = Pedido::where('estado', 'pendiente');
+        
+        
+        if($user->id_perfil==3) {
+            if($cliente->parent==0) {
+                $sucursalesIds = Cliente::where('parent', $user->cliente_id)->pluck('id')->toArray();
+                $pedidosPendientes = $pedidosPendientes->whereIn('cliente_id', $sucursalesIds);
+            } else {
+                $pedidosPendientes = $pedidosPendientes->where('cliente_id', $user->cliente_id);
+            }
+        }
+        $pedidosPendientes = $pedidosPendientes->count();
+        $pedidosEnProceso = Pedido::where('estado', 'en_proceso');
+        if($user->id_perfil==3) {
+            if($cliente->parent==0) {
+                $sucursalesIds = Cliente::where('parent', $user->cliente_id)->pluck('id')->toArray();
+                $pedidosEnProceso = $pedidosEnProceso->whereIn('cliente_id', $sucursalesIds);
+            } else {
+                $pedidosEnProceso = $pedidosEnProceso->where('cliente_id', $user->cliente_id);
+            }
+        }
+        $pedidosEnProceso = $pedidosEnProceso->count();
 
         // 4. Niveles de los depósitos.
-        $depositos = Deposito::all();
+        $depositos = [];
+        if($user->id_perfil<3) {    
+            $depositos = Deposito::all();
+        }
 
         // 5. Camiones cargados.
         // Asumimos que tienes un campo 'estado' en la tabla de vehículos o una relación
         // que te permite saber si un camión está cargado.
         // Por ejemplo, un estado 'cargado' o 'en_ruta_con_combustible'.
-        $camionesCargados = Vehiculo::where('estado', 'cargado')->count();
+        if($user->id_perfil==3) {
+            if($cliente->parent==0) {
+                $sucursalesIds = Cliente::where('parent', $user->cliente_id)->pluck('id')->toArray();
+                $camionesCargados = Vehiculo::whereIn('id_cliente', $sucursalesIds)
+                                    ->count();
+            } else {
+                $camionesCargados = Vehiculo::where('id_cliente', $user->cliente_id)
+                                    ->count();
+            }
+        } else {
+            $camionesCargados = Vehiculo::where('estado', 'cargado')->count();
+        }
+    
+        if($user->id_perfil==2) {
+            return view('combustible.dashboard', compact(
+                'clientesPadre', 
+                'disponibilidadData',
+                'pedidosPendientes', 
+                'pedidosEnProceso', 
+                'depositos', 
+                'camionesCargados'
+            ));
+        } elseif($user->id_perfil==3) {
 
+            return view('cliente.index', compact(
+                'disponibilidadData',
+                'pedidosPendientes', 
+                'pedidosEnProceso', 
+                'sucursales',
+                'cliente',
+            ));
+        }
         // Pasamos todos los datos a la vista.
         return view('combustible.dashboard', compact(
             'clientesPadre', 
