@@ -173,7 +173,8 @@ class ClienteController extends BaseController
                 'pedidosPendientes', 
                 'pedidosEnProceso', 
                 'depositos', 
-                'camionesCargados'
+                'camionesCargados',
+                'pedidosDashboard'
             ));
         } elseif($user->id_perfil==3) {
 
@@ -194,6 +195,7 @@ class ClienteController extends BaseController
             'pedidosEnProceso', 
             'depositos', 
             'camionesCargados'
+            ,'pedidosDashboard'
         ));
     }
 
