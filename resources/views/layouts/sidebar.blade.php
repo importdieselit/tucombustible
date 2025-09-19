@@ -106,9 +106,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
 <div class="col-md-3 col-lg-2 d-md-block sidebar ">
     <div class="d-flex flex-column align-items-center mb-4">
-          <img src="img/logomini.png" alt="Logo de la empresa" class="img-fluid rounded-circle mb-3 border border-3 border-secondary" style="max-width: 100px;background: white;">
+          <img src="{{ asset('img/logomini.png') }}" alt="Logo de la empresa" class="img-fluid rounded-circle mb-3 border border-3 border-secondary" style="max-width: 100px;background: white; padding: 10px;">
             
-            <p class=" text-center mt-1">TuCombustible</p>
+            <p class=" text-center mt-1"><strong>TuCombustible</strong></p>
+            <p class=" text-center mt-1">Impordiesel  </p>
 
         </div>
     <div class="position-sticky pt-3">

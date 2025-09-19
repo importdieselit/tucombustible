@@ -158,6 +158,6 @@
                     });
                 });
             });
-        });
-    </script>
+            });
+        </script>
 @endsection
