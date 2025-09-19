@@ -110,16 +110,29 @@ class ClienteController extends BaseController
         }
         $pedidosEnProceso = $pedidosEnProceso->count();
 
+        // Inicia el query builder
         $pedidos = Pedido::whereNotIn('estado', ['entregado', 'cancelado']);
-        if($user->id_perfil==3) {
-            if($cliente->parent==0) {
-                $pedidos = $pedidos->whereIn('cliente_id', $sucursalesIds)->orWhere('cliente_id', $user->cliente_id);
+
+        // Aplica la lógica de perfiles usando una cláusula where anidada para agrupar las condiciones.
+        if ($user->id_perfil == 3) {
+            if ($cliente->parent == 0) {
+                // Si el cliente principal (parent == 0), se buscan pedidos de sus sucursales
+                // Y también los pedidos propios del cliente principal.
+                $pedidos->where(function ($query) use ($sucursalesIds, $user) {
+                    $query->whereIn('cliente_id', $sucursalesIds)
+                          ->orWhere('cliente_id', $user->cliente_id);
+                });
             } else {
-                $pedidos = $pedidos->where('cliente_id', $user->cliente_id);
+                // Si es una sucursal, solo se buscan los pedidos de esa sucursal.
+                $pedidos->where('cliente_id', $user->cliente_id);
             }
         }
-          
-        $pedidosDashboard = $pedidos->map(function ($pedido) {
+        
+        // Obtiene la colección de pedidos después de aplicar los filtros.
+        $pedidosCollection = $pedidos->get();
+
+        // Mapea la colección a la estructura de datos para el dashboard.
+        $pedidosDashboard = $pedidosCollection->map(function ($pedido) {
             return [
                 'id_pedido' => $pedido->id,
                 'cantidad' => number_format($pedido->cantidad_solicitada, 2, ',', '.') . ' L',
