@@ -7,6 +7,7 @@ use App\Models\MovimientoCombustible;
 use App\Models\Pedido;
 use App\Models\Deposito;
 use App\Models\Cliente;
+use App\Services\FcmNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -132,14 +133,38 @@ class RecepcionController extends Controller
                     $clientePadre = \App\Models\Cliente::find($cliente->parent);
                     if ($clientePadre) {
                         $disponiblePadre = $clientePadre->disponible ?? 0;
+                        $nuevoDisponiblePadre = $disponiblePadre - $request->cantidad_recibida;
+                        
                         $clientePadre->update([
-                            'disponible' => $disponiblePadre - $request->cantidad_recibida
+                            'disponible' => $nuevoDisponiblePadre
                         ]);
                         
                         \Log::info("Descontado de sucursal {$cliente->id}: {$request->cantidad_recibida} litros");
                         \Log::info("Descontado de cliente padre {$clientePadre->id}: {$request->cantidad_recibida} litros");
                         \Log::info("Nuevo disponible sucursal: " . ($disponible - $request->cantidad_recibida));
-                        \Log::info("Nuevo disponible padre: " . ($disponiblePadre - $request->cantidad_recibida));
+                        \Log::info("Nuevo disponible padre: " . $nuevoDisponiblePadre);
+                        
+                        // Verificar si el cliente padre queda por debajo del 10% de su cupo
+                        $cupoPadre = $clientePadre->cupo ?? 0;
+                        if ($cupoPadre > 0) {
+                            $porcentajeDisponible = ($nuevoDisponiblePadre / $cupoPadre) * 100;
+                            if ($porcentajeDisponible < 10) {
+                                \Log::info("Cliente padre {$clientePadre->id} queda con {$porcentajeDisponible}% de su cupo. Enviando notificación.");
+                                
+                                // Enviar notificación al cliente padre
+                                try {
+                                    FcmNotificationService::sendBajoDisponibleNotification(
+                                        $clientePadre,
+                                        $nuevoDisponiblePadre,
+                                        $cupoPadre,
+                                        $cliente->nombre // Nombre de la sucursal
+                                    );
+                                    \Log::info("Notificación de bajo disponible enviada al cliente padre {$clientePadre->id}");
+                                } catch (\Exception $e) {
+                                    \Log::error("Error enviando notificación de bajo disponible: " . $e->getMessage());
+                                }
+                            }
+                        }
                     } else {
                         \Log::warning("No se encontró el cliente padre con ID: {$cliente->parent}");
                     }
@@ -147,12 +172,35 @@ class RecepcionController extends Controller
                     // Es un cliente principal - solo descontar de él
                     \Log::info("Procesando recepción para cliente principal ID: {$cliente->id}");
                     
+                    $nuevoDisponible = $disponible - $request->cantidad_recibida;
                     $cliente->update([
-                        'disponible' => $disponible - $request->cantidad_recibida
+                        'disponible' => $nuevoDisponible
                     ]);
                     
                     \Log::info("Descontado de cliente principal {$cliente->id}: {$request->cantidad_recibida} litros");
-                    \Log::info("Nuevo disponible: " . ($disponible - $request->cantidad_recibida));
+                    \Log::info("Nuevo disponible: " . $nuevoDisponible);
+                    
+                    // Verificar si el cliente principal queda por debajo del 10% de su cupo
+                    $cupo = $cliente->cupo ?? 0;
+                    if ($cupo > 0) {
+                        $porcentajeDisponible = ($nuevoDisponible / $cupo) * 100;
+                        if ($porcentajeDisponible < 10) {
+                            \Log::info("Cliente principal {$cliente->id} queda con {$porcentajeDisponible}% de su cupo. Enviando notificación.");
+                            
+                            // Enviar notificación al cliente principal
+                            try {
+                                FcmNotificationService::sendBajoDisponibleNotification(
+                                    $cliente,
+                                    $nuevoDisponible,
+                                    $cupo,
+                                    null // No es sucursal
+                                );
+                                \Log::info("Notificación de bajo disponible enviada al cliente principal {$cliente->id}");
+                            } catch (\Exception $e) {
+                                \Log::error("Error enviando notificación de bajo disponible: " . $e->getMessage());
+                            }
+                        }
+                    }
                 }
 
                 // Actualizar el estado del pedido a 'completado' y calificación si se proporciona

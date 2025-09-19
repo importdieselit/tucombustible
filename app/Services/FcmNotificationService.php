@@ -351,4 +351,172 @@ class FcmNotificationService
             return false;
         }
     }
+
+    /**
+     * Enviar notificación de bajo disponible al cliente padre
+     * Se envía cuando el disponible queda por debajo del 10% del cupo
+     */
+    public static function sendBajoDisponibleNotification(Cliente $clientePadre, float $nuevoDisponible, float $cupo, ?string $sucursalNombre = null): bool
+    {
+        try {
+            // Buscar el usuario asociado al cliente padre
+            $clienteUser = User::where('cliente_id', $clientePadre->id)->first();
+            
+            if (!$clienteUser || !$clienteUser->fcm_token) {
+                Log::warning("No se encontró token FCM para el cliente padre {$clientePadre->id}");
+                return false;
+            }
+
+            // Calcular el porcentaje actual
+            $porcentajeActual = ($nuevoDisponible / $cupo) * 100;
+            $porcentajeFormateado = number_format($porcentajeActual, 1);
+
+            // Preparar título y mensaje
+            $title = '⚠️ Bajo Disponible';
+            
+            if ($sucursalNombre) {
+                $body = "Tu sucursal '{$sucursalNombre}' ha recibido combustible. Tu disponible actual es de {$nuevoDisponible} litros ({$porcentajeFormateado}% de tu cupo). Se recomienda tomar previsiones.";
+            } else {
+                $body = "Tu disponible actual es de {$nuevoDisponible} litros ({$porcentajeFormateado}% de tu cupo). Se recomienda tomar previsiones.";
+            }
+            
+            $data = [
+                'cliente_id' => $clientePadre->id,
+                'disponible_actual' => $nuevoDisponible,
+                'cupo_total' => $cupo,
+                'porcentaje_disponible' => $porcentajeActual,
+                'tipo_notificacion' => 'bajo_disponible',
+                'sucursal_nombre' => $sucursalNombre ?? '',
+            ];
+
+            Log::info("Enviando notificación de bajo disponible al cliente padre {$clientePadre->id}: {$nuevoDisponible}L ({$porcentajeFormateado}%)");
+
+            return self::sendFcmNotification($clienteUser->fcm_token, $title, $body, $data);
+
+        } catch (\Exception $e) {
+            Log::error("Error enviando notificación de bajo disponible: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Enviar notificación de bajo disponible a super admins
+     * Se envía cuando cualquier cliente tiene disponible por debajo del 10% del cupo
+     */
+    public static function sendBajoDisponibleNotificationToSuperAdmins(Cliente $cliente, float $nuevoDisponible, float $cupo): bool
+    {
+        try {
+            // Buscar usuarios super admins (id_perfil = 1)
+            $superAdmins = User::where('id_perfil', 1)->get();
+            
+            if ($superAdmins->isEmpty()) {
+                Log::warning("No se encontraron usuarios super admin para enviar notificación de bajo disponible");
+                return false;
+            }
+
+            // Calcular el porcentaje actual
+            $porcentajeActual = ($nuevoDisponible / $cupo) * 100;
+            $porcentajeFormateado = number_format($porcentajeActual, 1);
+
+            // Preparar título y mensaje para super admins
+            $title = '🚨 Alerta: Cliente con Bajo Disponible';
+            $body = "El cliente '{$cliente->nombre}' tiene disponible bajo: {$nuevoDisponible} litros ({$porcentajeFormateado}% de su cupo de {$cupo} litros).";
+            
+            $data = [
+                'cliente_id' => $cliente->id,
+                'cliente_nombre' => $cliente->nombre,
+                'disponible_actual' => $nuevoDisponible,
+                'cupo_total' => $cupo,
+                'porcentaje_disponible' => $porcentajeActual,
+                'tipo_notificacion' => 'bajo_disponible_admin',
+            ];
+
+            $successCount = 0;
+            $totalSuperAdmins = $superAdmins->count();
+
+            // Enviar notificación a todos los super admins
+            foreach ($superAdmins as $superAdmin) {
+                if ($superAdmin->fcm_token) {
+                    if (self::sendFcmNotification($superAdmin->fcm_token, $title, $body, $data)) {
+                        $successCount++;
+                        Log::info("Notificación de bajo disponible enviada al super admin: {$superAdmin->email}");
+                    }
+                } else {
+                    Log::warning("Super admin {$superAdmin->email} no tiene token FCM");
+                }
+            }
+
+            Log::info("Notificaciones de bajo disponible enviadas: {$successCount}/{$totalSuperAdmins} super admins");
+            return $successCount > 0;
+
+        } catch (\Exception $e) {
+            Log::error("Error enviando notificación de bajo disponible a super admins: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Enviar notificación consolidada de bajo disponible a super admins
+     * Se envía una sola notificación con todos los clientes con bajo disponible
+     */
+    public static function sendBajoDisponibleConsolidatedNotificationToSuperAdmins(array $clientesConBajoDisponible): bool
+    {
+        try {
+            // Buscar usuarios super admins (id_perfil = 1)
+            $superAdmins = User::where('id_perfil', 1)->get();
+            
+            if ($superAdmins->isEmpty()) {
+                Log::warning("No se encontraron usuarios super admin para enviar notificación consolidada de bajo disponible");
+                return false;
+            }
+
+            $totalClientes = count($clientesConBajoDisponible);
+            
+            if ($totalClientes === 0) {
+                Log::info("No hay clientes con bajo disponible para notificar");
+                return true;
+            }
+
+            // Preparar título y mensaje consolidado
+            $title = '🚨 Alerta';
+            
+            if ($totalClientes === 1) {
+                $cliente = $clientesConBajoDisponible[0];
+                $porcentaje = number_format(($cliente['disponible'] / $cliente['cupo']) * 100, 1);
+                $body = "Múltiples Clientes con Bajo Disponible\n1 cliente con bajo disponible: {$cliente['nombre']} ({$porcentaje}%)";
+            } else {
+                $body = "Múltiples Clientes con Bajo Disponible\n{$totalClientes} clientes tienen disponible bajo. Toca para ver detalles.";
+            }
+            
+            // Preparar datos consolidados
+            $data = [
+                'total_clientes' => $totalClientes,
+                'clientes' => json_encode($clientesConBajoDisponible),
+                'tipo_notificacion' => 'bajo_disponible_consolidado',
+                'fecha_revision' => now()->toDateTimeString(),
+            ];
+
+            $successCount = 0;
+            $totalSuperAdmins = $superAdmins->count();
+
+            // Enviar notificación consolidada a todos los super admins
+            foreach ($superAdmins as $superAdmin) {
+                if ($superAdmin->fcm_token) {
+                    if (self::sendFcmNotification($superAdmin->fcm_token, $title, $body, $data)) {
+                        $successCount++;
+                        Log::info("Notificación consolidada de bajo disponible enviada al super admin: {$superAdmin->email}");
+                    }
+                } else {
+                    Log::warning("Super admin {$superAdmin->email} no tiene token FCM");
+                }
+            }
+
+            Log::info("Notificaciones consolidadas de bajo disponible enviadas: {$successCount}/{$totalSuperAdmins} super admins");
+            return $successCount > 0;
+
+        } catch (\Exception $e) {
+            Log::error("Error enviando notificación consolidada de bajo disponible a super admins: " . $e->getMessage());
+            return false;
+        }
+    }
 }

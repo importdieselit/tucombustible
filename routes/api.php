@@ -19,6 +19,7 @@ use App\Http\Controllers\Apis\ProfileController;
 use App\Http\Controllers\Apis\UserController;
 use App\Http\Controllers\Apis\AdminController;
 use App\Http\Controllers\Apis\AdminDespachoController;
+use App\Http\Controllers\Apis\ReportesController;
 
 /*
 |--------------------------------------------------------------------------
@@ -73,6 +74,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/reportes/depositos', [AdminController::class, 'getReporteDepositos']);
     Route::get('/admin/reportes/consumo', [AdminController::class, 'getReporteConsumo']);
     
+    // Reportes Generales (Super Admin)
+    Route::post('/admin/reportes/general', [ReportesController::class, 'generarReporteGeneral']);
+    Route::get('/admin/reportes/clientes-filtro', [ReportesController::class, 'obtenerClientesParaFiltro']);
+    Route::get('/admin/reportes/productos-disponibles', [ReportesController::class, 'obtenerProductosDisponibles']);
+    Route::post('/admin/reportes/generar-pdf', [ReportesController::class, 'generarPdfReporte']);
+    
     // Administrador - Despacho de Combustible
     Route::post('/admin/despacho/realizar', [AdminDespachoController::class, 'realizarDespacho']);
     Route::get('/admin/despacho/historial', [AdminDespachoController::class, 'getHistorialDespachos']);
@@ -93,6 +100,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/cliente/info', [ClienteController::class, 'info']);
     Route::get('/cliente/mis-datos', [ClienteController::class, 'misDatos']);
     Route::put('/cliente/disponible', [ClienteController::class, 'updateDisponible']);
+    Route::get('/cliente/sucursales', [ClienteController::class, 'getSucursales']);
+    Route::get('/cliente/sucursales/{id}', [ClienteController::class, 'getSucursalDetail']);
     
     // Rutas temporales sin autenticación para pruebas
     Route::get('/test/clientes/con-vehiculos', [ClienteController::class, 'getClientesConVehiculos'])->withoutMiddleware('auth:sanctum');

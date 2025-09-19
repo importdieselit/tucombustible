@@ -35,6 +35,7 @@ class AdminController extends Controller
                 'clientes_sin_disponible' => Cliente::where('disponible', '<=', 0)->count(),
                 'clientes_principales' => Cliente::where('parent', 0)->count(),
                 'sucursales' => Cliente::where('parent', '>', 0)->count(),
+                'total_disponible_clientes_padres' => Cliente::where('parent', 0)->sum('disponible'),
                 
                 // Estadísticas de depósitos
                 'total_depositos' => Deposito::count(),

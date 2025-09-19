@@ -415,5 +415,188 @@ class ClienteController extends Controller
         }
     }
 
+    /**
+     * Obtener las sucursales de un cliente padre
+     */
+    public function getSucursales(Request $request): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            
+            // Verificar que el usuario tenga un cliente asociado
+            if (!$user->cliente_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuario no tiene cliente asociado'
+                ], 400);
+            }
+
+            // Obtener el cliente del usuario
+            $cliente = Cliente::find($user->cliente_id);
+            
+            if (!$cliente) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cliente no encontrado'
+                ], 404);
+            }
+
+            // Verificar que sea un cliente padre (parent = 0)
+            if ($cliente->parent != 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Solo los clientes principales pueden ver sus sucursales'
+                ], 403);
+            }
+
+            // Obtener todas las sucursales del cliente padre
+            $sucursales = Cliente::where('parent', $cliente->id)
+                ->select([
+                    'id',
+                    'nombre',
+                    'contacto',
+                    'dni',
+                    'telefono',
+                    'email',
+                    'rif',
+                    'direccion',
+                    'disponible',
+                    'cupo',
+                    'ciiu',
+                    'parent',
+                    'sector',
+                    'periodo',
+                    'created_at',
+                    'updated_at'
+                ])
+                ->orderBy('nombre', 'asc')
+                ->get();
+
+            // Agregar información adicional a cada sucursal
+            $sucursales->transform(function ($sucursal) {
+                $sucursal->porcentaje_disponible = $sucursal->cupo > 0 
+                    ? round(($sucursal->disponible / $sucursal->cupo) * 100, 2) 
+                    : 0;
+                
+                $sucursal->estado_disponible = $this->getEstadoDisponible($sucursal->porcentaje_disponible);
+                
+                return $sucursal;
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $sucursales,
+                'message' => 'Sucursales obtenidas correctamente'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener sucursales',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener el detalle de una sucursal específica
+     */
+    public function getSucursalDetail(Request $request, $id): JsonResponse
+    {
+        try {
+            $user = $request->user();
+            
+            // Verificar que el usuario tenga un cliente asociado
+            if (!$user->cliente_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuario no tiene cliente asociado'
+                ], 400);
+            }
+
+            // Obtener el cliente del usuario
+            $cliente = Cliente::find($user->cliente_id);
+            
+            if (!$cliente) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cliente no encontrado'
+                ], 404);
+            }
+
+            // Verificar que sea un cliente padre (parent = 0)
+            if ($cliente->parent != 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Solo los clientes principales pueden ver sus sucursales'
+                ], 403);
+            }
+
+            // Buscar la sucursal específica
+            $sucursal = Cliente::where('id', $id)
+                ->where('parent', $cliente->id)
+                ->select([
+                    'id',
+                    'nombre',
+                    'contacto',
+                    'dni',
+                    'telefono',
+                    'email',
+                    'rif',
+                    'direccion',
+                    'disponible',
+                    'cupo',
+                    'ciiu',
+                    'parent',
+                    'sector',
+                    'periodo',
+                    'created_at',
+                    'updated_at'
+                ])
+                ->first();
+
+            if (!$sucursal) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sucursal no encontrada o no pertenece a este cliente'
+                ], 404);
+            }
+
+            // Agregar información adicional
+            $sucursal->porcentaje_disponible = $sucursal->cupo > 0 
+                ? round(($sucursal->disponible / $sucursal->cupo) * 100, 2) 
+                : 0;
+            
+            $sucursal->estado_disponible = $this->getEstadoDisponible($sucursal->porcentaje_disponible);
+
+            return response()->json([
+                'success' => true,
+                'data' => $sucursal,
+                'message' => 'Detalle de sucursal obtenido correctamente'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener detalle de sucursal',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Determinar el estado del combustible basado en el porcentaje disponible
+     */
+    private function getEstadoDisponible($porcentaje): string
+    {
+        if ($porcentaje <= 10) {
+            return 'bajo';
+        } elseif ($porcentaje <= 30) {
+            return 'medio';
+        } else {
+            return 'alto';
+        }
+    }
+
    
 }
