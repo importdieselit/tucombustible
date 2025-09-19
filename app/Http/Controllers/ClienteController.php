@@ -117,7 +117,7 @@ class ClienteController extends BaseController
             } else {
                 $pedidos = $pedidos->where('cliente_id', $user->cliente_id);
             }
-
+        }
           
         $pedidosDashboard = $pedidos->map(function ($pedido) {
             return [
@@ -170,6 +170,7 @@ class ClienteController extends BaseController
                 'pedidosEnProceso', 
                 'sucursales',
                 'cliente',
+                'pedidosDashboard',
             ));
         }
         // Pasamos todos los datos a la vista.
