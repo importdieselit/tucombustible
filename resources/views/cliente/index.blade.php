@@ -875,9 +875,8 @@
                     });
                 });
             });
-        });
-
-            // Funciones para manejar la vista del dashboard y los detalles
+        
+           // Funciones para manejar la vista del dashboard y los detalles
         function hideAllDetails() {
             detailSections.forEach(section => {
                 section.style.display = 'none';
@@ -953,6 +952,10 @@
                 listGroup.appendChild(item);
             });
         }
+        
+        });
+
+         
         
     </script>
 @endpush
