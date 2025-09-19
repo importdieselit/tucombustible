@@ -25,6 +25,7 @@ use App\Http\Controllers\AlmacenController;
 use App\Http\Controllers\ChoferController;
 use App\Http\Controllers\AlertaController;
 use App\Http\Controllers\AccesoController;
+use App\Http\Controllers\InspectionController;
 use App\Http\Controllers\PedidoController;
 use App\Models\Deposito;
 
@@ -44,6 +45,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/home', [DashboardController::class, 'index'])->name('home');
 
+Route::get('/checklist-salida', [InspectionController::class, 'showChecklistForm'])->name('checklist.show');
+Route::post('/checklist-salida', [InspectionController::class, 'processChecklist'])->name('checklist.process');
 
 
 Route::get('clientes/dashboard', [ClienteController::class, 'dashboard'])->name('clientes.dashboard')->middleware('role:3');

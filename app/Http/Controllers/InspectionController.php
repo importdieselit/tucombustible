@@ -191,4 +191,78 @@ class InspectionController extends Controller
         $inspection->delete();
         return redirect()->route('inspections.index')->with('success', 'Inspección eliminada exitosamente.');
     }
+
+     public function showChecklistForm()
+    {
+        // Simulando datos para el formulario de checklist
+        // En una aplicación real, estos datos se obtendrían de la base de datos
+        // Por ejemplo, la lista de camiones, conductores, etc.
+        $camiones = [
+            ['id' => 1, 'placa' => 'ABC-123', 'marca' => 'Volvo'],
+            ['id' => 2, 'placa' => 'DEF-456', 'marca' => 'Scania'],
+            ['id' => 3, 'placa' => 'GHI-789', 'marca' => 'Freightliner'],
+        ];
+
+        $conductores = [
+            ['id' => 101, 'nombre' => 'Luis González'],
+            ['id' => 102, 'nombre' => 'María Fernández'],
+            ['id' => 103, 'nombre' => 'Carlos Rodriguez'],
+        ];
+
+        // Se puede pasar un listado de ítems de verificación desde el controlador
+        $itemsChecklist = [
+            'Nivel de combustible verificado',
+            'Luces delanteras y traseras en funcionamiento',
+            'Presión de neumáticos revisada',
+            'Frenos de emergencia y de servicio operativos',
+            'Documentación del vehículo en regla (permiso de circulación, seguro)',
+            'Extintor de incendios a bordo y cargado',
+            'Kit de primeros auxilios completo',
+            'Espejos retrovisores ajustados y limpios',
+            'Cierre de seguridad del camión verificado',
+            'Estado general de la carga',
+        ];
+
+        return view('checklist.checklist_salida', compact('camiones', 'conductores', 'itemsChecklist'));
+    }
+
+    /**
+     * Procesa y guarda los datos del checklist enviado.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function processChecklist(Request $request)
+    {
+        // Validar los datos del formulario
+        $request->validate([
+            'camion_id' => 'required|integer',
+            'conductor_id' => 'required|integer',
+            'items_verificados' => 'array',
+            'items_verificados.*' => 'required|string',
+            'observaciones' => 'nullable|string',
+        ]);
+
+        // Lógica para guardar el checklist en la base de datos
+        // Aquí se puede usar un modelo de Eloquent para almacenar la información.
+        // Ejemplo de los datos a guardar:
+        $checklistData = [
+            'camion_id' => $request->camion_id,
+            'conductor_id' => $request->conductor_id,
+            'fecha' => now(),
+            'verificado_por' => Auth::id(), // Obtiene el ID del usuario autenticado
+            'items' => json_encode($request->items_verificados),
+            'observaciones' => $request->observaciones,
+        ];
+
+        // Simulando el guardado de datos
+        // Por ejemplo: Checklist::create($checklistData);
+        // Log::info('Checklist guardado', $checklistData);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Checklist de salida guardado con éxito!',
+            'data' => $checklistData
+        ]);
+    }
 }
