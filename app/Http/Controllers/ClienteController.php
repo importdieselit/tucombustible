@@ -32,6 +32,9 @@ class ClienteController extends BaseController
 
         $user = auth()->user();
         $cliente = Cliente::find($user->cliente_id);
+         if($cliente->parent==0) {
+                $sucursalesIds = Cliente::where('parent', $user->cliente_id)->pluck('id')->toArray();
+         }
         // 1. Indicadores de clientes
         // Obtenemos todos los clientes con parent 0.
         $sucursales = [];
@@ -39,7 +42,7 @@ class ClienteController extends BaseController
         $disponibilidadData = [];
         if($user->id_perfil==3) {
             if($cliente->parent==0) {
-                $sucursales = Cliente::where('parent', $user->cliente_id)
+                $sucursales = Cliente::whereIn('id', $sucursalesIds)
                                 ->select('nombre', 'disponible', 'cupo', 'direccion', 'id')
                                 ->get();
             } 
@@ -87,27 +90,46 @@ class ClienteController extends BaseController
 
         // 3. Indicadores de pedidos pendientes y en proceso.
         $pedidosPendientes = Pedido::where('estado', 'pendiente');
-        
-        
         if($user->id_perfil==3) {
             if($cliente->parent==0) {
-                $sucursalesIds = Cliente::where('parent', $user->cliente_id)->pluck('id')->toArray();
-                $pedidosPendientes = $pedidosPendientes->whereIn('cliente_id', $sucursalesIds);
+                $pedidosPendientes = $pedidosPendientes->whereIn('cliente_id', $sucursalesIds)->orWhere('cliente_id', $user->cliente_id);
             } else {
                 $pedidosPendientes = $pedidosPendientes->where('cliente_id', $user->cliente_id);
             }
         }
+      
+
         $pedidosPendientes = $pedidosPendientes->count();
         $pedidosEnProceso = Pedido::where('estado', 'en_proceso');
         if($user->id_perfil==3) {
             if($cliente->parent==0) {
-                $sucursalesIds = Cliente::where('parent', $user->cliente_id)->pluck('id')->toArray();
                 $pedidosEnProceso = $pedidosEnProceso->whereIn('cliente_id', $sucursalesIds);
             } else {
                 $pedidosEnProceso = $pedidosEnProceso->where('cliente_id', $user->cliente_id);
             }
         }
         $pedidosEnProceso = $pedidosEnProceso->count();
+
+        $pedidos = Pedido::whereNotIn('estado', ['entregado', 'cancelado']);
+        if($user->id_perfil==3) {
+            if($cliente->parent==0) {
+                $pedidos = $pedidos->whereIn('cliente_id', $sucursalesIds)->orWhere('cliente_id', $user->cliente_id);
+            } else {
+                $pedidos = $pedidos->where('cliente_id', $user->cliente_id);
+            }
+
+          
+        $pedidosDashboard = $pedidos->map(function ($pedido) {
+            return [
+                'id_pedido' => $pedido->id,
+                'cantidad' => number_format($pedido->cantidad_solicitada, 2, ',', '.') . ' L',
+                'cliente' => $pedido->cliente->nombre,
+                'estado' => $pedido->estado,
+                'observacion' => $pedido->observaciones,
+                'fecha' => $pedido->fecha_solicitud->format('d/m/Y H:i'),
+                'tipo' => 'pedido', // Identificador para el front-end
+            ];
+        });
 
         // 4. Niveles de los depósitos.
         $depositos = [];
@@ -121,7 +143,6 @@ class ClienteController extends BaseController
         // Por ejemplo, un estado 'cargado' o 'en_ruta_con_combustible'.
         if($user->id_perfil==3) {
             if($cliente->parent==0) {
-                $sucursalesIds = Cliente::where('parent', $user->cliente_id)->pluck('id')->toArray();
                 $camionesCargados = Vehiculo::whereIn('id_cliente', $sucursalesIds)
                                     ->count();
             } else {
