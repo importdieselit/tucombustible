@@ -525,16 +525,8 @@
                 document.getElementById('solicitudes-details'),
                 document.getElementById('notificaciones-details')
             ];
-        document.addEventListener('DOMContentLoaded', function () {
-            // Datos simulados pasados desde PHP
-            const chartData = {!! json_encode($chartData) !!};
-            const currentUserRole = '{!! $currentUserRole !!}';
 
-             const sucursales = {!! json_encode($sucursales) !!};
-           
-
-
-              const pedidos = [
+             const pedidos = [
                     { id: 1, cliente: 'Empresa Alfa', cantidad: 5000, estado: 'Pendiente', fecha: '2024-10-26' },
                     { id: 2, cliente: 'Transportes Delta', cantidad: 800, estado: 'Pendiente', fecha: '2024-10-25' },
                     { id: 3, cliente: 'Distribuidora Beta', cantidad: 1000, estado: 'En Ruta', fecha: '2024-10-25' },
@@ -551,8 +543,14 @@
             { id: 1, cliente: 'Transportes Delta', mensaje: 'El depósito de la sucursal 1 está por debajo del 10% de su capacidad.', fecha: '2024-10-26 09:30' },
             { id: 2, cliente: 'Empresa Alfa', mensaje: 'Cambio de horario en el envío programado de hoy.', fecha: '2024-10-26 08:15' },
         ];
+         // Datos simulados pasados desde PHP
+            const chartData = {!! json_encode($chartData) !!};
+            const currentUserRole = '{!! $currentUserRole !!}';
 
-       
+             const sucursales = {!! json_encode($sucursales) !!};   
+
+        document.addEventListener('DOMContentLoaded', function () {
+              
 
 
             // Botones de navegación
