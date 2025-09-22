@@ -618,6 +618,7 @@
 
         function showDetails(sectionId) {
             preventDefault();
+            
             document.getElementById('dashboard-main-view').style.display = 'none';
             hideAllDetails();
             document.getElementById(sectionId).style.display = 'block';
