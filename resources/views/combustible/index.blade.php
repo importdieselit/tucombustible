@@ -246,7 +246,7 @@
 
 
             <div class="col-12 col-md-6 col-lg-3">
-                <a href="#" class="card-link" onclick="showDetails('pedidos-details')">
+                <a href="#" class="card-link" onclick="showDetails('pedidos-details', event)">
                     <div class="card h-100 p-4 d-flex flex-column justify-content-center text-center">
                         <i class="fas fa-truck-ramp-box stat-card-icon mb-2 text-warning"></i>
                         <h5 class="fw-bold mb-1">Pedidos</h5>
@@ -255,7 +255,7 @@
                 </a>
             </div>
             <div class="col-12 col-md-6 col-lg-3">
-                <a href="#" class="card-link" onclick="showDetails('solicitudes-details')">
+                <a href="#" class="card-link" onclick="showDetails('solicitudes-details', event)">
                     <div class="card h-100 p-4 d-flex flex-column justify-content-center text-center">
                         <i class="fas fa-clipboard-list stat-card-icon mb-2 text-primary"></i>
                         <h5 class="fw-bold mb-1">Solicitudes</h5>
@@ -264,7 +264,7 @@
                 </a>
             </div>
             <div class="col-12 col-md-6 col-lg-3">
-                <a href="#" class="card-link" onclick="showDetails('notificaciones-details')">
+                <a href="#" class="card-link" onclick="showDetails('notificaciones-details', event)">
                     <div class="card h-100 p-4 d-flex flex-column justify-content-center text-center">
                         <i class="fas fa-bell stat-card-icon mb-2 text-danger"></i>
                         <h5 class="fw-bold mb-1">Notificaciones</h5>
@@ -616,9 +616,9 @@
             });
         }
 
-        function showDetails(sectionId) {
-            preventDefault();
-            
+        function showDetails(sectionId,event) {
+            event.preventDefault(); 
+
             document.getElementById('dashboard-main-view').style.display = 'none';
             hideAllDetails();
             document.getElementById(sectionId).style.display = 'block';
