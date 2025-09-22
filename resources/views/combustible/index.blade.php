@@ -377,7 +377,7 @@
             </div>
         </div>
 <!-- Sección de Detalle de Pedidos -->
-<div id="pedidos-details" style="display: none;">
+<div id="pedidos-details" style="display: none;" tabindex="-1">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="h4 fw-bold mb-0">Detalle de Pedidos</h2>
         <button class="btn btn-outline-secondary" onclick="showDashboard()">
@@ -405,7 +405,7 @@
 </div>
 
 <!-- Sección de Detalle de Solicitudes -->
-<div id="solicitudes-details" style="display: none;">
+<div id="solicitudes-details" style="display: none;" tabindex="-1">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="h4 fw-bold mb-0">Detalle de Solicitudes</h2>
         <button class="btn btn-outline-secondary" onclick="showDashboard()">
@@ -433,7 +433,7 @@
 </div>
 
 <!-- Sección de Detalle de Notificaciones -->
-<div id="notificaciones-details" style="display: none;">
+<div id="notificaciones-details" style="display: none;" tabindex="-1">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="h4 fw-bold mb-0">Detalle de Notificaciones</h2>
         <button class="btn btn-outline-secondary" onclick="showDashboard()">
@@ -605,10 +605,10 @@
         ];
  
         let detailSections = [
-                document.getElementById('pedidos-details'),
+                
+            ];document.getElementById('pedidos-details'),
                 document.getElementById('solicitudes-details'),
                 document.getElementById('notificaciones-details')
-            ];
                // Funciones para manejar la vista del dashboard y los detalles
         function hideAllDetails() {
             detailSections.forEach(section => {
@@ -650,6 +650,8 @@
                 `;
                 tbody.appendChild(row);
             });
+             document.getElementById('pedidos-details').focus();
+            
         }
 
         function renderizarSolicitudes() {
@@ -666,7 +668,8 @@
                 `;
                 tbody.appendChild(row);
             });
-        }
+                document.getElementById('solicitudes-details').focus();
+            }
         
         function renderizarNotificaciones() {
             const listGroup = document.querySelector('#notificaciones-details .list-group');
@@ -684,6 +687,7 @@
                 `;
                 listGroup.appendChild(item);
             });
+            document.getElementById('notificaciones-details').focus();
         }
 
 
