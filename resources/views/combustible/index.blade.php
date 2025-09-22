@@ -585,25 +585,8 @@
     <script src="https://code.highcharts.com/modules/export-data.js"></script>
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Datos simulados pasados desde PHP
-            const clientes = {!! json_encode($clientes) !!};
-            const chartData = {!! json_encode($chartData) !!};
-            const drilldownSeries = {!! json_encode($drilldownSeries) !!};
-            
-            // Referencias a los contenedores
-            const clientesListContainer = document.getElementById('clientes-list-container');
-            const sucursalDetailsContainer = document.getElementById('sucursal-details-container');
-            const dashboardMainView = document.getElementById('dashboard-main-view');
 
-            const detailSections = [
-                document.getElementById('pedidos-details'),
-                document.getElementById('solicitudes-details'),
-                document.getElementById('notificaciones-details')
-            ];
-
-
-              const pedidos = [
+   const pedidos = [
             { id: 1, cliente: 'Empresa Alfa', cantidad: 5000, estado: 'Pendiente', fecha: '2024-10-26' },
             { id: 2, cliente: 'Transportes Delta', cantidad: 800, estado: 'Pendiente', fecha: '2024-10-25' },
             { id: 3, cliente: 'Distribuidora Beta', cantidad: 1000, estado: 'En Ruta', fecha: '2024-10-25' },
@@ -698,6 +681,27 @@
             });
         }
 
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Datos simulados pasados desde PHP
+            const clientes = {!! json_encode($clientes) !!};
+            const chartData = {!! json_encode($chartData) !!};
+            const drilldownSeries = {!! json_encode($drilldownSeries) !!};
+            
+            // Referencias a los contenedores
+            const clientesListContainer = document.getElementById('clientes-list-container');
+            const sucursalDetailsContainer = document.getElementById('sucursal-details-container');
+            const dashboardMainView = document.getElementById('dashboard-main-view');
+
+            const detailSections = [
+                document.getElementById('pedidos-details'),
+                document.getElementById('solicitudes-details'),
+                document.getElementById('notificaciones-details')
+            ];
+
+
+           
 
             // Botones de navegación
             const verClientesBtn = document.getElementById('sucursales-card');

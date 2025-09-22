@@ -195,7 +195,7 @@ class ClienteController extends BaseController
             'pedidosEnProceso', 
             'depositos', 
             'camionesCargados'
-            ,'pedidosDashboard'
+            
         ));
     }
 
