@@ -603,7 +603,12 @@
             { id: 1, cliente: 'Transportes Delta', mensaje: 'El depósito de la sucursal 1 está por debajo del 10% de su capacidad.', fecha: '2024-10-26 09:30' },
             { id: 2, cliente: 'Empresa Alfa', mensaje: 'Cambio de horario en el envío programado de hoy.', fecha: '2024-10-26 08:15' },
         ];
-
+ 
+        let detailSections = [
+                document.getElementById('pedidos-details'),
+                document.getElementById('solicitudes-details'),
+                document.getElementById('notificaciones-details')
+            ];
                // Funciones para manejar la vista del dashboard y los detalles
         function hideAllDetails() {
             detailSections.forEach(section => {
@@ -694,7 +699,7 @@
             const sucursalDetailsContainer = document.getElementById('sucursal-details-container');
             const dashboardMainView = document.getElementById('dashboard-main-view');
 
-            const detailSections = [
+            detailSections = [
                 document.getElementById('pedidos-details'),
                 document.getElementById('solicitudes-details'),
                 document.getElementById('notificaciones-details')
