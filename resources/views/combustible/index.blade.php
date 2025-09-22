@@ -612,7 +612,7 @@
         }
 
         function showDetails(sectionId) {
-            dashboardMainView.style.display = 'none';
+            document.getElementById('dashboard-main-view').style.display = 'none';
             hideAllDetails();
             document.getElementById(sectionId).style.display = 'block';
 
@@ -628,7 +628,7 @@
 
         function showDashboard() {
             hideAllDetails();
-            dashboardMainView.style.display = 'block';
+           document.getElementById('dashboard-main-view').style.display = 'block';
         }
 
         function renderizarPedidos() {
@@ -794,7 +794,7 @@
             // Manejadores de eventos de navegación
             if (verClientesBtn) {
                 verClientesBtn.addEventListener('click', () => {
-                    dashboardMainView.classList.add('hidden');
+                    document.getElementById('dashboard-main-view').classList.add('hidden');
                     clientesListContainer.classList.remove('hidden');
                 });
             }
@@ -802,7 +802,7 @@
             if (backToDashboardBtn) {
                 backToDashboardBtn.addEventListener('click', () => {
                     clientesListContainer.classList.add('hidden');
-                    dashboardMainView.classList.remove('hidden');
+                    document.getElementById('dashboard-main-view').classList.remove('hidden');
                 });
             }
 
