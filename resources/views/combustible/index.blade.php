@@ -728,7 +728,7 @@
             // Lógica para el gráfico de Highcharts con drilldown
             Highcharts.chart('chart-container', {
                 chart: {
-                    type: 'column',
+                    type: 'bar',
                     events: {
                         drilldown: function(e) {
                             if (!e.seriesOptions) {
