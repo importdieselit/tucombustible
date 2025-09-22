@@ -614,6 +614,8 @@
             detailSections.forEach(section => {
                 section.style.display = 'none';
             });
+            document.getElementById('clientes-list-container').classList.add('hidden');
+            document.getElementById('sucursal-details-container').classList.add('hidden');
         }
 
         function showDetails(sectionId,event) {
