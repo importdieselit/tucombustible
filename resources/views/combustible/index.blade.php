@@ -595,9 +595,9 @@
     <script src="https://code.highcharts.com/modules/export-data.js"></script>
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-const pedidos = @json($pedidos);
-const solicitudes = @json($solicitudes);
-const notificaciones = @json($notificaciones);
+// const pedidos = @json($pedidos);
+// const solicitudes = @json($solicitudes);
+// const notificaciones = @json($notificaciones);
 
 //    const pedidos = [
 //             { id: 1, cliente: 'Empresa Alfa', cantidad: 5000, estado: 'Pendiente', fecha: '2024-10-26' },
