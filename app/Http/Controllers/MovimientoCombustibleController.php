@@ -78,7 +78,7 @@ class MovimientoCombustibleController extends Controller
         $nivelPromedio = $capacidadTotal > 0 ? ($totalCombustible / $capacidadTotal) * 100 : 0;
         $nivelPromedio = round($nivelPromedio, 2);
 
-         $pedidos = Pedido::whereNotIn('estado', ['entregado', 'cancelado']);
+         $pedidos = Pedido::whereNotIn('estado', ['entregado', 'cancelado','completado']);
 
            // Obtiene la colección de pedidos después de aplicar los filtros.
         $pedidosCollection = $pedidos->get();
@@ -86,7 +86,7 @@ class MovimientoCombustibleController extends Controller
         // Mapea la colección a la estructura de datos para el dashboard.
         $pedidos = $pedidosCollection->map(function ($pedido) {
             return [
-                'id_pedido' => $pedido->id,
+                'id' => $pedido->id,
                 'cantidad' => number_format($pedido->cantidad_solicitada, 2, ',', '.') . ' L',
                 'cliente' => $pedido->cliente->nombre,
                 'estado' => $pedido->estado,
