@@ -372,7 +372,7 @@
             <div id="dashboard-main-view">
                 <div class="card p-4 mb-4">
                     <h4 class="fw-bold mb-3">Consumo por Clientes</h4>
-                    <div id="chart-container"></div>
+                    <div id="chart-container" style="height: {{ 40 * count($chartData) + 150 }}px;"></div>
                 </div>
             </div>
         </div>
@@ -726,83 +726,64 @@
             sucursalDetailsContainer.classList.add('hidden');
 
             // Lógica para el gráfico de Highcharts con drilldown
-            Highcharts.chart('chart-container', {
-                chart: {
-                    type: 'bar',
-                    events: {
-                        drilldown: function(e) {
-                            if (!e.seriesOptions) {
-                                let chart = this;
-                                chart.showLoading('Cargando sucursales de ' + e.point.name + '...');
-                                // Aquí se podría hacer una llamada AJAX para obtener los datos de sucursales
-                                // Para esta simulación, los datos ya están en el arreglo drilldownSeries
-                                setTimeout(function() {
-                                    chart.addSeriesAsDrilldown(e.point, {
-                                        name: 'Sucursales de ' + e.point.name,
-                                        data: drilldownSeries.find(s => s.id === e.point.drilldown).data.map(d => [d.name, d.y])
-                                    });
-                                    chart.hideLoading();
-                                }, 500);
-                            }
-                        }
-                    }
+          ighcharts.chart('chart-container', {
+    chart: {
+        type: 'bar'
+    },
+    title: {
+        text: 'Consumo por Clientes Principales'
+    },
+    xAxis: {
+        type: 'category'
+    },
+    yAxis: {
+        title: {
+            text: 'Litros Consumidos'
+        }
+    },
+    legend: {
+        enabled: false
+    },
+    tooltip: {
+        pointFormat: 'Consumido: <b>{point.y:.2f} L</b>'
+    },
+    plotOptions: {
+        bar: {
+            dataLabels: {
+                enabled: true
+            }
+        },
+        series: {
+            // Este icono indica que hay un drilldown disponible
+            dataLabels: [{
+                enabled: true,
+                align: 'right',
+                formatter: function() {
+                    return this.point.drilldown ? '➡️' : '';
                 },
-                title: {
-                    text: 'Consumo por Clientes Principales'
-                },
-                xAxis: {
-                    type: 'category'
-                },
-                yAxis: {
-                    title: {
-                        text: 'Litros Consumidos'
-                    }
-                },
-                legend: {
-                    enabled: false
-                },
-                tooltip: {
-                    pointFormat: 'Consumido: <b>{point.y:.2f} L</b>'
-                },
-                plotOptions: {
-                    column: {
-                        cursor: 'pointer',
-                        point: {
-                            events: {
-                                click: function() {
-                                    // Highcharts ya maneja el drilldown por sí solo, pero aquí se podría
-                                    // agregar lógica adicional si fuera necesario.
-                                    // Por ejemplo, para cambiar la vista de la UI.
-                                }
-                            }
-                        }
-                    }
-                },
-                series: [{
-                    name: 'Consumido',
-                    colorByPoint: true,
-                    data: chartData.map(d => ({
-                        name: d.name,
-                        y: d.y,
-                        drilldown: d.drilldown,
-                        disponible: d.disponible,
-                        cupo: d.cupo
-                    }))
-                }],
-                drilldown: {
-                    allowPointDrilldown: false,
-                    series: drilldownSeries.map(s => ({
-                        id: s.id,
-                        name: s.name,
-                        data: s.data.map(d => ({
-                             name: d.name,
-                             y: d.y,
-                             disponible: d.disponible,
-                             cupo: d.cupo
-                        }))
-                    }))
+                style: {
+                    fontSize: '13px'
                 }
-            });
+            }]
+        }
+    },
+    series: [{
+        name: 'Consumo Total',
+        colorByPoint: true,
+        data: chartData.map(d => ({
+            name: d.name,
+            y: d.y,
+            drilldown: d.drilldown // Este es el ID que conecta con la serie de drilldown
+        }))
+    }],
+    drilldown: {
+        series: drilldownSeries.map(s => ({
+            id: s.id,
+            name: s.name,
+            data: s.data.map(d => [d.name, d.y])
+        }))
+    }
+});
 
             // Manejadores de eventos de navegación
             if (verClientesBtn) {
