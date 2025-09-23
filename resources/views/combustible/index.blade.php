@@ -619,9 +619,11 @@ const notificaciones = @json($notificaciones);
  
         let detailSections = [
                 
-            ];document.getElementById('pedidos-details'),
+           document.getElementById('pedidos-details'),
                 document.getElementById('solicitudes-details'),
                 document.getElementById('notificaciones-details')
+
+                 ];
                // Funciones para manejar la vista del dashboard y los detalles
         function hideAllDetails() {
             detailSections.forEach(section => {
