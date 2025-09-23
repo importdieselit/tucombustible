@@ -596,6 +596,8 @@
     <script src="https://code.highcharts.com/modules/exporting.js"></script>
     <script src="https://code.highcharts.com/modules/export-data.js"></script>
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    {{-- <script src="{{ asset('js/dashboard-operaciones.js') }}"></script> --}}
+
     <script>
         console.log('Dashboard Operaciones cargado');
         console.log('Pedidos:', @json($pedidos));
@@ -662,8 +664,48 @@ const pedidos = @json($pedidos);
         }
 
 
+// Data de prueba para vehículos y tanques
+const vehiculosDisponibles = ['Camión A', 'Camión B', 'Camión C'];
+const tanquesDisponibles = [
+    { id: 1, nombre: 'Tanque Principal 10k L', capacidad: 10000, disponible: 8500 },
+    { id: 2, nombre: 'Tanque Secundario 5k L', capacidad: 5000, disponible: 4000 }
+];
 
-// Agrega los listeners a los botones y selectores
+function renderizarPedidos() {
+    const tbody = document.getElementById('pedidos-table-body');
+    tbody.innerHTML = '';
+    
+    pedidos.forEach(pedido => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${pedido.id}</td>
+            <td>${pedido.cliente}</td>
+            <td>${pedido.cantidad} L</td>
+            <td><span class="badge ${pedido.estado === 'Pendiente' ? 'bg-danger' : 'bg-success'}">${pedido.estado}</span></td>
+            <td>${pedido.fecha}</td>
+            <td>
+                <button class="btn btn-sm btn-info ver-btn" data-id="${pedido.id}">Ver</button>
+                
+                ${pedido.estado === 'Pendiente' ? `
+                    <button class="btn btn-sm btn-success aprobar-btn" data-id="${pedido.id}">Aprobar</button>
+                    <select class="form-select form-select-sm vehiculo-select mt-1" data-id="${pedido.id}">
+                        <option value="">Asignar Vehículo</option>
+                        ${vehiculosDisponibles.map(vehiculo => `<option value="${vehiculo}">${vehiculo}</option>`).join('')}
+                    </select>
+                ` : `
+                    <button class="btn btn-sm btn-primary crear-despacho-btn" data-id="${pedido.id}">Crear Despacho</button>
+                `}
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+    
+    document.getElementById('pedidos-details').focus();
+    
+    // Llamar a la función para agregar los eventos a los nuevos elementos
+    agregarListeners();
+}
+
 function agregarListeners() {
     // Escucha los clics en los botones "Aprobar"
     document.querySelectorAll('.aprobar-btn').forEach(button => {
@@ -673,7 +715,15 @@ function agregarListeners() {
         });
     });
 
-    // Escucha los cambios en los selectores de vehículos
+    // Escucha los clics en los botones "Crear Despacho"
+    document.querySelectorAll('.crear-despacho-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const pedidoId = parseInt(e.target.dataset.id);
+            mostrarFormularioDespacho(pedidoId);
+        });
+    });
+
+    // Escucha los cambios en los selectores de vehículos (solo para pedidos pendientes)
     document.querySelectorAll('.vehiculo-select').forEach(select => {
         select.addEventListener('change', (e) => {
             const pedidoId = parseInt(e.target.dataset.id);
@@ -681,8 +731,8 @@ function agregarListeners() {
             asignarVehiculo(pedidoId, vehiculoAsignado);
         });
     });
-
-    // Puedes agregar un listener para el botón "Ver" aquí
+    
+    // Escucha para el botón "Ver"
     document.querySelectorAll('.ver-btn').forEach(button => {
         button.addEventListener('click', (e) => {
             const pedidoId = parseInt(e.target.dataset.id);
@@ -694,37 +744,103 @@ function agregarListeners() {
 function aprobarPedido(id) {
     const pedido = pedidos.find(p => p.id === id);
     if (pedido) {
-        // Lógica para cambiar el estado
+        if (!pedido.vehiculo) {
+            Swal.fire('Error', 'Debe asignar un vehículo antes de aprobar el pedido.', 'warning');
+            return; // No aprobar si no hay vehículo asignado
+        }
+        
         pedido.estado = 'Aprobado';
-        
-        // Re-renderizar la tabla para reflejar el cambio
         renderizarPedidos();
-        
-        // Mostrar una alerta de éxito con SweetAlert
-        Swal.fire('Aprobado', `El pedido #${id} ha sido aprobado.`, 'success');
+        Swal.fire('¡Aprobado!', `El pedido #${id} ha sido aprobado y está listo para ser despachado.`, 'success');
     }
 }
 
 function asignarVehiculo(id, vehiculo) {
     const pedido = pedidos.find(p => p.id === id);
     if (pedido) {
-        // Lógica para asignar el vehículo
         pedido.vehiculo = vehiculo;
-        
-        // Opcional: Re-renderizar para mostrar el vehículo asignado si es necesario
-        // renderizarPedidos(); 
-        
-        // Mostrar una alerta de confirmación
         Swal.fire('Vehículo Asignado', `El vehículo ${vehiculo} ha sido asignado al pedido #${id}.`, 'success');
     }
 }
 
+function mostrarFormularioDespacho(id) {
+    const pedido = pedidos.find(p => p.id === id);
+    if (!pedido) return;
+
+    // Crear las opciones para el selector de tanques
+    const tanqueOptions = tanquesDisponibles.map(tanque => 
+        `<option value="${tanque.id}">${tanque.nombre} (${tanque.disponible} L disponibles)</option>`
+    ).join('');
+
+    Swal.fire({
+        title: `Crear Despacho para Pedido #${pedido.id}`,
+        html: `
+            <div class="mb-3 text-start">
+                <label class="form-label fw-bold">Cantidad:</label>
+                <p>${pedido.cantidad} L</p>
+            </div>
+            <div class="mb-3 text-start">
+                <label for="swal-vehiculo" class="form-label fw-bold">Vehículo Asignado:</label>
+                <input id="swal-vehiculo" class="form-control" value="${pedido.vehiculo}" readonly>
+            </div>
+            <div class="mb-3 text-start">
+                <label for="swal-tanque" class="form-label fw-bold">Seleccionar Tanque:</label>
+                <select id="swal-tanque" class="form-select">${tanqueOptions}</select>
+            </div>
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Confirmar Despacho',
+        preConfirm: () => {
+            const tanqueId = document.getElementById('swal-tanque').value;
+            if (!tanqueId) {
+                Swal.showValidationMessage('Debe seleccionar un tanque.');
+                return false;
+            }
+            return {
+                tanqueId: tanqueId,
+                vehiculo: pedido.vehiculo
+            };
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const { tanqueId, vehiculo } = result.value;
+            crearDespacho(id, tanqueId, vehiculo);
+        }
+    });
+}
+
+function crearDespacho(pedidoId, tanqueId, vehiculo) {
+    // Aquí iría la lógica para enviar la información al servidor
+    // Para esta simulación, simplemente mostramos una alerta
+    
+    // Lógica de simulación
+    const tanqueSeleccionado = tanquesDisponibles.find(t => t.id == tanqueId);
+    if (tanqueSeleccionado.disponible < pedidos.find(p => p.id === pedidoId).cantidad) {
+        Swal.fire('Error', 'El tanque seleccionado no tiene suficiente combustible.', 'error');
+        return;
+    }
+
+    // Actualizar el estado del pedido a 'Despachado' o 'En camino'
+    const pedido = pedidos.find(p => p.id === pedidoId);
+    pedido.estado = 'Despachado';
+    
+    // Actualizar la cantidad disponible en el tanque (simulación)
+    tanqueSeleccionado.disponible -= pedido.cantidad;
+
+    // Volver a renderizar la tabla para reflejar el cambio de estado
+    renderizarPedidos();
+    
+    Swal.fire(
+        '¡Despacho Creado!',
+        `El pedido #${pedidoId} ha sido despachado usando el ${tanqueSeleccionado.nombre} con el ${vehiculo}.`,
+        'success'
+    );
+}
+
 function mostrarDetallesPedido(id) {
-    // Lógica para mostrar los detalles del pedido
     const pedido = pedidos.find(p => p.id === id);
     if (pedido) {
-        // Aquí puedes abrir un modal, por ejemplo, para mostrar más información
-        console.log('Detalles del pedido:', pedido);
         Swal.fire({
             title: `Detalles del Pedido #${pedido.id}`,
             html: `
@@ -732,42 +848,12 @@ function mostrarDetallesPedido(id) {
                 <p><strong>Cantidad:</strong> ${pedido.cantidad} L</p>
                 <p><strong>Estado:</strong> <span class="badge ${pedido.estado === 'Pendiente' ? 'bg-danger' : 'bg-success'}">${pedido.estado}</span></p>
                 <p><strong>Fecha:</strong> ${pedido.fecha}</p>
-                <p><strong>Vehículo:</strong> ${pedido.vehiculo || 'No asignado'}</p>
-            `
+                <p><strong>Vehículo Asignado:</strong> ${pedido.vehiculo || 'No asignado'}</p>
+            `,
+            confirmButtonText: 'Cerrar'
         });
     }
 }
-
-
-        function renderizarPedidos() {
-            const tbody = document.getElementById('pedidos-table-body');
-            tbody.innerHTML = '';
-            pedidos.forEach(pedido => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${pedido.id}</td>
-                    <td>${pedido.cliente}</td>
-                    <td>${pedido.cantidad} L</td>
-                    <td><span class="badge ${pedido.estado === 'Pendiente' ? 'bg-danger' : 'bg-success'}">${pedido.estado}</span></td>
-                    <td>${pedido.fecha}</td>
-                    <td>
-                          <button class="btn btn-sm btn-info ver-btn" data-id="${pedido.id}">Ver</button>
-                
-                        ${pedido.estado === 'Pendiente' ? `
-                            <button class="btn btn-sm btn-success aprobar-btn" data-id="${pedido.id}">Aprobar</button>
-                            <select class="form-select form-select-sm vehiculo-select mt-1" data-id="${pedido.id}">
-                                <option value="">Asignar Vehículo</option>
-                                ${vehiculosDisponibles.map(vehiculo => `<option value="${vehiculo}">${vehiculo}</option>`).join('')}
-                            </select>
-                        ` : ''}
-                        </td>
-                `;
-                tbody.appendChild(row);
-            });
-            agregarListeners()
-             document.getElementById('pedidos-details').focus();
-            
-        }
 
         function renderizarSolicitudes() {
             const tbody = document.getElementById('solicitudes-table-body');
