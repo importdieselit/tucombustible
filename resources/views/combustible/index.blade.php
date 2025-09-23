@@ -474,6 +474,7 @@
                             <div>
                                 <h6 class="m-0">{{ $deposito->serial }} ({{ $deposito->producto }})</h6>
                                 <p class="text-muted m-0"><small>Nivel: {{ $percentage }}%</small></p>
+                                <p class="text-muted m-0"><small>{{ $deposito->nivel_actual_litros }}/{{ $deposito->capacidad_litros }}</small></p>
                             </div>
                             <div class="progress" style="width: 150px; height: 20px;">
                                 <div class="progress-bar" 
@@ -671,7 +672,17 @@ const pedidos = @json($pedidos);
                     <td>${pedido.cantidad} L</td>
                     <td><span class="badge ${pedido.estado === 'Pendiente' ? 'bg-danger' : 'bg-success'}">${pedido.estado}</span></td>
                     <td>${pedido.fecha}</td>
-                    <td></td>
+                    <td>
+                          <button class="btn btn-sm btn-info ver-btn" data-id="${pedido.id}">Ver</button>
+                
+                        ${pedido.estado === 'Pendiente' ? `
+                            <button class="btn btn-sm btn-success aprobar-btn" data-id="${pedido.id}">Aprobar</button>
+                            <select class="form-select form-select-sm vehiculo-select mt-1" data-id="${pedido.id}">
+                                <option value="">Asignar Vehículo</option>
+                                ${vehiculosDisponibles.map(vehiculo => `<option value="${vehiculo}">${vehiculo}</option>`).join('')}
+                            </select>
+                        ` : ''}
+                        </td>
                 `;
                 tbody.appendChild(row);
             });
