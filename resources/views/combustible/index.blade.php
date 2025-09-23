@@ -177,7 +177,7 @@
                 $percentage = $totalCapacity > 0 ? ($totalCurrent / $totalCapacity) * 100 : 0;
                 $isAlert = $totalCurrent <= ($totalCapacity * 0.1);
 
-                $pedidos = [['id' => 'p1', 'estado' => 'En proceso'], ['id' => 'p2', 'estado' => 'Pendiente']];
+                $pedidos = $pedidosDashboard ?? [];
                 $solicitudes = [['id' => 's1', 'estado' => 'Pendiente'], ['id' => 's2', 'estado' => 'Aprobada']];
                 $notificaciones = [['id' => 'n1', 'leido' => false], ['id' => 'n2', 'leido' => true]];
 
