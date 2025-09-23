@@ -315,8 +315,7 @@
                                 @endphp
 
                                 <div class="progress mt-3" style="height: 25px;">
-                                    <div class="progress-bar" role="progressbar" style="width: {{ $porcentajeDisponible }}%; background-color: rgb(69, 155, 100);" aria-valuenow="{{ $porcentajeDisponible }}" aria-valuemin="0" aria-valuemax="100"></div>
-                                    <div class="progress-bar" role="progressbar" style="width: {{ $porcentajeConsumido }}%; background-color: rgb(204, 74, 58);" aria-valuenow="{{ $porcentajeConsumido }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                    <div class="progress-bar" role="progressbar" style="width: {{  $porcentajeDisponible }}%; background-color: {{  $porcentajeDisponible > 50 ? '#28a745' : ( $porcentajeDisponible > 15 ? '#ffc107' : '#dc3545') }};" aria-valuemin="0" aria-valuemax="100"></div>
                                 </div>
                             </div>
                         </div>
@@ -478,7 +477,7 @@
                             <div class="progress" style="width: 150px; height: 20px;">
                                 <div class="progress-bar" 
                                      role="progressbar" 
-                                     style="width: {{  $percentage }}%; background-color: {{  $percentage > 50 ? '#28a745' : ( $percentage > 25 ? '#ffc107' : '#dc3545') }};" 
+                                     style="width: {{  $percentage }}%; background-color: {{  $percentage > 50 ? '#28a745' : ( $percentage > 15 ? '#ffc107' : '#dc3545') }};" 
                                      aria-valuenow="{{  $percentage }}" 
                                      aria-valuemin="0" 
                                      aria-valuemax="100">
@@ -495,7 +494,7 @@
                             <div class="progress" style="width: 150px; height: 20px;">
                                 <div class="progress-bar" 
                                      role="progressbar" 
-                                     style="width: {{  $tipo->nivel }}%; background-color: {{  $tipo->nivel > 50 ? '#28a745' : ( $tipo->nivel > 25 ? '#ffc107' : '#dc3545') }};" 
+                                     style="width: {{  $tipo->nivel }}%; background-color: {{  $tipo->nivel > 50 ? '#28a745' : ( $tipo->nivel > 15 ? '#ffc107' : '#dc3545') }};" 
                                      aria-valuenow="{{  $tipo->nivel }}" 
                                      aria-valuemin="0" 
                                      aria-valuemax="100">
