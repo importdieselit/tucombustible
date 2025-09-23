@@ -134,7 +134,7 @@ class ClienteController extends BaseController
         // Mapea la colección a la estructura de datos para el dashboard.
         $pedidosDashboard = $pedidosCollection->map(function ($pedido) {
             return [
-                'id_pedido' => $pedido->id,
+                'id' => $pedido->id,
                 'cantidad' => number_format($pedido->cantidad_solicitada, 2, ',', '.') . ' L',
                 'cliente' => $pedido->cliente->nombre,
                 'estado' => $pedido->estado,
@@ -142,7 +142,7 @@ class ClienteController extends BaseController
                 'fecha' => $pedido->fecha_solicitud->format('d/m/Y H:i'),
                 'tipo' => 'pedido', // Identificador para el front-end
             ];
-        });
+        })->toArray();
 
         // 4. Niveles de los depósitos.
         $depositos = [];
