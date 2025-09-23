@@ -89,7 +89,7 @@ class MovimientoCombustibleController extends Controller
                 'id' => $pedido->id,
                 'cantidad' => number_format($pedido->cantidad_solicitada, 2, ',', '.') . ' L',
                 'cliente' => $pedido->cliente->nombre,
-                'estado' => $pedido->estado,
+                'estado' => ucwords($pedido->estado),
                 'observacion' => $pedido->observaciones,
                 'fecha' => $pedido->fecha_solicitud->format('d/m/Y H:i'),
                 'tipo' => 'pedido', // Identificador para el front-end

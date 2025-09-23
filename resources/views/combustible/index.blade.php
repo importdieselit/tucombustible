@@ -404,6 +404,7 @@
                         <th scope="col">Cantidad (L)</th>
                         <th scope="col">Estado</th>
                         <th scope="col">Fecha de Creación</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody id="pedidos-table-body">
@@ -670,6 +671,7 @@ const pedidos = @json($pedidos);
                     <td>${pedido.cantidad} L</td>
                     <td><span class="badge ${pedido.estado === 'Pendiente' ? 'bg-danger' : 'bg-success'}">${pedido.estado}</span></td>
                     <td>${pedido.fecha}</td>
+                    <td></td>
                 `;
                 tbody.appendChild(row);
             });
