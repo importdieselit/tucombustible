@@ -547,8 +547,8 @@
          // Datos simulados pasados desde PHP
             const chartData = {!! json_encode($chartData) !!};
             const pedidos = {!! json_encode($pedidos) !!};
-            const solicitudes = {!! json_encode($solicitudes) !!};
-            const notificaciones = {!! json_encode($notificaciones) !!};
+            //const solicitudes = {!! json_encode($solicitudes) !!};
+           // const notificaciones = {!! json_encode($notificaciones) !!};
             const currentUserRole = '{!! $currentUserRole !!}';
 
              const sucursales = {!! json_encode($sucursales) !!};   
