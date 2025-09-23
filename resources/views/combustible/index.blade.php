@@ -315,8 +315,8 @@
                                 @endphp
 
                                 <div class="progress mt-3" style="height: 25px;">
-                                    <div class="progress-bar bg-danger" role="progressbar" style="width: {{ $porcentajeConsumido }}%" aria-valuenow="{{ $porcentajeConsumido }}" aria-valuemin="0" aria-valuemax="100"></div>
-                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ $porcentajeDisponible }}%" aria-valuenow="{{ $porcentajeDisponible }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                    <div class="progress-bar" role="progressbar" style="width: {{ $porcentajeDisponible }}%; background-color: rgb(69, 155, 100);" aria-valuenow="{{ $porcentajeDisponible }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                    <div class="progress-bar" role="progressbar" style="width: {{ $porcentajeConsumido }}%; background-color: rgb(204, 74, 58);" aria-valuenow="{{ $porcentajeConsumido }}" aria-valuemin="0" aria-valuemax="100"></div>
                                 </div>
                             </div>
                         </div>
@@ -779,14 +779,14 @@
                 },
                 series: [{
                     name: 'Consumido',
-                    color: '#dc3545', // Rojo para el consumo
+                    color: 'rgb(204, 74, 58)', // N
                     data: chartData.map(d => ({
                         y: d.cupo - d.disponible,
                         drilldown: d.drilldown
                     }))
                 }, {
                     name: 'Disponible',
-                    color: '#198754', // Verde para el disponible
+                    color: 'rgb(69, 155, 100)', // Nuevo color para el disponible
                     data: chartData.map(d => ({
                         y: d.disponible,
                         drilldown: d.drilldown
