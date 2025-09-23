@@ -596,9 +596,9 @@
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         console.log('Dashboard Operaciones cargado');
-        conole.log('Pedidos:', @json($pedidos));
-        conole.log('Solicitudes:', @json($solicitudes));    
-        conole.log('Notificaciones:', @json($notificaciones));
+        console.log('Pedidos:', @json($pedidos));
+        console.log('Solicitudes:', @json($solicitudes));    
+        console.log('Notificaciones:', @json($notificaciones));
 const pedidos = @json($pedidos);
 // const solicitudes = @json($solicitudes);
 // const notificaciones = @json($notificaciones);
