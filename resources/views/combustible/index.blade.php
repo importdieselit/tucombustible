@@ -297,18 +297,29 @@
                         <i class="fas fa-arrow-left me-1"></i> Volver al Dashboard
                     </button>
                 </div>
-                <div class="row g-4" id="clientes-cards">
+               <div class="row g-4" id="clientes-cards">
                     @foreach ($clientesPrincipales as $cliente)
-                    <div class="col-12 col-md-6 col-lg-4">
-                        <div class="card h-100 p-4 sucursal-card-container" data-sucursal-id="{{ $cliente->id }}">
-                            <h5 class="fw-bold mb-1">{{ $cliente->nombre }}</h5>
-                            <p class="text-muted mb-0">Contacto: {{ $cliente->contacto }}</p>
-                            <div class="mt-3">
-                                <p class="fw-bold mb-1">Disponible: <span class="text-success">{{ number_format($cliente->disponible, 0) }} L</span></p>
-                                <p class="fw-bold mb-0">Cupo: <span class="text-muted">{{ number_format($cliente->cupo, 0) }} L</span></p>
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <div class="card h-100 p-4 sucursal-card-container" data-sucursal-id="{{ $cliente->id }}">
+                                <h5 class="fw-bold mb-1">{{ $cliente->nombre }}</h5>
+                                <p class="text-muted mb-0">Contacto: {{ $cliente->contacto }}</p>
+                                <div class="mt-3">
+                                    <p class="fw-bold mb-1">Disponible: <span class="text-success">{{ number_format($cliente->disponible, 0) }} L</span></p>
+                                    <p class="fw-bold mb-0">Cupo: <span class="text-muted">{{ number_format($cliente->cupo, 0) }} L</span></p>
+                                </div>
+                                
+                                @php
+                                    // Calcula el porcentaje disponible
+                                    $porcentajeDisponible = ($cliente->cupo > 0) ? ($cliente->disponible / $cliente->cupo) * 100 : 0;
+                                    $porcentajeConsumido = 100 - $porcentajeDisponible;
+                                @endphp
+
+                                <div class="progress mt-3" style="height: 25px;">
+                                    <div class="progress-bar bg-danger" role="progressbar" style="width: {{ $porcentajeConsumido }}%" aria-valuenow="{{ $porcentajeConsumido }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ $porcentajeDisponible }}%" aria-valuenow="{{ $porcentajeDisponible }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
                             </div>
                         </div>
-                    </div>
                     @endforeach
                 </div>
             </div>
