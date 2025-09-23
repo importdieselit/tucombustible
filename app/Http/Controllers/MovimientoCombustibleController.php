@@ -94,7 +94,7 @@ class MovimientoCombustibleController extends Controller
                 'fecha' => $pedido->fecha_solicitud->format('d/m/Y H:i'),
                 'tipo' => 'pedido', // Identificador para el front-end
             ];
-        });
+        })->toArray();
 
         // 5. Camiones cargados.
         // Asumimos que tienes un campo 'estado' en la tabla de vehículos o una relación
