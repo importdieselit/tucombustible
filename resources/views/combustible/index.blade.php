@@ -281,68 +281,12 @@
             </div>
         </div>
         
-
-<div class="row g-4 mb-5">
-        @foreach ($tipoDeposito as $tipo )
-    <div class="col-lg-6">        
-        
-        <div class="card shadow-sm p-4 h-100">
-            <div class="card-header bg-white">
-                <h5 class="card-title m-0">Niveles de Depósitos tipo {{ $tipo->producto }}</h5>
-            </div>
-            <div class="card-body bg-white">
-                <ul class="list-group list-group-flush">
-                    @foreach($tipo->depositos as $deposito)
-                        @php($percentage = $deposito->nivel)
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="m-0">{{ $deposito->serial }} ({{ $deposito->producto }})</h6>
-                                <p class="text-muted m-0"><small>Nivel: {{ $percentage }}%</small></p>
-                            </div>
-                            <div class="progress" style="width: 150px; height: 20px;">
-                                <div class="progress-bar" 
-                                     role="progressbar" 
-                                     style="width: {{  $percentage }}%; background-color: {{  $percentage > 50 ? '#28a745' : ( $percentage > 25 ? '#ffc107' : '#dc3545') }};" 
-                                     aria-valuenow="{{  $percentage }}" 
-                                     aria-valuemin="0" 
-                                     aria-valuemax="100">
-                                    {{ $deposito->nivel_actual_litros }}L - {{  $percentage }}%
-                                </div>
-                            </div>
-                        </li>
-                    @endforeach
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="m-0">Total </h6>
-                                <p class="text-muted m-0"><small>Nivel: {{$tipo->nivel}}%</small></p>
-                            </div>
-                            <div class="progress" style="width: 150px; height: 20px;">
-                                <div class="progress-bar" 
-                                     role="progressbar" 
-                                     style="width: {{  $tipo->nivel }}%; background-color: {{  $tipo->nivel > 50 ? '#28a745' : ( $tipo->nivel > 25 ? '#ffc107' : '#dc3545') }};" 
-                                     aria-valuenow="{{  $tipo->nivel }}" 
-                                     aria-valuemin="0" 
-                                     aria-valuemax="100">
-                                    {{ $tipo->total }}L / {{  $tipo->nivel }}%
-                                </div>
-                            </div>
-                    </li>
-                </ul>
-            </div>
-        </div>
-
-</div>
-        @endforeach
-</div>
-
         <!-- Botón para Hacer Pedido -->
         <div class="text-center my-5">
             <button class="btn btn-primary-custom btn-lg rounded-pill px-5 py-3 shadow-lg fs-5" data-bs-toggle="modal" data-bs-target="#hacerPedidoModal">
                 <i class="fas fa-plus-circle me-2"></i> Hacer Pedido
             </button>
         </div>
-
-
 
         <!-- Secciones de Contenido Dinámico -->
         <div id="content-sections">
@@ -409,7 +353,7 @@
                     </div>
                 </div>
 
-                <div class="card p-4 mb-4">
+                <div class="card p-4 mb-4" class="hidden">
                     <h5 class="fw-bold mb-3">Histórico de Consumo Semanal</h5>
                     <div id="consumo-chart-container"></div>
                 </div>
@@ -514,7 +458,58 @@
     </div>
 </div>
     </div>
+<div class="row g-4 mb-5">
+        @foreach ($tipoDeposito as $tipo )
+    <div class="col-lg-6">        
+        
+        <div class="card shadow-sm p-4 h-100">
+            <div class="card-header bg-white">
+                <h5 class="card-title m-0">Niveles de Depósitos tipo {{ $tipo->producto }}</h5>
+            </div>
+            <div class="card-body bg-white">
+                <ul class="list-group list-group-flush">
+                    @foreach($tipo->depositos as $deposito)
+                        @php($percentage = $deposito->nivel)
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="m-0">{{ $deposito->serial }} ({{ $deposito->producto }})</h6>
+                                <p class="text-muted m-0"><small>Nivel: {{ $percentage }}%</small></p>
+                            </div>
+                            <div class="progress" style="width: 150px; height: 20px;">
+                                <div class="progress-bar" 
+                                     role="progressbar" 
+                                     style="width: {{  $percentage }}%; background-color: {{  $percentage > 50 ? '#28a745' : ( $percentage > 25 ? '#ffc107' : '#dc3545') }};" 
+                                     aria-valuenow="{{  $percentage }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    {{ $deposito->nivel_actual_litros }}L - {{  $percentage }}%
+                                </div>
+                            </div>
+                        </li>
+                    @endforeach
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="m-0">Total </h6>
+                                <p class="text-muted m-0"><small>Nivel: {{$tipo->nivel}}%</small></p>
+                            </div>
+                            <div class="progress" style="width: 150px; height: 20px;">
+                                <div class="progress-bar" 
+                                     role="progressbar" 
+                                     style="width: {{  $tipo->nivel }}%; background-color: {{  $tipo->nivel > 50 ? '#28a745' : ( $tipo->nivel > 25 ? '#ffc107' : '#dc3545') }};" 
+                                     aria-valuenow="{{  $tipo->nivel }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    {{ $tipo->total }}L / {{  $tipo->nivel }}%
+                                </div>
+                            </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
 
+</div>
+        @endforeach
+</div>
     <!-- Modal para Hacer Pedido -->
     <div class="modal fade" id="hacerPedidoModal" tabindex="-1" aria-labelledby="hacerPedidoModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
