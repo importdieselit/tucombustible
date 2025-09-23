@@ -726,64 +726,72 @@
             sucursalDetailsContainer.classList.add('hidden');
 
             // Lógica para el gráfico de Highcharts con drilldown
-          Highcharts.chart('chart-container', {
-    chart: {
-        type: 'bar'
-    },
-    title: {
-        text: 'Consumo por Clientes Principales'
-    },
-    xAxis: {
-        type: 'category'
-    },
-    yAxis: {
-        title: {
-            text: 'Litros Consumidos'
-        }
-    },
-    legend: {
-        enabled: false
-    },
-    tooltip: {
-        pointFormat: 'Consumido: <b>{point.y:.2f} L</b>'
-    },
-    plotOptions: {
-        bar: {
-            dataLabels: {
-                enabled: true
-            }
-        },
-        series: {
-            // Este icono indica que hay un drilldown disponible
-            dataLabels: [{
-                enabled: true,
-                align: 'right',
-                formatter: function() {
-                    return this.point.drilldown ? '➡️' : '';
+            Highcharts.chart('chart-container', {
+                chart: {
+                    type: 'bar'
                 },
-                style: {
-                    fontSize: '13px'
+                title: {
+                    text: 'Consumo y Disponibilidad por Clientes'
+                },
+                xAxis: {
+                    categories: chartData.map(d => d.name)
+                },
+                yAxis: {
+                    min: 0,
+                    title: {
+                        text: 'Porcentaje de Cupo'
+                    },
+                    labels: {
+                        formatter: function () {
+                            return this.value + '%';
+                        }
+                    }
+                },
+                tooltip: {
+                    formatter: function () {
+                        // Encuentra el dato original para obtener los valores en litros
+                        const pointData = chartData.find(d => d.name === this.x);
+                        const cupo = pointData ? pointData.cupo : null;
+                        const disponible = pointData ? pointData.disponible : null;
+                        const consumido = cupo - disponible;
+                        
+                        return `<b>${this.x}</b><br/>
+                                Consumido: <b>${(consumido / cupo * 100).toFixed(2)}%</b> (${consumido.toFixed(2)} L)<br/>
+                                Disponible: <b>${(disponible / cupo * 100).toFixed(2)}%</b> (${disponible.toFixed(2)} L)<br/>
+                                Cupo Total: ${cupo.toFixed(2)} L`;
+                    }
+                },
+                plotOptions: {
+                    series: {
+                        stacking: 'percent' // Apilamiento en porcentaje
+                    }
+                },
+                series: [{
+                    name: 'Consumido',
+                    color: '#dc3545', // Rojo para el consumo
+                    data: chartData.map(d => ({
+                        y: d.cupo - d.disponible,
+                        drilldown: d.drilldown
+                    }))
+                }, {
+                    name: 'Disponible',
+                    color: '#198754', // Verde para el disponible
+                    data: chartData.map(d => ({
+                        y: d.disponible,
+                        drilldown: d.drilldown
+                    }))
+                }],
+                drilldown: {
+                    series: drilldownSeries.map(s => ({
+                        id: s.id,
+                        name: s.name,
+                        data: s.data.map(d => {
+                            const consumido = d.cupo - d.disponible;
+                            return [d.name, consumido];
+                        })
+                    }))
                 }
-            }]
-        }
-    },
-    series: [{
-        name: 'Consumo Total',
-        colorByPoint: true,
-        data: chartData.map(d => ({
-            name: d.name,
-            y: d.y,
-            drilldown: d.drilldown // Este es el ID que conecta con la serie de drilldown
-        }))
-    }],
-    drilldown: {
-        series: drilldownSeries.map(s => ({
-            id: s.id,
-            name: s.name,
-            data: s.data.map(d => [d.name, d.y])
-        }))
-    }
-});
+            });
 
             // Manejadores de eventos de navegación
             if (verClientesBtn) {
