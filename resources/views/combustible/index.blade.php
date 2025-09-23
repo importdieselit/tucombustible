@@ -290,7 +290,7 @@
 
         <!-- Secciones de Contenido Dinámico -->
         <div id="content-sections">
-            <div id="clientes-list-container" class="hidden">
+            <div id="clientes-list-container" >
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h4 class="fw-bold mb-0">Clientes Principales</h4>
                     <button class="btn btn-outline-secondary" id="back-to-dashboard-btn">
@@ -380,7 +380,7 @@
 
             </div>
 
-            <div id="dashboard-main-view">
+            <div id="dashboard-main-view" class="hidden">
                 <div class="card p-4 mb-4">
                     <h4 class="fw-bold mb-3">Consumo por Clientes</h4>
                     <div id="chart-container" style="height: {{ 40 * count($chartData) + 150 }}px;"></div>
