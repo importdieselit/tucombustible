@@ -474,7 +474,7 @@
                             <div>
                                 <h6 class="m-0">{{ $deposito->serial }} ({{ $deposito->producto }})</h6>
                                 <p class="text-muted m-0"><small>Nivel: {{ $percentage }}%</small></p>
-                                <p class="text-muted m-0"><small>{{ $deposito->nivel_actual_litros }}/{{ $deposito->capacidad_litros }}</small></p>
+                                <p class="text-black m-0 "><small>{{ $deposito->nivel_actual_litros }}/{{ $deposito->capacidad_litros }} Litros</small></p>
                             </div>
                             <div class="progress" style="width: 150px; height: 20px;">
                                 <div class="progress-bar" 

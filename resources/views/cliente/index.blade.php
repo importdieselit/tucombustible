@@ -553,6 +553,10 @@
 
              const sucursales = {!! json_encode($sucursales) !!};   
 
+
+
+
+
         document.addEventListener('DOMContentLoaded', function () {
               
 
@@ -922,7 +926,83 @@
                 `;
                 tbody.appendChild(row);
             });
+            agregarListeners(); // Agrega los listeners después de renderizar
         }
+
+        // Agrega los listeners a los botones y selectores
+function agregarListeners() {
+    // Escucha los clics en los botones "Aprobar"
+    document.querySelectorAll('.aprobar-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const pedidoId = parseInt(e.target.dataset.id);
+            aprobarPedido(pedidoId);
+        });
+    });
+
+    // Escucha los cambios en los selectores de vehículos
+    document.querySelectorAll('.vehiculo-select').forEach(select => {
+        select.addEventListener('change', (e) => {
+            const pedidoId = parseInt(e.target.dataset.id);
+            const vehiculoAsignado = e.target.value;
+            asignarVehiculo(pedidoId, vehiculoAsignado);
+        });
+    });
+
+    // Puedes agregar un listener para el botón "Ver" aquí
+    document.querySelectorAll('.ver-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const pedidoId = parseInt(e.target.dataset.id);
+            mostrarDetallesPedido(pedidoId);
+        });
+    });
+}
+
+function aprobarPedido(id) {
+    const pedido = pedidos.find(p => p.id === id);
+    if (pedido) {
+        // Lógica para cambiar el estado
+        pedido.estado = 'Aprobado';
+        
+        // Re-renderizar la tabla para reflejar el cambio
+        renderizarPedidos();
+        
+        // Mostrar una alerta de éxito con SweetAlert
+        Swal.fire('Aprobado', `El pedido #${id} ha sido aprobado.`, 'success');
+    }
+}
+
+function asignarVehiculo(id, vehiculo) {
+    const pedido = pedidos.find(p => p.id === id);
+    if (pedido) {
+        // Lógica para asignar el vehículo
+        pedido.vehiculo = vehiculo;
+        
+        // Opcional: Re-renderizar para mostrar el vehículo asignado si es necesario
+        // renderizarPedidos(); 
+        
+        // Mostrar una alerta de confirmación
+        Swal.fire('Vehículo Asignado', `El vehículo ${vehiculo} ha sido asignado al pedido #${id}.`, 'success');
+    }
+}
+
+function mostrarDetallesPedido(id) {
+    // Lógica para mostrar los detalles del pedido
+    const pedido = pedidos.find(p => p.id === id);
+    if (pedido) {
+        // Aquí puedes abrir un modal, por ejemplo, para mostrar más información
+        console.log('Detalles del pedido:', pedido);
+        Swal.fire({
+            title: `Detalles del Pedido #${pedido.id}`,
+            html: `
+                <p><strong>Cliente:</strong> ${pedido.cliente}</p>
+                <p><strong>Cantidad:</strong> ${pedido.cantidad} L</p>
+                <p><strong>Estado:</strong> <span class="badge ${pedido.estado === 'Pendiente' ? 'bg-danger' : 'bg-success'}">${pedido.estado}</span></p>
+                <p><strong>Fecha:</strong> ${pedido.fecha}</p>
+                <p><strong>Vehículo:</strong> ${pedido.vehiculo || 'No asignado'}</p>
+            `
+        });
+    }
+}
 
         function renderizarSolicitudes() {
             const tbody = document.getElementById('solicitudes-table-body');
