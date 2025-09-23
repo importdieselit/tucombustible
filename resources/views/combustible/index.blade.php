@@ -595,7 +595,11 @@
     <script src="https://code.highcharts.com/modules/export-data.js"></script>
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-// const pedidos = @json($pedidos);
+        console.log('Dashboard Operaciones cargado');
+        conole.log('Pedidos:', @json($pedidos));
+        conole.log('Solicitudes:', @json($solicitudes));    
+        conole.log('Notificaciones:', @json($notificaciones));
+const pedidos = @json($pedidos);
 // const solicitudes = @json($solicitudes);
 // const notificaciones = @json($notificaciones);
 
