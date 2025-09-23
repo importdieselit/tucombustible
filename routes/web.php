@@ -161,6 +161,14 @@ Route::prefix('combustible')->name('combustible.')->group(function () {
     
     Route::post('/pedidos/{id}/aprobar', [MovimientoCombustibleController::class, 'aprobar'])->name('aprobar');
     Route::post('/pedidos/{id}/rechazar', [MovimientoCombustibleController::class, 'rechazar'])->name('rechazar');
+
+   
+// Ruta para aprobar un pedido
+Route::post('/pedido/{id}/aprobar', [PedidoController::class, 'aprobar'])->name('pedido.aprobar');
+
+// Ruta para crear un despacho
+Route::post('/pedido/{id}/despachar', [PedidoController::class, 'despachar'])->name('pedido.despachar');
+
     Route::get('/aprobados', [MovimientoCombustibleController::class, 'despachos'])->name('aprobados');
     Route::post('/despachos/{id}/despachar', [MovimientoCombustibleController::class, 'despachar'])->name('despachar');
  // Nuevas rutas para el despacho de combustible

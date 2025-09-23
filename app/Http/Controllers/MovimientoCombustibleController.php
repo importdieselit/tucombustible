@@ -490,6 +490,7 @@ public function createPrecarga()
 
         return redirect()->route('combustible.pedidos');
     }
+    
 
     /**
      * Procesa el rechazo de un pedido.

@@ -832,6 +832,75 @@ class PedidoController extends Controller
         }
     }
 
+     public function aprobar(Request $request, $id)
+    {
+        $pedido = Pedido::find($id);
+
+        if (!$pedido) {
+            return response()->json(['error' => 'Pedido no encontrado.'], 404);
+        }
+
+        // Valida que el pedido esté en estado 'Pendiente'
+        if ($pedido->estado !== 'Pendiente') {
+            return response()->json(['error' => 'El pedido ya ha sido procesado.'], 400);
+        }
+
+        // Validar que el vehículo haya sido asignado (en el frontend)
+        $request->validate([
+            'vehiculo' => 'required'
+        ]);
+
+        $pedido->estado = 'Aprobado';
+        $pedido->vehiculo_asignado = $request->input('vehiculo');
+        $pedido->save();
+
+        return response()->json(['message' => 'Pedido aprobado con éxito.']);
+    }
+
+    public function despachar(Request $request, $id)
+    {
+        $pedido = Pedido::find($id);
+
+        if (!$pedido) {
+            return response()->json(['error' => 'Pedido no encontrado.'], 404);
+        }
+
+        // Valida que el pedido esté en estado 'Aprobado'
+        if ($pedido->estado !== 'Aprobado') {
+            return response()->json(['error' => 'El pedido no está aprobado para despacho.'], 400);
+        }
+
+        $request->validate([
+            'deposito_id' => 'required|exists:depositos,id',
+        ]);
+
+        $deposito = Deposito::find($request->input('deposito_id'));
+
+        if ($deposito->disponible < $pedido->cantidad) {
+            return response()->json(['error' => 'El deposito no tiene suficiente combustible.'], 400);
+        }
+
+        // 1. Actualiza el estado del pedido
+        $pedido->estado = 'Despachado';
+        $pedido->save();
+
+        // 2. Reduce la cantidad en el deposito
+        $deposito->disponible -= $pedido->cantidad;
+        $deposito->save();
+
+        // 3. Opcional: crea un nuevo registro de despacho, si tu modelo lo requiere
+        // Despacho::create([ ... ]);
+
+        // 4. Actualiza el cupo disponible del cliente (simulación)
+        $cliente = Cliente::find($pedido->cliente_id);
+        if ($cliente) {
+            $cliente->disponible -= $pedido->cantidad;
+            $cliente->save();
+        }
+
+        return response()->json(['message' => 'Despacho creado con éxito.']);
+    }
+
     /**
      * Actualizar un pedido (para administradores)
      */

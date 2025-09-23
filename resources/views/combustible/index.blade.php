@@ -810,33 +810,58 @@ function mostrarFormularioDespacho(id) {
     });
 }
 
-function crearDespacho(pedidoId, tanqueId, vehiculo) {
-    // Aquí iría la lógica para enviar la información al servidor
-    // Para esta simulación, simplemente mostramos una alerta
-    
-    // Lógica de simulación
-    const tanqueSeleccionado = tanquesDisponibles.find(t => t.id == tanqueId);
-    if (tanqueSeleccionado.disponible < pedidos.find(p => p.id === pedidoId).cantidad) {
-        Swal.fire('Error', 'El tanque seleccionado no tiene suficiente combustible.', 'error');
-        return;
+async function aprobarPedido(id, vehiculo) {
+    try {
+        const response = await fetch(`/pedidos/${id}/aprobar`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({ vehiculo: vehiculo })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            const pedido = pedidos.find(p => p.id === id);
+            pedido.estado = 'Aprobado';
+            renderizarPedidos();
+            Swal.fire('¡Aprobado!', data.message, 'success');
+        } else {
+            Swal.fire('Error', data.error || 'No se pudo aprobar el pedido.', 'error');
+        }
+    } catch (error) {
+        Swal.fire('Error', 'Hubo un problema de conexión con el servidor.', 'error');
     }
-
-    // Actualizar el estado del pedido a 'Despachado' o 'En camino'
-    const pedido = pedidos.find(p => p.id === pedidoId);
-    pedido.estado = 'Despachado';
-    
-    // Actualizar la cantidad disponible en el tanque (simulación)
-    tanqueSeleccionado.disponible -= pedido.cantidad;
-
-    // Volver a renderizar la tabla para reflejar el cambio de estado
-    renderizarPedidos();
-    
-    Swal.fire(
-        '¡Despacho Creado!',
-        `El pedido #${pedidoId} ha sido despachado usando el ${tanqueSeleccionado.nombre} con el ${vehiculo}.`,
-        'success'
-    );
 }
+
+async function crearDespacho(pedidoId, tanqueId) {
+    try {
+        const response = await fetch(`/pedidos/${pedidoId}/despachar`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({ tanque_id: tanqueId })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            const pedido = pedidos.find(p => p.id === pedidoId);
+            pedido.estado = 'Despachado';
+            renderizarPedidos();
+            Swal.fire('¡Despacho Creado!', data.message, 'success');
+        } else {
+            Swal.fire('Error', data.error || 'No se pudo crear el despacho.', 'error');
+        }
+    } catch (error) {
+        Swal.fire('Error', 'Hubo un problema de conexión con el servidor.', 'error');
+    }
+}
+
 
 function mostrarDetallesPedido(id) {
     const pedido = pedidos.find(p => p.id === id);
