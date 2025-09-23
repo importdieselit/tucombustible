@@ -726,7 +726,7 @@
             sucursalDetailsContainer.classList.add('hidden');
 
             // Lógica para el gráfico de Highcharts con drilldown
-          ighcharts.chart('chart-container', {
+          Highcharts.chart('chart-container', {
     chart: {
         type: 'bar'
     },
