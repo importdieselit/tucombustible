@@ -476,7 +476,7 @@
                         @php($capacidadTotal += $deposito->capacidad_litros)
                         @php($percentage = $deposito->nivel)
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
+                            <div id="deposito-info-{{ $deposito->id }}" data-nivel="{{ $deposito->nivel_actual_litros }}" data-capacidad="{{ $deposito->capacidad_litros }}">
                                 <h6 class="m-0">{{ $deposito->serial }} ({{ $deposito->producto }})</h6>
                                 <p class="text-muted m-0"><small>Nivel: {{ $percentage }}%</small></p>
                                 <p class="text-black m-0 "><small>{{ $deposito->nivel_actual_litros }}/{{ $deposito->capacidad_litros }} Litros</small>  
@@ -901,7 +901,90 @@ async function crearDespacho(pedidoId, tanqueId) {
         Swal.fire('Error', 'Hubo un problema de conexión con el servidor.', 'error');
     }
 }
+// La función para abrir el modal y llenar sus campos
+function openAjusteModal(id) {
+    const depositoDiv = document.getElementById(`deposito-info-${id}`);
+    
+    // Obtener los datos del HTML usando .dataset
+    const nivelActual = parseFloat(depositoDiv.dataset.nivel);
+    const capacidad = parseFloat(depositoDiv.dataset.capacidad);
 
+    const ajustarNivelModal = new bootstrap.Modal(document.getElementById('ajustarNivelModal'));
+    
+    // Llenar los campos del modal
+    document.getElementById('deposito-id').value = id;
+    document.getElementById('modal-nivel-actual').textContent = nivelActual;
+    document.getElementById('capacidad-litros').textContent = capacidad;
+    document.getElementById('nuevo_nivel').value = nivelActual;
+    document.getElementById('observacion').value = '';
+    
+    // Mostrar el modal
+    ajustarNivelModal.show();
+}
+
+// Asegúrate de que este token CSRF esté en tu <head> de Blade
+// <meta name="csrf-token" content="{{ csrf_token() }}">
+const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+async function submitAjuste(e) {
+    e.preventDefault(); // Evita el envío tradicional del formulario
+
+    const id = document.getElementById('deposito-id').value;
+    const nuevoNivel = document.getElementById('nuevo_nivel').value;
+    const observacion = document.getElementById('observacion').value;
+
+    const btnSubmit = document.getElementById('btn-submit-ajuste');
+    btnSubmit.disabled = true; // Deshabilita el botón mientras se envía
+
+    try {
+        const response = await fetch(`/api/depositos/${id}/ajustar-nivel`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+            },
+            body: JSON.stringify({
+                nuevo_nivel: nuevoNivel,
+                observacion: observacion
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Actualizar la vista dinámicamente
+            const depositoInfo = document.getElementById(`deposito-info-${id}`);
+            const progressParent = depositoInfo.closest('li').querySelector('.progress');
+            
+            const nuevoPorcentaje = (data.nuevo_nivel / data.capacidad) * 100;
+            const progressBar = progressParent.querySelector('.progress-bar');
+            
+            // Actualizar los datos del DOM
+            depositoInfo.dataset.nivel = data.nuevo_nivel;
+            depositoInfo.dataset.capacidad = data.capacidad;
+            depositoInfo.querySelector('p:nth-child(2) small').textContent = `Nivel: ${nuevoPorcentaje.toFixed(2)}%`;
+            depositoInfo.querySelector('p:nth-child(3) small').textContent = `${data.nuevo_nivel}L/${data.capacidad}L Litros`;
+            
+            progressBar.style.width = `${nuevoPorcentaje}%`;
+            progressBar.textContent = `${data.nuevo_nivel}L - ${nuevoPorcentaje.toFixed(2)}%`;
+            progressBar.ariaValueNow = nuevoPorcentaje;
+            
+            // Cambiar color de la barra según el nivel
+            progressBar.style.backgroundColor = nuevoPorcentaje > 50 ? '#28a745' : (nuevoPorcentaje > 15 ? '#ffc107' : '#dc3545');
+
+            // Cerrar el modal y mostrar un mensaje de éxito
+            const ajustarNivelModal = bootstrap.Modal.getInstance(document.getElementById('ajustarNivelModal'));
+            ajustarNivelModal.hide();
+            Swal.fire('¡Ajuste Guardado!', data.message, 'success');
+        } else {
+            Swal.fire('Error', data.error || 'Ocurrió un error al guardar el ajuste.', 'error');
+        }
+    } catch (error) {
+        Swal.fire('Error', 'Hubo un problema de conexión. Intente de nuevo.', 'error');
+    } finally {
+        btnSubmit.disabled = false;
+    }
+}
 
 function mostrarDetallesPedido(id) {
     const pedido = pedidos.find(p => p.id === id);
@@ -1193,6 +1276,7 @@ function mostrarDetallesPedido(id) {
              document.querySelectorAll('.ajustar-btn').forEach(button => {
                 button.addEventListener('click', (e) => openAjusteModal(e.target.dataset.id));
             });
+             document.getElementById('btn-submit-ajuste').addEventListener('click', submitAjuste);
         });
     </script>
 @endpush
