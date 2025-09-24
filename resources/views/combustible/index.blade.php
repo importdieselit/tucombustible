@@ -479,7 +479,8 @@
                             <div>
                                 <h6 class="m-0">{{ $deposito->serial }} ({{ $deposito->producto }})</h6>
                                 <p class="text-muted m-0"><small>Nivel: {{ $percentage }}%</small></p>
-                                <p class="text-black m-0 "><small>{{ $deposito->nivel_actual_litros }}/{{ $deposito->capacidad_litros }} Litros</small>  <i class="rounded fa fa-pencil"></i></p>
+                                <p class="text-black m-0 "><small>{{ $deposito->nivel_actual_litros }}/{{ $deposito->capacidad_litros }} Litros</small>  
+                                <i class="rounded fa fa-pencil ajustar-btn" data-id="{{$deposito->id}}"></i></p>
                             </div>
                             <div class="progress" style="width: 150px; height: 20px;">
                                 <div class="progress-bar" 
@@ -517,6 +518,39 @@
 </div>
         @endforeach
 </div>
+
+
+    <!-- Modal para Ajuste de Nivel -->
+    <div class="modal fade" id="ajustarNivelModal" tabindex="-1" aria-labelledby="ajustarNivelModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-custom-dark text-white rounded-3 shadow-lg">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title" id="ajustarNivelModalLabel">Ajustar Nivel del Depósito</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="ajustarNivelForm">
+                        <input type="hidden" id="deposito-id">
+                        <p class="text-sm"><strong>Nivel Actual:</strong> <span id="modal-nivel-actual"></span> L/ <span id="capacidad-litros"></span> L</p>
+                        <div class="mb-3">
+                            <label for="nuevo_nivel" class="form-label">Nuevo Nivel (Litros)</label>
+                            <input type="number" step="0.01" class="form-control  border-0" id="nuevo_nivel" name="nuevo_nivel" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="observacion" class="form-label">Observación</label>
+                            <textarea class="form-control  border-0" id="observacion" name="observacion" rows="3" required placeholder="Describe el motivo del ajuste."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btn-submit-ajuste">Guardar Ajuste</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
     <!-- Modal para Hacer Pedido -->
     <div class="modal fade" id="hacerPedidoModal" tabindex="-1" aria-labelledby="hacerPedidoModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -1155,6 +1189,9 @@ function mostrarDetallesPedido(id) {
                         backdrop.remove();
                     });
                 });
+            });
+             document.querySelectorAll('.ajustar-btn').forEach(button => {
+                button.addEventListener('click', (e) => openAjusteModal(e.target.dataset.id));
             });
         });
     </script>
