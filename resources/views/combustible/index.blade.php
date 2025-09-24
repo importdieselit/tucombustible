@@ -283,9 +283,9 @@
         
         <!-- Botón para Hacer Pedido -->
         <div class="text-center my-5">
-            <button class="btn btn-primary-custom btn-lg rounded-pill px-4 py-2 shadow-lg fs-5" data-bs-toggle="modal" data-bs-target="#hacerPedidoModal">
+            {{-- <button class="btn btn-primary-custom btn-lg rounded-pill px-4 py-2 shadow-lg fs-5" data-bs-toggle="modal" data-bs-target="#hacerPedidoModal">
                 <i class="fas fa-plus-circle me-2"></i> Hacer Pedido
-            </button>
+            </button> --}}
             <button class="btn btn-primary-custom btn-lg rounded-pill px-4 py-2 shadow-lg fs-5" id="btn-crear-despacho">
                 <i class="fa fa-truck me-2"></i> Nuevo Despacho
             </button>
@@ -1286,10 +1286,7 @@ function mostrarDetallesPedido(id) {
 
 // Data simulada para el ejemplo
 const cisternasDisponibles = ['Cisterna 01', 'Cisterna 02'];
-const clientesDisponibles = [
-    { id: 1, nombre: 'Cliente Principal A' },
-    { id: 2, nombre: 'Cliente Sucursal B' }
-];
+const clientesDisponibles = @json($clientes)
 
 
 
