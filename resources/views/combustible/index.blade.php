@@ -1286,7 +1286,6 @@ function mostrarDetallesPedido(id) {
 
 // Data simulada para el ejemplo
 const cisternasDisponibles = ['Cisterna 01', 'Cisterna 02'];
-const vehiculosDisponibles = ['Vehículo X', 'Vehículo Y', 'Vehículo Z'];
 const clientesDisponibles = [
     { id: 1, nombre: 'Cliente Principal A' },
     { id: 2, nombre: 'Cliente Sucursal B' }
