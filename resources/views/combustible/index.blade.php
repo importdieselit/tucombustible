@@ -283,10 +283,10 @@
         
         <!-- Botón para Hacer Pedido -->
         <div class="text-center my-5">
-            <button class="btn btn-primary-custom btn-lg rounded-pill px-5 py-3 shadow-lg fs-5" data-bs-toggle="modal" data-bs-target="#hacerPedidoModal">
+            <button class="btn btn-primary-custom btn-lg rounded-pill px-4 py-2 shadow-lg fs-5" data-bs-toggle="modal" data-bs-target="#hacerPedidoModal">
                 <i class="fas fa-plus-circle me-2"></i> Hacer Pedido
             </button>
-            <button class="btn btn-primary" id="btn-crear-despacho">
+            <button class="btn btn-primary-custom btn-lg rounded-pill px-4 py-2 shadow-lg fs-5" id="btn-crear-despacho">
                 <i class="fa fa-truck me-2"></i> Nuevo Despacho
             </button>
         </div>
