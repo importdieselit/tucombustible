@@ -286,6 +286,9 @@
             <button class="btn btn-primary-custom btn-lg rounded-pill px-5 py-3 shadow-lg fs-5" data-bs-toggle="modal" data-bs-target="#hacerPedidoModal">
                 <i class="fas fa-plus-circle me-2"></i> Hacer Pedido
             </button>
+            <button class="btn btn-primary" id="btn-crear-despacho">
+                <i class="fa fa-truck me-2"></i> Nuevo Despacho
+            </button>
         </div>
 
         <!-- Secciones de Contenido Dinámico -->
@@ -1277,6 +1280,178 @@ function mostrarDetallesPedido(id) {
                 button.addEventListener('click', (e) => openAjusteModal(e.target.dataset.id));
             });
              document.getElementById('btn-submit-ajuste').addEventListener('click', submitAjuste);
+            document.getElementById('btn-crear-despacho').addEventListener('click', mostrarSelectorTipoDespacho);
         });
+
+
+// Data simulada para el ejemplo
+const cisternasDisponibles = ['Cisterna 01', 'Cisterna 02'];
+const vehiculosDisponibles = ['Vehículo X', 'Vehículo Y', 'Vehículo Z'];
+const clientesDisponibles = [
+    { id: 1, nombre: 'Cliente Principal A' },
+    { id: 2, nombre: 'Cliente Sucursal B' }
+];
+
+
+
+async function mostrarSelectorTipoDespacho() {
+    // Muestra un modal con las dos opciones de despacho
+    const { value: tipoDespacho } = await Swal.fire({
+        title: 'Selecciona el tipo de Despacho',
+        input: 'radio',
+        inputOptions: {
+            'despacho': 'Despacho (Clientes)',
+            'surtir': 'Surtir Vehículo (Consumo Interno)'
+        },
+        inputValidator: (value) => {
+            if (!value) {
+                return 'Debes seleccionar un tipo de despacho.';
+            }
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Continuar'
+    });
+
+    if (tipoDespacho) {
+        // Llama a la función del formulario correspondiente
+        if (tipoDespacho === 'despacho') {
+            mostrarFormularioDespacho();
+        } else {
+            mostrarFormularioRepostar();
+        }
+    }
+}
+
+async function mostrarFormularioDespacho() {
+    // Genera las opciones para los selectores
+    const cisternaOptions = cisternasDisponibles.map(c => `<option value="${c}">${c}</option>`).join('');
+    const depositoOptions = tanquesDisponibles.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
+    const clienteOptions = clientesDisponibles.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
+
+    const { value: formValues } = await Swal.fire({
+        title: 'Crear Despacho',
+        html: `
+            <div class="row g-3">
+                <div class="col-12 text-start">
+                    <label class="form-label">Cisterna</label>
+                    <select id="swal-cisterna" class="form-select">${cisternaOptions}</select>
+                </div>
+                <div class="col-12 text-start">
+                    <label class="form-label">Depósito de Origen</label>
+                    <select id="swal-deposito" class="form-select">${depositoOptions}</select>
+                </div>
+                <div class="col-12 text-start">
+                    <label class="form-label">Cliente</label>
+                    <select id="swal-cliente" class="form-select">${clienteOptions}</select>
+                </div>
+                <div class="col-12 text-start">
+                    <label class="form-label">Cantidad (Litros)</label>
+                    <input id="swal-cantidad" type="number" step="0.01" class="form-control" required>
+                </div>
+                <div class="col-12 text-start">
+                    <label class="form-label">Observación</label>
+                    <textarea id="swal-observacion" class="form-control"></textarea>
+                </div>
+            </div>
+        `,
+        focusConfirm: false,
+        preConfirm: () => {
+            const cantidad = parseFloat(document.getElementById('swal-cantidad').value);
+            if (!cantidad || cantidad <= 0) {
+                Swal.showValidationMessage('La cantidad debe ser un número positivo.');
+                return false;
+            }
+            return {
+                tipo: 'lode',
+                cisterna: document.getElementById('swal-cisterna').value,
+                deposito_id: document.getElementById('swal-deposito').value,
+                cliente_id: document.getElementById('swal-cliente').value,
+                cantidad: cantidad,
+                observacion: document.getElementById('swal-observacion').value
+            };
+        }
+    });
+
+    if (formValues) {
+        submitDespacho(formValues);
+    }
+}
+
+async function mostrarFormularioRepostar() {
+    // Genera las opciones para los selectores
+    const vehiculoOptions = vehiculosDisponibles.map(v => `<option value="${v}">${v}</option>`).join('');
+
+    const { value: formValues } = await Swal.fire({
+        title: 'Surtir Vehículo',
+        html: `
+            <div class="row g-3">
+                <div class="col-12 text-start">
+                    <label class="form-label">Vehículo</label>
+                    <select id="swal-vehiculo" class="form-select">${vehiculoOptions}</select>
+                </div>
+                <div class="col-12 text-start">
+                    <label class="form-label">Cantidad (Litros)</label>
+                    <input id="swal-cantidad" type="number" step="0.01" class="form-control" required>
+                </div>
+                <div class="col-12 text-start">
+                    <label class="form-label">Observación</label>
+                    <textarea id="swal-observacion" class="form-control"></textarea>
+                </div>
+            </div>
+        `,
+        focusConfirm: false,
+        preConfirm: () => {
+            const cantidad = parseFloat(document.getElementById('swal-cantidad').value);
+            if (!cantidad || cantidad <= 0) {
+                Swal.showValidationMessage('La cantidad debe ser un número positivo.');
+                return false;
+            }
+            return {
+                tipo: 'repostar',
+                vehiculo: document.getElementById('swal-vehiculo').value,
+                cantidad: cantidad,
+                observacion: document.getElementById('swal-observacion').value
+            };
+        }
+    });
+
+    if (formValues) {
+        submitDespacho(formValues);
+    }
+}
+
+async function submitDespacho(data) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    Swal.fire({
+        title: 'Procesando...',
+        didOpen: () => Swal.showLoading()
+    });
+    
+    try {
+        const response = await fetch('/api/despachos/crear', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            Swal.fire('¡Despacho Creado!', result.message, 'success');
+            // Aquí puedes actualizar la vista de tus tanques/depósitos
+            // o recargar los datos del dashboard si es necesario.
+            // Por ejemplo: recargarDatosDashboard();
+        } else {
+            Swal.fire('Error', result.error || 'No se pudo crear el despacho.', 'error');
+        }
+    } catch (error) {
+        Swal.fire('Error', 'Hubo un problema de conexión con el servidor.', 'error');
+    }
+}
+
+
     </script>
 @endpush
