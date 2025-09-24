@@ -3,6 +3,12 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Models\Pedido;
+use App\Observers\PedidoObserver;
+use App\Models\Deposito;
+use App\Observers\DepositoObserver;
+use App\Models\Cliente;
+use App\Observers\ClienteObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,6 +29,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        Pedido::observe(PedidoObserver::class);
+        Deposito::observe(DepositoObserver::class); 
+        Cliente::observe(ClienteObserver::class);
     }
 }

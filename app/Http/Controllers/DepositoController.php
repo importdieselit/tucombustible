@@ -61,7 +61,7 @@ class DepositoController extends BaseController
         return redirect()->route('depositos.index');
     }
 
-     public function ajuste(Request $request)
+    public function ajuste(Request $request)
     {
         $deposito=Deposito::find($request->id);
         $variacion=$deposito->nivel_actual_litros - $request->nivel_actual_litros;
@@ -80,6 +80,31 @@ class DepositoController extends BaseController
 
         Session::flash('success', 'Depósito actualizado exitosamente.');
         return redirect()->route('depositos.index');
+    }
+
+     public function ajusteDinamic(Request $request)
+    {
+        $deposito=Deposito::find($request->id);
+        $variacion=$deposito->nivel_actual_litros - $request->nivel_actual_litros;
+        $deposito->nivel_actual_litros= $request->nivel_actual_litros;
+        $deposito->save();
+
+        // 3. Crear el registro del movimiento
+            $movimiento = new MovimientoCombustible();
+            $movimiento->created_at = date('Y-m-d H:i '); // Asignar la fecha del formulario
+            $movimiento->tipo_movimiento = 'ajuste';
+            $movimiento->deposito_id = $request->deposito_id;
+            $movimiento->cantidad_litros = abs($variacion);
+            $movimiento->observaciones = $request->observacion;
+            $movimiento->save();
+
+
+        return response()->json([
+            'message' => 'Nivel ajustado con éxito.',
+            'nuevo_nivel' => $deposito->nivel_actual_litros,
+            'capacidad' => $deposito->capacidad_litros
+        ]);
+       
     }
 
 }

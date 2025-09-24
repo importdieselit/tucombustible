@@ -531,7 +531,7 @@
                 <div class="modal-body">
                     <form id="ajustarNivelForm">
                         <input type="hidden" id="deposito-id">
-                        <p class="text-sm"><strong>Nivel Actual:</strong> <span id="modal-nivel-actual"></span> L/ <span id="capacidad-litros"></span> L</p>
+                        <p class="text-sm"><strong>Nivel Actual:</strong> <span id="modal-nivel-actual"></span> / <span id="capacidad-litros"></span> L</p>
                         <div class="mb-3">
                             <label for="nuevo_nivel" class="form-label">Nuevo Nivel (Litros)</label>
                             <input type="number" step="0.01" class="form-control " id="nuevo_nivel" name="nuevo_nivel" required>
@@ -937,7 +937,7 @@ async function submitAjuste(e) {
     btnSubmit.disabled = true; // Deshabilita el botón mientras se envía
 
     try {
-        const response = await fetch(`/depositos/ajuste`, {
+        const response = await fetch(`/depositos/ajustedinamic`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
