@@ -468,13 +468,18 @@
             </div>
             <div class="card-body bg-white">
                 <ul class="list-group list-group-flush">
-                    @foreach($tipo->depositos as $deposito)
+                    @php($percentage = 0)
+                    @php($total = 0)
+                    @php($capacidadTotal = 0) 
+                     @foreach($tipo->depositos as $deposito)
+                        @php($total += $deposito->nivel_actual_litros)
+                        @php($capacidadTotal += $deposito->capacidad_litros)
                         @php($percentage = $deposito->nivel)
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
                                 <h6 class="m-0">{{ $deposito->serial }} ({{ $deposito->producto }})</h6>
                                 <p class="text-muted m-0"><small>Nivel: {{ $percentage }}%</small></p>
-                                <p class="text-black m-0 "><small>{{ $deposito->nivel_actual_litros }}/{{ $deposito->capacidad_litros }} Litros</small></p>
+                                <p class="text-black m-0 "><small>{{ $deposito->nivel_actual_litros }}/{{ $deposito->capacidad_litros }} Litros</small>  <i class="rounded fa fa-pencil"></i></p>
                             </div>
                             <div class="progress" style="width: 150px; height: 20px;">
                                 <div class="progress-bar" 
@@ -491,6 +496,7 @@
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
                                 <h6 class="m-0">Total </h6>
+                                <p>{{$total}}/{{$capacidadTotal }}</p>
                                 <p class="text-muted m-0"><small>Nivel: {{$tipo->nivel}}%</small></p>
                             </div>
                             <div class="progress" style="width: 150px; height: 20px;">
