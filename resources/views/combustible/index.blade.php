@@ -522,8 +522,8 @@
 
     <!-- Modal para Ajuste de Nivel -->
     <div class="modal fade" id="ajustarNivelModal" tabindex="-1" aria-labelledby="ajustarNivelModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content bg-custom-dark text-white rounded-3 shadow-lg">
+        <div class="modal-dialog modal-dialog-centered text-dark">
+            <div class="modal-content bg-custom-dark rounded-3 shadow-lg">
                 <div class="modal-header border-bottom-0">
                     <h5 class="modal-title" id="ajustarNivelModalLabel">Ajustar Nivel del Depósito</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -534,11 +534,11 @@
                         <p class="text-sm"><strong>Nivel Actual:</strong> <span id="modal-nivel-actual"></span> L/ <span id="capacidad-litros"></span> L</p>
                         <div class="mb-3">
                             <label for="nuevo_nivel" class="form-label">Nuevo Nivel (Litros)</label>
-                            <input type="number" step="0.01" class="form-control  border-0" id="nuevo_nivel" name="nuevo_nivel" required>
+                            <input type="number" step="0.01" class="form-control " id="nuevo_nivel" name="nuevo_nivel" required>
                         </div>
                         <div class="mb-3">
                             <label for="observacion" class="form-label">Observación</label>
-                            <textarea class="form-control  border-0" id="observacion" name="observacion" rows="3" required placeholder="Describe el motivo del ajuste."></textarea>
+                            <textarea class="form-control " id="observacion" name="observacion" rows="3" required placeholder="Describe el motivo del ajuste."></textarea>
                         </div>
                     </form>
                 </div>
@@ -937,7 +937,7 @@ async function submitAjuste(e) {
     btnSubmit.disabled = true; // Deshabilita el botón mientras se envía
 
     try {
-        const response = await fetch(`/api/depositos/${id}/ajustar-nivel`, {
+        const response = await fetch(`/depositos/ajuste`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
