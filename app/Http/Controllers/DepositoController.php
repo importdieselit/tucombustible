@@ -85,8 +85,8 @@ class DepositoController extends BaseController
      public function ajusteDinamic(Request $request)
     {
         $deposito=Deposito::find($request->id);
-        $variacion=$deposito->nivel_actual_litros - $request->nivel_actual_litros;
-        $deposito->nivel_actual_litros= $request->nivel_actual_litros;
+        $variacion=$deposito->nivel_actual_litros - $request->nuevo_nivel;
+        $deposito->nivel_actual_litros= $request->nuevo_nivel;
         $deposito->save();
 
         // 3. Crear el registro del movimiento
@@ -94,7 +94,7 @@ class DepositoController extends BaseController
             $movimiento->created_at = date('Y-m-d H:i '); // Asignar la fecha del formulario
             $movimiento->tipo_movimiento = 'ajuste';
             $movimiento->deposito_id = $request->deposito_id;
-            $movimiento->cantidad_litros = abs($variacion);
+            $movimiento->cantidad_litros = $variacion;
             $movimiento->observaciones = $request->observacion;
             $movimiento->save();
 
