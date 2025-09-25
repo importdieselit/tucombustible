@@ -25,8 +25,9 @@ use App\Http\Controllers\AlmacenController;
 use App\Http\Controllers\ChoferController;
 use App\Http\Controllers\AlertaController;
 use App\Http\Controllers\AccesoController;
-use App\Http\Controllers\InspectionController;
+use App\Http\Controllers\InspeccionController;
 use App\Http\Controllers\PedidoController;
+
 use App\Models\Deposito;
 
 // Agrega otros controladores según los modelos y tablas
@@ -45,8 +46,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/home', [DashboardController::class, 'index'])->name('home');
 
-Route::get('/checklist-salida', [InspectionController::class, 'showChecklistForm'])->name('checklist.show');
-Route::post('/checklist-salida', [InspectionController::class, 'processChecklist'])->name('checklist.process');
+// Route::get('/checklist-salida', [InspectionController::class, 'showChecklistForm'])->name('checklist.show');
+// Route::post('/checklist-salida', [InspectionController::class, 'processChecklist'])->name('checklist.process');
 
 
 Route::get('clientes/dashboard', [ClienteController::class, 'dashboard'])->name('clientes.dashboard')->middleware('role:3');
@@ -152,7 +153,7 @@ Route::post('/inspecciones', [InspeccionController::class, 'store'])->name('insp
     Route::post('/perfiles/{perfil}/permisos', [PerfilController::class, 'updatePermisos'])->name('perfiles.updatePermisos'); 
     Route::post('/pedidos', [PedidoController::class, 'crearPedido'])->name('pedidos.store');
     // Rutas de Combustible (Pedidos y Despachos)
-Route::prefix('combustible')->name('combustible.')->group(function () {
+    Route::prefix('combustible')->name('combustible.')->group(function () {
     
     
     // Rutas para los movimientos de combustible
@@ -169,15 +170,15 @@ Route::prefix('combustible')->name('combustible.')->group(function () {
     Route::post('/pedidos/{id}/rechazar', [MovimientoCombustibleController::class, 'rechazar'])->name('rechazar');
 
    
-// Ruta para aprobar un pedido
-Route::post('/pedido/{id}/aprobar', [PedidoController::class, 'aprobar'])->name('pedido.aprobar');
+    // Ruta para aprobar un pedido
+    Route::post('/pedido/{id}/aprobar', [PedidoController::class, 'aprobar'])->name('pedido.aprobar');
 
-// Ruta para crear un despacho
-Route::post('/pedido/{id}/despachar', [PedidoController::class, 'despachar'])->name('pedido.despachar');
+    // Ruta para crear un despacho
+    Route::post('/pedido/{id}/despachar', [PedidoController::class, 'despachar'])->name('pedido.despachar');
 
     Route::get('/aprobados', [MovimientoCombustibleController::class, 'despachos'])->name('aprobados');
     Route::post('/despachos/{id}/despachar', [MovimientoCombustibleController::class, 'despachar'])->name('despachar');
- // Nuevas rutas para el despacho de combustible
+     // Nuevas rutas para el despacho de combustible
     Route::get('/despacho', [MovimientoCombustibleController::class, 'createDespacho'])->name('despacho');
     Route::post('/despacho', [MovimientoCombustibleController::class, 'storeDespacho'])->name('storeDespacho');
 
@@ -188,7 +189,7 @@ Route::post('/pedido/{id}/despachar', [PedidoController::class, 'despachar'])->n
 
 });
   
-      Route::get('/alertas', [AlertaController::class, 'index'])->name('alertas.index');
+    Route::get('/alertas', [AlertaController::class, 'index'])->name('alertas.index');
     Route::get('/alertas/read/{id}', [AlertaController::class, 'markAsRead'])->name('alertas.read');
 
     

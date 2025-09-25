@@ -289,6 +289,10 @@
             <button class="btn btn-primary-custom btn-lg rounded-pill px-4 py-2 shadow-lg fs-5" id="btn-crear-despacho">
                 <i class="fa fa-truck me-2"></i> Nuevo Despacho
             </button>
+
+            <button class="btn btn-warning btn-lg rounded-pill px-4 py-2 shadow-lg fs-5" id="btn-inspeccion-salida">
+                <i class="fa fa-clipboard-check me-2"></i> Checkout Vehículo
+            </button>
         </div>
 
         <!-- Secciones de Contenido Dinámico -->
@@ -1281,6 +1285,11 @@ function mostrarDetallesPedido(id) {
             });
              document.getElementById('btn-submit-ajuste').addEventListener('click', submitAjuste);
             document.getElementById('btn-crear-despacho').addEventListener('click', mostrarSelectorTipoDespacho);
+
+            const btnInspeccion = document.getElementById('btn-inspeccion-salida');
+            if (btnInspeccion) {
+                btnInspeccion.addEventListener('click', mostrarSelectorVehiculoParaInspeccion);
+            }
         });
 
 
@@ -1448,6 +1457,51 @@ async function submitDespacho(data) {
     }
 }
 
+
+async function mostrarSelectorVehiculoParaInspeccion() {
+    // 💡 NOTA: En un sistema real, esta data debería venir de un endpoint API real:
+    // fetch('/api/vehiculos/activos').then(res => res.json())
+    const vehiculosActivos = [
+        { id: 101, placa: 'IM-101', descripcion: 'Cisterna #1' },
+        { id: 102, placa: 'ID-203', descripcion: 'Camioneta de Servicio' },
+        { id: 103, placa: 'EX-055', descripcion: 'Lode de Reparto' },
+    ];
+    
+    // Convertir el array de vehículos a opciones para el input de SweetAlert2
+    const inputOptions = vehiculosActivos.reduce((options, vehiculo) => {
+        options[vehiculo.id] = `${vehiculo.placa} (${vehiculo.descripcion})`;
+        return options;
+    }, {});
+
+
+    const { value: vehiculoId } = await Swal.fire({
+        title: 'Selecciona el Vehículo para Inspección',
+        input: 'select',
+        inputPlaceholder: 'Selecciona un vehículo...',
+        inputOptions: inputOptions,
+        inputValidator: (value) => {
+            if (!value) {
+                return 'Debes seleccionar un vehículo para continuar.';
+            }
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Abrir Checklist'
+    });
+
+    if (vehiculoId) {
+        // Redirigir a la ruta definida en el InspeccionController
+        // La ruta usa el ID del vehículo seleccionado
+        const urlInspeccion = `/vehiculos/${vehiculoId}/inspeccion/salida`;
+        
+        Swal.fire({
+            title: 'Cargando Checklist...',
+            didOpen: () => Swal.showLoading()
+        });
+        
+        // Redirección
+        window.location.href = urlInspeccion;
+    }
+}
 
     </script>
 @endpush
