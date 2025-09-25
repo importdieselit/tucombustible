@@ -38,6 +38,7 @@ class MovimientoCombustibleController extends Controller
                                 ->get();
         $clientes = Cliente::all();
 
+        $user = Auth::user();
         
         // 2. Gráficas de disponibilidad de clientes.
         // Los datos para la gráfica los podemos pasar directamente del controlador a la vista.
@@ -101,7 +102,7 @@ class MovimientoCombustibleController extends Controller
         // que te permite saber si un camión está cargado.
         // Por ejemplo, un estado 'cargado' o 'en_ruta_con_combustible'.
         $camionesCargados = VehiculoPrecargado::where('estatus', 0)->count();
-
+        $vehiculosDisponibles = Vehiculo::where('estatus', 1)->where('id_cliente',$user->cliente_id)->get();
         // Pasamos todos los datos a la vista.
         return view('combustible.index', compact(
             'clientes', 
@@ -113,7 +114,8 @@ class MovimientoCombustibleController extends Controller
             'totalCombustible',
             'capacidadTotal',
             'nivelPromedio',
-            'pedidos'
+            'pedidos',
+            'vehiculosDisponibles'
         ));
     }
 

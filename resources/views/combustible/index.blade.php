@@ -712,7 +712,7 @@ const pedidos = @json($pedidos);
 
 
 // Data de prueba para vehículos y tanques
-const vehiculosDisponibles = ['Camión A', 'Camión B', 'Camión C'];
+const vehiculosDisponibles = @json($vehiculosDisponibles);
 const tanquesDisponibles = [
     { id: 1, nombre: 'Tanque Principal 10k L', capacidad: 10000, disponible: 8500 },
     { id: 2, nombre: 'Tanque Secundario 5k L', capacidad: 5000, disponible: 4000 }
@@ -1461,11 +1461,7 @@ async function submitDespacho(data) {
 async function mostrarSelectorVehiculoParaInspeccion() {
     // 💡 NOTA: En un sistema real, esta data debería venir de un endpoint API real:
     // fetch('/api/vehiculos/activos').then(res => res.json())
-    const vehiculosActivos = [
-        { id: 101, placa: 'IM-101', descripcion: 'Cisterna #1' },
-        { id: 102, placa: 'ID-203', descripcion: 'Camioneta de Servicio' },
-        { id: 103, placa: 'EX-055', descripcion: 'Lode de Reparto' },
-    ];
+    const vehiculosActivos = @json($vehiculosDisponibles);
     
     // Convertir el array de vehículos a opciones para el input de SweetAlert2
     const inputOptions = vehiculosActivos.reduce((options, vehiculo) => {
