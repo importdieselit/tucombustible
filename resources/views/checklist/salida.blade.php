@@ -101,7 +101,7 @@
                  section.subsections.forEach((subsection, subIndex) => {
                     const subDiv = document.createElement('div');
                     subDiv.className = 'card bg-light shadow-sm mb-3';
-                    subDiv.innerHTML = `<div class="card-header border-bottom-0"><h5>${subsection.subsection_title}</h5></div><div class="card-body"></div>`;
+                    subDiv.innerHTML = `<div class="card-header border-bottom-0"><h5>${subsection.subsection_title}</h5></div><div class="card-body row"></div>`;
                     const subBody = subDiv.querySelector('.card-body');
                     
                     subsection.items.forEach((item, itemIndex) => {
