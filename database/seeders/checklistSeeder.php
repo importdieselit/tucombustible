@@ -258,8 +258,7 @@ class ChecklistSeeder extends Seeder
         // Crear el registro del checklist
         Checklist::create([
             'id' => 1,
-            'titulo' => 'Inspección de Vehículos - IMPORDIESEL',
-            'version' => '1.2',
+            'titulo' => 'Checkout',
             'activo' => true,
             // Almacenar el array de PHP, Laravel lo convertirá a JSON en la base de datos
             'checklist' => $checklistJson, 
