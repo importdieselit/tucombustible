@@ -86,7 +86,7 @@ Route::get('combustible/dashboard', [MovimientoCombustibleController::class, 'in
 
     Route::get('/usuarios/importar', [UserController::class, 'import'])->name('usuarios.importar');
     Route::post('/usuarios/importarP', [UserController::class, 'handleImport'])->name('usuarios.importarprocess');
-    Route::post('/depositos/ajustedinamic', [DepositoController::class, 'ajusteDinamic'])->name('deposito.ajusteD');
+    Route::put('/depositos/ajustedinamic', [DepositoController::class, 'ajusteDinamic'])->name('deposito.ajusteD');
                 
    
   Route::get('/permisos', [AccesoController::class, 'index'])->name('permisos.index');

@@ -932,7 +932,7 @@ const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute
 async function submitAjuste(e) {
     e.preventDefault(); // Evita el envío tradicional del formulario
 
-    const id = document.getElementById('deposito-id').value;
+    const id_deposito = document.getElementById('deposito-id').value;
     const nuevoNivel = document.getElementById('nuevo_nivel').value;
     const observacion = document.getElementById('observacion').value;
 
@@ -941,12 +941,13 @@ async function submitAjuste(e) {
 
     try {
         const response = await fetch(`/depositos/ajustedinamic`, {
-            method: 'POST',
+            method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': csrfToken,
             },
             body: JSON.stringify({
+                id: id_deposito,
                 nuevo_nivel: nuevoNivel,
                 observacion: observacion
             })
@@ -1060,9 +1061,7 @@ function mostrarDetallesPedido(id) {
                 document.getElementById('solicitudes-details'),
                 document.getElementById('notificaciones-details')
             ];
-
-
-           
+   
 
             // Botones de navegación
             const verClientesBtn = document.getElementById('sucursales-card');
