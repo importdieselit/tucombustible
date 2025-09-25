@@ -91,7 +91,7 @@
             if (section.items) {
                 section.items.forEach((item, itemIndex) => {
                     const itemDiv = document.createElement('div');
-                    itemDiv.className = 'mb-3 pb-2 border-bottom';
+                    itemDiv.className = 'mb-3 pb-2 border-bottom col-md-' + (item.col_width || 12);
                     itemDiv.innerHTML = `<label class="form-label fw-bold">${item.label}</label>${generateInput(item, secIndex, itemIndex)}`;
                     cardBody.appendChild(itemDiv);
                 });
@@ -106,7 +106,7 @@
                     
                     subsection.items.forEach((item, itemIndex) => {
                         const itemDiv = document.createElement('div');
-                        itemDiv.className = 'mb-3 pb-2 border-bottom';
+                        itemDiv.className = 'mb-3 pb-2 border-bottom col-md-' + (item.col_width || 12);
                         itemDiv.innerHTML = `<label class="form-label">${item.label}</label>${generateInput(item, secIndex, itemIndex, subIndex)}`;
                         subBody.appendChild(itemDiv);
                     });
