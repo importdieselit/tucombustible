@@ -86,7 +86,7 @@
             const sectionDiv = document.createElement('div');
             sectionDiv.className = 'card shadow-sm mb-4';
             sectionDiv.innerHTML = `<div class="card-header bg-light"><h4>${section.section_title}</h4></div><div class="card-body"></div>`;
-            const cardBody = sectionDiv.querySelector('.card-body');
+            const cardBody = sectionDiv.querySelector('.card-body row');
 
             if (section.items) {
                 section.items.forEach((item, itemIndex) => {
