@@ -957,7 +957,7 @@ async function submitAjuste(e) {
 
         if (response.ok) {
             // Actualizar la vista dinámicamente
-            const depositoInfo = document.getElementById(`deposito-info-${id}`);
+            const depositoInfo = document.getElementById(`deposito-info-${id_deposito}`);
             const progressParent = depositoInfo.closest('li').querySelector('.progress');
             
             const nuevoPorcentaje = (data.nuevo_nivel / data.capacidad) * 100;
@@ -984,6 +984,7 @@ async function submitAjuste(e) {
             Swal.fire('Error', data.error || 'Ocurrió un error al guardar el ajuste.', 'error');
         }
     } catch (error) {
+        console.error('Error en la solicitud:', error);
         Swal.fire('Error', 'Hubo un problema de conexión. Intente de nuevo.', 'error');
     } finally {
         btnSubmit.disabled = false;

@@ -101,7 +101,7 @@ class DepositoController extends BaseController
 
         return response()->json([
             'message' => 'Nivel ajustado con éxito.',
-            'nuevo_nivel' => $deposito->nivel_actual_litros,
+            'nuevo_nivel' => round($deposito->nivel_actual_litros, 2),
             'capacidad' => $deposito->capacidad_litros
         ]);
        
