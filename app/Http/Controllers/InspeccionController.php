@@ -32,7 +32,7 @@ class InspeccionController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+public function store(Request $request)
     {
         $data = $request->validate([
             'vehiculo_id' => 'required|exists:vehiculos,id',
@@ -42,40 +42,66 @@ class InspeccionController extends Controller
         $respuestaJson = $data['respuesta_json'];
         $checklistId = self::CHECKLIST_VEHICULOS_ID;
         $estatusGeneral = 'OK';
+        $warningFound = false;
 
         // 1. Determinar el Estatus General
-        // Iteramos el JSON de respuesta para buscar fallos
         foreach ($respuestaJson['sections'] as $section) {
-            foreach ($section['items'] as $item) {
-                // Si es booleano, y es falso -> WARNING
-                if ($item['response_type'] === 'boolean' && $item['value'] === false) {
-                    $estatusGeneral = 'WARNING';
-                    break 2; // Salir de los bucles de items y sections
+            
+            // Función auxiliar para procesar los items, ya sea directamente o dentro de subsecciones
+            $processItems = function ($items) use (&$estatusGeneral, &$warningFound) {
+                foreach ($items as $item) {
+                    // Si es booleano, y es falso -> WARNING
+                    if ($item['response_type'] === 'boolean' && $item['value'] === false) {
+                        $estatusGeneral = 'WARNING';
+                        $warningFound = true;
+                        return; // Detiene la función auxiliar
+                    }
+                    // Si es compuesto, y el estado es falso -> WARNING
+                    if ($item['response_type'] === 'composite' && isset($item['value']['status']) && $item['value']['status'] === false) {
+                        $estatusGeneral = 'WARNING';
+                        $warningFound = true;
+                        return; // Detiene la función auxiliar
+                    }
                 }
-                // Si es compuesto, y el estado es falso -> WARNING
-                if ($item['response_type'] === 'composite' && isset($item['value']['status']) && $item['value']['status'] === false) {
-                    $estatusGeneral = 'WARNING';
-                    break 2;
+            };
+            
+            // Lógica para manejar la estructura de la sección:
+            if (isset($section['items'])) {
+                // Caso 1: Secciones normales (Ej: 1.- SISTEMA ELÉCTRICO)
+                $processItems($section['items']);
+            } elseif (isset($section['subsections'])) {
+                // Caso 2: Secciones con subsecciones (Ej: 8.- DOCUMENTACIÓN Y EQUIPO)
+                foreach ($section['subsections'] as $subsection) {
+                    if (isset($subsection['items'])) {
+                        $processItems($subsection['items']);
+                    }
+                    if ($warningFound) break;
                 }
             }
-        }
-        // Nota: Para un estatus 'ALERT', se requeriría una lógica adicional (por ejemplo, un campo 'critico' en el JSON blueprint).
 
+            if ($warningFound) {
+                break; // Salir del bucle principal de sections
+            }
+        }
+        
         // 2. Guardar la Inspección
+        // ... (Tu código de guardado sigue igual)
         $inspeccion = Inspeccion::create([
             'vehiculo_id' => $data['vehiculo_id'],
             'checklist_id' => $checklistId,
             'usuario_id' => Auth::id(),
             'estatus_general' => $estatusGeneral,
-            'respuesta_json' => $respuestaJson,
+            // Asegúrate de guardar el JSON como string, si la columna `respuesta_json` no es un tipo JSON nativo.
+            'respuesta_json' => json_encode($respuestaJson), 
         ]);
-
+        
         // 3. Sistema de Alertas y Notificaciones (Si no está OK)
         if ($estatusGeneral !== 'OK') {
             $vehiculo = Vehiculo::find($data['vehiculo_id']);
             $placa = $vehiculo ? $vehiculo->placa : 'N/A';
             
             // Crear Alerta en la tabla de Alertas (para administradores)
+            // Usando tu modelo Alerta y AlertaController
             Alerta::create([
                 'id_usuario' => null, // null para todos los admins
                 'id_rel' => $inspeccion->id,
@@ -85,9 +111,7 @@ class InspeccionController extends Controller
                 'accion' => "/inspecciones/{$inspeccion->id}" // Ruta al detalle de la inspección
             ]);
 
-            // Enviar Notificación Móvil (usando tu FcmNotificationService)
-            // Asume que tienes un método para enviar a todos los admins
-            // FcmNotificationService::sendInspectionStatusToAdmin($inspeccion, $placa, $estatusGeneral);
+            // ... (Llamada a FcmNotificationService si la implementas)
         }
 
         return response()->json([
