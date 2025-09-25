@@ -56,6 +56,12 @@ Route::get('combustible/dashboard', [MovimientoCombustibleController::class, 'in
     Route::get('/marcas/get-modelos', [MarcaController::class, 'getModelos'])->name('marcas.getModelos');
 
 
+    // Formulario de inspección (usando el ID del checklist y del vehículo)
+Route::get('/vehiculos/{vehiculo_id}/inspeccion/salida', [InspeccionController::class, 'create'])->name('inspeccion.salida.create');
+
+// Guardar la inspección
+Route::post('/inspecciones', [InspeccionController::class, 'store'])->name('inspeccion.store');
+
     Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('inventario.entry');
     Route::get('inventario/adjustment', [InventarioController::class, 'adjustment'])->name('inventario.adjustment');
     Route::get('choferes/importar', [ChoferController::class, 'showImportForm'])->name('choferes.show-import-form');
