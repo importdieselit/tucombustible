@@ -1456,6 +1456,16 @@ async function submitDespacho(data) {
         Swal.fire('Error', 'Hubo un problema de conexión con el servidor.', 'error');
     }
 }
+function getTipoVehiculoString(tipoId) {
+    // Mapeo de tipos de vehículo según tu solicitud
+    const tipoMap = {
+        1: 'camion sencillo',
+        2: 'cisterna',
+        3: 'chuto',
+    };
+    // Devuelve el tipo mapeado o 'otro' por defecto
+    return tipoMap[tipoId] || 'otro';
+}
 
 
 async function mostrarSelectorVehiculoParaInspeccion() {
@@ -1465,7 +1475,9 @@ async function mostrarSelectorVehiculoParaInspeccion() {
     
     // Convertir el array de vehículos a opciones para el input de SweetAlert2
     const inputOptions = vehiculosActivos.reduce((options, vehiculo) => {
-        options[vehiculo.id] = `${vehiculo.placa} (${vehiculo.descripcion})`;
+        const tipoString = getTipoVehiculoString(vehiculo.tipo);
+        options[vehiculo.id] = `${vehiculo.placa} (${tipoString})`;
+
         return options;
     }, {});
 
