@@ -93,7 +93,7 @@ class DepositoController extends BaseController
             $movimiento = new MovimientoCombustible();
             $movimiento->created_at = date('Y-m-d H:i '); // Asignar la fecha del formulario
             $movimiento->tipo_movimiento = 'ajuste';
-            $movimiento->deposito_id = $request->deposito_id;
+            $movimiento->deposito_id = $request->id;
             $movimiento->cantidad_litros = $variacion;
             $movimiento->observaciones = $request->observacion;
             $movimiento->save();
