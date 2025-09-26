@@ -322,8 +322,8 @@ class VehiculoController extends Controller
     {
         try {
             $marcas = DB::table('marcas')
-                ->select(['id', 'nombre'])
-                ->orderBy('nombre')
+                ->select(['id', 'marca'])
+                ->orderBy('marca', 'asc')
                 ->get();
 
             return response()->json([
