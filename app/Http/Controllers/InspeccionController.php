@@ -9,6 +9,7 @@ use App\Models\Inspeccion;
 use App\Models\Vehiculo;
 use App\Models\Alerta;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class InspeccionController extends Controller
 {
@@ -43,23 +44,31 @@ public function store(Request $request)
         $checklistId = self::CHECKLIST_VEHICULOS_ID;
         $estatusGeneral = 'OK';
         $warningFound = false;
+        $fail=0;
 
         // 1. Determinar el Estatus General
         foreach ($respuestaJson['sections'] as $section) {
-            
+           
             // Función auxiliar para procesar los items, ya sea directamente o dentro de subsecciones
             $processItems = function ($items) use (&$estatusGeneral, &$warningFound) {
                 foreach ($items as $item) {
                     // Si es booleano, y es falso -> WARNING
                     if ($item['response_type'] === 'boolean' && $item['value'] === false) {
-                        $estatusGeneral = 'WARNING';
+                        $estatusGeneral = 'ADVERTENCIA';
                         $warningFound = true;
-                        return; // Detiene la función auxiliar
+                        $fail++;
+                        if ($fail >= 5) {
+                            $estatusGeneral = 'ALERTA';
+                        }
                     }
                     // Si es compuesto, y el estado es falso -> WARNING
                     if ($item['response_type'] === 'composite' && isset($item['value']['status']) && $item['value']['status'] === false) {
-                        $estatusGeneral = 'WARNING';
+                        $estatusGeneral = 'ADVERTENCIA';
                         $warningFound = true;
+                        $fail++;
+                        if ($fail >= 5) {
+                            $estatusGeneral = 'ALERTA';
+                        }
                         return; // Detiene la función auxiliar
                     }
                 }
@@ -119,5 +128,42 @@ public function store(Request $request)
             'message' => "Inspección guardada con estado: {$estatusGeneral}",
             'estatus' => $estatusGeneral
         ]);
+    }
+
+
+    public function show($inspeccion_id)
+    {
+        // Carga la inspección y el vehículo relacionado
+        $inspeccion = Inspeccion::with('vehiculo')->findOrFail($inspeccion_id);
+        
+        // Si la columna respuesta_json no está casteada, asegúrate de decodificarla.
+        $respuesta = is_string($inspeccion->respuesta_json) 
+                    ? json_decode($inspeccion->respuesta_json, true) 
+                    : $inspeccion->respuesta_json;
+        
+        // El título del documento para la vista
+        $titulo = $respuesta['checklist_name'] ?? 'Inspección de Vehículo';
+
+        return view('checklist.show', compact('inspeccion', 'respuesta', 'titulo'));
+    }
+
+    public function exportPdf($inspeccion_id)
+    {
+        $inspeccion = Inspeccion::with('vehiculo')->findOrFail($inspeccion_id);
+        
+        $respuesta = is_string($inspeccion->respuesta_json) 
+                    ? json_decode($inspeccion->respuesta_json, true) 
+                    : $inspeccion->respuesta_json;
+
+        $titulo = $respuesta['checklist_name'] ?? 'Inspección de Vehículo';
+        
+        // Carga la vista 'checklistpdf_template' con los datos
+        $pdf = Pdf::loadView('checklist.pdf_template', compact('inspeccion', 'respuesta', 'titulo'));
+        
+        // Descarga el PDF con un nombre claro
+        $placa = $inspeccion->vehiculo->placa ?? 'SINPLACA';
+        $fecha = \Carbon\Carbon::parse($inspeccion->created_at)->format('Ymd');
+        
+        return $pdf->download("Inspeccion_Salida_{$placa}_{$fecha}.pdf");
     }
 }

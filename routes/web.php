@@ -63,6 +63,12 @@ Route::get('/vehiculos/{vehiculo_id}/inspeccion/salida', [InspeccionController::
 // Guardar la inspección
 Route::post('/inspecciones', [InspeccionController::class, 'store'])->name('inspeccion.store');
 
+// Ruta para ver el detalle de la inspección
+Route::get('/inspecciones/{inspeccion_id}', [InspeccionController::class, 'show'])->name('inspeccion.show');
+
+// Ruta para generar el PDF
+Route::get('/inspecciones/{inspeccion_id}/pdf', [InspeccionController::class, 'exportPdf'])->name('inspeccion.pdf');
+
     Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('inventario.entry');
     Route::get('inventario/adjustment', [InventarioController::class, 'adjustment'])->name('inventario.adjustment');
     Route::get('choferes/importar', [ChoferController::class, 'showImportForm'])->name('choferes.show-import-form');
