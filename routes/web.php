@@ -62,6 +62,8 @@ Route::get('/vehiculos/{vehiculo_id}/inspeccion/salida', [InspeccionController::
 
 // Guardar la inspección
 Route::post('/inspecciones', [InspeccionController::class, 'store'])->name('inspeccion.store');
+Route::get('/inspecciones', [InspeccionController::class, 'list'])->name('inspeccion.list');
+Route::get('/inspecciones-dashboard', [InspeccionController::class, 'index'])->name('inspeccion.index');
 
 // Ruta para ver el detalle de la inspección
 Route::get('/inspecciones/{inspeccion_id}', [InspeccionController::class, 'show'])->name('inspeccion.show');

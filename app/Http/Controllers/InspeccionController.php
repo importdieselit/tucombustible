@@ -166,4 +166,24 @@ public function store(Request $request)
         
         return $pdf->download("Inspeccion_Salida_{$placa}_{$fecha}.pdf");
     }
+
+     public function list()
+    {
+        // 1. Obtener las inspecciones
+        // Cargamos las relaciones del vehículo y el usuario que inspeccionó para mostrar sus nombres/placas.
+        $inspecciones = Inspeccion::with(['vehiculo', 'usuario'])
+                                  ->orderBy('created_at', 'desc')
+                                  ->paginate(15); // Paginamos para listas grandes
+        
+        // 2. Definir los colores/estilos para el estatus (opcional pero muy visual)
+        $estatusColores = [
+            'OK' => 'success',
+            'WARNING' => 'warning',
+            'ALERT' => 'danger',
+            'N/A' => 'secondary',
+        ];
+
+        return view('checklist.list', compact('inspecciones', 'estatusColores'));
+    }
+
 }

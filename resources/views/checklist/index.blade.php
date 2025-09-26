@@ -1,0 +1,111 @@
+@extends('layouts.app')
+
+@section('title', 'Dashboard de Inspecciones y Mantenimiento')
+
+@section('content')
+<div class="container-fluid">
+    <div class="row page-titles mb-4">
+        <div class="col-12">
+            <h3 class="text-themecolor mb-0">Gestión de Inspecciones y Taller 🛠️</h3>
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Inicio</a></li>
+                <li class="breadcrumb-item active">Dashboard Inspecciones</li>
+            </ol>
+        </div>
+    </div>
+    
+    {{-- Asume que las variables $resumenAlertas, $inspeccionesPendientes y $ordenesAbiertas se definen en el controlador --}}
+
+    {{-- ******* SECCIÓN 1: INDICADORES CLAVE (Kpis) ******* --}}
+    <h4 class="mt-4 mb-3 text-secondary">Indicadores Rápidos</h4>
+    <div class="row">
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card card-hover bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i class="fa-solid fa-triangle-exclamation fa-2x me-3"></i>
+                        <div>
+                            <h4 class="mb-0 text-white">{{ $resumenAlertas['warnings'] ?? '0' }}</h4>
+                            <span class="text-white op-5">Inspecciones con WARNING</span>
+                        </div>
+                    </div>
+                </div>
+                <a href="{{ route('inspecciones.index', ['estatus' => 'WARNING']) }}" class="small-box-footer text-white text-end p-2 d-block">Revisar <i class="fa-solid fa-arrow-circle-right"></i></a>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card card-hover bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i class="fa-solid fa-clipboard-list fa-2x me-3"></i>
+                        <div>
+                            <h4 class="mb-0 text-white">{{ $resumenAlertas['ordenes_abiertas'] ?? '0' }}</h4>
+                            <span class="text-white op-5">Órdenes de Trabajo Abiertas</span>
+                        </div>
+                    </div>
+                </div>
+                <a href="{{ route('ordenes.index') }}" class="small-box-footer text-white text-end p-2 d-block">Ir a Órdenes <i class="fa-solid fa-arrow-circle-right"></i></a>
+            </div>
+        </div>
+
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card card-hover bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <i class="fa-solid fa-truck-ramp-box fa-2x me-3"></i>
+                        <div>
+                            <h4 class="mb-0 text-white">{{ $resumenAlertas['vehiculos_mantenimiento'] ?? '0' }}</h4>
+                            <span class="text-white op-5">Vehículos en Taller/Mantenimiento</span>
+                        </div>
+                    </div>
+                </div>
+                <a href="{{ route('vehiculos.index', ['estatus' => 2]) }}" class="small-box-footer text-white text-end p-2 d-block">Ver Vehículos <i class="fa-solid fa-arrow-circle-right"></i></a>
+            </div>
+        </div>
+    </div>
+    
+    ---
+
+    {{-- ******* SECCIÓN 2: ACCESOS DIRECTOS ******* --}}
+    <h4 class="mt-4 mb-3 text-secondary">Accesos Directos a Gestión</h4>
+    <div class="row">
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card text-center shadow">
+                <div class="card-body">
+                    <i class="fa-solid fa-list-check fa-4x text-info mb-3"></i>
+                    <h5 class="card-title">Listado de Inspecciones</h5>
+                    <p class="card-text text-muted">Revisa el historial y el estatus general de todos los Checklists.</p>
+                    <a href="{{ route('inspecciones.index') }}" class="btn btn-info w-100">Ver Todas las Inspecciones</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card text-center shadow">
+                <div class="card-body">
+                    <i class="fa-solid fa-truck fa-4x text-success mb-3"></i>
+                    <h5 class="card-title">Gestión de Vehículos</h5>
+                    <p class="card-text text-muted">Accede a la lista de vehículos para crear una nueva Orden de Trabajo.</p>
+                    <a href="{{ route('vehiculos.index') }}" class="btn btn-success w-100">Ir a Vehículos</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card text-center shadow">
+                <div class="card-body">
+                    <i class="fa-solid fa-file-invoice fa-4x text-warning mb-3"></i>
+                    <h5 class="card-title">Órdenes de Trabajo (OT)</h5>
+                    <p class="card-text text-muted">Revisa, edita y cierra las órdenes de trabajo de mantenimiento.</p>
+                    <a href="{{ route('ordenes.index') ?? '#' }}" class="btn btn-warning w-100">Gestionar Órdenes</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+@endsection
+
+@push('scripts')
+    @endpush
