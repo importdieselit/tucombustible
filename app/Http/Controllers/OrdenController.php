@@ -166,7 +166,7 @@ class OrdenController extends BaseController
         if(!is_null($vehiculo_id)){
                      $vehiculo = Vehiculo::findOrFail($vehiculo_id); 
                 }
-        return view('orden.create', compact('vehiculo','vehiculos', 'personal','tipos', 'nro_orden','suministros','estatuOpciones'));
+        return view('orden.create', compact('vehiculo','vehiculos', 'personal','tipos', 'nro_orden','suministros','estatusOpciones'));
     }
 
     /**
