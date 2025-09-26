@@ -42,10 +42,10 @@ class VehiculoController extends BaseController
         // Se obtiene el vehículo usando la lógica del BaseController.
         $item = $this->model->findOrFail($id);
 
-        $marcas = Marca::pluck('nombre', 'id');
-        $modelos = Modelo::pluck('nombre', 'id');
+        $marcas = Marca::pluck('marca', 'id');
+        $modelos = Modelo::pluck('modelo', 'id');
         $clientes = Cliente::pluck('name', 'id');
-        $tiposVehiculo = TipoVehiculo::pluck('nombre', 'id');
+        $tiposVehiculo = TipoVehiculo::pluck('tipo', 'id');
 
         // Se pasa el vehículo y los datos adicionales a la vista.
         return view($this->getModelNameLowerCase() . '.edit', compact('item', 'marcas', 'modelos', 'clientes', 'tiposVehiculo'));
