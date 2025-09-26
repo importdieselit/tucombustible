@@ -153,17 +153,20 @@ class OrdenController extends BaseController
      * Muestra el formulario para crear un nuevo recurso, sobrescribiendo el del BaseController.
      * @return \Illuminate\View\View
      */
-    public function create()
+    public function create($vehiculo_id=null)
     {
         // En una app real, se obtendrían de la base de datos
+        $vehiculo =NULL;
         $vehiculos = Vehiculo::all();
         $personal = Personal::all();
         $tipos = TipoOrden::all();
         $nro_orden = $this->generateOrdenCode();
         $suministros = Inventario::all();
-        
-
-        return view('orden.create', compact('vehiculos', 'personal','tipos', 'nro_orden','suministros'));
+        $estatusOpciones = EstatusData::all()->keyBy('id_estatus');        
+        if(!is_null($vehiculo_id)){
+                     $vehiculo = Vehiculo::findOrFail($vehiculo_id); 
+                }
+        return view('orden.create', compact('vehiculo','vehiculos', 'personal','tipos', 'nro_orden','suministros','estatuOpciones'));
     }
 
     /**

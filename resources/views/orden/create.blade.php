@@ -29,12 +29,21 @@
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="vehiculo_id" class="form-label">Vehículo</label>
+                    @if(!is_null($vehiculo))
+                    <h3 class="text-primary">{{ $vehiculo->placa }} - {{ $vehiculo->marca }} {{ $vehiculo->modelo }}</h3>
+                    <hr>
+                    <input type="hidden" name="vehiculo_id" value="{{ $vehiculo->id }}">
+
+                    @else
+
                     <select class="form-select" id="vehiculo_id" name="id_vehiculo" required>
                         <option value="">Seleccione un vehículo</option>
                         @foreach ($vehiculos as $vehiculo)
                             <option value="{{ $vehiculo->id }}">{{ $vehiculo->placa }} - {{ $vehiculo->marca()->marca }} {{ $vehiculo->modelo()->modelo }}</option>
                         @endforeach
                     </select>
+
+                    @endif
                 </div>
                 <div class="col-md-6 mb-3">
                     <label for="nro_orden" class="form-label">Número de Orden</label>

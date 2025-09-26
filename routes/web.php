@@ -87,6 +87,8 @@ Route::get('/inspecciones/{inspeccion_id}/pdf', [InspeccionController::class, 'e
     Route::get('/inventario/export/excel', [InventarioController::class, 'export'])->name('inventario.export');
 
     Route::post('ordenes/supplies', [OrdenController::class, 'storeSupply'])->name('ordenes.supplies.store');
+    Route::get('/ot/create/{vehiculo_id}', [OrdenController::class, 'create'])->name('ot.create');
+
     Route::put('ordenes/supplies/{id}', [OrdenController::class, 'updateSupply'])->name('ordenes.supplies.update');
     Route::delete('ordenes/supplies/{id}', [OrdenController::class, 'deleteSupply'])->name('ordenes.supplies.delete');
 
