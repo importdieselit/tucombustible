@@ -30,7 +30,7 @@
                         </div>
                     </div>
                 </div>
-                <a href="{{ route('inspecciones.index', ['estatus' => 'WARNING']) }}" class="small-box-footer text-white text-end p-2 d-block">Revisar <i class="fa-solid fa-arrow-circle-right"></i></a>
+                <a href="{{ route('checklist.list', ['estatus' => 'WARNING']) }}" class="small-box-footer text-white text-end p-2 d-block">Revisar <i class="fa-solid fa-arrow-circle-right"></i></a>
             </div>
         </div>
         
@@ -76,7 +76,7 @@
                     <i class="fa-solid fa-list-check fa-4x text-info mb-3"></i>
                     <h5 class="card-title">Listado de Inspecciones</h5>
                     <p class="card-text text-muted">Revisa el historial y el estatus general de todos los Checklists.</p>
-                    <a href="{{ route('inspecciones.index') }}" class="btn btn-info w-100">Ver Todas las Inspecciones</a>
+                    <a href="{{ route('checklist.list') }}" class="btn btn-info w-100">Ver Todas las Inspecciones</a>
                 </div>
             </div>
         </div>
