@@ -113,7 +113,15 @@
 
             {{-- Aquí se añadirán inputs ocultos para los suministros seleccionados --}}
             <div id="hidden-inputs-container"></div>
-            
+             <div>
+                Estatus Orden
+                       <select name="estatus" id="estatus" class="form-control">
+                                            <option value="2" selected>Abierta</option>
+                                            <option value="1" >Cerrada</option>
+                                            <option value="4" >Anulada</option>
+                                        </select>
+                        
+            </div>
             <div class="mt-4 d-flex justify-content-between">
                 <a href="{{ route('ordenes.list') }}" class="btn btn-secondary">Cancelar</a>
                 <button type="submit" class="btn btn-primary">Guardar Orden</button>
@@ -151,15 +159,7 @@
                     </table>
                 </div>
             </div>
-            <div>
-                Estatus Orden
-                       <select name="estatus" id="estatus" class="form-control">
-                                            <option value="2" selected>Abierta</option>
-                                            <option value="1" >Cerrada</option>
-                                            <option value="4" >Anulada</option>
-                                        </select>
-                        
-            </div>
+           
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
