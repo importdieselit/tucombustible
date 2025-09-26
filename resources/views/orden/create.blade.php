@@ -71,12 +71,13 @@
                 </div>
                 <div class="col-md-6 mb-3">
                     <label for="responsable" class="form-label">Responsable Asignado</label>
-                    <select class="form-select" id="responsable" name="responsable" required>
+                    <input type="text" class="form-control" id="responsable" name="responsable" required>
+                    {{-- <select class="form-select" id="responsable" name="responsable" required>
                         <option value="">Seleccione un responsable</option>
                         @foreach ($personal as $persona)
                             <option value="{{ $persona->id_personal }}">{{ $persona->nombre }} - {{ $persona->cargo }}</option>
                         @endforeach
-                    </select>
+                    </select> --}}
                 </div>
             </div>
 
@@ -149,6 +150,15 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+            <div>
+                Estatus Orden
+                       <select name="estatus" id="estatus" class="form-control">
+                                            <option value="2" selected>Abierta</option>
+                                            <option value="1" >Cerrada</option>
+                                            <option value="4" >Anulada</option>
+                                        </select>
+                        
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
