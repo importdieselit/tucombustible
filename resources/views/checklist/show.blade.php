@@ -1,5 +1,12 @@
 @extends('layouts.app') 
-
+@push('styles')
+<style>
+p {
+    margin-top: 0;
+    margin-bottom: 0rem;
+}
+</style>    
+@endpush
 @section('content')
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
