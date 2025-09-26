@@ -85,7 +85,7 @@
             <a href="{{ route('vehiculos.edit', $item->id) }}" class="btn btn-warning me-2 d-flex align-items-center">
                 <i class="fas fa-edit me-2"></i> Editar
             </a>
-            <a href="{{ route('ordenes.create', $item->id) }}" class="btn btn-warning btn-lg d-flex align-items-center">
+            <a href="{{ route('ot.create', $item->id) }}" class="btn btn-warning btn-lg d-flex align-items-center">
                 <i class="fa-solid fa-wrench me-2"></i> Crear Orden de Trabajo
             </a>
             <a href="{{ route('vehiculos.index') }}" class="btn btn-secondary d-flex align-items-center">
