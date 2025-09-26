@@ -29,7 +29,7 @@
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="vehiculo_id" class="form-label">Vehículo</label>
-                    {{dd($vehiculo)}}
+                    
                     @if(!is_null($vehiculo))
                     <h3 class="text-primary">{{ $vehiculo->placa }} - {{ $vehiculo->marca }} {{ $vehiculo->modelo }}</h3>
                     <hr>
