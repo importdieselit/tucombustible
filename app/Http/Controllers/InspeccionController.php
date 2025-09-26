@@ -10,6 +10,8 @@ use App\Models\Vehiculo;
 use App\Models\Alerta;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\FcmNotificationService; // Asegúrate de tener este servicio implementado
+use App\Models\Orden;
 
 class InspeccionController extends Controller
 {
