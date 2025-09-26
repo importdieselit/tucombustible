@@ -186,4 +186,24 @@ public function store(Request $request)
         return view('checklist.list', compact('inspecciones', 'estatusColores'));
     }
 
+      public function index()
+    {
+        // 1. Obtener datos de resumen (KPIs)
+        $resumenAlertas = [
+            // Contar inspecciones con estatus WARNING
+            'warnings' => Inspeccion::where('estatus_general', 'WARNING')->count(),
+            
+            // Contar órdenes de trabajo que no han sido cerradas (ej. estatus 'Abierta', 'En Revisión')
+            'ordenes_abiertas' => Orden::whereIn('estatus', ['En Revisión', 'En Reparación', 'Pendiente Repuestos'])->count(),
+            
+            // Contar vehículos con estatus de mantenimiento (asumiendo estatus=2)
+            'vehiculos_mantenimiento' => Vehiculo::where('estatus', 2)->count(),
+        ];
+
+        // 2. Puedes agregar datos adicionales si tienes gráficos o tablas de resumen.
+
+        // Retornar la vista con los datos
+        return view('checklist.index', compact('resumenAlertas'));
+    }
+
 }
