@@ -20,6 +20,7 @@ use App\Http\Controllers\Apis\UserController;
 use App\Http\Controllers\Apis\AdminController;
 use App\Http\Controllers\Apis\AdminDespachoController;
 use App\Http\Controllers\Apis\ReportesController;
+use App\Http\Controllers\Api\ChecklistController;
 
 /*
 |--------------------------------------------------------------------------
@@ -204,6 +205,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/mecanico/egreso-despacho', [MecanicoController::class, 'realizarEgresoDespacho']);
     Route::post('/mecanico/ingreso-recarga', [MecanicoController::class, 'realizarIngresoRecarga']);
     Route::post('/mecanico/check-in-out', [MecanicoController::class, 'realizarCheckInOut']);
+    
+    // Checklist e Inspecciones para Mecánico
+    Route::prefix('checklist')->group(function () {
+        Route::get('/', [ChecklistController::class, 'index']); // Obtener todos los checklists activos
+        Route::get('/{id}', [ChecklistController::class, 'show']); // Obtener checklist específico
+        Route::post('/inspeccion', [ChecklistController::class, 'store']); // Guardar inspección
+        Route::get('/inspecciones/historial', [ChecklistController::class, 'historial']); // Historial de inspecciones
+        Route::get('/inspecciones/{id}', [ChecklistController::class, 'showInspeccion']); // Ver inspección específica
+        Route::get('/vehiculo/{id}', [ChecklistController::class, 'getVehiculoCompleto']); // Obtener datos completos del vehículo
+    });
+    
     
     Route::get('/despachos/estadisticas', [DespachoController::class, 'estadisticas']);
     Route::get('/despachos/{id}', [DespachoController::class, 'show']);

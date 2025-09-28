@@ -69,7 +69,9 @@ class VehiculoController extends Controller
         try {
             $user = $request->user();
             
-            $vehiculo = DB::table('vehiculos as v')
+            // Si es mecánico (id_perfil = 3), puede ver cualquier vehículo
+            // Si no, solo vehículos de su cliente
+            $query = DB::table('vehiculos as v')
                 ->leftJoin('marcas as m', 'v.marca', '=', 'm.id')
                 ->select([
                     'v.id',
@@ -94,9 +96,14 @@ class VehiculoController extends Controller
                     'v.created_at',
                     'v.updated_at'
                 ])
-                ->where('v.id', $id)
-                ->where('v.id_cliente', $user->id_cliente)
-                ->first();
+                ->where('v.id', $id);
+            
+            // Solo filtrar por cliente si no es mecánico
+            if ($user->id_perfil != 3) {
+                $query->where('v.id_cliente', $user->id_cliente);
+            }
+            
+            $vehiculo = $query->first();
 
             if (!$vehiculo) {
                 return response()->json([
@@ -652,4 +659,5 @@ class VehiculoController extends Controller
             ], 500);
         }
     }
+
 }
