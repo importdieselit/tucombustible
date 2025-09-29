@@ -56,7 +56,7 @@
                     <tr class="clickable-row" data-id="{{ $orden->id }}">
                         <td>{{ $orden->id }}</td>
                         <td>{{ $orden->nro_orden }}</td>
-                        <td>{{ $orden->vehiculo()->placa }}</td>
+                        <td>{{ $orden->vehiculo->placa }}</td>
                         <td>{{ $orden->tipo }}</td>
                         <td>
                             @php
