@@ -280,7 +280,7 @@ class Vehiculo extends Model
         }
     }
 
-    public function getUnidadesConDocumentosVencidos($user)
+    public static function getUnidadesConDocumentosVencidos($user)
     {
         $cliente = Cliente::find($user);
           
