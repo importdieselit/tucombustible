@@ -10,9 +10,11 @@ use App\Models\TipoVehiculo; // Asegúrate de que el modelo
 use App\Models\Cliente;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Traits\FiltroPorCliente;
 
 class Vehiculo extends Model
 {
+    use FiltroPorCliente;
     /**
      * The table associated with the model.
      *
@@ -178,6 +180,13 @@ class Vehiculo extends Model
     {
         return $this->belongsTo(TipoVehiculo::class, 'tipo', 'id'); // Ajusta 'App\TipoVehiculo::class' al nombre de tu modelo de TipoVehiculo
     } 
+
+    public static function countVehiculos()
+    {
+        // Llama al Scope 'porCliente' ANTES de realizar el conteo.
+        // El Scope ya tiene toda la lógica de seguridad y jerarquía.
+        return self::porCliente()->count();
+    }
     
       /**
      * Evalúa el estatus de un documento basado en su campo de fecha o texto.

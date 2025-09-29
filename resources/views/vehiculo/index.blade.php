@@ -1,6 +1,7 @@
 @extends('layouts.app')
 @php
 $unidades_con_alerta = App\Models\Vehiculo::getUnidadesConDocumentosVencidos(Auth::user()->cliente_id); 
+ $total_vehiculos = App\Models\Vehiculo::countVehiculos(); 
 @endphp
 @section('title', 'Dashboard de Vehículos')
 
@@ -75,7 +76,7 @@ $unidades_con_alerta = App\Models\Vehiculo::getUnidadesConDocumentosVencidos(Aut
                 <span class="rounded-circle p-3 mb-2 d-inline-block bg-dark">
                     <i class="fa fa-car text-white" style="font-size:2rem;"></i>
                 </span>
-                <h2 class="fw-bold">62</h2>
+                <h2 class="fw-bold">{{ $total_vehiculos }}</h2>
                 <div class="text-muted small">Total Vehículos</div>
             </div>
         </div>
