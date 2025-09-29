@@ -11,8 +11,12 @@ use Illuminate\Support\Str; // Es necesario para la función Str::plural()
 use App\Models\EstatusData;
 use App\Traits\PluralizaEnEspanol;
 use App\Traits\GenerateAlerts;
+use App\Models\Cliente;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
+use Maatwebsite\Excel\Facades\Excel;  
+use Illuminate\Support\Facades\Schema;  
+
 /**
  * Clase base para controladores de recursos CRUD que infiere el modelo.
  * Los controladores específicos que hereden de esta clase no necesitan constructor.
@@ -92,7 +96,32 @@ abstract class BaseController extends Controller
      */
     public function list()
     {
-        $data = $this->model->all();
+       $user = auth()->user();
+       $cliente = Cliente::find($user->cliente_id);
+       $query = $this->model->query();
+        $tableName = $this->model->getTable();
+
+        if (Schema::hasColumn($tableName, 'id_cliente')) {
+
+            if ($user->cliente_id === 0) {
+                // 1. SUPER USUARIO (cliente_id == 0)
+                // No se aplica ningún filtro, obtiene todos los registros.
+            } elseif ($cliente && $cliente->parent === 0) {
+                // 2. CLIENTE PRINCIPAL / PADRE
+
+                // Obtener los IDs de todos los clientes hijos
+                $subClientIds = Cliente::where('parent', $user->cliente_id)->pluck('id'); 
+                $allowedClientIds = $subClientIds->push($user->cliente_id);
+                $query->whereIn('id_cliente', $allowedClientIds);
+
+            } else {
+                // 3. CLIENTE HIJO o CLIENTE REGULAR SIN JERARQUÍA
+                $query->where('id_cliente', $user->cliente_id);
+            }
+        }
+
+        $data = $query->get();
+        //    $data = $this->model->all();
         $estatusData = EstatusData::all()->keyBy('id_estatus');
         return view($this->getModelNameLowerCase() . '.list', compact('data', 'estatusData'));
     }
