@@ -6,7 +6,7 @@
     $status = array_merge([
         'class' => 'bg-secondary',
         'icon' => 'bi-question-circle',
-        'title' => 'Estatus Desconocido',
+        'title' => 'Sin Informacion',
     ], (array) $status);
 @endphp
 
