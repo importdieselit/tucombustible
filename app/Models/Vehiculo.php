@@ -137,6 +137,13 @@ class Vehiculo extends Model
         'poliza_fecha_out' => 'date',
         'salida_fecha' => 'date',
         'fecha_in' => 'date',
+        'semcamer' => 'string',
+        'homologacion_intt' => 'string',
+        'permiso_intt' => 'string',
+        'rotc' => 'date',
+        'rotc_venc' => 'date',
+        'rcv' => 'date',
+        'racda' => 'date',
         'facturacion_completa' => 'boolean', // Si aplicara, basado en otro contexto si no fuera booleano nativo
     ];
 
