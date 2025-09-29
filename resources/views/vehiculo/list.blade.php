@@ -115,6 +115,7 @@
                     @endforeach
                 </tbody>
             </table>
+            <span> <x-document-status-badge :status='bg-danger' label="Documento Vencido" />  |  <x-document-status-badge :status='bg-warning' label="Documento vence en menos de 30 dias" /> |  <x-document-status-badge :status='bg-secondary' label="sin Informacion (S/P)" /></span>
         </div>
     </div>
 </div>
