@@ -18,7 +18,7 @@
                 <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#28a74510;">
                     <i class="fa fa-flag text-success" style="font-size:2rem;"></i>
                 </span>
-                <h2 class="fw-bold text-success">32</h2>
+                <h2 class="fw-bold text-success"></h2>
                 <div class="text-muted small">Disponibles</div>
             </div>
         </div>
@@ -29,7 +29,7 @@
                 <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#ffc10710;">
                     <i class="fa fa-car text-warning" style="font-size:2rem;"></i>
                 </span>
-                <h2 class="fw-bold text-warning">18</h2>
+                <h2 class="fw-bold text-warning"></h2>
                 <div class="text-muted small">En Ruta/Servicio</div>
             </div>
         </div>
@@ -40,7 +40,7 @@
                 <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#007bff10;">
                     <i class="fa fa-exclamation-triangle text-primary" style="font-size:2rem;"></i>
                 </span>
-                <h2 class="fw-bold text-primary">7</h2>
+                <h2 class="fw-bold text-primary"></h2>
                 <div class="text-muted small">En Mantenimiento</div>
             </div>
         </div>
@@ -51,7 +51,7 @@
                 <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#6c757d10;">
                     <i class="fa fa-exclamation-triangle text-secondary" style="font-size:2rem;"></i>
                 </span>
-                <h2 class="fw-bold text-secondary">3</h2>
+                <h2 class="fw-bold text-secondary"></h2>
                 <div class="text-muted small">Fuera Servicio</div>
             </div>
         </div>
@@ -59,11 +59,11 @@
     <div class="col-md-2">
         <div class="card shadow-sm border-0 text-center">
             <div class="card-body">
-                <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#dc354510;">
+                <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#d12638e0;">
                     <i class="fa fa-times text-danger" style="font-size:2rem;"></i>
                 </span>
-                <h2 class="fw-bold text-danger">2</h2>
-                <div class="text-muted small">Desincorporados</div>
+                <h2 class="fw-bold text-danger">{{ Vehiculos::getUnidadesConDocumentos()}}</h2>
+                <div class="text-muted small">Documentos Vencidos</div>
             </div>
         </div>
     </div>

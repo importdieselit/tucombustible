@@ -279,5 +279,82 @@ class Vehiculo extends Model
         }
     }
 
+    public function getUnidadesConDocumentosVencidos()
+    {
+        $user = auth()->user();
+        $cliente = Cliente::find($user->cliente_id);
+          
+        // 1. Definir los límites de tiempo para la consulta SQL
+        $today = Carbon::now()->toDateString();
+        $date30Days = Carbon::now()->addDays(30)->toDateString();
+
+        // 2. Definir los campos por tipo
+        // Campos que contienen FECHAS (pueden tener 'S/P' como texto)
+        $dateFields = ['poliza_fecha_out', 'rcv', 'racda', 'rotc_venc', 'permiso_intt'];
+        // Campos de ESTATUS TEXTUAL (SENCAMMER, Homologación INTTT)
+        $textFields = ['sencammer', 'homologacion_inttt'];
+        $statusOk = ['N/A', 'NO APLICA', 'NO VENCE', 'OK', 'VIGENTE']; // Estatus que NO requieren atención
+
+        $totalUnidadesConAlertas = Vehiculo::where(function ($query) use ($dateFields, $textFields, $today, $date30Days, $statusOk) {
+            
+            // --- LÓGICA DE DOCUMENTOS CON FECHA ---
+            foreach ($dateFields as $field) {
+                $query->orWhere(function ($q) use ($field, $today, $date30Days) {
+                    
+                    // 1. CONDICIÓN DE VENCIMIENTO/WARNING (Fechas en el pasado o dentro de 30 días)
+                    $q->where(function ($subQ) use ($field, $today, $date30Days) {
+                        $subQ->where($field, '<', $today) // Vencido (Danger)
+                            ->orWhereBetween($field, [$today, $date30Days]); // Próximo a vencer (Warning)
+                    });
+
+                    // 2. CONDICIÓN DE TEXTO DE PELIGRO ('S/P' o 'SIN PERMISO')
+                    $q->orWhere($field, 'like', '%S/P%'); 
+                    $q->orWhere($field, 'like', '%SIN PERMISO%');
+
+                    // 3. CONDICIÓN DE NO REGISTRADO (Secondary)
+                    $q->orWhereNull($field); 
+                });
+            }
+
+            // --- LÓGICA DE DOCUMENTOS DE ESTATUS TEXTUAL (S/P, Vacíos, o no OK) ---
+            foreach ($textFields as $field) {
+                $query->orWhere(function ($q) use ($field, $statusOk) {
+                    
+                    // 1. CONDICIÓN DE TEXTO DE PELIGRO ('S/P')
+                    $q->where($field, 'like', '%S/P%');
+                    $q->orWhere($field, 'like', '%SIN PERMISO%');
+                    
+                    // 2. CONDICIÓN DE NO REGISTRADO (Secondary)
+                    $q->orWhereNull($field); 
+
+                    // 3. CONDICIÓN DE TEXTO NO VÁLIDO (Existe un valor, pero NO es un estatus OK)
+                    $q->orWhere(function ($subQ) use ($field, $statusOk) {
+                        $subQ->whereNotNull($field)
+                            // Comparamos el valor de la columna en MAYÚSCULAS y sin espacios para mayor robustez
+                            ->whereNotIn(DB::raw('UPPER(TRIM(' . $field . '))'), $statusOk);
+                    });
+                });
+            }
+        });
+         if ($user->cliente_id === 0) {
+                // 1. SUPER USUARIO (cliente_id == 0)
+                // No se aplica ningún filtro, obtiene todos los registros.
+            } elseif ($cliente && $cliente->parent === 0) {
+                // 2. CLIENTE PRINCIPAL / PADRE
+
+                // Obtener los IDs de todos los clientes hijos
+                $subClientIds = Cliente::where('parent', $user->cliente_id)->pluck('id'); 
+                $allowedClientIds = $subClientIds->push($user->cliente_id);
+                $totalUnidadesConAlertas->whereIn('id_cliente', $allowedClientIds);
+
+            } else {
+                // 3. CLIENTE HIJO o CLIENTE REGULAR SIN JERARQUÍA
+                $totalUnidadesConAlertas->where('id_cliente', $user->cliente_id);
+            }
+        $totalUnidadesConAlertas = $totalUnidadesConAlertas->count();
+
+     return $totalUnidadesConAlertas;
+    }
+
     
 }
