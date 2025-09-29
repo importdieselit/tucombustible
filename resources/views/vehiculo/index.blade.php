@@ -3,6 +3,8 @@
 $unidades_con_alerta = App\Models\Vehiculo::getUnidadesConDocumentosVencidos(Auth::user()->cliente_id); 
 $total_vehiculos = App\Models\Vehiculo::countVehiculos(); 
 $unidades_con_orden_abierta = App\Models\Vehiculo::countVehiculosConOrdenAbierta();
+$unidades_en_mantenimiento = App\Models\Vehiculo::countVehiculosEnMantenimiento();
+$unidades_disponibles = App\Models\Vehiculo::countDisponibles();
 @endphp
 @section('title', 'Dashboard de Vehículos')
 
@@ -22,7 +24,7 @@ $unidades_con_orden_abierta = App\Models\Vehiculo::countVehiculosConOrdenAbierta
                 <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#28a74510;">
                     <i class="fa fa-flag text-success" style="font-size:2rem;"></i>
                 </span>
-                <h2 class="fw-bold text-success"></h2>
+                <h2 class="fw-bold text-success">{{ $unidades_disponibles}}</h2>
                 <div class="text-muted small">Disponibles</div>
             </div>
         </div>
@@ -44,7 +46,7 @@ $unidades_con_orden_abierta = App\Models\Vehiculo::countVehiculosConOrdenAbierta
                 <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#007bff10;">
                     <i class="fa fa-exclamation-triangle text-primary" style="font-size:2rem;"></i>
                 </span>
-                <h2 class="fw-bold text-primary"></h2>
+                <h2 class="fw-bold text-primary">{{ $unidades_en_mantenimiento}}</h2>
                 <div class="text-muted small">En Mantenimiento</div>
             </div>
         </div>
@@ -323,10 +325,10 @@ document.addEventListener('DOMContentLoaded', function () {
     new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: ['Disponible', 'En servicio', 'En Mantenimiento', 'Fuera Servicio', 'Desincorporado'],
+            labels: ['Disponible', 'En servicio', 'En Mantenimiento', 'Fuera Servicio'],
             datasets: [{
-                data: [32, 18, 7, 3, 2],
-                backgroundColor: ['#28a745', '#ffc107', '#007bff', '#6c757d', '#dc3545'],
+                data: [{{$unidades_disponibles}}, 0, {{$unidades_en_mantenimiento }}, {{ $unidades_con_orden_abierta-$unidades_en_mantenimineto}}],
+                backgroundColor: ['#28a745', '#ffc107', '#007bff', '#dc3545'],
             }]
         },
         options: {

@@ -184,6 +184,24 @@ class Vehiculo extends Model
             ->count(); // 3. Cuenta los vehículos únicos resultantes
     }
 
+    public static function countVehiculosEnMantenimiento()
+    {
+        // 1. Array de tipos de órdenes que consideramos "en mantenimiento"
+        $tiposMantenimiento = ['Preventivo', 'Mantenimiento'];
+
+        return self::porCliente() // Aplica el filtro de seguridad (jerarquía del cliente)
+            ->whereHas('ordenes', function ($query) use ($tiposMantenimiento) {
+                
+                // 2. Filtra por ESTATUS: La orden debe estar abierta.
+                $query->where('estatus', 2);
+                
+                // 3. Filtra por TIPO: La orden debe ser de mantenimiento o preventivo.
+                // Asumo que la columna en la tabla 'ordenes' se llama 'tipo'.
+                $query->whereIn('tipo', $tiposMantenimiento);
+            })
+            ->count(); // 4. Cuenta los vehículos únicos resultantes
+    }
+
     /**
      * Get the model associated with the vehiculo.
      */
@@ -204,6 +222,14 @@ class Vehiculo extends Model
         return self::porCliente()->count();
     }
     
+   public static function countDisponibles()
+    {
+        // Llama al Scope 'porCliente' ANTES de realizar el conteo.
+        // El Scope ya tiene toda la lógica de seguridad y jerarquía.
+        return self::porCliente()->where('estatus',1)->count();
+    }
+    
+
       /**
      * Evalúa el estatus de un documento basado en su campo de fecha o texto.
      * @param string|null $dateField Nombre del campo de fecha (ej: 'poliza_fecha_out').
@@ -220,9 +246,6 @@ class Vehiculo extends Model
         // 1. Obtener el valor crudo del campo, ya sea de fecha o texto
         $rawValue = $dateField ? ($this->{$dateField} ?? '') : ($this->{$textField} ?? '');
         $statusValue = trim(mb_strtoupper($rawValue));
-        if(!is_null($dateField) && $rawValue === 'S/P' ){
-            dd($docName,$dateField,$textField,$rawValue,$statusValue);
-        }
         // ==========================================================
         // 2. VERIFICACIÓN DEFENSIVA Y MANEJO DE ESTATUS DE TEXTO
         //    (Maneja S/P y N/A primero, sin importar si es dateField o textField)
