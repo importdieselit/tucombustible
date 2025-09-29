@@ -1,5 +1,7 @@
 @extends('layouts.app')
-
+@php
+use App\Models\Vehiculo;
+@endphp
 @section('title', 'Dashboard de Vehículos')
 
 @section('content')
