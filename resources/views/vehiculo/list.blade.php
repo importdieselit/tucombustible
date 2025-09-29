@@ -91,8 +91,8 @@
                                     'RACDA'        => ['racda', null],
                                     'ROTC'         => ['rotc_venc', null],
                                     'SEMCAMMER'    => [null, 'semcamer'], // Solo campo de texto
-                                    'Homologacion INTT'    => [null, 'homologacion_intt'], // Solo campo de texto
-                                    'Permiso INTT' => [null,'permiso_intt'], // O si tiene campo de texto, ajusta a [null, 'permiso_intt']
+                                    'Homologacion INTT' => [null, 'homologacion_intt'], // Solo campo de texto
+                                    'Permiso INTT' => ['permiso_intt',null], // O si tiene campo de texto, ajusta a [null, 'permiso_intt']
                                 ];
                             @endphp
 
@@ -101,7 +101,6 @@
                                     // Llama al método del modelo para obtener el estatus
                                     $status = $vehiculo->getDocumentStatus($label, $fields[0], $fields[1]);
                                 @endphp
-                                
                                 <x-document-status-badge :status="$status" label="{{ $label }}" />
                             @endforeach
                         </td>
