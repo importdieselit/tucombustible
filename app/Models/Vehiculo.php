@@ -194,7 +194,9 @@ class Vehiculo extends Model
         // 1. Obtener el valor crudo del campo, ya sea de fecha o texto
         $rawValue = $dateField ? ($this->{$dateField} ?? '') : ($this->{$textField} ?? '');
         $statusValue = trim(mb_strtoupper($rawValue));
-
+        if(!is_null($dateField) && $rawValue === 'S/P' ){
+            dd($docName,$dateField,$textField,$rawValue,$statusValue);
+        }
         // ==========================================================
         // 2. VERIFICACIÓN DEFENSIVA Y MANEJO DE ESTATUS DE TEXTO
         //    (Maneja S/P y N/A primero, sin importar si es dateField o textField)
