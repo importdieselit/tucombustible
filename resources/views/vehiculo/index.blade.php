@@ -327,7 +327,7 @@ document.addEventListener('DOMContentLoaded', function () {
         data: {
             labels: ['Disponible', 'En servicio', 'En Mantenimiento', 'Fuera Servicio'],
             datasets: [{
-                data: [{{$unidades_disponibles}}, 0, {{$unidades_en_mantenimiento }}, {{ $unidades_con_orden_abierta-$unidades_en_mantenimineto}}],
+                data: [{{$unidades_disponibles}}, 0, {{$unidades_en_mantenimiento }}, {{ $unidades_con_orden_abierta-$unidades_en_mantenimiento}}],
                 backgroundColor: ['#28a745', '#ffc107', '#007bff', '#dc3545'],
             }]
         },
