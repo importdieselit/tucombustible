@@ -53,7 +53,7 @@
                         <th>Tipo</th>
                         <th>Kilometraje</th>
                         <th>Estatus</th>
-                        <th>Documentos</th>
+                        <th>Documentos Vencidos</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -88,20 +88,27 @@
                                 $documentos = [
                                     'Póliza'       => ['poliza_fecha_out', null],
                                     'RCV'          => ['rcv', null],
-                                   // 'RACDA'        => ['racda', null],
-                                  //  'ROTC'         => ['rotc_venc', null],
-                                  //  'SEMCAMMER'    => [null, 'semcamer'], // Solo campo de texto
-                                  //  'Homologacion INTT' => [null, 'homologacion_intt'], // Solo campo de texto
-                                    //'Permiso INTT' => ['permiso_intt',null], // O si tiene campo de texto, ajusta a [null, 'permiso_intt']
+                                    'RACDA'        => ['racda', null],
+                                    'ROTC'         => ['rotc_venc', null],
+                                    'SEMCAMMER'    => [null, 'semcamer'], // Solo campo de texto
+                                    'Homologacion INTT' => [null, 'homologacion_intt'], // Solo campo de texto
+                                    'Permiso INTT' => ['permiso_intt',null], // O si tiene campo de texto, ajusta a [null, 'permiso_intt']
                                 ];
+                                $hasAlerts = false; 
                             @endphp
 
                             @foreach ($documentos as $label => $fields)
                                 @php
-                                    // Llama al método del modelo para obtener el estatus
+                                    // 1. Llama al método del modelo para obtener el estatus
                                     $status = $vehiculo->getDocumentStatus($label, $fields[0], $fields[1]);
+                                    $statusClass = $status['class'] ?? 'bg-secondary';
                                 @endphp
-                                <x-document-status-badge :status="$status" label="{{ $label }}" />
+
+                                {{-- 2. Mostrar SOLO si el estatus NO es de éxito. --}}
+                                @if ($statusClass === 'bg-danger' || $statusClass === 'bg-warning' || $statusClass === 'bg-secondary')
+                                    <x-document-status-badge :status="$status" label="{{ $label }}" />
+                                    @php $hasAlerts = true; @endphp
+                                @endif
                             @endforeach
                         </td>
                     </tr>
