@@ -291,8 +291,8 @@ class Vehiculo extends Model
         // 2. Definir los campos por tipo
         // Campos que contienen FECHAS (pueden tener 'S/P' como texto)
         $dateFields = ['poliza_fecha_out', 'rcv', 'racda', 'rotc_venc', 'permiso_intt'];
-        // Campos de ESTATUS TEXTUAL (SENCAMMER, Homologación INTTT)
-        $textFields = ['semcamer', 'homologacion_inttt'];
+        // Campos de ESTATUS TEXTUAL (SENCAMMER, Homologación INTT)
+        $textFields = ['semcamer', 'homologacion_intt'];
         $statusOk = ['N/A', 'NO APLICA', 'NO VENCE', 'OK', 'VIGENTE']; // Estatus que NO requieren atención
 
         $totalUnidadesConAlertas = Vehiculo::where(function ($query) use ($dateFields, $textFields, $today, $date30Days, $statusOk) {
