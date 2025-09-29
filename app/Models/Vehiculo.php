@@ -226,7 +226,7 @@ class Vehiculo extends Model
     {
         // Llama al Scope 'porCliente' ANTES de realizar el conteo.
         // El Scope ya tiene toda la lógica de seguridad y jerarquía.
-        return self::porCliente()->where('estatus',1)->count();
+        return self::porCliente()->whereIn('estatus',[1,3])->count();
     }
     
 
