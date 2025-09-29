@@ -62,7 +62,7 @@
                 <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#d12638e0;">
                     <i class="fa fa-times text-danger" style="font-size:2rem;"></i>
                 </span>
-                <h2 class="fw-bold text-danger">{{ Vehiculos::getUnidadesConDocumentos()}}</h2>
+                <h2 class="fw-bold text-danger">{{ Vehiculo::getUnidadesConDocumentosVencidos()}}</h2>
                 <div class="text-muted small">Documentos Vencidos</div>
             </div>
         </div>
