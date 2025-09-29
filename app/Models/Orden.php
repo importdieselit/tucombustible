@@ -20,7 +20,7 @@ class Orden extends Model
         'nro_orden',
         'tipo',
         'estatus',
-        'id_auto',
+        'id_vehiculo',
         'kilometraje',
         'descripcion_1',
         'descripcion_2',
