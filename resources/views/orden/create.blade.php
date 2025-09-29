@@ -28,17 +28,17 @@
            <input type="hidden" name="fecha_in"  value="{{ date('Y-m-d') }}">
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label for="vehiculo_id" class="form-label">Vehículo</label>
+                    <label for="id_vehiculo" class="form-label">Vehículo</label>
                     
                     @if(!is_null($vehiculo))
                     <h3 class="text-primary">{{ $vehiculo->placa }} - {{ $vehiculo->marca }} {{ $vehiculo->modelo }}</h3>
                     <hr>
-                    <input type="hidden" name="vehiculo_id" value="{{ $vehiculo->id }}">
+                    <input type="hidden" name="id_vehiculo" value="{{ $vehiculo->id }}">
                     <input type="hidden" name="placa" value="{{ $vehiculo->placa }}">
 
                     @else
 
-                    <select class="form-select" id="vehiculo_id" name="id_vehiculo" required>
+                    <select class="form-select" id="id_vehiculo" name="id_vehiculo" required>
                         <option value="">Seleccione un vehículo</option>
                         @foreach ($vehiculos as $vehiculo)
                             <option value="{{ $vehiculo->id }}">{{ $vehiculo->placa }} - {{ $vehiculo->marca()->marca }} {{ $vehiculo->modelo()->modelo }}</option>
