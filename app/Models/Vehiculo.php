@@ -281,7 +281,7 @@ class Vehiculo extends Model
 
     public function getUnidadesConDocumentosVencidos($user)
     {
-        $cliente = Cliente::find($user->cliente_id);
+        $cliente = Cliente::find($user);
           
         // 1. Definir los límites de tiempo para la consulta SQL
         $today = Carbon::now()->toDateString();
@@ -335,20 +335,18 @@ class Vehiculo extends Model
                 });
             }
         });
-         if ($user->cliente_id === 0) {
+         if ($user === 0) {
                 // 1. SUPER USUARIO (cliente_id == 0)
                 // No se aplica ningún filtro, obtiene todos los registros.
             } elseif ($cliente && $cliente->parent === 0) {
                 // 2. CLIENTE PRINCIPAL / PADRE
-
-                // Obtener los IDs de todos los clientes hijos
-                $subClientIds = Cliente::where('parent', $user->cliente_id)->pluck('id'); 
-                $allowedClientIds = $subClientIds->push($user->cliente_id);
+                $subClientIds = Cliente::where('parent', $user)->pluck('id'); 
+                $allowedClientIds = $subClientIds->push($user);
                 $totalUnidadesConAlertas->whereIn('id_cliente', $allowedClientIds);
 
             } else {
                 // 3. CLIENTE HIJO o CLIENTE REGULAR SIN JERARQUÍA
-                $totalUnidadesConAlertas->where('id_cliente', $user->cliente_id);
+                $totalUnidadesConAlertas->where('id_cliente', $user);
             }
         $totalUnidadesConAlertas = $totalUnidadesConAlertas->count();
 
