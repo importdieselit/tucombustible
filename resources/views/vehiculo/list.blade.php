@@ -90,9 +90,9 @@
                                     'RCV'          => ['rcv', null],
                                     'RACDA'        => ['racda', null],
                                     'ROTC'         => ['rotc_venc', null],
-                                    'SEMCAMMER'    => [null, 'semcamer'], // Solo campo de texto
-                                    'Homologacion INTT' => [null, 'homologacion_intt'], // Solo campo de texto
-                                    'Permiso INTT' => ['permiso_intt',null], // O si tiene campo de texto, ajusta a [null, 'permiso_intt']
+                                  //  'SEMCAMMER'    => [null, 'semcamer'], // Solo campo de texto
+                                  //  'Homologacion INTT' => [null, 'homologacion_intt'], // Solo campo de texto
+                                    //'Permiso INTT' => ['permiso_intt',null], // O si tiene campo de texto, ajusta a [null, 'permiso_intt']
                                 ];
                             @endphp
 
