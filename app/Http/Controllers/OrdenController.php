@@ -164,8 +164,8 @@ class OrdenController extends BaseController
         $suministros = Inventario::all();
         $estatusOpciones = EstatusData::all()->keyBy('id_estatus');        
         if(!is_null($vehiculo_id)){
-                     $vehiculo = Vehiculo::findOrFail($vehiculo_id); 
-                }
+            $vehiculo = Vehiculo::findOrFail($vehiculo_id); 
+        }
         return view('orden.create', compact('vehiculo','vehiculos', 'personal','tipos', 'nro_orden','suministros','estatusOpciones'));
     }
 
@@ -231,6 +231,14 @@ class OrdenController extends BaseController
                     ]);
                 }
             }
+
+            $vehiculo = Vehiculo::find($request->id_vehiculo);
+            if($orden->tipo=='Mantenimiento'|| $orden->tipo=='Preventivo'){
+                $vehiculo->estatus = 3;
+            }else{
+                $vehiculo->estatus = 5;
+            }
+            $vehiculo->save();
 
         $this->createAlert([
             'id_usuario' => $userId, // ID del usuario responsable de la orden.
