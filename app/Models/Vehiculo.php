@@ -168,6 +168,22 @@ class Vehiculo extends Model
         return $this->belongsTo(Marca::class, 'marca', 'id')->first() ; // Ajusta 'App\Marca::class' al nombre de tu modelo de Marca
     }
 
+    public function ordenes()
+    {
+        // Ajusta 'id_vehiculo' si el nombre de la llave foránea en la tabla 'ordenes' es diferente
+        return $this->hasMany(Orden::class, 'id_vehiculo'); 
+    }
+
+    public static function countVehiculosConOrdenAbierta()
+    {
+        return self::porCliente() // 1. Aplica el filtro de seguridad (jerarquía del cliente)
+            ->whereHas('ordenes', function ($query) {
+                // 2. Filtra solo los vehículos que tienen una orden con estatus = 2 (Abierta)
+                $query->where('estatus', 2);
+            })
+            ->count(); // 3. Cuenta los vehículos únicos resultantes
+    }
+
     /**
      * Get the model associated with the vehiculo.
      */
@@ -302,7 +318,7 @@ class Vehiculo extends Model
         $dateFields = ['poliza_fecha_out', 'rcv', 'racda', 'rotc_venc', 'permiso_intt'];
         // Campos de ESTATUS TEXTUAL (SENCAMMER, Homologación INTT)
         $textFields = ['semcamer', 'homologacion_intt'];
-        $statusOk = ['N/A', 'NO APLICA', 'NO VENCE', 'OK', 'VIGENTE']; // Estatus que NO requieren atención
+        $statusOk = ['N/A', 'NO APLICA', 'NO VENCE', 'OK', 'VIGENTE','',null]; // Estatus que NO requieren atención
 
         $totalUnidadesConAlertas = Vehiculo::where(function ($query) use ($dateFields, $textFields, $today, $date30Days, $statusOk) {
             

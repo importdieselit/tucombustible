@@ -1,7 +1,8 @@
 @extends('layouts.app')
 @php
 $unidades_con_alerta = App\Models\Vehiculo::getUnidadesConDocumentosVencidos(Auth::user()->cliente_id); 
- $total_vehiculos = App\Models\Vehiculo::countVehiculos(); 
+$total_vehiculos = App\Models\Vehiculo::countVehiculos(); 
+$unidades_con_orden_abierta = App\Models\Vehiculo::countVehiculosConOrdenAbierta();
 @endphp
 @section('title', 'Dashboard de Vehículos')
 
@@ -54,7 +55,7 @@ $unidades_con_alerta = App\Models\Vehiculo::getUnidadesConDocumentosVencidos(Aut
                 <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#6c757d10;">
                     <i class="fa fa-exclamation-triangle text-secondary" style="font-size:2rem;"></i>
                 </span>
-                <h2 class="fw-bold text-secondary"></h2>
+                <h2 class="fw-bold text-secondary">{{$unidades_con_orden_abierta}}</h2>
                 <div class="text-muted small">Fuera Servicio</div>
             </div>
         </div>
