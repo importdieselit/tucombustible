@@ -9,6 +9,7 @@ use App\Models\Modelo; // Asegúrate de que el modelo Modelo esté correctamente
 use App\Models\TipoVehiculo; // Asegúrate de que el modelo  
 use App\Models\Cliente;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class Vehiculo extends Model
 {
