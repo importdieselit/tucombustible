@@ -88,7 +88,7 @@
                                 $documentos = [
                                     'Póliza'       => ['poliza_fecha_out', null],
                                     'RCV'          => ['rcv', null],
-                                    'RACDA'        => ['racda', null],
+                                   // 'RACDA'        => ['racda', null],
                                   //  'ROTC'         => ['rotc_venc', null],
                                   //  'SEMCAMMER'    => [null, 'semcamer'], // Solo campo de texto
                                   //  'Homologacion INTT' => [null, 'homologacion_intt'], // Solo campo de texto
