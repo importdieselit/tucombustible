@@ -34,6 +34,7 @@
                     <h3 class="text-primary">{{ $vehiculo->placa }} - {{ $vehiculo->marca }} {{ $vehiculo->modelo }}</h3>
                     <hr>
                     <input type="hidden" name="vehiculo_id" value="{{ $vehiculo->id }}">
+                    <input type="hidden" name="placa" value="{{ $vehiculo->placa }}">
 
                     @else
 

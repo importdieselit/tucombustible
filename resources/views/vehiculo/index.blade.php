@@ -35,7 +35,7 @@ $unidades_disponibles = App\Models\Vehiculo::countDisponibles();
                 <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#ffc10710;">
                     <i class="fa fa-car text-warning" style="font-size:2rem;"></i>
                 </span>
-                <h2 class="fw-bold text-warning"></h2>
+                <h2 class="fw-bold text-warning">0</h2>
                 <div class="text-muted small">En Ruta/Servicio</div>
             </div>
         </div>
@@ -230,24 +230,7 @@ $unidades_disponibles = App\Models\Vehiculo::countDisponibles();
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>XYZ-789</td>
-                            <td>Daily</td>
-                            <td>Iveco</td>
-                            <td>Caracas - Valencia</td>
-                            <td>120,000</td>
-                            <td>28</td>
-                            <td><span class="badge bg-warning text-dark">En servicio</span></td>
-                        </tr>
-                        <tr>
-                            <td>JKL-321</td>
-                            <td>Sprinter</td>
-                            <td>Mercedes</td>
-                            <td>Maracay - Barquisimeto</td>
-                            <td>98,000</td>
-                            <td>26</td>
-                            <td><span class="badge bg-warning text-dark">En servicio</span></td>
-                        </tr>
+                        
                         <tr>
                             <td>LMN-654</td>
                             <td>Cargo</td>
@@ -265,7 +248,7 @@ $unidades_disponibles = App\Models\Vehiculo::countDisponibles();
 </div>
 
 <!-- Tabla de vehículos recientes -->
-<div class="row g-4">
+{{-- <div class="row g-4">
     <div class="col-12">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-0">
@@ -313,7 +296,7 @@ $unidades_disponibles = App\Models\Vehiculo::countDisponibles();
             </div>
         </div>
     </div>
-</div>
+</div> --}}
 @endsection
 
 @push('scripts')
