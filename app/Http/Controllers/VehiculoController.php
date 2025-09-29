@@ -145,5 +145,83 @@ class VehiculoController extends BaseController
         return Redirect::back();
     }
 
+     /**
+     * Evalúa el estatus de un documento basado en su campo de fecha o texto.
+     * @param string|null $dateField Nombre del campo de fecha (ej: 'poliza_fecha_out').
+     * @param string|null $textField Nombre del campo de texto (ej: 'sencammer').
+     * @param string $docName Nombre del documento para el título (ej: 'Póliza').
+     * @return array
+     */
+    public function getDocumentStatus(string $docName, ?string $dateField = null, ?string $textField = null): array
+    {
+        $valor = $textField ? trim(mb_strtoupper($this->{$textField} ?? '')) : null;
+        
+        // ==========================================================
+        // 1. MANEJO DE ESTATUS DE TEXTO (Para SENCAMMER, INTTT)
+        // ==========================================================
+        if ($textField && in_array($valor, ['S/P', 'SIN PERMISO'])) {
+            return [
+                'class' => 'bg-danger', 
+                'icon' => 'bi-x-octagon-fill', 
+                'title' => "$docName: ¡Sin Permiso (S/P)! Por favor, gestione el documento.",
+            ];
+        }
+        
+        if ($textField && in_array($valor, ['N/A', 'NO APLICA', 'NO VENCE', 'OK', 'VIGENTE'])) {
+            return [
+                'class' => 'bg-success', 
+                'icon' => 'bi-check-circle', 
+                'title' => "$docName: Vigente / No aplica / Status OK",
+            ];
+        }
+
+        // Si es un campo de texto y no es S/P, N/A o similar, lo marcamos como no definido por seguridad
+        if ($textField) {
+            return [
+                'class' => 'bg-secondary', 
+                'icon' => 'bi-question-circle', 
+                'title' => "$docName: Estatus de texto no definido.",
+            ];
+        }
+        
+        // ==========================================================
+        // 2. MANEJO DE ESTATUS POR FECHA
+        // ==========================================================
+        $date = $dateField ? ($this->{$dateField} ? Carbon::parse($this->{$dateField}) : null) : null;
+        $now = Carbon::now()->startOfDay();
+        $oneMonthFromNow = $now->copy()->addMonth();
+
+        if (!$date) {
+            return [
+                'class' => 'bg-secondary', 
+                'icon' => 'bi-slash-circle', 
+                'title' => "$docName: Fecha de vigencia no registrada",
+            ];
+        }
+
+        if ($date->lessThan($now)) {
+            // Vencida (<= Hoy)
+            return [
+                'class' => 'bg-danger', 
+                'icon' => 'bi-x-circle', 
+                'title' => "$docName: Vencida desde el {$date->format('d/m/Y')}",
+            ];
+        } elseif ($date->lessThan($oneMonthFromNow)) {
+            // Próximo a vencer (< 30 días)
+            return [
+                'class' => 'bg-warning', 
+                'icon' => 'bi-exclamation-triangle-fill', 
+                'title' => "$docName: Vence pronto el {$date->format('d/m/Y')}",
+            ];
+        } else {
+            // Vigente (> 30 días)
+            return [
+                'class' => 'bg-success', 
+                'icon' => 'bi-check-circle', 
+                'title' => "$docName: Vigente hasta {$date->format('d/m/Y')}",
+            ];
+        }
+    }
+
     
 }

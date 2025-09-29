@@ -45,15 +45,15 @@
                     <tr>
                         <th width="5%">#</th>
                         <th>Flota</th>
-                        <th>Cliente</th>
-                        <th>Clase</th>
+                        {{-- <th>Cliente</th> --}}
+                        {{-- <th>Clase</th> --}}
                         <th>Marca/Modelo</th>
                         <th>Año</th>
                         <th>Placa</th>
                         <th>Tipo</th>
                         <th>Kilometraje</th>
                         <th>Estatus</th>
-                        <th>Fecha Registro</th>
+                        <th>Documentos</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -61,8 +61,8 @@
                     <tr class="clickable-row" data-id="{{ $vehiculo->id }}">
                         <td>{{ $index + 1 }}</td>
                         <td>{{ $vehiculo->flota ?? 'N/A' }}</td>
-                        <td>{{ $vehiculo->cliente->nombre ?? 'N/A' }}</td>
-                        <td>{{ $vehiculo->clase ?? 'N/A' }}</td>
+                        {{-- <td>{{ $vehiculo->cliente->nombre ?? 'N/A' }}</td> --}}
+                        {{-- <td>{{ $vehiculo->clase ?? 'N/A' }}</td> --}}
                         <td>{{ $vehiculo->marca()->marca ?? 'N/A' }} / {{ $vehiculo->modelo()->modelo ?? 'N/A' }}</td>
                         <td>{{ $vehiculo->anno }}</td>
                         <td>{{ $vehiculo->placa }}</td>
@@ -81,7 +81,30 @@
                                 <span class="badge bg-gray">Desconocido</span>
                             @endif
                         </td>
-                        <td>{{ !is_null($vehiculo->created_at)?$vehiculo->created_at->format('d/m/Y'): 'N/A' }}</td>
+                        <td>
+                           @php
+    // Definimos un array asociativo con el nombre y los campos del vehículo.
+    // 'Documento' => ['campo_fecha', 'campo_texto']
+                                $documentos = [
+                                    'Póliza'       => ['poliza_fecha_out', null],
+                                    'RCV'          => ['rcv', null],
+                                    'RACDA'        => ['racda', null],
+                                    'ROTC'         => ['rotc_venc', null],
+                                    'SEMCAMMER'    => [null, 'semcamer'], // Solo campo de texto
+                                    'Homologacion INTT'    => [null, 'homologacion_intt'], // Solo campo de texto
+                                    'Permiso INTT' => ['permiso_intt', null], // O si tiene campo de texto, ajusta a [null, 'permiso_intt']
+                                ];
+                            @endphp
+
+                            @foreach ($documentos as $label => $fields)
+                                @php
+                                    // Llama al método del modelo para obtener el estatus
+                                    $status = $vehiculo->getDocumentStatus($label, $fields[0], $fields[1]);
+                                @endphp
+                                
+                                <x-document-status-badge :status="$status" label="{{ $label }}" />
+                            @endforeach
+                        </td>
                     </tr>
                     @endforeach
                 </tbody>
