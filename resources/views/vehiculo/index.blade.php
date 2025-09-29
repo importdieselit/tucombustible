@@ -47,7 +47,7 @@ $unidades_disponibles = App\Models\Vehiculo::countDisponibles();
                     <i class="fa fa-exclamation-triangle text-primary" style="font-size:2rem;"></i>
                 </span>
                 <h2 class="fw-bold text-primary">{{ $unidades_en_mantenimiento}}</h2>
-                <div class="text-muted small">En Mantenimiento</div>
+                <div class="text-muted small">Por Mantenimiento</div>
             </div>
         </div>
     </div>
