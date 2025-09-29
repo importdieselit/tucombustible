@@ -221,7 +221,7 @@ class OrdenController extends BaseController
                         'estatus' => 1, // 1 = 'Solicitado'
                         'id_usuario' => $userId,
                         'id_orden' => $orden->id, // Usar el número de orden que acabamos de crear
-                        'id_auto' => $request->id_vehiculo,
+                        'id_auto' => $request->vehiculo_id,
                         'id_inventario' => $supply['item_id'],
                         'id_emisor' => $userId,
                         // 'servicio' y 'anulacion' se dejarán nulos por ahora, ya que no son parte del formulario inicial
@@ -232,7 +232,7 @@ class OrdenController extends BaseController
                 }
             }
 
-            $vehiculo = Vehiculo::find($request->id_vehiculo);
+            $vehiculo = Vehiculo::find($request->vehiculo_id);
             if($orden->tipo=='Mantenimiento'|| $orden->tipo=='Preventivo'){
                 $vehiculo->estatus = 3;
             }else{
