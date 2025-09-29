@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @php
-use App\Models\Vehiculo;
+$unidades_con_alerta = App\Models\Vehiculo::getUnidadesConAlertas(Auth::user()); 
 @endphp
 @section('title', 'Dashboard de Vehículos')
 
@@ -64,7 +64,7 @@ use App\Models\Vehiculo;
                 <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#d12638e0;">
                     <i class="fa fa-times text-danger" style="font-size:2rem;"></i>
                 </span>
-                <h2 class="fw-bold text-danger">{{ Vehiculo::getUnidadesConDocumentosVencidos()}}</h2>
+                <h2 class="fw-bold text-danger">{{ $unidades_con_alerta }}</h2>
                 <div class="text-muted small">Documentos Vencidos</div>
             </div>
         </div>

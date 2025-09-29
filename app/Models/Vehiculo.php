@@ -279,9 +279,8 @@ class Vehiculo extends Model
         }
     }
 
-    public function getUnidadesConDocumentosVencidos()
+    public function getUnidadesConDocumentosVencidos($user)
     {
-        $user = auth()->user();
         $cliente = Cliente::find($user->cliente_id);
           
         // 1. Definir los límites de tiempo para la consulta SQL
