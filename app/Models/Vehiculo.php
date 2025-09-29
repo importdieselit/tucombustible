@@ -8,6 +8,7 @@ use App\Models\Marca; // Asegúrate de que el modelo Marca esté correctamente i
 use App\Models\Modelo; // Asegúrate de que el modelo Modelo esté correctamente importado
 use App\Models\TipoVehiculo; // Asegúrate de que el modelo  
 use App\Models\Cliente;
+use Illuminate\Support\Carbon;
 
 class Vehiculo extends Model
 {
