@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @php
-$unidades_con_alerta = App\Models\Vehiculo::getUnidadesConAlertas(Auth::user()); 
+$unidades_con_alerta = App\Models\Vehiculo::getUnidadesConDocumentosVencidos(Auth::user()); 
 @endphp
 @section('title', 'Dashboard de Vehículos')
 
