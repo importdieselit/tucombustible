@@ -94,11 +94,21 @@ abstract class BaseController extends Controller
      * Muestra una lista de todos los recursos. Este método puede ser sobrescrito para vistas de listado.
      * @return \Illuminate\View\View
      */
-    public function list()
+    public function list($query=null) // Aún recibe el Query Builder inicial
     {
+       
        $user = auth()->user();
        $cliente = Cliente::find($user->cliente_id);
-       $query = $this->model->query();
+        if(is_null($query)){
+            $query = $this->model->query();
+            
+        }
+        
+        if (method_exists($this, 'applyBusinessFilters')) {
+            $query = $this->applyBusinessFilters($query); 
+        }
+        
+
         $tableName = $this->model->getTable();
 
         if (Schema::hasColumn($tableName, 'id_cliente')) {

@@ -47,8 +47,9 @@
                         <th>Nro. Orden</th>
                         <th>Vehículo</th>
                         <th>Tipo</th>
-                        <th>Estatus</th>
                         <th>Fecha de Apertura</th>
+                        <th>Tiempo abierta</th>
+                        <th>Estatus</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -59,30 +60,24 @@
                         <td>{{ $orden->vehiculo()->placa }}</td>
                         <td>{{ $orden->tipo }}</td>
                         <td>
-                            @php
-                                        $estatusInfo = $estatusData->get($orden->estatus);
-                                    @endphp
-                                    @if ($estatusInfo)
-                                        <span class="badge bg-{{ $estatusInfo->css }}" title="{{ $estatusInfo->descripcion }}">
-                                            <i class="mr-1 fa-solid {{ $estatusInfo->icon_orden }}"></i>
-                                            {{ $estatusInfo->orden }}
-                                        </span>
-                                    @else
-                                        <span class="badge bg-gray">Desconocido</span>
-                                    @endif
+                            @if(isset($orden->created_at) && $orden->created_at)
+                                {{ $orden->created_at->format('d/m/Y') }}
+                            @else
+                                N/A
+                            @endif
                         </td>
+                        <td>{{$orden->created_at->diffForHumans(now())}}</td>
                         <td>
-                            @php
-                                        // Verifica si la variable existe y si no está vacía
-                                        if (isset($orden->created_at) && !empty($orden->created_at)) {
-                                            // Convierte la cadena de fecha a una marca de tiempo y luego la formatea
-                                            $fecha_formateada = date('Y-m-d', strtotime($orden->created_at));
-                                            echo $fecha_formateada;
-                                        } else {
-                                            // Si la fecha no existe, muestra 'N/A' o algún otro valor por defecto
-                                            echo 'N/A';
-                                        }
-                                    @endphp
+                            @php($estatusInfo = $estatusData->get($orden->estatus))
+                            @if ($estatusInfo)
+                                @php($css=$orden->created_at->diffInDays(now())>1?'bg-danger':$estatusInfo->css)
+                                <span class="badge bg-{{ $css }}" title="{{ $estatusInfo->descripcion }}">
+                                    <i class="mr-1 fa-solid {{ $estatusInfo->icon_orden }}"></i>
+                                    {{ $estatusInfo->orden }}
+                                </span>
+                            @else
+                                <span class="badge bg-gray">Desconocido</span>
+                            @endif
                         </td>
                     </tr>
                     @endforeach

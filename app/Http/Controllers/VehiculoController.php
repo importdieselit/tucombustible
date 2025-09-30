@@ -13,6 +13,7 @@ use App\Http\Requests\VehiculoStoreRequest;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Database\Eloquent\Builder;
 
 
 class VehiculoController extends BaseController
@@ -21,6 +22,17 @@ class VehiculoController extends BaseController
      * Sobrescribe el método create para pasar datos adicionales a la vista.
      * @return \Illuminate\View\View
      */
+    
+    public function filter(Request $request)
+        {
+        // 1. Inicializar el Query Builder del modelo correcto
+        $query = Vehiculo::query(); 
+        
+        // 2. Llamar al list() del padre, que ejecutará el applyBusinessFilters(si existe)
+        // y luego el filtro de seguridad de cliente.
+        return $this->list($query); 
+    }
+
     public function create()
     {
         $marcas = Marca::pluck('marca', 'id');
