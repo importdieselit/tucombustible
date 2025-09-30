@@ -20,7 +20,7 @@ $unidades_disponibles = App\Models\Vehiculo::Disponibles()->count();
     <!-- KPIs principales -->
     <div class="col-md-2">
         <div class="card shadow-sm border-0 text-center">
-            <a href="{{ route('vehiculos.list', ['filter' => 'disponibles']) }}">
+            <a href="{{ route('vehiculos.list', ['filter' => 'disponibles']) }}" target="_blank">
             <div class="card-body">
                 <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#28a74510;">
                     <i class="fa fa-flag text-success" style="font-size:2rem;"></i>
@@ -44,7 +44,7 @@ $unidades_disponibles = App\Models\Vehiculo::Disponibles()->count();
     </div>
     <div class="col-md-2">
         <div class="card shadow-sm border-0 text-center">
-            <a href="{{ route('vehiculos.list', ['filter' => 'mantenimiento']) }}">
+            <a href="{{ route('vehiculos.list', ['filter' => 'mantenimiento']) }}" target="_blank">
             <div class="card-body">
                 <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#007bff10;">
                     <i class="fa fa-exclamation-triangle text-primary" style="font-size:2rem;"></i>
@@ -57,7 +57,7 @@ $unidades_disponibles = App\Models\Vehiculo::Disponibles()->count();
     </div>
     <div class="col-md-2">
         <div class="card shadow-sm border-0 text-center">
-            <a href="{{ route('vehiculos.list', ['filter' => 'con_orden_abierta']) }}">
+            <a href="{{ route('vehiculos.list', ['filter' => 'con_orden_abierta']) }}" target="_blank">
             <div class="card-body">
                 <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#6c757d10;">
                     <i class="fa fa-exclamation-triangle text-secondary" style="font-size:2rem;"></i>
@@ -70,7 +70,7 @@ $unidades_disponibles = App\Models\Vehiculo::Disponibles()->count();
     </div>
     <div class="col-md-2">
         <div class="card shadow-sm border-0 text-center">
-            <a href="{{ route('vehiculos.list', ['filter' => 'documentos_alerta']) }}">
+            <a href="{{ route('vehiculos.list', ['filter' => 'documentos_alerta']) }}" target="_blank">
             <div class="card-body">
                 <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#d12638e0;">
                     <i class="fa fa-times text-danger" style="font-size:2rem;"></i>
@@ -83,7 +83,7 @@ $unidades_disponibles = App\Models\Vehiculo::Disponibles()->count();
     </div>
     <div class="col-md-2">
         <div class="card shadow-sm border-0 text-center">
-            <a href="{{ route('vehiculos.list') }}">
+            <a href="{{ route('vehiculos.list') }}" target="_blank">
             <div class="card-body">
                 <span class="rounded-circle p-3 mb-2 d-inline-block bg-dark">
                     <i class="fa fa-car text-white" style="font-size:2rem;"></i>
@@ -107,7 +107,7 @@ $unidades_disponibles = App\Models\Vehiculo::Disponibles()->count();
                 <a href="{{ route('vehiculos.create') }}" class="btn btn-primary w-100 mb-2">
                     <i class="fa fa-plus"></i> Registrar Vehículo
                 </a>
-                <a href="{{ route('vehiculos.index') }}" class="btn btn-outline-secondary w-100 mb-2">
+                <a href="{{ route('vehiculos.list') }}" class="btn btn-outline-secondary w-100 mb-2">
                     <i class="fa fa-list"></i> Ver Listado
                 </a>
                 <a href="#" class="btn btn-outline-info w-100">
@@ -131,7 +131,7 @@ $unidades_disponibles = App\Models\Vehiculo::Disponibles()->count();
     <div class="col-lg-6">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-0">
-                <h5 class="mb-0">Relación Kilometraje / Consumo</h5>
+                <h5 class="mb-0">Relación Kilometraje / Consumo  (Demo)</h5>
             </div>
             <div class="card-body">
                 <canvas id="kmConsumoChart" height="120"></canvas>
@@ -143,7 +143,7 @@ $unidades_disponibles = App\Models\Vehiculo::Disponibles()->count();
     <div class="col-lg-6">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-0">
-                <h5 class="mb-0">Top 10 Camiones con Mayor Consumo</h5>
+                <h5 class="mb-0">Top 10 Camiones con Mayor Consumo  (Demo)</h5>
             </div>
             <div class="card-body">
                 <canvas id="topConsumoChart" height="180"></canvas>
@@ -158,7 +158,7 @@ $unidades_disponibles = App\Models\Vehiculo::Disponibles()->count();
     <div class="col-md-4">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-0">
-                <h5 class="mb-0">Nivel Combustible Estimado</h5>
+                <h5 class="mb-0">Nivel Combustible Estimado  (Demo)</h5>
             </div>
             <div class="card-body">
                 <h2 class="fw-bold text-info">58%</h2>
@@ -173,7 +173,7 @@ $unidades_disponibles = App\Models\Vehiculo::Disponibles()->count();
     <div class="col-md-4">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-0">
-                <h5 class="mb-0">Próximos Mantenimientos</h5>
+                <h5 class="mb-0">Próximos Mantenimientos (Demo)</h5>
             </div>
             <div class="card-body">
                 <ul class="list-group list-group-flush">
@@ -197,7 +197,7 @@ $unidades_disponibles = App\Models\Vehiculo::Disponibles()->count();
     <div class="col-md-4">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-0">
-                <h5 class="mb-0">Gasto Estimado Mensual</h5>
+                <h5 class="mb-0">Gasto Estimado Mensual  (Demo)</h5>
             </div>
             <div class="card-body">
                 <h2 class="fw-bold text-danger">$12,500</h2>
@@ -212,7 +212,7 @@ $unidades_disponibles = App\Models\Vehiculo::Disponibles()->count();
     <div class="col-md-4">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-0">
-                <h5 class="mb-0">Índice de Reportes de Falla</h5>
+                <h5 class="mb-0">Índice de Reportes de Falla  (Demo)</h5>
             </div>
             <div class="card-body">
                 <canvas id="fallasChart" height="80"></canvas>
@@ -224,7 +224,7 @@ $unidades_disponibles = App\Models\Vehiculo::Disponibles()->count();
     <div class="col-md-8">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-0">
-                <h5 class="mb-0">Camiones en Ruta/Servicio</h5>
+                <h5 class="mb-0">Camiones en Ruta/Servicio  (Demo)</h5>
             </div>
             <div class="card-body p-0">
                 <table class="table table-hover mb-0">
