@@ -1,10 +1,10 @@
 @extends('layouts.app')
 @php
-$unidades_con_alerta = App\Models\Vehiculo::getUnidadesConDocumentosVencidos(Auth::user()->cliente_id); 
-$total_vehiculos = App\Models\Vehiculo::countVehiculos(); 
-$unidades_con_orden_abierta = App\Models\Vehiculo::countVehiculosConOrdenAbierta();
-$unidades_en_mantenimiento = App\Models\Vehiculo::countVehiculosEnMantenimiento();
-$unidades_disponibles = App\Models\Vehiculo::countDisponibles();
+$unidades_con_alerta = App\Models\Vehiculo::getUnidadesConDocumentosVencidos(Auth::user()->cliente_id)->count(); 
+$total_vehiculos = App\Models\Vehiculo::misVehiculos()->count(); 
+$unidades_con_orden_abierta = App\Models\Vehiculo::VehiculosConOrdenAbierta()->count();
+$unidades_en_mantenimiento = App\Models\Vehiculo::VehiculosEnMantenimiento()->count();
+$unidades_disponibles = App\Models\Vehiculo::Disponibles()->count();
 @endphp
 @section('title', 'Dashboard de Vehículos')
 
@@ -20,6 +20,7 @@ $unidades_disponibles = App\Models\Vehiculo::countDisponibles();
     <!-- KPIs principales -->
     <div class="col-md-2">
         <div class="card shadow-sm border-0 text-center">
+            <a href="{{ route('vehiculos.list', ['filter' => 'disponibles']) }}">
             <div class="card-body">
                 <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#28a74510;">
                     <i class="fa fa-flag text-success" style="font-size:2rem;"></i>
@@ -27,6 +28,7 @@ $unidades_disponibles = App\Models\Vehiculo::countDisponibles();
                 <h2 class="fw-bold text-success">{{ $unidades_disponibles}}</h2>
                 <div class="text-muted small">Disponibles</div>
             </div>
+            </a>
         </div>
     </div>
     <div class="col-md-2">
@@ -55,6 +57,7 @@ $unidades_disponibles = App\Models\Vehiculo::countDisponibles();
     </div>
     <div class="col-md-2">
         <div class="card shadow-sm border-0 text-center">
+            <a href="{{ route('vehiculos.list', ['filter' => 'con_orden_abierta']) }}">
             <div class="card-body">
                 <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#6c757d10;">
                     <i class="fa fa-exclamation-triangle text-secondary" style="font-size:2rem;"></i>
@@ -62,10 +65,12 @@ $unidades_disponibles = App\Models\Vehiculo::countDisponibles();
                 <h2 class="fw-bold text-secondary">{{$unidades_con_orden_abierta}}</h2>
                 <div class="text-muted small">Fuera Servicio</div>
             </div>
+            </a>
         </div>
     </div>
     <div class="col-md-2">
         <div class="card shadow-sm border-0 text-center">
+            <a href="{{ route('vehiculos.list', ['filter' => 'documentos_alerta']) }}">
             <div class="card-body">
                 <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#d12638e0;">
                     <i class="fa fa-times text-danger" style="font-size:2rem;"></i>
@@ -73,10 +78,12 @@ $unidades_disponibles = App\Models\Vehiculo::countDisponibles();
                 <h2 class="fw-bold text-danger">{{ $unidades_con_alerta }}</h2>
                 <div class="text-muted small">Documentos Vencidos</div>
             </div>
+            </a>
         </div>
     </div>
     <div class="col-md-2">
         <div class="card shadow-sm border-0 text-center">
+            <a href="{{ route('vehiculos.list') }}">
             <div class="card-body">
                 <span class="rounded-circle p-3 mb-2 d-inline-block bg-dark">
                     <i class="fa fa-car text-white" style="font-size:2rem;"></i>
@@ -84,6 +91,7 @@ $unidades_disponibles = App\Models\Vehiculo::countDisponibles();
                 <h2 class="fw-bold">{{ $total_vehiculos }}</h2>
                 <div class="text-muted small">Total Vehículos</div>
             </div>
+            </a>
         </div>
     </div>
 </div>

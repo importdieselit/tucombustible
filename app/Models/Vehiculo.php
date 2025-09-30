@@ -174,17 +174,17 @@ class Vehiculo extends Model
         return $this->hasMany(Orden::class, 'id_vehiculo'); 
     }
 
-    public static function countVehiculosConOrdenAbierta()
+    public static function VehiculosConOrdenAbierta()
     {
         return self::porCliente() // 1. Aplica el filtro de seguridad (jerarquía del cliente)
             ->whereHas('ordenes', function ($query) {
                 // 2. Filtra solo los vehículos que tienen una orden con estatus = 2 (Abierta)
                 $query->where('estatus', 2);
-            })
-            ->count(); // 3. Cuenta los vehículos únicos resultantes
+            }); // 3. Cuenta los vehículos únicos resultantes
     }
 
-    public static function countVehiculosEnMantenimiento()
+    
+    public static function VehiculosEnMantenimiento()
     {
         // 1. Array de tipos de órdenes que consideramos "en mantenimiento"
         $tiposMantenimiento = ['Preventivo', 'Mantenimiento'];
@@ -198,8 +198,7 @@ class Vehiculo extends Model
                 // 3. Filtra por TIPO: La orden debe ser de mantenimiento o preventivo.
                 // Asumo que la columna en la tabla 'ordenes' se llama 'tipo'.
                 $query->whereIn('tipo', $tiposMantenimiento);
-            })
-            ->count(); // 4. Cuenta los vehículos únicos resultantes
+            }); 
     }
 
     /**
@@ -215,18 +214,18 @@ class Vehiculo extends Model
         return $this->belongsTo(TipoVehiculo::class, 'tipo', 'id'); // Ajusta 'App\TipoVehiculo::class' al nombre de tu modelo de TipoVehiculo
     } 
 
-    public static function countVehiculos()
+    public static function misVehiculos()
     {
         // Llama al Scope 'porCliente' ANTES de realizar el conteo.
         // El Scope ya tiene toda la lógica de seguridad y jerarquía.
-        return self::porCliente()->count();
+        return self::porCliente();
     }
     
-   public static function countDisponibles()
+   public static function Disponibles()
     {
         // Llama al Scope 'porCliente' ANTES de realizar el conteo.
         // El Scope ya tiene toda la lógica de seguridad y jerarquía.
-        return self::porCliente()->whereIn('estatus',[1,3])->count();
+        return self::porCliente()->whereIn('estatus',[1,3]);
     }
     
 
@@ -397,7 +396,7 @@ class Vehiculo extends Model
                 // 3. CLIENTE HIJO o CLIENTE REGULAR SIN JERARQUÍA
                 $totalUnidadesConAlertas->where('id_cliente', $user);
             }
-        $totalUnidadesConAlertas = $totalUnidadesConAlertas->count();
+    
 
      return $totalUnidadesConAlertas;
     }

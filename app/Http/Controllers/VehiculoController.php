@@ -14,6 +14,14 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Str; // Es necesario para la función Str::plural()
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Schema;
+use App\Traits\GenerateAlerts;
+use App\Traits\PluralizaEnEspanol;
+use Illuminate\Support\Facades\Auth;
 
 
 class VehiculoController extends BaseController
@@ -31,6 +39,35 @@ class VehiculoController extends BaseController
         // 2. Llamar al list() del padre, que ejecutará el applyBusinessFilters(si existe)
         // y luego el filtro de seguridad de cliente.
         return $this->list($query); 
+    }
+
+     protected function applyBusinessFilters(Builder $query): Builder
+    {
+        $filterKey = request()->get('filter'); // Usamos el helper global 'request()'
+        
+        if ($filterKey) {
+            switch ($filterKey) {
+                
+                case 'mantenimiento':
+                    $query->VehiculosEnMantenimiento()->get();
+                    break;
+
+                case 'documentos_alerta':
+                    $query->VehiculosConDocumentosEnAlerta()->get(Auth::user()->cliente_id);
+                    break;
+                
+                case 'disponibles':
+                    // Filtro genérico que solo aplica si Vehiculo tiene columna 'estatus'
+                    $query->disponibles()->get();
+                    break;
+                case 'con_orden_abierta':
+                    $query->VehiculosConOrdenAbierta()->get();
+                    break;
+                
+            }
+        }
+
+        return $query; // Devolvemos el Query Builder modificado
     }
 
     public function create()
