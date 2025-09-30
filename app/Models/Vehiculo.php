@@ -11,6 +11,8 @@ use App\Models\Cliente;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Traits\FiltroPorCliente;
+use Google\Service\ApigeeRegistry\Build;
+use Illuminate\Database\Eloquent\Builder;
 
 class Vehiculo extends Model
 {
@@ -174,31 +176,65 @@ class Vehiculo extends Model
         return $this->hasMany(Orden::class, 'id_vehiculo'); 
     }
 
-    public static function VehiculosConOrdenAbierta()
+     public static function countVehiculosEnMantenimiento(): int
     {
-        return self::porCliente() // 1. Aplica el filtro de seguridad (jerarquía del cliente)
-            ->whereHas('ordenes', function ($query) {
-                // 2. Filtra solo los vehículos que tienen una orden con estatus = 2 (Abierta)
-                $query->where('estatus', 2);
-            }); // 3. Cuenta los vehículos únicos resultantes
+        // Llama al Scope de negocio y al Scope de seguridad del cliente, luego cuenta.
+        return self::porCliente()->vehiculosEnMantenimiento()->count();
     }
 
-    
-    public static function VehiculosEnMantenimiento()
+     public function scopeVehiculosEnMantenimiento(Builder $query): void
     {
-        // 1. Array de tipos de órdenes que consideramos "en mantenimiento"
         $tiposMantenimiento = ['Preventivo', 'Mantenimiento'];
 
-        return self::porCliente() // Aplica el filtro de seguridad (jerarquía del cliente)
-            ->whereHas('ordenes', function ($query) use ($tiposMantenimiento) {
-                
-                // 2. Filtra por ESTATUS: La orden debe estar abierta.
-                $query->where('estatus', 2);
-                
-                // 3. Filtra por TIPO: La orden debe ser de mantenimiento o preventivo.
-                // Asumo que la columna en la tabla 'ordenes' se llama 'tipo'.
-                $query->whereIn('tipo', $tiposMantenimiento);
-            }); 
+        $query->whereHas('ordenes', function ($q) use ($tiposMantenimiento) {
+            // Estatus de orden abierta y tipo de mantenimiento
+            $q->where('estatus', 2)
+              ->whereIn('tipo', $tiposMantenimiento);
+        }); 
+    }
+
+    /**
+     * Scope: Filtra vehículos con CUALQUIER tipo de orden abierta (estatus = 2).
+     * Uso: Vehiculo::vehiculosConOrdenAbierta()
+     */
+    public function scopeVehiculosConOrdenAbierta(Builder $query): void
+    {
+        $query->whereHas('ordenes', function ($q) {
+            $q->where('estatus', 2);
+        });
+    }
+
+    /**
+     * Scope: Filtra vehículos que están listos para trabajar (asumimos estatus = 1).
+     * Uso: Vehiculo::disponibles()
+     */
+    public function scopeDisponibles(Builder $query): void
+    {
+        // Ajustar el estatus según tu lógica de "Disponible"
+        $query->where('estatus', 1);
+    }
+    
+    /**
+     * Scope: Filtra vehículos que tienen documentos vencidos, próximos a vencer o sin registrar (S/P).
+     * Nota: La lógica es compleja y asumo las columnas de fecha más importantes.
+     * Uso: Vehiculo::conDocumentosEnAlerta()
+     */
+    public function scopeConDocumentosEnAlerta(Builder $query): void
+    {
+        $today = Carbon::now()->toDateString();
+        $date30Days = Carbon::now()->addDays(30)->toDateString();
+        $dateFields = ['rotc_venc', 'poliza_fecha', 'rcv', 'racda', 'permiso_intt']; 
+
+        $query->where(function ($q) use ($dateFields, $today, $date30Days) {
+            foreach ($dateFields as $field) {
+                // OR: Vencidos (fecha < hoy) O Próximos a vencer (entre hoy y +30 días)
+                $q->orWhere($field, '<', $today);
+                $q->orWhereBetween($field, [$today, $date30Days]);
+                // OR: No registrado/Alerta de texto (Nulo o S/P)
+                $q->orWhereNull($field); 
+                $q->orWhere($field, 'like', '%S/P%');
+            }
+        });
     }
 
     /**
@@ -221,12 +257,6 @@ class Vehiculo extends Model
         return self::porCliente();
     }
     
-   public static function Disponibles()
-    {
-        // Llama al Scope 'porCliente' ANTES de realizar el conteo.
-        // El Scope ya tiene toda la lógica de seguridad y jerarquía.
-        return self::porCliente()->whereIn('estatus',[1,3]);
-    }
     
 
       /**
@@ -295,7 +325,7 @@ class Vehiculo extends Model
             return [
                 'class' => 'bg-danger', 
                 'icon' => 'bi-x-circle', 
-                'title' => "$docName: Error de Formato. El valor '{$rawValue}' no es una fecha válida.",
+                'title' =>  "$docName: Error de Formato. El valor '{$rawValue}' no es una fecha válida.",
             ];
         }
 

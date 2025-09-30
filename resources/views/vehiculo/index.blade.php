@@ -3,7 +3,7 @@
 $unidades_con_alerta = App\Models\Vehiculo::getUnidadesConDocumentosVencidos(Auth::user()->cliente_id)->count(); 
 $total_vehiculos = App\Models\Vehiculo::misVehiculos()->count(); 
 $unidades_con_orden_abierta = App\Models\Vehiculo::VehiculosConOrdenAbierta()->count();
-$unidades_en_mantenimiento = App\Models\Vehiculo::VehiculosEnMantenimiento()->count();
+$unidades_en_mantenimiento = App\Models\Vehiculo::countVehiculosEnMantenimiento();
 $unidades_disponibles = App\Models\Vehiculo::Disponibles()->count();
 @endphp
 @section('title', 'Dashboard de Vehículos')

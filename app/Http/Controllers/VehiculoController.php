@@ -49,19 +49,19 @@ class VehiculoController extends BaseController
             switch ($filterKey) {
                 
                 case 'mantenimiento':
-                    $query->VehiculosEnMantenimiento()->get();
+                    $query->VehiculosEnMantenimiento();
                     break;
 
                 case 'documentos_alerta':
-                    $query->VehiculosConDocumentosEnAlerta()->get(Auth::user()->cliente_id);
+                    $query->VehiculosConDocumentosEnAlerta(Auth::user()->cliente_id);
                     break;
                 
                 case 'disponibles':
                     // Filtro genérico que solo aplica si Vehiculo tiene columna 'estatus'
-                    $query->disponibles()->get();
+                    $query->disponibles();
                     break;
                 case 'con_orden_abierta':
-                    $query->VehiculosConOrdenAbierta()->get();
+                    $query->VehiculosConOrdenAbierta();
                     break;
                 
             }
