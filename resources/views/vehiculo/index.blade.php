@@ -42,6 +42,7 @@ $unidades_disponibles = App\Models\Vehiculo::countDisponibles();
     </div>
     <div class="col-md-2">
         <div class="card shadow-sm border-0 text-center">
+            <a href="{{ route('vehiculos.list', ['filter' => 'mantenimiento']) }}">
             <div class="card-body">
                 <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#007bff10;">
                     <i class="fa fa-exclamation-triangle text-primary" style="font-size:2rem;"></i>
@@ -49,6 +50,7 @@ $unidades_disponibles = App\Models\Vehiculo::countDisponibles();
                 <h2 class="fw-bold text-primary">{{ $unidades_en_mantenimiento}}</h2>
                 <div class="text-muted small">Por Mantenimiento</div>
             </div>
+            </a>
         </div>
     </div>
     <div class="col-md-2">
