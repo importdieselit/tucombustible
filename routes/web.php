@@ -107,6 +107,22 @@ Route::get('/inspecciones/{inspeccion_id}/pdf', [InspeccionController::class, 'e
                 
    
   Route::get('/permisos', [AccesoController::class, 'index'])->name('permisos.index');
+
+  // Rutas para la gestión de usuarios (CRUD principal)
+    Route::resource('usuarios', UserController::class);
+
+    // Rutas para la gestión de permisos específicos (Usuario Individual)
+    Route::get('usuarios/{usuario}/permissions', [UserController::class, 'editPermissions'])->name('usuarios.edit_permissions');
+    Route::put('usuarios/{usuario}/permissions', [UserController::class, 'updatePermissions'])->name('usuarios.update_permissions');
+
+    // Rutas para la gestión de perfiles (CRUD + Permisos Base)
+    // Usamos 'except' para indicar que la edición de permisos reemplaza al 'edit' genérico.
+    Route::resource('perfiles', PerfilController::class)->except(['edit', 'update']); 
+    
+    // Ruta para la edición de permisos base de un perfil
+    Route::get('perfiles/{perfil}/permissions', [PerfilController::class, 'editPermissions'])->name('perfiles.edit_permissions');
+    Route::put('perfiles/{perfil}/permissions', [PerfilController::class, 'updatePermissions'])->name('perfiles.update_permissions');
+
     
     // Las rutas de la API para obtener y actualizar permisos
     Route::get('/api/permisos/{user}/get', [AccesoController::class, 'getPermissionsForUser'])->name('permisos.get');

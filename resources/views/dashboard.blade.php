@@ -2,6 +2,17 @@
 
 @section('title', 'Dashboard')
 
+@php
+    // IDs de Módulos (referencia de tu tabla)
+    $MODULO_VEHICULOS = 1;
+    $MODULO_ORDENES = 2;
+    $MODULO_INVENTARIO = 30;
+    $MODULO_COMBUSTIBLE = 4;
+    $MODULO_DESPACHOS = 42;
+    $MODULO_USUARIOS = 51;
+    $MODULO_ADMINISTRAR = 5;
+@endphp
+
 @section('content')
 {{-- Se realizan las consultas a la base de datos directamente en la vista --}}
 <?php
@@ -192,6 +203,118 @@ $data = [
             </div>
         </div>
     </div>
+
+       {{-- Contenedor de Tarjetas de Acceso --}}
+    <div class="row g-4 mb-4 justify-content-center">
+        
+        {{-- =============================================== --}}
+        {{-- TARJETA DE VEHÍCULOS (ID 1) --}}
+        {{-- El usuario necesita al menos permiso de LECTURA para ver este módulo --}}
+        {{-- =============================================== --}}
+        @if(Auth::user()->canAccess('read', $MODULO_VEHICULOS))
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+            @include('partials.access_card', [
+                'route' => route('vehiculos.index'),
+                'icon' => 'fa-truck-fast',
+                'title' => 'Vehículos',
+                'color' => 'bg-info',
+                'bg_opacity' => 'rgba(23, 162, 184, 0.15)'
+            ])
+        </div>
+        @endif
+        
+        {{-- =============================================== --}}
+        {{-- TARJETA DE ÓRDENES DE MANTENIMIENTO (ID 2) --}}
+        {{-- =============================================== --}}
+        @if(Auth::user()->canAccess('read', $MODULO_ORDENES))
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+            @include('partials.access_card', [
+                'route' => route('ordenes.index'),
+                'icon' => 'fa-screwdriver-wrench',
+                'title' => 'Mantenimiento',
+                'color' => 'bg-warning',
+                'bg_opacity' => 'rgba(255, 193, 7, 0.15)'
+            ])
+        </div>
+        @endif
+        
+        {{-- =============================================== --}}
+        {{-- TARJETA DE INVENTARIO / ALMACÉN (ID 30) --}}
+        {{-- =============================================== --}}
+        @if(Auth::user()->canAccess('read', $MODULO_INVENTARIO))
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+            @include('partials.access_card', [
+                'route' => route('inventario.index'),
+                'icon' => 'fa-box-open',
+                'title' => 'Inventario',
+                'color' => 'bg-success',
+                'bg_opacity' => 'rgba(40, 167, 69, 0.15)'
+            ])
+        </div>
+        @endif
+
+        {{-- =============================================== --}}
+        {{-- TARJETA DE COMBUSTIBLE (ID 4) --}}
+        {{-- =============================================== --}}
+        @if(Auth::user()->canAccess('read', $MODULO_COMBUSTIBLE))
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+            @include('partials.access_card', [
+                'route' => route('combustible.index'),
+                'icon' => 'fa-gas-pump',
+                'title' => 'Combustible',
+                'color' => 'bg-secondary',
+                'bg_opacity' => 'rgba(108, 117, 125, 0.15)'
+            ])
+        </div>
+        @endif
+        
+        {{-- =============================================== --}}
+        {{-- TARJETA DE DESPACHOS / LOGÍSTICA (ID 42) --}}
+        {{-- =============================================== --}}
+        @if(Auth::user()->canAccess('read', $MODULO_DESPACHOS))
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+            @include('partials.access_card', [
+                'route' => route('despachos.index'),
+                'icon' => 'fa-route',
+                'title' => 'Despachos',
+                'color' => 'bg-primary',
+                'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
+            ])
+        </div>
+        @endif
+        
+        {{-- =============================================== --}}
+        {{-- TARJETA DE ADMINISTRACIÓN DE USUARIOS (ID 51) --}}
+        {{-- =============================================== --}}
+        @if(Auth::user()->canAccess('read', $MODULO_USUARIOS))
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+            @include('partials.access_card', [
+                'route' => route('usuarios.index'),
+                'icon' => 'fa-users-gear',
+                'title' => 'Usuarios',
+                'color' => 'bg-danger',
+                'bg_opacity' => 'rgba(220, 53, 69, 0.15)'
+            ])
+        </div>
+        @endif
+
+        {{-- =============================================== --}}
+        {{-- TARJETA DE CONFIGURACIÓN GENERAL (ID 5) --}}
+        {{-- =============================================== --}}
+        @if(Auth::user()->canAccess('read', $MODULO_ADMINISTRAR))
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+            @include('partials.access_card', [
+                'route' => route('admin.settings'),
+                'icon' => 'fa-gear',
+                'title' => 'Configuración',
+                'color' => 'bg-dark',
+                'bg_opacity' => 'rgba(33, 37, 41, 0.15)'
+            ])
+        </div>
+        @endif
+        
+    </div>
+
     <div class="row g-4">
         <div class="col-lg-6">
             <div class="card shadow-sm border-0 mb-4">

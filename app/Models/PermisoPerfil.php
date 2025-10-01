@@ -12,19 +12,19 @@ class PermisoPerfil extends Model
     protected $table = 'permiso_perfil'; // Nombre explícito de la tabla
 
     protected $fillable = [
-        'perfil_id',
-        'seccion_id',
-        'ver',
-        'crear',
-        'editar',
-        'eliminar',
+        'id_perfil',
+        'id_modulo',
+        'create',
+        'read',
+        'update',
+        'delete',
     ];
 
     protected $casts = [
-        'ver' => 'boolean',
-        'crear' => 'boolean',
-        'editar' => 'boolean',
-        'eliminar' => 'boolean',
+        'create' => 'boolean',
+        'read' => 'boolean',
+        'update' => 'boolean',
+        'delete' => 'boolean',
     ];
 
     /**
@@ -32,14 +32,17 @@ class PermisoPerfil extends Model
      */
     public function perfil()
     {
-        return $this->belongsTo(Perfil::class, 'perfil_id');
+        return $this->belongsTo(Perfil::class, 'id_perfil');
     }
 
     /**
      * Un permiso de perfil pertenece a una sección.
      */
-    public function seccion()
+    public function modulo()
     {
-        return $this->belongsTo(Seccion::class, 'seccion_id');
+        return $this->belongsTo(Modulo::class, 'id_modulo');
     }
+
+    public $timestamps = true;
+    
 }

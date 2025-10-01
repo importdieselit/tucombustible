@@ -2,87 +2,108 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Perfil; // CAMBIADO: Usar tu modelo Perfil
+use App\Models\Perfil;
+use App\Models\Modulo;
+use App\Models\PermisoPerfil;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule; // Añadir si no está
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\DB;
 
-class PerfilController extends Controller // CAMBIADO: Nombre de la clase
+// Hereda de BaseController para listar, crear, etc.
+class PerfilController extends BaseController
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    private $moduloAdministrarId = 5; // ID del módulo 'Administrar'
+    
+    public function __construct()
     {
-        $perfiles = Perfil::paginate(10); // CAMBIADO: a $perfiles
-        return view('perfiles.index', compact('perfiles')); // CAMBIADO: a perfiles.index
+        $this->model = new Perfil();
+        parent::__construct();
+    }
+    
+    // Sobrescribe el método 'index' para listar y añadir validación de permisos
+    public function index(Request $request)
+    {
+        // El ID del módulo 'Administrar' (5) y la acción 'read'
+        if (!auth()->user()->canAccess('read', $this->moduloAdministrarId)) {
+            abort(403, 'No tiene permiso para ver la lista de perfiles.');
+        }
+        
+        // Llama al método list() del BaseController
+        $query = Perfil::query();
+        return $this->list($query); 
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Muestra la vista para configurar los permisos base de un perfil.
+     * Esto reemplaza la vista 'edit' estándar de BaseController.
+     * @param int $id
+     * @return \Illuminate\View\View
      */
-    public function create()
+    public function editPermissions($id)
     {
-        return view('perfiles.create'); // CAMBIADO: a perfiles.create
+        if (!auth()->user()->canAccess('update', $this->moduloAdministrarId)) {
+            abort(403, 'No tiene permiso para modificar permisos de perfiles.');
+        }
+        
+        $perfil = Perfil::findOrFail($id);
+        
+        // Obtener todos los módulos y los permisos actuales del perfil
+        $modulos = Modulo::orderBy('nombre')->get();
+        $permisosActuales = $perfil->permisosBase->keyBy('id_modulo');
+
+        return view('perfiles.permissions', compact('perfil', 'modulos', 'permisosActuales'));
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Actualiza los permisos base del perfil en la tabla 'permiso_perfil'.
+     * @param Request $request
+     * @param int $id
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request)
+    public function updatePermissions(Request $request, $id)
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:perfiles,name'], // CAMBIADO: a perfiles
-        ]);
+        if (!auth()->user()->canAccess('update', $this->moduloAdministrarId)) {
+            abort(403, 'No tiene permiso para modificar permisos de perfiles.');
+        }
+        
+        $perfil = Perfil::findOrFail($id);
+        $permissions = $request->input('permissions', []); // Array de [moduloId => ['read', 'create', ...]]
+        $dataToSync = [];
+        $now = now();
 
-        Perfil::create([ // CAMBIADO: a Perfil
-            'name' => $request->name,
-            // Si tu tabla 'perfiles' tiene otras columnas como 'description', 'activo', etc., añádelas aquí.
-            'description' => $request->description ?? null, // Asumiendo que puedes tener una descripción
-            'activo' => $request->activo ?? true, // Asumiendo que puedes tener un campo activo
-        ]);
+        // 1. Procesar la entrada del formulario
+        foreach ($permissions as $moduleId => $actions) {
+            $dataToSync[] = [
+                'id_perfil' => $perfil->id,
+                'id_modulo' => $moduleId,
+                'read'      => in_array('read', $actions) ? 1 : 0,
+                'update'    => in_array('update', $actions) ? 1 : 0,
+                'create'    => in_array('create', $actions) ? 1 : 0,
+                'delete'    => in_array('delete', $actions) ? 1 : 0,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
 
-        return redirect()->route('perfiles.index')->with('success', 'Perfil creado exitosamente.'); // CAMBIADO: a perfiles.index
-    }
+        // 2. Transacción para asegurar la consistencia de los datos
+        DB::beginTransaction();
+        try {
+            // Eliminar todos los permisos base actuales del perfil
+            PermisoPerfil::where('id_perfil', $perfil->id)->delete();
+            
+            // Insertar la nueva matriz de permisos
+            if (!empty($dataToSync)) {
+                DB::table('permiso_perfil')->insert($dataToSync);
+            }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Perfil $perfil) // CAMBIADO: a Perfil $perfil
-    {
-        return redirect()->route('perfiles.edit', $perfil); // CAMBIADO: a perfiles.edit
-    }
+            DB::commit();
+            Session::flash('success', 'Permisos del perfil ' . $perfil->nombre_perfil . ' actualizados exitosamente.');
+        } catch (\Exception $e) {
+            DB::rollback();
+            Session::flash('error', 'Error al actualizar los permisos: ' . $e->getMessage());
+        }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Perfil $perfil) // CAMBIADO: a Perfil $perfil
-    {
-        return view('perfiles.edit', compact('perfil')); // CAMBIADO: a perfiles.edit
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Perfil $perfil) // CAMBIADO: a Perfil $perfil
-    {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255', Rule::unique('perfiles', 'name')->ignore($perfil->id)], // CAMBIADO: a perfiles
-        ]);
-
-        $perfil->name = $request->name;
-        $perfil->description = $request->description ?? $perfil->description; // Actualizar descripción si se envía
-        $perfil->activo = $request->activo ?? $perfil->activo; // Actualizar activo si se envía
-        $perfil->save();
-
-        return redirect()->route('perfiles.index')->with('success', 'Perfil actualizado exitosamente.'); // CAMBIADO: a perfiles.index
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Perfil $perfil) // CAMBIADO: a Perfil $perfil
-    {
-        $perfil->delete();
-        return redirect()->route('perfiles.index')->with('success', 'Perfil eliminado exitosamente.'); // CAMBIADO: a perfiles.index
+        return Redirect::route('perfiles.index');
     }
 }

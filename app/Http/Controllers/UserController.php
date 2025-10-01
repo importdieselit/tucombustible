@@ -24,6 +24,8 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class UserController extends Controller
 {
+
+    private $moduloIdUsuarios = 51; // ID del módulo 'Usuarios'
     /**
      * Display a listing of the resource.
      */
@@ -36,7 +38,7 @@ class UserController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create_old()
     {
         $perfiles = Perfil::all(); // CAMBIADO: Obtener perfiles
         //return view('users.create', compact('perfiles')); // CAMBIADO: Pasar 'perfiles'
@@ -82,7 +84,7 @@ class UserController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(User $user)
+    public function edit_old(User $user)
     {
         $perfiles = Perfil::all(); // CAMBIADO: Obtener perfiles
        // return view('users.edit', compact('user', 'perfiles')); // CAMBIADO: Pasar 'perfiles'
@@ -243,4 +245,36 @@ class UserController extends Controller
         return Redirect::back();
 
     }
+
+
+        public function create()
+    {
+        if (!auth()->user()->canAccess('create', $this->moduloIdUsuarios)) {
+             abort(403, 'No tiene permiso para crear usuarios.');
+        }
+        
+        $perfiles = Perfil::pluck('nombre_perfil')->toArray();
+        $clientes = Cliente::all();
+        
+        return view('usuarios.create_edit', compact('perfiles', 'clientes'));
+    }
+
+    /**
+     * Sobrescribe el método edit para pasar datos adicionales a la vista.
+     * @param int $id
+     * @return \Illuminate\View\View
+     */
+    public function edit($id)
+    {
+        if (!auth()->user()->canAccess('update', $this->moduloIdUsuarios)) {
+             abort(403, 'No tiene permiso para editar usuarios.');
+        }
+        
+        $item = $this->model->findOrFail($id);
+        $perfiles = Perfil::pluck('nombre_perfil')->toArray();
+        $clientes = Cliente::all();
+        
+        return view('usuarios.create_edit', compact('item', 'perfiles', 'clientes'));
+    }
+    
 }
