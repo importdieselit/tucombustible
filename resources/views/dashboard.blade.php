@@ -274,7 +274,7 @@ $data = [
         @if(Auth::user()->canAccess('read', $MODULO_DESPACHOS))
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
             @include('partials.access_card', [
-                'route' => route('despachos.index'),
+                'route' => route('despachos.list'),
                 'icon' => 'fa-route',
                 'title' => 'Despachos',
                 'color' => 'bg-primary',
@@ -289,7 +289,7 @@ $data = [
         @if(Auth::user()->canAccess('read', $MODULO_USUARIOS))
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
             @include('partials.access_card', [
-                'route' => route('usuarios.index'),
+                'route' => route('usuarios.list'),
                 'icon' => 'fa-users-gear',
                 'title' => 'Usuarios',
                 'color' => 'bg-danger',
@@ -301,7 +301,7 @@ $data = [
         {{-- =============================================== --}}
         {{-- TARJETA DE CONFIGURACIÓN GENERAL (ID 5) --}}
         {{-- =============================================== --}}
-        @if(Auth::user()->canAccess('read', $MODULO_ADMINISTRAR))
+        {{-- @if(Auth::user()->canAccess('read', $MODULO_ADMINISTRAR))
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
             @include('partials.access_card', [
                 'route' => route('admin.settings'),
@@ -312,7 +312,7 @@ $data = [
             ])
         </div>
         @endif
-        
+         --}}
     </div>
 
     <div class="row g-4">
