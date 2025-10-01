@@ -91,7 +91,7 @@ class User extends Authenticatable
         $profileId = $this->id_perfil ?? null; 
 
         if ($profileId) {
-            $hasProfileAccess = DB::table('permisos_perfiles')
+            $hasProfileAccess = DB::table('permiso_perfil')
                                   ->where('id_perfil', $profileId)
                                   ->where('id_modulo', $moduleId)
                                   ->where($action, 1)
