@@ -4,7 +4,9 @@
 
 @section('content')
 <div class="container-fluid mt-4">
+     @if(Auth::user()->canAccess('create', 10))
     <div class="row page-titles mb-4">
+        
         <div class="col-12 d-flex justify-content-between align-items-center">
             <h3 class="text-themecolor mb-0">Dashboard de Órdenes de Trabajo</h3>
             <a href="{{ route('ordenes.list') }}" class="btn btn-info d-flex align-items-center">
@@ -12,7 +14,9 @@
             </a>
         </div>
     </div>
+    @endif
 
+    {{-- Filtros --}}
     {{-- Primera fila de métricas --}}
     <div class="row mb-4">
         <div class="col-md-4">

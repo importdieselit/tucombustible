@@ -7,6 +7,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Support\Facades\DB;
+use App\Models\Perfil;
+use App\Models\Persona;
+use App\Models\PermisoUsuario;
+
 
 class User extends Authenticatable
 {
@@ -63,6 +68,98 @@ class User extends Authenticatable
     {
         return $this->hasMany(PermisoUsuario::class, 'users_id');
     }
+
+    public function canAccess(string $action, int $moduleId): bool
+    {
+        // 1. Verificar Permiso Asignado DIRECTAMENTE (tabla 'accesos')
+        // La tabla 'accesos' es tu tabla de Permisos Específicos por Usuario.
+        
+        $hasDirectAccess = DB::table('accesos')
+                            ->where('id_usuario', $this->id)
+                            ->where('id_modulo', $moduleId)
+                            ->where($action, 1) // Verifica si la columna 'read'/'update'/etc. es true (1)
+                            ->exists();
+
+        if ($hasDirectAccess) {
+            return true; // Si el permiso específico está en la tabla 'accesos', SE SUMA y es TRUE.
+        }
+
+        // 2. Verificar Permiso Base del Perfil (Asumiremos que tienes una tabla para esto)
+        // Ejemplo: `permisos_perfiles` tiene 'id_perfil', 'id_modulo', 'read', 'update', etc.
+        
+        // Obtener el ID del perfil base del usuario (asumiendo que $this->id_perfil existe)
+        $profileId = $this->id_perfil ?? null; 
+
+        if ($profileId) {
+            $hasProfileAccess = DB::table('permisos_perfiles')
+                                  ->where('id_perfil', $profileId)
+                                  ->where('id_modulo', $moduleId)
+                                  ->where($action, 1)
+                                  ->exists();
+            
+            if ($hasProfileAccess) {
+                return true; // Si el permiso está en el perfil base, es TRUE.
+            }
+        }
+
+        // 3. Ningún permiso encontrado
+        return false;
+    }
+
+
+
+    /**
+     * Método para asignar permisos extra a un usuario específico.
+     * @param array $permissions Array de permisos (ej: ['create-flota', 'view-finanzas']).
+     */
+     public function syncSpecificPermissions(array $modulePermissions): void
+    {
+        // 1. Eliminar todos los permisos específicos existentes para este usuario
+        DB::table('accesos')->where('id_usuario', $this->id)->delete();
+
+        $dataToInsert = [];
+        $now = now();
+
+        foreach ($modulePermissions as $moduleId => $actions) {
+            // Inicializar todas las acciones a 0 (FALSE)
+            $row = [
+                'id_usuario' => $this->id,
+                'id_modulo'  => $moduleId,
+                'read'       => 0,
+                'update'     => 0,
+                'create'     => 0,
+                'delete'     => 0,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+
+            // Establecer a 1 (TRUE) solo las acciones presentes en el array $actions
+            foreach ($actions as $action) {
+                if (array_key_exists($action, $row)) {
+                    $row[$action] = 1;
+                }
+            }
+            
+            $dataToInsert[] = $row;
+        }
+
+        // 2. Insertar los nuevos registros específicos
+        if (!empty($dataToInsert)) {
+            DB::table('accesos')->insert($dataToInsert);
+        }
+    }
+
+
+    // Relación con el filtro de permisos específicos por usuario (tabla 'accesos')
+    public function permisosAdicionales()
+    {
+        // Asume que la tabla 'accesos' es tu tabla pivote para permisos extra
+        return $this->hasMany(Acceso::class, 'id_usuario', 'id');
+    }
+
+
+
+
 
     // --- Relaciones existentes (mantener) ---
     public function vehicles()

@@ -104,12 +104,18 @@ $unidades_disponibles = App\Models\Vehiculo::Disponibles()->count();
                 <h5 class="mb-0">Acciones rápidas</h5>
             </div>
             <div class="card-body">
+                 @if(Auth::user()->canAccess('create', 10))
                 <a href="{{ route('vehiculos.create') }}" class="btn btn-primary w-100 mb-2">
                     <i class="fa fa-plus"></i> Registrar Vehículo
                 </a>
+                @endif
+                 @if(Auth::user()->canAccess('read', 10))
+
                 <a href="{{ route('vehiculos.list') }}" class="btn btn-outline-secondary w-100 mb-2">
                     <i class="fa fa-list"></i> Ver Listado
                 </a>
+                @endif
+                 
                 <a href="#" class="btn btn-outline-info w-100">
                     <i class="fa fa-file-excel"></i> Exportar Excel
                 </a>
