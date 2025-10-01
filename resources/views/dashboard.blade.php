@@ -271,10 +271,10 @@ $data = [
         {{-- =============================================== --}}
         {{-- TARJETA DE DESPACHOS / LOGÍSTICA (ID 42) --}}
         {{-- =============================================== --}}
-        @if(Auth::user()->canAccess('read', $MODULO_DESPACHOS))
+        @if(Auth::user()->canAccess('create', $MODULO_DESPACHOS))
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
             @include('partials.access_card', [
-                'route' => route('despachos.list'),
+                'route' => route('combustible.despacho'),
                 'icon' => 'fa-route',
                 'title' => 'Despachos',
                 'color' => 'bg-primary',

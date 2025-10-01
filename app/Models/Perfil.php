@@ -28,12 +28,11 @@ class Perfil extends Model
     {
         return $this->hasMany(User::class, 'perfil_id');
     }
-
     /**
-     * Un perfil tiene muchos permisos de sección.
+     * Un perfil tiene muchos permisos.
      */
-    public function permisosSeccion()
+    public function permisos()
     {
-        return $this->hasMany(PermisoPerfil::class, 'perfil_id');
-    }
+        return $this->hasMany(PermisoPerfil::class, 'id_perfil');
+
 }
