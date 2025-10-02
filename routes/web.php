@@ -147,7 +147,7 @@ Route::get('/inspecciones/{inspeccion_id}/pdf', [InspeccionController::class, 'e
         'proveedores' => ProveedorController::class,
         //'servicios' => ServicioController::class,
         'perfiles' => PerfilController::class,
-        'usuarios' => UserController::class,
+        'usuarios' => UserController::class
         //'plan-mantenimiento' => PlanMantenimientoController::class,
         //'historial-mantenimiento' => HistorialMantenimientoController::class,
         // Agrega aquí otros recursos según tus tablas/modelos
