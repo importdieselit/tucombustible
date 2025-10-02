@@ -191,4 +191,37 @@ class User extends Authenticatable
     {
         return $this->perfil ? $this->perfil->nombre : 'Usuario';
     }
+
+    public function index()
+    {
+        if (!auth()->user()->canAccess('read', $this->moduloIdUsuarios)) {
+            abort(403, 'No tiene permiso para ver el dashboard de usuarios.');
+        }
+        
+        // Obtener el ID del cliente del usuario autenticado
+        $clienteId = auth()->user()->cliente_id;
+        
+        // 1. Consulta el conteo de usuarios por perfil.
+        // Usamos la tabla 'users' directamente.
+        $perfilesConteo = DB::table('users')
+            ->select('perfil', DB::raw('COUNT(*) as total'))
+            // 2. Aplicar el filtro de seguridad de cliente
+            // Esto asume que tienes la columna 'cliente_id' en tu tabla 'users'
+            ->when($clienteId !== 0, function ($query) use ($clienteId) {
+                // Lógica de seguridad: solo mostrar usuarios del mismo cliente (y sus hijos, si aplica)
+                // (Esta lógica debería coincidir con la de BaseController::list)
+                $query->where('cliente_id', $clienteId); 
+                
+                // NOTA: Si necesitas incluir clientes hijos, la lógica debe ser más compleja, 
+                // pero para el dashboard, un filtro directo por cliente_id es más seguro.
+            })
+            ->groupBy('perfil')
+            ->orderBy('total', 'desc')
+            ->get();
+
+        // 3. Obtener el total general para la card principal.
+        $totalGeneral = $perfilesConteo->sum('total');
+
+        return view('usuarios.dashboard', compact('perfilesConteo', 'totalGeneral'));
+    }
 }
