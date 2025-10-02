@@ -16,54 +16,54 @@
 @section('content')
 {{-- Se realizan las consultas a la base de datos directamente en la vista --}}
 <?php
-use App\Models\Vehiculo;
-use App\Models\Orden;
-use App\Models\Deposito;
-use App\Models\User;
-use App\Models\Alerta;
-use App\Models\Mantenimiento;
-use App\Models\Inventario;
-use Illuminate\Support\Facades\DB;
+// use App\Models\Vehiculo;
+// use App\Models\Orden;
+// use App\Models\Deposito;
+// use App\Models\User;
+// use App\Models\Alerta;
+// use App\Models\Mantenimiento;
+// use App\Models\Inventario;
+// use Illuminate\Support\Facades\DB;
 
-// KPI: Vehículos en operación
-$totalVehiculos = Vehiculo::count();
+// // KPI: Vehículos en operación
+// $totalVehiculos = Vehiculo::count();
 
-// KPI: Órdenes activas (ejemplo: estatus 1 = activo/en proceso, 2 = pendiente)
-$ordenesActivas = Orden::whereIn('estatus', [1, 2])->count();
+// // KPI: Órdenes activas (ejemplo: estatus 1 = activo/en proceso, 2 = pendiente)
+// $ordenesActivas = Orden::whereIn('estatus', [1, 2])->count();
 
-// KPI: Depósitos operativos (ejemplo: estatus 1 = operativo)
-$depositosOperativos = Deposito::count();
+// // KPI: Depósitos operativos (ejemplo: estatus 1 = operativo)
+// $depositosOperativos = Deposito::count();
 
-// KPI: Usuarios activos (ejemplo: estatus 1 = activo)
-$usuariosActivos = User::where('status', 1)->count();
+// // KPI: Usuarios activos (ejemplo: estatus 1 = activo)
+// $usuariosActivos = User::where('status', 1)->count();
 
-// KPI: Alertas críticas
-$alertasCriticas = 2; //Alerta::where('prioridad', 'critica')->count();
+// // KPI: Alertas críticas
+// $alertasCriticas = 2; //Alerta::where('prioridad', 'critica')->count();
 
-// KPI: Mantenimientos pendientes
-$mantenimientosPendientes = 4; //Mantenimiento::where('estatus', 'pendiente')->count();
+// // KPI: Mantenimientos pendientes
+// $mantenimientosPendientes = 4; //Mantenimiento::where('estatus', 'pendiente')->count();
 
-// KPI: Inventario bajo (existencia < existencia_minima)
-$inventarioBajo = Inventario::whereColumn('existencia', '<', 'existencia_minima')->count();
+// // KPI: Inventario bajo (existencia < existencia_minima)
+// $inventarioBajo = Inventario::whereColumn('existencia', '<', 'existencia_minima')->count();
 
-// KPI: Eficiencia de flota - Se deja como un valor fijo ya que la lógica es muy compleja
-$eficienciaFlota = 92; 
+// // KPI: Eficiencia de flota - Se deja como un valor fijo ya que la lógica es muy compleja
+// $eficienciaFlota = 92; 
 
-// Tabla de órdenes recientes
-$ordenesRecientes = Orden::orderBy('created_at', 'desc')->limit(3)->get();
-$alertasRecientes = Alerta::orderBy('id_alerta', 'desc')->limit(5)->get();
+// // Tabla de órdenes recientes
+// $ordenesRecientes = Orden::orderBy('created_at', 'desc')->limit(3)->get();
+// $alertasRecientes = Alerta::orderBy('id_alerta', 'desc')->limit(5)->get();
 
-// Datos para el gráfico de órdenes por estatus
-$ordenesPorEstatus = Orden::select('estatus', DB::raw('count(*) as total'))
-                         ->groupBy('estatus')
-                         ->pluck('total', 'estatus')
-                         ->toArray();
-$labels = ['Completada', 'Pendiente', 'En Proceso'];
-$data = [
-    $ordenesPorEstatus[3] ?? 0, // Suponiendo 3 es completada
-    $ordenesPorEstatus[2] ?? 0, // Suponiendo 2 es pendiente
-    $ordenesPorEstatus[1] ?? 0  // Suponiendo 1 es en proceso
-];
+// // Datos para el gráfico de órdenes por estatus
+// $ordenesPorEstatus = Orden::select('estatus', DB::raw('count(*) as total'))
+//                          ->groupBy('estatus')
+//                          ->pluck('total', 'estatus')
+//                          ->toArray();
+// $labels = ['Completada', 'Pendiente', 'En Proceso'];
+// $data = [
+//     $ordenesPorEstatus[3] ?? 0, // Suponiendo 3 es completada
+//     $ordenesPorEstatus[2] ?? 0, // Suponiendo 2 es pendiente
+//     $ordenesPorEstatus[1] ?? 0  // Suponiendo 1 es en proceso
+// ];
 ?>
 
 <div class="container-fluid">
