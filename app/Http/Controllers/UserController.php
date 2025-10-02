@@ -96,7 +96,7 @@ class UserController extends BaseController
         // 3. Devolver la vista del Dashboard/Index con las variables
         // Esto asume que tienes la vista en resources/views/usuarios/index.blade.php
         // y que mostrará las cards (KPIs) en lugar del listado.
-        return view('usuarios.index', compact('perfilesConteo', 'totalGeneral'));
+        return view('usuario.index', compact('perfilesConteo', 'totalGeneral'));
     }
     /**
      * Show the form for creating a new resource.
