@@ -109,12 +109,19 @@
                                                 @foreach ($actions as $action)
                                                     <td class="text-center">
                                                         <div class="form-check d-inline-block">
+                                                            @php
+                                                                // Lógica para determinar si el checkbox debe estar marcado
+                                                                $isCheckedPadre = old("permisos.{$padre->id}.{$action}", $currentPermisosPadre[$action] ?? false);
+                                                            @endphp
+                                                            
+                                                            {{-- FIX: Usar el atributo 'checked' condicionalmente --}}
                                                             <input class="form-check-input" 
-                                                                   type="checkbox" 
-                                                                   value="1" 
-                                                                   name="permisos[{{ $hijo->id }}][{{ $action }}]"
-                                                                   @checked(old('permisos.' . $hijo->id . '.' . $action, $currentPermisosHijo[$action] ?? false))
-                                                                   >
+                                                                type="checkbox" 
+                                                                value="1" 
+                                                                name="permisos[{{ $padre->id }}][{{ $action }}]"
+                                                                id="permiso-{{ $padre->id }}-{{ $action }}"
+                                                                {{ $isCheckedPadre ? 'checked' : '' }} 
+                                                            >
                                                         </div>
                                                     </td>
                                                 @endforeach
