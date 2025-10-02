@@ -330,7 +330,7 @@ class UserController extends BaseController
         $perfiles = Perfil::pluck('nombre')->toArray();
         $clientes = Cliente::all();
         
-        return view('usuarios.create_edit', compact('perfiles', 'clientes'));
+        return view('usuario.create_edit', compact('perfiles', 'clientes'));
     }
 
     /**
