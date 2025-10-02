@@ -66,7 +66,7 @@
                                 @endphp
                                 
                                 {{-- Recorre la colección jerárquica ($modulosJerarquicos) --}}
-                                @foreach ($modulosJerarquicos as $padre)
+                                @foreach ($modulos as $padre)
                                     @php
                                         // Cargar los permisos actuales (si el campo 'permisos' es un JSON/Array en el modelo)
                                         $currentPermisosPadre = $item->permisos[$padre->id] ?? [];
