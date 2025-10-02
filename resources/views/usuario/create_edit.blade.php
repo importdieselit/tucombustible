@@ -58,7 +58,7 @@
                                 </option>
                             @endforeach
                         </select>
-                        <small class="text-danger">Solo requerido para el perfil '{{ $perfilClienteName }}'.</small>
+                        <small class="text-danger">Solo requerido para el perfil 'cliente'.</small>
                     </div>
 
                     {{-- Este div es un placeholder para que la fila se vea bien cuando el selector de cliente está oculto --}}
