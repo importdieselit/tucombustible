@@ -78,7 +78,7 @@
                                         <tr class="table-info fw-bold"> {{-- Usa table-info para resaltar --}}
                                             <td>
                                                 <i class="{{ $padre->icono ?? 'fas fa-cogs' }} me-2"></i> 
-                                                {{ $padre->nombre }}
+                                                {{ $padre->modulo }}
                                             </td>
                                             @foreach ($actions as $action)
                                                 <td class="text-center">
@@ -104,7 +104,7 @@
                                             <tr class="table-light"> {{-- Fila normal o con indentación visual --}}
                                                 <td class="ps-5"> 
                                                     <i class="fas fa-level-up-alt fa-rotate-90 me-2 text-muted"></i> 
-                                                    {{ $hijo->nombre }}
+                                                    {{ $hijo->modulo }}
                                                 </td>
                                                 @foreach ($actions as $action)
                                                     <td class="text-center">
