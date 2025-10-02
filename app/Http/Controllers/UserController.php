@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Perfil; // CAMBIADO: Usar tu modelo Perfil
+use App\Models\Perfil; 
 use App\Models\Persona;
 use App\Models\Cliente;
 use Illuminate\Http\Request;
@@ -51,7 +51,6 @@ class UserController extends BaseController
             // Si es un nuevo registro y no hay contraseña (debería fallar la validación, pero por seguridad)
             // Se asume que el frontend tiene validación
         } else {
-            // Si es edición y la contraseña está vacía, la eliminamos para no sobrescribir el hash
             unset($data['password']);
         }
 
@@ -60,20 +59,18 @@ class UserController extends BaseController
             // Perfil 'cliente': mantiene el id_cliente enviado por el formulario
             // Si no se envía (y es requerido), la validación debe fallar.
         } else {
-            // Otros perfiles: forzar el id_cliente al valor por defecto (0)
             $data['id_cliente'] = $this->defaultClienteId;
         }
 
         return $data;
     }
 
-
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $users = User::with('perfil')->paginate(10); // CAMBIADO: Cargar la relación 'perfil'
+        $users = User::with('perfil')->paginate(10); 
    //     return view('users.index', compact('users'));
     }
 
@@ -82,7 +79,7 @@ class UserController extends BaseController
      */
     public function create_old()
     {
-        $perfiles = Perfil::all(); // CAMBIADO: Obtener perfiles
+        $perfiles = Perfil::all(); 
         //return view('users.create', compact('perfiles')); // CAMBIADO: Pasar 'perfiles'
     }
 
@@ -93,13 +90,11 @@ class UserController extends BaseController
         }
     
         // 2. Llama al método list() del padre. 
-        //    El BaseController aplicará los filtros de seguridad del cliente.
         return parent::list($query); 
     
     }
 
 
-    // Sobrescribe el método store para hashear la contraseña y asignar id_cliente
     public function store(Request $request)
     {
         if (!auth()->user()->canAccess('create', $this->moduloIdUsuarios)) {
@@ -108,11 +103,9 @@ class UserController extends BaseController
 
         $data = $this->prepareData($request);
         
-        // Se usa el método store del BaseController
         return parent::store(new Request($data));
     }
     
-    // Sobrescribe el método update para manejar la contraseña opcional y asignar id_cliente
     public function update(Request $request, $id)
     {
         if (!auth()->user()->canAccess('update', $this->moduloIdUsuarios)) {
@@ -135,27 +128,34 @@ class UserController extends BaseController
     /**
      * Display the specified resource.
      */
-    public function show(User $user)
-    {
-       // return redirect()->route('users.edit', $user);
-    }
+      public function show($id) 
+        {
+            if (!auth()->user()->canAccess('read', $this->moduloIdUsuarios)) {
+                abort(403, 'No tiene permiso para ver detalles de usuarios.');
+            }    
+            return parent::show($id);
+        }
 
     /**
      * Show the form for editing the specified resource.
      */
     public function edit_old(User $user)
     {
-        $perfiles = Perfil::all(); // CAMBIADO: Obtener perfiles
-       // return view('users.edit', compact('user', 'perfiles')); // CAMBIADO: Pasar 'perfiles'
+        $perfiles = Perfil::all();
+        // return view('users.edit', compact('user', 'perfiles')); // CAMBIADO: Pasar 'perfiles'
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(User $user)
+     public function destroy($id) 
     {
-        $user->delete();
-        return redirect()->route('users.index')->with('success', 'Usuario eliminado exitosamente.');
+        if (!auth()->user()->canAccess('delete', $this->moduloIdUsuarios)) {
+             abort(403, 'No tiene permiso para eliminar usuarios.');
+        }
+        
+        // Usamos la lógica del padre para eliminar y manejar redirección/mensajes.
+        return parent::destroy($id);
     }
 
      public function import()
