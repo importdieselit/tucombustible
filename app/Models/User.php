@@ -157,65 +157,6 @@ class User extends Authenticatable
         return $this->hasMany(Acceso::class, 'id_usuario', 'id');
     }
 
-
-
-
-
-    // --- Relaciones existentes (mantener) ---
-    public function vehicles()
-    {
-        // Si la relación current_driver_id en vehicles apunta a users.id,
-        // y quieres que apunte a personas.id, necesitarás otra migración y ajuste aquí.
-        // Por ahora, asumimos que current_driver_id en vehicles sigue apuntando a users.id
-        // y que User::find(driver_id)->persona->conductor es la forma de acceder al conductor.
-        return $this->hasMany(Vehicle::class, 'current_driver_id');
-    }
-
-    public function vehicleStatusLogs()
-    {
-        return $this->hasMany(VehicleStatusLog::class, 'user_id');
-    }
-
-    public function maintenanceRecords()
-    {
-        return $this->hasMany(MaintenanceRecord::class, 'performed_by_user_id');
-    }
-
-    public function approvedMaintenanceRecords()
-    {
-        return $this->hasMany(MaintenanceRecord::class, 'approved_by_user_id');
-    }
-
-    public function inspections()
-    {
-        return $this->hasMany(Inspection::class, 'inspected_by_user_id');
-    }
-
-    public function createdPurchaseOrders()
-    {
-        return $this->hasMany(PurchaseOrder::class, 'created_by_user_id');
-    }
-
-    public function requestedOutgoingOrders()
-    {
-        return $this->hasMany(OutgoingOrder::class, 'requested_by_user_id');
-    }
-
-    public function approvedOutgoingOrders()
-    {
-        return $this->hasMany(OutgoingOrder::class, 'approved_by_user_id');
-    }
-
-    public function stockMovements()
-    {
-        return $this->hasMany(StockMovement::class, 'user_id');
-    }
-
-    public function stockCounts()
-    {
-        return $this->hasMany(StockCount::class, 'counted_by_user_id');
-    }
-
     /**
      * Get the cliente that owns the user.
      * Los clientes son usuarios con id_perfil = 3 (cliente)
@@ -256,4 +197,6 @@ class User extends Authenticatable
     {
         return $this->perfil ? $this->perfil->nombre : 'Usuario';
     }
+
+    
 }

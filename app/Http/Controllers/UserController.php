@@ -22,7 +22,7 @@ use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 
-class UserController extends Controller
+class UserController extends BaseController
 {
 
     private $moduloIdUsuarios = 51; // ID del módulo 'Usuarios'
