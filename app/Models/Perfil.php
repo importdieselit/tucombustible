@@ -35,4 +35,5 @@ class Perfil extends Model
     {
         return $this->hasMany(PermisoPerfil::class, 'id_perfil');
 
+    }
 }
