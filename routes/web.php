@@ -35,7 +35,7 @@ use App\Models\Deposito;
 Auth::routes();
 
 Route::get('/', function () {
-    dd('error  403: Acceso no autorizado. Por favor, inicie sesión.');
+    //dd('error  403: Acceso no autorizado. Por favor, inicie sesión.');
     // Si deseas redirigir a una página específica, descomenta la línea siguiente:
     return redirect()->route('login');
 });

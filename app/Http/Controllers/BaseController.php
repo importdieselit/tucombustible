@@ -111,24 +111,24 @@ abstract class BaseController extends Controller
 
         $tableName = $this->model->getTable();
 
-        // if (Schema::hasColumn($tableName, 'id_cliente')) {
+        if (Schema::hasColumn($tableName, 'id_cliente')) {
 
-        //     if ($user->cliente_id === 0) {
-        //         // 1. SUPER USUARIO (cliente_id == 0)
-        //         // No se aplica ningún filtro, obtiene todos los registros.
-        //     } elseif ($cliente && $cliente->parent === 0) {
-        //         // 2. CLIENTE PRINCIPAL / PADRE
+            if ($user->cliente_id === 0) {
+                // 1. SUPER USUARIO (cliente_id == 0)
+                // No se aplica ningún filtro, obtiene todos los registros.
+            } elseif ($cliente && $cliente->parent === 0) {
+                // 2. CLIENTE PRINCIPAL / PADRE
 
-        //         // Obtener los IDs de todos los clientes hijos
-        //         $subClientIds = Cliente::where('parent', $user->cliente_id)->pluck('id'); 
-        //         $allowedClientIds = $subClientIds->push($user->cliente_id);
-        //         $query->whereIn('id_cliente', $allowedClientIds);
+                // Obtener los IDs de todos los clientes hijos
+                $subClientIds = Cliente::where('parent', $user->cliente_id)->pluck('id'); 
+                $allowedClientIds = $subClientIds->push($user->cliente_id);
+                $query->whereIn('id_cliente', $allowedClientIds);
 
-        //     } else {
-        //         // 3. CLIENTE HIJO o CLIENTE REGULAR SIN JERARQUÍA
-        //         $query->where('id_cliente', $user->cliente_id);
-        //     }
-        // }
+            } else {
+                // 3. CLIENTE HIJO o CLIENTE REGULAR SIN JERARQUÍA
+                $query->where('id_cliente', $user->cliente_id);
+            }
+        }
 
         $data = $query->get();
         //    $data = $this->model->all();
