@@ -37,10 +37,38 @@ class PerfilController extends BaseController
         return $this->list($query); 
     }
 
-     protected function getModuloData(): array
+    protected function getModuloData(): array
     {
+        // 1. Obtener todos los módulos y ordenarlos por el campo 'orden' (asumiendo que existe)
+        $allModulos = Modulo::orderBy('id_padre')
+                            ->orderBy('orden') // Asumiendo un campo 'orden' para el ordenamiento
+                            ->get();
+
+        $modulosJerarquicos = collect();
+        $modulosHijos = [];
+
+        // 2. Separar padres (id_padre = 0) de hijos (id_padre > 0)
+        foreach ($allModulos as $modulo) {
+            if ($modulo->id_padre == 0) {
+                // Inicializar el padre
+                $modulo->hijos = collect();
+                $modulosJerarquicos->push($modulo);
+            } else {
+                // Guardar hijos temporalmente por id_padre
+                $modulosHijos[$modulo->id_padre][] = $modulo;
+            }
+        }
+
+        // 3. Asignar los hijos a sus respectivos padres
+        foreach ($modulosJerarquicos as $padre) {
+            if (isset($modulosHijos[$padre->id])) {
+                $padre->hijos = collect($modulosHijos[$padre->id]);
+            }
+        }
+        
+        // Devolvemos la estructura jerárquica
         return [
-            'modulos' => Modulo::all(),
+            'modulos' => $modulosJerarquicos, // Nueva variable que usaremos en la vista
         ];
     }
 

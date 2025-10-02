@@ -52,34 +52,33 @@
                         <h5 class="mb-0">Asignación de Permisos por Módulo</h5>
                         <small class="text-muted">Marque los permisos (CRUD) que tendrá este perfil.</small>
                     </div>
+                    
                     <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-striped table-hover mb-0">
+                            <table class="table table-hover mb-0">
                                 <thead class="table-dark">
                                     <tr>
                                         <th>Módulo</th>
-                                        <th class="text-center">Leer (Read)</th>
-                                        <th class="text-center">Crear (Create)</th>
-                                        <th class="text-center">Editar (Update)</th>
-                                        <th class="text-center">Eliminar (Delete)</th>
+                                        <th class="text-center">Leer</th>
+                                        <th class="text-center">Crear</th>
+                                        <th class="text-center">Editar</th>
+                                        <th class="text-center">Eliminar</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($modulos as $modulo)
+                                    {{-- Recorre la colección jerárquica --}}
+                                    @foreach ($modulos as $padre)
                                         @php
-                                            // Obtener el estado del permiso actual del perfil
-                                            // ASUMIMOS que los permisos se guardan en un array: 
-                                            // $item->permisos['modulo_id']['action']
-                                            $currentPermisos = $item->permisos[$modulo->id] ?? [];
-                                            
-                                            // Definir las acciones básicas de un CRUD
                                             $actions = ['read', 'create', 'update', 'delete'];
+                                            // Obtener el estado del permiso actual para el padre
+                                            $currentPermisosPadre = $item->permisos[$padre->id] ?? [];
                                         @endphp
-                                        
-                                        <tr>
+
+                                        {{-- FILA DEL MÓDULO PADRE (Resaltada) --}}
+                                        <tr class="table-info fw-bold"> {{-- Usa table-info para resaltar --}}
                                             <td>
-                                                <i class="{{ $modulo->icono ?? 'fas fa-cogs' }} me-2"></i> 
-                                                {{ $modulo->nombre }}
+                                                <i class="{{ $padre->icono ?? 'fas fa-cogs' }} me-2"></i> 
+                                                {{ $padre->nombre }}
                                             </td>
                                             @foreach ($actions as $action)
                                                 <td class="text-center">
@@ -87,19 +86,47 @@
                                                         <input class="form-check-input" 
                                                                type="checkbox" 
                                                                value="1" 
-                                                               name="permisos[{{ $modulo->id }}][{{ $action }}]"
-                                                               id="permiso-{{ $modulo->id }}-{{ $action }}"
-                                                               @checked(old('permisos.' . $modulo->id . '.' . $action, $currentPermisos[$action] ?? false))
+                                                               name="permisos[{{ $padre->id }}][{{ $action }}]"
+                                                               @checked(old('permisos.' . $padre->id . '.' . $action, $currentPermisosPadre[$action] ?? false))
                                                                >
                                                     </div>
                                                 </td>
                                             @endforeach
                                         </tr>
+
+                                        {{-- Recorre los módulos Hijos --}}
+                                        @foreach ($padre->hijos as $hijo)
+                                            @php
+                                                // Obtener el estado del permiso actual para el hijo
+                                                $currentPermisosHijo = $item->permisos[$hijo->id] ?? [];
+                                            @endphp
+                                            
+                                            <tr class="table-light"> {{-- Fila normal o con indentación visual --}}
+                                                <td class="ps-5"> 
+                                                    <i class="fas fa-level-up-alt fa-rotate-90 me-2 text-muted"></i> 
+                                                    {{ $hijo->nombre }}
+                                                </td>
+                                                @foreach ($actions as $action)
+                                                    <td class="text-center">
+                                                        <div class="form-check d-inline-block">
+                                                            <input class="form-check-input" 
+                                                                   type="checkbox" 
+                                                                   value="1" 
+                                                                   name="permisos[{{ $hijo->id }}][{{ $action }}]"
+                                                                   @checked(old('permisos.' . $hijo->id . '.' . $action, $currentPermisosHijo[$action] ?? false))
+                                                                   >
+                                                        </div>
+                                                    </td>
+                                                @endforeach
+                                            </tr>
+                                        @endforeach
+                                        
                                     @endforeach
                                 </tbody>
                             </table>
                         </div>
                     </div>
+
                 </div>
 
                 <div class="d-flex justify-content-end mb-5">
