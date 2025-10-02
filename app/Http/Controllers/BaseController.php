@@ -96,7 +96,7 @@ abstract class BaseController extends Controller
      */
     public function list($query=null) // Aún recibe el Query Builder inicial
     {
-       
+       dd('llegue aqui - 6');
        $user = auth()->user();
        $cliente = Cliente::find($user->cliente_id);
        dd('llegue aqui - 5');
