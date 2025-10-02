@@ -38,9 +38,9 @@
                         <select class="form-control" id="perfil" name="perfil" required>
                             <option value="">-- Seleccione un Perfil --</option>
                             @foreach($perfiles as $perfil)
-                                <option value="{{ $perfil }}" 
-                                    {{ old('perfil', $item->perfil ?? '') == $perfil ? 'selected' : '' }}>
-                                    {{ Str::ucfirst($perfil) }}
+                                <option value="{{ $perfil->id }}" 
+                                    {{ old('perfil', $item->perfil ?? '') == $perfil->nombre ? 'selected' : '' }}>
+                                    {{ Str::ucfirst($perfil->nombre) }}
                                 </option>
                             @endforeach
                         </select>
@@ -54,7 +54,7 @@
                             @foreach($clientes as $cliente)
                                 <option value="{{ $cliente->id }}" 
                                     {{ old('id_cliente', $item->id_cliente ?? '') == $cliente->id ? 'selected' : '' }}>
-                                    {{ $cliente->name }}
+                                    {{ $cliente->name }}    
                                 </option>
                             @endforeach
                         </select>
@@ -87,7 +87,7 @@
         const clienteGroup = document.getElementById('cliente-selector-group');
         const clienteInput = document.getElementById('id_cliente');
         const clientePlaceholder = document.getElementById('cliente-placeholder-group');
-        const perfilCliente = '{{ $perfilClienteName }}'; // Obtiene el nombre 'cliente' desde el controlador
+        const perfilCliente = 3; // Obtiene el nombre 'cliente' desde el controlador
 
         function toggleClienteSelector() {
             if (perfilSelector.value === perfilCliente) {
