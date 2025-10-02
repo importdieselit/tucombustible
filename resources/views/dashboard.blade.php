@@ -218,6 +218,7 @@ $data = [
                 'icon' => 'fa-truck-fast',
                 'title' => 'Vehículos',
                 'color' => 'bg-info',
+                'target' => '_blank',
                 'bg_opacity' => 'rgba(23, 162, 184, 0.15)'
             ])
         </div>

@@ -88,10 +88,8 @@ class UserController extends BaseController
         if (!auth()->user()->canAccess('read', $this->moduloIdUsuarios)) {
             abort(403, 'No tiene permiso para ver la lista de usuarios.');
         }
-    
         // 2. Llama al método list() del padre. 
-        return parent::list($query); 
-    
+        return parent::list($query);    
     }
 
 
@@ -100,7 +98,6 @@ class UserController extends BaseController
         if (!auth()->user()->canAccess('create', $this->moduloIdUsuarios)) {
              abort(403, 'No tiene permiso para crear usuarios.');
         }
-
         $data = $this->prepareData($request);
         
         return parent::store(new Request($data));
@@ -282,9 +279,7 @@ class UserController extends BaseController
 
     }
 
-    
-
-        public function create()
+    public function create()
     {
         if (!auth()->user()->canAccess('create', $this->moduloIdUsuarios)) {
              abort(403, 'No tiene permiso para crear usuarios.');

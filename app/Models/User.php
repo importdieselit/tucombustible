@@ -11,8 +11,6 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Perfil;
 use App\Models\Persona;
 use App\Models\PermisoUsuario;
-
-
 class User extends Authenticatable
 {
     use HasFactory, Notifiable, HasApiTokens;
@@ -167,8 +165,6 @@ class User extends Authenticatable
         return $this->belongsTo(Cliente::class, 'cliente_id', 'id');
     }
 
-
-
     /**
      * Get the master user.
      */
@@ -176,8 +172,6 @@ class User extends Authenticatable
     {
         return $this->belongsTo(User::class, 'id_master');
     }
-
-    
 
     /**
      * Get the full name of the user.
@@ -197,6 +191,4 @@ class User extends Authenticatable
     {
         return $this->perfil ? $this->perfil->nombre : 'Usuario';
     }
-
-    
 }
