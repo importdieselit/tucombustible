@@ -26,6 +26,48 @@ class UserController extends Controller
 {
 
     private $moduloIdUsuarios = 51; // ID del módulo 'Usuarios'
+    private $perfilClienteName = 'cliente'; // Nombre del perfil que requiere id_cliente
+    private $defaultClienteId = 0; // ID para perfiles que no son de cliente
+
+
+    public function __construct()
+    {
+        $this->model = new User();
+        parent::__construct();
+    }
+
+    /**
+     * Prepara los datos del formulario (create/edit)
+     */
+    protected function prepareData(Request $request, ?User $item = null): array
+    {
+        $data = $request->except(['password', 'password_confirmation']);
+        $currentProfile = $request->input('perfil', $item ? $item->perfil : null);
+
+        // 1. Manejo de Contraseña (Solo si se envía o si es nuevo)
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->input('password'));
+        } elseif (!$item) {
+            // Si es un nuevo registro y no hay contraseña (debería fallar la validación, pero por seguridad)
+            // Se asume que el frontend tiene validación
+        } else {
+            // Si es edición y la contraseña está vacía, la eliminamos para no sobrescribir el hash
+            unset($data['password']);
+        }
+
+        // 2. Lógica de Asignación de id_cliente
+        if ($currentProfile === $this->perfilClienteName) {
+            // Perfil 'cliente': mantiene el id_cliente enviado por el formulario
+            // Si no se envía (y es requerido), la validación debe fallar.
+        } else {
+            // Otros perfiles: forzar el id_cliente al valor por defecto (0)
+            $data['id_cliente'] = $this->defaultClienteId;
+        }
+
+        return $data;
+    }
+
+
     /**
      * Display a listing of the resource.
      */
@@ -51,26 +93,37 @@ class UserController extends Controller
     }
 
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    // Sobrescribe el método store para hashear la contraseña y asignar id_cliente
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'perfil_id' => ['required', 'exists:perfiles,id'], // CAMBIADO: a perfil_id y perfiles
-        ]);
+        if (!auth()->user()->canAccess('create', $this->moduloIdUsuarios)) {
+             abort(403, 'No tiene permiso para crear usuarios.');
+        }
 
-        User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'perfil_id' => $request->perfil_id, // CAMBIADO: a perfil_id
-        ]);
+        $data = $this->prepareData($request);
+        
+        // Se usa el método store del BaseController
+        return parent::store(new Request($data));
+    }
+    
+    // Sobrescribe el método update para manejar la contraseña opcional y asignar id_cliente
+    public function update(Request $request, $id)
+    {
+        if (!auth()->user()->canAccess('update', $this->moduloIdUsuarios)) {
+             abort(403, 'No tiene permiso para editar usuarios.');
+        }
+        
+        $item = $this->model->findOrFail($id);
+        $data = $this->prepareData($request, $item);
 
-        //return redirect()->route('users.index')->with('success', 'Usuario creado exitosamente.');
+        try {
+            $item->update($data);
+            Session::flash('success', 'Usuario actualizado exitosamente.');
+        } catch (\Exception $e) {
+            Session::flash('error', 'Error al actualizar el usuario: ' . $e->getMessage());
+        }
+        
+        return Redirect::route($this->getPluralModelNameLowerCase() . '.show', $id);
     }
 
     /**
@@ -88,29 +141,6 @@ class UserController extends Controller
     {
         $perfiles = Perfil::all(); // CAMBIADO: Obtener perfiles
        // return view('users.edit', compact('user', 'perfiles')); // CAMBIADO: Pasar 'perfiles'
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, User $user)
-    {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
-            'perfil_id' => ['required', 'exists:perfiles,id'], // CAMBIADO: a perfil_id y perfiles
-        ]);
-
-        $user->name = $request->name;
-        $user->email = $request->email;
-        if ($request->filled('password')) {
-            $user->password = Hash::make($request->password);
-        }
-        $user->perfil_id = $request->perfil_id; // CAMBIADO: a perfil_id
-        $user->save();
-
-        return redirect()->route('users.index')->with('success', 'Usuario actualizado exitosamente.');
     }
 
     /**
@@ -246,6 +276,7 @@ class UserController extends Controller
 
     }
 
+    
 
         public function create()
     {
