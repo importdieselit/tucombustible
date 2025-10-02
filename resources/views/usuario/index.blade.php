@@ -36,7 +36,7 @@
         <div class="col-12 col-md-4 col-lg-3">
             {{-- **ACTUALIZACIÓN CRÍTICA DEL ENLACE** --}}
             {{-- Pasa 'filter' y 'value' a la ruta usuarios.list --}}
-            <a href="{{ route('usuarios.list', ['filter' => 'perfil', 'value' => $perfil->perfil]) }}" class="text-decoration-none">
+            <a href="{{ route('usuarios.list', ['filter' => 'perfil', 'value' => $perfil->id]) }}" class="text-decoration-none">
                 <div class="card shadow-sm border-{{ $cardColor }} h-100">
                     <div class="card-body text-center">
                         <i class="fas fa-user-tag fa-2x text-{{ $cardColor }} mb-3"></i>

@@ -222,6 +222,6 @@ class User extends Authenticatable
         // 3. Obtener el total general para la card principal.
         $totalGeneral = $perfilesConteo->sum('total');
 
-        return view('usuarios.dashboard', compact('perfilesConteo', 'totalGeneral'));
+        return view('usuarios.index', compact('perfilesConteo', 'totalGeneral'));
     }
 }

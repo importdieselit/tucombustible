@@ -81,7 +81,7 @@ class UserController extends BaseController
         
         // Consulta para obtener el conteo de usuarios por perfil
         $perfilesConteo = DB::table('users')
-            ->select('perfil', DB::raw('COUNT(*) as total'))
+            ->select('id','nombre as perfil', DB::raw('COUNT(*) as total'))
             ->when($clienteId !== 0, function ($query) use ($clienteId) {
                 // Aplicar el filtro de seguridad de cliente si no es Super Admin
                 $query->where('cliente_id', $clienteId); 
@@ -115,7 +115,7 @@ class UserController extends BaseController
             switch ($filterKey) {
                 
                 case 'perfil':
-                     $query->where('perfil', request()->get('value'));
+                     $query->where('id_perfil', request()->get('value'));
                     break;                
             }
         }
