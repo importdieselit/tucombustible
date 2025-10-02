@@ -1,5 +1,5 @@
 {{-- Componente reusable para las tarjetas de acceso rápido --}}
-<a href="{{ $route }}" class="text-decoration-none">
+<a href="{{ $route }}" class="text-decoration-none" target="{{ $target ?? '_self' }}">
     <div class="card shadow-sm border-0 text-center access-card" 
          style="min-height: 150px; background-color: {{ $bg_opacity ?? 'rgba(0,0,0,0.1)' }};">
         <div class="card-body d-flex flex-column justify-content-center align-items-center p-3">
