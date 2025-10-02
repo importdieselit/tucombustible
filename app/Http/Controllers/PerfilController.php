@@ -22,7 +22,7 @@ class PerfilController extends BaseController
     }
     
     // Sobrescribe el método 'index' para listar y añadir validación de permisos
-    public function index(Request $request)
+    public function index($query = null)
     {
         // El ID del módulo 'Administrar' (5) y la acción 'read'
         if (!auth()->user()->canAccess('read', $this->moduloAdministrarId)) {
