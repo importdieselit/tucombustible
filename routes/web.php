@@ -52,8 +52,8 @@ Route::middleware(['auth'])->group(function () {
 // Route::post('/checklist-salida', [InspectionController::class, 'processChecklist'])->name('checklist.process');
 
 
-Route::get('clientes/dashboard', [ClienteController::class, 'dashboard'])->name('clientes.dashboard')->middleware('role:3');
-Route::get('combustible/dashboard', [MovimientoCombustibleController::class, 'index'])->name('combustible.dashboard')->middleware('role:2');
+    Route::get('clientes/dashboard', [ClienteController::class, 'dashboard'])->name('clientes.dashboard')->middleware('role:3');
+    Route::get('combustible/dashboard', [MovimientoCombustibleController::class, 'index'])->name('combustible.dashboard')->middleware('role:2');
     
     // Rutas para la carga dinámica de modelos
     Route::get('/marcas/get-modelos', [MarcaController::class, 'getModelos'])->name('marcas.getModelos');
@@ -182,40 +182,38 @@ Route::get('/inspecciones/{inspeccion_id}/pdf', [InspeccionController::class, 'e
     Route::post('/pedidos', [PedidoController::class, 'crearPedido'])->name('pedidos.store');
     // Rutas de Combustible (Pedidos y Despachos)
     Route::prefix('combustible')->name('combustible.')->group(function () {
+        // Rutas para los movimientos de combustible
+        Route::get('/recarga', [MovimientoCombustibleController::class, 'createRecarga'])->name('recarga');
+        Route::post('/recarga', [MovimientoCombustibleController::class, 'storeRecarga'])->name('\storeRecarga');
+
+        Route::get('/index', [MovimientoCombustibleController::class, 'index'])->name('index');
+        Route::get('/list', [MovimientoCombustibleController::class, 'list'])->name('list');
+        Route::get('/despacholist', [MovimientoCombustibleController::class, 'despachoList'])->name('despachos.list');
+        
+        Route::get('/pedidos', [MovimientoCombustibleController::class, 'pedidos'])->name('pedidos');
+        
+        Route::post('/pedidos/{id}/aprobar', [MovimientoCombustibleController::class, 'aprobar'])->name('aprobar');
+        Route::post('/pedidos/{id}/rechazar', [MovimientoCombustibleController::class, 'rechazar'])->name('rechazar');
+
     
-    
-    // Rutas para los movimientos de combustible
-    Route::get('/recarga', [MovimientoCombustibleController::class, 'createRecarga'])->name('recarga');
-    Route::post('/recarga', [MovimientoCombustibleController::class, 'storeRecarga'])->name('\storeRecarga');
+        // Ruta para aprobar un pedido
+        Route::post('/pedido/{id}/aprobar', [PedidoController::class, 'aprobar'])->name('pedido.aprobar');
 
-    Route::get('/index', [MovimientoCombustibleController::class, 'index'])->name('index');
-    Route::get('/list', [MovimientoCombustibleController::class, 'list'])->name('list');
-    Route::get('/despacholist', [MovimientoCombustibleController::class, 'despachoList'])->name('despachos.list');
-    
-    Route::get('/pedidos', [MovimientoCombustibleController::class, 'pedidos'])->name('pedidos');
-    
-    Route::post('/pedidos/{id}/aprobar', [MovimientoCombustibleController::class, 'aprobar'])->name('aprobar');
-    Route::post('/pedidos/{id}/rechazar', [MovimientoCombustibleController::class, 'rechazar'])->name('rechazar');
+        // Ruta para crear un despacho
+        Route::post('/pedido/{id}/despachar', [PedidoController::class, 'despachar'])->name('pedido.despachar');
 
-   
-    // Ruta para aprobar un pedido
-    Route::post('/pedido/{id}/aprobar', [PedidoController::class, 'aprobar'])->name('pedido.aprobar');
+        Route::get('/aprobados', [MovimientoCombustibleController::class, 'despachos'])->name('aprobados');
+        Route::post('/despachos/{id}/despachar', [MovimientoCombustibleController::class, 'despachar'])->name('despachar');
+        // Nuevas rutas para el despacho de combustible
+        Route::get('/despacho', [MovimientoCombustibleController::class, 'createDespacho'])->name('despacho');
+        Route::post('/despacho', [MovimientoCombustibleController::class, 'storeDespacho'])->name('storeDespacho');
 
-    // Ruta para crear un despacho
-    Route::post('/pedido/{id}/despachar', [PedidoController::class, 'despachar'])->name('pedido.despachar');
+        // Nuevas rutas para el despacho de combustible
+        Route::get('/precarga', [MovimientoCombustibleController::class, 'createPrecarga'])->name('precarga');
+        Route::post('/precarga', [MovimientoCombustibleController::class, 'storePrecarga'])->name('storePrecarga');
+        Route::post('/aprobado', [MovimientoCombustibleController::class, 'storeAprobado'])->name('storeAprobado');
 
-    Route::get('/aprobados', [MovimientoCombustibleController::class, 'despachos'])->name('aprobados');
-    Route::post('/despachos/{id}/despachar', [MovimientoCombustibleController::class, 'despachar'])->name('despachar');
-     // Nuevas rutas para el despacho de combustible
-    Route::get('/despacho', [MovimientoCombustibleController::class, 'createDespacho'])->name('despacho');
-    Route::post('/despacho', [MovimientoCombustibleController::class, 'storeDespacho'])->name('storeDespacho');
-
-    // Nuevas rutas para el despacho de combustible
-    Route::get('/precarga', [MovimientoCombustibleController::class, 'createPrecarga'])->name('precarga');
-    Route::post('/precarga', [MovimientoCombustibleController::class, 'storePrecarga'])->name('storePrecarga');
-    Route::post('/aprobado', [MovimientoCombustibleController::class, 'storeAprobado'])->name('storeAprobado');
-
-});
+    });
   
     Route::get('/alertas', [AlertaController::class, 'index'])->name('alertas.index');
     Route::get('/alertas/read/{id}', [AlertaController::class, 'markAsRead'])->name('alertas.read');
