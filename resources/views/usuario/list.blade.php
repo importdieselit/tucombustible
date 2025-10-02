@@ -74,10 +74,10 @@
                                 <td>{{ !is_null($user->cliente()->first())?$user->cliente()->first()->nombre:'N/A' }} {{$user->id_master==0?'(P)':''}}</td>
                                 
                                 <td>
-                                    <a href="{{ route('usuario.show', $user->id) }}" class="btn btn-sm btn-info text-white" title="Ver Detalle">
+                                    <a href="{{ route('usuarios.show', $user->id) }}" class="btn btn-sm btn-info text-white" title="Ver Detalle">
                                         <i class="fas fa-eye"></i>
                                     </a>
-                                    <a href="{{ route('usuario.edit', $user->id) }}" class="btn btn-sm btn-warning text-white" title="Editar">
+                                    <a href="{{ route('usuarios.edit', $user->id) }}" class="btn btn-sm btn-warning text-white" title="Editar">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                      @if($user->id_perfil != 1)
@@ -87,7 +87,7 @@
                                     @else
                                         <span class="badge bg-success">Super Usuario</span>
                                     @endif
-                                    <form action="{{ route('usuario.destroy', $user->id) }}" method="POST" style="display: inline;">
+                                    <form action="{{ route('usuarios.destroy', $user->id) }}" method="POST" style="display: inline;">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('¿Estás seguro de que deseas eliminar a este user?')" title="Eliminar">
