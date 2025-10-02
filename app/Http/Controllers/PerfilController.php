@@ -215,7 +215,7 @@ public function show($id): View
             }
 
             DB::commit();
-            Session::flash('success', 'Permisos del perfil ' . $perfil->nombre_perfil . ' actualizados exitosamente.');
+            Session::flash('success', 'Permisos del perfil ' . $perfil->nombre . ' actualizados exitosamente.');
         } catch (\Exception $e) {
             DB::rollback();
             Session::flash('error', 'Error al actualizar los permisos: ' . $e->getMessage());

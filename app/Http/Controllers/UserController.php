@@ -327,7 +327,7 @@ class UserController extends BaseController
              abort(403, 'No tiene permiso para crear usuarios.');
         }
         
-        $perfiles = Perfil::all()->toArray();
+        $perfiles = Perfil::all();
         $clientes = Cliente::all();
         
         return view('usuario.create_edit', compact('perfiles', 'clientes'));
