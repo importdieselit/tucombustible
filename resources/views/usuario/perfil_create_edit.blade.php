@@ -81,14 +81,21 @@
                                                 {{ $padre->modulo }}
                                             </td>
                                             @foreach ($actions as $action)
-                                                <td class="text-center">
+                                                 <td class="text-center">
                                                     <div class="form-check d-inline-block">
+                                                        @php
+                                                            // Lógica para determinar si el checkbox debe estar marcado
+                                                            $isCheckedPadre = old("permisos.{$padre->id}.{$action}", $currentPermisosPadre[$action] ?? false);
+                                                        @endphp
+                                                        
+                                                        {{-- FIX: Usar el atributo 'checked' condicionalmente --}}
                                                         <input class="form-check-input" 
-                                                               type="checkbox" 
-                                                               value="1" 
-                                                               name="permisos[{{ $padre->id }}][{{ $action }}]"
-                                                               @checked(old('permisos.' . $padre->id . '.' . $action, $currentPermisosPadre[$action] ?? false))
-                                                               >
+                                                            type="checkbox" 
+                                                            value="1" 
+                                                            name="permisos[{{ $padre->id }}][{{ $action }}]"
+                                                            id="permiso-{{ $padre->id }}-{{ $action }}"
+                                                            {{ $isCheckedPadre ? 'checked' : '' }} {{-- Esto resuelve el error --}}
+                                                        >
                                                     </div>
                                                 </td>
                                             @endforeach
@@ -107,23 +114,23 @@
                                                     {{ $hijo->modulo }}
                                                 </td>
                                                 @foreach ($actions as $action)
-                                                    <td class="text-center">
-                                                        <div class="form-check d-inline-block">
-                                                            @php
-                                                                // Lógica para determinar si el checkbox debe estar marcado
-                                                                $isCheckedPadre = old("permisos.{$padre->id}.{$action}", $currentPermisosPadre[$action] ?? false);
-                                                            @endphp
-                                                            
-                                                            {{-- FIX: Usar el atributo 'checked' condicionalmente --}}
-                                                            <input class="form-check-input" 
-                                                                type="checkbox" 
-                                                                value="1" 
-                                                                name="permisos[{{ $padre->id }}][{{ $action }}]"
-                                                                id="permiso-{{ $padre->id }}-{{ $action }}"
-                                                                {{ $isCheckedPadre ? 'checked' : '' }} 
-                                                            >
-                                                        </div>
-                                                    </td>
+                                                      <td class="text-center">
+                                                            <div class="form-check d-inline-block">
+                                                                @php
+                                                                    // Lógica para determinar si el checkbox debe estar marcado
+                                                                    $isCheckedHijo = old("permisos.{$hijo->id}.{$action}", $currentPermisosHijo[$action] ?? false);
+                                                                @endphp
+
+                                                                {{-- FIX: Usar el atributo 'checked' condicionalmente --}}
+                                                                <input class="form-check-input" 
+                                                                    type="checkbox" 
+                                                                    value="1" 
+                                                                    name="permisos[{{ $hijo->id }}][{{ $action }}]"
+                                                                    id="permiso-{{ $hijo->id }}-{{ $action }}"
+                                                                    {{ $isCheckedHijo ? 'checked' : '' }} {{-- Esto resuelve el error --}}
+                                                                >
+                                                            </div>
+                                                        </td>
                                                 @endforeach
                                             </tr>
                                         @endforeach
