@@ -85,11 +85,7 @@ class UserController extends BaseController
 
     public function list($query = null)
     {
-        if (!auth()->user()->canAccess('read', $this->moduloIdUsuarios)) {
-            dd('No tiene permiso para ver la lista de usuarios.');
-             //
-            abort(403, 'No tiene permiso para ver la lista de usuarios.');
-        }
+        
         dd('llegue aqui');
         // 2. Llama al método list() del padre. 
         return parent::list($query);    
