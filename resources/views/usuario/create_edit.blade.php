@@ -38,6 +38,7 @@
                         <select class="form-control" id="perfil" name="perfil" required>
                             <option value="">-- Seleccione un Perfil --</option>
                             @foreach($perfiles as $perfil)
+                            {{dd($perfil)}}
                                 <option value="{{ $perfil->id }}" 
                                     {{ old('perfil', $item->perfil ?? '') == $perfil->nombre ? 'selected' : '' }}>
                                     {{ Str::ucfirst($perfil->nombre) }}
