@@ -111,6 +111,31 @@ class PerfilController extends BaseController
     }
 
     /**
+ * Muestra el perfil especificado con su matriz de permisos.
+ * @param int $id
+ * @return View
+ */
+public function show($id): View
+{
+    // 1. Verificación de Permisos (Asumiendo que ver requiere permiso 'read')
+    if (!auth()->user()->canAccess('read', $this->moduloIdPerfiles)) {
+        abort(403, 'No tiene permiso para ver este perfil.');
+    }
+    
+    // 2. Obtener el ítem (perfil)
+    $item = $this->model->findOrFail($id); 
+    
+    // 3. Obtener los datos específicos (Módulos Jerárquicos)
+    $extraData = $this->getModuloData(); // Reutiliza el método que crea la jerarquía
+    
+    // NOTA: Asegúrate de definir $MODULO_PERFILES en tu vista o pasarlo aquí
+    $data = compact('item', 'MODULO_PERFILES') + $extraData;
+    
+    // 4. Retornar la vista 'perfiles.show'
+    return view('usuario.perfil_show', $data);
+}
+
+    /**
      * Muestra la vista para configurar los permisos base de un perfil.
      * Esto reemplaza la vista 'edit' estándar de BaseController.
      * @param int $id
