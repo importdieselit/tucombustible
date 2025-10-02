@@ -99,15 +99,16 @@ abstract class BaseController extends Controller
        
        $user = auth()->user();
        $cliente = Cliente::find($user->cliente_id);
+       dd('llegue aqui - 5');
         if(is_null($query)){
             $query = $this->model->query();
             
         }
-        
+        dd('llegue aqui - 4');
         if (method_exists($this, 'applyBusinessFilters')) {
             $query = $this->applyBusinessFilters($query); 
         }
-        
+        dd('llegue aqui - 3');
 
         $tableName = $this->model->getTable();
 
@@ -133,6 +134,7 @@ abstract class BaseController extends Controller
         $data = $query->get();
         //    $data = $this->model->all();
         $estatusData = EstatusData::all()->keyBy('id_estatus');
+        dd('llegue aqui - 2');
         return view($this->getModelNameLowerCase() . '.list', compact('data', 'estatusData'));
     }
 
