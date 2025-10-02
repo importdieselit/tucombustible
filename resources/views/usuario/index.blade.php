@@ -7,6 +7,16 @@
 @endphp
 
 @section('content')
+    
+        @php
+            // Lógica de color de la card (ajustar según tu diseño)
+            $cardColor = match($perfil->perfil) {
+                'administrador' => 'primary',
+                'cliente' => 'info',
+                'chofer' => 'success',
+                default => 'warning',
+            };
+        @endphp
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="mb-0">Dashboard de Usuarios por Perfil</h1>
