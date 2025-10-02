@@ -151,6 +151,27 @@ public function show($id): View
         return view('perfiles.permissions', compact('perfil', 'modulos', 'permisosActuales'));
     }
 
+    protected function preparePermissionsForPivot(array $inputPermisos, int $perfilId): array
+    {
+        $dataToSync = [];
+        $now = now();
+        
+        foreach ($inputPermisos as $moduleId => $actions) {
+            // Se asume que los nombres de las acciones son 'read', 'update', 'create', 'delete'
+            $dataToSync[] = [
+                'id_perfil'  => $perfilId,
+                'id_modulo'  => $moduleId,
+                'read'       => $actions['read'] ?? 0,
+                'update'     => $actions['update'] ?? 0,
+                'create'     => $actions['create'] ?? 0,
+                'delete'     => $actions['delete'] ?? 0,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+        return $dataToSync;
+    }
+
     /**
      * Actualiza los permisos base del perfil en la tabla 'permiso_perfil'.
      * @param Request $request
@@ -201,5 +222,92 @@ public function show($id): View
         }
 
         return Redirect::route('perfiles.index');
+    }
+
+     public function store(Request $request)
+    {
+        if (!auth()->user()->canAccess('create', $this->moduloIdPerfiles)) {
+            abort(403, 'No tiene permiso para crear perfiles.');
+        }
+
+        try {
+            DB::beginTransaction(); // <-- Iniciar la transacción
+            
+            // 1. Validación (Asegurar que el nombre es único)
+            $validatedData = $request->validate([
+                'nombre' => 'required|string|max:255|unique:perfiles,nombre',
+            ]);
+
+            // 2. Crear el Perfil (Guardar solo los datos del perfil)
+            $item = $this->model->create($validatedData);
+            
+            // 3. Procesar y guardar permisos en la tabla 'permiso_perfil'
+            $permissionsData = $this->preparePermissionsForPivot($request->input('permisos', []), $item->id);
+
+            if (!empty($permissionsData)) {
+                DB::table('permiso_perfil')->insert($permissionsData);
+            }
+
+            DB::commit(); // <-- Confirmar la transacción
+            
+            Session::flash('success', 'Perfil **' . $item->nombre . '** creado exitosamente.');
+            
+            // Redirigir a la vista de detalle (asumo 'perfiles.show')
+            return Redirect::route('perfiles.show', $item->id); 
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollback(); // Deshacer si falla la validación
+            return Redirect::back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            DB::rollback(); // Deshacer si falla la inserción
+            Session::flash('error', 'Error al crear el perfil: ' . $e->getMessage());
+            return Redirect::back()->withInput();
+        }
+    }
+    public function update(Request $request, $id)
+    {
+        if (!auth()->user()->canAccess('update', $this->moduloIdPerfiles)) {
+            abort(403, 'No tiene permiso para editar perfiles.');
+        }
+
+        $item = $this->model->findOrFail($id);
+
+        try {
+            DB::beginTransaction(); // <-- Iniciar la transacción
+            
+            // 1. Validación (Asegurar que el nombre es único, ignorando el actual)
+            $validatedData = $request->validate([
+                'nombre' => 'required|string|max:255|unique:perfiles,nombre,' . $item->id,
+            ]);
+
+            // 2. Actualizar el Perfil (Guardar solo los datos del perfil)
+            $item->update($validatedData);
+            
+            // 3. Procesar y guardar permisos en la tabla 'permiso_perfil'
+            // Eliminar permisos actuales
+            PermisoPerfil::where('id_perfil', $item->id)->delete();
+            
+            // Insertar los nuevos permisos
+            $permissionsData = $this->preparePermissionsForPivot($request->input('permisos', []), $item->id);
+
+            if (!empty($permissionsData)) {
+                DB::table('permiso_perfil')->insert($permissionsData);
+            }
+
+            DB::commit(); // <-- Confirmar la transacción
+            
+            Session::flash('success', 'Perfil **' . $item->nombre . '** actualizado exitosamente.');
+            
+            // Redirigir a la vista de detalle (asumo 'perfiles.show')
+            return Redirect::route('perfiles.show', $item->id); 
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollback(); // Deshacer si falla la validación
+            return Redirect::back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            DB::rollback(); // Deshacer si falla la inserción
+            Session::flash('error', 'Error al actualizar el perfil: ' . $e->getMessage());
+            return Redirect::back()->withInput();
+        }
     }
 }
