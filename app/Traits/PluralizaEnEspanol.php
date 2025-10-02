@@ -14,6 +14,8 @@ trait PluralizaEnEspanol
         'orden' => 'ordenes',
         'camion' => 'camiones',
         'almacen' => 'almacenes',
+        'user' => 'usuarios',
+        'perfil' => 'perfiles',
         // Puedes agregar otros sustantivos irregulares aquí.
     ];
 
