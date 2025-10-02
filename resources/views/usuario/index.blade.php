@@ -77,13 +77,13 @@
                     
                     {{-- Botón para Editar Perfil (Nombre y Permisos) --}}
                     @if (auth()->user()->canAccess('update', $MODULO_PERFILES))
-                        <a href="{{ route('perfiles.edit', $perfil->id_perfil) }}" class="btn btn-sm btn-outline-{{ $cardColor }} me-1" title="Editar Permisos y Nombre">
+                        <a href="{{ route('perfiles.edit', $perfil->id) }}" class="btn btn-sm btn-outline-{{ $cardColor }} me-1" title="Editar Permisos y Nombre">
                             <i class="fas fa-edit"></i>
                         </a>
                     @endif
                     
                     {{-- Botón para Ver Listado --}}
-                    <a href="{{ route('usuarios.list', ['filter' => 'id_perfil', 'value' => $perfil->id_perfil]) }}" class="btn btn-sm btn-{{ $cardColor }}" title="Ver Usuarios">
+                    <a href="{{ route('usuarios.list', ['filter' => 'id_perfil', 'value' => $perfil->id]) }}" class="btn btn-sm btn-{{ $cardColor }}" title="Ver Usuarios">
                         <i class="fas fa-arrow-right"></i>
                     </a>
                 </div>
