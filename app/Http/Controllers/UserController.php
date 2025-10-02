@@ -345,7 +345,7 @@ class UserController extends BaseController
         }
         
         $item = $this->model->findOrFail($id);
-        $perfiles = Perfil::pluck('nombre')->toArray();
+        $perfiles = Perfil::all();
         $clientes = Cliente::all();
         
         return view('usuario.create_edit', compact('item', 'perfiles', 'clientes'));
