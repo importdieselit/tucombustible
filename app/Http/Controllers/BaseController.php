@@ -65,10 +65,11 @@ abstract class BaseController extends Controller
      */
     protected function getModelNameLowerCase()
     {
-        if($this->model=='user'){
-            $this->model='usuario';
+        $modelName = class_basename($this->model);
+        if($modelName=='User'){
+            $modelName='Usuario';
         }
-        return strtolower(class_basename($this->model));
+        return strtolower($modelName);
     }
 
     /**
