@@ -56,7 +56,7 @@
                                 <td>{{ $user->name }}</td>
                                 <td>{{ $user->email }}</td>
                                 <td>
-                                    <span class="badge bg-primary">{{ $user->perfil->nombre_perfil ?? 'Sin Perfil' }}</span>
+                                    <span class="badge bg-primary">{{ $user->perfil->nombre ?? 'Sin Perfil' }}</span>
                                 </td>
                                 <td class="text-center">
                                     @if($user->id_perfil != 1)

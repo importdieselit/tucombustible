@@ -327,7 +327,7 @@ class UserController extends BaseController
              abort(403, 'No tiene permiso para crear usuarios.');
         }
         
-        $perfiles = Perfil::pluck('nombre_perfil')->toArray();
+        $perfiles = Perfil::pluck('nombre')->toArray();
         $clientes = Cliente::all();
         
         return view('usuarios.create_edit', compact('perfiles', 'clientes'));
@@ -345,7 +345,7 @@ class UserController extends BaseController
         }
         
         $item = $this->model->findOrFail($id);
-        $perfiles = Perfil::pluck('nombre_perfil')->toArray();
+        $perfiles = Perfil::pluck('nombre')->toArray();
         $clientes = Cliente::all();
         
         return view('usuarios.create_edit', compact('item', 'perfiles', 'clientes'));
