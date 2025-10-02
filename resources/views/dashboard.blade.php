@@ -294,7 +294,7 @@ $data = [
         @if(Auth::user()->canAccess('read', $MODULO_USUARIOS))
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
             @include('partials.access_card', [
-                'route' => route('usuarios.list'),
+                'route' => route('usuarios.index'),
                 'icon' => 'fa-users-gear',
                 'title' => 'Usuarios',
                 'color' => 'bg-danger',
