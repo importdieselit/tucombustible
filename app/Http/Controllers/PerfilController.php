@@ -9,11 +9,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
 
 // Hereda de BaseController para listar, crear, etc.
 class PerfilController extends BaseController
 {
     private $moduloAdministrarId = 5; // ID del módulo 'Administrar'
+    private $moduloIdPerfiles = 52; // ID del módulo 'Perfiles'
+
     
     public function __construct()
     {
@@ -32,6 +35,51 @@ class PerfilController extends BaseController
         // Llama al método list() del BaseController
         $query = Perfil::query();
         return $this->list($query); 
+    }
+
+     protected function getModuloData(): array
+    {
+        return [
+            'modulos' => Modulo::all(),
+        ];
+    }
+
+
+     public function create(): View
+    {
+        // 1. Verificación de Permisos
+        if (!auth()->user()->canAccess('create', $this->moduloIdPerfiles)) {
+            abort(403, 'No tiene permiso para crear perfiles.');
+        }
+        
+        // 2. Obtiene datos específicos
+        $data = $this->getModuloData();
+        
+        // 3. Retorna la vista con los datos
+        // Usa la convención de nombres de vista: 'perfiles.create_edit'
+        return view('usuario.perfil_create_edit', $data);
+    }
+    
+    /**
+     * Muestra el formulario de edición de perfil.
+     * @param int $id
+     * @return View
+     */
+    public function edit($id): View
+    {
+        // 1. Verificación de Permisos
+        if (!auth()->user()->canAccess('update', $this->moduloIdPerfiles)) {
+            abort(403, 'No tiene permiso para editar perfiles.');
+        }
+        
+        // 2. Obtiene el ítem usando la referencia del modelo de BaseController
+        $item = $this->model->findOrFail($id); 
+        
+        // 3. Obtiene datos específicos
+        $extraData = $this->getModuloData();
+
+        // 4. Retorna la vista con el ítem y los datos extra
+        return view('usuario.perfil_create_edit', compact('item') + $extraData);
     }
 
     /**
