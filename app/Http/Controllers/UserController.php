@@ -20,6 +20,7 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\Eloquent\Builder;
 
 
 class UserController extends BaseController
@@ -70,10 +71,33 @@ class UserController extends BaseController
      */
     public function index()
     {
-        $users = User::with('perfil')->paginate(10); 
-   //     return view('users.index', compact('users'));
-    }
+        // 1. Verificación de Permiso
+        if (!auth()->user()->canAccess('read', $this->moduloIdUsuarios)) {
+            abort(403, 'No tiene permiso para ver el dashboard de usuarios.');
+        }
+        
+        // 2. Lógica de Conteo (Tus variables)
+        $clienteId = auth()->user()->cliente_id;
+        
+        // Consulta para obtener el conteo de usuarios por perfil
+        $perfilesConteo = DB::table('users')
+            ->select('perfil', DB::raw('COUNT(*) as total'))
+            ->when($clienteId !== 0, function ($query) use ($clienteId) {
+                // Aplicar el filtro de seguridad de cliente si no es Super Admin
+                $query->where('cliente_id', $clienteId); 
+            })
+            ->groupBy('perfil')
+            ->orderBy('total', 'desc')
+            ->get();
 
+        // Obtener el total general
+        $totalGeneral = $perfilesConteo->sum('total');
+
+        // 3. Devolver la vista del Dashboard/Index con las variables
+        // Esto asume que tienes la vista en resources/views/usuarios/index.blade.php
+        // y que mostrará las cards (KPIs) en lugar del listado.
+        return view('usuarios.index', compact('perfilesConteo', 'totalGeneral'));
+    }
     /**
      * Show the form for creating a new resource.
      */
@@ -82,6 +106,23 @@ class UserController extends BaseController
         $perfiles = Perfil::all(); 
         //return view('users.create', compact('perfiles')); // CAMBIADO: Pasar 'perfiles'
     }
+
+     protected function applyBusinessFilters(Builder $query): Builder
+    {
+        $filterKey = request()->get('filter'); // Usamos el helper global 'request()'
+        
+        if ($filterKey) {
+            switch ($filterKey) {
+                
+                case 'perfil':
+                     $query->where('perfil', request()->get('value'));
+                    break;                
+            }
+        }
+
+        return $query; // Devolvemos el Query Builder modificado
+    }
+
 
     public function list($query = null)
     {
