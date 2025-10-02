@@ -32,12 +32,12 @@
                         <input type="password" class="form-control" id="password" name="password" 
                                {{ isset($item) ? '' : 'required' }}>
                     </div>
-                    
+                    {{dd($perfiles)}}
+                            
                     <div class="col-md-6 mb-4">
                         <label for="perfil" class="form-label fw-bold">Perfil Base (*)</label>
                         <select class="form-control" id="perfil" name="perfil" required>
                             <option value="">-- Seleccione un Perfil --</option>
-                            {{dd($perfiles)}}
                             @foreach($perfiles as $perfil)
                             
                                 <option value="{{ $perfil->id }}" 
