@@ -234,6 +234,7 @@ $data = [
                 'icon' => 'fa-screwdriver-wrench',
                 'title' => 'Mantenimiento',
                 'color' => 'bg-warning',
+                'target' => '_blank',
                 'bg_opacity' => 'rgba(255, 193, 7, 0.15)'
             ])
         </div>
@@ -249,6 +250,7 @@ $data = [
                 'icon' => 'fa-box-open',
                 'title' => 'Inventario',
                 'color' => 'bg-success',
+                'target' => '_blank',
                 'bg_opacity' => 'rgba(40, 167, 69, 0.15)'
             ])
         </div>
@@ -263,6 +265,7 @@ $data = [
                 'route' => route('combustible.index'),
                 'icon' => 'fa-gas-pump',
                 'title' => 'Combustible',
+                'target' => '_blank',
                 'color' => 'bg-secondary',
                 'bg_opacity' => 'rgba(108, 117, 125, 0.15)'
             ])
@@ -279,6 +282,7 @@ $data = [
                 'icon' => 'fa-route',
                 'title' => 'Despachos',
                 'color' => 'bg-primary',
+                'target' => '_blank',
                 'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
             ])
         </div>
@@ -294,6 +298,7 @@ $data = [
                 'icon' => 'fa-users-gear',
                 'title' => 'Usuarios',
                 'color' => 'bg-danger',
+                'target' => '_blank',
                 'bg_opacity' => 'rgba(220, 53, 69, 0.15)'
             ])
         </div>
