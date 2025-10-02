@@ -110,8 +110,6 @@ Route::get('/inspecciones/{inspeccion_id}/pdf', [InspeccionController::class, 'e
    
   Route::get('/permisos', [AccesoController::class, 'index'])->name('permisos.index');
 
-  // Rutas para la gestión de usuarios (CRUD principal)
-  //  Route::resource('usuarios', UserController::class);
 
     // Rutas para la gestión de permisos específicos (Usuario Individual)
     Route::get('usuarios/{usuario}/permissions', [UserController::class, 'editPermissions'])->name('usuarios.edit_permissions');

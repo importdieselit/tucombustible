@@ -83,6 +83,15 @@ class UserController extends BaseController
         //return view('users.create', compact('perfiles')); // CAMBIADO: Pasar 'perfiles'
     }
 
+    public function list($query = null)
+    {
+        if (!auth()->user()->canAccess('read', $this->moduloIdUsuarios)) {
+            abort(403, 'No tiene permiso para ver la lista de usuarios.');
+        }
+        // 2. Llama al método list() del padre. 
+        return parent::list($query);    
+    }
+
 
     public function store(Request $request)
     {
