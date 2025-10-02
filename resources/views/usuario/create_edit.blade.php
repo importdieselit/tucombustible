@@ -93,6 +93,7 @@
         function toggleClienteSelector() {
             if (perfilSelector.value === perfilCliente) {
                 // Mostrar y hacer requerido para el perfil 'cliente'
+                console.log('Perfil cliente seleccionado '+ perfilSelector.value);
                 clienteGroup.style.display = 'block';
                 clienteInput.setAttribute('required', 'required');
                 clientePlaceholder.style.display = 'none';
