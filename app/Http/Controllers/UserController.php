@@ -87,7 +87,7 @@ class UserController extends BaseController
                 $query->where('cliente_id', $clienteId); 
             })
             ->join('perfiles', 'users.id_perfil', '=', 'perfiles.id')
-            ->groupBy('id_perfil')
+            ->groupBy('id_perfil','perfiles.nombre')
             ->orderBy('total', 'desc')
             ->get();
 
