@@ -72,8 +72,7 @@ class IntegracionIAController extends Controller
 
      protected function identificarClientePorTelefono(Request $request)
     {
-        dd( $request->all());
-        return response()->json(['success' => false, 'response' => json_decode($request)],200);
+        dd( $request->telefono);
         // Botpress debe extraer el número y enviarlo en el payload
         $telefono = $request->input('telefono');
         
@@ -91,12 +90,11 @@ class IntegracionIAController extends Controller
         try {
             // Asumimos que tu modelo Cliente tiene un campo 'telefono'
             $cliente = Cliente::where('telefono', $telefonoLimpio)
-                              ->orWhere('telefono2', $telefonoLimpio) // Busca en campos secundarios por robustez
                               ->first();
 
             if ($cliente) {
                 // Éxito: Cliente encontrado
-                $mensajeBienvenida = "Hola, {$cliente->nombre_contacto}. Soy tu asistente virtual. ¿En qué puedo ayudarte hoy?";
+                $mensajeBienvenida = "Hola, {$cliente->contacto}. ¿En qué puedo ayudarte hoy?";
                 
                 return response()->json([
                     'success' => true,
@@ -104,9 +102,10 @@ class IntegracionIAController extends Controller
                     'data' => [
                         'clienteEncontrado' => true,
                         'clienteId' => $cliente->id,
-                        'nombreCliente' => $cliente->nombre_contacto ?? $cliente->razon_social,
+                        'nombreCliente' => $cliente->contacto ?? $cliente->nombre,
                         // Puedes incluir el cupo disponible de una vez para un saludo más personalizado
-                        'cupoDisponible' => $cliente->cupo_disponible ?? 0
+                        'cupo' => $cliente->cupo ?? 0,
+                        'disponible' => $cliente->disponible ?? 0
                     ]
                 ]);
             } else {
