@@ -72,6 +72,7 @@ class IntegracionIAController extends Controller
 
      protected function identificarClientePorTelefono(Request $request)
     {
+        return response()->json(['success' => false, 'response' => 'Función en desarrollo.'], 501);
         // Botpress debe extraer el número y enviarlo en el payload
         $telefono = $request->input('telefono');
         
