@@ -72,9 +72,8 @@ class IntegracionIAController extends Controller
 
      protected function identificarClientePorTelefono(Request $request)
     {
-        dd( $request->telefono);
         // Botpress debe extraer el número y enviarlo en el payload
-        $telefono = $request->input('telefono');
+        $telefono = $request->telefono;
         
         // Limpia el número: elimina espacios, guiones, y el código de país (si aplica)
         $telefonoLimpio = preg_replace('/[^0-9]/', '', $telefono);
