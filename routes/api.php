@@ -21,6 +21,8 @@ use App\Http\Controllers\Apis\AdminController;
 use App\Http\Controllers\Apis\AdminDespachoController;
 use App\Http\Controllers\Apis\ReportesController;
 use App\Http\Controllers\Api\ChecklistController;
+use App\Http\Controllers\IntegracionIAController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -36,6 +38,9 @@ use App\Http\Controllers\Api\ChecklistController;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+
+Route::post('/ia/webhook', [IntegracionIAController::class, 'handleWebhook']);
 
 // Rutas de autenticación (públicas)
 Route::post('/auth/register', [AuthController::class, 'register']);
@@ -222,7 +227,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/despachos', [DespachoController::class, 'store']);
     Route::put('/despachos/{id}', [DespachoController::class, 'update']);
     Route::delete('/despachos/{id}', [DespachoController::class, 'destroy']);
-
 
     
     // FCM - Notificaciones Push
