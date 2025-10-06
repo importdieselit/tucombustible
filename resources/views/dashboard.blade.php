@@ -276,12 +276,12 @@ $data = [
 {{-- =============================================== --}}
         {{-- TARJETA DE inspecciones (ID 42) --}}
         {{-- =============================================== --}}
-        @if(Auth::user()->canAccess('create', $MODULO_DESPACHOS))
+        @if(Auth::user()->canAccess('create', $MODULO_CHECKLIST))
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
             @include('partials.access_card', [
-                'route' => route('combustible.despacho'),
-                'icon' => 'fa-route',
-                'title' => 'Despachos',
+                'route' => route('inspeccion.index'),
+                'icon' => 'fa-list',
+                'title' => 'Checklist',
                 'color' => 'bg-primary',
                 'target' => '_blank',
                 'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
