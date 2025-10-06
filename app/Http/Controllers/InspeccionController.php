@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Services\FcmNotificationService; // Asegúrate de tener este servicio implementado
 use App\Models\Orden;
+use App\Models\User;
 
 class InspeccionController extends Controller
 {
@@ -201,6 +202,9 @@ public function store(Request $request)
             // Contar vehículos con estatus de mantenimiento (asumiendo estatus=2)
             'vehiculos_mantenimiento' => Vehiculo::where('estatus', 2)->count(),
         ];
+        $user = auth()->user();
+        $vehiculosDisponibles = Vehiculo::where('estatus', 1)->where('id_cliente',$user->cliente_id)->get();
+        
 
         // 2. Puedes agregar datos adicionales si tienes gráficos o tablas de resumen.
 
