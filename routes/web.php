@@ -27,6 +27,7 @@ use App\Http\Controllers\AlertaController;
 use App\Http\Controllers\AccesoController;
 use App\Http\Controllers\InspeccionController;
 use App\Http\Controllers\PedidoController;
+use App\Http\Controllers\ReporteController;
 
 use App\Models\Deposito;
 

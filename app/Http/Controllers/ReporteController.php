@@ -229,13 +229,13 @@ class ReporteController extends BaseController
         }
     }
 
-    // En ReporteController.php, añade:
-    public function show(Reporte $reporte)
-    {
-        // Carga las relaciones de historial y usuario que reportó
-        $reporte->load(['historialEstatus.usuarioModifica', 'reportadoPor', 'tipo']); 
+    // // En ReporteController.php, añade:
+    // public function show(Reporte $reporte)
+    // {
+    //     // Carga las relaciones de historial y usuario que reportó
+    //     $reporte->load(['historialEstatus.usuarioModifica', 'reportadoPor', 'tipo']); 
         
-        return view('reportes.show', compact('reporte'));
-    }
+    //     return view('reportes.show', compact('reporte'));
+    // }
     // Continuamos con el método para generar la OT en el siguiente paso.
 }
