@@ -160,7 +160,8 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
         'proveedores' => ProveedorController::class,
         //'servicios' => ServicioController::class,
         'perfiles' => PerfilController::class,
-        'usuarios' => UserController::class
+        'usuarios' => UserController::class,
+        'reportes' => ReporteController::class
         //'plan-mantenimiento' => PlanMantenimientoController::class,
         //'historial-mantenimiento' => HistorialMantenimientoController::class,
         // Agrega aquí otros recursos según tus tablas/modelos

@@ -32,7 +32,7 @@ class ReporteController extends BaseController
 
         $tiposReporte = TipoReporte::where('activo', true)->pluck('nombre_tipo', 'id');
         
-        return view('reportes.create', compact('tiposReporte'));
+        return view('reporte.create', compact('tiposReporte'));
     }
 
     // El método index puede ser heredado o modificado para añadir filtros por estatus.
@@ -79,7 +79,7 @@ class ReporteController extends BaseController
 
             DB::commit();
             Session::flash('success', 'Reporte #' . $reporte->id . ' reportada exitosamente.');
-            return redirect()->route('reportes.index');
+            return redirect()->route('reporte.index');
 
         } catch (\Exception $e) {
             DB::rollback();
@@ -235,7 +235,7 @@ class ReporteController extends BaseController
     //     // Carga las relaciones de historial y usuario que reportó
     //     $reporte->load(['historialEstatus.usuarioModifica', 'reportadoPor', 'tipo']); 
         
-    //     return view('reportes.show', compact('reporte'));
+    //     return view('reporte.show', compact('reporte'));
     // }
     // Continuamos con el método para generar la OT en el siguiente paso.
 }
