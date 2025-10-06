@@ -209,7 +209,7 @@ public function store(Request $request)
         // 2. Puedes agregar datos adicionales si tienes gráficos o tablas de resumen.
 
         // Retornar la vista con los datos
-        return view('checklist.index', compact('resumenAlertas'));
+        return view('checklist.index', compact('resumenAlertas','vehiculosDisponibles'));
     }
 
 }
