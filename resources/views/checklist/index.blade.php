@@ -127,6 +127,17 @@
             }
         });
 
+        function getTipoVehiculoString(tipoId) {
+    // Mapeo de tipos de vehículo según tu solicitud
+    const tipoMap = {
+        1: 'camion sencillo',
+        2: 'cisterna',
+        3: 'chuto',
+    };
+    // Devuelve el tipo mapeado o 'otro' por defecto
+    return tipoMap[tipoId] || 'otro';
+}
+
 async function mostrarSelectorVehiculoParaInspeccion() {
     // 💡 NOTA: En un sistema real, esta data debería venir de un endpoint API real:
     // fetch('/api/vehiculos/activos').then(res => res.json())
