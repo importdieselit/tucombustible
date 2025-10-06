@@ -74,7 +74,6 @@ Route::get('/inspecciones/{inspeccion_id}', [InspeccionController::class, 'show'
 // Ruta para generar el PDF
 Route::get('/inspecciones/{inspeccion_id}/pdf', [InspeccionController::class, 'exportPdf'])->name('inspeccion.pdf');
 
- Route::resource('reportes', ReporteController::class);
 
     // 2. Rutas Específicas para las Acciones de Ciclo de Vida (POST)
     
