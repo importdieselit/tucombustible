@@ -11,6 +11,7 @@
     $MODULO_DESPACHOS = 42;
     $MODULO_USUARIOS = 51;
     $MODULO_ADMINISTRAR = 5;
+    $MODULO_CHECKLIST = 6;
 @endphp
 
 @section('content')
@@ -272,6 +273,22 @@ $data = [
         </div>
         @endif
         
+{{-- =============================================== --}}
+        {{-- TARJETA DE inspecciones (ID 42) --}}
+        {{-- =============================================== --}}
+        @if(Auth::user()->canAccess('create', $MODULO_DESPACHOS))
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+            @include('partials.access_card', [
+                'route' => route('combustible.despacho'),
+                'icon' => 'fa-route',
+                'title' => 'Despachos',
+                'color' => 'bg-primary',
+                'target' => '_blank',
+                'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
+            ])
+        </div>
+        @endif
+
         {{-- =============================================== --}}
         {{-- TARJETA DE DESPACHOS / LOGÍSTICA (ID 42) --}}
         {{-- =============================================== --}}

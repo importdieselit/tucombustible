@@ -227,7 +227,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/despachos', [DespachoController::class, 'store']);
     Route::put('/despachos/{id}', [DespachoController::class, 'update']);
     Route::delete('/despachos/{id}', [DespachoController::class, 'destroy']);
-
+        
     
     // FCM - Notificaciones Push
     Route::post('/auth/update-fcm-token', [\App\Http\Controllers\Apis\FcmController::class, 'updateToken']);

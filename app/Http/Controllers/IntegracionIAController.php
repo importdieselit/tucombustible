@@ -32,6 +32,7 @@ class IntegracionIAController extends Controller
 
         // Ejecutar la función correspondiente basada en la acción
         return match ($action) {
+            'identificarPorTelegram' => $this->identificarClientePorTelegramId($request), 
             'consultarCupo'       => $this->consultarCupo($request),
             'crearSolicitud'      => $this->crearSolicitud($request),
             'confirmarRecepcion'  => $this->confirmarRecepcion($request),
@@ -41,6 +42,70 @@ class IntegracionIAController extends Controller
             default               => response()->json(['success' => false, 'message' => 'Acción no soportada.'], 404),
         };
     }
+
+
+     protected function identificarClientePorTelegramId(Request $request)
+    {
+        // El ID de Telegram que Botpress nos envía.
+        $telegramId = $request->input('telegramId');
+        // El teléfono solo se envía si Botpress lo capturó en el paso anterior (para vinculación)
+        $telefono = $request->input('telefono'); 
+        
+        if (!$telegramId) {
+            return response()->json(['success' => false, 'response' => 'ID de Telegram requerido.'], 400);
+        }
+
+        try {
+            // 1. Intentar buscar por Telegram ID (Identificación rápida)
+            $cliente = Cliente::where('telegram_id', $telegramId)->first();
+
+            if ($cliente) {
+                // Éxito: Cliente identificado instantáneamente
+                return response()->json([
+                    'success' => true,
+                    'response' => "Hola de nuevo, {$cliente->nombre_contacto}.",
+                    'data' => [
+                        'clienteEncontrado' => true,
+                        'clienteId' => $cliente->id,
+                        'nombreCliente' => $cliente->nombre_contacto,
+                        'cupoDisponible' => $cliente->cupo_disponible ?? 0
+                    ]
+                ]);
+            } 
+            
+            // 2. Si no se encuentra, verificar si se envió un teléfono para vincular
+            if (!$cliente && $telefono) {
+                $cliente = Cliente::where('telefono', $telefono)->first();
+                if ($cliente) {
+                    // Vinculación: Encontró por teléfono, ahora guardamos el ID de Telegram
+                    $cliente->telegram_id = $telegramId;
+                    $cliente->save();
+                    return response()->json([
+                        'success' => true,
+                        'response' => "Cuenta vinculada. Hola, {$cliente->nombre_contacto}.",
+                        'data' => [
+                            'clienteEncontrado' => true,
+                            'clienteId' => $cliente->id,
+                            'nombreCliente' => $cliente->nombre_contacto,
+                            'cupoDisponible' => $cliente->cupo_disponible ?? 0
+                        ]
+                    ]);
+                }
+            }
+
+            // 3. Fallo: El ID de Telegram no está vinculado y no se proporcionó teléfono.
+            return response()->json([
+                'success' => false, 
+                'response' => 'No estás registrado o vinculado. Por favor, proporciona tu número de teléfono.',
+                'data' => ['clienteEncontrado' => false]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error("Error de identificación por Telegram ID: " . $e->getMessage());
+            return response()->json(['success' => false, 'response' => 'Error interno.']);
+        }
+    }
+
 
     // --- FUNCIONES DE LÓGICA DE NEGOCIO ---
 
@@ -74,7 +139,7 @@ class IntegracionIAController extends Controller
     {
         // Botpress debe extraer el número y enviarlo en el payload
         $telefono = $request->telefono;
-        
+        $telegramId=$request->telegramId ?? null;
         // Limpia el número: elimina espacios, guiones, y el código de país (si aplica)
         $telefonoLimpio = preg_replace('/[^0-9]/', '', $telefono);
         
@@ -92,6 +157,10 @@ class IntegracionIAController extends Controller
                               ->first();
 
             if ($cliente) {
+                if(!is_null($telegramId)){
+                    $cliente->telegram_id = $telegramId;
+                    $cliente->save();
+                }
                 // Éxito: Cliente encontrado
                 $mensajeBienvenida = "Hola, {$cliente->contacto}. ¿En qué puedo ayudarte hoy?";
                 
