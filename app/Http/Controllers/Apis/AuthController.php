@@ -207,7 +207,7 @@ class AuthController extends Controller
         // Para editar: simplemente cambiar estos IDs por los IDs de los usuarios deseados
         // Ejemplo: si quieres agregar más usuarios, solo añade sus IDs al array
         $usuariosParaNotificar = [
-            1, // Oscar (Super Admin) - ID del usuario Oscar
+            1,2,11,18, // Oscar (Super Admin) - ID del usuario Oscar
         ];
 
         // Obtener usuarios por IDs específicos
@@ -329,6 +329,7 @@ class AuthController extends Controller
 
         } catch (\Exception $e) {
             \DB::rollBack();
+            \Log::error ('Error al procesar preregistro: ' . $e->getMessage());  
             return response()->json([
                 'success' => false,
                 'message' => 'Error al procesar el preregistro',
