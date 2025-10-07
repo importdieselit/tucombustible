@@ -30,7 +30,7 @@ class ReporteController extends BaseController
         // Aquí se aplicaría la validación de permisos:
         // if (!auth()->user()->canAccess('create', $this->moduloIdReportes)) { abort(403); } 
 
-        $tiposReporte = TipoReporte::where('activo', true)->pluck('nombre_tipo', 'id');
+        $tiposReporte = TipoReporte::where('activo', true)->pluck('tipo', 'id');
         
         return view('reporte.create', compact('tiposReporte'));
     }
