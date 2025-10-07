@@ -288,7 +288,7 @@ class AuthController extends Controller
                 'telefono' => $request->cliente_telefono,
                 'email' => $request->cliente_email,
                 'sector' => $request->cliente_sector,
-                'periodo' => $request->cliente_periodo,
+                'periodo' => $request->cliente_periodo[0],
                 'disponible' => 0,
                 'cupo' => 0,
             ]);
