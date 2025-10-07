@@ -68,8 +68,12 @@
         </tbody>
     </table>
     
-    {{-- Paginación (si list() en BaseController lo soporta) --}}
-    {{ $data->links() }} 
+    {{-- Paginación Condicional --}}
+@if (method_exists($data, 'links'))
+    <div class="d-flex justify-content-center mt-4">
+        {{ $data->links() }}
+    </div>
+@endif
 
 </div>
 @endsection
