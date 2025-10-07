@@ -44,8 +44,10 @@ Route::post('/ia/webhook', [IntegracionIAController::class, 'handleWebhook']);
 
 // Rutas de autenticación (públicas)
 Route::post('/auth/register', [AuthController::class, 'register']);
+Route::post('/auth/preregister', [AuthController::class, 'preregister']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::get('/auth/perfiles', [AuthController::class, 'getPerfiles']);
+Route::get('/auth/usuarios-para-notificar', [AuthController::class, 'getUsuariosParaNotificar']);
 Route::get('/auth/debug-user', [AuthController::class, 'debugUser']);
 
 Route::post('/test-fcm-notification', [TestFcmController::class, 'sendFcmNotification']);
@@ -71,6 +73,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/users/{id}', [UserController::class, 'destroy']);
     Route::patch('/users/{id}/toggle-status', [UserController::class, 'toggleStatus']);
     Route::get('/users/perfiles/disponibles', [UserController::class, 'getPerfiles']);
+    
+    // Usuarios Preregistrados (Solo para Super Admin)
+    Route::get('/auth/usuarios-preregistrados', [AuthController::class, 'getUsuariosPreregistrados']);
+    Route::get('/auth/usuarios-preregistrados/{id}', [AuthController::class, 'getUsuarioPreregistradoDetalle']);
+    Route::post('/auth/usuarios-preregistrados/{id}/aprobar', [AuthController::class, 'aprobarUsuarioPreregistrado']);
+    Route::delete('/auth/usuarios-preregistrados/{id}/rechazar', [AuthController::class, 'rechazarUsuarioPreregistrado']);
     
     // Administrador - Reportes y Estadísticas
     Route::get('/admin/estadisticas-generales', [AdminController::class, 'getEstadisticasGenerales']);

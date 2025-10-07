@@ -23,7 +23,8 @@ class User extends Authenticatable
         'id_persona',
         'cliente_id',
         'fcm_token',
-        'id_master'
+        'id_master',
+        'status'
 
     ];
 
