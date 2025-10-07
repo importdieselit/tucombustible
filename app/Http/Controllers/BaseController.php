@@ -134,7 +134,7 @@ abstract class BaseController extends Controller
             }
         }
 
-        $data = $query->get()->paginate(15);
+        $data = $query->get();
         //    $data = $this->model->all();
         $estatusData = EstatusData::all()->keyBy('id_estatus');
         return view($this->getModelNameLowerCase() . '.list', compact('data', 'estatusData'));
