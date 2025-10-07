@@ -1,0 +1,82 @@
+{{-- resources/views/reportes/index.blade.php --}}
+
+@extends('layouts.app') 
+
+@section('content')
+<div class="container">
+    <h2>Gestión de Reportes de Reporte</h2>
+    
+    {{-- Botón para crear un nuevo reporte --}}
+    <a href="{{ route('reportes.create') }}" class="btn btn-primary mb-3">
+        + Nuevo Reporte
+    </a>
+    
+    {{-- Sección de Filtros --}}
+    <div class="card mb-4">
+        <div class="card-header">Filtros</div>
+        <div class="card-body">
+            <form method="GET" action="{{ route('reportes.index') }}">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label for="estatus_filter">Estatus</label>
+                        <select name="estatus_filter" class="form-control">
+                            <option value="">Todos</option>
+                            <option value="ABIERTO" {{ request('estatus_filter') == 'ABIERTO' ? 'selected' : '' }}>Abierto</option>
+                            <option value="EN_PROCESO" {{ request('estatus_filter') == 'EN_PROCESO' ? 'selected' : '' }}>En Proceso</option>
+                            <option value="CERRADO" {{ request('estatus_filter') == 'CERRADO' ? 'selected' : '' }}>Cerrado</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 align-self-end">
+                        <button type="submit" class="btn btn-secondary">Aplicar Filtro</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- Tabla de Reportes (Asume que el controlador ReporteController.php llama a list() del BaseController) --}}
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Lugar</th>
+                <th>Estatus</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach ($data as $reporte)
+                <tr>
+                    <td>{{ $reporte->id }}</td>
+                    <td>{{ $reporte->created_at->format('Y-m-d H:i') }}</td>
+                    {{-- Usando la relación definida en el modelo --}}
+                    <td>{{ $reporte->tipo->nombre_tipo ?? 'N/A' }}</td> 
+                    <td>{{ $reporte->lugar_reporte }}</td>
+                    <td>
+                        {{-- Colorear el estatus para visualización rápida --}}
+                        <span class="badge {{ $reporte->estatus_actual === 'ABIERTO' ? 'bg-danger' : ($reporte->estatus_actual === 'EN_PROCESO' ? 'bg-warning text-dark' : 'bg-success') }}">
+                            {{ $reporte->estatus_actual }}
+                        </span>
+                    </td>
+                    <td>
+                        <a href="{{ route('reportes.show', $reporte->id) }}" class="btn btn-sm btn-info">Ver Detalle</a>
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+    
+    {{-- Paginación (si list() en BaseController lo soporta) --}}
+    {{ $data->links() }} 
+
+</div>
+@endsection
+
+@push('styles')
+<style>
+/* Estilos básicos para badges de bootstrap 5 (si no los tiene) */
+.badge.bg-warning { color: #212529 !important; } 
+</style>
+@endpush

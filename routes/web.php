@@ -27,6 +27,7 @@ use App\Http\Controllers\AlertaController;
 use App\Http\Controllers\AccesoController;
 use App\Http\Controllers\InspeccionController;
 use App\Http\Controllers\PedidoController;
+use App\Http\Controllers\ReporteController;
 
 use App\Models\Deposito;
 
@@ -73,7 +74,20 @@ Route::get('/inspecciones/{inspeccion_id}', [InspeccionController::class, 'show'
 // Ruta para generar el PDF
 Route::get('/inspecciones/{inspeccion_id}/pdf', [InspeccionController::class, 'exportPdf'])->name('inspeccion.pdf');
 
-    Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('inventario.entry');
+
+    // 2. Rutas Específicas para las Acciones de Ciclo de Vida (POST)
+    
+    // Ruta para cambiar el estatus de un ticket (Ej: de Abierto a En Proceso)
+    // Se usa PUT o POST (aquí usamos PUT para ser más RESTful)
+    Route::put('reportes/{reporte}/estatus', [ReporteController::class, 'updateStatus'])
+        ->name('reportes.update.estatus'); 
+
+    // Ruta para generar la Orden de Trabajo a partir de la reporte
+    // Se usa POST porque es una acción que crea un nuevo recurso (la OT) o cambia el estado
+    Route::post('reportes/{reporte}/generarot', [ReporteController::class, 'generarOT'])
+        ->name('reportes.generarot');   
+
+Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('inventario.entry');
     Route::get('inventario/adjustment', [InventarioController::class, 'adjustment'])->name('inventario.adjustment');
     Route::get('choferes/importar', [ChoferController::class, 'showImportForm'])->name('choferes.show-import-form');
     Route::post('choferes/importar', [ChoferController::class, 'importar'])->name('choferes.importar');
@@ -145,7 +159,8 @@ Route::get('/inspecciones/{inspeccion_id}/pdf', [InspeccionController::class, 'e
         'proveedores' => ProveedorController::class,
         //'servicios' => ServicioController::class,
         'perfiles' => PerfilController::class,
-        'usuarios' => UserController::class
+        'usuarios' => UserController::class,
+        'reportes' => ReporteController::class
         //'plan-mantenimiento' => PlanMantenimientoController::class,
         //'historial-mantenimiento' => HistorialMantenimientoController::class,
         // Agrega aquí otros recursos según tus tablas/modelos
