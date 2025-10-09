@@ -256,7 +256,7 @@ class IntegracionIAController extends Controller
             } else {
                 $persona = Persona::where('telefono',$telefonoLimpio)->first();
                 if($persona){
-                    Log::info('persona encontrada '.json_decode($persona));
+                    Log::info('persona encontrada '.$persona);
                
                     $user=User::where('id_persona', $persona->id)->first();
             // Asignación de Funciones basada en el Perfil
@@ -292,7 +292,7 @@ class IntegracionIAController extends Controller
             return response()->json(['success' => false, 'response' => 'Error interno al buscar el cliente.'], 500);
         }
         Log::info('response: '.$response);
-        return response()->json($response);
+        return response()->json(json_decode($response));
     }
 
 
