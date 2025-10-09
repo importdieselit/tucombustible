@@ -18,9 +18,9 @@
                     $inicio = $j * $rangoPorColumna;
                     $fin = min($deposito->diametro, ($j + 1) * $rangoPorColumna - $pasoAforo);
                 @endphp
-                <th colspan="2" class="text-center">
+                {{-- <th colspan="2" class="text-center">
                     {{ number_format($inicio, 0) }} cm a {{ number_format($fin, 1) }} cm
-                </th>
+                </th> --}}
             @endfor
         </tr>
         <tr>

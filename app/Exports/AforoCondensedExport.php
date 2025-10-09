@@ -32,9 +32,9 @@ class AforoCondensedExport implements FromCollection, WithHeadings
             $fin = min($D, ($j + 1) * $rangoPorColumna - $pasoAforo);
 
             // Encabezado para la columna CM
-            $headings[] = "CM ({$inicio}.0 a {$fin} cm)";
+            $headings[] = "CM";
             // Encabezado para la columna LITROS
-            $headings[] = "LITROS ({$inicio}.0 a {$fin} cm)";
+            $headings[] = "LITROS";
         }
 
         return $headings;
@@ -67,7 +67,7 @@ class AforoCondensedExport implements FromCollection, WithHeadings
             $indiceFila = (int)round($hRelativa / $pasoAforo);
 
             $tablaCondensada[$indiceFila][$indiceColumna]['h'] = $h;
-            $tablaCondensada[$indiceFila][$indiceColumna]['v'] = $aforo->volumen_litros;
+            $tablaCondensada[$indiceFila][$indiceColumna]['v'] = $aforo->litros;
 
             if ($indiceFila > $maxFilas) {
                 $maxFilas = $indiceFila;
