@@ -70,6 +70,9 @@ class IntegracionIAController extends Controller
         // ==========================================================
         // ETAPA 1: BÚSQUEDA CANÓNICA POR USER (Por telegram_id)
         // ==========================================================
+        Log::info('valida telegramid: '.$telegramId);
+        Log::info('valida telegramid: '.$request);
+
         $user = User::where('telegram_id', $telegramId)
                     ->first();
 
