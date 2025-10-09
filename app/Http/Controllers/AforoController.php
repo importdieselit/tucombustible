@@ -63,7 +63,7 @@ class AforoController extends Controller
         }
         
         // Generar un nombre de archivo limpio y único
-        $nombreArchivo = 'Aforo_Teorico_' . str_replace(' ', '_', $deposito->nombre) . '_' . date('Ymd') . '.xlsx';
+        $nombreArchivo = 'Aforo_Tanque_' . str_replace(' ', '_', $deposito->serial) . '_' . date('Ymd') . '.xlsx';
         
         // Iniciar la descarga usando la clase de exportación
         return Excel::download(new AforoCondensedExport($deposito->id), $nombreArchivo);
