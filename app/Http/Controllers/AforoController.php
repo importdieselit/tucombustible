@@ -40,7 +40,7 @@ class AforoController extends Controller
             $indiceFila = round($hRelativa / $pasoAforo); // Redondeo por seguridad
 
             // Almacenar el volumen
-            $tablaCondensada[$indiceFila][$indiceColumna] = $aforo->volumen_litros;
+            $tablaCondensada[$indiceFila][$indiceColumna] = $aforo->litros;
 
             // Actualizar el número máximo de filas
             if ($indiceFila > $maxFilas) {
