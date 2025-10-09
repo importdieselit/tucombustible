@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 // Importa tus modelos de negocio (Ejemplo)
 use App\Models\Cliente;
+use App\Models\User;
+use App\Models\Persona;
 use App\Models\Solicitud;
 use App\Models\Conductor;
 
@@ -32,7 +34,7 @@ class IntegracionIAController extends Controller
 
         // Ejecutar la función correspondiente basada en la acción
         return match ($action) {
-            'identificarPorTelegram' => $this->identificarClientePorTelegramId($request), 
+            'identificarPorTelegram' => $this->identificarPorTelegram($request), 
             'consultarCupo'       => $this->consultarCupo($request),
             'crearSolicitud'      => $this->crearSolicitud($request),
             'confirmarRecepcion'  => $this->confirmarRecepcion($request),
@@ -44,68 +46,173 @@ class IntegracionIAController extends Controller
     }
 
 
-     protected function identificarClientePorTelegramId(Request $request)
+    public function identificarPorTelegram(Request $request)
     {
-        // El ID de Telegram que Botpress nos envía.
         $telegramId = $request->input('telegramId');
-        // El teléfono solo se envía si Botpress lo capturó en el paso anterior (para vinculación)
-        $telefono = $request->input('telefono'); 
-        
-        if (!$telegramId) {
-            return response()->json(['success' => false, 'response' => 'ID de Telegram requerido.'], 400);
+        $contacto = $request->input('contacto'); 
+
+        // Inicializar la respuesta base
+        $response = [
+            'success' => false,
+            'action' => $request->action,
+            'data' => [
+                'clienteEncontrado' => false,
+                'userEncontrado' => false,
+                'perfil' => null,
+                'clienteId' => null,
+                'nombreCliente' => null,
+                'cupo' => null,
+                'disponible' => null,
+            ],
+            'response' => 'Error de identificación.'
+        ];
+
+        // ==========================================================
+        // ETAPA 1: BÚSQUEDA CANÓNICA POR USER (Por telegram_id)
+        // ==========================================================
+        $user = User::where('telegram_id', $telegramId)
+                    ->first();
+
+        if ($user) {
+            // El usuario ya existe, tiene un perfil definido (3 o !=3). Se devuelve la información.
+            return $this->handleUserFound($user, $response);
         }
 
-        try {
-            // 1. Intentar buscar por Telegram ID (Identificación rápida)
-            $cliente = Cliente::where('telegram_id', $telegramId)->first();
+        $cliente = Cliente::where('telegram_id', $telegramId)
+                    ->first();
 
-            if ($cliente) {
-                // Éxito: Cliente identificado instantáneamente
-                return response()->json([
-                    'success' => true,
-                    'response' => "Hola de nuevo, {$cliente->nombre_contacto}.",
-                    'data' => [
-                        'clienteEncontrado' => true,
-                        'clienteId' => $cliente->id,
-                        'nombreCliente' => $cliente->nombre_contacto,
-                        'cupoDisponible' => $cliente->cupo_disponible ?? 0
-                    ]
-                ]);
-            } 
-            
-            // 2. Si no se encuentra, verificar si se envió un teléfono para vincular
-            if (!$cliente && $telefono) {
-                $cliente = Cliente::where('telefono', $telefono)->first();
+        if ($cliente) {
+            $user=User::where('cliente_id',$cliente->id)->first();
+            // El usuario ya existe, tiene un perfil definido (3 o !=3). Se devuelve la información.
+            return $this->handleUserFound($user, $response);
+        }
+
+        // ==========================================================
+        // ETAPA 2: BÚSQUEDA POR CONTACTO Y VALIDACIÓN DE CLIENTE
+        // ==========================================================
+        if ($contacto) {
+            $contactoNormalizado = strtolower(trim($contacto));
+
+            // A) Buscar la Persona
+            $persona = Persona::where('telefono', $contactoNormalizado)
+                              ->orWhere('correo', $contactoNormalizado) 
+                              ->first();
+
+            if ($persona) {
+                // B) VALIDACIÓN CRÍTICA: ¿Es esta persona un Cliente?
+                $cliente = Cliente::where('persona_id', $persona->id)->first();
+                
                 if ($cliente) {
-                    // Vinculación: Encontró por teléfono, ahora guardamos el ID de Telegram
-                    $cliente->telegram_id = $telegramId;
-                    $cliente->save();
-                    return response()->json([
-                        'success' => true,
-                        'response' => "Cuenta vinculada. Hola, {$cliente->nombre_contacto}.",
-                        'data' => [
-                            'clienteEncontrado' => true,
-                            'clienteId' => $cliente->id,
-                            'nombreCliente' => $cliente->nombre_contacto,
-                            'cupoDisponible' => $cliente->cupo_disponible ?? 0
-                        ]
-                    ]);
+                    // C) ES UN CLIENTE VÁLIDO. Ahora asegurar que tenga un registro en User.
+                    $user = User::with('cliente', 'persona')
+                                ->where('persona_id', $persona->id)
+                                ->first();
+
+                    if ($user) {
+                        // Cliente con User existente: Actualizamos el telegram_id y asignamos perfil 3 (si no lo tenía)
+                        $user->telegram_id = $telegramId;
+                        // Forzamos el id_perfil a 3 si el User ya existía pero lo tenía diferente.
+                        if ($user->id_perfil !== 3) {
+                             $user->id_perfil = 3;
+                        }
+                        $user->save();
+                        return $this->handleUserFound($user, $response);
+                    } else {
+                        // Cliente sin User: Lo creamos con perfil 3
+                        $newUser = User::create([
+                            'persona_id' => $persona->id,
+                            'id_perfil' => 3, // Perfil de Cliente
+                            'telegram_id' => $telegramId,
+                            'email' => $persona->correo ?? "telegram_{$telegramId}@placeholder.com",
+                            'password' => Hash::make('combustible123'),
+                        ]);
+                        $newUser->load('cliente', 'persona');
+                        return $this->handleUserFound($newUser, $response);
+                    }
                 }
+                
+                // Si la Persona existe pero NO es Cliente (Lógica de rechazo de contacto)
             }
-
-            // 3. Fallo: El ID de Telegram no está vinculado y no se proporcionó teléfono.
-            return response()->json([
-                'success' => false, 
-                'response' => 'No estás registrado o vinculado. Por favor, proporciona tu número de teléfono.',
-                'data' => ['clienteEncontrado' => false]
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error("Error de identificación por Telegram ID: " . $e->getMessage());
-            return response()->json(['success' => false, 'response' => 'Error interno.']);
+            
+            // Falla la búsqueda por contacto o persona no es cliente
+            $response['response'] = 'El contacto proporcionado no está asociado a una cuenta activa de cliente.';
+            return response()->json($response);
         }
-    }
 
+        // ==========================================================
+        // ETAPA 3: FALLO FINAL DE IDENTIFICACIÓN
+        // ==========================================================
+        $response['response'] = 'No se pudo identificar. Por favor, proporcione su número de teléfono o correo.';
+        return response()->json($response);
+    }
+    
+    // ==========================================================
+    // MÉTODO AUXILIAR: Manejar User Encontrado (Se mantiene igual)
+    // ==========================================================
+    private function handleUserFound($user, $response)
+    {
+        // Asegurar que las relaciones estén cargadas
+        if (!$user->relationLoaded('persona')) {
+             $user->load('persona', 'cliente');
+        }
+
+        $response['success'] = true;
+        $response['data']['userEncontrado'] = true;
+        $response['data']['perfil'] = $user->id_perfil;
+        
+        // Asignación de Funciones basada en el Perfil
+        if ($user->id_perfil == 3) {
+            // PERFIL CLIENTE (Datos de cliente)
+            $cliente = $user->cliente;
+            $response['data']['clienteEncontrado'] = true;
+            $response['data']['clienteId'] = $cliente->id ?? null;
+            $response['data']['nombreCliente'] = $user->persona->nombre ?? 'Cliente';
+            $response['data']['cupo'] = $cliente->cupo ?? 0;
+            $response['data']['disponible'] = $cliente->disponible ?? 0;
+            $response['response'] = "Bienvenido, {$response['data']['nombreCliente']}. Eres un Cliente.";
+        } else {
+            // PERFIL ADMINISTRATIVO / SISTEMAS (Funciones amplias)
+            $response['data']['nombreCliente'] = $user->persona->nombre ?? 'Usuario de Sistema';
+            $response['response'] = "Bienvenido, {$response['data']['nombreCliente']}. Eres un Usuario Administrativo.";
+        }
+
+        return response()->json($response);
+    }
+    
+    // ==========================================================
+    // MÉTODO AUXILIAR: Manejar User Encontrado (Reutilizável)
+    // ==========================================================
+    private function handleUserFound($user, $response)
+    {
+        // Certificar-se de que o User tem relações carregadas (necessário se o User não foi carregado com with())
+        if (!$user->relationLoaded('persona')) {
+             $user->load('persona', 'cliente');
+        }
+
+        $response['success'] = true;
+        $response['data']['userEncontrado'] = true;
+        $response['data']['perfil'] = $user->id_perfil;
+        
+        // Asignación de Funciones
+        if ($user->id_perfil == 3) {
+            // PERFIL CLIENTE (Funções limitadas a consultas)
+            $cliente = $user->cliente;
+            $response['data']['clienteEncontrado'] = true;
+            $response['data']['clienteId'] = $cliente->id ?? null;
+            $response['data']['nombreCliente'] = $user->persona->nombre ?? 'Cliente';
+            // Campos de saldo/cupo (devem ser mapeados corretamente no seu modelo Cliente)
+            $response['data']['cupo'] = $cliente->cupo ?? 0;
+            $response['data']['disponible'] = $cliente->disponible ?? 0;
+            $response['response'] = "Bienvenido, {$response['data']['nombreCliente']}. Eres un Cliente.";
+        } else {
+            // PERFIL ADMINISTRATIVO / SISTEMAS (Funções de modificação)
+            $response['data']['nombreCliente'] = $user->persona->nombre ?? 'Usuário de Sistema';
+            $response['response'] = "Bienvenido, {$response['data']['nombreCliente']}. Eres un Usuario Administrativo.";
+        }
+
+        return response()->json($response);
+    }
+    
 
     // --- FUNCIONES DE LÓGICA DE NEGOCIO ---
 
