@@ -22,7 +22,7 @@ class AforoTableSeeder extends Seeder
             $longitud = $deposito->longitud;
 
             // Iterar desde 0 cm hasta el diámetro del tanque, en pasos de 0.5 cm
-            for ($h = 0.0; $h <= $diametro; $h += 0.5) {
+            for ($h = 0.5; $h <= $diametro; $h += 0.5) {
 
                 $volumen = AforoCalculoService::calcularVolumenTeorico(
                     $diametro,
