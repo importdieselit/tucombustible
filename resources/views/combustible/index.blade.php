@@ -489,7 +489,7 @@
                                 <p class="text-black m-0 "><small>{{ $deposito->nivel_actual_litros }}/{{ $deposito->capacidad_litros }} Litros</small>  
                                     <i class="rounded fa fa-pencil ajustar-btn" data-id="{{$deposito->id}}"></i>
                                     <a href="{{ route('depositos.aforo.show', ['deposito' => $deposito->id]) }}">
-                                        <i class="rounded fa fa-pencil"></i>
+                                        <i class="rounded fa fa-table"></i>
                                     </a>
                                 </p>    
                             </div>
