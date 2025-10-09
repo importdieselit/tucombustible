@@ -249,7 +249,7 @@ class IntegracionIAController extends Controller
                         'nombreCliente' => $cliente->contacto ?? $cliente->nombre,
                         // Puedes incluir el cupo disponible de una vez para un saludo más personalizado
                         'cupo' => $cliente->cupo ?? 0,
-                        'perfil' => $cliente->id_perfil,
+                        'perfil' => 3,
                         'disponible' => $cliente->disponible ?? 0
                     ]
                 ]);
@@ -267,7 +267,7 @@ class IntegracionIAController extends Controller
                         $response['data']['clienteId'] = $cliente->id ?? null;
                         $response['data']['nombreCliente'] = $user->persona->nombre ?? 'Cliente';
                         $response['data']['cupo'] = $cliente->cupo ?? 0;
-                        $response['data']['perfil'] = $cliente->id_perfil;
+                        $response['data']['perfil'] = $user->id_perfil;
                         $response['data']['disponible'] = $cliente->disponible ?? 0;
                         $response['response'] = "Bienvenido, {$response['data']['nombreCliente']}. Eres un Cliente.";
                     } else {
