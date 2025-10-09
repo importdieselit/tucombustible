@@ -1,3 +1,8 @@
+@extends('layouts.app')
+
+@section('title', 'Gestión de Depósitos de Combustible')
+
+@section('content')
 <h2>Tabla de Aforo Teórico - {{ $deposito->nombre }} ({{ number_format($deposito->diametro, 0) }} cm)</h2>
 <p class="text-muted">Rango por Columna: {{ $rangoPorColumna }} cm</p>
 
@@ -45,3 +50,4 @@
         @endfor
     </tbody>
 </table>
+@endsection
