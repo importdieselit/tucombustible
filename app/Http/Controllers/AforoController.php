@@ -10,13 +10,13 @@ use Illuminate\Support\Facades\DB;
 
 class AforoController extends Controller
 {
-    public function showAforoTable($id)
+    public function showAforoTable($id) 
     {
         $deposito=Deposito::find($id);
         $aforos = Aforo::where('deposito_id', $deposito->id)
                         ->orderBy('profundidad_cm')
                         ->get();
-
+                    
         $D = $deposito->diametro;
         $pasoAforo = 0.5; // cm
         $numColumnasRango = 5; // 5 pares de (CM|LITROS)
@@ -48,7 +48,7 @@ class AforoController extends Controller
             }
         }
 
-        return view('deposito.aforo', compact('deposito', 'tablaCondensada', 'rangos', 'etiquetasFilas', 'maxFilas'));
+        return view('deposito.aforo', compact('deposito', 'tablaCondensada', 'rangoPorColumna', 'etiquetasFilas', 'maxFilas'));
     }
 
 }
