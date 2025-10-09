@@ -249,13 +249,14 @@ class IntegracionIAController extends Controller
                         'nombreCliente' => $cliente->contacto ?? $cliente->nombre,
                         // Puedes incluir el cupo disponible de una vez para un saludo más personalizado
                         'cupo' => $cliente->cupo ?? 0,
+                        'perfil' => $cliente->id_perfil,
                         'disponible' => $cliente->disponible ?? 0
                     ]
                 ]);
             } else {
                 $persona = Persona::where('telefono',$telefonoLimpio)->first();
                 if($persona){
-                    Log::info('perosna encontrada '.$persona);
+                    Log::info('persona encontrada '.$persona);
                
                     $user=User::where('id_persona', $persona->id)->first();
             // Asignación de Funciones basada en el Perfil
@@ -266,11 +267,13 @@ class IntegracionIAController extends Controller
                         $response['data']['clienteId'] = $cliente->id ?? null;
                         $response['data']['nombreCliente'] = $user->persona->nombre ?? 'Cliente';
                         $response['data']['cupo'] = $cliente->cupo ?? 0;
+                        $response['data']['perfil'] = $cliente->id_perfil;
                         $response['data']['disponible'] = $cliente->disponible ?? 0;
                         $response['response'] = "Bienvenido, {$response['data']['nombreCliente']}. Eres un Cliente.";
                     } else {
                         // PERFIL ADMINISTRATIVO / SISTEMAS (Funciones amplias)
                         $response['data']['nombreCliente'] = $user->persona->nombre ?? 'Usuario de Sistema';
+                        $response['data']['perfil'] = $user->id_perfil;
                         $response['response'] = "Bienvenido, {$response['data']['nombreCliente']}. Eres un Usuario Administrativo.";
                     }
 
