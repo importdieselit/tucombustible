@@ -255,6 +255,8 @@ class IntegracionIAController extends Controller
             } else {
                 $persona = Persona::where('telefono',$telefonoLimpio)->first();
                 if($persona){
+                    Log::info('perosna encontrada '.$persona);
+               
                     $user=User::where('id_persona', $persona->id)->first();
             // Asignación de Funciones basada en el Perfil
                     if ($user->id_perfil == 3) {
