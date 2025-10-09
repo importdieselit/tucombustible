@@ -182,41 +182,7 @@ class IntegracionIAController extends Controller
         return response()->json($response);
     }
     
-    // ==========================================================
-    // MÉTODO AUXILIAR: Manejar User Encontrado (Reutilizável)
-    // ==========================================================
-    private function handleUserFound($user, $response)
-    {
-        // Certificar-se de que o User tem relações carregadas (necessário se o User não foi carregado com with())
-        if (!$user->relationLoaded('persona')) {
-             $user->load('persona', 'cliente');
-        }
-
-        $response['success'] = true;
-        $response['data']['userEncontrado'] = true;
-        $response['data']['perfil'] = $user->id_perfil;
-        
-        // Asignación de Funciones
-        if ($user->id_perfil == 3) {
-            // PERFIL CLIENTE (Funções limitadas a consultas)
-            $cliente = $user->cliente;
-            $response['data']['clienteEncontrado'] = true;
-            $response['data']['clienteId'] = $cliente->id ?? null;
-            $response['data']['nombreCliente'] = $user->persona->nombre ?? 'Cliente';
-            // Campos de saldo/cupo (devem ser mapeados corretamente no seu modelo Cliente)
-            $response['data']['cupo'] = $cliente->cupo ?? 0;
-            $response['data']['disponible'] = $cliente->disponible ?? 0;
-            $response['response'] = "Bienvenido, {$response['data']['nombreCliente']}. Eres un Cliente.";
-        } else {
-            // PERFIL ADMINISTRATIVO / SISTEMAS (Funções de modificação)
-            $response['data']['nombreCliente'] = $user->persona->nombre ?? 'Usuário de Sistema';
-            $response['response'] = "Bienvenido, {$response['data']['nombreCliente']}. Eres un Usuario Administrativo.";
-        }
-
-        return response()->json($response);
-    }
-    
-
+   
     // --- FUNCIONES DE LÓGICA DE NEGOCIO ---
 
     /**
@@ -287,17 +253,40 @@ class IntegracionIAController extends Controller
                     ]
                 ]);
             } else {
-                // Fallo: No se encontró el cliente
-                return response()->json([
-                    'success' => true, // La llamada a la API tuvo éxito, pero el cliente no fue encontrado
-                    'response' => 'No se encontró ningún cliente asociado a ese número. Por favor, verifica el número o habla con un agente.',
-                    'data' => ['clienteEncontrado' => false]
-                ]);
+                $persona = Persona::where('telefono',$telefonoLimpio)->first();
+                if($persona){
+                    $user=User::where('persona_id', $persona->id)->first();
+            // Asignación de Funciones basada en el Perfil
+                    if ($user->id_perfil == 3) {
+                        // PERFIL CLIENTE (Datos de cliente)
+                        $cliente = $user->cliente;
+                        $response['data']['clienteEncontrado'] = true;
+                        $response['data']['clienteId'] = $cliente->id ?? null;
+                        $response['data']['nombreCliente'] = $user->persona->nombre ?? 'Cliente';
+                        $response['data']['cupo'] = $cliente->cupo ?? 0;
+                        $response['data']['disponible'] = $cliente->disponible ?? 0;
+                        $response['response'] = "Bienvenido, {$response['data']['nombreCliente']}. Eres un Cliente.";
+                    } else {
+                        // PERFIL ADMINISTRATIVO / SISTEMAS (Funciones amplias)
+                        $response['data']['nombreCliente'] = $user->persona->nombre ?? 'Usuario de Sistema';
+                        $response['response'] = "Bienvenido, {$response['data']['nombreCliente']}. Eres un Usuario Administrativo.";
+                    }
+
+                    
+                }else{
+                    // Fallo: No se encontró el cliente
+                    return response()->json([
+                        'success' => true, // La llamada a la API tuvo éxito, pero el cliente no fue encontrado
+                        'response' => 'No se encontró ningún cliente asociado a ese número. Por favor, verifica el número o habla con un agente.',
+                        'data' => ['clienteEncontrado' => false]
+                    ]);
+                }
             }
         } catch (\Exception $e) {
             Log::error("Error de identificación por teléfono: " . $e->getMessage());
             return response()->json(['success' => false, 'response' => 'Error interno al buscar el cliente.'], 500);
         }
+        return response()->json($response);
     }
 
 
