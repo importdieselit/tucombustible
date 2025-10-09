@@ -48,7 +48,7 @@ class AforoController extends Controller
             }
         }
 
-        return view('deposito.aforo', compact('deposito', 'tablaCondensada', 'rangoPorColumna', 'etiquetasFilas', 'maxFilas'));
+        return view('deposito.aforo', compact('deposito', 'tablaCondensada', 'rangoPorColumna', 'numColumnasRango', 'maxFilas', 'pasoAforo'));
     }
 
 }
