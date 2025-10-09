@@ -85,6 +85,8 @@ Route::get('/inspecciones/{inspeccion_id}/pdf', [InspeccionController::class, 'e
 
     Route::get('/depositos/{deposito}/aforo', [AforoController::class, 'showAforoTable'])->name('depositos.aforo.show');
 
+    Route::get('/depositos/{deposito}/aforo/exportar', [AforoController::class, 'exportAforoTable'])->name('depositos.aforo.export');
+
     // Ruta para generar la Orden de Trabajo a partir de la reporte
     // Se usa POST porque es una acción que crea un nuevo recurso (la OT) o cambia el estado
     Route::post('reportes/{reporte}/generarot', [ReporteController::class, 'generarOT'])

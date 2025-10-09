@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Deposito;
 use App\Models\Aforo;
+use Maatwebsite\Excel\Facades\Excel; 
+use App\Exports\AforoCondensedExport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -49,6 +51,22 @@ class AforoController extends Controller
         }
 
         return view('deposito.aforo', compact('deposito', 'tablaCondensada', 'rangoPorColumna', 'numColumnasRango', 'maxFilas', 'pasoAforo'));
+    }
+
+
+
+    public function exportAforoTable(Deposito $deposito)
+    {
+        // Verificación de seguridad
+        if (!$deposito) {
+            return redirect()->back()->with('error', 'Depósito no encontrado.');
+        }
+        
+        // Generar un nombre de archivo limpio y único
+        $nombreArchivo = 'Aforo_Teorico_' . str_replace(' ', '_', $deposito->nombre) . '_' . date('Ymd') . '.xlsx';
+        
+        // Iniciar la descarga usando la clase de exportación
+        return Excel::download(new AforoCondensedExport($deposito->id), $nombreArchivo);
     }
 
 }

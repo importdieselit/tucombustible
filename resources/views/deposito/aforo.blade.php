@@ -6,6 +6,10 @@
 <h2>Tabla de Aforo Teórico - Deposito {{ $deposito->serial }} ({{ number_format($deposito->diametro, 0) }} cm)</h2>
 <p class="text-muted">Rango por Columna: {{ $rangoPorColumna }} cm</p>
 
+<a href="{{ route('depositos.aforo.export', ['deposito' => $deposito->id ]) }}" class="btn btn-success">
+    <i class="fas fa-file-excel"></i> Exportar a Excel
+</a>
+
 <table class="table table-bordered table-sm table-striped">
     <thead>
         <tr>
