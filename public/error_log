@@ -8,3 +8,4 @@ Stack trace:
 #2 /home/impormot/public_html/tucombustible/public/index.php(34): require('/home/impormot/...')
 #3 {main}
   thrown in /home/impormot/public_html/tucombustible/vendor/composer/autoload_real.php on line 41
+[09-Oct-2025 16:52:17 America/Caracas] PHP Fatal error:  Cannot redeclare App\Http\Controllers\IntegracionIAController::handleUserFound() in /home/impormot/public_html/tucombustible/app/Http/Controllers/IntegracionIAController.php on line 188
