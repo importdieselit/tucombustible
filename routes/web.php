@@ -28,6 +28,7 @@ use App\Http\Controllers\AccesoController;
 use App\Http\Controllers\InspeccionController;
 use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\ReporteController;
+use App\Http\Controllers\AforoController;
 
 use App\Models\Deposito;
 
@@ -81,6 +82,8 @@ Route::get('/inspecciones/{inspeccion_id}/pdf', [InspeccionController::class, 'e
     // Se usa PUT o POST (aquí usamos PUT para ser más RESTful)
     Route::put('reportes/{reporte}/estatus', [ReporteController::class, 'updateStatus'])
         ->name('reportes.update.estatus'); 
+
+    Route::get('/depositos/{deposito}/aforo', [AforoController::class, 'showAforoTable'])->name('depositos.aforo.show');
 
     // Ruta para generar la Orden de Trabajo a partir de la reporte
     // Se usa POST porque es una acción que crea un nuevo recurso (la OT) o cambia el estado
@@ -207,6 +210,8 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
         
         Route::post('/pedidos/{id}/aprobar', [MovimientoCombustibleController::class, 'aprobar'])->name('aprobar');
         Route::post('/pedidos/{id}/rechazar', [MovimientoCombustibleController::class, 'rechazar'])->name('rechazar');
+
+
 
     
         // Ruta para aprobar un pedido

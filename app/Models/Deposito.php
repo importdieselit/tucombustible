@@ -21,7 +21,9 @@ class Deposito extends Model
         'nivel_alerta_litros',
         'ubicacion', 
         'serial',
-        'producto'
+        'producto',
+        'diametro',
+        'longitud'
     ];
     protected $casts = [
         'capacidad_litros' => 'float',
