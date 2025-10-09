@@ -103,12 +103,12 @@ class IntegracionIAController extends Controller
 
             if ($persona) {
                 // B) VALIDACIÓN CRÍTICA: ¿Es esta persona un Cliente?
-                $cliente = Cliente::where('persona_id', $persona->id)->first();
+                $cliente = Cliente::where('id_persona', $persona->id)->first();
                 
                 if ($cliente) {
                     // C) ES UN CLIENTE VÁLIDO. Ahora asegurar que tenga un registro en User.
                     $user = User::with('cliente', 'persona')
-                                ->where('persona_id', $persona->id)
+                                ->where('id_persona', $persona->id)
                                 ->first();
 
                     if ($user) {
@@ -123,7 +123,7 @@ class IntegracionIAController extends Controller
                     } else {
                         // Cliente sin User: Lo creamos con perfil 3
                         $newUser = User::create([
-                            'persona_id' => $persona->id,
+                            'id_persona' => $persona->id,
                             'id_perfil' => 3, // Perfil de Cliente
                             'telegram_id' => $telegramId,
                             'email' => $persona->correo ?? "telegram_{$telegramId}@placeholder.com",
@@ -255,7 +255,7 @@ class IntegracionIAController extends Controller
             } else {
                 $persona = Persona::where('telefono',$telefonoLimpio)->first();
                 if($persona){
-                    $user=User::where('persona_id', $persona->id)->first();
+                    $user=User::where('id_persona', $persona->id)->first();
             // Asignación de Funciones basada en el Perfil
                     if ($user->id_perfil == 3) {
                         // PERFIL CLIENTE (Datos de cliente)
