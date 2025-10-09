@@ -291,6 +291,7 @@ class IntegracionIAController extends Controller
             Log::error("Error de identificación por teléfono: " . $e->getMessage());
             return response()->json(['success' => false, 'response' => 'Error interno al buscar el cliente.'], 500);
         }
+        Log::info('response: '.$response);
         return response()->json($response);
     }
 
