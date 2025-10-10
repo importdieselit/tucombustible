@@ -267,6 +267,10 @@ class IntegracionIAController extends Controller
                     if ($user->id_perfil == 3) {
                         // PERFIL CLIENTE (Datos de cliente)
                         $cliente = $user->cliente;
+
+                        $response['success'] = true;
+                        $response['data']['userEncontrado'] = true;
+                                    
                         $response['data']['clienteEncontrado'] = true;
                         $response['data']['clienteId'] = $cliente->id ?? null;
                         $response['data']['nombreCliente'] = $user->persona->nombre ?? 'Cliente';
@@ -275,6 +279,10 @@ class IntegracionIAController extends Controller
                         $response['data']['disponible'] = $cliente->disponible ?? 0;
                         $response['response'] = "Bienvenido, {$response['data']['nombreCliente']}. Eres un Cliente.";
                     } else {
+
+                        $response['success'] = true;
+                        $response['data']['userEncontrado'] = true;
+                        
                         // PERFIL ADMINISTRATIVO / SISTEMAS (Funciones amplias)
                         $response['data']['nombreCliente'] = $persona->nombre ?? 'Usuario de Sistema';
                         $response['data']['perfil'] = $user->id_perfil;
