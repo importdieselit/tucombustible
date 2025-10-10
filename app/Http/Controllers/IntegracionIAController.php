@@ -25,8 +25,9 @@ class IntegracionIAController extends Controller
         // Es común usar un campo 'action' o 'function' para identificar la tarea.
         $action = $request->input('action');
         $userId = $request->input('userId'); 
+        $telefono = $request->input('telefono'); 
 
-        Log::info("Webhook recibido. Acción: {$action}, Usuario: {$userId}");
+        Log::info("Webhook recibido. Acción: {$action}, telefono:{$telefono}. Usuario: {$userId}");
 
         if (!$action) {
             return response()->json(['success' => false, 'message' => 'Acción no especificada.'], 400);
@@ -238,6 +239,7 @@ class IntegracionIAController extends Controller
                     $cliente->telegram_id = $telegramId;
                     $cliente->save();
                 }
+                Log::info('cliente encontrado');
                 // Éxito: Cliente encontrado
                 $mensajeBienvenida = "Hola, {$cliente->contacto}. ¿En qué puedo ayudarte hoy?";
                 
