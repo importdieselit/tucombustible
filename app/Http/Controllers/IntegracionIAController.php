@@ -436,58 +436,58 @@ class IntegracionIAController extends Controller
 
 
     protected function ajustarNivelTanque(Request $request)
-{
-    $adminId = $request->input('admin_id');
-    $tanqueId = $request->input('tanque_id');
-    $nuevoNivelCm = $request->input('nuevo_nivel_cm');
-    $nuevoNivelitros = $request->input('nuevo_nivel_litros');
-Log::info('inicia ajuste');
-    // 1. **VALIDACIÓN DE DATOS BÁSICOS**
-    if (!$tanqueId || !is_numeric($nuevoNivelCm)) {
-        return response()->json([
-            'success' => false, 
-            'response' => 'Faltan parámetros de tanque (ID o Nivel). Por favor, repite el comando completo.'
-        ]);
-    }
-
-    // 2. **VALIDACIÓN DE PERMISOS (Opcional, pero recomendado)**
-    // Puedes verificar el perfil del $adminId aquí si es necesario
-
-    try {
-        // 3. **LÓGICA DE NEGOCIO: ENCONTRAR Y ACTUALIZAR**
-        $tanque = Deposito::where('serial', $tanqueId)->firstOrFail();
-        if(!is_null($nuevoNivelCm)){
-            $aforo = Aforo::where('deporito_id',$tanque->id)->where('profundidad_cm',$nuevoNivelCm)->get()->first()->litros;
-        }else{
-            $aforo=$nuevoNivelitros
+    {
+        $adminId = $request->input('admin_id');
+        $tanqueId = $request->input('tanque_id');
+        $nuevoNivelCm = $request->input('nuevo_nivel_cm');
+        $nuevoNivelitros = $request->input('nuevo_nivel_litros');
+        Log::info('inicia ajuste');
+        // 1. **VALIDACIÓN DE DATOS BÁSICOS**
+        if (!$tanqueId || !is_numeric($nuevoNivelCm)) {
+            return response()->json([
+                'success' => false, 
+                'response' => 'Faltan parámetros de tanque (ID o Nivel). Por favor, repite el comando completo.'
+            ]);
         }
 
-        $tanque->nivel_actual_litros = $aforo;
-        $tanque->save();
-        Log::info('fin ajuste', var_dump([
-            'success' => true,
-            'response' => "El nivel del Tanque **{$tanque->serial}** ha sido ajustado exitosamente a **{$aforo} Litros**.",
-            'data' => ['tanque_id' => $tanqueId]
-        ]));
-        // 4. **RESPUESTA DE ÉXITO**
-        return response()->json([
-            'success' => true,
-            'response' => "El nivel del Tanque **{$tanque->serial}** ha sido ajustado exitosamente a **{$aforo} Litros**.",
-            'data' => ['tanque_id' => $tanqueId]
-        ]);
+        // 2. **VALIDACIÓN DE PERMISOS (Opcional, pero recomendado)**
+        // Puedes verificar el perfil del $adminId aquí si es necesario
 
-    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-         Log::error($e->getMessage());
-        return response()->json([
-            'success' => false,
-            'response' => "Error: No se encontró ningún tanque con el identificador **{$tanqueId}**."
-        ]);
-    } catch (\Exception $e) {
-         Log::error($e->getMessage());
-        return response()->json([
-            'success' => false,
-            'response' => 'Error interno del sistema al intentar ajustar el nivel.'
-        ]);
-    }
+        try {
+            // 3. **LÓGICA DE NEGOCIO: ENCONTRAR Y ACTUALIZAR**
+            $tanque = Deposito::where('serial', $tanqueId)->firstOrFail();
+            if(!is_null($nuevoNivelCm)){
+                $aforo = Aforo::where('deporito_id',$tanque->id)->where('profundidad_cm',$nuevoNivelCm)->get()->first()->litros;
+            }else{
+                $aforo=$nuevoNivelitros;
+            }
+
+            $tanque->nivel_actual_litros = $aforo;
+            $tanque->save();
+            Log::info('fin ajuste', var_dump([
+                'success' => true,
+                'response' => "El nivel del Tanque **{$tanque->serial}** ha sido ajustado exitosamente a **{$aforo} Litros**.",
+                'data' => ['tanque_id' => $tanqueId]
+            ]));
+            // 4. **RESPUESTA DE ÉXITO**
+            return response()->json([
+                'success' => true,
+                'response' => "El nivel del Tanque **{$tanque->serial}** ha sido ajustado exitosamente a **{$aforo} Litros**.",
+                'data' => ['tanque_id' => $tanqueId]
+            ]);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error($e->getMessage());
+            return response()->json([
+                'success' => false,
+                'response' => "Error: No se encontró ningún tanque con el identificador **{$tanqueId}**."
+            ]);
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return response()->json([
+                'success' => false,
+                'response' => 'Error interno del sistema al intentar ajustar el nivel.'
+            ]);
+        }
 }
 }
