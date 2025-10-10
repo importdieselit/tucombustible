@@ -39,6 +39,7 @@ class IntegracionIAController extends Controller
             'crearSolicitud'      => $this->crearSolicitud($request),
             'confirmarRecepcion'  => $this->confirmarRecepcion($request),
             'reportarFalla'       => $this->reportarFalla($request),
+            'reportarFalla'       => $this->ajustarNivelTanque($request),
             'aprobarSolicitud'    => $this->aprobarSolicitud($request),
             'identificarCliente' => $this->identificarClientePorTelefono($request),
             default               => response()->json(['success' => false, 'message' => 'Acción no soportada.'], 404),
@@ -259,6 +260,7 @@ class IntegracionIAController extends Controller
                     Log::info('persona encontrada '.$persona);
                
                     $user=User::where('id_persona', $persona->id)->first();
+                    Log::info($user);
             // Asignación de Funciones basada en el Perfil
                     if ($user->id_perfil == 3) {
                         // PERFIL CLIENTE (Datos de cliente)
@@ -272,7 +274,7 @@ class IntegracionIAController extends Controller
                         $response['response'] = "Bienvenido, {$response['data']['nombreCliente']}. Eres un Cliente.";
                     } else {
                         // PERFIL ADMINISTRATIVO / SISTEMAS (Funciones amplias)
-                        $response['data']['nombreCliente'] = $user->persona->nombre ?? 'Usuario de Sistema';
+                        $response['data']['nombreCliente'] = $persona->nombre ?? 'Usuario de Sistema';
                         $response['data']['perfil'] = $user->id_perfil;
                         $response['response'] = "Bienvenido, {$response['data']['nombreCliente']}. Eres un Usuario Administrativo.";
                     }
@@ -431,4 +433,61 @@ class IntegracionIAController extends Controller
             return response()->json(['success' => false, 'response' => 'Error al aprobar la solicitud.']);
         }
     }
+
+
+    protected function ajustarNivelTanque(Request $request)
+{
+    $adminId = $request->input('admin_id');
+    $tanqueId = $request->input('tanque_id');
+    $nuevoNivelCm = $request->input('nuevo_nivel_cm');
+    $nuevoNivelitros = $request->input('nuevo_nivel_litros');
+Log::info('inicia ajuste');
+    // 1. **VALIDACIÓN DE DATOS BÁSICOS**
+    if (!$tanqueId || !is_numeric($nuevoNivelCm)) {
+        return response()->json([
+            'success' => false, 
+            'response' => 'Faltan parámetros de tanque (ID o Nivel). Por favor, repite el comando completo.'
+        ]);
+    }
+
+    // 2. **VALIDACIÓN DE PERMISOS (Opcional, pero recomendado)**
+    // Puedes verificar el perfil del $adminId aquí si es necesario
+
+    try {
+        // 3. **LÓGICA DE NEGOCIO: ENCONTRAR Y ACTUALIZAR**
+        $tanque = Deposito::where('serial', $tanqueId)->firstOrFail();
+        if(!is_null($nuevoNivelCm)){
+            $aforo = Aforo::where('deporito_id',$tanque->id)->where('profundidad_cm',$nuevoNivelCm)->get()->first()->litros;
+        }else{
+            $aforo=$nuevoNivelitros
+        }
+
+        $tanque->nivel_actual_litros = $aforo;
+        $tanque->save();
+        Log::info('fin ajuste', var_dump([
+            'success' => true,
+            'response' => "El nivel del Tanque **{$tanque->serial}** ha sido ajustado exitosamente a **{$aforo} Litros**.",
+            'data' => ['tanque_id' => $tanqueId]
+        ]));
+        // 4. **RESPUESTA DE ÉXITO**
+        return response()->json([
+            'success' => true,
+            'response' => "El nivel del Tanque **{$tanque->serial}** ha sido ajustado exitosamente a **{$aforo} Litros**.",
+            'data' => ['tanque_id' => $tanqueId]
+        ]);
+
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+         Log::error($e->getMessage());
+        return response()->json([
+            'success' => false,
+            'response' => "Error: No se encontró ningún tanque con el identificador **{$tanqueId}**."
+        ]);
+    } catch (\Exception $e) {
+         Log::error($e->getMessage());
+        return response()->json([
+            'success' => false,
+            'response' => 'Error interno del sistema al intentar ajustar el nivel.'
+        ]);
+    }
+}
 }
