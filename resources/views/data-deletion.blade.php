@@ -65,7 +65,7 @@
                 <label for="type">Tipo de Identificador:</label>
                 <select id="type" name="type" required>
                     <option value="">-- Seleccione el Tipo --</option>
-                    <option value="telegram">ID de Usuario de Telegram</option>
+                    <option value="telegram">ID de Usuario </option>
                     <option value="email">Correo Electrónico Registrado</option>
                 </select>
                 @error('type') <span class="alert-error">{{ $message }}</span> @enderror
@@ -73,7 +73,7 @@
 
             <div class="form-group">
                 <label for="identifier">Su Identificador (ID o Email):</label>
-                <input type="text" id="identifier" name="identifier" value="{{ old('identifier') }}" placeholder="Ej: @nombreusuario o su.email@ejemplo.com" required>
+                <input type="text" id="identifier" name="identifier" value="{{ old('identifier') }}" placeholder="Ej: nombreusuario o su.email@ejemplo.com" required>
                 @error('identifier') <span class="alert-error">{{ $message }}</span> @enderror
             </div>
 
