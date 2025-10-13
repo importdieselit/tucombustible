@@ -29,6 +29,7 @@ use App\Http\Controllers\InspeccionController;
 use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\AforoController;
+use App\Http\Controllers\DataDeletionController;
 
 use App\Models\Deposito;
 
@@ -42,8 +43,14 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-//Route::get('clientes/dashboard', [ClienteController::class, 'dashboard'])->name('clientes.dashboard')->middleware('role:3');
+// routes/web.php
 
+// 1. Ruta GET: Muestra la vista con la política y el formulario.
+Route::get('/politica-eliminacion-datos', [DataDeletionController::class, 'showRequestForm'])->name('data.deletion.form');
+
+// 2. Ruta POST: Procesa el envío del formulario.
+// Usamos el mismo endpoint que definimos antes para simplificar.
+Route::post('/solicitud-eliminacion-datos', [DataDeletionController::class, 'submitRequest'])->name('data.deletion.submit');
 
 Route::middleware(['auth'])->group(function () {
     // Dashboard principal
