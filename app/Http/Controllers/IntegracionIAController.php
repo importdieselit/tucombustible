@@ -27,6 +27,8 @@ class IntegracionIAController extends Controller
         $userId = $request->input('userId'); 
         $telefono = $request->input('telefono'); 
 
+        \Log::info('📩 Llamada recibida desde Botpress:', $request->all());
+
         Log::info("Webhook recibido. Acción: {$action}, telefono:{$telefono}. Usuario: {$userId}");
 
         if (!$action) {
