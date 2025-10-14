@@ -49,7 +49,7 @@ class ViajesController extends Controller
         // En un escenario real, aquí se cargan dinámicamente:
         $choferes = User::where('id_perfil',4)->get(['id', 'name']);
         $vehiculos = Vehiculo::where('estatus', 1)->get(['id', 'placa', 'flota']);
-        $ciudades_tabulador = TabuladorViatico::pluck('ciudad')->unique();
+        $ciudades_tabulador = TabuladorViatico::pluck('destino')->unique();
 
         return view('viajes.create', compact('choferes', 'vehiculos', 'ciudades_tabulador'));
     }
@@ -124,7 +124,7 @@ class ViajesController extends Controller
         ]);
 
         // 2. Buscar tarifa en el Tabulador
-        $tabulador = TabuladorViatico::where('ciudad', $request->destino_ciudad)->first();
+        $tabulador = TabuladorViatico::where('destino', $request->destino_ciudad)->first();
 
         if (!$tabulador) {
             return back()->with('error', 'No se encontró una tarifa de viáticos para esa ciudad.');
