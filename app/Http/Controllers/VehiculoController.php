@@ -173,7 +173,7 @@ class VehiculoController extends BaseController
                         $vehiculo->sucursal = $rowData['empresa'] ?? $vehiculo->sucursal;
                         $vehiculo->carga_maxima = $rowData['capacidad'] ?? $vehiculo->carga_maxima;
                         $vehiculo->gps = $rowData['gps'] ?? $vehiculo->gps;
-                        $vehiculo->es_flota = 1;
+                        $vehiculo->es_flota = true;
                         $vehiculo->save();
                     }
 
