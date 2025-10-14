@@ -147,7 +147,7 @@ class ViajesController extends Controller
     public function editViaticos($viajeId)
     {
         // 1. Autenticación y Autorización (Perfil Coordinador Administrativo)
-        if (!Auth::user()->canAccess('edit', 8)) { // Asumiendo que usa Spatie/Roles o similar
+        if (!Auth::user()->canAccess('update', 8)) { // Asumiendo que usa Spatie/Roles o similar
             abort(403, 'Acceso no autorizado.');
         }
 
@@ -162,7 +162,7 @@ class ViajesController extends Controller
     public function updateViaticos(Request $request, $viajeId)
     {
         // 1. Autorización (Mismo chequeo de perfil)
-        if (!Auth::user()->canAccess('edit', 8)) {
+        if (!Auth::user()->canAccess('update', 8)) {
             abort(403, 'Acceso no autorizado.');
         }
 
