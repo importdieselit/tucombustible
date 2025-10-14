@@ -47,7 +47,7 @@ class ViajesController extends Controller
     public function create()
     {
         // En un escenario real, aquí se cargan dinámicamente:
-        $choferes = User::whereHasRole('chofer')->get(['id', 'name']);
+        $choferes = User::where('id_perfil',4)->get(['id', 'name']);
         $vehiculos = Vehiculo::where('status', 'available')->get(['id', 'placa', 'modelo']);
         $ciudades_tabulador = TabuladorViatico::pluck('ciudad')->unique();
 
@@ -244,7 +244,7 @@ class ViajesController extends Controller
         });
 
         // Cargar datos para mantener los filtros
-        $choferes = User::whereHasRole('chofer')->get(['id', 'name']);
+        $choferes = User::where('id_perfil', 4)->get(['id', 'name']);
         $ciudades = Viaje::distinct()->pluck('destino_ciudad');
 
         return view('viajes.reports_index', [
