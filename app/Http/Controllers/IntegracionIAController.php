@@ -22,37 +22,71 @@ class IntegracionIAController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function handleWebhook(Request $request)
+   public function handleWebhook(Request $request)
     {
-        // El cuerpo del request (payload) de Botpress puede variar. 
-        // Es común usar un campo 'action' o 'function' para identificar la tarea.
-        $action = $request->input('action');
-        $userId = $request->input('userId'); 
-        $telefono = $request->input('telefono'); 
+        $payload = $request->all();
 
-        Log::info('📩 Llamada recibida desde Botpress:', $request->all());
+        // 1. Verificar si el payload es un lote (array de acciones)
+        if (is_array($payload) && !empty($payload) && isset($payload[0]['action'])) {
+            $results = [];
+            foreach ($payload as $item) {
+                $action = $item['action'] ?? null;
+                if ($action) {
+                    // Ejecuta cada acción en el lote
+                    $results[] = $this->executeAction($action, $item);
+                }
+            }
+            // Devuelve un arreglo JSON con los resultados de todas las acciones
+            return response()->json($results);
 
-        Log::info("Webhook recibido. Acción: {$action}, telefono:{$telefono}. Usuario: {$userId}");
-        Log::info('request: '.json_encode($request->all()));
+        } else {
+            $action = $request->input('action');
+            $data = $request->all(); // Pasa todo el request
+            
+            // Ejecutar la acción única
+            $result = $this->executeAction($action, $data);
 
-        if (!$action) {
-            return response()->json(['success' => false, 'message' => 'Acción no especificada.'], 400);
+            // Si es una acción única, no se envuelve en un array
+            return response()->json($result);
         }
-
-        // Ejecutar la función correspondiente basada en la acción
-        return match ($action) {
-            'identificarPorTelegram' => $this->identificarPorTelegram($request), 
-            'consultarCupo'       => $this->consultarCupo($request),
-            'crearSolicitud'      => $this->crearSolicitud($request),
-            'confirmarRecepcion'  => $this->confirmarRecepcion($request),
-            'reportarFalla'       => $this->reportarFalla($request),
-            'ajustarNivelTanque'       => $this->ajustarNivelTanque($request),
-            'aprobarSolicitud'    => $this->aprobarSolicitud($request),
-            'identificarCliente' => $this->identificarClientePorTelefono($request),
-            default               => response()->json(['success' => false, 'message' => 'Acción no soportada.'], 404),
-        };
     }
 
+    /**
+     * Método auxiliar para ejecutar una acción individual dentro del lote.
+     * @param string $action Nombre de la acción a ejecutar.
+     * @param array $data Datos del payload para esta acción.
+     * @return array Resultado de la ejecución (para ser incluido en el JSON final).
+     */
+    protected function executeAction($action, $data)
+    {
+        // Crea un nuevo objeto Request con los datos de la acción actual.
+        // Esto permite que los métodos existentes ($this->metodo($request)) funcionen.
+        $request = new Request($data);
+        
+        // Asume que la ID de usuario o administrador se puede encontrar en 'userId' o dentro de 'params'
+        $userId = $data['userId'] ?? $data['params']['admin_id'] ?? 'N/A';
+        Log::info("Ejecutando Acción: {$action}, Usuario: {$userId}");
+
+        if (!$action) {
+            return ['success' => false, 'message' => 'Acción no especificada en el item del lote.'];
+        }
+
+        // Mapeo de acciones a métodos de clase
+        // Se usa ->getData(true) para extraer el contenido del JsonResponse como un array PHP
+        return match ($action) {
+            'identificarPorTelegram'    => $this->identificarPorTelegram($request)->getData(true), 
+            'consultarCupo'             => $this->consultarCupo($request)->getData(true),
+            'crearSolicitud'            => $this->crearSolicitud($request)->getData(true),
+            'confirmarRecepcion'        => $this->confirmarRecepcion($request)->getData(true),
+            'reportarFalla'             => $this->reportarFalla($request)->getData(true),
+            'aprobarSolicitud'          => $this->aprobarSolicitud($request)->getData(true),
+            'identificarCliente'        => $this->identificarClientePorTelefono($request)->getData(true),
+            'ajustarNivelTanque'        => $this->ajustarNivelTanque($request)->getData(true), 
+            'aprobarEliminacionUsuario' => $this->aprobarEliminacionUsuario($request)->getData(true), 
+            
+            default                     => ['success' => false, 'message' => 'Acción no soportada: ' . $action],
+        };
+    }
 
     public function identificarPorTelegram(Request $request)
     {
