@@ -163,19 +163,19 @@ class VehiculoController extends BaseController
                 //         $modeloId = $modelo->id;
                 //     }
                 // }
-                 $vehiculo=Vehiculo::where('placa', $rowData['placas'])->first();
+                 $vehiculo=Vehiculo::where('placa', $rowData['PLACAS'])->first();
                     if($vehiculo){
-                        $tiposVehiculo= TipoVehiculo::where('tipo', $rowData['tipo'])->first();
-                        $vehiculo->color = $rowData['color'] ?? $vehiculo->color;
-                        $vehiculo->kilometraje = $rowData['kilometraje'] ?? $vehiculo->kilometraje;
-                        $vehiculo->observacion = $rowData['detalles'] ?? $vehiculo->observacion;
-                        $vehiculo->serial_motor = $rowData['serial motor'] ?? $vehiculo->serial_motor;
-                        $vehiculo->serial_carroceria = $rowData['serial carroceria'] ?? $vehiculo->serial_carroceria;
+                        $tiposVehiculo= TipoVehiculo::where('tipo', $rowData['TIPO'])->first();
+                        $vehiculo->color = $rowData['COLOR'] ?? $vehiculo->color;
+                        $vehiculo->kilometraje = $rowData['KILOMETRAJE'] ?? $vehiculo->kilometraje;
+                        //$vehiculo->observacion = $rowData['detalles'] ?? $vehiculo->observacion;
+                        $vehiculo->serial_motor = $rowData['SERIAL_MOTOR'] ?? $vehiculo->serial_motor;
+                        $vehiculo->serial_carroceria = $rowData['SERIAL_CARROCERIA'] ?? $vehiculo->serial_carroceria;
                         $vehiculo->tipo = $tiposVehiculo->id ?? $vehiculo->tipo;
-                        $vehiculo->anno = $rowData['año'] ?? $vehiculo->anno;
-                        $vehiculo->sucursal = $rowData['empresa'] ?? $vehiculo->sucursal;
-                        $vehiculo->carga_maxima = $rowData['capacidad'] ?? $vehiculo->carga_maxima;
-                        $vehiculo->gps = $rowData['gps'] ?? $vehiculo->gps;
+                        $vehiculo->anno = $rowData['AÑO'] ?? $vehiculo->anno;
+                        $vehiculo->sucursal = $rowData['EMPRESA'] ?? $vehiculo->sucursal;
+                        $vehiculo->carga_maxima = $rowData['CAPACIDAD'] ?? 0;
+                        $vehiculo->gps = $rowData['GPS'] ?? $vehiculo->gps;
                         $vehiculo->es_flota = true;
                         $vehiculo->save();
                     }
