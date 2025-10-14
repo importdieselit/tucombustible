@@ -22,14 +22,14 @@
                     <div class="col-md-6">
                         <label for="destino_ciudad" class="form-label fw-bold">Ciudad de Destino</label>
                         <select name="destino_ciudad" id="destino_ciudad" class="form-select @error('destino_ciudad') is-invalid @enderror" required>
-                            <option value="">Seleccione una ciudad del Tabulador</option>
+                            <option value="">Seleccione un destino del Tabulador</option>
                             
                             <!-- Ejemplo: Este array debe ser cargado desde el controlador con las ciudades del TabuladorViatico -->
-                            @php
+                            {{-- @php
                                 $ciudades_tabulador = ['BARQUISIMETO', 'VALENCIA', 'MARACAIBO', 'PLANTA GUATIRE', 'PLANTA PALITO'];
-                            @endphp
+                            @endphp --}}
                             
-                            @foreach($ciudades_tabulador as $ciudad)
+                            @foreach($destino as $ciudad)
                                 <option value="{{ $ciudad }}" {{ old('destino_ciudad') == $ciudad ? 'selected' : '' }}>{{ $ciudad }}</option>
                             @endforeach
                             
@@ -39,14 +39,6 @@
                         @enderror
                     </div>
 
-                    <!-- Días Estimados -->
-                    <div class="col-md-6">
-                        <label for="dias_estimados" class="form-label fw-bold">Días Estimados de Viaje</label>
-                        <input type="number" name="dias_estimados" id="dias_estimados" class="form-control @error('dias_estimados') is-invalid @enderror" value="{{ old('dias_estimados', 1) }}" min="1" required>
-                        @error('dias_estimados')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
                 </div>
 
                 <h4 class="mt-4 mb-3 text-success border-bottom pb-1">Asignación de Personal</h4>
@@ -75,8 +67,20 @@
 
                     <!-- Cantidad de Ayudantes -->
                     <div class="col-md-3">
-                        <label for="ayudantes_count" class="form-label fw-bold">N° Ayudantes</label>
-                        <input type="number" name="ayudantes_count" id="ayudantes_count" class="form-control @error('ayudantes_count') is-invalid @enderror" value="{{ old('ayudantes_count', 0) }}" min="0">
+                        <label for="ayudantes_count" class="form-label fw-bold">Ayudante</label>
+                       <select name="chofer_id" id="chofer_id" class="form-select @error('chofer_id') is-invalid @enderror" required>
+                            <option value="">Seleccione el chofer</option>
+                            <!-- Este loop debe cargar los usuarios con rol 'chofer' -->
+                            @php
+                                $choferes_ejemplo = [
+                                    ['id' => 101, 'name' => 'Luis Pérez'],
+                                    ['id' => 102, 'name' => 'Ana Rodríguez']
+                                ];
+                            @endphp
+                            @foreach($choferes_ejemplo as $chofer)
+                                <option value="{{ $chofer['id'] }}" {{ old('chofer_id') == $chofer['id'] ? 'selected' : '' }}>{{ $chofer['name'] }}</option>
+                            @endforeach
+                        </select>
                         @error('ayudantes_count')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -84,7 +88,7 @@
                     
                     <!-- Cantidad de Custodia/Seguridad -->
                     <div class="col-md-3">
-                        <label for="custodia_count" class="form-label fw-bold">N° Custodia</label>
+                        <label for="custodia_count" class="form-label fw-bold">Custodia</label>
                         <input type="number" name="custodia_count" id="custodia_count" class="form-control @error('custodia_count') is-invalid @enderror" value="{{ old('custodia_count', 0) }}" min="0">
                         @error('custodia_count')
                             <div class="invalid-feedback">{{ $message }}</div>
