@@ -30,6 +30,7 @@ class IntegracionIAController extends Controller
         Log::info('📩 Llamada recibida desde Botpress:', $request->all());
 
         Log::info("Webhook recibido. Acción: {$action}, telefono:{$telefono}. Usuario: {$userId}");
+        Log::info('request: '.json_encode($request->all()));
 
         if (!$action) {
             return response()->json(['success' => false, 'message' => 'Acción no especificada.'], 400);
@@ -454,13 +455,19 @@ class IntegracionIAController extends Controller
         $nuevoNivelCm = $request->input('nuevo_nivel_cm');
         $nuevoNivelitros = $request->input('nuevo_nivel_litros');
         Log::info('inicia ajuste');
+        Log::info('parametros', var_dump([
+            'adminId' => $adminId,
+            'tanqueId' => $tanqueId,
+            'nuevoNivelCm' => $nuevoNivelCm,
+            'nuevoNivelitros' => $nuevoNivelitros,
+        ]));
         // 1. **VALIDACIÓN DE DATOS BÁSICOS**
-        if (!$tanqueId || !is_numeric($nuevoNivelCm)) {
-            return response()->json([
-                'success' => false, 
-                'response' => 'Faltan parámetros de tanque (ID o Nivel). Por favor, repite el comando completo.'
-            ]);
-        }
+        // if (!$tanqueId || !is_numeric($nuevoNivelCm)) {
+        //     return response()->json([
+        //         'success' => false, 
+        //         'response' => 'Faltan parámetros de tanque (ID o Nivel). Por favor, repite el comando completo.'
+        //     ]);
+        // }
 
         // 2. **VALIDACIÓN DE PERMISOS (Opcional, pero recomendado)**
         // Puedes verificar el perfil del $adminId aquí si es necesario

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eliminación de Datos | Impormotor, C.A.</title>
+    <title>Eliminación de Datos | Distribuidora Impordiesel.</title>
     <style>
         body { font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0; background-color: #f4f4f4; color: #333; }
         .container { max-width: 900px; margin: 40px auto; padding: 30px; background-color: #fff; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); border-radius: 8px; }
@@ -37,12 +37,12 @@
 
     <div class="policy-section">
         <h2>Política de Eliminación de Cuentas y Datos</h2>
-        <p>Esta política complementa la Política de Privacidad principal de <strong>Impormotor, C.A.</strong> y se aplica a la aplicación <strong>[Nombre de tu Aplicación en Play Store]</strong>, desarrollada por <strong>Impormotor, C.A.</strong> (el "Desarrollador").</p>
+        <p>Esta política complementa la Política de Privacidad principal de <strong>Distribuidora Impordiesel.</strong> y se aplica a la aplicación <strong>[Nombre de tu Aplicación en Play Store]</strong>, desarrollada por <strong>Distribuidora Impordiesel.</strong> (el "Desarrollador").</p>
 
         <h3>1. Datos Sujetos a Eliminación</h3>
         <p>La eliminación de la cuenta conlleva la eliminación de los siguientes datos personales y sensibles que la aplicación haya recopilado:</p>
         <ul>
-            <li>**Datos de Identificación de Contacto:** Identificadores únicos de usuario (ej. ID de Telegram, correo electrónico), nombre de usuario, e ID de cuenta en el sistema de Impormotor.</li>
+            <li>**Datos de Identificación de Contacto:** Identificadores únicos de usuario (ej. ID de usuario, correo electrónico), nombre de usuario, e ID de cuenta en el sistema de Impormotor.</li>
             <li>**Datos Operacionales Vinculados:** Cualquier configuración o dato de contexto almacenado en el perfil de la aplicación/bot.</li>
         </ul>
 
@@ -65,7 +65,7 @@
                 <label for="type">Tipo de Identificador:</label>
                 <select id="type" name="type" required>
                     <option value="">-- Seleccione el Tipo --</option>
-                    <option value="telegram">ID de Usuario </option>
+                    <option value="IdUser">ID de Usuario </option>
                     <option value="email">Correo Electrónico Registrado</option>
                 </select>
                 @error('type') <span class="alert-error">{{ $message }}</span> @enderror
