@@ -478,7 +478,7 @@ class IntegracionIAController extends Controller
             // 3. **LÓGICA DE NEGOCIO: ENCONTRAR Y ACTUALIZAR**
             $tanque = Deposito::where('serial', $tanqueId)->firstOrFail();
             if(!is_null($nuevoNivelCm)){
-                $aforo = Aforo::where('deporito_id',$tanque->id)->where('profundidad_cm',$nuevoNivelCm)->get()->first()->litros;
+                $aforo = Aforo::where('deposito_id',$tanque->id)->where('profundidad_cm',$nuevoNivelCm)->get()->first()->litros;
             }else{
                 $aforo=$nuevoNivelitros;
             }
