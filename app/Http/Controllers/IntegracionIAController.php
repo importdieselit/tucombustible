@@ -455,12 +455,11 @@ class IntegracionIAController extends Controller
         $nuevoNivelCm = $request->input('nuevo_nivel_cm');
         $nuevoNivelitros = $request->input('nuevo_nivel_litros');
         Log::info('inicia ajuste');
-        Log::info('parametros', var_dump([
-            'adminId' => $adminId,
-            'tanqueId' => $tanqueId,
-            'nuevoNivelCm' => $nuevoNivelCm,
-            'nuevoNivelitros' => $nuevoNivelitros,
-        ]));
+        Log::info('adminId: '.$adminId);
+        Log::info('tanqueId: '.$tanqueId);
+        Log::info('nuevoNivelCm: '.$nuevoNivelCm);
+        Log::info('nuevoNivelitros: '.$nuevoNivelitros);
+        
         // 1. **VALIDACIÓN DE DATOS BÁSICOS**
         // if (!$tanqueId || !is_numeric($nuevoNivelCm)) {
         //     return response()->json([
