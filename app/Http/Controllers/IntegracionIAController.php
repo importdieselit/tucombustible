@@ -10,6 +10,9 @@ use App\Models\User;
 use App\Models\Persona;
 use App\Models\Solicitud;
 use App\Models\Conductor;
+use App\Models\Pedido;
+use App\Models\Deposito;
+use App\Models\Aforo;
 
 class IntegracionIAController extends Controller
 {
