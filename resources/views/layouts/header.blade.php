@@ -41,7 +41,7 @@
                    href="{{ url($alerta->accion) }}" 
                    title="Ir a {{ $alerta->observacion }}">
                     
-                    <small class="text-muted float-end">{{ $alerta->fecha->diffForHumans() }}</small>
+                    <small class="text-muted float-end" style="margin-top:15px">{{ $alerta->fecha->diffForHumans() }}</small>
                     <!-- Icono simple basado en la categoría o texto -->
                     <i class="bi bi-exclamation-circle me-2 text-warning"></i>
                     
