@@ -43,7 +43,7 @@ class IntegracionIAController extends Controller
             'crearSolicitud'      => $this->crearSolicitud($request),
             'confirmarRecepcion'  => $this->confirmarRecepcion($request),
             'reportarFalla'       => $this->reportarFalla($request),
-            'reportarFalla'       => $this->ajustarNivelTanque($request),
+            'ajustarNivelTanque'       => $this->ajustarNivelTanque($request),
             'aprobarSolicitud'    => $this->aprobarSolicitud($request),
             'identificarCliente' => $this->identificarClientePorTelefono($request),
             default               => response()->json(['success' => false, 'message' => 'Acción no soportada.'], 404),
