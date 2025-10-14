@@ -141,6 +141,9 @@ class VehiculoController extends BaseController
                 }
                 
                 $rowData = array_combine($header, $row);
+                $vard=var_dump($rowData);
+
+                return $vard;
 
                 // // Lógica de búsqueda y creación de marca y modelo
                 // $marcaNombre = $rowData['marca'] ?? null;
