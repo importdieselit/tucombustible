@@ -172,7 +172,7 @@ class VehiculoController extends BaseController
                         $vehiculo->serial_carroceria = $rowData['SERIAL_CARROCERIA'] ?? $vehiculo->serial_carroceria;
                         $vehiculo->tipo = $tiposVehiculo->id ?? $vehiculo->tipo;
                         $vehiculo->anno = $rowData['AÑO'] ?? $vehiculo->anno;
-                        $vehiculo->sucursal = $rowData['EMPRESA'] ?? $vehiculo->sucursal;
+                        $vehiculo->agencia = $rowData['EMPRESA'] ?? $vehiculo->agencia;
                         $vehiculo->carga_max = $rowData['CAPACIDAD'] ?? 0;
                         $vehiculo->gps = $rowData['GPS']== 'SI' ? true : false;
                         $vehiculo->es_flota = true;
