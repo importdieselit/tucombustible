@@ -189,4 +189,70 @@ class ViajesController extends Controller
 
         return back()->with('success', 'Cuadro de viáticos actualizado y guardado.');
     }
+
+    
+    public function reportsIndex()
+    {
+        // Cargar datos para los filtros
+        $choferes = User::whereHasRole('chofer')->get(['id', 'name']);
+        $ciudades = Viaje::distinct()->pluck('destino_ciudad');
+
+        return view('viajes.reports_index', compact('choferes', 'ciudades'));
+    }
+
+    /**
+     * Procesa la solicitud de reporte y devuelve los datos filtrados.
+     */
+    public function generateReport(Request $request)
+    {
+        $request->validate([
+            'fecha_inicio' => 'nullable|date',
+            'fecha_fin' => 'nullable|date|after_or_equal:fecha_inicio',
+            'chofer_id' => 'nullable|exists:users,id',
+            'destino_ciudad' => 'nullable|string',
+            'status' => 'nullable|string',
+        ]);
+
+        $query = Viaje::with(['chofer', 'viaticos']);
+
+        // Aplicar filtros dinámicos
+        if ($request->fecha_inicio) {
+            $query->whereDate('created_at', '>=', $request->fecha_inicio);
+        }
+        if ($request->fecha_fin) {
+            $query->whereDate('created_at', '<=', $request->fecha_fin);
+        }
+        if ($request->chofer_id) {
+            $query->where('chofer_id', $request->chofer_id);
+        }
+        if ($request->destino_ciudad) {
+            $query->where('destino_ciudad', $request->destino_ciudad);
+        }
+        if ($request->status) {
+            $query->where('status', $request->status);
+        }
+
+        $viajes_reporte = $query->get();
+
+        // Calcular el Gran Total de Viáticos
+        $granTotalViaticos = $viajes_reporte->sum(function($viaje) {
+            return $viaje->viaticos->sum(function($viatico) {
+                // Usar el monto ajustado si existe, sino usar el monto base
+                $monto = $viatico->monto_ajustado ?? $viatico->monto_base;
+                return $monto * $viatico->cantidad;
+            });
+        });
+
+        // Cargar datos para mantener los filtros
+        $choferes = User::whereHasRole('chofer')->get(['id', 'name']);
+        $ciudades = Viaje::distinct()->pluck('destino_ciudad');
+
+        return view('viajes.reports_index', [
+            'viajes_reporte' => $viajes_reporte,
+            'granTotalViaticos' => $granTotalViaticos,
+            'choferes' => $choferes,
+            'ciudades' => $ciudades,
+            'filtros' => $request->all(), // Devolver los filtros aplicados
+        ]);
+    }
 }
