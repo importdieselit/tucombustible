@@ -25,7 +25,7 @@ class IntegracionIAController extends Controller
    public function handleWebhook(Request $request)
     {
         $payload = $request->all();
-
+        Log::info('Payload recibido: ' . json_encode($payload));
         // 1. Verificar si el payload es un lote (array de acciones)
         if (is_array($payload) && !empty($payload) && isset($payload[0]['action'])) {
             $results = [];
