@@ -194,7 +194,7 @@ class ViajesController extends Controller
     public function reportsIndex()
     {
         // Cargar datos para los filtros
-        $choferes = User::whereHasRole('chofer')->get(['id', 'name']);
+        $choferes = User::where('id_perfil', 4)->get(['id', 'name']);
         $ciudades = Viaje::distinct()->pluck('destino_ciudad');
 
         return view('viajes.reports_index', compact('choferes', 'ciudades'));
