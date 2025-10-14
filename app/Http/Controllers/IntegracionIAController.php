@@ -485,11 +485,7 @@ class IntegracionIAController extends Controller
 
             $tanque->nivel_actual_litros = $aforo;
             $tanque->save();
-            Log::info('fin ajuste', var_dump([
-                'success' => true,
-                'response' => "El nivel del Tanque **{$tanque->serial}** ha sido ajustado exitosamente a **{$aforo} Litros**.",
-                'data' => ['tanque_id' => $tanqueId]
-            ]));
+            
             // 4. **RESPUESTA DE ÉXITO**
             return response()->json([
                 'success' => true,
