@@ -9,6 +9,8 @@ use App\Models\Deposito;
 use App\Observers\DepositoObserver;
 use App\Models\Cliente;
 use App\Observers\ClienteObserver;
+use Illuminate\Support\Facades\View;
+use App\View\Composers\AlertsComposer;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,10 +29,11 @@ class AppServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
+    public function boot() : void
     {
         Pedido::observe(PedidoObserver::class);
         Deposito::observe(DepositoObserver::class); 
         Cliente::observe(ClienteObserver::class);
+        View::composer('layouts.header', AlertsComposer::class); 
     }
 }
