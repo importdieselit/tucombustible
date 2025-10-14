@@ -1,0 +1,41 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Viaje extends Model
+{
+    use HasFactory;
+
+    protected $table = 'viajes';
+
+    protected $fillable = [
+        'destino_ciudad',
+        'chofer_id',
+        'ayudante',
+        'custodia_count',
+        'dias_estimados',
+        'status',
+    ];
+
+    /**
+     * Relación con el Chofer asignado (un usuario).
+     */
+    public function chofer(): BelongsTo
+    {
+        // Asume que la tabla de usuarios se llama 'users'
+        return $this->belongsTo(User::class, 'chofer_id'); 
+    }
+
+    /**
+     * Relación con el cuadro de viáticos generados para este viaje.
+     */
+    public function viaticos(): HasMany
+    {
+        return $this->hasMany(ViaticoViaje::class, 'viaje_id');
+    }
+}

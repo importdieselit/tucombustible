@@ -13,6 +13,7 @@
     $MODULO_ADMINISTRAR = 5;
     $MODULO_CHECKLIST = 6;
     $MODULO_REPORTES = 7;
+    $MODULO_VIAJES = 8;
 @endphp
 
 @section('content')
@@ -25,6 +26,7 @@ use App\Models\User;
 use App\Models\Alerta;
 use App\Models\Mantenimiento;
 use App\Models\Inventario;
+use App\Models\Viaje;
 use Illuminate\Support\Facades\DB;
 
 // KPI: Vehículos en operación
@@ -314,6 +316,21 @@ $data = [
                 'route' => route('reportes.index'),
                 'icon' => 'fa-list',
                 'title' => 'Reportes',
+                'color' => 'bg-primary',
+                'target' => '_blank',
+                'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
+            ])
+        </div>
+        @endif
+
+        {{-- TARJETA DE viajes (ID 8) --}}
+        {{-- =============================================== --}}
+        @if(Auth::user()->canAccess('create', $MODULO_VIAJES))
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+            @include('partials.access_card', [
+                'route' => route('viajes.index'),
+                'icon' => 'bi bi-geo-alt-fill me-2',
+                'title' => 'Viajes',
                 'color' => 'bg-primary',
                 'target' => '_blank',
                 'bg_opacity' => 'rgba(0, 123, 255, 0.15)'

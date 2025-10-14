@@ -188,7 +188,7 @@ class Vehiculo extends Model
 
         $query->whereHas('ordenes', function ($q) use ($tiposMantenimiento) {
             // Estatus de orden abierta y tipo de mantenimiento
-            $q->where('estatus', 2)
+            $q->where('estatus', 2)->where('es_flota', true)
               ->whereIn('tipo', $tiposMantenimiento);
         }); 
     }
@@ -211,7 +211,7 @@ class Vehiculo extends Model
     public function scopeDisponibles(Builder $query): void
     {
         // Ajustar el estatus según tu lógica de "Disponible"
-        $query->where('estatus', 1);
+        $query->where('estatus', 1)->where('es_flota', true);
     }
     
     /**

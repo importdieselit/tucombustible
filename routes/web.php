@@ -30,6 +30,7 @@ use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\AforoController;
 use App\Http\Controllers\DataDeletionController;
+use App\Http\Controllers\ViajesController;
 
 use App\Models\Deposito;
 
@@ -108,8 +109,7 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
     Route::post('/inventario/solicitudes/{id}/approve', [InventarioController::class, 'approve'])->name('inventario.requests.approve');
     Route::post('/inventario/solicitudes/{id}/reject', [InventarioController::class, 'reject'])->name('inventario.requests.reject');
     Route::post('/inventario/solicitudes/{id}/dispatch', [InventarioController::class, 'dispatch'])->name('inventario.requests.dispatch');
-
-
+ 
     Route::get('/vehiculos/import', [VehiculoController::class, 'importForm'])->name('vehiculos.import');
     Route::post('/vehiculos/import', [VehiculoController::class, 'importSave'])->name('vehiculos.import.save');
 
@@ -246,6 +246,11 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
     Route::get('/alertas/read/{id}', [AlertaController::class, 'markAsRead'])->name('alertas.read');
 
     
+    Route::resource('viajes', ViajesController::class)->only(['store', 'index', 'show','list']);
+    Route::get('viajes/dashboard', [ViajesController::class, 'dashboard'])->name('viajes.dashboard');
+    Route::get('viajes/{viaje}/viaticos/edit', [ViajesController::class, 'editViaticos'])->name('viajes.viaticos.edit');
+    Route::put('viajes/{viaje}/viaticos', [ViajesController::class, 'updateViaticos'])->name('viajes.viaticos.update');
+
     // Rutas para historial de mantenimiento
     //Route::get('/vehiculos/{vehiculo}/historial', [HistorialMantenimientoController::class, 'showByVehiculo'])->name('vehiculos.historial');
 
