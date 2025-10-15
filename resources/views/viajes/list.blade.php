@@ -70,7 +70,7 @@
                             </a>
                         @elseif($viaje->status == 'PENDIENTE_ASIGNACION')
                             <!-- Botón para el usuario de Asignación -->
-                            <a href="{{ route('viajes.assign', $viaje->id) }}" class="btn btn-sm btn-danger" title="Asignar Recursos">
+                            <a href="{{ route('viaje.assign', $viaje->id) }}" class="btn btn-sm btn-danger" title="Asignar Recursos">
                                 <i class="bi bi-truck"></i> Asignar Recursos
                             </a>
                         @else

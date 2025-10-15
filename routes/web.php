@@ -249,6 +249,7 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
     Route::resource('viajes', ViajesController::class)->only(['create','store', 'index', 'show']);
     Route::get('viajes/dashboard', [ViajesController::class, 'dashboard'])->name('viajes.dashboard');
     Route::get('viaje/list', [ViajesController::class, 'list'])->name('viaje.list');
+    Route::get('viaje/assign', [ViajesController::class, 'assign'])->name('viaje.assign');
     Route::get('viajes/{viaje}/viaticos/edit', [ViajesController::class, 'editViaticos'])->name('viajes.viaticos.edit');
     Route::put('viajes/{viaje}/viaticos', [ViajesController::class, 'updateViaticos'])->name('viajes.viaticos.update');
     Route::get('viajes/report/index', [ViajesController::class, 'reportsIndex'])->name('reportes.viajes');
