@@ -135,6 +135,9 @@ class ViajesController extends Controller
         if (!$tabulador) {
             return back()->with('error', 'No se encontró una tarifa de viáticos para esa ciudad.');
         }
+        if($request->chofer_id == null){
+            $request->merge(['status' => 'PENDIENTE_ASIGNACION']);
+        }
 
         // 3. Crear el Viaje
         $viaje = Viaje::create($request->all());
