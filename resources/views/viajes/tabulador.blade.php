@@ -111,7 +111,7 @@
 
                 // 3. Petición AJAX para guardar en el servidor
                 $.ajax({
-                    url: '{{ route('viajes.tabulador.update') }}',
+                    url: '{{ route('viaticos.tabulador.update') }}',
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': csrfToken

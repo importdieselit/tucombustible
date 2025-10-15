@@ -253,6 +253,7 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
     Route::put('viajes/report/index', [ViajesController::class, 'reportsIndex'])->name('reportes.viajes');
     Route::put('viajes/report/generate', [ViajesController::class, 'generateReport'])->name('viajes.report.generate');
     Route::get('viaticos/tabulador', [ViajesController::class, 'tabuladorIndex'])->name('viaticos.tabulador');
+    Route::put('viaticos/tabulador/update', [ViajesController::class, 'tabuladorUpdate'])->name('viaticos.tabulador.update');
 
     // Rutas para historial de mantenimiento
     //Route::get('/vehiculos/{vehiculo}/historial', [HistorialMantenimientoController::class, 'showByVehiculo'])->name('vehiculos.historial');
