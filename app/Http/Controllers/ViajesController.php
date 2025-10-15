@@ -81,7 +81,7 @@ class ViajesController extends Controller
     private function generarCuadroViaticos(Viaje $viaje, TabuladorViatico $tabulador): void
     {
         $fecha_salida = $viaje->fecha_salida;
-        $totalPersonas = 1 + $ayudantes + $viaje->custodia_count;
+        $totalPersonas = 1  + $viaje->custodia_count;
         $parametros = Parametro::all()->keyBy('nombre')
             ->map(function($item) {
                 return $item->valor;
