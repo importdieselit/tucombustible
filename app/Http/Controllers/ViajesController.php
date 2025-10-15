@@ -81,8 +81,12 @@ class ViajesController extends Controller
     private function generarCuadroViaticos(Viaje $viaje, TabuladorViatico $tabulador): void
     {
         $dias = $viaje->dias_estimados;
-        $ayudantes = !is_null($viaje->ayudantes)?1: 0; // Número de ayudantes
+        $ayudantes = !is_null($viaje->ayudante)?1: 0; // Número de ayudantes
         $totalPersonas = 1 + $ayudantes + $viaje->custodia_count;
+        $parametros = Parametro::all()->keyBy('nombre')
+            ->map(function($item) {
+                return $item->valor;
+            });
 
         // Lista de conceptos a generar (usando el Tabulador)
         $conceptos = [
@@ -97,7 +101,7 @@ class ViajesController extends Controller
             
             // Pernocta y Peajes
             ['concepto' => 'Costo Pernocta', 'monto' => $tabulador->costo_pernocta, 'cantidad' => $totalPersonas, 'editable' => true],
-            ['concepto' => 'Peajes (Ida y Vuelta)', 'monto' => $tabulador->peajes , 'cantidad' => 1, 'editable' => true], // Asumimos peajes ida y vuelta
+            ['concepto' => 'Peajes (Ida y Vuelta)', 'monto' => $tabulador->peajes * $parametros->peaje , 'cantidad' => 1, 'editable' => true], // Asumimos peajes ida y vuelta
         ];
 
         // Guardar cada concepto en la tabla 'viaticos_viaje'
@@ -190,7 +194,7 @@ class ViajesController extends Controller
         // $viaje->status = 'VIATICOS_APROBADOS';
         // $viaje->save();
 
-        return back()->with('success', 'Cuadro de viáticos actualizado y guardado.');
+        return redirect()->route('reportes.viajes');
     }
 
     
