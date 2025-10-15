@@ -64,14 +64,14 @@
                         </span>
                     </td>
                     <td>
-                        @if($viaje->status == 'PENDIENTE_VIATICOS')
+                         @if($viaje->status == 'PENDIENTE_VIATICOS')
                             <!-- Botón de acceso directo para el Coordinador Administrativo -->
                             <a href="{{ route('viajes.viaticos.edit', $viaje->id) }}" class="btn btn-sm btn-warning" title="Revisar Viáticos">
                                 <i class="bi bi-currency-dollar"></i> Generar Viáticos
                             </a>
                         @elseif($viaje->status == 'PENDIENTE_ASIGNACION')
                             <!-- Botón para el usuario de Asignación -->
-                            <a href="{{ route('viaje.assign', $viaje->id) }}" class="btn btn-sm btn-danger" title="Asignar Recursos">
+                            <a href="{{ route('viajes.assign', $viaje->id) }}" class="btn btn-sm btn-danger" title="Asignar Recursos">
                                 <i class="bi bi-truck"></i> Asignar Recursos
                             </a>
                         @else
