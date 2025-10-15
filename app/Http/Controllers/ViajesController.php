@@ -255,4 +255,51 @@ class ViajesController extends Controller
             'filtros' => $request->all(), // Devolver los filtros aplicados
         ]);
     }
+
+      public function tabuladorIndex()
+    {
+        // Se carga todo el tabulador para la edición en línea
+        $tabulador = TabuladorViatico::orderBy('ciudad')->get();
+        return view('viajes.tabulador', compact('tabulador'));
+    }
+
+    /**
+     * Procesa la solicitud de edición en línea del Tabulador de Viáticos.
+     */
+    public function tabuladorUpdate(Request $request)
+    {
+        // Validar que la solicitud contenga los datos esperados
+        $validated = $request->validate([
+            'id_tabulador' => 'required|exists:tabulador_viaticos,id_tabulador',
+            'field' => 'required|string', // Nombre del campo a editar
+            'value' => 'nullable|numeric|min:0', // El nuevo valor
+        ]);
+
+        // Mapeo para seguridad: asegurar que solo se editen campos de tarifas
+        $allowedFields = [
+            'viatico_chofer_ejecutivo', 'viatico_chofer', 'viatico_ayudante', 
+            'desayuno', 'almuerzo', 'cena', 'pernoctar', 'total_peajes'
+        ];
+
+        $field = $validated['field'];
+        $value = $validated['value'] ?? 0;
+
+        if (!in_array($field, $allowedFields)) {
+            return response()->json(['success' => false, 'message' => 'Campo no editable.'], 403);
+        }
+        
+        // Ejecutar la actualización
+        try {
+            $tabulador = TabuladorViatico::find($validated['id_tabulador']);
+            $tabulador->{$field} = $value;
+            $tabulador->save();
+
+            return response()->json(['success' => true, 'message' => 'Actualización exitosa.', 'new_value' => number_format($value, 2)], 200);
+
+        } catch (\Exception $e) {
+            \Log::error('Error actualizando tabulador: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Error de servidor al guardar.'], 500);
+        }
+    }
+
 }
