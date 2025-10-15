@@ -122,7 +122,7 @@ class ViajesController extends Controller
             ->map(function($item) {
                 return $item->valor;
             });
-            dd($parametros);
+            //dd($parametros);
             // Lista de conceptos a generar (usando el Tabulador)
         $conceptos = [
             // Pagos Fijos
@@ -136,7 +136,7 @@ class ViajesController extends Controller
             
             // Pernocta y Peajes
             ['concepto' => 'Costo Pernocta', 'monto' => $tabulador->costo_pernocta, 'cantidad' => $totalPersonas, 'editable' => true],
-            ['concepto' => 'Peajes (Ida y Vuelta)', 'monto' => $tabulador->peajes * $parametros->peaje , 'cantidad' => 1, 'editable' => true], // Asumimos peajes ida y vuelta
+            ['concepto' => 'Peajes (Ida y Vuelta)', 'monto' => $tabulador->peajes * $parametros['peaje'] , 'cantidad' => 1, 'editable' => true], // Asumimos peajes ida y vuelta
         ];
 
         // Guardar cada concepto en la tabla 'viaticos_viaje'
