@@ -47,7 +47,7 @@
                     <!-- Chofer Asignado -->
                     <div class="col-md-6">
                         <label for="chofer_id" class="form-label fw-bold">Chofer Principal</label>
-                        <select name="chofer_id" id="chofer_id" class="form-select @error('chofer_id') is-invalid @enderror" required>
+                        <select name="chofer_id" id="chofer_id" class="form-select @error('chofer_id') is-invalid @enderror" >
                             <option value="">Seleccione el chofer</option>
                             <!-- Este loop debe cargar los usuarios con rol 'chofer' -->
                          
@@ -95,7 +95,7 @@
                 <!-- ID del Vehículo (Campo nuevo para una asignación real) -->
                 <div class="mb-4">
                     <label for="vehiculo_id" class="form-label fw-bold">Vehículo Asignado</label>
-                    <select name="vehiculo_id" id="vehiculo_id" class="form-select @error('vehiculo_id') is-invalid @enderror" required>
+                    <select name="vehiculo_id" id="vehiculo_id" class="form-select @error('vehiculo_id') is-invalid @enderror" >
                         <option value="">Seleccione el vehículo</option>
                         <!-- Este loop debe cargar los vehículos disponibles -->
                        

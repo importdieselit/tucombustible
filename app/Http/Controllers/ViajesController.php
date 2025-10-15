@@ -27,7 +27,6 @@ class ViajesController extends Controller
      */
     public function list()
     {
-        dd('list');
         // Obtener el estado de filtro de la solicitud
         $status = request('status');
 
