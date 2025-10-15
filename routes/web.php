@@ -250,7 +250,7 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
     Route::get('viajes/dashboard', [ViajesController::class, 'dashboard'])->name('viajes.dashboard');
     Route::get('viajes/{viaje}/viaticos/edit', [ViajesController::class, 'editViaticos'])->name('viajes.viaticos.edit');
     Route::put('viajes/{viaje}/viaticos', [ViajesController::class, 'updateViaticos'])->name('viajes.viaticos.update');
-    Route::put('viajes/report/index', [ViajesController::class, 'reportsIndex'])->name('reportes.viajes');
+    Route::get('viajes/report/index', [ViajesController::class, 'reportsIndex'])->name('reportes.viajes');
     Route::put('viajes/report/generate', [ViajesController::class, 'generateReport'])->name('viajes.report.generate');
     Route::get('viaticos/tabulador', [ViajesController::class, 'tabuladorIndex'])->name('viaticos.tabulador');
     Route::put('viaticos/tabulador/update', [ViajesController::class, 'tabuladorUpdate'])->name('viaticos.tabulador.update');
