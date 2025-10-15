@@ -44,14 +44,17 @@
             </thead>
             <tbody>
                 @forelse($viajes as $viaje)
+                @php($chofer= \App\Models\Chofer::find($viaje->chofer_id)->with('persona')->first())
+                 @php($viaje->chofer = $chofer ? $chofer->persona->nombre : 'sin asignar')
+                 @php($viaje->vehiculo = $viaje->vehiculo_id ? \App\Models\Vehiculo::find($viaje->vehiculo_id)->placa : 'N/A')
                 <tr>
                     <td>{{ $viaje->id }}</td>
                     <td>{{ $viaje->destino_ciudad }}</td>
                     <td>{{ $viaje->fecha_salida }}</td>
-                    <td>{{ $viaje->chofer->persona->name ?? 'Sin Asignar' }}</td>
+                    <td>{{ $viaje->chofer }}</td>
                     
                     <!-- Usando la nueva relación vehiculo -->
-                    <td>{{ $viaje->vehiculo->placa ?? 'N/A' }}</td> 
+                    <td>{{ $viaje->vehiculo }}</td> 
                     <td>
                         <span class="badge 
                             @if($viaje->status == 'PENDIENTE_ASIGNACION') bg-danger 
