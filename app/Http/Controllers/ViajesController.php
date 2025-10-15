@@ -81,22 +81,23 @@ class ViajesController extends Controller
     private function generarCuadroViaticos(Viaje $viaje, TabuladorViatico $tabulador): void
     {
         $dias = $viaje->dias_estimados;
-        $totalPersonas = 1 + $viaje->ayudantes_count + $viaje->custodia_count;
+        $ayudantes = !is_null($viaje->ayudantes)?1: 0; // Número de ayudantes
+        $totalPersonas = 1 + $ayudantes + $viaje->custodia_count;
 
         // Lista de conceptos a generar (usando el Tabulador)
         $conceptos = [
             // Pagos Fijos
             ['concepto' => 'Pago Chofer', 'monto' => $tabulador->pago_chofer, 'cantidad' => 1, 'editable' => false],
-            ['concepto' => 'Pago Ayudantes', 'monto' => $tabulador->pago_ayudante, 'cantidad' => $viaje->ayudantes_count, 'editable' => false],
+            ['concepto' => 'Pago Ayudantes', 'monto' => $tabulador->pago_ayudante, 'cantidad' => $ayudantes, 'editable' => false],
             
             // Viáticos de Comida (por persona, por día)
-            ['concepto' => 'Viático Desayuno', 'monto' => $tabulador->viatico_desayuno * $dias, 'cantidad' => $totalPersonas, 'editable' => true],
-            ['concepto' => 'Viático Almuerzo', 'monto' => $tabulador->viatico_almuerzo * $dias, 'cantidad' => $totalPersonas, 'editable' => true],
-            ['concepto' => 'Viático Cena', 'monto' => $tabulador->viatico_cena * $dias, 'cantidad' => $totalPersonas, 'editable' => true],
+            ['concepto' => 'Viático Desayuno', 'monto' => $tabulador->viatico_desayuno , 'cantidad' => $totalPersonas, 'editable' => true],
+            ['concepto' => 'Viático Almuerzo', 'monto' => $tabulador->viatico_almuerzo , 'cantidad' => $totalPersonas, 'editable' => true],
+            ['concepto' => 'Viático Cena', 'monto' => $tabulador->viatico_cena, 'cantidad' => $totalPersonas, 'editable' => true],
             
             // Pernocta y Peajes
-            ['concepto' => 'Costo Pernocta', 'monto' => $tabulador->costo_pernocta * ($dias > 1 ? $dias - 1 : 0), 'cantidad' => $totalPersonas, 'editable' => true],
-            ['concepto' => 'Peajes (Ida y Vuelta)', 'monto' => $tabulador->peajes_por_zona * 2, 'cantidad' => 1, 'editable' => true], // Asumimos peajes ida y vuelta
+            ['concepto' => 'Costo Pernocta', 'monto' => $tabulador->costo_pernocta, 'cantidad' => $totalPersonas, 'editable' => true],
+            ['concepto' => 'Peajes (Ida y Vuelta)', 'monto' => $tabulador->peajes , 'cantidad' => 1, 'editable' => true], // Asumimos peajes ida y vuelta
         ];
 
         // Guardar cada concepto en la tabla 'viaticos_viaje'
@@ -121,7 +122,7 @@ class ViajesController extends Controller
         // 1. Validar la entrada (omitiendo por brevedad)
         $request->validate([
             'destino_ciudad' => 'required|string',
-            'chofer_id' => 'required|exists:users,id',
+            'chofer_id' => 'required|exists:choferes,id',
             // ... otras validaciones
         ]);
 
