@@ -18,7 +18,7 @@
                     <th rowspan="2">ID</th>
                     <th rowspan="2" style="min-width: 150px;">Destino</th>
                     <th colspan="3">Pago por Viaje (USD)</th>
-                    <th colspan="4">Viáticos Diarios (USD)</th>
+                    <th colspan="3">Viáticos Diarios (USD)</th>
                     <th rowspan="2">Pernocta (USD)</th>
                     <th rowspan="2">Cantidad Peajes</th>
                     <th rowspan="2">Peajes I/V (USD)</th>
