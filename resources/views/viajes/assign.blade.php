@@ -28,30 +28,40 @@
                     <!-- Chofer -->
                     <div class="col-md-6">
                         <label for="chofer_id" class="form-label fw-bold">Chofer Principal</label>
-                        <select name="chofer_id" id="chofer_id" class="form-select @error('chofer_id') is-invalid @enderror" required>
-                            <option value="">Seleccione el Chofer</option>
+                         <select name="chofer_id" id="chofer_id" class="form-select @error('chofer_id') is-invalid @enderror" >
+                            <option value="">Seleccione el chofer</option>
+                            <!-- Este loop debe cargar los usuarios con rol 'chofer' -->
+                         
                             @foreach($choferes as $chofer)
-                                <option value="{{ $chofer->id }}" {{ old('chofer_id', $viaje->chofer_id) == $chofer->id ? 'selected' : '' }}>
-                                    {{ $chofer->persona->nombre ?? $chofer->name }}
-                                </option>
-                            @endforeach
+                                @if($chofer->cargo == 'CHOFER' )                            
+                                    <option value="{{ $chofer->id }}" {{ old('chofer_id') == $chofer->id ? 'selected' : '' }}>{{ $chofer->persona->nombre }}</option>
+                                @endif
+                          @endforeach
                         </select>
                         @error('chofer_id')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-
+                    
                     <!-- Ayudante -->
                     <div class="col-md-3">
-                        <label for="ayudante" class="form-label fw-bold">Cant. Ayudantes</label>
-                        <input type="number" name="ayudante" id="ayudante" class="form-control @error('ayudante') is-invalid @enderror" 
-                            value="{{ old('ayudante', $viaje->ayudante ?? 0) }}" min="0">
+                        <label for="ayudantes" class="form-label fw-bold">Ayudante</label>
+                       <select name="ayudante" id="ayudante" class="form-select @error('ayudante') is-invalid @enderror">
+                            <option value="">Seleccione el Ayudante</option>
+                            <!-- Este loop debe cargar los usuarios con rol 'chofer' -->
+                          
+                            @foreach($choferes as $chofer)
+                                @if($chofer->cargo == 'AYUDANTE' || $chofer->cargo == 'AYUDANTE DE CHOFER')
+                                    <option value="{{ $chofer->id }}" {{ old('ayudante') == $chofer->id ? 'selected' : '' }}>{{ $chofer->persona->nombre }}</option>
+                                @endif
+                            @endforeach
+                        </select>
                         @error('ayudante')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                     
-                    <!-- Custodia -->
+                    {{-- <!-- Custodia -->
                     <div class="col-md-3">
                         <label for="custodia_count" class="form-label fw-bold">Cant. Custodia</label>
                         <input type="number" name="custodia_count" id="custodia_count" class="form-control @error('custodia_count') is-invalid @enderror" 
@@ -59,7 +69,7 @@
                         @error('custodia_count')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-                    </div>
+                    </div> --}}
                 </div>
 
                 <h4 class="mt-5 mb-3 text-danger border-bottom pb-1">Asignación de Vehículo</h4>
