@@ -5,8 +5,8 @@
 @section('content')
 <!-- Simulación de variables de datos (DEBE SER REEMPLAZADO POR LA LÓGICA DEL CONTROLADOR) -->
 <?php
-$ruta_tabulador_update => route('viaticos.tabulador.update'); // Ruta para actualizar el tabulador principal
-$ruta_parametros_update => route('viaticos.parametros.update'); // Ruta para actualizar parámetros
+$ruta_tabulador_update = route('viaticos.tabulador.update'); // Ruta para actualizar el tabulador principal
+$ruta_parametros_update = route('viaticos.parametros.update'); // Ruta para actualizar parámetros
 
 
 ?>

@@ -309,4 +309,38 @@ class ViajesController extends Controller
         }
     }
 
+
+     public function parametrosUpdate(Request $request)
+    {
+        // Validar que la solicitud contenga los datos esperados
+        $validated = $request->validate([
+            'id' => 'required|exists:parametros,id',
+            'field' => 'required|string', // Nombre del campo a editar
+            'value' => 'nullable|numeric|min:0', // El nuevo valor
+        ]);
+
+        // Mapeo para seguridad: asegurar que solo se editen campos de tarifas
+        $allowedFields = ['peaje', 'desayuno', 'almuerzo'];
+
+        $field = $validated['field'];
+        $value = $validated['value'] ?? 0;
+
+        if (!in_array($field, $allowedFields)) {
+            return response()->json(['success' => false, 'message' => 'Campo no editable.'], 403);
+        }
+        
+        // Ejecutar la actualización
+        try {
+            $tabulador = Parametro::find($validated['id']);
+            $tabulador->{$field} = $value;
+            $tabulador->save();
+
+            return response()->json(['success' => true, 'message' => 'Actualización exitosa.', 'new_value' => number_format($value, 2)], 200);
+
+        } catch (\Exception $e) {
+            \Log::error('Error actualizando tabulador: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Error de servidor al guardar.'], 500);
+        }
+    }
+
 }
