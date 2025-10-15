@@ -57,11 +57,11 @@
                     <h5 class="mb-0">Asignación</h5>
                 </div>
                 <div class="card-body">
-                    <p class="mb-2"><strong>Chofer:</strong> {{ $viaje->chofer->nombre ?? 'N/A' }}</p>
+                    <p class="mb-2"><strong>Chofer:</strong> {{ $viaje->chofer->persona->nombre ?? 'N/A' }}</p>
                     {{-- Asumimos que tienes una relación 'vehiculo' en el modelo Viaje --}}
                     <p class="mb-2"><strong>Vehículo:</strong> {{ $viaje->vehiculo->placa ?? 'N/A' }} ({{ $viaje->vehiculo->modelo ?? 'Modelo Desconocido' }})</p>
-                    <p class="mb-2"><strong>Ayudantes:</strong> {{ $viaje->ayudante }}</p>
-                    <p class="mb-2"><strong>Custodia:</strong> {{ $viaje->custodia_count }}</p>
+                    <p class="mb-2"><strong>Ayudantes:</strong> {{ $viaje->ayudante->persona->nombre }}</p>
+                    {{-- <p class="mb-2"><strong>Custodia:</strong> {{ $viaje->custodia_count }}</p> --}}
                 </div>
             </div>
         </div>
