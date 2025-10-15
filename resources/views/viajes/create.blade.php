@@ -53,7 +53,7 @@
                          
                             @foreach($choferes as $chofer)
                                 @if($chofer->cargo == 'CHOFER' )                            
-                                    <option value="{{ $chofer->id }}" {{ old('chofer_id') == $chofer->id ? 'selected' : '' }}>{{ $chofer->nombre }}</option>
+                                    <option value="{{ $chofer->id }}" {{ old('chofer_id') == $chofer->id ? 'selected' : '' }}>{{ $chofer->persona->nombre }}</option>
                                 @endif
                           @endforeach
                         </select>
@@ -71,7 +71,7 @@
                           
                             @foreach($choferes as $chofer)
                                 @if($chofer->cargo == 'AYUDANTE' || $chofer->cargo == 'AYUDANTE DE CHOFER')
-                                    <option value="{{ $chofer->id }}" {{ old('ayudante') == $chofer->id ? 'selected' : '' }}>{{ $chofer->nombre }}</option>
+                                    <option value="{{ $chofer->id }}" {{ old('ayudante') == $chofer->id ? 'selected' : '' }}>{{ $chofer->persona->nombre }}</option>
                                 @endif
                             @endforeach
                         </select>
