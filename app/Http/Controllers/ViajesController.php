@@ -68,6 +68,30 @@ class ViajesController extends Controller
         return view('viajes.assign', compact('viaje', 'choferes', 'vehiculos'));
     }
 
+     public function processAssignment(Request $request, $id)
+    {
+        $viaje = Viaje::findOrFail($id);
+
+        $validated = $request->validate([
+            'chofer_id' => 'required|exists:choferes,id', // Asumo que el ID en Viaje apunta a choferes.id
+            'vehiculo_id' => 'required|exists:vehiculos,id',
+            'ayudante' => 'nullable|integer|min:0',
+            'custodia_count' => 'nullable|integer|min:0',
+        ]);
+        
+        // Actualizar el viaje con los recursos asignados
+        $viaje->update([
+            'chofer_id' => $validated['chofer_id'],
+            'vehiculo_id' => $validated['vehiculo_id'],
+            'ayudante' => $validated['ayudante'] ?? 0,
+            'custodia_count' => $validated['custodia_count'] ?? 0,
+            'status' => 'PENDIENTE_VIATICOS', // Cambia el estado para el siguiente paso (Viáticos)
+        ]);
+
+        return redirect()->route('viaje.list')->with('success', 
+            "Asignación de recursos completada para el viaje a {$viaje->destino_ciudad}. Estado: PENDIENTE DE VIÁTICOS.");
+    }
+
     /**
      * Muestra los detalles de un viaje específico.
      * Carga todas las relaciones necesarias para la vista de detalle.

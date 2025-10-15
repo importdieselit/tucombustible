@@ -48,7 +48,8 @@
                     <td>{{ $viaje->id }}</td>
                     <td>{{ $viaje->destino_ciudad }}</td>
                     <td>{{ $viaje->fecha_salida }}</td>
-                    <td>{{ $viaje->chofer->name ?? 'N/A' }}</td>
+                    <td>{{ $viaje->chofer->persona->name ?? 'Sin Asignar' }}</td>
+                    
                     <!-- Usando la nueva relación vehiculo -->
                     <td>{{ $viaje->vehiculo->placa ?? 'N/A' }}</td> 
                     <td>
