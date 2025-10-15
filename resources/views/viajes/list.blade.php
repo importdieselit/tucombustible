@@ -56,7 +56,7 @@
                 <tr>
                     <td>{{ $viaje->id }}</td>
                     <td>{{ $viaje->destino_ciudad }}</td>
-                    <td>{{ $viaje->chofer->name }}</td>
+                    <td>{{ $viaje->chofer->name ?? 'Sin Asignar' }}</td>
                     <td>{{ $viaje->fecha_salida }}</td>
                     <td>
                         @if($viaje->status == 'PENDIENTE_VIATICOS')
