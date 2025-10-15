@@ -78,7 +78,7 @@
                         <th>Fecha Creación</th>
                         <th>Destino</th>
                         <th>Chofer</th>
-                        <th>Días</th>
+                        <th>Fecha Salida</th>
                         <th>Estatus</th>
                         <th class="text-end">Costo Viáticos (USD)</th>
                     </tr>
@@ -97,7 +97,7 @@
                             <td>{{ $viaje->created_at->format('d/m/Y') }}</td>
                             <td>{{ $viaje->destino_ciudad }}</td>
                             <td>{{ $viaje->chofer->name ?? 'N/A' }}</td>
-                            <td>{{ $viaje->dias_estimados }}</td>
+                            <td>{{ $viaje->fecha_salida }}</td>
                             <td>
                                 @php
                                     $badgeClass = ($viaje->status == 'VIATICOS_APROBADOS') ? 'primary' : (($viaje->status == 'COMPLETADO') ? 'success' : 'warning text-dark');

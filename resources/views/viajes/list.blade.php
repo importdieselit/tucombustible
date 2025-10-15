@@ -44,21 +44,15 @@
             <tbody>
                 <!-- Simulando datos de viajes (Reemplazar con el loop $viajes del controlador) -->
                 @php
-                    // Datos de ejemplo
-                    $viajes_ejemplo = [
-                        (object)['id' => 5, 'destino_ciudad' => 'PLANTA PALITO', 'chofer' => (object)['name' => 'Luis Pérez'], 'fecha_salida' => 2, 'status' => 'PENDIENTE_VIATICOS', 'created_at' => now()->subDay()],
-                        (object)['id' => 4, 'destino_ciudad' => 'BARQUISIMETO', 'chofer' => (object)['name' => 'Ana Rodríguez'], 'fecha_salida' => 3, 'status' => 'EN_CURSO', 'created_at' => now()->subDays(3)],
-                        (object)['id' => 3, 'destino_ciudad' => 'VALENCIA', 'chofer' => (object)['name' => 'Luis Pérez'], 'fecha_salida' => 1, 'status' => 'COMPLETADO', 'created_at' => now()->subWeeks(1)],
-                    ];
                     
                     // Aplicar el filtro de ejemplo para simular la vista
                     if (request('status')) {
-                        $viajes_ejemplo = array_filter($viajes_ejemplo, fn($v) => $v->status === request('status'));
+                        $viajes = array_filter($viajes, fn($v) => $v->status === request('status'));
                         //$viajes = array_filter($viajes, fn($v) => $v->status === request('status'));
                     }
                 @endphp
                 
-                @forelse ($viajes_ejemplo as $viaje)
+                @forelse ($viajes as $viaje)
                 <tr>
                     <td>{{ $viaje->id }}</td>
                     <td>{{ $viaje->destino_ciudad }}</td>
@@ -72,7 +66,7 @@
                         @elseif($viaje->status == 'COMPLETADO')
                             <span class="badge bg-success">Completado</span>
                         @else
-                            <span class="badge bg-secondary">{{ $viaje->status }}</span>
+                            <span class="badge bg-danger">{{ $viaje->status }}</span>
                         @endif
                     </td>
                     <td>{{ $viaje->created_at->format('d/m/Y') }}</td>
@@ -82,8 +76,12 @@
                             <a href="{{ route('viajes.viaticos.edit', $viaje->id) }}" class="btn btn-sm btn-warning" title="Revisar Viáticos">
                                 <i class="bi bi-pencil-square"></i> Editar Viáticos
                             </a>
+                        @elseif($viaje->status == 'PENDIENTE_ASIGNACION')
+                            <a href="{{ route('viaje.edit', $viaje->id) }}" class="btn btn-sm btn-secondary" title="Ver Viaje">
+                                <i class="bi bi-edit"></i> Asignar
+                            </a>
                         @else
-                            <a href="{{ route('viajes.show', $viaje->id) }}" class="btn btn-sm btn-secondary" title="Ver Detalles">
+                            <a href="{{ route('viajes.show', $viaje->id) }}" class="btn btn-sm btn-secondary" title="Ver Viaje">
                                 <i class="bi bi-eye"></i> Ver
                             </a>
                         @endif

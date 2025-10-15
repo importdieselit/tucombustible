@@ -18,7 +18,7 @@ class Viaje extends Model
         'chofer_id',
         'ayudante',
         'custodia_count',
-        'dias_estimados',
+        'fecha_salida',
         'status',
     ];
 
