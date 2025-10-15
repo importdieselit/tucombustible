@@ -60,6 +60,17 @@
             </div>
         </div>
 
+         <!-- Tarjeta 5: Ver Tabulador de Viaticos -->
+        <div class="col">
+            <div class="card h-100 shadow border-start border-4 border-secondary">
+                <div class="card-body">
+                    <h5 class="card-title text-secondary"><i class="bi bi-graph-up me-2"></i> Tabulador de Viaticos</h5>
+                    <p class="card-text">Consultar y editar la tabla de viáticos por viaje.</p>
+                    <a href="{{ route('viajes.tabulador') }}" class="btn btn-secondary w-100 disabled" aria-disabled="true">Ver Tabulador</a>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 @endsection
