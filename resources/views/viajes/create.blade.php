@@ -50,15 +50,12 @@
                         <select name="chofer_id" id="chofer_id" class="form-select @error('chofer_id') is-invalid @enderror" required>
                             <option value="">Seleccione el chofer</option>
                             <!-- Este loop debe cargar los usuarios con rol 'chofer' -->
-                            @php
-                                $choferes_ejemplo = [
-                                    ['id' => 101, 'name' => 'Luis Pérez'],
-                                    ['id' => 102, 'name' => 'Ana Rodríguez']
-                                ];
-                            @endphp
-                            @foreach($choferes_ejemplo as $chofer)
-                                <option value="{{ $chofer['id'] }}" {{ old('chofer_id') == $chofer['id'] ? 'selected' : '' }}>{{ $chofer['name'] }}</option>
-                            @endforeach
+                         
+                            @foreach($choferes as $chofer)
+                                @if($chofer->cargo == 'CHOFER' )                            
+                                    <option value="{{ $chofer['id'] }}" {{ old('chofer_id') == $chofer['id'] ? 'selected' : '' }}>{{ $chofer['name'] }}</option>
+                                @endif
+                          @endforeach
                         </select>
                         @error('chofer_id')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -68,20 +65,17 @@
                     <!-- Cantidad de Ayudantes -->
                     <div class="col-md-3">
                         <label for="ayudantes_count" class="form-label fw-bold">Ayudante</label>
-                       <select name="chofer_id" id="chofer_id" class="form-select @error('chofer_id') is-invalid @enderror" required>
-                            <option value="">Seleccione el chofer</option>
+                       <select name="ayudante" id="ayudante" class="form-select @error('ayudante') is-invalid @enderror">
+                            <option value="">Seleccione el Ayudante</option>
                             <!-- Este loop debe cargar los usuarios con rol 'chofer' -->
-                            @php
-                                $choferes_ejemplo = [
-                                    ['id' => 101, 'name' => 'Luis Pérez'],
-                                    ['id' => 102, 'name' => 'Ana Rodríguez']
-                                ];
-                            @endphp
-                            @foreach($choferes_ejemplo as $chofer)
-                                <option value="{{ $chofer['id'] }}" {{ old('chofer_id') == $chofer['id'] ? 'selected' : '' }}>{{ $chofer['name'] }}</option>
+                          
+                            @foreach($choferes as $chofer)
+                                @if($chofer->cargo == 'AYUDANTE' || $chofer->cargo == 'AYUDANTE DE CHOFER')
+                                    <option value="{{ $chofer['id'] }}" {{ old('chofer_id') == $chofer['id'] ? 'selected' : '' }}>{{ $chofer['name'] }}</option>
+                                @endif
                             @endforeach
                         </select>
-                        @error('ayudantes_count')
+                        @error('ayudante')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
