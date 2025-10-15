@@ -194,7 +194,7 @@ class ViajesController extends Controller
         // $viaje->status = 'VIATICOS_APROBADOS';
         // $viaje->save();
 
-        return redirect()->route('reportes.viajes');
+        return redirect()->route('viajes.list');
     }
 
     
