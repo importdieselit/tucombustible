@@ -9,7 +9,7 @@
             <i class="bi bi-truck me-2"></i> 
             Detalle del Viaje #{{ $viaje->id }}
         </h1>
-        <a href="{{ route('viajes.list') }}" class="btn btn-outline-secondary">
+        <a href="{{ route('viaje.list') }}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i> Volver al Historial
         </a>
     </div>
