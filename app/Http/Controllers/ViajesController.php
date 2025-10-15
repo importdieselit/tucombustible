@@ -321,7 +321,6 @@ class ViajesController extends Controller
 
         // Mapeo para seguridad: asegurar que solo se editen campos de tarifas
         $allowedFields = ['peaje', 'desayuno', 'almuerzo'];
-
         $field = $validated['field'];
         $value = $validated['value'] ?? 0;
 
@@ -331,9 +330,9 @@ class ViajesController extends Controller
         
         // Ejecutar la actualización
         try {
-            $tabulador = Parametro::find($validated['id']);
-            $tabulador->{$field} = $value;
-            $tabulador->save();
+            $parametro = Parametro::find($validated['id']);
+            $parametro->valor = $value;
+            $parametro->save();
 
             return response()->json(['success' => true, 'message' => 'Actualización exitosa.', 'new_value' => number_format($value, 2)], 200);
 

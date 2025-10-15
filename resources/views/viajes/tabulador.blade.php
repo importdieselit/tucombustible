@@ -81,21 +81,21 @@ $ruta_parametros_update = route('viaticos.parametros.update'); // Ruta para actu
                         <tr data-id="{{ $parametros->id }}">
                             <td class="bg-light text-start fw-bold" style="width: 50%;">Peaje Unitario (Valor por Peaje)</td>
                             <td data-field="peaje" class="editable-param-cell text-success text-end pe-4" style="width: 50%;">
-                                ${{ number_format($parametros->peaje, 2) }}
+                                ${{ number_format($parametros['peaje'], 2) }}
                             </td>
                         </tr>
                         {{-- Costo Desayuno (Editable) --}}
                         <tr data-id="{{ $parametros->id }}">
                             <td class="bg-light text-start fw-bold">Viático Desayuno</td>
                             <td data-field="desayuno" class="editable-param-cell text-end pe-4">
-                                ${{ number_format($parametros->desayuno, 2) }}
+                                ${{ number_format($parametros['desayuno'], 2) }}
                             </td>
                         </tr>
                         {{-- Costo Almuerzo (Editable) --}}
                         <tr data-id="{{ $parametros->id }}">
                             <td class="bg-light text-start fw-bold">Viático Almuerzo</td>
                             <td data-field="almuerzo" class="editable-param-cell text-end pe-4">
-                                ${{ number_format($parametros->almuerzo, 2) }}
+                                ${{ number_format($parametros['almuerzo'], 2) }}
                             </td>
                         </tr>
                         {{-- Costo Cena (Editable) --}}
@@ -120,8 +120,8 @@ $ruta_parametros_update = route('viaticos.parametros.update'); // Ruta para actu
         const csrfToken = $('meta[name="csrf-token"]').attr('content');
         
         // Rutas (usamos variables de Blade para obtenerlas dinámicamente)
-        const tabuladorUpdateRoute = '{{ $parametros->ruta_tabulador_update }}';
-        const parametrosUpdateRoute = '{{ $parametros->ruta_parametros_update }}';
+        const tabuladorUpdateRoute = '{{ $ruta_tabulador_update }}';
+        const parametrosUpdateRoute = '{{ $ruta_parametros_update }}';
         
         // ----------------------------------------------------
         // FUNCIÓN DE RECALCULO GLOBAL DE PEAJES
