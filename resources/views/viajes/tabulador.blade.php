@@ -59,7 +59,7 @@ $ruta_parametros_update = route('viaticos.parametros.update'); // Ruta para actu
                         <td data-field="costo_pernocta" class="editable-cell text-success">${{ number_format($item->costo_pernocta, 2) }}</td>
                         <td data-field="peajes" class="editable-cell text-success">{{ $item->peajes }}</td>
                         {{-- Cálculo de Peajes I/V (USA EL VALOR DE $parametros->peaje_unitario) --}}
-                        <td data-field="total_peajes" class="total-peajes-cell text-success">${{ number_format($item->peajes * $parametros->peaje_unitario, 2) }}</td>
+                        <td data-field="total_peajes" class="total-peajes-cell text-success">${{ number_format($item->peajes * $parametros->peaje, 2) }}</td>
                     </tr>
                 @empty
                     <tr>
@@ -161,7 +161,7 @@ $ruta_parametros_update = route('viaticos.parametros.update'); // Ruta para actu
             // Determinar si es un campo de cantidad (entero) o monto (decimal)
             const fieldName = $cell.data('field');
             const isPeajesCantidad = fieldName === 'peajes';
-            const isPeajeUnitario = fieldName === 'peaje_unitario';
+            const isPeajeUnitario = fieldName === 'peaje';
 
             // Obtener el valor actual (quitar el '$' si existe)
             const currentValue = $cell.text().replace('$', '').replace(/,/g, '').trim();
@@ -190,6 +190,7 @@ $ruta_parametros_update = route('viaticos.parametros.update'); // Ruta para actu
             const $input = $('<input>', inputOptions);
 
             // Reemplazar el contenido de la celda con el input
+            $cell.html($input);
             $cell.empty().append($input);
             $input.focus();
 
@@ -253,7 +254,7 @@ $ruta_parametros_update = route('viaticos.parametros.update'); // Ruta para actu
                             // C. Lógica de Recalculo Específica: Si es 'peajes' (cantidad), actualizar solo el total de esa fila.
                             else if (!isParamCell && isPeajesCantidad) {
                                 // Leer el costo unitario actual desde la tabla de parámetros
-                                const currentUnitCost = parseFloat($('#parametrosTable td[data-field="peaje_unitario"]').text().replace('$', '').trim());
+                                const currentUnitCost = parseFloat($('#parametrosTable td[data-field="peaje"]').text().replace('$', '').trim());
                                 const totalPeajes = (parseInt(response.new_value) * currentUnitCost).toFixed(2);
                                 $cell.closest('tr').find('.total-peajes-cell').html('$' + totalPeajes);
                             }
