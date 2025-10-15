@@ -44,8 +44,12 @@
             </thead>
             <tbody>
                 @forelse($viajes as $viaje)
-                @php($chofer= \App\Models\Chofer::find($viaje->chofer_id)->with('persona')->first())
-                 @php($viaje->chofer = $chofer ? $chofer->persona->nombre : 'sin asignar')
+                @if(!is_null($viaje->chofer_id))
+                    @php($chofer=  \App\Models\Chofer::find($viaje->chofer_id)->with('persona')->first())
+                     @php($viaje->chofer = $chofer ? $chofer->persona->nombre : 'sin asignar')
+                @else
+                    @php($viaje->chofer = 'sin asignar')
+                @endif
                  @php($viaje->vehiculo = $viaje->vehiculo_id ? \App\Models\Vehiculo::find($viaje->vehiculo_id)->placa : 'N/A')
                 <tr>
                     <td>{{ $viaje->id }}</td>
