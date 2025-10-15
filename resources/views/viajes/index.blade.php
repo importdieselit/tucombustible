@@ -33,7 +33,7 @@
                     <h5 class="card-title text-warning"><i class="bi bi-cash-stack me-2"></i> Cuadro de Viáticos</h5>
                     <p class="card-text">Revisa, ajusta y aprueba los montos de viáticos generados. Solo para viajes en estado **PENDIENTE_VIATICOS**.</p>
                     <!-- Esta ruta debe listar los viajes PENDIENTES, aquí apuntamos al índice de viajes -->
-                    <a href="{{ route('viajes.list') }}?status=PENDIENTE_VIATICOS" class="btn btn-warning w-100">Revisar Viáticos</a>
+                    <a href="{{ route('viaje.list') }}?status=PENDIENTE_VIATICOS" class="btn btn-warning w-100">Revisar Viáticos</a>
                 </div>
             </div>
         </div>
@@ -44,7 +44,7 @@
                 <div class="card-body">
                     <h5 class="card-title text-info"><i class="bi bi-clock-history me-2"></i> Historial de Viajes</h5>
                     <p class="card-text">Consulta todos los viajes realizados, en curso y pendientes. Filtra por chofer, vehículo o fecha.</p>
-                    <a href="{{ route('viajes.list') }}" class="btn btn-info w-100">Ver Historial Completo</a>
+                    <a href="{{ route('viaje.list') }}" class="btn btn-info w-100">Ver Historial Completo</a>
                 </div>
             </div>
         </div>
