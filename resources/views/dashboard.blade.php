@@ -219,7 +219,7 @@ $data = [
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
             @include('partials.access_card', [
                 'route' => route('vehiculos.index'),
-                'icon' => 'fa-truck-fast',
+                'icon' => 'fa-truck',
                 'title' => 'Vehículos',
                 'color' => 'bg-info',
                 'target' => '_blank',
@@ -299,7 +299,7 @@ $data = [
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
             @include('partials.access_card', [
                 'route' => route('combustible.despacho'),
-                'icon' => 'fa-truck-container',
+                'icon' => 'fa-truck-fast',
                 'title' => 'Despachos',
                 'color' => 'bg-primary',
                 'target' => '_blank',
