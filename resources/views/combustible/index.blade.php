@@ -1298,7 +1298,7 @@ function mostrarDetallesPedido(id) {
 
 
 // Data simulada para el ejemplo
-const cisternasDisponibles = ['Cisterna 01', 'Cisterna 02'];
+const cisternasDisponibles = @json($vehiculos);
 const clientesDisponibles = @json($clientes);
 
 

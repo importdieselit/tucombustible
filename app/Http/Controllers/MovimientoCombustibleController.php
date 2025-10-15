@@ -103,6 +103,7 @@ class MovimientoCombustibleController extends Controller
         // Por ejemplo, un estado 'cargado' o 'en_ruta_con_combustible'.
         $camionesCargados = VehiculoPrecargado::where('estatus', 0)->count();
         $vehiculosDisponibles = Vehiculo::where('estatus', 1)->where('id_cliente',$user->cliente_id)->get();
+        $vehiculos = Vehiculo::where('estatus', 1)->where('es_flota',true)->get();
         // Pasamos todos los datos a la vista.
         return view('combustible.index', compact(
             'clientes', 
@@ -115,7 +116,8 @@ class MovimientoCombustibleController extends Controller
             'capacidadTotal',
             'nivelPromedio',
             'pedidos',
-            'vehiculosDisponibles'
+            'vehiculosDisponibles',
+            'vehiculos'
         ));
     }
 
