@@ -17,10 +17,11 @@
     <div class="mb-3 d-flex justify-content-between align-items-center">
         <div>
             <span class="fw-bold me-2">Filtrar por Estatus:</span>
-            <a href="{{ route('viajes.list') }}" class="btn btn-sm btn-outline-primary @unless(request('status')) active @endunless">Todos</a>
-            <a href="{{ route('viajes.list', ['status' => 'PENDIENTE_VIATICOS']) }}" class="btn btn-sm btn-outline-warning @if(request('status') === 'PENDIENTE_VIATICOS') active @endif">Pendiente Viáticos</a>
-            <a href="{{ route('viajes.list', ['status' => 'EN_CURSO']) }}" class="btn btn-sm btn-outline-info @if(request('status') === 'EN_CURSO') active @endif">En Curso</a>
-            <a href="{{ route('viajes.list', ['status' => 'COMPLETADO']) }}" class="btn btn-sm btn-outline-success @if(request('status') === 'COMPLETADO') active @endif">Completado</a>
+            <a href="{{ route('viaje.list') }}" class="btn btn-sm btn-outline-primary @unless(request('status')) active @endunless">Todos</a>
+            <a href="{{ route('viaje.list', ['status' => 'PENDIENTE_ASIGNACION']) }}" class="btn btn-sm btn-outline-warning @if(request('status') === 'PENDIENTE_ASIGNACION') active @endif">Pendiente Asignacion</a>
+            <a href="{{ route('viaje.list', ['status' => 'PENDIENTE_VIATICOS']) }}" class="btn btn-sm btn-outline-warning @if(request('status') === 'PENDIENTE_VIATICOS') active @endif">Pendiente Viáticos</a>
+            <a href="{{ route('viaje.list', ['status' => 'EN_CURSO']) }}" class="btn btn-sm btn-outline-info @if(request('status') === 'EN_CURSO') active @endif">En Curso</a>
+            <a href="{{ route('viaje.list', ['status' => 'COMPLETADO']) }}" class="btn btn-sm btn-outline-success @if(request('status') === 'COMPLETADO') active @endif">Completado</a>
         </div>
         <a href="{{ route('viajes.create') }}" class="btn btn-primary">
             <i class="bi bi-plus-circle me-1"></i> Nuevo Viaje
@@ -34,7 +35,7 @@
                     <th>ID</th>
                     <th>Destino</th>
                     <th>Chofer</th>
-                    <th>Días Est.</th>
+                    <th>Salida</th>
                     <th>Estado</th>
                     <th>Fecha Creación</th>
                     <th>Acciones</th>
@@ -45,9 +46,9 @@
                 @php
                     // Datos de ejemplo
                     $viajes_ejemplo = [
-                        (object)['id' => 5, 'destino_ciudad' => 'PLANTA PALITO', 'chofer' => (object)['name' => 'Luis Pérez'], 'dias_estimados' => 2, 'status' => 'PENDIENTE_VIATICOS', 'created_at' => now()->subDay()],
-                        (object)['id' => 4, 'destino_ciudad' => 'BARQUISIMETO', 'chofer' => (object)['name' => 'Ana Rodríguez'], 'dias_estimados' => 3, 'status' => 'EN_CURSO', 'created_at' => now()->subDays(3)],
-                        (object)['id' => 3, 'destino_ciudad' => 'VALENCIA', 'chofer' => (object)['name' => 'Luis Pérez'], 'dias_estimados' => 1, 'status' => 'COMPLETADO', 'created_at' => now()->subWeeks(1)],
+                        (object)['id' => 5, 'destino_ciudad' => 'PLANTA PALITO', 'chofer' => (object)['name' => 'Luis Pérez'], 'fecha_salida' => 2, 'status' => 'PENDIENTE_VIATICOS', 'created_at' => now()->subDay()],
+                        (object)['id' => 4, 'destino_ciudad' => 'BARQUISIMETO', 'chofer' => (object)['name' => 'Ana Rodríguez'], 'fecha_salida' => 3, 'status' => 'EN_CURSO', 'created_at' => now()->subDays(3)],
+                        (object)['id' => 3, 'destino_ciudad' => 'VALENCIA', 'chofer' => (object)['name' => 'Luis Pérez'], 'fecha_salida' => 1, 'status' => 'COMPLETADO', 'created_at' => now()->subWeeks(1)],
                     ];
                     
                     // Aplicar el filtro de ejemplo para simular la vista
@@ -62,7 +63,7 @@
                     <td>{{ $viaje->id }}</td>
                     <td>{{ $viaje->destino_ciudad }}</td>
                     <td>{{ $viaje->chofer->name }}</td>
-                    <td>{{ $viaje->dias_estimados }}</td>
+                    <td>{{ $viaje->fecha_salida }}</td>
                     <td>
                         @if($viaje->status == 'PENDIENTE_VIATICOS')
                             <span class="badge bg-warning text-dark">Pendiente Viáticos</span>

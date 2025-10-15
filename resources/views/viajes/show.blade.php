@@ -24,7 +24,7 @@
                 </div>
                 <div class="card-body">
                     <p class="mb-2"><strong>Destino:</strong> {{ $viaje->destino_ciudad }}</p>
-                    <p class="mb-2"><strong>Días Estimados:</strong> {{ $viaje->dias_estimados }}</p>
+                    <p class="mb-2"><strong>Fecha Salida:</strong> {{ $viaje->fecha_salida }}</p>
                     <p class="mb-2"><strong>Fecha de Creación:</strong> {{ $viaje->created_at->format('d/m/Y h:i A') }}</p>
                     
                     <hr>

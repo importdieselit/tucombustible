@@ -5,7 +5,7 @@
 @section('content')
 <div class="container mt-4">
     <h2>Cuadro de Viáticos para Viaje a {{ $viaje->destino_ciudad }}</h2>
-    <p>Chofer Asignado: **{{ $viaje->chofer->name ?? 'N/A' }}** | Días Estimados: {{ $viaje->dias_estimados }}</p>
+    <p>Chofer Asignado: **{{ $viaje->chofer->persona->nombre ?? 'N/A' }}** | Fecha Salida: {{ $viaje->fecha_salida }}</p>
 
     <form action="{{ route('viajes.viaticos.update', $viaje->id) }}" method="POST">
         @csrf

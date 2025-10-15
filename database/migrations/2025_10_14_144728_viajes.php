@@ -19,7 +19,7 @@ class Viajes extends Migration
             $table->unsignedBigInteger('chofer_id'); // Usuario asignado
             $table->integer('ayudante')->default(0);
             $table->integer('custodia_count')->default(0);
-            $table->integer('dias_estimados')->default(1); // Para calcular viáticos de comida/pernocta
+            $table->datetime('fecha_salida')->default(1); // Para calcular viáticos de comida/pernocta
             $table->string('status')->default('PENDIENTE_VIATICOS');
 
             $table->foreign('chofer_id')->references('id')->on('choferes');
