@@ -299,7 +299,7 @@ $data = [
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
             @include('partials.access_card', [
                 'route' => route('combustible.despacho'),
-                'icon' => 'fa-route',
+                'icon' => 'fa-truck-container',
                 'title' => 'Despachos',
                 'color' => 'bg-primary',
                 'target' => '_blank',
@@ -329,7 +329,7 @@ $data = [
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
             @include('partials.access_card', [
                 'route' => route('viajes.index'),
-                'icon' => 'bi bi-geo-alt-fill me-2',
+                'icon' => 'fa-route',
                 'title' => 'Viajes',
                 'color' => 'bg-primary',
                 'target' => '_blank',
