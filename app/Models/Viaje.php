@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Chofer;
+use App\Models\ViaticoViaje;
+
 
 class Viaje extends Model
 {
@@ -28,7 +31,7 @@ class Viaje extends Model
     public function chofer(): BelongsTo
     {
         // Asume que la tabla de usuarios se llama 'users'
-        return $this->belongsTo(User::class, 'chofer_id'); 
+        return $this->belongsTo(Chofer::class, 'chofer_id'); 
     }
 
     /**

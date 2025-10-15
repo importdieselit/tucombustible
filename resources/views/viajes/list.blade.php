@@ -53,10 +53,11 @@
                 @endphp
                 
                 @forelse ($viajes as $viaje)
+                
                 <tr>
                     <td>{{ $viaje->id }}</td>
                     <td>{{ $viaje->destino_ciudad }}</td>
-                    <td>{{ $viaje->chofer->name ?? 'Sin Asignar' }}</td>
+                    <td>{{ $viaje->chofer->persona->nombre ?? 'Sin Asignar' }}</td>
                     <td>{{ $viaje->fecha_salida }}</td>
                     <td>
                         @if($viaje->status == 'PENDIENTE_VIATICOS')
