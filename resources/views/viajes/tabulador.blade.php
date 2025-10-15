@@ -20,6 +20,7 @@
                     <th colspan="3">Pago por Viaje (USD)</th>
                     <th colspan="4">Viáticos Diarios (USD)</th>
                     <th rowspan="2">Pernocta (USD)</th>
+                    <th rowspan="2">Cantidad Peajes</th>
                     <th rowspan="2">Peajes I/V (USD)</th>
                 </tr>
                 <tr>
@@ -37,16 +38,17 @@
                         <td>{{ $item->id_tabulador }}</td>
                         <td class="bg-light text-start text-dark fw-bold">{{ $item->destino }}</td>
                         {{-- Pagos por Viaje --}}
-                        <td data-field="viatico_chofer_ejecutivo" class="editable-cell text-primary">${{ number_format($item->viatico_chofer_ejecutivo, 2) }}</td>
-                        <td data-field="viatico_chofer" class="editable-cell text-primary">${{ number_format($item->viatico_chofer, 2) }}</td>
-                        <td data-field="viatico_ayudante" class="editable-cell text-primary">${{ number_format($item->viatico_ayudante, 2) }}</td>
+                        <td data-field="pago_chofer_ejecutivo" class="editable-cell text-primary">${{ number_format($item->pago_chofer_ejecutivo, 2) }}</td>
+                        <td data-field="pago_chofer" class="editable-cell text-primary">${{ number_format($item->pago_chofer, 2) }}</td>
+                        <td data-field="pago_ayudante" class="editable-cell text-primary">${{ number_format($item->pago_ayudante, 2) }}</td>
                         {{-- Viáticos Diarios --}}
-                        <td data-field="desayuno" class="editable-cell">${{ number_format($item->desayuno, 2) }}</td>
-                        <td data-field="almuerzo" class="editable-cell">${{ number_format($item->almuerzo, 2) }}</td>
-                        <td data-field="cena" class="editable-cell">${{ number_format($item->cena, 2) }}</td>
+                        <td data-field="viatio_desayuno" class="editable-cell">${{ number_format($item->viatico_desayuno, 2) }}</td>
+                        <td data-field="viatico_almuerzo" class="editable-cell">${{ number_format($item->viatico_almuerzo, 2) }}</td>
+                        <td data-field="viatico_cena" class="editable-cell">${{ number_format($item->viatico_cena, 2) }}</td>
                         {{-- Pernocta y Peajes --}}
-                        <td data-field="pernoctar" class="editable-cell text-success">${{ number_format($item->pernoctar, 2) }}</td>
-                        <td data-field="total_peajes" class="editable-cell text-success">${{ number_format($item->total_peajes, 2) }}</td>
+                        <td data-field="costo_pernocta" class="editable-cell text-success">${{ number_format($item->costo_pernocta, 2) }}</td>
+                        <td data-field="peajes" class="editable-cell text-success">{{ $item->peajes }}</td>
+                        <td data-field="total_peajes" class="text-success">${{ number_format($item->peajes*4, 2) }}</td>
                     </tr>
                 @empty
                     <tr>
