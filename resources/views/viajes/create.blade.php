@@ -38,6 +38,14 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
+                    <!-- Fecha de Salida -->
+                    <div class="col-md-6">  
+                        <label for="fecha_salida" class="form-label fw-bold">Fecha de Salida</label>
+                        <input type="date" name="fecha_salida" id="fecha_salida" class="form-control @error('fecha_salida') is-invalid @enderror" value="{{ old('fecha_salida') }}" required>
+                        @error('fecha_salida')
+                            <div class="invalid-feedback">{{ $message }}</div>      
+                        @enderror
+                        
 
                 </div>
 

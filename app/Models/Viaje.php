@@ -23,6 +23,7 @@ class Viaje extends Model
         'custodia_count',
         'fecha_salida',
         'status',
+        'vehiculo_id'
     ];
 
     /**
@@ -40,5 +41,10 @@ class Viaje extends Model
     public function viaticos(): HasMany
     {
         return $this->hasMany(ViaticoViaje::class, 'viaje_id');
+    }
+
+    public function vehiculo(): BelongsTo
+    {
+        return $this->belongsTo(Vehiculo::class, 'vehiculo_id');
     }
 }
