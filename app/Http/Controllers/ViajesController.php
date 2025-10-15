@@ -102,7 +102,7 @@ class ViajesController extends Controller
         $viaje->load([
             'chofer', // Necesario para mostrar el nombre
             'vehiculo', // Necesario para placa y modelo
-            'viaticos.aprobador' // Necesario para mostrar quién ajustó cada línea de viático
+            'viaticos.ajustadoPor' // Necesario para mostrar quién ajustó cada línea de viático
         ]);
         
         return view('viajes.show', compact('viaje'));
