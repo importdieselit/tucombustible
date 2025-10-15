@@ -212,6 +212,8 @@ class ViajesController extends Controller
         }
 
         $viaje = Viaje::findOrFail($viajeId);
+        $viaje->status = 'COMPLETADO';
+        $viaje->save();
         $adminId = Auth::id();
         $ajustes = $request->input('ajustes', []);
 

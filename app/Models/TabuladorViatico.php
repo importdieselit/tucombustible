@@ -17,10 +17,11 @@ class TabuladorViatico extends Model
         'pago_chofer_ejecutivo',
         'pago_chofer',
         'pago_ayudante',
-        'peajes_por_zona',
+        'peajes',
         'viatico_desayuno',
         'viatico_almuerzo',
         'viatico_cena',
         'costo_pernocta',
+        
     ];
 }
