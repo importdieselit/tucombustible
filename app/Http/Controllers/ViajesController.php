@@ -122,6 +122,7 @@ class ViajesController extends Controller
             ->map(function($item) {
                 return $item->valor;
             });
+            dd($tabulador);
 
         // Lista de conceptos a generar (usando el Tabulador)
         $conceptos = [
