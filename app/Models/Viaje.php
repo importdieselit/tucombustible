@@ -35,6 +35,12 @@ class Viaje extends Model
         return $this->belongsTo(Chofer::class, 'chofer_id'); 
     }
 
+    public function ayudante(): BelongsTo
+    {
+        // Asume que la tabla de usuarios se llama 'users'
+        return $this->belongsTo(Chofer::class, 'ayudante'); 
+    }
+
     /**
      * Relación con el cuadro de viáticos generados para este viaje.
      */
