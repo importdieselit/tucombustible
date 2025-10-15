@@ -81,7 +81,6 @@ class ViajesController extends Controller
     private function generarCuadroViaticos(Viaje $viaje, TabuladorViatico $tabulador): void
     {
         $fecha_salida = $viaje->fecha_salida;
-        $ayudantes = !is_null($viaje->ayudante)?1: 0; // Número de ayudantes
         $totalPersonas = 1 + $ayudantes + $viaje->custodia_count;
         $parametros = Parametro::all()->keyBy('nombre')
             ->map(function($item) {
@@ -92,7 +91,7 @@ class ViajesController extends Controller
         $conceptos = [
             // Pagos Fijos
             ['concepto' => 'Pago Chofer', 'monto' => $tabulador->pago_chofer, 'cantidad' => 1, 'editable' => false],
-            ['concepto' => 'Pago Ayudantes', 'monto' => $tabulador->pago_ayudante, 'cantidad' => $ayudantes, 'editable' => false],
+            ['concepto' => 'Pago Ayudantes', 'monto' => $tabulador->pago_ayudante, 'cantidad' => 1, 'editable' => false],
             
             // Viáticos de Comida (por persona, por día)
             ['concepto' => 'Viático Desayuno', 'monto' => $tabulador->viatico_desayuno , 'cantidad' => $totalPersonas, 'editable' => true],
@@ -126,7 +125,7 @@ class ViajesController extends Controller
         // 1. Validar la entrada (omitiendo por brevedad)
         $request->validate([
             'destino_ciudad' => 'required|string',
-            'chofer_id' => 'required|exists:choferes,id',
+            //'chofer_id' => 'required|exists:choferes,id',
             // ... otras validaciones
         ]);
 
