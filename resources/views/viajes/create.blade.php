@@ -70,7 +70,7 @@
                             <!-- Este loop debe cargar los usuarios con rol 'chofer' -->
                           
                             @foreach($choferes as $chofer)
-                                @if($chofer->persona()->chofer->cargo == 'AYUDANTE' || $chofer->persona()->chofer->cargo == 'AYUDANTE DE CHOFER')
+                                @if($chofer->cargo == 'AYUDANTE' || $chofer->cargo == 'AYUDANTE DE CHOFER')
                                     <option value="{{ $chofer->id }}" {{ old('ayudante') == $chofer->id ? 'selected' : '' }}>{{ $chofer->nombre }}</option>
                                 @endif
                             @endforeach
