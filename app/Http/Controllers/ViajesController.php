@@ -48,27 +48,9 @@ class ViajesController extends Controller
     public function create()
     {
         // En un escenario real, aquí se cargan dinámicamente:
-        $choferes = User::where('id_perfil', 4)
-    // 1. Carga la relación 'persona', y dentro de 'persona' carga la relación 'chofer'
-    ->with([
-        // Selección para el nivel PERSONA -> CHOFER
-        'persona.chofer' => function ($query) {
-            // Selecciona las columnas de la tabla 'choferes'. 
-            // Asegúrate de incluir la clave foránea (e.g., 'persona_id')
-            $query->select('id as chofer_id', 'persona_id', 'cargo'); 
-        },
-        // Selección para el nivel USER -> PERSONA
-        'persona' => function ($query) {
-            // Selecciona las columnas de la tabla 'personas'.
-            // Asegúrate de incluir la clave foránea (e.g., 'user_id')
-            $query->select('id as persona_id', 'user_id'); 
-        }
-    ])
-    // 2. Selecciona las columnas del modelo principal 'User'.
-    ->get(['id', 'name','cargo']);
+        $choferes = User::where('id_perfil',4)->get(['id', 'name']);
         $vehiculos = Vehiculo::where('estatus', 1)->get(['id', 'placa', 'flota']);
         $destino = TabuladorViatico::pluck('destino')->unique();
-        dd($choferes);
         return view('viajes.create', compact('choferes', 'vehiculos', 'destino'));
     }
 
