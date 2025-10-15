@@ -122,8 +122,8 @@ class ViajesController extends Controller
             ->map(function($item) {
                 return $item->valor;
             });
-
-        // Lista de conceptos a generar (usando el Tabulador)
+            dd($parametros);
+            // Lista de conceptos a generar (usando el Tabulador)
         $conceptos = [
             // Pagos Fijos
             ['concepto' => 'Pago Chofer', 'monto' => $tabulador->pago_chofer, 'cantidad' => 1, 'editable' => false],
