@@ -100,7 +100,7 @@ class ViajesController extends Controller
     {
         // Cargar las relaciones necesarias para la vista show.blade.php
         $viaje->load([
-            'chofer', // Necesario para mostrar el nombre
+            'chofer.persona', // Necesario para mostrar el nombre
             'vehiculo', // Necesario para placa y modelo
             'viaticos.ajustadoPor' // Necesario para mostrar quién ajustó cada línea de viático
         ]);
