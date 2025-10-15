@@ -277,8 +277,8 @@ class ViajesController extends Controller
 
         // Mapeo para seguridad: asegurar que solo se editen campos de tarifas
         $allowedFields = [
-            'viatico_chofer_ejecutivo', 'viatico_chofer', 'viatico_ayudante', 
-            'desayuno', 'almuerzo', 'cena', 'pernoctar', 'total_peajes'
+            'pago_chofer_ejecutivo', 'pago_chofer', 'pago_ayudante', 
+            'viatico_desayuno', 'viatico_almuerzo', 'viatico_cena', 'costo_pernocta', 'peajes'
         ];
 
         $field = $validated['field'];
