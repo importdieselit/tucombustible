@@ -18,72 +18,64 @@
         <div>
             <span class="fw-bold me-2">Filtrar por Estatus:</span>
             <a href="{{ route('viaje.list') }}" class="btn btn-sm btn-outline-primary @unless(request('status')) active @endunless">Todos</a>
-            <a href="{{ route('viaje.list', ['status' => 'PENDIENTE_ASIGNACION']) }}" class="btn btn-sm btn-outline-warning @if(request('status') === 'PENDIENTE_ASIGNACION') active @endif">Pendiente Asignacion</a>
+            <a href="{{ route('viaje.list', ['status' => 'PENDIENTE_ASIGNACION']) }}" class="btn btn-sm btn-outline-danger @if(request('status') === 'PENDIENTE_ASIGNACION') active @endif">Pendiente Asignacion</a>
             <a href="{{ route('viaje.list', ['status' => 'PENDIENTE_VIATICOS']) }}" class="btn btn-sm btn-outline-warning @if(request('status') === 'PENDIENTE_VIATICOS') active @endif">Pendiente Viáticos</a>
-            <a href="{{ route('viaje.list', ['status' => 'EN_CURSO']) }}" class="btn btn-sm btn-outline-info @if(request('status') === 'EN_CURSO') active @endif">En Curso</a>
+            <a href="{{ route('viaje.list', ['status' => 'ASIGNADO']) }}" class="btn btn-sm btn-outline-info @if(request('status') === 'ASIGNADO') active @endif">Asignado</a>
             <a href="{{ route('viaje.list', ['status' => 'COMPLETADO']) }}" class="btn btn-sm btn-outline-success @if(request('status') === 'COMPLETADO') active @endif">Completado</a>
         </div>
-        <a href="{{ route('viajes.create') }}" class="btn btn-primary">
+        <a href="{{ route('viajes.create') }}" class="btn btn-info shadow-sm">
             <i class="bi bi-plus-circle me-1"></i> Nuevo Viaje
         </a>
     </div>
 
+    <!-- Tabla de Viajes -->
     <div class="table-responsive">
-        <table class="table table-hover table-striped">
-            <thead class="table-dark">
+        <table class="table table-hover table-striped shadow-sm">
+            <thead class="bg-info text-white">
                 <tr>
-                    <th>ID</th>
+                    <th>#</th>
                     <th>Destino</th>
+                    <th>Fecha Salida</th>
                     <th>Chofer</th>
-                    <th>Salida</th>
-                    <th>Estado</th>
-                    <th>Fecha Creación</th>
+                    <th>Vehículo</th>
+                    <th>Estatus</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
-                <!-- Simulando datos de viajes (Reemplazar con el loop $viajes del controlador) -->
-                @php
-                    
-                    // Aplicar el filtro de ejemplo para simular la vista
-                    if (request('status')) {
-                        $viajes = array_filter($viajes, fn($v) => $v->status === request('status'));
-                        //$viajes = array_filter($viajes, fn($v) => $v->status === request('status'));
-                    }
-                @endphp
-                
-                @forelse ($viajes as $viaje)
-                
+                @forelse($viajes as $viaje)
                 <tr>
                     <td>{{ $viaje->id }}</td>
                     <td>{{ $viaje->destino_ciudad }}</td>
-                    <td>{{ $viaje->chofer->persona->nombre ?? 'Sin Asignar' }}</td>
                     <td>{{ $viaje->fecha_salida }}</td>
+                    <td>{{ $viaje->chofer->name ?? 'N/A' }}</td>
+                    <!-- Usando la nueva relación vehiculo -->
+                    <td>{{ $viaje->vehiculo->placa ?? 'N/A' }}</td> 
                     <td>
-                        @if($viaje->status == 'PENDIENTE_VIATICOS')
-                            <span class="badge bg-warning text-dark">Pendiente Viáticos</span>
-                        @elseif($viaje->status == 'EN_CURSO')
-                            <span class="badge bg-info">En Curso</span>
-                        @elseif($viaje->status == 'COMPLETADO')
-                            <span class="badge bg-success">Completado</span>
-                        @else
-                            <span class="badge bg-danger">{{ $viaje->status }}</span>
-                        @endif
+                        <span class="badge 
+                            @if($viaje->status == 'PENDIENTE_ASIGNACION') bg-danger 
+                            @elseif($viaje->status == 'PENDIENTE_VIATICOS') bg-warning 
+                            @elseif($viaje->status == 'ASIGNADO') bg-info
+                            @elseif($viaje->status == 'COMPLETADO') bg-success 
+                            @else bg-secondary
+                            @endif">
+                            {{ str_replace('_', ' ', $viaje->status) }}
+                        </span>
                     </td>
-                    <td>{{ $viaje->created_at->format('d/m/Y') }}</td>
                     <td>
                         @if($viaje->status == 'PENDIENTE_VIATICOS')
                             <!-- Botón de acceso directo para el Coordinador Administrativo -->
                             <a href="{{ route('viajes.viaticos.edit', $viaje->id) }}" class="btn btn-sm btn-warning" title="Revisar Viáticos">
-                                <i class="bi bi-pencil-square"></i> Editar Viáticos
+                                <i class="bi bi-currency-dollar"></i> Generar Viáticos
                             </a>
                         @elseif($viaje->status == 'PENDIENTE_ASIGNACION')
-                            <a href="{{ route('viaje.edit', $viaje->id) }}" class="btn btn-sm btn-secondary" title="Ver Viaje">
-                                <i class="bi bi-edit"></i> Asignar
+                            <!-- Botón para el usuario de Asignación -->
+                            <a href="{{ route('viajes.assign', $viaje->id) }}" class="btn btn-sm btn-danger" title="Asignar Recursos">
+                                <i class="bi bi-truck"></i> Asignar Recursos
                             </a>
                         @else
                             <a href="{{ route('viajes.show', $viaje->id) }}" class="btn btn-sm btn-secondary" title="Ver Viaje">
-                                <i class="bi bi-eye"></i> Ver
+                                <i class="bi bi-eye"></i> Ver Detalles
                             </a>
                         @endif
                     </td>

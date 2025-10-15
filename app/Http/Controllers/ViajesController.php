@@ -56,6 +56,18 @@ class ViajesController extends Controller
         return view('viajes.create', compact('choferes', 'vehiculos', 'destino'));
     }
 
+     public function assign($id)
+    {
+        $viaje = Viaje::findOrFail($id);
+        
+        // Cargar los recursos necesarios para la asignación
+        // Asumiendo que Chofer::with('persona') es la forma correcta de cargar los choferes disponibles
+        $choferes = Chofer::with('persona')->get(); 
+        $vehiculos = Vehiculo::where('estatus', 1)->where('es_flota',true)->get(['id', 'placa', 'flota']);
+        
+        return view('viajes.assign', compact('viaje', 'choferes', 'vehiculos'));
+    }
+
     /**
      * Muestra los detalles de un viaje específico.
      * Carga todas las relaciones necesarias para la vista de detalle.
