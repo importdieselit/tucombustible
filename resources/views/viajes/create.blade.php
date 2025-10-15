@@ -52,8 +52,8 @@
                             <!-- Este loop debe cargar los usuarios con rol 'chofer' -->
                          
                             @foreach($choferes as $chofer)
-                                @if($chofer->persona()->chofer->cargo == 'CHOFER' )                            
-                                    <option value="{{ $chofer['id'] }}" {{ old('chofer_id') == $chofer['id'] ? 'selected' : '' }}>{{ $chofer['name'] }}</option>
+                                @if($chofer->cargo == 'CHOFER' )                            
+                                    <option value="{{ $chofer->id }}" {{ old('chofer_id') == $chofer->id ? 'selected' : '' }}>{{ $chofer->nombre }}</option>
                                 @endif
                           @endforeach
                         </select>
@@ -64,14 +64,14 @@
 
                     <!-- Cantidad de Ayudantes -->
                     <div class="col-md-3">
-                        <label for="ayudantes_count" class="form-label fw-bold">Ayudante</label>
+                        <label for="ayudantes" class="form-label fw-bold">Ayudante</label>
                        <select name="ayudante" id="ayudante" class="form-select @error('ayudante') is-invalid @enderror">
                             <option value="">Seleccione el Ayudante</option>
                             <!-- Este loop debe cargar los usuarios con rol 'chofer' -->
                           
                             @foreach($choferes as $chofer)
                                 @if($chofer->persona()->chofer->cargo == 'AYUDANTE' || $chofer->persona()->chofer->cargo == 'AYUDANTE DE CHOFER')
-                                    <option value="{{ $chofer['id'] }}" {{ old('chofer_id') == $chofer['id'] ? 'selected' : '' }}>{{ $chofer['name'] }}</option>
+                                    <option value="{{ $chofer->id }}" {{ old('ayudante') == $chofer->id ? 'selected' : '' }}>{{ $chofer->nombre }}</option>
                                 @endif
                             @endforeach
                         </select>

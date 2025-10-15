@@ -10,6 +10,7 @@ use App\Models\ViaticoViaje;
 use App\Models\User;
 use App\Models\Vehiculo;
 use App\Models\Parametro;
+use App\Models\Chofer;
 use Illuminate\Support\Facades\DB;
 
 
@@ -48,7 +49,7 @@ class ViajesController extends Controller
     public function create()
     {
         // En un escenario real, aquí se cargan dinámicamente:
-        $choferes = User::where('id_perfil',4)->get(['id', 'name']);
+        $choferes = Chofer::with('persona')->get();
         $vehiculos = Vehiculo::where('estatus', 1)->get(['id', 'placa', 'flota']);
         $destino = TabuladorViatico::pluck('destino')->unique();
         return view('viajes.create', compact('choferes', 'vehiculos', 'destino'));
