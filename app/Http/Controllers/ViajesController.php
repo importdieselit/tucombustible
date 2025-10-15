@@ -259,7 +259,7 @@ class ViajesController extends Controller
       public function tabuladorIndex()
     {
         // Se carga todo el tabulador para la edición en línea
-        $tabulador = TabuladorViatico::orderBy('ciudad')->get();
+        $tabulador = TabuladorViatico::orderBy('id')->get();
         return view('viajes.tabulador', compact('tabulador'));
     }
 
