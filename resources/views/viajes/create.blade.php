@@ -98,13 +98,8 @@
                     <select name="vehiculo_id" id="vehiculo_id" class="form-select @error('vehiculo_id') is-invalid @enderror" required>
                         <option value="">Seleccione el vehículo</option>
                         <!-- Este loop debe cargar los vehículos disponibles -->
-                        @php
-                            $vehiculos_ejemplo = [
-                                ['id' => 201, 'placa' => 'A5F8B7', 'modelo' => 'Cisterna 2000'],
-                                ['id' => 202, 'placa' => 'B4C9D2', 'modelo' => 'Camioneta Pick-up']
-                            ];
-                        @endphp
-                        @foreach($vehiculos_ejemplo as $vehiculo)
+                       
+                        @foreach($vehiculos as $vehiculo)
                             <option value="{{ $vehiculo['id'] }}" {{ old('vehiculo_id') == $vehiculo['id'] ? 'selected' : '' }}>{{ $vehiculo['placa'] }} - {{ $vehiculo['modelo'] }}</option>
                         @endforeach
                     </select>
