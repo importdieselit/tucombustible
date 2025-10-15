@@ -48,7 +48,7 @@ class ViajesController extends Controller
     public function create()
     {
         // En un escenario real, aquí se cargan dinámicamente:
-        $choferes = User::where('id_perfil',4)->get(['id', 'name']);
+        $choferes = User::where('id_perfil',4)->get(['id', 'name','cargo']);
         $vehiculos = Vehiculo::where('estatus', 1)->get(['id', 'placa', 'flota']);
         $destino = TabuladorViatico::pluck('destino')->unique();
         dd($choferes);
