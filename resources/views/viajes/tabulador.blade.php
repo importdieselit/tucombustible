@@ -59,7 +59,7 @@ $ruta_parametros_update = route('viaticos.parametros.update'); // Ruta para actu
                         <td data-field="costo_pernocta" class="editable-cell text-success">${{ number_format($item->costo_pernocta, 2) }}</td>
                         <td data-field="peajes" class="editable-cell text-success">{{ $item->peajes }}</td>
                         {{-- Cálculo de Peajes I/V (USA EL VALOR DE $parametros->peaje_unitario) --}}
-                        <td data-field="total_peajes" class="total-peajes-cell text-success">${{ number_format($item->peajes * $parametros->peaje, 2) }}</td>
+                        <td data-field="total_peajes" class="total-peajes-cell text-success">${{ number_format($item->peajes * $parametros['peaje'], 2) }}</td>
                     </tr>
                 @empty
                     <tr>
@@ -78,21 +78,21 @@ $ruta_parametros_update = route('viaticos.parametros.update'); // Ruta para actu
                 <table class="table table-sm table-bordered mb-0 align-middle" id="parametrosTable">
                     <tbody>
                         {{-- Peaje Unitario (Editable) --}}
-                        <tr data-id="{{ $parametros->id }}">
+                        <tr data-id="1">
                             <td class="bg-light text-start fw-bold" style="width: 50%;">Peaje Unitario (Valor por Peaje)</td>
                             <td data-field="peaje" class="editable-param-cell text-success text-end pe-4" style="width: 50%;">
                                 ${{ number_format($parametros['peaje'], 2) }}
                             </td>
                         </tr>
                         {{-- Costo Desayuno (Editable) --}}
-                        <tr data-id="{{ $parametros->id }}">
+                        <tr data-id="2">
                             <td class="bg-light text-start fw-bold">Viático Desayuno</td>
                             <td data-field="desayuno" class="editable-param-cell text-end pe-4">
                                 ${{ number_format($parametros['desayuno'], 2) }}
                             </td>
                         </tr>
                         {{-- Costo Almuerzo (Editable) --}}
-                        <tr data-id="{{ $parametros->id }}">
+                        <tr data-id="3">
                             <td class="bg-light text-start fw-bold">Viático Almuerzo</td>
                             <td data-field="almuerzo" class="editable-param-cell text-end pe-4">
                                 ${{ number_format($parametros['almuerzo'], 2) }}
