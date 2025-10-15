@@ -32,7 +32,7 @@
                             <option value="">Seleccione el Chofer</option>
                             @foreach($choferes as $chofer)
                                 <option value="{{ $chofer->id }}" {{ old('chofer_id', $viaje->chofer_id) == $chofer->id ? 'selected' : '' }}>
-                                    {{ $chofer->persona->nombre_completo ?? $chofer->name }}
+                                    {{ $chofer->persona->nombre ?? $chofer->name }}
                                 </option>
                             @endforeach
                         </select>
