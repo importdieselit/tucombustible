@@ -18,10 +18,10 @@
                     <th rowspan="2">ID</th>
                     <th rowspan="2" style="min-width: 150px;">Destino</th>
                     <th colspan="3">Pago por Viaje (USD)</th>
-                    <th colspan="3">Viáticos Diarios (USD)</th>
+                    <th colspan="4">Viáticos Diarios (USD)</th>
                     <th rowspan="2">Pernocta (USD)</th>
                     <th rowspan="2">Cantidad Peajes</th>
-                    <th rowspan="2">Peajes I/V (USD)</th>
+                    <th rowspan="2">Peajes I/V (USD)</th> {{-- Campo calculado, no editable --}}
                 </tr>
                 <tr>
                     <th>Chofer Ejecutivo</th>
@@ -48,7 +48,7 @@
                         {{-- Pernocta y Peajes --}}
                         <td data-field="costo_pernocta" class="editable-cell text-success">${{ number_format($item->costo_pernocta, 2) }}</td>
                         <td data-field="peajes" class="editable-cell text-success">{{ $item->peajes }}</td>
-                        <td data-field="total_peajes" class="text-success">${{ number_format($item->peajes*4, 2) }}</td>
+                        <td data-field="total_peajes" class="text-success">${{ number_format($item->peajes * 4, 2) }}</td>
                     </tr>
                 @empty
                     <tr>
@@ -66,25 +66,48 @@
     $(document).ready(function() {
         const csrfToken = $('meta[name="csrf-token"]').attr('content');
         
+        // Función para actualizar el campo calculado de Peajes I/V
+        const updateCalculatedPeajes = (cell, newValue) => {
+            const $row = cell.closest('tr');
+            // Asumimos que el costo es 4 USD por peaje (peajes * 4) según tu fórmula Blade: $item->peajes*4
+            const totalPeajes = (newValue * 4).toFixed(2);
+            // Actualizar la celda siguiente (Total Peajes I/V)
+            $row.find('td[data-field="total_peajes"]').html('$' + totalPeajes);
+        };
+        
         // 1. Manejar el clic en las celdas editables
         $('#tabuladorTable').on('click', '.editable-cell', function() {
             const $cell = $(this);
             // Evitar editar si ya estamos editando
             if ($cell.find('input').length > 0) return;
 
-            // Obtener el valor actual (quitar el '$')
-            const currentValue = $cell.text().replace('$', '').replace(/,/g, '');
+            // Obtener el valor actual (quitar el '$' si existe)
+            const currentValue = $cell.text().replace('$', '').replace(/,/g, '').trim();
             const fieldName = $cell.data('field');
 
-            // Crear el campo de entrada (input)
-            const $input = $('<input>', {
-                type: 'number',
+            let inputOptions = {
                 class: 'form-control form-control-sm text-center border-primary',
-                value: parseFloat(currentValue).toFixed(2), // Formatear a 2 decimales
-                step: '0.01',
-                min: '0',
+                value: currentValue,
                 'data-original-value': currentValue // Guardar valor original
-            });
+            };
+
+            // Trato especial para el campo 'peajes' (cantidad)
+            if (fieldName === 'peajes') {
+                 inputOptions.type = 'number';
+                 inputOptions.step = '1';
+                 inputOptions.min = '0';
+                 // Asegurar que el valor inicial sea entero
+                 inputOptions.value = parseInt(currentValue) || 0;
+            } else {
+                 inputOptions.type = 'number';
+                 inputOptions.step = '0.01';
+                 inputOptions.min = '0';
+                 // Asegurar que el valor inicial tenga 2 decimales
+                 inputOptions.value = parseFloat(currentValue).toFixed(2);
+            }
+
+            // Crear el campo de entrada (input)
+            const $input = $('<input>', inputOptions);
 
             // Reemplazar el contenido de la celda con el input
             $cell.empty().append($input);
@@ -92,19 +115,33 @@
 
             // 2. Manejar la pérdida de foco (Blur) o presionar Enter
             const saveChanges = function() {
-                const newValue = parseFloat($input.val());
-                const originalValue = parseFloat($input.data('original-value'));
-
-                if (isNaN(newValue) || newValue < 0) {
-                    // Revertir a valor original si no es válido
-                    $cell.html('$' + originalValue.toFixed(2));
-                    return;
-                }
+                let newValue = $input.val();
+                const originalValue = $input.data('original-value');
                 
-                // Si el valor no cambió, solo revertir la apariencia
-                if (newValue.toFixed(2) === originalValue.toFixed(2)) {
-                     $cell.html('$' + newValue.toFixed(2));
-                     return;
+                // Si es un campo de monto, parsear a float
+                if (fieldName !== 'peajes') {
+                    newValue = parseFloat(newValue);
+                    if (isNaN(newValue) || newValue < 0) {
+                        $cell.html('$' + parseFloat(originalValue).toFixed(2));
+                        return;
+                    }
+                    if (newValue.toFixed(2) === parseFloat(originalValue).toFixed(2)) {
+                        $cell.html('$' + newValue.toFixed(2));
+                        return;
+                    }
+                    newValue = newValue.toFixed(2); // Formatear para envío si no es peajes
+                    
+                } else {
+                    // Si es 'peajes' (cantidad), parsear a entero
+                    newValue = parseInt(newValue);
+                    if (isNaN(newValue) || newValue < 0) {
+                        $cell.html(originalValue);
+                        return;
+                    }
+                    if (newValue === parseInt(originalValue)) {
+                        $cell.html(newValue);
+                        return;
+                    }
                 }
 
                 // Deshabilitar input mientras se guarda
@@ -113,7 +150,7 @@
 
                 // 3. Petición AJAX para guardar en el servidor
                 $.ajax({
-                    url: '{{ route('viaticos.tabulador.update') }}',
+                    url: '{{ route('viajes.tabulador.update') }}', // Usar la ruta correcta del controlador
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': csrfToken
@@ -125,23 +162,32 @@
                     },
                     success: function(response) {
                         if (response.success) {
-                            // Actualizar la celda con el nuevo valor formateado
-                            $cell.html('$' + response.new_value);
+                            
+                            // A. Actualizar la celda editada
+                            let displayValue = (fieldName !== 'peajes') ? ('$' + response.new_value) : response.new_value;
+                            $cell.html(displayValue);
+                            
+                            // B. SI EL CAMPO EDITADO ES 'PEAJES' (CANTIDAD), CALCULAR Y ACTUALIZAR EL TOTAL
+                            if (fieldName === 'peajes') {
+                                updateCalculatedPeajes($cell, parseInt(response.new_value));
+                            }
+                            
                             $cell.addClass('bg-warning animate__animated animate__flash'); // Feedback visual
                             setTimeout(() => {
                                 $cell.removeClass('bg-warning animate__animated animate__flash');
                             }, 1000);
                         } else {
                             // Mostrar mensaje de error y revertir
-                            alert('Error al guardar: ' + response.message);
-                            $cell.html('$' + originalValue.toFixed(2));
+                            const errorMessage = 'Error al guardar: ' + response.message;
+                            console.error(errorMessage); 
+                            $cell.html((fieldName !== 'peajes') ? ('$' + parseFloat(originalValue).toFixed(2)) : originalValue);
                         }
                     },
                     error: function(xhr) {
-                        alert('Error de conexión o validación. Intente de nuevo.');
-                        console.error(xhr.responseText);
+                        const errorMessage = 'Error de conexión o validación. Intente de nuevo.';
+                        console.error(errorMessage, xhr.responseText);
                         // Revertir a valor original en caso de error
-                        $cell.html('$' + originalValue.toFixed(2));
+                        $cell.html((fieldName !== 'peajes') ? ('$' + parseFloat(originalValue).toFixed(2)) : originalValue);
                     },
                     complete: function() {
                          $cell.css('cursor', 'pointer');
@@ -165,4 +211,3 @@
 </script>
 @endpush
 @endsection
-
