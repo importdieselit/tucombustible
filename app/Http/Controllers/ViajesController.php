@@ -265,7 +265,7 @@ class ViajesController extends Controller
             ->map(function($item) {
                 return $item->valor;
             });
-            dd($parametros);
+            
          // Convertir valores numéricos a float
         return view('viajes.tabulador', compact('tabulador', 'parametros'));
     }
