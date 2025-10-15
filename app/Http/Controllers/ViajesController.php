@@ -270,7 +270,7 @@ class ViajesController extends Controller
     {
         // Validar que la solicitud contenga los datos esperados
         $validated = $request->validate([
-            'id_tabulador' => 'required|exists:tabulador_viaticos,id_tabulador',
+            'id' => 'required|exists:tabulador_viaticos,id',
             'field' => 'required|string', // Nombre del campo a editar
             'value' => 'nullable|numeric|min:0', // El nuevo valor
         ]);
@@ -290,7 +290,7 @@ class ViajesController extends Controller
         
         // Ejecutar la actualización
         try {
-            $tabulador = TabuladorViatico::find($validated['id_tabulador']);
+            $tabulador = TabuladorViatico::find($validated['id']);
             $tabulador->{$field} = $value;
             $tabulador->save();
 

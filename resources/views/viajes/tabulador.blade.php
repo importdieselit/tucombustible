@@ -34,8 +34,8 @@
             </thead>
             <tbody>
                 @forelse ($tabulador as $item)
-                    <tr data-id="{{ $item->id_tabulador }}">
-                        <td>{{ $item->id_tabulador }}</td>
+                    <tr data-id="{{ $item->id }}">
+                        <td>{{ $item->id }}</td>
                         <td class="bg-light text-start text-dark fw-bold">{{ $item->destino }}</td>
                         {{-- Pagos por Viaje --}}
                         <td data-field="pago_chofer_ejecutivo" class="editable-cell text-primary">${{ number_format($item->pago_chofer_ejecutivo, 2) }}</td>
@@ -156,7 +156,7 @@
                         'X-CSRF-TOKEN': csrfToken
                     },
                     data: {
-                        id_tabulador: $cell.closest('tr').data('id'),
+                        id: $cell.closest('tr').data('id'),
                         field: fieldName,
                         value: newValue
                     },
