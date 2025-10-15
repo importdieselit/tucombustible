@@ -57,8 +57,8 @@
         </table>
     </div>
 </div>
-
-{{-- Script para Edición en Línea (In-place Editing) --}}
+@push('scripts')
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawR/Y1/fMFa6B2/S6iK5F8FzI7tFz5kF8FzE=" crossorigin="anonymous"></script>
 <script>
     // Asumimos que jQuery está cargado en el layout principal
     $(document).ready(function() {
@@ -161,4 +161,6 @@
         });
     });
 </script>
+@endpush
 @endsection
+
