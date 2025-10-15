@@ -9,6 +9,7 @@ use App\Models\TabuladorViatico;
 use App\Models\ViaticoViaje;
 use App\Models\User;
 use App\Models\Vehiculo;
+use App\Models\Parametro;
 use Illuminate\Support\Facades\DB;
 
 
@@ -260,7 +261,13 @@ class ViajesController extends Controller
     {
         // Se carga todo el tabulador para la edición en línea
         $tabulador = TabuladorViatico::orderBy('id')->get();
-        return view('viajes.tabulador', compact('tabulador'));
+        $parametros = Parametro::all()->keyBy('nombre')
+            ->map(function($item) {
+                return $item->valor;
+            });
+            dd($parametros);
+         // Convertir valores numéricos a float
+        return view('viajes.tabulador', compact('tabulador', 'parametros'));
     }
 
     /**
