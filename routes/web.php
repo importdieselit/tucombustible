@@ -253,6 +253,8 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
 Route::put('/viajes/{id}/assign', [ViajesController::class, 'processAssignment'])->name('viajes.processAssignment');    
     Route::get('viajes/{viaje}/viaticos/edit', [ViajesController::class, 'editViaticos'])->name('viajes.viaticos.edit');
     Route::put('viajes/{viaje}/viaticos', [ViajesController::class, 'updateViaticos'])->name('viajes.viaticos.update');
+    // Nueva ruta para el resumen de programación
+    Route::get('/viajes/resumen-programacion/{id?}', [ViajesController::class, 'resumenProgramacion'])->name('viajes.resumenProgramacion');
     Route::get('viajes/report/index', [ViajesController::class, 'reportsIndex'])->name('reportes.viajes');
     Route::put('viajes/report/generate', [ViajesController::class, 'generateReport'])->name('viajes.report.generate');
     Route::get('viaticos/tabulador', [ViajesController::class, 'tabuladorIndex'])->name('viaticos.tabulador');

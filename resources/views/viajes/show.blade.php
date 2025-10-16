@@ -33,7 +33,7 @@
                     @php
                         $badgeClass = match($viaje->status) {
                             'PENDIENTE_VIATICOS' => 'warning text-dark',
-                            'PENDIENTE_ASIGNACION' => 'warning text-dark',
+                            'PENDIENTE_ASIGNACION   ' => 'warning text-dark',
                             'VIATICOS_APROBADOS' => 'primary',
                             'EN_CURSO' => 'info',
                             'COMPLETADO' => 'success',

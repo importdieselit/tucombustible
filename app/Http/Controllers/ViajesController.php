@@ -391,4 +391,26 @@ class ViajesController extends Controller
         }
     }
 
+     public function resumenProgramacion($id=null)
+    {
+        // Carga todos los viajes que NO están completados
+        // Optimizamos la carga de datos con eager loading para Chofer, Ayudante, Vehiculo y Viaticos
+        $viajes = Viaje::with(['chofer.persona', 'ayudante.persona', 'vehiculo', 'viaticos'])
+         //   ->where('status', '!=', 'COMPLETADO') // Excluir completados
+            ->where('status', '!=', 'CANCELADO');
+            if($id != null){
+                $viajes = $viajes->where('id', $id);
+            }
+        $viajes = $viajes->get();
+
+        // Calcular el total de viáticos presupuestados/pendientes (ejemplo simple)
+        $totalViaticosPresupuestados = $viajes->flatMap(function($viaje) {
+            return $viaje->viaticos->pluck('monto');
+        })->sum();
+        
+        // Opcional: Agrupar por Chofer, etc. (se omite aquí por simplicidad)
+
+        return view('viajes.resumen_programacion', compact('viajes', 'totalViaticosPresupuestados'));
+    }
+
 }

@@ -23,6 +23,9 @@
             <a href="{{ route('viaje.list', ['status' => 'ASIGNADO']) }}" class="btn btn-sm btn-outline-info @if(request('status') === 'ASIGNADO') active @endif">Asignado</a>
             <a href="{{ route('viaje.list', ['status' => 'COMPLETADO']) }}" class="btn btn-sm btn-outline-success @if(request('status') === 'COMPLETADO') active @endif">Completado</a>
         </div>
+        <a href="{{ route('viajes.index') }}" class="btn btn-info shadow-sm">
+            <i class="fa fa-home"></i> Volver a Inicio
+        </a>
         <a href="{{ route('viajes.create') }}" class="btn btn-info shadow-sm">
             <i class="bi bi-plus-circle me-1"></i> Nuevo Viaje
         </a>
@@ -85,7 +88,11 @@
                             <a href="{{ route('viajes.show', $viaje->id) }}" class="btn btn-sm btn-secondary" title="Ver Viaje">
                                 <i class="bi bi-eye"></i> Ver Detalles
                             </a>
+                            <a href="{{ route('viajes.resumenProgramacion', $viaje->id) }}" class="btn btn-sm btn-info" title="Resumen de Programación">
+                                <i class="bi bi-journal-text"></i> Resumen
+                            </a>
                         @endif
+                        
                     </td>
                 </tr>
                 @empty
