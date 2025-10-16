@@ -30,7 +30,7 @@ class ViajesController extends Controller
         // Obtener el estado de filtro de la solicitud
         $status = request('status');
 
-        $query = Viaje::with(['chofer']);
+        $query = Viaje::with(['chofer','cliente']);
 
         // Aplicar filtro si existe
         if ($status) {
