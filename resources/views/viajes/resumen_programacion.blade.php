@@ -7,7 +7,7 @@
 <!-- Cargar librerías necesarias para la impresión/captura -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <!-- Uso jQuery.print.js para simular PrintArea.js (se abre el diálogo de impresión/PDF) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jQuery.print/1.6.0/jQuery.print.min.js"></script>
+<script src="{{assets('js/jquery.PrintArea.js')}}"></script>
 
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -37,45 +37,38 @@
             <table class="table table-sm" style="font-size: 0.75rem;">
                 <thead class="bg-primary text-white">
                     <tr>
-                        <th class="py-1">ID</th>
-                        <th class="py-1">FECHA</th>
-                        <th class="py-1">DESTINO</th>
+                        <th class="py-1"><img src="{{ asset('img/logomini.png') }}" alt="logo empresa" style="width: 100px"></th>
+                        <th class="py-1">Litros</th>
                         <th class="py-1">CHOFER / VEHÍCULO</th>
-                        <th class="py-1">PERSONAL APOYO</th>
-                        <th class="py-1">VIÁTICOS (EST.)</th>
-                        <th class="py-1">ESTATUS</th>
+                        <th class="py-1">UNIDAD</th>
+                    </tr>
+                    <tr>
+                        <th class="py-1">Despacho</th>
+                        <th class="py-1"></th>
+                        <th class="py-1"></th>
+                        <th class="py-1"></th>
                     </tr>
                 </thead>
                 <tbody>
+                    @php($TotalLitros=0)
                     @forelse($viajes as $viaje)
+                    @php($TotalLitros += $viaje->litros ?? 0)
                     <tr>
-                        <td>{{ $viaje->id }}</td>
-                        <td>{{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y') }}</td>
-                        <td>{{ $viaje->destino_ciudad }}</td>
+
+                        <td>Despacho {{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y') }}<br>
+                            {{ $viaje->destino_ciudad }}
+                        </td>
+                        <td>
+                            <span class="text-muted">{{ $viaje->litros ?? 0 }}</span>
+                        </td>
                         <td>
                             <span class="fw-bold">{{ $viaje->chofer->persona->name ?? 'PENDIENTE' }}</span><br>
-                            <span class="text-muted">{{ $viaje->vehiculo->placa ?? 'PENDIENTE' }}</span>
-                        </td>
-                        <td>
                             @if($viaje->ayudantePrincipal)
                                 <span class="d-block small">Ayudante: {{ $viaje->ayudantePrincipal->persona->name ?? 'N/A' }}</span>
-                            @else
-                                <span class="d-block small">Ayudante: N/A</span>
                             @endif
-                            <span class="d-block small">Custodia: {{ $viaje->custodia_count ?? 0 }}</span>
-                        </td>
-                        <td class="text-end fw-bold text-success">
-                            $ {{ number_format($viaje->viaticos->sum('monto'), 2) }}
                         </td>
                         <td>
-                            <span class="badge 
-                                @if($viaje->status == 'PENDIENTE_ASIGNACION') bg-danger 
-                                @elseif($viaje->status == 'PENDIENTE_VIATICOS') bg-warning text-dark
-                                @elseif($viaje->status == 'ASIGNADO') bg-info
-                                @else bg-secondary
-                                @endif">
-                                {{ str_replace('_', ' ', $viaje->status) }}
-                            </span>
+                            <span class="text-muted">{{ $viaje->vehiculo->flota ?? 'PENDIENTE' }}</span>
                         </td>
                     </tr>
                     @empty
@@ -103,7 +96,7 @@
         downloadButton.addEventListener('click', function() {
             // Usando jQuery.print.js para simular la funcionalidad de PrintArea
             // Esto abrirá el diálogo de impresión (el usuario puede Guardar como PDF o Imprimir).
-            printArea.print({
+            printArea.printArea({
                 globalStyles: true,
                 mediaPrint: false,
                 iframe: true,
