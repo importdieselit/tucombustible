@@ -33,14 +33,14 @@
         </div>
 
         <!-- Tabla de Detalle Simplificada -->
-        <div class="table-responsive">
+        <div class="table-responsive" style="max-height: 500px; overflow-y: auto; width: 50%;">
             <table class="table table-sm" style="font-size: 0.75rem;">
                 <thead class="bg-primary text-white">
-                    <tr>
-                        <th class="py-1"><img src="{{ asset('img/logomini.png') }}" alt="logo empresa" style="width: 100px"></th>
+                    <tr style="font-weight: 700">
+                        <th class="py-1"><img src="{{ asset('img/logo1.png') }}" alt="logo empresa" style="width: 300px"></th>
                         <th class="py-1">Litros</th>
-                        <th class="py-1">CHOFER / VEHÍCULO</th>
-                        <th class="py-1">UNIDAD</th>
+                        <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;">CHOFER / AYUDANTE</th>
+                        <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;">UNIDAD</th>
                     </tr>
                     <tr>
                         <th class="py-1">Despacho</th>
@@ -53,7 +53,7 @@
                     @php($TotalLitros=0)
                     @forelse($viajes as $viaje)
                     @php($TotalLitros += $viaje->litros ?? 0)
-                    <tr>
+                    <tr style="border-bottom: 1px solid #01050a; background-color:white"   >
 
                         <td>Despacho {{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y') }}<br>
                             {{ $viaje->destino_ciudad }}
@@ -76,6 +76,11 @@
                         <td colspan="7" class="text-center text-muted">No hay viajes programados o en curso.</td>
                     </tr>
                     @endforelse
+                    <tr style="font-weight: 700; border-top: 2px solid #01050a; background-color: #d1ecf1;">
+                        <td class="py-1">TOTAL LITROS</td>
+                        <td class="py-1">{{ $TotalLitros }}</td>
+                        <td class="py-1"></td>
+                        <td class="py-1"></td>
                 </tbody>
             </table>
         </div>
