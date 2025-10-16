@@ -55,6 +55,24 @@
                     </div>
                 </div>
 
+                <h4 class="mt-4 mb-3 text-success border-bottom pb-1">Indique Cliente de ser necesario</h4>
+                <div class="row g-3 mb-4">
+                    <!-- Cliente (opcional) -->
+                    <div class="col-md-6">
+                        <label for="cliente_id" class="form-label fw-bold">Cliente (Opcional)</label>
+                        <select name="cliente_id" id="cliente_id" class="form-select @error('cliente_id') is-invalid @enderror">
+                            <option value="">Seleccione un cliente (opcional)</option>
+                            @foreach($clientes as $cliente)
+                                <option value="{{ $cliente->id }}" {{ old('cliente_id') == $cliente->id ? 'selected' : '' }}>{{ $cliente->nombre }}</option>
+                            @endforeach 
+                        </select>
+                        @error('cliente_id')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                
+
                 <h4 class="mt-4 mb-3 text-success border-bottom pb-1">Asignación de Personal</h4>
 
                 <div class="row g-3 mb-4">

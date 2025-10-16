@@ -56,10 +56,10 @@
                     <tr style="border-bottom: 1px solid #01050a; background-color:white"   >
 
                         <td>Despacho {{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y') }}<br>
-                            {{ $viaje->destino_ciudad }}
+                            <strong>{{ $viaje->destino_ciudad }}</strong>
                         </td>
                         <td>
-                            <span class="text-muted">{{ $viaje->litros ?? 0 }}</span>
+                            <span class="text-muted"><strong>{{ $viaje->litros ?? 0 }}</strong></span>
                         </td>
                         <td>
                             <span class="fw-bold">{{ $viaje->chofer->persona->name ?? 'PENDIENTE' }}</span><br>
@@ -68,7 +68,7 @@
                             @endif
                         </td>
                         <td>
-                            <span class="text-muted">{{ $viaje->vehiculo->flota ?? 'PENDIENTE' }}</span>
+                            <span class="text-black">{{ $viaje->vehiculo->flota ?? 'PENDIENTE' }}</span>
                         </td>
                     </tr>
                     @empty

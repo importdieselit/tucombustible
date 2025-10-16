@@ -395,7 +395,7 @@ class ViajesController extends Controller
     {
         // Carga todos los viajes que NO están completados
         // Optimizamos la carga de datos con eager loading para Chofer, Ayudante, Vehiculo y Viaticos
-        $viajes = Viaje::with(['chofer.persona', 'ayudante.persona', 'vehiculo', 'viaticos'])
+        $viajes = Viaje::with(['chofer.persona', 'ayudante.persona', 'vehiculo', 'viaticos','cliente'])
          //   ->where('status', '!=', 'COMPLETADO') // Excluir completados
             ->where('status', '!=', 'CANCELADO');
             if($id != null){

@@ -24,7 +24,8 @@ class Viaje extends Model
         'fecha_salida',
         'status',
         'vehiculo_id',
-        'litros'
+        'litros',
+        'cliente_id',
     ];
 
     /**
@@ -53,5 +54,9 @@ class Viaje extends Model
     public function vehiculo(): BelongsTo
     {
         return $this->belongsTo(Vehiculo::class, 'vehiculo_id');
+    }
+    public function cliente(): BelongsTo
+    {
+        return $this->belongsTo(Cliente::class, 'cliente_id');
     }
 }
