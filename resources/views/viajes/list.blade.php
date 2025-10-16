@@ -56,7 +56,7 @@
                  @php($viaje->vehiculo = $viaje->vehiculo_id ? \App\Models\Vehiculo::find($viaje->vehiculo_id)->placa : 'N/A')
                 <tr>
                     <td>{{ $viaje->id }}</td>
-                    <td>{{ $viaje->destino_ciudad }} {{ $viaje->cliente->nombre}}</td>
+                    <td>{{ $viaje->destino_ciudad }} {{ $viaje->cliente?$viaje->cliente->nombre:'N/A'}}</td>
                     <td>{{ $viaje->fecha_salida }}</td>
                     <td>{{ $viaje->chofer }}</td>
                     
