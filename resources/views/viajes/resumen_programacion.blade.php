@@ -56,7 +56,7 @@
                     <tr style="border-bottom: 1px solid #01050a; background-color:white"   >
 
                         <td>Despacho {{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y') }}<br>
-                            <strong>{{ $viaje->destino_ciudad }}</strong>
+                            <strong>[{{ $viaje->destino_ciudad }}] {{$viaje->cliente->nombre}}</strong>
                         </td>
                         <td>
                             <span class="text-muted"><strong>{{ $viaje->litros ?? 0 }}</strong></span>
