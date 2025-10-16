@@ -19,7 +19,7 @@
                 
                 <div class="row g-3 mb-4">
                     <!-- Destino -->
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label for="destino_ciudad" class="form-label fw-bold">Ciudad de Destino</label>
                         <select name="destino_ciudad" id="destino_ciudad" class="form-select @error('destino_ciudad') is-invalid @enderror" required>
                             <option value="">Seleccione un destino del Tabulador</option>
@@ -39,14 +39,20 @@
                         @enderror
                     </div>
                     <!-- Fecha de Salida -->
-                    <div class="col-md-6">  
+                    <div class="col-md-4">  
                         <label for="fecha_salida" class="form-label fw-bold">Fecha de Salida</label>
                         <input type="date" name="fecha_salida" id="fecha_salida" class="form-control @error('fecha_salida') is-invalid @enderror" value="{{ old('fecha_salida') }}" required>
                         @error('fecha_salida')
                             <div class="invalid-feedback">{{ $message }}</div>      
                         @enderror
-                        
-
+                    </div>
+                    <div class="col-md-4">
+                        <label for="litros" class="form-label fw-bold">Litros</label>
+                        <input type="number" name="litros" id="litros" class="form-control @error('litros') is-invalid @enderror" value="{{ old('litros', 0) }}" min="0" step="0.01">
+                        @error('litros')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
 
                 <h4 class="mt-4 mb-3 text-success border-bottom pb-1">Asignación de Personal</h4>

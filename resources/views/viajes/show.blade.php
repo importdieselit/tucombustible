@@ -25,7 +25,7 @@
                 <div class="card-body">
                     <p class="mb-2"><strong>Destino:</strong> {{ $viaje->destino_ciudad }}</p>
                     <p class="mb-2"><strong>Fecha Salida:</strong> {{ $viaje->fecha_salida }}</p>
-                    <p class="mb-2"><strong>Fecha de Creación:</strong> {{ $viaje->created_at->format('d/m/Y h:i A') }}</p>
+                    <p class="mb-2"><strong>Litros:</strong> {{ $viaje->litros ?? 0 }}</p>
                     
                     <hr>
                     
@@ -33,6 +33,7 @@
                     @php
                         $badgeClass = match($viaje->status) {
                             'PENDIENTE_VIATICOS' => 'warning text-dark',
+                            'PENDIENTE_ASIGNACION' => 'warning text-dark',
                             'VIATICOS_APROBADOS' => 'primary',
                             'EN_CURSO' => 'info',
                             'COMPLETADO' => 'success',

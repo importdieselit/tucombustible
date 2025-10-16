@@ -23,7 +23,8 @@ class Viaje extends Model
         'custodia_count',
         'fecha_salida',
         'status',
-        'vehiculo_id'
+        'vehiculo_id',
+        'litros'
     ];
 
     /**
