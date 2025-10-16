@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\Vehiculo;
 use App\Models\Parametro;
 use App\Models\Chofer;
+use App\Models\Cliente;
 use Illuminate\Support\Facades\DB;
 
 
@@ -52,8 +53,9 @@ class ViajesController extends Controller
         $choferes = Chofer::with('persona')->get();
         $vehiculos = Vehiculo::where('estatus', 1)->where('es_flota',true)->get(['id', 'placa', 'flota']);
         $destino = TabuladorViatico::pluck('destino')->unique();
+        $clientes = Cliente::where('estatus',1)->get(['id','nombre']);
         
-        return view('viajes.create', compact('choferes', 'vehiculos', 'destino'));
+        return view('viajes.create', compact('choferes', 'vehiculos', 'destino', 'clientes'));
     }
 
      public function assign($id)
@@ -64,8 +66,17 @@ class ViajesController extends Controller
         // Asumiendo que Chofer::with('persona') es la forma correcta de cargar los choferes disponibles
         $choferes = Chofer::with('persona')->get(); 
         $vehiculos = Vehiculo::where('estatus', 1)->where('es_flota',true)->get(['id', 'placa', 'flota']);
+        $clientes = Cliente::where('estatus',1)->get(['id','nombre']);
+
+        //  if($viaje->chofer_id != null){
+        //     return redirect()->route('viaje.list')->with('info', 'El viaje ya tiene chofer asignado.');
+        //  }
         
-        return view('viajes.assign', compact('viaje', 'choferes', 'vehiculos'));
+        //  if($viaje->vehiculo_id != null){
+        //     return redirect()->route('viaje.list')->with('info', 'El viaje ya tiene vehículo asignado.');
+        //  }
+        
+        return view('viajes.assign', compact('viaje', 'choferes', 'vehiculos', 'clientes'));
     }
 
      public function processAssignment(Request $request, $id)
