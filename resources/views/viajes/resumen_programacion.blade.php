@@ -20,20 +20,20 @@
     </div>
 
     <!-- Contenedor del Reporte (El área que será capturada, simplificada) -->
-    <div id="reporte-area" class="card shadow-sm p-3 bg-white border border-primary">
+    <div id="reporte-area" class="card shadow-sm p-3 bg-white border border-primary" style="width: 50%">
         
         <!-- Encabezado del Reporte Simplificado -->
         <div class="text-center mb-3">
             <h5 class="text-primary fw-bold mb-0">REPORTE DE PROGRAMACIÓN DE VIAJES</h5>
             <p class="text-muted small mb-1">Fecha de Emisión: {{ now()->format('d/m/Y H:i') }}</p>
-            <div class="bg-light p-2 rounded d-inline-block border border-danger">
+            {{-- <div class="bg-light p-2 rounded d-inline-block border border-danger">
                 <span class="fw-light small me-2">Presupuesto Total Estimado:</span> 
                 <span class="text-danger fw-bold">$ {{ number_format($totalViaticosPresupuestados, 2) }}</span>
-            </div>
+            </div> --}}
         </div>
 
         <!-- Tabla de Detalle Simplificada -->
-        <div class="table-responsive" style="max-height: 500px; overflow-y: auto; width: 50%;">
+        <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
             <table class="table table-sm" style="font-size: 0.75rem;">
                 <thead class="bg-primary text-white">
                     <tr style="font-weight: 700">
