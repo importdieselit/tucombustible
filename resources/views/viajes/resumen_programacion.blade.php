@@ -7,7 +7,7 @@
 <!-- Cargar librerías necesarias para la impresión/captura -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <!-- Uso jQuery.print.js para simular PrintArea.js (se abre el diálogo de impresión/PDF) -->
-<script src="{{assets('js/jquery.PrintArea.js')}}"></script>
+<script src="{{asset('js/jquery.PrintArea.js')}}"></script>
 
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
