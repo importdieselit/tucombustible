@@ -61,4 +61,11 @@ class Viaje extends Model
     {
         return $this->belongsTo(Cliente::class, 'cliente_id');
     }
+    /**
+     * Relación con los despachos asociados a este viaje.
+     */
+    public function despachos(): HasMany
+    {
+        return $this->hasMany(DespachoViaje::class, 'viaje_id');
+    }   
 }
