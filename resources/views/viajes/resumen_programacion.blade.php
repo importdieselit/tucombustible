@@ -52,14 +52,14 @@
                         <td colspan="2">Despacho {{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y') }}<br>
                             <strong>[{{ $viaje->destino_ciudad }}]</strong>
                         </td>
-                        <td rowspan="{{$viaje->despachos->count()+1}}" style="vertical-align: middle; text-align:center">
+                        <td rowspan="{{$viaje->despachos->count()+1}}" style="vertical-align: middle; text-align:center; font-size: 20px;">
                             <span class="fw-bold">{{ $viaje->chofer->persona->name ?? 'PENDIENTE' }}</span><br>
                             @if($viaje->ayudante)
                                 <span class="d-block">Ayudante: {{ $viaje->ayudante->persona->name ?? 'N/A' }}</span>
                             @endif
                         </td>
                         <td rowspan="{{$viaje->despachos->count()+1}}" style="vertical-align: middle; text-align:center">
-                            <span class="text-black fw-bold" style="font-size: 20px" >{{  $viaje->vehiculo->flota }}</span><br>
+                            <span class="text-black fw-bold" style="font-size: 40px" >{{  $viaje->vehiculo->flota }}</span><br>
                                 {{ $viaje->vehiculo->placa ?? 'PENDIENTE' }}
                             
                         </td>
