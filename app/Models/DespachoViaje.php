@@ -32,7 +32,7 @@ class DespachoViaje extends Model
      */
     public function cliente(): BelongsTo
     {
-        // Asumiendo que existe un modelo 'Cliente' y la clave foránea es 'cliente_id'
-        return $this->belongsTo(Cliente::class, 'cliente_id'); 
+         // Asumiendo que existe un modelo 'Cliente' y la clave foránea es 'cliente_id'
+        return $this->belongsTo(Cliente::class, 'cliente_id', 'id'); 
     }
 }
