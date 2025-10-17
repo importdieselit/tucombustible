@@ -420,7 +420,7 @@ class ViajesController extends Controller
         
         // 3. Ejecuta la consulta
         $viajes = $query->get();
-        dd($viajes);
+       
         // Calcular el total de viáticos presupuestados/pendientes
         $totalViaticosPresupuestados = $viajes->flatMap(function($viaje) {
             return $viaje->viaticos->pluck('monto');
