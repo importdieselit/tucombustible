@@ -51,6 +51,7 @@
                 </thead>
                 <tbody>
                     @php($TotalLitros=0)
+
                     @forelse($viajes as $viaje)
                     @php($TotalLitros += $viaje->litros ?? 0)
                     <tr style="border-bottom: 1px solid #01050a; background-color:white"   >
@@ -63,8 +64,8 @@
                         </td>
                         <td>
                             <span class="fw-bold">{{ $viaje->chofer->persona->name ?? 'PENDIENTE' }}</span><br>
-                            @if($viaje->ayudantePrincipal)
-                                <span class="d-block small">Ayudante: {{ $viaje->ayudantePrincipal->persona->name ?? 'N/A' }}</span>
+                            @if($viaje->ayudante)
+                                <span class="d-block small">Ayudante: {{ $viaje->ayudante->persona->name ?? 'N/A' }}</span>
                             @endif
                         </td>
                         <td>
