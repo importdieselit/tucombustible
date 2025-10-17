@@ -58,8 +58,10 @@
                                 <span class="d-block small">Ayudante: {{ $viaje->ayudante->persona->name ?? 'N/A' }}</span>
                             @endif
                         </td>
-                        <td rowspan="{{$viaje->despachos->count()+1}}">
-                            <span class="text-black">{{ $viaje->vehiculo->placa ?? 'PENDIENTE' }}</span>
+                        <td rowspan="{{$viaje->despachos->count()+1}}" style="vertical-align: middle; text-align:center">
+                            <span class="text-black fw-bold" style="font-size: 30" >{{ $viaje->vehiculo->Flota }}</span><br>
+                                {{ $viaje->vehiculo->placa ?? 'PENDIENTE' }}
+                            
                         </td>
                       </tr>
 
