@@ -70,21 +70,6 @@
                         </tr>
                       @endforeach
 
-                    <tr style="border-bottom: 1px solid #01050a; background-color:white"   >
-
-                        <td>Despacho {{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y') }}<br>
-                            <strong>[{{ $viaje->destino_ciudad }}] {{$viaje->cliente->nombre}}</strong>
-                        </td>
-                        <td>
-                            <span class="text-muted"><strong>{{ $viaje->litros ?? 0 }}</strong></span>
-                        </td>
-                        <td>
-                            
-                        </td>
-                        <td>
-                            <span class="text-black">{{ $viaje->vehiculo->flota ?? 'PENDIENTE' }}</span>
-                        </td>
-                    </tr>
                     @empty
                     <tr>
                         <td colspan="7" class="text-center text-muted">No hay viajes programados o en curso.</td>
