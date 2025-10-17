@@ -49,7 +49,7 @@
                 </div>
                 <div class="col-md-4">
                     <p class="mb-0 fw-bold">Ayudante:</p>
-                    <p>{{ $viaje->ayudantePrincipal->persona->nombre_completo ?? 'N/A' }}</p>
+                    <p>{{ $viaje->ayudante->persona->nombre_completo ?? 'N/A' }}</p>
                 </div>
             </div>
             

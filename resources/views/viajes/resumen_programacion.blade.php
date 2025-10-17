@@ -42,18 +42,34 @@
                         <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;">CHOFER / AYUDANTE</th>
                         <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;">UNIDAD</th>
                     </tr>
-                    <tr>
-                        <th class="py-1">Despacho</th>
-                        <th class="py-1"></th>
-                        <th class="py-1"></th>
-                        <th class="py-1"></th>
-                    </tr>
                 </thead>
                 <tbody>
                     @php($TotalLitros=0)
-
                     @forelse($viajes as $viaje)
                     @php($TotalLitros += $viaje->litros ?? 0)
+
+                      <tr style="border-bottom: 1px solid #01050a; background-color:white"   >
+                        <td colspan="2">Despacho {{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y') }}<br>
+                            <strong>[{{ $viaje->destino_ciudad }}]</strong>
+                        </td>
+                        <td rowspan="{{$viaje->despachos->count()+1}}">
+                            <span class="fw-bold">{{ $viaje->chofer->persona->name ?? 'PENDIENTE' }}</span><br>
+                            @if($viaje->ayudante)
+                                <span class="d-block small">Ayudante: {{ $viaje->ayudante->persona->name ?? 'N/A' }}</span>
+                            @endif
+                        </td>
+                        <td rowspan="{{$viaje->despachos->count()+1}}">
+                            <span class="text-black">{{ $viaje->vehiculo->placa ?? 'PENDIENTE' }}</span>
+                        </td>
+                      </tr>
+
+                      @foreach($viaje->despachos as $index => $despacho)
+                        <tr>
+                            <td>{{ $despacho->cliente->nombre ?? $despacho->otro_cliente ?? 'Cliente Null' }}</td>
+                            <td>{{ number_format($despacho->litros, 2)}} L</td>
+                        </tr>
+                      @endforeach
+
                     <tr style="border-bottom: 1px solid #01050a; background-color:white"   >
 
                         <td>Despacho {{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y') }}<br>
@@ -63,10 +79,7 @@
                             <span class="text-muted"><strong>{{ $viaje->litros ?? 0 }}</strong></span>
                         </td>
                         <td>
-                            <span class="fw-bold">{{ $viaje->chofer->persona->name ?? 'PENDIENTE' }}</span><br>
-                            @if($viaje->ayudante)
-                                <span class="d-block small">Ayudante: {{ $viaje->ayudante->persona->name ?? 'N/A' }}</span>
-                            @endif
+                            
                         </td>
                         <td>
                             <span class="text-black">{{ $viaje->vehiculo->flota ?? 'PENDIENTE' }}</span>
