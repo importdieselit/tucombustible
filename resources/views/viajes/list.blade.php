@@ -51,7 +51,7 @@
                     @php($chofer=  \App\Models\Chofer::find($viaje->chofer_id))
                     @php($persona=  \App\Models\Persona::find($chofer->persona_id))
                     
-                     @php($viaje->chofer = $persona ? \$persona->nombre : 'sin asignar')
+                     @php($viaje->chofer = $persona ? $persona->nombre : 'sin asignar')
                 @else
                     @php($viaje->chofer = 'sin asignar')
                 @endif
