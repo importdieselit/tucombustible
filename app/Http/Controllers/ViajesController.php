@@ -151,6 +151,7 @@ class ViajesController extends Controller
                 ]);
             }
         }
+        dd($request->despachos);
 
         // 2. Buscar tarifa en el Tabulador para el destino principal
         $tabulador = TabuladorViatico::where('destino', $request->destino_ciudad)->first();
