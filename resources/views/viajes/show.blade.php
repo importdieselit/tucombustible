@@ -24,7 +24,7 @@
                 </div>
                 <div class="card-body">
                     <p class="mb-2"><strong>Destino:</strong> {{ $viaje->destino_ciudad }}</p>
-                    <p class="mb-2"><strong>Cliente:</strong> {{ $viaje->cliente->nombre??'N/A' }}</p>
+                    <p class="mb-2"><strong>Cliente:</strong> {{ $viaje->cliente->nombre??($viaje->otro_cliente ??'N/A') }}</p>
                     <p class="mb-2"><strong>Fecha Salida:</strong> {{ $viaje->fecha_salida }}</p>
                     <p class="mb-2"><strong>Litros:</strong> {{ $viaje->litros ?? 0 }}</p>
                     

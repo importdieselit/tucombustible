@@ -70,6 +70,10 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
+                    <div>
+                        <label for="otro_cliente" class="form-label fw-bold">Otro Cliente (Especifique)</label>
+                        <input type="text" name="otro_cliente" id="otro_cliente" class="form-control" value="{{ old('otro_cliente') }}" placeholder="Ingrese el nombre del cliente si no está en la lista">                
+                    </div>
                 </div>
                 
 

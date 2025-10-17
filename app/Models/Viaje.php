@@ -26,6 +26,7 @@ class Viaje extends Model
         'vehiculo_id',
         'litros',
         'cliente_id',
+        'otro_cliente',
     ];
 
     /**

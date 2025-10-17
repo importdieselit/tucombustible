@@ -411,7 +411,10 @@ class ViajesController extends Controller
             ->where('status', '!=', 'CANCELADO');
             if($id != null){
                 $viajes = $viajes->where('id', $id);
+            }else{
+                $viajes = $viajes->whereDate('fecha_salida', now('Y-m-d'));
             }
+
         $viajes = $viajes->get();
 
         // Calcular el total de viáticos presupuestados/pendientes (ejemplo simple)
