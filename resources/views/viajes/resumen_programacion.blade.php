@@ -46,7 +46,7 @@
                 <tbody>
                     @php($TotalLitros=0)
                     @forelse($viajes as $viaje)
-                    @php($TotalLitros += $viaje->litros ?? 0)
+                    
 
                       <tr style="border-bottom: 1px solid #01050a; background-color:white"   >
                         <td colspan="2">Despacho {{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y') }}<br>
@@ -66,6 +66,7 @@
                       </tr>
 
                       @foreach($viaje->despachos as $index => $despacho)
+                      @php($TotalLitros += $despacho->litros ?? 0)
                         <tr style="font-size: 18px; font-weight: 600;">
                             <td>{{ $despacho->cliente->nombre ?? $despacho->otro_cliente ?? 'Cliente Null' }}</td>
                             <td>{{ number_format($despacho->litros, 2)}} L</td>
