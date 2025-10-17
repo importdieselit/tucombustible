@@ -48,7 +48,7 @@
             <tbody>
                 @forelse($viajes as $viaje)
                 @if(!is_null($viaje->chofer_id))
-                    @php($chofer=  \App\Models\Chofer::find($viaje->chofer_id)->with('persona')->first())
+                    @php($chofer=  \App\Models\Chofer::find($viaje->chofer_id)->with('persona');)
                      @php($viaje->chofer = $chofer ? $chofer->persona->nombre : 'sin asignar')
                 @else
                     @php($viaje->chofer = 'sin asignar')
@@ -56,7 +56,7 @@
                  @php($viaje->vehiculo = $viaje->vehiculo_id ? \App\Models\Vehiculo::find($viaje->vehiculo_id)->placa : 'N/A')
                 <tr>
                     <td>{{ $viaje->id }}</td>
-                    <td>[{{ $viaje->destino_ciudad }}] {{ $viaje->cliente?$viaje->cliente->nombre:'N/A'}}</td>
+                    <td>[{{ $viaje->destino_ciudad }}] {{ $viaje->cliente?$viaje->cliente->nombre??($viaje->otro_cliente ??'N/A')}}</td>
                     <td>{{ $viaje->fecha_salida }}</td>
                     <td>{{ $viaje->chofer }}</td>
                     
