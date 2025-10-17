@@ -25,6 +25,7 @@ class Viaje extends Model
         'status',
         'vehiculo_id',
         'litros',
+        'has_viatico',
         'cliente_id',
         'otro_cliente',
     ];

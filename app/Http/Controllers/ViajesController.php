@@ -123,7 +123,71 @@ class ViajesController extends Controller
         return view('viajes.show', compact('viaje'));
     }
 
-    public function store(Request $request)
+
+    /**
+     * Genera el cuadro de viáticos para un viaje recién creado.
+     * @param Viaje $viaje
+     * @param TabuladorViatico $tabulador
+     */
+    private function generarCuadroViaticos(Viaje $viaje, TabuladorViatico $tabulador,$cantidadDespachos): void
+    {
+        $fecha_salida = $viaje->fecha_salida;
+        $viatico=false;
+        $totalPersonas = 1  + $viaje->custodia_count;
+        $parametros = Parametro::all()->keyBy('nombre')
+            ->map(function($item) {
+                return $item->valor;
+            });
+            //dd($parametros);
+            // Lista de conceptos a generar (usando el Tabulador)
+        $conceptos = [
+            // Pagos Fijos
+            ['concepto' => 'Pago Chofer', 'monto' => $tabulador->pago_chofer * $cantidadDespachos, 'cantidad' => $cantidadDespachos, 'editable' => false],
+            ['concepto' => 'Pago Ayudantes', 'monto' => $tabulador->pago_ayudante * $cantidadDespachos, 'cantidad' => $cantidadDespachos, 'editable' => false],
+        ];    
+            // Viáticos de Comida (por persona, por día)
+            if($tabulador->viatico_desayuno > 0 ){
+                $viatico=true;
+                $conceptos[] = ['concepto' => 'Viático Desayuno', 'monto' => $tabulador->viatico_desayuno , 'cantidad' => $totalPersonas, 'editable' => true];
+            }
+            if($tabulador->viatico_almuerzo > 0 ){
+                $viatico=true;
+                $conceptos[] = ['concepto' => 'Viático Almuerzo', 'monto' => $tabulador->viatico_almuerzo , 'cantidad' => $totalPersonas, 'editable' => true];
+            }
+            if($tabulador->viatico_cena > 0 ){
+                $viatico=true;
+                $conceptos[] = ['concepto' => 'Viático Cena', 'monto' => $tabulador->viatico_cena, 'cantidad' => $totalPersonas, 'editable' => true];
+            }
+            // Pernocta y Peajes
+            if($tabulador->costo_pernocta > 0 ){
+                $viatico=true;
+                $conceptos[] =['concepto' => 'Costo Pernocta', 'monto' => $tabulador->costo_pernocta, 'cantidad' => $totalPersonas, 'editable' => true];
+            }
+            if($tabulador->peajes > 0 ) {
+                $conceptos[] =['concepto' => 'Peajes (Ida y Vuelta)', 'monto' => $tabulador->peajes * $parametros['peaje'] , 'cantidad' => 1, 'editable' => true];
+            }
+            if($viatico==true){
+                $viaje->has_viatico=true;
+                $viaje->save();
+            };
+        // Guardar cada concepto en la tabla 'viaticos_viaje'
+        foreach ($conceptos as $item) {
+            if ($item['cantidad'] > 0) {
+                ViaticoViaje::create([
+                    'viaje_id' => $viaje->id,
+                    'concepto' => $item['concepto'],
+                    'monto_base' => $item['monto'],
+                    'cantidad' => $item['cantidad'],
+                    'es_editable' => $item['editable'],
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Procesa la creación de un nuevo viaje.
+     */
+     public function store(Request $request)
     {
         // 1. Validación de la entrada
         $request->validate([
@@ -151,7 +215,6 @@ class ViajesController extends Controller
                 ]);
             }
         }
-        dd($request->despachos);
 
         // 2. Buscar tarifa en el Tabulador para el destino principal
         $tabulador = TabuladorViatico::where('destino', $request->destino_ciudad)->first();
@@ -164,20 +227,17 @@ class ViajesController extends Controller
             DB::beginTransaction();
 
             // 3. Crear el Viaje ÚNICO
-            // NOTA: chofer_id, vehiculo_id, etc. serán nulos ya que el estado inicial es PENDIENTE_ASIGNACION
             $viaje = Viaje::create([
                 'destino_ciudad' => $request->destino_ciudad,
                 'fecha_salida' => $request->fecha_salida,
                 'status' => 'PENDIENTE_ASIGNACION',
-                // Otros campos (chofer_id, vehiculo_id) son opcionales y se dejarán nulos aquí.
-                // Los campos de 'ayudante' y 'custodia_count' también se dejarán nulos/0
+                // Los campos opcionales como chofer_id y vehiculo_id se dejan nulos aquí.
             ]);
 
             // 4. Crear los registros de DespachoViaje
-            $cantidadDespachos = count($request->despachos); // Contamos los despachos
+            $cantidadDespachos = count($request->despachos);
             
             foreach ($request->despachos as $despachoData) {
-                // Si viene cliente_id, otro_cliente debe ser nulo, y viceversa.
                 DespachoViaje::create([
                     'viaje_id' => $viaje->id,
                     'cliente_id' => $despachoData['cliente_id'] ?? null,
@@ -186,64 +246,20 @@ class ViajesController extends Controller
                 ]);
             }
 
-            // 5. Generar el Cuadro de Viáticos automáticamente
-            // Pasamos la cantidad de despachos a la función de cálculo
+            // 5. Generar el Cuadro de Viáticos automáticamente (con correcciones y desglose)
             $this->generarCuadroViaticos($viaje, $tabulador, $cantidadDespachos);
             
             DB::commit();
 
-            return redirect()->route('viajes.list', $viaje->id)
-                             ->with('success', 'Viaje creado . Pendiente de asignación de Chofer y Vehículo.');
+            return redirect()->route('viajes.viaticos.edit', $viaje->id)
+                             ->with('success', 'Viaje creado con múltiples despachos y cuadro de viáticos generado. Pendiente de asignación de Chofer y Vehículo.');
         
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Error creando Viaje con Despachos: ' . $e->getMessage());
-            return back()->withInput()->with('error', 'Error del servidor al crear el viaje. Intente nuevamente.');
+            // El log ahora mostrará el mensaje de error completo
+            \Log::error('Error creando Viaje con Despachos: ' . $e->getMessage()); 
+            return back()->withInput()->with('error', 'Error del servidor al crear el viaje. Intente nuevamente. Detalles: ' . $e->getMessage());
         }
-    }
-    
-    // ... otros métodos (resumenProgramacion, etc.) ...
-    
-    /**
-     * Genera el cuadro de viáticos para un viaje basado en el Tabulador.
-     * La tarifa de chofer/ayudante se multiplica por la cantidad de despachos.
-     */
-    protected function generarCuadroViaticos(Viaje $viaje, TabuladorViatico $tabulador, int $cantidadDespachos)
-    {
-        // 1. CÁLCULO DE PAGOS POR SERVICIO (multiplicado por despachos)
-        
-        // El pago por despacho es la suma de los pagos del Chofer Ejecutivo, Chofer y Ayudante.
-        // NOTA: Se asume que estos campos son los que el usuario quiere multiplicar.
-        // La lógica debe ser: si hay X despachos, el pago total es X * (PagoChofer + PagoAyudante).
-        $pagoPorServicioPorDespacho = (float)($tabulador->chofer_ejecutivo ?? 0) + 
-                                      (float)($tabulador->chofer ?? 0) + 
-                                      (float)($tabulador->ayudante ?? 0);
-
-        $pagoTotalPorServicio = $pagoPorServicioPorDespacho * $cantidadDespachos;
-
-        // 2. CÁLCULO DE VIÁTICOS FIJOS (aplicado una sola vez)
-        
-        // Se asume que el resto de los campos son viáticos fijos por viaje (Comida, Pernocta, Peajes).
-        $viaticosFijos = (float)($tabulador->desayuno ?? 0) + 
-                         (float)($tabulador->almuerzo ?? 0) + 
-                         (float)($tabulador->cena ?? 0) + 
-                         (float)($tabulador->pernoctar ?? 0) + 
-                         (float)($tabulador->peajes_por_zona ?? 0); // O el total de peajes
-
-
-        // 3. MONTO TOTAL PRESUPUESTADO
-        $monto_viaticos_total = $pagoTotalPorServicio + $viaticosFijos;
-
-        // Registro del Viático para el Viaje
-        ViaticoViaje::create([
-            'viaje_id' => $viaje->id,
-            'concepto' => "Presupuesto Inicial ($cantidadDespachos Despachos)",
-            'monto' => $monto_viaticos_total,
-            'moneda' => 'USD', // Asume una moneda base
-            'usuario_responsable_id' => Auth::id(), 
-            'observaciones' => "Incluye \$" . number_format($pagoTotalPorServicio, 2) . " por pagos de servicio y \$" . number_format($viaticosFijos, 2) . " por viáticos fijos (comidas/peajes)."
-        ]);
-        
     }
 
     /**
@@ -346,7 +362,6 @@ class ViajesController extends Controller
 
         // Calcular el Gran Total de Viáticos
         $granTotalViaticos = $viajes_reporte->sum(function($viaje) {
-            Log::info('Calculando viáticos para viaje ID: ' . $viaje->viaticos);
             return $viaje->viaticos->sum(function($viatico) {
                 // Usar el monto ajustado si existe, sino usar el monto base
                 $monto = $viatico->monto_ajustado ?? $viatico->monto_base;
