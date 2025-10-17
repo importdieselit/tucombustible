@@ -27,7 +27,7 @@
                             <option value="">Seleccione un destino del Tabulador</option>
                             
                             <!-- Cargar las ciudades del TabuladorViatico -->
-                            @foreach($destinos as $ciudad)
+                            @foreach($destino as $ciudad)
                                 <option value="{{ $ciudad }}" {{ old('destino_ciudad') == $ciudad ? 'selected' : '' }}>{{ $ciudad }}</option>
                             @endforeach
                         </select>
