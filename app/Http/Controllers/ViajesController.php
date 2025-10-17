@@ -464,7 +464,7 @@ class ViajesController extends Controller
      public function resumenProgramacion($id = null)
     {
         // 1. Inicializa la query builder
-        $query = Viaje::with(['chofer.persona', 'ayudante.persona', 'vehiculo', 'despacho.cliente', 'viaticos']);
+        $query = Viaje::with(['chofer.persona', 'ayudante.persona', 'vehiculo', 'despachos.cliente', 'viaticos']);
 
         // Excluir cancelados
         $query->where('status', '!=', 'CANCELADO');
