@@ -406,7 +406,7 @@ class ViajesController extends Controller
      public function resumenProgramacion($id = null)
     {
         // 1. Inicializa la query builder
-        $query = Viaje::with(['chofer.persona', 'ayudantePrincipal.persona', 'vehiculo', 'viaticos', 'cliente'])
+        $query = Viaje::with(['chofer.persona', 'ayudante.persona', 'vehiculo', 'viaticos', 'cliente'])
             ->where('status', '!=', 'CANCELADO');
 
         // 2. Aplica la lógica condicional de tu preferencia
