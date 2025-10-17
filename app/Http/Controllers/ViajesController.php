@@ -191,8 +191,8 @@ class ViajesController extends Controller
             
             DB::commit();
 
-            return redirect()->route('viajes.viaticos.edit', $viaje->id)
-                             ->with('success', 'Viaje creado con múltiples despachos y cuadro de viáticos generado. Pendiente de asignación de Chofer y Vehículo.');
+            return redirect()->route('viajes.list', $viaje->id)
+                             ->with('success', 'Viaje creado . Pendiente de asignación de Chofer y Vehículo.');
         
         } catch (\Exception $e) {
             DB::rollBack();
@@ -345,6 +345,7 @@ class ViajesController extends Controller
 
         // Calcular el Gran Total de Viáticos
         $granTotalViaticos = $viajes_reporte->sum(function($viaje) {
+            Log::info('Calculando viáticos para viaje ID: ' . $viaje->viaticos);
             return $viaje->viaticos->sum(function($viatico) {
                 // Usar el monto ajustado si existe, sino usar el monto base
                 $monto = $viatico->monto_ajustado ?? $viatico->monto_base;
