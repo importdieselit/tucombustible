@@ -50,8 +50,8 @@
                 @if(!is_null($viaje->chofer_id))
                     @php($chofer=  \App\Models\Chofer::find($viaje->chofer_id))
                     @php($persona=  \App\Models\Persona::find($chofer->persona_id))
-                    {{dd($persona)}}
-                     @php($viaje->chofer = $chofer ? \App\Models\Chofer::find($chofer->persona_id)->nombre : 'sin asignar')
+                    
+                     @php($viaje->chofer = $persona ? \$persona->nombre : 'sin asignar')
                 @else
                     @php($viaje->chofer = 'sin asignar')
                 @endif
