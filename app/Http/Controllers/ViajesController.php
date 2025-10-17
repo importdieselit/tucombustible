@@ -12,6 +12,7 @@ use App\Models\Vehiculo;
 use App\Models\Parametro;
 use App\Models\Chofer;
 use App\Models\Cliente;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 
@@ -402,28 +403,30 @@ class ViajesController extends Controller
         }
     }
 
-     public function resumenProgramacion($id=null)
+     public function resumenProgramacion($id = null)
     {
-        // Carga todos los viajes que NO están completados
-        // Optimizamos la carga de datos con eager loading para Chofer, Ayudante, Vehiculo y Viaticos
-        $viajes = Viaje::with(['chofer.persona', 'ayudante.persona', 'vehiculo', 'viaticos','cliente'])
-         //   ->where('status', '!=', 'COMPLETADO') // Excluir completados
+        // 1. Inicializa la query builder
+        $query = Viaje::with(['chofer.persona', 'ayudantePrincipal.persona', 'vehiculo', 'viaticos', 'cliente'])
+            ->where('status', '!=', 'COMPLETADO')
             ->where('status', '!=', 'CANCELADO');
-            if($id != null){
-                $viajes = $viajes->where('id', $id);
-            }else{
-                $viajes = $viajes->whereDate('fecha_salida', now('Y-m-d'));
-            }
 
-        $viajes = $viajes->get();
+        // 2. Aplica la lógica condicional de tu preferencia
+        if ($id != null) {
+            // Filtrar por ID específico
+            $query->where('id', $id);
+        } else {
+            // Filtrar por fecha de salida igual a hoy (hora de Caracas)
+            $query->whereDate('fecha_salida', Carbon::now()->toDateString());
+        }
+        
+        // 3. Ejecuta la consulta
+        $viajes = $query->latest()->get();
 
-        // Calcular el total de viáticos presupuestados/pendientes (ejemplo simple)
+        // Calcular el total de viáticos presupuestados/pendientes
         $totalViaticosPresupuestados = $viajes->flatMap(function($viaje) {
             return $viaje->viaticos->pluck('monto');
         })->sum();
         
-        // Opcional: Agrupar por Chofer, etc. (se omite aquí por simplicidad)
-
         return view('viajes.resumen_programacion', compact('viajes', 'totalViaticosPresupuestados'));
     }
 
