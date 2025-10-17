@@ -66,7 +66,7 @@
                       </tr>
 
                       @foreach($viaje->despachos as $index => $despacho)
-                        <tr>
+                        <tr style="font-size: 18px; font-weight: 600;">
                             <td>{{ $despacho->cliente->nombre ?? $despacho->otro_cliente ?? 'Cliente Null' }}</td>
                             <td>{{ number_format($despacho->litros, 2)}} L</td>
                         </tr>
