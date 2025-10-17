@@ -27,7 +27,7 @@
                             <option value="">Seleccione un destino del Tabulador</option>
                             
                             <!-- Cargar las ciudades del TabuladorViatico -->
-                            @foreach($destino as $ciudad)
+                            @foreach($destino_ciudades as $ciudad)
                                 <option value="{{ $ciudad }}" {{ old('destino_ciudad') == $ciudad ? 'selected' : '' }}>{{ $ciudad }}</option>
                             @endforeach
                         </select>
@@ -66,10 +66,46 @@
                         </thead>
                         <tbody>
                             <!-- Las filas se añadirán aquí mediante JavaScript -->
+                            
+                            <!-- Manejo de errores de validación de Laravel para filas existentes (si el formulario falla) -->
+                            @if(old('despachos'))
+                                @foreach(old('despachos') as $index => $despacho)
+                                    <tr id="row-{{ $index }}">
+                                        <td>
+                                            <select name="despachos[{{ $index }}][cliente_id]" class="form-select form-select-sm cliente-select @error("despachos.{$index}.cliente_id") is-invalid @enderror" {{ old("despachos.{$index}.otro_cliente") ? 'disabled' : '' }}>
+                                                <option value="">-- Seleccione Cliente --</option>
+                                                @foreach($clientes as $cliente)
+                                                    <option value="{{ $cliente->id }}" {{ old("despachos.{$index}.cliente_id") == $cliente->id ? 'selected' : '' }}>{{ $cliente->nombre }}</option>
+                                                @endforeach
+                                            </select>
+                                            @error("despachos.{$index}.cliente_id")
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </td>
+                                        <td>
+                                            <input type="text" name="despachos[{{ $index }}][otro_cliente]" class="form-control form-control-sm otro-cliente-input @error("despachos.{$index}.otro_cliente") is-invalid @enderror" placeholder="Nombre o Razón Social" value="{{ old("despachos.{$index}.otro_cliente") }}" {{ old("despachos.{$index}.cliente_id") ? 'disabled' : '' }}>
+                                            @error("despachos.{$index}.otro_cliente")
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </td>
+                                        <td>
+                                            <input type="number" name="despachos[{{ $index }}][litros]" class="form-control form-control-sm @error("despachos.{$index}.litros") is-invalid @enderror" placeholder="Cantidad" step="any" required value="{{ old("despachos.{$index}.litros") }}">
+                                            @error("despachos.{$index}.litros")
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-danger btn-sm remove-despacho" data-index="{{ $index }}"><i class="bi bi-trash"></i></button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            @endif
+
                         </tbody>
                     </table>
                 </div>
                 
+                <!-- Este error general es para cuando el array 'despachos' está vacío -->
                 @error('despachos')
                     <div class="alert alert-danger mt-2">Debe agregar al menos un despacho.</div>
                 @enderror
@@ -90,38 +126,75 @@
     document.addEventListener('DOMContentLoaded', function() {
         const despachosTableBody = document.getElementById('despachos-table').getElementsByTagName('tbody')[0];
         const addDespachoButton = document.getElementById('add-despacho');
-        let despachoIndex = 0;
+        // Inicializa el índice para que continúe donde se quedó si hay old('despachos')
+        let despachoIndex = {{ old('despachos') ? max(array_keys(old('despachos'))) + 1 : 0 }};
+        
+        // Función para aplicar la lógica de exclusividad
+        const applyExclusivityLogic = (row) => {
+            const select = row.querySelector('.cliente-select');
+            const input = row.querySelector('.otro-cliente-input');
+            
+            if (!select || !input) return; // Salir si los elementos no existen
+            
+            // Listener para el Select
+            select.addEventListener('change', function() {
+                if (this.value) {
+                    input.value = '';
+                    input.disabled = true;
+                } else {
+                    // Solo habilitar si el input no tiene valor
+                    if (!input.value) {
+                        input.disabled = false;
+                    }
+                }
+            });
+            
+            // Listener para el Input
+            input.addEventListener('input', function() {
+                if (this.value) {
+                    select.value = '';
+                    select.disabled = true;
+                } else {
+                    // Solo habilitar si el select no tiene valor
+                    if (!select.value) {
+                        select.disabled = false;
+                    }
+                }
+            });
+            
+            // Lógica de estado inicial (necesaria para filas viejas o al cargar)
+            if (select.value) {
+                input.disabled = true;
+            } else if (input.value) {
+                select.disabled = true;
+            }
+        };
 
         // Plantilla de la Fila
-        const createRow = () => {
+        const createRow = (initialData = {}) => {
             const index = despachoIndex++;
             const newRow = despachosTableBody.insertRow();
             newRow.id = `row-${index}`;
             
+            // Obtener las opciones de cliente del servidor para el HTML
+            const clienteOptions = `@foreach($clientes as $cliente)<option value=\"{{ $cliente->id }}\">{{ $cliente->nombre }}</option>@endforeach`;
+
             // Columna Cliente Registrado
             newRow.insertCell(0).innerHTML = `
-                <select name="despachos[${index}][cliente_id]" class="form-select form-select-sm cliente-select">
+                <select name="despachos[${index}][cliente_id]" class="form-select form-select-sm cliente-select" ${initialData.otro_cliente ? 'disabled' : ''}>
                     <option value="">-- Seleccione Cliente --</option>
-                    @foreach($clientes as $cliente)
-                        <option value="{{ $cliente->id }}">{{ $cliente->nombre }}</option>
-                    @endforeach
+                    ${clienteOptions}
                 </select>
-                @error("despachos.${index}.cliente_id")
-                    <small class="text-danger">Selección requerida.</small>
-                @enderror
             `;
 
             // Columna Otro Cliente
             newRow.insertCell(1).innerHTML = `
-                <input type="text" name="despachos[${index}][otro_cliente]" class="form-control form-control-sm otro-cliente-input" placeholder="Nombre o Razón Social">
+                <input type="text" name="despachos[${index}][otro_cliente]" class="form-control form-control-sm otro-cliente-input" placeholder="Nombre o Razón Social" ${initialData.cliente_id ? 'disabled' : ''}>
             `;
 
             // Columna Litros
             newRow.insertCell(2).innerHTML = `
                 <input type="number" name="despachos[${index}][litros]" class="form-control form-control-sm" placeholder="Cantidad" step="any" required>
-                @error("despachos.${index}.litros")
-                    <small class="text-danger">Litros requeridos.</small>
-                @enderror
             `;
 
             // Columna Acción
@@ -129,37 +202,23 @@
                 <button type="button" class="btn btn-danger btn-sm remove-despacho" data-index="${index}"><i class="bi bi-trash"></i></button>
             `;
             
-            // Aplicar lógica de exclusividad
-            const select = newRow.querySelector('.cliente-select');
-            const input = newRow.querySelector('.otro-cliente-input');
-            
-            select.addEventListener('change', function() {
-                if (this.value) {
-                    input.value = '';
-                    input.disabled = true;
-                } else {
-                    input.disabled = false;
-                }
-            });
-            
-            input.addEventListener('input', function() {
-                if (this.value) {
-                    select.value = '';
-                    select.disabled = true;
-                } else {
-                    select.disabled = false;
-                }
-            });
-
-            // Inicialmente, si el select está vacío, el input está habilitado.
-            if (!select.value) {
-                input.disabled = false;
-                select.disabled = false;
-            }
+            // Aplicar la lógica de exclusividad a la nueva fila
+            applyExclusivityLogic(newRow);
         };
+        
+        // ----------------------------------------------------
+        // Lógica de Inicialización
+        // ----------------------------------------------------
+        
+        // 1. Si no hay filas de old('despachos'), agrega la primera fila.
+        // Esto previene duplicados si la validación falla y Laravel ya restauró las filas.
+        if (despachosTableBody.rows.length === 0) {
+             createRow();
+        } else {
+             // 2. Si hay filas de old('despachos'), aplicarles la lógica de exclusividad
+            Array.from(despachosTableBody.rows).forEach(applyExclusivityLogic);
+        }
 
-        // Agregar la primera fila al cargar
-        createRow();
         
         // Manejador del botón 'Agregar Despacho'
         addDespachoButton.addEventListener('click', createRow);
@@ -168,14 +227,15 @@
         despachosTableBody.addEventListener('click', function(e) {
             if (e.target.closest('.remove-despacho')) {
                 const button = e.target.closest('.remove-despacho');
-                const rowIndex = button.dataset.index;
-                const row = document.getElementById(`row-${rowIndex}`);
+                const row = button.closest('tr');
                 
                 // Solo eliminar si quedan más de 1 filas
                 if (despachosTableBody.rows.length > 1) {
                     row.remove();
                 } else {
-                    alert('Debe haber al menos un despacho por viaje.');
+                    // Cambiado de alert() a un mensaje en el console para cumplir con las reglas del ambiente
+                    console.error('Debe haber al menos un despacho por viaje.'); 
+                    // Podrías añadir un pequeño modal o toast aquí en un entorno real.
                 }
             }
         });
@@ -183,7 +243,3 @@
     });
 </script>
 @endpush
-
-<!-- NOTA IMPORTANTE: Esta vista asume que el controlador (ViajesController@create) 
-     está cargando las variables $destino_ciudades (para el select del viaje) 
-     y $clientes (para el select de despachos). -->
