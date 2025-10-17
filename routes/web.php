@@ -209,7 +209,7 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
     Route::prefix('combustible')->name('combustible.')->group(function () {
         // Rutas para los movimientos de combustible
         Route::get('/recarga', [MovimientoCombustibleController::class, 'createRecarga'])->name('recarga');
-        Route::post('/recarga', [MovimientoCombustibleController::class, 'storeRecarga'])->name('\storeRecarga');
+        Route::post('/recargaStore', [MovimientoCombustibleController::class, 'storeRecarga'])->name('storeRecarga');
 
         Route::get('/index', [MovimientoCombustibleController::class, 'index'])->name('index');
         Route::get('/list', [MovimientoCombustibleController::class, 'list'])->name('list');
