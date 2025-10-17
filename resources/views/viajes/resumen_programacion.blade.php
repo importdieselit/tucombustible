@@ -78,7 +78,7 @@
                         <td colspan="7" class="text-center text-muted">No hay viajes programados o en curso.</td>
                     </tr>
                     @endforelse
-                    <tr style="font-weight: 700; border-top: 2px solid #01050a; background-color: #d1ecf1;">
+                    <tr style="font-weight: 700; font-size:19px; border-top: 2px solid #01050a; background-color: #d1ecf1;">
                         <td class="py-1">TOTAL LITROS</td>
                         <td class="py-1">{{ $TotalLitros }}</td>
                         <td class="py-1"></td>
