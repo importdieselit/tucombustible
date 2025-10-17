@@ -48,7 +48,7 @@
             <tbody>
                 @forelse($viajes as $viaje)
                 @if(!is_null($viaje->chofer_id))
-                    @php($chofer=  \App\Models\Chofer::find($viaje->chofer_id)->with('persona'))
+                    @php($chofer=  \App\Models\Chofer::find($viaje->chofer_id)->with('persona')->first())
                     {{dd($chofer)}}
                      @php($viaje->chofer = $chofer ? \App\Models\Chofer::find($chofer->persona_id)->nombre : 'sin asignar')
                 @else
