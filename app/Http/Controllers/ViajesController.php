@@ -112,14 +112,8 @@ class ViajesController extends Controller
      */
     public function show(Viaje $viaje)
     {
-        // Cargar las relaciones necesarias para la vista show.blade.php
-        $viaje->load([
-            'chofer.persona', // Necesario para mostrar el nombre
-            'ayudante.persona', // Necesario para mostrar el nombre
-            'vehiculo', // Necesario para placa y modelo
-            'viaticos.ajustadoPor' // Necesario para mostrar quién ajustó cada línea de viático
-        ]);
-        
+         // Eager load todas las relaciones necesarias para la vista de detalle
+        $viaje->load(['chofer.persona', 'ayudante.persona', 'vehiculo', 'despachos.cliente', 'viaticos.ajustadoPor']);   
         return view('viajes.show', compact('viaje'));
     }
 
@@ -470,8 +464,10 @@ class ViajesController extends Controller
      public function resumenProgramacion($id = null)
     {
         // 1. Inicializa la query builder
-        $query = Viaje::with(['chofer.persona', 'ayudante.persona', 'vehiculo', 'viaticos', 'cliente'])
-            ->where('status', '!=', 'CANCELADO');
+        $query = Viaje::with(['chofer.persona', 'ayudantePrincipal.persona', 'vehiculo', 'despachos.cliente', 'viaticos']);
+
+        // Excluir cancelados
+        $query->where('status', '!=', 'CANCELADO');
 
         // 2. Aplica la lógica condicional de tu preferencia
         if ($id != null) {

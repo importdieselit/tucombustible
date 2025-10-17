@@ -1,126 +1,124 @@
 @extends('layouts.app')
 
-@section('title', 'Detalle del Viaje #{{ $viaje->id }}')
+@section('title', 'Detalle de Viaje #' . $viaje->id)
 
 @section('content')
 <div class="container mt-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="text-primary">
-            <i class="bi bi-truck me-2"></i> 
-            Detalle del Viaje #{{ $viaje->id }}
-        </h1>
-        <a href="{{ route('viaje.list') }}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i> Volver al Historial
-        </a>
-    </div>
-
-    <div class="row">
-        
-        <!-- Columna Principal: Resumen y Estado -->
-        <div class="col-lg-5">
-            <div class="card shadow mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">Información General</h5>
-                </div>
-                <div class="card-body">
-                    <p class="mb-2"><strong>Destino:</strong> {{ $viaje->destino_ciudad }}</p>
-                    <p class="mb-2"><strong>Cliente:</strong> {{ $viaje->cliente->nombre??($viaje->otro_cliente ??'N/A') }}</p>
-                    <p class="mb-2"><strong>Fecha Salida:</strong> {{ $viaje->fecha_salida }}</p>
-                    <p class="mb-2"><strong>Litros:</strong> {{ $viaje->litros ?? 0 }}</p>
-                    
-                    <hr>
-                    
-                    <h5 class="mt-3">Estado del Viaje</h5>
-                    @php
-                        $badgeClass = match($viaje->status) {
-                            'PENDIENTE_VIATICOS' => 'warning text-dark',
-                            'PENDIENTE_ASIGNACION   ' => 'warning text-dark',
-                            'VIATICOS_APROBADOS' => 'primary',
-                            'EN_CURSO' => 'info',
-                            'COMPLETADO' => 'success',
-                            default => 'secondary',
-                        };
-                    @endphp
-                    <span class="badge bg-{{ $badgeClass }} fs-6">{{ str_replace('_', ' ', strtoupper($viaje->status)) }}</span>
-
-                    @if ($viaje->status === 'PENDIENTE_VIATICOS' && Auth::user()->canAccess('create', 8))
-                        <div class="mt-3">
-                            <a href="{{ route('viajes.viaticos.edit', $viaje->id) }}" class="btn btn-sm btn-warning">
-                                <i class="bi bi-pencil-square me-1"></i> Ir a Ajustar Viáticos
-                            </a>
-                        </div>
-                    @endif
-                </div>
-            </div>
-
-            <!-- Asignación -->
-            <div class="card shadow mb-4">
-                <div class="card-header bg-secondary text-white">
-                    <h5 class="mb-0">Asignación</h5>
-                </div>
-                <div class="card-body">
-                    <p class="mb-2"><strong>Chofer:</strong> {{ $viaje->chofer->persona->nombre ?? 'N/A' }}</p>
-                    {{-- Asumimos que tienes una relación 'vehiculo' en el modelo Viaje --}}
-                    <p class="mb-2"><strong>Vehículo:</strong> {{ $viaje->vehiculo->placa ?? 'N/A' }} ({{ $viaje->vehiculo->modelo ?? 'Modelo Desconocido' }})</p>
-                    {{-- <p class="mb-2"><strong>Ayudantes:</strong> {{dd}} {{ $viaje->ayudante->persona->nombre }}</p> --}}
-                    {{-- <p class="mb-2"><strong>Custodia:</strong> {{ $viaje->custodia_count }}</p> --}}
-                </div>
-            </div>
+    <div class="card shadow-lg">
+        <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+            <h3 class="mb-0"><i class="bi bi-truck me-2"></i> Detalle de Viaje #{{ $viaje->id }}</h3>
+            <a href="{{ route('viaje.list') }}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i> Volver al Listado</a>
         </div>
-
-        <!-- Columna Viáticos: Cuadro de Detalle -->
-        <div class="col-lg-7">
-            <div class="card shadow">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">Cuadro de Viáticos</h5>
+        <div class="card-body">
+            
+            <!-- Estatus y Fechas -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <p class="mb-0 fw-bold">Destino:</p>
+                    <span class="badge bg-secondary fs-6">{{ $viaje->destino_ciudad }}</span>
                 </div>
-                <div class="card-body p-0">
-                    <table class="table table-sm table-striped table-hover mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Concepto</th>
-                                <th class="text-end">Monto Base (USD)</th>
-                                <th class="text-end">Cant.</th>
-                                <th class="text-end">Total Ajustado (USD)</th>
-                                <th>Aprobado Por</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @php $granTotal = 0; @endphp
-                            @forelse ($viaje->viaticos as $viatico)
-                                @php
-                                    // Determinar qué monto usar: ajustado si existe, sino base.
-                                    $montoFinal = $viatico->monto_ajustado ?? $viatico->monto_base;
-                                    $granTotal += $montoFinal * $viatico->cantidad;
-                                @endphp
-                                <tr>
-                                    <td>
-                                        {{ $viatico->concepto }}
-                                        @if($viatico->es_editable)
-                                            <i class="bi bi-pencil-square text-muted ms-1" title="Monto Editable"></i>
-                                        @endif
-                                    </td>
-                                    <td class="text-end text-muted">${{ number_format($viatico->monto_base, 2) }}</td>
-                                    <td class="text-end">{{ $viatico->cantidad }}</td>
-                                    <td class="text-end fw-bold text-success">${{ number_format($montoFinal * $viatico->cantidad, 2) }}</td>
-                                    <td>{{ $viatico->aprobador->name ?? 'Sistema/N/A' }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" class="text-center text-muted">No se ha generado el cuadro de viáticos.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                        <tfoot>
-                            <tr class="table-primary fw-bold">
-                                <td colspan="3" class="text-end">GRAN TOTAL A PAGAR</td>
-                                <td class="text-end">${{ number_format($granTotal, 2) }}</td>
-                                <td></td>
-                            </tr>
-                        </tfoot>
-                    </table>
+                <div class="col-md-4">
+                    <p class="mb-0 fw-bold">Fecha de Salida:</p>
+                    <p class="fs-6">{{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y') }}</p>
+                </div>
+                <div class="col-md-4">
+                    <p class="mb-0 fw-bold">Estatus:</p>
+                    @php
+                        $badgeClass = [
+                            'PENDIENTE_ASIGNACION' => 'warning',
+                            'PENDIENTE_VIATICOS' => 'danger',
+                            'EN_CURSO' => 'info',
+                            'FINALIZADO' => 'success',
+                            'CANCELADO' => 'danger'
+                        ][$viaje->status] ?? 'secondary';
+                    @endphp
+                    <span class="badge bg-{{ $badgeClass }} fs-6">{{ str_replace('_', ' ', $viaje->status) }}</span>
                 </div>
             </div>
+
+            <!-- Asignación (Si aplica) -->
+            <h4 class="mt-4 mb-3 text-info border-bottom pb-1">Asignación de Personal y Vehículo</h4>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <p class="mb-0 fw-bold">Chofer Principal:</p>
+                    <p>{{ $viaje->chofer->persona->nombre_completo ?? 'N/A' }}</p>
+                </div>
+                <div class="col-md-4">
+                    <p class="mb-0 fw-bold">Vehículo:</p>
+                    <p>{{ $viaje->vehiculo->placa ?? 'N/A' }} ({{ $viaje->vehiculo->modelo ?? '' }})</p>
+                </div>
+                <div class="col-md-4">
+                    <p class="mb-0 fw-bold">Ayudante:</p>
+                    <p>{{ $viaje->ayudantePrincipal->persona->nombre_completo ?? 'N/A' }}</p>
+                </div>
+            </div>
+            
+            <!-- Despachos Múltiples -->
+            <h4 class="mt-4 mb-3 text-info border-bottom pb-1">Detalle de Despachos ({{ $viaje->despachos->count() }})</h4>
+            <div class="table-responsive mb-4">
+                <table class="table table-bordered table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 5%;">#</th>
+                            <th style="width: 50%;">Cliente</th>
+                            <th style="width: 25%;">Litros</th>
+                            <th style="width: 20%;">Tipo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($viaje->despachos as $index => $despacho)
+                        <tr>
+                            <td>{{ $index + 1 }}</td>
+                            <td>{{ $despacho->cliente->nombre ?? $despacho->otro_cliente ?? 'Cliente Eliminado' }}</td>
+                            <td>{{ number_format($despacho->litros, 2) }} L</td>
+                            <td><span class="badge bg-{{ $despacho->cliente_id ? 'primary' : 'success' }}">{{ $despacho->cliente_id ? 'Registrado' : 'Otro Cliente' }}</span></td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot class="table-secondary">
+                        <tr>
+                            <td colspan="2" class="fw-bold text-end">Total Litros:</td>
+                            <td colspan="2" class="fw-bold">{{ number_format($viaje->despachos->sum('litros'), 2) }} L</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Viáticos Presupuestados -->
+            <h4 class="mt-4 mb-3 text-info border-bottom pb-1">Cuadro de Viáticos Presupuestado</h4>
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm">
+                    <thead class="table-success text-white">
+                        <tr>
+                            <th>Concepto</th>
+                            <th>Monto Base ($)</th>
+                            <th>Monto Total ($)</th>
+                            <th>Observaciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($viaje->viaticos as $viatico)
+                        <tr>
+                            <td>{{ $viatico->concepto }}</td>
+                            <td>{{ number_format($viatico->monto_base, 2) }}</td>
+                            <td><span class="badge bg-primary fs-6">{{ number_format($viatico->monto, 2) }} {{ $viatico->moneda }}</span></td>
+                            <td>{{ $viatico->observaciones }}</td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">No se ha generado el cuadro de viáticos.</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="2" class="fw-bold text-end">TOTAL PRESUPUESTADO:</td>
+                            <td colspan="2" class="fw-bold text-success fs-5">{{ number_format($viaje->viaticos->sum('monto'), 2) }} USD</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
         </div>
     </div>
 </div>
