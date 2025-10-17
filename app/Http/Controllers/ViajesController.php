@@ -407,7 +407,6 @@ class ViajesController extends Controller
     {
         // 1. Inicializa la query builder
         $query = Viaje::with(['chofer.persona', 'ayudantePrincipal.persona', 'vehiculo', 'viaticos', 'cliente'])
-            ->where('status', '!=', 'COMPLETADO')
             ->where('status', '!=', 'CANCELADO');
 
         // 2. Aplica la lógica condicional de tu preferencia
@@ -420,8 +419,8 @@ class ViajesController extends Controller
         }
         
         // 3. Ejecuta la consulta
-        $viajes = $query->latest()->get();
-
+        $viajes = $query->get();
+        dd($viajes);
         // Calcular el total de viáticos presupuestados/pendientes
         $totalViaticosPresupuestados = $viajes->flatMap(function($viaje) {
             return $viaje->viaticos->pluck('monto');
