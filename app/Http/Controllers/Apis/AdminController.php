@@ -389,4 +389,48 @@ class AdminController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Obtener lista de conductores disponibles
+     */
+    public function getConductores()
+    {
+        try {
+            // Obtener usuarios con perfil de conductor (id_perfil = 4)
+            // y hacer join con personas y choferes
+            $conductores = DB::table('users')
+                ->join('personas', 'users.id_persona', '=', 'personas.id')
+                ->leftJoin('choferes', 'personas.id', '=', 'choferes.persona_id')
+                ->where('users.id_perfil', 4) // Perfil conductor
+                ->where('users.status', 1) // Solo activos
+                ->select(
+                    'users.id as user_id',
+                    'users.name as nombre_usuario',
+                    'users.email',
+                    'personas.id as persona_id',
+                    'personas.nombre as nombre_completo',
+                    'personas.dni',
+                    'personas.telefono',
+                    'choferes.id as chofer_id',
+                    'choferes.licencia_numero as licencia',
+                    'choferes.licencia_vencimiento as fecha_vencimiento_licencia',
+                    'choferes.vehiculo_id',
+                    'choferes.tipo_licencia',
+                    'choferes.cargo'
+                )
+                ->orderBy('personas.nombre', 'asc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $conductores,
+                'message' => 'Conductores obtenidos exitosamente'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener conductores: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

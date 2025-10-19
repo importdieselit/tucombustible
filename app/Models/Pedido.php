@@ -17,6 +17,7 @@ class Pedido extends Model
         'cliente_id',
         'deposito_id',
         'vehiculo_id',
+        'chofer_id',
         'cantidad_solicitada',
         'cantidad_aprobada',
         'cantidad_recibida',
@@ -148,5 +149,10 @@ class Pedido extends Model
     public function vehiculo(): BelongsTo
     {
         return $this->belongsTo(Vehiculo::class, 'vehiculo_id');
+    }
+
+    public function chofer(): BelongsTo
+    {
+        return $this->belongsTo(Chofer::class, 'chofer_id');
     }
 }

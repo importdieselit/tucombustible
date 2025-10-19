@@ -22,6 +22,7 @@ use App\Http\Controllers\Apis\AdminDespachoController;
 use App\Http\Controllers\Apis\ReportesController;
 use App\Http\Controllers\Api\ChecklistController;
 use App\Http\Controllers\IntegracionIAController;
+use App\Http\Controllers\Apis\ConductorController;
 
 
 /*
@@ -104,6 +105,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/movimientos/{id}/detalle', [MovimientoCombustibleController::class, 'getDetalleAdmin']);
     Route::get('/admin/clientes', [ClienteController::class, 'getClientesAdmin']);
     Route::get('/admin/vehiculos', [VehiculoController::class, 'getVehiculosAdmin']);
+    Route::get('/admin/conductores', [AdminController::class, 'getConductores']);
     
     // Clientes
     Route::get('/clientes', [ClienteController::class, 'index']);
@@ -242,7 +244,33 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/fcm-token', [\App\Http\Controllers\Apis\FcmController::class, 'getToken']);
     Route::delete('/auth/fcm-token', [\App\Http\Controllers\Apis\FcmController::class, 'removeToken']);
 
-
+    // Conductor - Rutas para el perfil Conductor (ID 4)
+    Route::prefix('conductor')->group(function () {
+        // Datos del conductor (compatibilidad con sistema antiguo)
+        Route::get('/{conductorId}/datos', [ConductorController::class, 'datos']);
+        Route::get('/{conductorId}/historial-pedidos', [ConductorController::class, 'historialPedidos']);
+        
+        // Dashboard y estadísticas
+        Route::get('/dashboard', [ConductorController::class, 'dashboard']);
+        Route::get('/estadisticas', [ConductorController::class, 'estadisticas']);
+        
+        // Pedidos
+        Route::get('/pedidos-asignados', [ConductorController::class, 'pedidosAsignados']);
+        Route::get('/pedidos/{pedidoId}', [ConductorController::class, 'detallePedido']);
+        Route::get('/historial', [ConductorController::class, 'historial']);
+        
+        // Acciones sobre pedidos
+        Route::post('/pedidos/{pedidoId}/aceptar', [ConductorController::class, 'aceptarPedido']);
+        Route::post('/pedidos/{pedidoId}/iniciar-viaje', [ConductorController::class, 'iniciarViaje']);
+        Route::post('/pedidos/{pedidoId}/completar-entrega', [ConductorController::class, 'completarEntrega']);
+        
+        // Incidencias
+        Route::post('/pedidos/{pedidoId}/reportar-incidencia', [ConductorController::class, 'reportarIncidencia']);
+        Route::get('/incidencias', [ConductorController::class, 'incidencias']);
+        
+        // Disponibilidad
+        Route::post('/actualizar-disponibilidad', [ConductorController::class, 'actualizarDisponibilidad']);
+    });
     
 }); 
 

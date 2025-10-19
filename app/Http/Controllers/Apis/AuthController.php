@@ -250,7 +250,8 @@ class AuthController extends Controller
             'cliente_telefono' => 'nullable|string|max:255',
             'cliente_email' => 'nullable|string|email|max:255',
             'cliente_sector' => 'nullable|string|max:255',
-            'cliente_periodo' => 'nullable|string|max:255',
+            'cliente_periodo' => 'nullable|string|in:M,S,D',
+            'cliente_cupo' => 'nullable|numeric|min:0',
             
             // IDs de usuarios a notificar (opcional, si no se envía se usan los configurados)
             'notificar_usuarios' => 'nullable|array',
@@ -288,9 +289,9 @@ class AuthController extends Controller
                 'telefono' => $request->cliente_telefono,
                 'email' => $request->cliente_email,
                 'sector' => $request->cliente_sector,
-                'periodo' => $request->cliente_periodo[0],
+                'periodo' => $request->cliente_periodo, // M = Mensual, S = Semanal, D = Diario
                 'disponible' => 0,
-                'cupo' => 0,
+                'cupo' => $request->cliente_cupo ?? 0,
             ]);
 
             // Crear el usuario con status = 0 (preregistrado)

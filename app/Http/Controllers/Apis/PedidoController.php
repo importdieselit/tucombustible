@@ -524,8 +524,8 @@ class PedidoController extends Controller
                 ], 401);
             }
 
-            // Verificar que el usuario es administrador (id_perfil = 2)
-            if ($user->id_perfil != 2) {
+            // Verificar que el usuario es administrador (id_perfil = 2) o super admin (id_perfil = 1)
+            if (!in_array($user->id_perfil, [1, 2])) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Acceso denegado. Solo administradores pueden ver todos los pedidos'
@@ -567,8 +567,8 @@ class PedidoController extends Controller
                 ], 401);
             }
 
-            // Verificar que el usuario es administrador (id_perfil = 2)
-            if ($user->id_perfil != 2) {
+            // Verificar que el usuario es administrador (id_perfil = 2) o super admin (id_perfil = 1)
+            if (!in_array($user->id_perfil, [1, 2])) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Acceso denegado. Solo administradores pueden ver todos los pedidos'
@@ -619,8 +619,8 @@ class PedidoController extends Controller
                 ], 401);
             }
 
-            // Verificar que el usuario es administrador (id_perfil = 2)
-            if ($user->id_perfil != 2) {
+            // Verificar que el usuario es administrador (id_perfil = 2) o super admin (id_perfil = 1)
+            if (!in_array($user->id_perfil, [1, 2])) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Acceso denegado. Solo administradores pueden aprobar pedidos'
@@ -630,6 +630,7 @@ class PedidoController extends Controller
             $validator = Validator::make($request->all(), [
                 'cantidad_aprobada' => 'required|numeric|min:0.01',
                 'observaciones_admin' => 'nullable|string|max:500',
+                'chofer_id' => 'nullable|integer|exists:choferes,id',
             ]);
 
             if ($validator->fails()) {
@@ -705,12 +706,19 @@ class PedidoController extends Controller
             $oldStatus = $pedido->estado;
             
             // Actualizar el pedido (sin descontar del disponible del cliente)
-            $pedido->update([
+            $updateData = [
                 'estado' => 'aprobado',
                 'cantidad_aprobada' => $request->cantidad_aprobada,
                 'observaciones_admin' => $request->observaciones_admin,
                 'fecha_aprobacion' => now(),
-            ]);
+            ];
+            
+            // Asignar conductor si se proporcionó
+            if ($request->has('chofer_id') && $request->chofer_id !== null) {
+                $updateData['chofer_id'] = $request->chofer_id;
+            }
+            
+            $pedido->update($updateData);
 
             \Log::info("Pedido {$pedido->id} aprobado por admin {$user->id} - Sin descuento de disponible");
 
@@ -724,8 +732,22 @@ class PedidoController extends Controller
                 );
                 \Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por aprobación de pedido");
             } catch (\Exception $e) {
-                \Log::error("Error enviando notificación FCM: " . $e->getMessage());
+                \Log::error("Error enviando notificación FCM al cliente: " . $e->getMessage());
                 // No fallar la operación principal por error en notificación
+            }
+
+            // Enviar notificación FCM al conductor si fue asignado
+            if ($request->has('chofer_id') && $request->chofer_id !== null) {
+                try {
+                    FcmNotificationService::sendPedidoAsignadoConductorNotification(
+                        $pedido->fresh(['cliente']),
+                        $request->chofer_id
+                    );
+                    \Log::info("Notificación FCM enviada al conductor {$request->chofer_id} por asignación de pedido #{$pedido->id}");
+                } catch (\Exception $e) {
+                    \Log::error("Error enviando notificación FCM al conductor: " . $e->getMessage());
+                    // No fallar la operación principal por error en notificación
+                }
             }
 
             return response()->json([
@@ -757,8 +779,8 @@ class PedidoController extends Controller
                 ], 401);
             }
 
-            // Verificar que el usuario es administrador (id_perfil = 2)
-            if ($user->id_perfil != 2) {
+            // Verificar que el usuario es administrador (id_perfil = 2) o super admin (id_perfil = 1)
+            if (!in_array($user->id_perfil, [1, 2])) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Acceso denegado. Solo administradores pueden rechazar pedidos'
@@ -847,8 +869,8 @@ class PedidoController extends Controller
                 ], 401);
             }
 
-            // Verificar que el usuario es administrador (id_perfil = 2)
-            if ($user->id_perfil != 2) {
+            // Verificar que el usuario es administrador (id_perfil = 2) o super admin (id_perfil = 1)
+            if (!in_array($user->id_perfil, [1, 2])) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Acceso denegado. Solo administradores pueden actualizar pedidos'

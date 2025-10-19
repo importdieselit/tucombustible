@@ -63,6 +63,60 @@ class FcmNotificationService
         }
     }
 
+    /**
+     * Enviar notificación de asignación de pedido al conductor
+     */
+    public static function sendPedidoAsignadoConductorNotification(Pedido $pedido, int $chofer_id): bool
+    {
+        try {
+            // Buscar el chofer y su relación con persona y usuario
+            $chofer = \DB::table('choferes')
+                ->join('personas', 'choferes.persona_id', '=', 'personas.id')
+                ->join('users', 'users.id_persona', '=', 'personas.id')
+                ->where('choferes.id', $chofer_id)
+                ->where('users.id_perfil', 4) // Perfil conductor
+                ->select('users.id', 'users.fcm_token', 'personas.nombre')
+                ->first();
+            
+            if (!$chofer || !$chofer->fcm_token) {
+                Log::warning("No se encontró token FCM para el conductor {$chofer_id}");
+                return false;
+            }
+
+            // Preparar datos de la notificación
+            $cliente = $pedido->cliente;
+            $clienteNombre = $cliente ? $cliente->nombre : 'Cliente';
+            
+            $title = '🚚 Nuevo Pedido Asignado';
+            $body = "Se te ha asignado el pedido #{$pedido->id} - {$clienteNombre}. Cantidad: " . 
+                    ($pedido->cantidad_aprobada ?? $pedido->cantidad_solicitada) . " L";
+            
+            $data = [
+                'type' => 'pedido_asignado',
+                'pedido_id' => (string)$pedido->id,
+                'cliente_id' => (string)$pedido->cliente_id,
+                'cliente_nombre' => $clienteNombre,
+                'cantidad' => (string)($pedido->cantidad_aprobada ?? $pedido->cantidad_solicitada),
+                'estado' => $pedido->estado,
+                'action' => 'navigate_to_pedido_detail',
+                'screen' => 'conductor_pedido_detalle',
+            ];
+
+            // Enviar notificación
+            $result = self::sendFcmNotification($chofer->fcm_token, $title, $body, $data);
+            
+            if ($result) {
+                Log::info("Notificación enviada al conductor {$chofer->nombre} (ID: {$chofer->id}) por pedido #{$pedido->id}");
+            }
+            
+            return $result;
+
+        } catch (\Exception $e) {
+            Log::error("Error enviando notificación al conductor: " . $e->getMessage());
+            return false;
+        }
+    }
+
     
 
     /**
