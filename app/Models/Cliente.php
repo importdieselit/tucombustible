@@ -28,6 +28,7 @@ class Cliente extends Model
         'parent',
         'sector',
         'periodo',
+        'status',
 
     ];
 

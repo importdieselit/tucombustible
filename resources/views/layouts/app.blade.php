@@ -46,6 +46,11 @@
 
     @include('layouts.footer')
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js" xintegrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" xintegrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf198Ytg5eI4Nkz5q+0Ukn" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js" xintegrity="sha512-rpLll8u6Jj6XvYhJ2kZlD+0ZlH2d9e6o4j5Yp7v0s3Ue5z7N46u5v6Z5q+0Ukn" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        
+    
     <script src="{{ mix('js/app.js') }}"></script>
     <script src="{{ asset('js/alerts.js') }}"></script>
     @stack('scripts')

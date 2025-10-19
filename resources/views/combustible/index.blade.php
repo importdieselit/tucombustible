@@ -246,7 +246,7 @@
 
 
             <div class="col-12 col-md-6 col-lg-3">
-                <a href="#" class="card-link" onclick="showDetails('pedidos-details', event)">
+                <a href="{{route('combustible.pedidos')}}" class="card-link" >
                     <div class="card h-100 p-4 d-flex flex-column justify-content-center text-center">
                         <i class="fas fa-truck-ramp-box stat-card-icon mb-2 text-warning"></i>
                         <h5 class="fw-bold mb-1">Pedidos</h5>
@@ -1298,7 +1298,7 @@ function mostrarDetallesPedido(id) {
 
 
 // Data simulada para el ejemplo
-const cisternasDisponibles = ['Cisterna 01', 'Cisterna 02'];
+const cisternasDisponibles = @json($vehiculos);
 const clientesDisponibles = @json($clientes);
 
 

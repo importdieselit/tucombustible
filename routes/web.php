@@ -29,6 +29,8 @@ use App\Http\Controllers\InspeccionController;
 use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\AforoController;
+use App\Http\Controllers\DataDeletionController;
+use App\Http\Controllers\ViajesController;
 
 use App\Models\Deposito;
 
@@ -42,8 +44,14 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-//Route::get('clientes/dashboard', [ClienteController::class, 'dashboard'])->name('clientes.dashboard')->middleware('role:3');
+// routes/web.php
 
+// 1. Ruta GET: Muestra la vista con la política y el formulario.
+Route::get('/politica-eliminacion-datos', [DataDeletionController::class, 'showRequestForm'])->name('data.deletion.form');
+
+// 2. Ruta POST: Procesa el envío del formulario.
+// Usamos el mismo endpoint que definimos antes para simplificar.
+Route::post('/solicitud-eliminacion-datos', [DataDeletionController::class, 'submitRequest'])->name('data.deletion.submit');
 
 Route::middleware(['auth'])->group(function () {
     // Dashboard principal
@@ -101,8 +109,7 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
     Route::post('/inventario/solicitudes/{id}/approve', [InventarioController::class, 'approve'])->name('inventario.requests.approve');
     Route::post('/inventario/solicitudes/{id}/reject', [InventarioController::class, 'reject'])->name('inventario.requests.reject');
     Route::post('/inventario/solicitudes/{id}/dispatch', [InventarioController::class, 'dispatch'])->name('inventario.requests.dispatch');
-
-
+ 
     Route::get('/vehiculos/import', [VehiculoController::class, 'importForm'])->name('vehiculos.import');
     Route::post('/vehiculos/import', [VehiculoController::class, 'importSave'])->name('vehiculos.import.save');
 
@@ -202,7 +209,7 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
     Route::prefix('combustible')->name('combustible.')->group(function () {
         // Rutas para los movimientos de combustible
         Route::get('/recarga', [MovimientoCombustibleController::class, 'createRecarga'])->name('recarga');
-        Route::post('/recarga', [MovimientoCombustibleController::class, 'storeRecarga'])->name('\storeRecarga');
+        Route::post('/recargaStore', [MovimientoCombustibleController::class, 'storeRecarga'])->name('storeRecarga');
 
         Route::get('/index', [MovimientoCombustibleController::class, 'index'])->name('index');
         Route::get('/list', [MovimientoCombustibleController::class, 'list'])->name('list');
@@ -239,6 +246,21 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
     Route::get('/alertas/read/{id}', [AlertaController::class, 'markAsRead'])->name('alertas.read');
 
     
+    Route::resource('viajes', ViajesController::class)->only(['create','store', 'index', 'show']);
+    Route::get('viajes/dashboard', [ViajesController::class, 'dashboard'])->name('viajes.dashboard');
+    Route::get('viaje/list', [ViajesController::class, 'list'])->name('viaje.list');
+    Route::get('/viajes/{id}/assign', [ViajesController::class, 'assign'])->name('viajes.assign');
+Route::put('/viajes/{id}/assign', [ViajesController::class, 'processAssignment'])->name('viajes.processAssignment');    
+    Route::get('viajes/{viaje}/viaticos/edit', [ViajesController::class, 'editViaticos'])->name('viajes.viaticos.edit');
+    Route::put('viajes/{viaje}/viaticos', [ViajesController::class, 'updateViaticos'])->name('viajes.viaticos.update');
+    // Nueva ruta para el resumen de programación
+    Route::get('/viajes/resumen-programacion/{id?}', [ViajesController::class, 'resumenProgramacion'])->name('viajes.resumenProgramacion');
+    Route::get('viajes/report/index', [ViajesController::class, 'reportsIndex'])->name('reportes.viajes');
+    Route::put('viajes/report/generate', [ViajesController::class, 'generateReport'])->name('viajes.report.generate');
+    Route::get('viaticos/tabulador', [ViajesController::class, 'tabuladorIndex'])->name('viaticos.tabulador');
+    Route::put('viaticos/tabulador/update', [ViajesController::class, 'tabuladorUpdate'])->name('viaticos.tabulador.update');
+    Route::put('viaticos/parametros/update', [ViajesController::class, 'parametrosUpdate'])->name('viaticos.parametros.update');
+
     // Rutas para historial de mantenimiento
     //Route::get('/vehiculos/{vehiculo}/historial', [HistorialMantenimientoController::class, 'showByVehiculo'])->name('vehiculos.historial');
 
