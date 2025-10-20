@@ -80,22 +80,27 @@ $data = [
     <div class="row g-4 mb-4">
         <div class="col-md-3">
             <div class="card shadow-sm border-0">
-                <div class="card-body d-flex align-items-center">
-                    <div class="me-3">
-                        <span class="bg-primary text-white rounded-circle p-3">
-                            <i class="bi bi-truck" style="font-size:2rem;"></i>
-                        </span>
+                <a href="{{route('vehiculos.list')}}" target="_blank">
+                    
+                    <div class="card-body d-flex align-items-center">
+                        <div class="me-3">
+                            <span class="bg-primary text-white rounded-circle p-3">
+                                <i class="bi bi-truck" style="font-size:2rem;"></i>
+                            </span>
+                        </div>
+                        <div>
+                            <h5 class="card-title mb-0">Vehículos</h5>
+                            <h2 class="fw-bold">{{ $totalVehiculos }}</h2>
+                            <small class="text-muted">En operación</small>
+                        </div>
                     </div>
-                    <div>
-                        <h5 class="card-title mb-0">Vehículos</h5>
-                        <h2 class="fw-bold">{{ $totalVehiculos }}</h2>
-                        <small class="text-muted">En operación</small>
-                    </div>
-                </div>
+                </a>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card shadow-sm border-0">
+                <a href="{{route('ordenes.list')}}" target="_blank">
+
                 <div class="card-body d-flex align-items-center">
                     <div class="me-3">
                         <span class="bg-success text-white rounded-circle p-3">
@@ -108,9 +113,10 @@ $data = [
                         <small class="text-muted">Activas</small>
                     </div>
                 </div>
+                </a>
             </div>
         </div>
-        <div class="col-md-3">
+        {{-- <div class="col-md-3">
             <div class="card shadow-sm border-0">
                 <div class="card-body d-flex align-items-center">
                     <div class="me-3">
@@ -141,7 +147,7 @@ $data = [
                     </div>
                 </div>
             </div>
-        </div>
+        </div> --}}
         <div class="col-md-3">
             <div class="card shadow-sm border-0">
                 <div class="card-body d-flex align-items-center">

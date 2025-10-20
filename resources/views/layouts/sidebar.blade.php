@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <i class="bi bi-speedometer2"></i> Dashboard
                 </a>
             </li>
-            <hr class="text-white my-2">
+            <hr class="text-white my-2" style="overflow-y: auto">
 
             @foreach($modulos as $modulo)
                 @php
