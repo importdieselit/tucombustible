@@ -203,7 +203,7 @@ public function store(Request $request)
             'vehiculos_mantenimiento' => Vehiculo::where('estatus', 2)->count(),
         ];
         $user = auth()->user();
-        $vehiculosDisponibles = Vehiculo::where('estatus', 1)->where('id_cliente',$user->cliente_id)->get();
+        $vehiculosDisponibles = Vehiculo::where('estatus', 1)->where('es_flota',true)->get();
         
 
         // 2. Puedes agregar datos adicionales si tienes gráficos o tablas de resumen.
