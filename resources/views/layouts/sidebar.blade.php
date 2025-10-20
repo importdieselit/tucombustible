@@ -104,8 +104,8 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-<div class="col-md-3 col-lg-2 d-md-block sidebar ">
-    <div class="d-flex flex-column align-items-center mb-4">
+<div class="col-md-3 col-lg-2 d-md-block sidebar " style="overflow-y: auto">
+    <div class="d-flex flex-column align-items-center mb-4" >
           <img src="{{ asset('img/logomini.png') }}" alt="Logo de la empresa" class="img-fluid rounded-circle mb-3 border border-3 border-secondary" style="max-width: 100px;background: white; padding: 10px;">
             
             <p class=" text-center mt-1"><strong>TuCombustible</strong></p>
@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         </div>
     <div class="position-sticky pt-3" style="overflow-y: auto">
-        <ul class="nav flex-column">
+        <ul class="nav flex-column" style="overflow-y: auto">
             {{-- Enlace del Dashboard, siempre visible --}}
             <li class="nav-item">
                 <a href="{{ route('dashboard') }}" class="nav-link {{ Request::routeIs('dashboard') ? 'active' : '' }}" title="Dashboard">
