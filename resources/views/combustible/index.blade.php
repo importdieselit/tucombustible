@@ -1302,7 +1302,7 @@ function mostrarDetallesPedido(id) {
 
 
 // Data simulada para el ejemplo
-const cisternasDisponibles = @json($vehiculos);
+const cisternasDisponibles = @json($vehiculosDisponibles);
 const clientesDisponibles = @json($clientes);
 
 
@@ -1375,7 +1375,6 @@ async function mostrarFormularioDespacho() {
                 return false;
             }
             return {
-                tipo: 'lode',
                 vehiculo_id: document.getElementById('swal-cisterna').value,
                 deposito_id: document.getElementById('swal-deposito').value,
                 cliente_id: document.getElementById('swal-cliente').value,
