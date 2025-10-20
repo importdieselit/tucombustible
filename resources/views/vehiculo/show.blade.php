@@ -205,7 +205,7 @@
         {{-- Rutas y Movimientos --}}
         <div class="col-lg-6 mb-4">
             <div class="card shadow-sm h-100">
-                <div class="card-header">Últimas Rutas y Movimientos (MODO DEMO)</div>
+                <div class="card-header">Últimas Rutas y Movimientos <span class="text-danger">(MODO DEMO)</span></div>
                 <div class="card-body">
                     <table class="table table-striped table-hover">
                         <thead>
