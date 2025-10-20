@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <p class=" text-center mt-1">Impordiesel  </p>
 
         </div>
-    <div class="position-sticky pt-3">
+    <div class="position-sticky pt-3" style="overflow-y: auto">
         <ul class="nav flex-column">
             {{-- Enlace del Dashboard, siempre visible --}}
             <li class="nav-item">
@@ -120,11 +120,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     <i class="bi bi-speedometer2"></i> Dashboard
                 </a>
             </li>
-            <hr class="text-white my-2" style="overflow-y: auto">
+            <hr class="text-white my-2" >
 
             @foreach($modulos as $modulo)
                 @php
-   // Obtener los submódulos (hijos) permitidos para este usuario y módulo padre
                     $secciones = App\Models\Modulo::where('id_padre', $modulo->id)
                         ->where('visible', 1);
                         if(!($user && $user->id_perfil == 1)) {
@@ -132,8 +131,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                         $secciones = $secciones->orderBy('orden')
                         ->get();
-
-
                    $hasSubmenu = !$secciones->isEmpty();
                 @endphp
                 
