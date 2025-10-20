@@ -78,7 +78,7 @@ Route::post('/inspecciones', [InspeccionController::class, 'store'])->name('insp
 Route::get('/inspecciones', [InspeccionController::class, 'list'])->name('inspeccion.list');
 Route::get('/inspecciones-dashboard', [InspeccionController::class, 'index'])->name('inspeccion.index');
 
-Route::post('search/global', [SearchController::class, 'globalSearch'])->name('search.global');
+Route::get('search/global', [SearchController::class, 'globalSearch'])->name('search.global');
 
 // Ruta para ver el detalle de la inspección
 Route::get('/inspecciones/{inspeccion_id}', [InspeccionController::class, 'show'])->name('inspeccion.show');
