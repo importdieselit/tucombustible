@@ -95,7 +95,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="swal-deposito" class="form-label">Depósito de origen</label>
-                            <select id="swal-deposito" class="swal2-select form-select w-50">
+                            <select id="swal-deposito" class="swal2-select form-select w-75">
                                 <option value="">Seleccione un depósito</option>
                                 @foreach ($depositos as $deposito)
                                     <option value="{{ $deposito->id }}">{{ $deposito->nombre }} (Disp: {{ number_format($deposito->nivel_actual_litros, 2, ',', '.') }} Lt)</option>
@@ -104,7 +104,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="swal-deposito" class="form-label">Observacion</label>
-                                <textarea id="swal-observacion" class="swal2-textarea form-control" placeholder="Ingrese una observación (opcional)"></textarea>
+                                <textarea id="swal-observacion" class="swal2-textarea w-50 form-control" placeholder="Ingrese una observación (opcional)"></textarea>
                         </div>
                     `,
                     icon: 'question',
@@ -144,7 +144,7 @@
                         observacionInput.name = 'observacion';
                         observacionInput.value = observacion;
                         form.appendChild(observacionInput);
-                        
+
 
                         // Enviamos el formulario
                         form.submit();
