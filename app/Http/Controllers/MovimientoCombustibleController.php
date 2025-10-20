@@ -106,7 +106,6 @@ class MovimientoCombustibleController extends Controller
         $camionesCargados = VehiculoPrecargado::where('estatus', 0)->count();
         $vehiculosDisponibles = Vehiculo::where('estatus', 1)->where('id_cliente',$user->cliente_id)->get();
         $vehiculos = Vehiculo::where('estatus', 1)->where('es_flota',true)->get();
-        dd($vehiculos);
         // Pasamos todos los datos a la vista.
         return view('combustible.index', compact(
             'clientes', 
