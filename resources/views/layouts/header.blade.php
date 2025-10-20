@@ -8,7 +8,7 @@
                 <input 
                     class="form-control form-control-sm" 
                     type="search" 
-                    placeholder="Buscar por Placa, Chofer, Cliente..." 
+                    placeholder="Buscar por Placa, Chofer, Cliente..."  
                     aria-label="Search" 
                     name="query" 
                     value="{{ request('query') }}" 
