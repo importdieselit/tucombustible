@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="container">
-    <h2>Gestión de Reportes de Reporte</h2>
+    <h2>Gestión de Alertas</h2>
     
     {{-- Botón para crear un nuevo reporte --}}
     <a href="{{ route('reportes.create') }}" class="btn btn-primary mb-3">
@@ -15,15 +15,15 @@
     <div class="card mb-4">
         <div class="card-header">Filtros</div>
         <div class="card-body">
-            <form method="GET" action="{{ route('reportes.index') }}">
+            <form method="GET" action="{{ route('alertas.index') }}">
                 <div class="row">
                     <div class="col-md-4">
                         <label for="estatus_filter">Estatus</label>
                         <select name="estatus_filter" class="form-control">
                             <option value="">Todos</option>
-                            <option value="ABIERTO" {{ request('estatus_filter') == 'ABIERTO' ? 'selected' : '' }}>Abierto</option>
-                            <option value="EN_PROCESO" {{ request('estatus_filter') == 'EN_PROCESO' ? 'selected' : '' }}>En Proceso</option>
-                            <option value="CERRADO" {{ request('estatus_filter') == 'CERRADO' ? 'selected' : '' }}>Cerrado</option>
+                            <option value="0" {{ request('estatus_filter') == 'ABIERTO' ? 'selected' : '' }}>Abierto</option>
+                            <option value="1" {{ request('estatus_filter') == 'EN_PROCESO' ? 'selected' : '' }}>En Proceso</option>
+                            <option value="2" {{ request('estatus_filter') == 'CERRADO' ? 'selected' : '' }}>Cerrado</option>
                         </select>
                     </div>
                     <div class="col-md-4 align-self-end">
@@ -47,21 +47,20 @@
             </tr>
         </thead>
         <tbody>
-            @foreach ($data as $reporte)
+            @foreach ($alertas as $reporte)
                 <tr>
                     <td>{{ $reporte->id }}</td>
                     <td>{{ $reporte->created_at->format('Y-m-d H:i') }}</td>
                     {{-- Usando la relación definida en el modelo --}}
-                    <td>{{ $reporte->tipo->nombre_tipo ?? 'N/A' }}</td> 
-                    <td>{{ $reporte->lugar_reporte }}</td>
+                    <td>{{ $reporte->observacion ?? 'N/A' }}</td> 
                     <td>
                         {{-- Colorear el estatus para visualización rápida --}}
-                        <span class="badge {{ $reporte->estatus_actual === 'ABIERTO' ? 'bg-danger' : ($reporte->estatus_actual === 'EN_PROCESO' ? 'bg-warning text-dark' : 'bg-success') }}">
-                            {{ $reporte->estatus_actual }}
+                        <span class="badge {{ $reporte->estatus === '0' ? 'bg-danger' : ($reporte->estatus === '1' ? 'bg-warning text-dark' : 'bg-success') }}">
+                            {{ $reporte->estatus === '0' ? 'Abierto' : ($reporte->estatus === '1' ? 'En Proceso' : 'Cerrado') }}
                         </span>
                     </td>
                     <td>
-                        <a href="{{ route('reportes.show', $reporte->id) }}" class="btn btn-sm btn-info">Ver Detalle</a>
+                        {{-- <a href="{{ route('reportes.show', $reporte->id) }}" class="btn btn-sm btn-info">Ver Detalle</a> --}}
                     </td>
                 </tr>
             @endforeach
