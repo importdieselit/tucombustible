@@ -125,7 +125,7 @@
                     }
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        const { vehiculoId, depositoId } = result.value;
+                        const { vehiculoId, depositoId, observacion } = result.value;
                         
                         // Creamos campos de input ocultos para enviar los IDs seleccionados
                         const vehiculoInput = document.createElement('input');
