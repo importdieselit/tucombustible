@@ -1013,7 +1013,7 @@ function mostrarDetallesPedido(id) {
                 <p><strong>Estado:</strong> <span class="badge ${pedido.estado === 'Pendiente' ? 'bg-danger' : 'bg-success'}">${pedido.estado}</span></p>
                 <p><strong>Fecha:</strong> ${pedido.fecha}</p>
                 <p><strong>Vehículo Asignado:</strong> ${pedido.vehiculo || 'No asignado'}</p>
-                <p><strong>Vehículo Observacion:</strong> ${pedido.observaciones}'}</p>
+                <p><strong>Observacion:</strong> ${pedido.observaciones}'}</p>
             `,
             confirmButtonText: 'Cerrar'
         });
@@ -1363,7 +1363,7 @@ async function mostrarFormularioDespacho() {
                 </div>
                 <div class="col-12 text-start">
                     <label class="form-label">Observación</label>
-                    <textarea id="swal-observacion" class="form-control"></textarea>
+                    <textarea id="swal-observaciones" class="form-control"></textarea>
                 </div>
             </div>
         `,
@@ -1376,11 +1376,12 @@ async function mostrarFormularioDespacho() {
             }
             return {
                 tipo: 'lode',
-                cisterna: document.getElementById('swal-cisterna').value,
+                vehiculo_id: document.getElementById('swal-cisterna').value,
                 deposito_id: document.getElementById('swal-deposito').value,
                 cliente_id: document.getElementById('swal-cliente').value,
-                cantidad: cantidad,
-                observacion: document.getElementById('swal-observacion').value
+                cantidad_litros: cantidad,
+                observaciones: document.getElementById('swal-observaciones').value,
+                tipo:'DIESEL'
             };
         }
     });
@@ -1441,7 +1442,7 @@ async function submitDespacho(data) {
     });
     
     try {
-        const response = await fetch('/api/despachos/crear', {
+        const response = await fetch('/api/despachos', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
