@@ -1337,7 +1337,7 @@ async function mostrarSelectorTipoDespacho() {
 
 async function mostrarFormularioDespacho() {
     // Genera las opciones para los selectores
-    const cisternaOptions = cisternasDisponibles.map(c => `<option value="${c}">${c}</option>`).join('');
+    const cisternaOptions = cisternasDisponibles.map(c => `<option value="${c.id}">[${c.id}] - ${c.placa}</option>`).join('');
     const depositoOptions = tanquesDisponibles.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
     const clienteOptions = clientesDisponibles.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
 
