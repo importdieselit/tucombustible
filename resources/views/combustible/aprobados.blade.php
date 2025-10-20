@@ -102,6 +102,10 @@
                                 @endforeach
                             </select>
                         </div>
+                        <div class="mb-3">
+                            <label for="swal-deposito" class="form-label">Observacion</label>
+                                <textarea id="swal-observacion" class="swal2-textarea form-control" placeholder="Ingrese una observación (opcional)"></textarea>
+                        </div>
                     `,
                     icon: 'question',
                     showCancelButton: true,
@@ -110,6 +114,7 @@
                     preConfirm: () => {
                         const vehiculoId = document.getElementById('swal-vehiculo').value;
                         const depositoId = document.getElementById('swal-deposito').value;
+                        const observacion = document.getElementById('swal-observacion').value;
 
                         if (!vehiculoId || !depositoId) {
                             Swal.showValidationMessage('Por favor, selecciona un vehículo y un depósito.');
@@ -134,6 +139,12 @@
                         depositoInput.name = 'deposito_id';
                         depositoInput.value = depositoId;
                         form.appendChild(depositoInput);
+                        const observacionInput = document.createElement('input');
+                        observacionInput.type = 'hidden';
+                        observacionInput.name = 'observacion';
+                        observacionInput.value = observacion;
+                        form.appendChild(observacionInput);
+                        
 
                         // Enviamos el formulario
                         form.submit();
