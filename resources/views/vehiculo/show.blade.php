@@ -238,7 +238,7 @@
         {{-- Indicadores Económicos --}}
         <div class="col-lg-6 mb-4">
             <div class="card shadow-sm h-100">
-                <div class="card-header">Indicadores Económicos (MODO DEMO)</div>
+                <div class="card-header">Indicadores Económicos <span class="text-danger">(MODO DEMO)</span></div>
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-6 mb-3 text-center">
@@ -255,7 +255,7 @@
                         </div>
                     </div>
                     <hr>
-                    <h6 class="mb-3">Historial de Kilometraje y Consumo Mensual (MODO DEMO)</h6>
+                    <h6 class="mb-3">Historial de Kilometraje y Consumo Mensual <span class="text-danger">(MODO DEMO)</span></h6>
                     {{-- Contenedor del gráfico --}}
                     <div id="monthly-chart" style="height: 300px; margin-bottom: 20px;"></div>
                     {{-- Tabla de historial --}}

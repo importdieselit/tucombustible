@@ -1,6 +1,26 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container-fluid">
         <a class="navbar-brand" href="{{ route('dashboard') }}">TuCombustible</a>
+        
+        <!-- INICIO: Buscador Universal -->
+        <form class="d-flex me-3" action="{{ route('search.global') }}" method="GET">
+            <div class="input-group">
+                <input 
+                    class="form-control form-control-sm" 
+                    type="search" 
+                    placeholder="Buscar por Placa, Chofer, Cliente..." 
+                    aria-label="Search" 
+                    name="query" 
+                    value="{{ request('query') }}" 
+                    required
+                >
+                <button class="btn btn-outline-primary btn-sm" type="submit">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+        </form>
+        <!-- FIN: Buscador Universal -->
+
         <div class="d-flex ms-auto align-items-center">
             <!-- Fragmento de tu Cabecera -->
 
@@ -27,24 +47,15 @@
     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="alertsDropdown" style="min-width: 300px;">
         <li class="dropdown-header text-center">
             @if($unreadAlertsCount > 0)
-                Tienes **{{ $unreadAlertsCount }}** alertas nuevas.
+                Tienes **{{ $unreadAlertsCount }}** alertas sin leer
             @else
-                No tienes alertas nuevas.
+                No tienes alertas pendientes.
             @endif
         </li>
-        <li><hr class="dropdown-divider"></li>
-
-        @forelse ($unreadAlerts as $alerta)
+        @forelse($alertas as $alerta)
             <li>
-                <!-- Aquí construimos el enlace dinámico -->
-                <a class="dropdown-item @if($alerta->estatus == 0) fw-bold @endif" 
-                   href="{{ url($alerta->accion) }}" 
-                   title="Ir a {{ $alerta->observacion }}">
-                    
-                    <small class="text-muted float-end" style="margin-top:15px">{{ $alerta->fecha->diffForHumans() }}</small>
-                    <!-- Icono simple basado en la categoría o texto -->
-                    <i class="bi bi-exclamation-circle me-2 text-warning"></i>
-                    
+                <a class="dropdown-item" href="{{ url('/alertas/ver', $alerta->id) }}">
+                    <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i> 
                     <!-- Observación truncada para el menú -->
                     {{ Str::limit($alerta->observacion, 40) }}
                     
