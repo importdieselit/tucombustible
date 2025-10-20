@@ -409,6 +409,7 @@
                         <th scope="col"># Pedido</th>
                         <th scope="col">Cliente</th>
                         <th scope="col">Cantidad (L)</th>
+                        <th scope="col">Observacion</th>
                         <th scope="col">Estado</th>
                         <th scope="col">Fecha de Creación</th>
                         <th></th>
@@ -438,7 +439,7 @@
                         <th scope="col"># Solicitud</th>
                         <th scope="col">Cliente</th>
                         <th scope="col">Tipo</th>
-                        <th scope="col">Descripción</th>
+                        <th scope="col">Observacion</th>
                         <th scope="col">Estado</th>
                     </tr>
                 </thead>
@@ -732,6 +733,7 @@ function renderizarPedidos() {
             <td>${pedido.id}</td>
             <td>${pedido.cliente}</td>
             <td>${pedido.cantidad} L</td>
+            <td>${pedido.cantidad} L</td>
             <td><span class="badge ${pedido.estado === 'Pendiente' ? 'bg-danger' : 'bg-success'}">${pedido.estado}</span></td>
             <td>${pedido.fecha}</td>
             <td>
@@ -1010,6 +1012,7 @@ function mostrarDetallesPedido(id) {
                 <p><strong>Estado:</strong> <span class="badge ${pedido.estado === 'Pendiente' ? 'bg-danger' : 'bg-success'}">${pedido.estado}</span></p>
                 <p><strong>Fecha:</strong> ${pedido.fecha}</p>
                 <p><strong>Vehículo Asignado:</strong> ${pedido.vehiculo || 'No asignado'}</p>
+                <p><strong>Vehículo Observacion:</strong> ${pedido.observaciones}'}</p>
             `,
             confirmButtonText: 'Cerrar'
         });
