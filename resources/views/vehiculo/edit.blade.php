@@ -256,8 +256,8 @@
                                         <label for="tipo" class="form-label text-primary">Tipo de Vehículo</label>
                                         <select name="tipo" id="tipo" class="form-control">
                                             <option value="">Seleccione un tipo</option>
-                                            @foreach($tiposVehiculo as $tipo)
-                                                <option value="{{ $tipo->id }}" {{ old('tipo', $item->tipo ?? '') == $tipo->id ? 'selected' : '' }}>{{ $tipo->tipo }}</option>
+                                            @foreach($tiposVehiculo as $id => $tipo)
+                                                <option value="{{ $id }}" {{ old('tipo', $item->tipo ?? '') == $id ? 'selected' : '' }}>{{ $tipo }}</option>
                                             @endforeach
                                         </select>
                                         @error('id_tipo_vehiculo')<div class="text-danger mt-1">{{ $message }}</div>@enderror
