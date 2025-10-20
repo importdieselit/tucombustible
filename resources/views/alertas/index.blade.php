@@ -68,7 +68,7 @@
     </table>
     
     {{-- Paginación Condicional --}}
-@if (method_exists($data, 'links'))
+@if (method_exists($alertas, 'links'))
     <div class="d-flex justify-content-center mt-4">
         {{ $data->links() }}
     </div>
