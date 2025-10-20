@@ -86,7 +86,7 @@
                         <hr>
                         <div class="mb-3">
                             <label for="swal-vehiculo" class="form-label">Vehículo que recibe</label>
-                            <select id="swal-vehiculo" class="swal2-select form-select w-50">
+                            <select id="swal-vehiculo" class="swal2-select form-select w-75">
                                 <option value="">Seleccione un vehículo</option>
                                 @foreach ($vehiculos as $vehiculo)
                                     <option value="{{ $vehiculo->id }}">{{ $vehiculo->flota }} - {{ $vehiculo->placa }}</option>
@@ -104,7 +104,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="swal-deposito" class="form-label">Observacion</label>
-                                <textarea id="swal-observacion" class="swal2-textarea w-50 form-control" placeholder="Ingrese una observación (opcional)"></textarea>
+                                <textarea id="swal-observacion" class="swal2-textarea w-75 form-control" placeholder="Ingrese una observación (opcional)"></textarea>
                         </div>
                     `,
                     icon: 'question',
