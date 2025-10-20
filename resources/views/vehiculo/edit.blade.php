@@ -253,11 +253,11 @@
                                         @error('id_usuario')<div class="text-danger mt-1">{{ $message }}</div>@enderror
                                     </div>
                                     <div class="col-md-6">
-                                        <label for="id_tipo_vehiculo" class="form-label text-primary">Tipo de Vehículo</label>
-                                        <select name="id_tipo_vehiculo" id="id_tipo_vehiculo" class="form-control">
+                                        <label for="tipo" class="form-label text-primary">Tipo de Vehículo</label>
+                                        <select name="tipo" id="tipo" class="form-control">
                                             <option value="">Seleccione un tipo</option>
-                                            @foreach($tiposVehiculo as $id => $tipo)
-                                                <option value="{{ $id }}" {{ old('id_tipo_vehiculo', $item->id_tipo_vehiculo ?? '') == $id ? 'selected' : '' }}>{{ $tipo }}</option>
+                                            @foreach($tiposVehiculo as $tipo)
+                                                <option value="{{ $tipo->id }}" {{ old('tipo', $item->tipo ?? '') == $tipo->id ? 'selected' : '' }}>{{ $tipo->tipo }}</option>
                                             @endforeach
                                         </select>
                                         @error('id_tipo_vehiculo')<div class="text-danger mt-1">{{ $message }}</div>@enderror
