@@ -718,10 +718,11 @@ const pedidos = @json($pedidos);
 
 // Data de prueba para vehículos y tanques
 const vehiculosDisponibles = @json($vehiculosDisponibles);
-const tanquesDisponibles = [
-    { id: 1, nombre: 'Tanque Principal 10k L', capacidad: 10000, disponible: 8500 },
-    { id: 2, nombre: 'Tanque Secundario 5k L', capacidad: 5000, disponible: 4000 }
-];
+const tanquesDisponibles = @json($tanquesDisponibles);
+// [
+//     { id: 1, nombre: 'Tanque Principal 10k L', capacidad: 10000, disponible: 8500 },
+//     { id: 2, nombre: 'Tanque Secundario 5k L', capacidad: 5000, disponible: 4000 }
+// ];
 
 function renderizarPedidos() {
     const tbody = document.getElementById('pedidos-table-body');
@@ -1349,7 +1350,7 @@ async function mostrarFormularioDespacho() {
                     <select id="swal-cisterna" class="form-select">${cisternaOptions}</select>
                 </div>
                 <div class="col-12 text-start">
-                    <label class="form-label">Depósito de Origen</label>
+                    <label class="form-label">Depósito</label>
                     <select id="swal-deposito" class="form-select">${depositoOptions}</select>
                 </div>
                 <div class="col-12 text-start">
