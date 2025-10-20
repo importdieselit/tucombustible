@@ -52,7 +52,7 @@
                 No tienes alertas pendientes.
             @endif
         </li>
-        @forelse($alertas as $alerta)
+        @forelse($unreadAlerts as $alerta)
             <li>
                 <a class="dropdown-item" href="{{ url('/alertas/ver', $alerta->id) }}">
                     <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i> 
