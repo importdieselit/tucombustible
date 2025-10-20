@@ -1441,7 +1441,7 @@ async function submitDespacho(data) {
     });
     
     try {
-        const response = await fetch('/api/despachos', {
+        const response = await fetch('/despacho', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

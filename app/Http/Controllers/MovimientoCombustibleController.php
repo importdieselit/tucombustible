@@ -97,7 +97,7 @@ class MovimientoCombustibleController extends Controller
             ];
         })->toArray();
 
-        $tanquesDisponibles = Deposito::select('nivel_actual_litros as disponible', 'serial as nombre','capacidad_litros as capacidad')->get();
+        $tanquesDisponibles = Deposito::select('nivel_actual_litros as disponible', 'serial as nombre','capacidad_litros as capacidad','id')->get();
 
         // 5. Camiones cargados.
         // Asumimos que tienes un campo 'estado' en la tabla de vehículos o una relación
