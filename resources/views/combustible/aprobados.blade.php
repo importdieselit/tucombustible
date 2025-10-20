@@ -121,7 +121,7 @@
                             return false;
                         }
 
-                        return { vehiculoId, depositoId };
+                        return { vehiculoId, depositoId, observacion};
                     }
                 }).then((result) => {
                     if (result.isConfirmed) {
