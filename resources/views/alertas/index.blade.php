@@ -50,7 +50,7 @@
             @foreach ($alertas as $reporte)
                 <tr>
                     <td>{{ $reporte->id }}</td>
-                    <td>{{ $reporte->created_at->format('Y-m-d H:i') }}</td>
+                    <td>{{ $reporte->created_at->format('Y-m-d H:i')?? 'n/a' }}</td>
                     {{-- Usando la relación definida en el modelo --}}
                     <td>{{ $reporte->observacion ?? 'N/A' }}</td> 
                     <td>
