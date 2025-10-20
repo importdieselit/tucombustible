@@ -3,7 +3,7 @@
         <a class="navbar-brand" href="{{ route('dashboard') }}">TuCombustible</a>
         
         <!-- INICIO: Buscador Universal -->
-        <form class="d-flex me-3" action="{{ route('search.global') }}" method="GET">
+        <form class="d-flex me-3" action="{{ route('search.global') }}" method="GET" style="width: 50%; margin-left:50%">
             <div class="input-group">
                 <input 
                     class="form-control form-control-sm" 
