@@ -23,6 +23,7 @@
                         <th>Cliente</th>
                         <th>Cantidad Aprobada</th>
                         <th>Fecha de Aprobación</th>
+                        <th>Observaciones</th>
                         <th>Estatus</th>
                         <th class="text-center">Acciones</th>
                     </tr>
@@ -34,6 +35,7 @@
                             <td>{{ $pedido->cliente->nombre ?? 'N/A' }}</td>
                             <td>{{ number_format($pedido->cantidad_aprobada, 2, ',', '.') }} Lt</td>
                             <td>{{ $pedido->fecha_aprobacion->format('d/m/Y') }}</td>
+                            <td>{{$pedido->observaciones}} {{ $pedido->observaciones_admin }}</td>
                             <td>
                                 <span class="badge bg-success">{{ $pedido->estado }}</span>
                             </td>
