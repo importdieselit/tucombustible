@@ -98,7 +98,7 @@
                             <select id="swal-deposito" class="swal2-select form-select w-75">
                                 <option value="">Seleccione un depósito</option>
                                 @foreach ($depositos as $deposito)
-                                    <option value="{{ $deposito->id }}">{{ $deposito->nombre }} (Disp: {{ number_format($deposito->nivel_actual_litros, 2, ',', '.') }} Lt)</option>
+                                    <option value="{{ $deposito->id }}">{{ $deposito->serial }} (Disp: {{ number_format($deposito->nivel_actual_litros, 2, ',', '.') }} Lt)</option>
                                 @endforeach
                             </select>
                         </div>
