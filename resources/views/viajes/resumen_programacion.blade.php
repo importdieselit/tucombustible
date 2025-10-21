@@ -120,19 +120,19 @@
         const statusMessage = document.getElementById('statusMessage');
         const outputContainer = document.getElementById('outputContainer');
 
-        const downloadButton = document.getElementById('btn-descargar-reporte');
+        // const downloadButton = document.getElementById('btn-descargar-reporte');
 
-        downloadButton.addEventListener('click', function() {
-            // Usando jQuery.print.js para simular la funcionalidad de PrintArea
-            // Esto abrirá el diálogo de impresión (el usuario puede Guardar como PDF o Imprimir).
-            printArea.printArea({
-                globalStyles: true,
-                mediaPrint: false,
-                iframe: true,
-                manuallyCopyFormValues: false,
-                deferred: $.Deferred()
-            });
-        });
+        // downloadButton.addEventListener('click', function() {
+        //     // Usando jQuery.print.js para simular la funcionalidad de PrintArea
+        //     // Esto abrirá el diálogo de impresión (el usuario puede Guardar como PDF o Imprimir).
+        //     printArea.printArea({
+        //         globalStyles: true,
+        //         mediaPrint: false,
+        //         iframe: true,
+        //         manuallyCopyFormValues: false,
+        //         deferred: $.Deferred()
+        //     });
+        // });
 
 
   async function captureAndCopyToClipboard() {
