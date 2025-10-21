@@ -7,7 +7,7 @@
 <!-- Cargar librerías necesarias para la impresión/captura -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <!-- Uso jQuery.print.js para simular PrintArea.js (se abre el diálogo de impresión/PDF) -->
-<script src="{{asset('js/jquery.PrintArea.js')}}"></script>
+<script src="{{asset('js/jquery.PrintArea.js')}}" defer></script>
 
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -20,7 +20,7 @@
     </div>
 
     <!-- Contenedor del Reporte (El área que será capturada, simplificada) -->
-    <div id="reporte-area" class="card shadow-sm p-3 bg-white border border-primary printArea" style="width: 50%">
+    <div id="reporte-area" class="card shadow-sm p-3 bg-white border border-primary printableArea" style="width: 50%">
         
         <!-- Encabezado del Reporte Simplificado -->
         <div class="text-center mb-3">
