@@ -106,9 +106,12 @@
             <!-- El canvas se inyectará aquí -->
         </div>
 </div>
+@push('scripts')
+    
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
 
     document.addEventListener('DOMContentLoaded', function() {
         const printArea = $('#reporte-area');
@@ -202,4 +205,5 @@
 
     });
 </script>
+@endpush
 @endsection
