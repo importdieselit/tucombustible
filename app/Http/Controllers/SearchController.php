@@ -42,7 +42,7 @@ class SearchController extends Controller
         $choferes = Chofer::whereHas('persona', function ($q) use ($query) {
                                 $q->where('nombre', 'LIKE', "%".strtoupper($query)."%")
                                 ->orWhere('dni', 'LIKE', "%{$query}%");
-                            })
+                            })  
                             ->limit(10)
                             ->get();
 

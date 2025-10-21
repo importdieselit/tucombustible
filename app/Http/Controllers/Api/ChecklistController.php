@@ -85,7 +85,7 @@ class ChecklistController extends Controller
             'Vehiculo Operativo?',
             'Apto para Carga de Combustible?'
         ];
-        
+         $vehiculo = Vehiculo::find($request->vehiculo_id);
         // Asumimos que el vehículo está operativo al inicio
         $isCriticalFailure = false;
 
@@ -95,7 +95,18 @@ class ChecklistController extends Controller
                 foreach ($seccion['items'] as $item) {
                     $label = $item['label'] ?? null;
                     $value = $item['value'] ?? null;
-                    
+                    if($label=='Km. Recorridos'){
+                        $kmRecorridos = is_numeric($value) ? (int)$value : 0;
+                        $kmVeiculo = $vehiculo ? $vehiculo->kilometraje : 0;
+                        // Actualizar el kilometraje del vehículo si es mayor al actual
+                        if(is_numeric($value) && $value >0){
+                            $km=$kmRecorridos - $kmVeiculo;
+                            $vehiculo->kilometraje = $value;
+                            $vehiculo->km_contador += $km;
+                            $vehiculo->km_mantt += $km;
+                            $vehiculo->save();
+                        }
+                    }
                     // Comprueba si el ítem es crítico y la respuesta es negativa
                     // Consideramos negativo 'No', 'false', o cualquier valor que represente un fallo.
                     if (in_array($label, $criticalItems)) {
@@ -122,7 +133,6 @@ class ChecklistController extends Controller
 
             if ($isCriticalFailure) {
                 // Si hubo un fallo crítico, establecer el estatus del vehículo a 3 (No Operativo)
-                $vehiculo = Vehiculo::find($request->vehiculo_id);
                 if ($vehiculo && $vehiculo->estatus != 3) {
                     $vehiculo->estatus = 3; // 3 = No Operativo
                     $vehiculo->save();
