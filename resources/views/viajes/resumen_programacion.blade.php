@@ -20,7 +20,8 @@
     </div>
 
     <!-- Contenedor del Reporte (El área que será capturada, simplificada) -->
-    <div id="reporte-area" class="card shadow-sm p-3 bg-white border border-primary printableArea" style="width: 50%">
+    <div style="width: 50%">
+    <div id="reporte-area" class="card shadow-sm p-3 bg-white border border-primary printableArea" >
         
         <!-- Encabezado del Reporte Simplificado -->
         <div class="text-center mb-3">
@@ -91,6 +92,7 @@
         <div class="mt-3 border-top pt-2 text-end small text-muted">
             Generado por el Sistema de Viajes.
         </div>
+    </div>
     </div>
     
 </div>
