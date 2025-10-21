@@ -488,7 +488,7 @@
                                 <h6 class="m-0">{{ $deposito->serial }} ({{ $deposito->producto }})</h6>
                                 <p class="text-muted m-0"><small>Nivel: {{ $percentage }}%</small></p>
                                 <p class="text-black m-0 "><small>{{ $deposito->nivel_actual_litros }}/{{ $deposito->capacidad_litros }} Litros</small>  
-                                    <i class="rounded fa fa-pencil ajustar-btn" data-id="{{$deposito->id}}"></i>
+                                    <i class="rounded fa fa-pencil ajustar-btn" style="cursor: pointer" data-id="{{$deposito->id}}" onclick="openAjusteModal({{$deposito->id}})"></i>
                                     <a href="{{ route('depositos.aforo.show', ['deposito' => $deposito->id]) }}">
                                         <i class="rounded fa fa-table"></i>
                                     </a>
