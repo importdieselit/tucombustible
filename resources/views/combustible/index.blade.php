@@ -655,7 +655,7 @@
         console.log('Pedidos:', @json($pedidos));
         console.log('Solicitudes:', @json($solicitudes));    
         console.log('Notificaciones:', @json($notificaciones));
-const pedidos = @json($pedidos);
+        const pedidos = @json($pedidos);
 // const solicitudes = @json($solicitudes);
 // const notificaciones = @json($notificaciones);
 
@@ -1085,6 +1085,12 @@ function mostrarDetallesPedido(id) {
             clientesListContainer.classList.add('hidden');
             sucursalDetailsContainer.classList.add('hidden');
 
+             document.querySelectorAll('.ajustar-btn').forEach(button => {
+                button.addEventListener('click', (e) => openAjusteModal(e.target.dataset.id));
+            });
+             document.getElementById('btn-submit-ajuste').addEventListener('click', submitAjuste);
+            document.getElementById('btn-crear-despacho').addEventListener('click', mostrarSelectorTipoDespacho);
+
             // Lógica para el gráfico de Highcharts con drilldown
             Highcharts.chart('chart-container', {
                 chart: {
@@ -1288,11 +1294,7 @@ function mostrarDetallesPedido(id) {
                     });
                 });
             });
-             document.querySelectorAll('.ajustar-btn').forEach(button => {
-                button.addEventListener('click', (e) => openAjusteModal(e.target.dataset.id));
-            });
-             document.getElementById('btn-submit-ajuste').addEventListener('click', submitAjuste);
-            document.getElementById('btn-crear-despacho').addEventListener('click', mostrarSelectorTipoDespacho);
+            
 
             const btnInspeccion = document.getElementById('btn-inspeccion-salida');
             if (btnInspeccion) {
