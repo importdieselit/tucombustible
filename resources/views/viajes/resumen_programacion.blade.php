@@ -14,13 +14,13 @@
         <h1 class="text-primary"><i class="bi bi-calendar-check me-2"></i> Programación de Viajes Pendientes</h1>
         
         <!-- Botón para Capturar la Imagen/Imprimir -->
-        <button id="btn-descargar-reporte" class="btn btn-primary shadow-sm">
+        <button id="print" class="btn btn-primary shadow-sm">
             <i class="bi bi-camera me-2"></i> Capturar y Descargar Reporte
         </button>
     </div>
 
     <!-- Contenedor del Reporte (El área que será capturada, simplificada) -->
-    <div id="reporte-area" class="card shadow-sm p-3 bg-white border border-primary" style="width: 50%">
+    <div id="reporte-area" class="card shadow-sm p-3 bg-white border border-primary printArea" style="width: 50%">
         
         <!-- Encabezado del Reporte Simplificado -->
         <div class="text-center mb-3">

@@ -55,5 +55,22 @@
     <script src="{{ mix('js/app.js') }}"></script>
     <script src="{{ asset('js/alerts.js') }}"></script>
     @stack('scripts')
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+        $("#print").on("click", function () {
+        var mode = 'iframe'; //popup
+        var close = mode == "popup";
+        var options = {
+        mode: mode,
+        popClose: close
+        };
+        $(".noPrint").hide();
+        $(".siPrint").show();
+        $("div.printableArea").printArea(options);
+        $(".noPrint").show();
+        $(".siPrint").hide();
+    });
+    });
+    </script>
 </body>
 </html>
