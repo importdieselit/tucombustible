@@ -115,7 +115,7 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         const printArea = $('#reporte-area');
-         const captureButton = document.getElementById('captureButton');
+        const captureButton = document.getElementById('captureButton');
         const printableArea = $("div.printableArea");
         const statusMessage = document.getElementById('statusMessage');
         const outputContainer = document.getElementById('outputContainer');
