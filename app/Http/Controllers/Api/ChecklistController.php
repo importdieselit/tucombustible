@@ -79,6 +79,38 @@ class ChecklistController extends Controller
             'estatus_general' => 'required|in:OK,WARNING,ALERT'
         ]);
 
+
+ // Nombres de los ítems críticos a verificar
+        $criticalItems = [
+            'Vehiculo Operativo?',
+            'Apto para Carga de Combustible?'
+        ];
+        
+        // Asumimos que el vehículo está operativo al inicio
+        $isCriticalFailure = false;
+
+        // 1. Verificar respuestas críticas
+        foreach ($request->respuestas as $seccion) {
+            if (isset($seccion['items'])) {
+                foreach ($seccion['items'] as $item) {
+                    $label = $item['label'] ?? null;
+                    $value = $item['value'] ?? null;
+                    
+                    // Comprueba si el ítem es crítico y la respuesta es negativa
+                    // Consideramos negativo 'No', 'false', o cualquier valor que represente un fallo.
+                    if (in_array($label, $criticalItems)) {
+                        $normalizedValue = is_string($value) ? strtolower($value) : $value;
+
+                        if ($normalizedValue === 'no' || $normalizedValue === false || $normalizedValue === 0) {
+                            $isCriticalFailure = true;
+                            break 2; // Salir de ambos bucles si se encuentra un fallo
+                        }
+                    }
+                }
+            }
+        }
+
+        DB::beginTransaction();
         try {
             $inspeccion = Inspeccion::create([
                 'vehiculo_id' => $request->vehiculo_id,
@@ -87,6 +119,17 @@ class ChecklistController extends Controller
                 'estatus_general' => $request->estatus_general,
                 'respuesta_json' => json_encode($request->respuestas)
             ]);
+
+            if ($isCriticalFailure) {
+                // Si hubo un fallo crítico, establecer el estatus del vehículo a 3 (No Operativo)
+                $vehiculo = Vehiculo::find($request->vehiculo_id);
+                if ($vehiculo && $vehiculo->estatus != 3) {
+                    $vehiculo->estatus = 3; // 3 = No Operativo
+                    $vehiculo->save();
+                    // Opcional: registrar el cambio de estatus en un log o alerta
+                }
+            }
+             DB::commit();
 
             return response()->json([
                 'success' => true,
@@ -99,6 +142,7 @@ class ChecklistController extends Controller
             ]);
 
         } catch (\Exception $e) {
+             DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Error al guardar la inspección: ' . $e->getMessage()
