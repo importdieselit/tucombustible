@@ -21,10 +21,10 @@ class SearchController extends Controller
             // Si la consulta está vacía, simplemente redirige de vuelta.
             return redirect()->back();
         }
-
+        $query = trim( str_replace('unidad', '' ,  strtolower($query)));
         // 1. Búsqueda de Vehículos por Placa o Serial
         $vehiculos = Vehiculo::where('placa', 'LIKE', "%{$query}%")
-                             ->orWhere('serial', 'LIKE', "%{$query}%")
+                             ->orWhere('flota', 'LIKE', "%{$query}%")
                              ->limit(10)
                              ->get();
         
@@ -36,11 +36,11 @@ class SearchController extends Controller
                 'icon' => 'truck',
             ];
         }
-
+        
         // 2. Búsqueda de Personas (Choferes/Ayudantes)
         // Asumiendo que el modelo Chofer tiene una relación 'persona' que contiene el 'name'
         $choferes = Chofer::whereHas('persona', function ($q) use ($query) {
-                                $q->where('name', 'LIKE', "%{$query}%");
+                                $q->where('name', 'LIKE', "%".strtoupper($query)."%");
                             })
                             ->orWhere('cedula', 'LIKE', "%{$query}%")
                             ->limit(10)

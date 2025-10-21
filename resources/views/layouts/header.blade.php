@@ -13,7 +13,6 @@
                     name="query" 
                     value="{{ request('query') }}" 
                     required
-                    style="width: 50%; margin-left:50%"
                 >
                 <button class="btn btn-outline-primary btn-sm" type="submit">
                     <i class="bi bi-search"></i>
