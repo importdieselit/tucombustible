@@ -17,7 +17,7 @@
         <button id="print" class="btn btn-primary shadow-sm">
             <i class="bi bi-camera me-2"></i> Capturar y Descargar Reporte
         </button>
-         <button id="copytopaste" class="btn btn-primary shadow-sm">
+         <button id="captureButton" class="btn btn-primary shadow-sm">
             <i class="bi bi-camera me-2"></i> Capturar a portapapeles
         </button>
     </div>
