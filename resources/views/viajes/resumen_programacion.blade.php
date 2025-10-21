@@ -102,8 +102,6 @@
     </div>
     <!-- Área donde se mostrará el canvas generado (opcional, para debug/visualización) -->
         <div id="outputContainer" class="mt-8 pt-4 border-t border-gray-300">
-            <h3 class="text-xl font-semibold mb-3 text-gray-700">Previsualización del Canvas Generado (Solo Debug)</h3>
-            <!-- El canvas se inyectará aquí -->
         </div>
 </div>
 @push('scripts')
