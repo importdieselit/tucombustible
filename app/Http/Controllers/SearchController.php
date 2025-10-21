@@ -40,9 +40,9 @@ class SearchController extends Controller
         // 2. Búsqueda de Personas (Choferes/Ayudantes)
         // Asumiendo que el modelo Chofer tiene una relación 'persona' que contiene el 'name'
         $choferes = Chofer::whereHas('persona', function ($q) use ($query) {
-                                $q->where('nombre', 'LIKE', "%".strtoupper($query)."%");
+                                $q->where('nombre', 'LIKE', "%".strtoupper($query)."%")
+                                ->orWhere('dni', 'LIKE', "%{$query}%");
                             })
-                            ->orWhere('dni', 'LIKE', "%{$query}%")
                             ->limit(10)
                             ->get();
 
