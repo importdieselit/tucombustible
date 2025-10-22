@@ -492,12 +492,55 @@ class ViajesController extends Controller
     // En ViajesController.php
     public function calendar()
     {
-        // **TODO:** Aquí debes cargar la data real de tus viajes.
-        // Ejemplo: $viajes = Viaje::where('status', '!=', 'CANCELADO')->get();
-        // Luego pasarías esta data a la vista: return view('viajes.calendario', compact('viajes'));
 
-        // Por ahora, solo devuelve la vista con la data simulada en el script.
-        return view('viajes.calendario'); 
+       // 1. Consulta con las relaciones necesarias para el calendario
+        $query = Viaje::with(['chofer.persona', 'ayudante.persona', 'vehiculo', 'despachos.cliente', 'viaticos']);
+        $query->where('status', '!=', 'CANCELADO');
+        
+        $viajes = $query->get();
+        
+        // 2. Transformación de la colección al formato JavaScript requerido
+        $viajesData = $viajes->map(function ($viaje) {
+            
+            // Lógica de duración: 1 día por defecto, 2 días si hay viático con pernocta
+            $duracionDias = 1;
+            
+            // Buscar si existe al menos un viático con pernocta (asumo que pernocta es un campo numérico/booleano en ViaticoViaje)
+            // Asumo que la relación es $viaje->viaticos y que el campo de pernocta es 'monto_pernocta' o similar.
+            // Si el campo es 'monto_pernocta' (monto > 0) o 'pernocta' (booleano true), se aplica la duración de 2 días.
+            // Ajusta el campo y la condición si 'pernocta' tiene un nombre diferente en tu modelo ViaticoViaje.
+            $tienePernocta = $viaje->viaticos->contains(function ($viatico) {
+                // Ajusta 'monto_pernocta' al nombre real del campo en ViaticoViaje
+                return isset($viatico->monto_pernocta) && $viatico->monto_pernocta > 0;
+            });
+            
+            if ($tienePernocta) {
+                $duracionDias = 2;
+            }
+
+            // Nombre del chofer: Chofer::persona->nombre (asumiendo que 'persona' es la relación con el modelo User o Persona)
+            $nombreChofer = $viaje->chofer->persona->nombre ?? 'Sin Asignar';
+            
+            // Calcular fecha final (FullCalendar usa end de forma NO inclusiva)
+            // Añadir $duracionDias días a la fecha de salida.
+            $fechaFin = date('Y-m-d', strtotime("+$duracionDias day", strtotime($viaje->fecha_salida)));
+            
+            return [
+                'id' => $viaje->id,
+                'destino' => $viaje->destino_ciudad,
+                'chofer' => $nombreChofer,
+                'status' => $viaje->status,
+                'fecha_salida' => $viaje->fecha_salida,
+                'duracion_dias' => $duracionDias,
+                // Campo extra para FullCalendar (usado en la vista)
+                'fecha_fin_calendario' => $fechaFin,
+            ];
+        });
+
+        dd($viajesData);
+        return view('viajes.calendario_viajes', [
+            'viajesDataJson' => $viajesData->toJson()
+        ]);
     }
 
 }
