@@ -530,9 +530,18 @@ class ViajesController extends Controller
                 'destino' => $viaje->destino_ciudad,
                 'cliente' => $viaje->despachos->first()->cliente->nombre ?? $viaje->despachos->first()->otro_cliente ?? 'Cliente Desconocido',
                 'chofer' => $nombreChofer,
+                'ayudante' => $viaje->ayudante_chofer->persona->nombre ?? 'Sin Asignar',
+                'vehiculo' => $viaje->vehiculo->flota ?? 'Sin Asignar',
+                'placa' => $viaje->vehiculo->placa ?? 'Sin Asignar',
                 'status' => $viaje->status,
                 'fecha_salida' => $viaje->fecha_salida,
                 'duracion_dias' => $duracionDias,
+                'despachos'=> $viaje->despachos->map(function($despacho) {
+                    return [
+                        'cliente' => $despacho->cliente->nombre ?? $despacho->otro_cliente ?? 'Cliente Desconocido',
+                        'litros' => $despacho->litros,
+                    ];
+                }),
                 // Campo extra para FullCalendar (usado en la vista)
                 'fecha_fin_calendario' => $fechaFin,
             ];
