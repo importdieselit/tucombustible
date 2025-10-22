@@ -82,7 +82,8 @@
 //[${viaje.status}]
                 return {
                     id: viaje.id,
-                    title: ` ${viaje.cliente} ${viaje.destino} (${viaje.chofer})`,
+                    title: ` ${viaje.cliente}`,
+                    desc:` ${viaje.cliente} ${viaje.destino} (${viaje.chofer})`,
                     start: viaje.fecha_salida,
                     end: endFormatted, // La fecha de fin es exclusiva
                     allDay: true, // Asumimos que la planificación es por días completos
@@ -122,6 +123,7 @@
                         html: `
                             <p><strong>ID Viaje:</strong> #${info.event.id}</p>
                             <p><strong>Fecha Inicio:</strong> ${info.event.start.toLocaleDateString()}</p>
+                            <p><strong>${info.event.desc}</strong></p>
                             <p><strong>Estatus:</strong> <span class="badge" style="background-color: ${info.event.classNames.includes('fc-event-EN_CURSO') ? '#10b981' : (info.event.classNames.includes('fc-event-PENDIENTE_ASIGNACION') ? '#ef4444' : '#3b82f6')}; color: white;">${statusText}</span></p>
                             <p class="mt-3">¿Deseas ver los detalles o editar la planificación?</p>
                         `,
