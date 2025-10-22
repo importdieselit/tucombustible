@@ -16,7 +16,7 @@ return new class extends Migration
             $table->bigInteger('id_usuario')->nullable();
             $table->integer('prioridad')->nullable();
             $table->integer('estatus')->nullable();
-            $table->bigInteger('id_inventario_almacen')->nullable();
+            $table->bigInteger('id_almacen')->nullable();
             $table->string('codigo')->nullable();
             $table->string('codigo_fabricante')->nullable();
             $table->string('fabricante')->nullable();
