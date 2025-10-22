@@ -75,67 +75,88 @@
         // =====================================================================
 
         function generateSummaryHtml(viajeCompleto) {
-            // Verificar si el ayudante es un objeto Chofer (con persona.nombre) o un string simple
-            const ayudanteNombre = viajeCompleto.ayudante_chofer 
-                                   ? (viajeCompleto.ayudante_chofer.persona?.nombre || 'N/A')
-                                   : (viajeCompleto.ayudante || 'N/A');
-            
-            let totalLitros = 0;
-            let despachosHtml = '';
-
-            // Generar filas de despachos
-            viajeCompleto.despachos.forEach(despacho => {
-                const clienteNombre = despacho.cliente ? (despacho.cliente.nombre || despacho.otro_cliente) : (despacho.otro_cliente || 'Cliente Null');
+        
+        // Extracción segura de datos
+        const choferNombre = viajeCompleto.chofer?.persona?.nombre || 'PENDIENTE';
+        const ayudante = viajeCompleto.ayudante_chofer?.persona?.nombre || (viajeCompleto.ayudante || null); 
+        const flota = viajeCompleto.vehiculo?.flota || 'PENDIENTE';
+        const placa = viajeCompleto.vehiculo?.placa || 'N/A';
+        
+        // *** CORRECCIÓN CRÍTICA: Asegurar que despachos es un array, si no, usar [] ***
+        const despachos = Array.isArray(viajeCompleto.despachos) ? viajeCompleto.despachos : [];
+        
+        let totalLitros = 0;
+        let despachosHtml = '';
+        
+        // Generar filas de despachos
+        if (despachos.length > 0) {
+            despachos.forEach(despacho => {
+                const clienteNombre = despacho.cliente ? (despacho.cliente.nombre || despacho.otro_cliente) : (despacho.otro_cliente || 'Cliente Desconocido');
                 const litros = despacho.litros || 0;
                 totalLitros += litros;
 
                 despachosHtml += `
                     <tr style="font-size: 15px; font-weight: 500;">
-                        <td class="px-2">${clienteNombre}</td>
-                        <td class="px-2">${new Intl.NumberFormat('es-ES').format(litros)} Lts</td>
+                        <td class="px-2" style="border-right: 1px solid #dee2e6; color:#495057;">${clienteNombre}</td>
+                        <td class="px-2 fw-bold text-end">${new Intl.NumberFormat('es-ES').format(litros)} Lts</td>
                     </tr>
                 `;
             });
-
-            // Usamos un formato compacto similar a tu vista Blade
-            return `
-                <div class="table-responsive mt-3" style="max-height: 400px; overflow-y: auto;">
-                    <table class="table table-sm text-start" style="font-size: 0.8rem; width: 100%;">
-                        <thead class="bg-primary text-white">
-                            <tr style="font-weight: 700">
-                                <th class="py-1 px-2" style="width: 50%;">Destino / Cliente</th>
-                                <th class="py-1 px-2" style="width: 25%;">Litros</th>
-                                <th class="py-1 px-2 text-center" style="background-color: #6c757d; width: 25%;">Unidad</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr style="border-bottom: 1px solid #01050a; background-color:#f8f9fa;">
-                                <td colspan="2" class="px-2">
-                                    Despacho ${new Date(viajeCompleto.fecha_salida).toLocaleDateString('es-ES')}<br>
-                                    <strong class="text-primary">Destino: [${viajeCompleto.destino_ciudad}]</strong>
-                                    <p class="mb-0 mt-1">
-                                        <span class="fw-bold">Chofer:</span> ${viajeCompleto.chofer.persona.nombre || 'PENDIENTE'}<br>
-                                        ${viajeCompleto.ayudante ? `<span class="fw-bold">Ayudante:</span> ${ayudanteNombre}` : ''}
-                                    </p>
-                                </td>
-                                <td rowspan="${(viajeCompleto.despachos.length) + 2}" style="vertical-align: middle; text-align:center; background-color:#e9ecef;">
-                                    <span class="text-black fw-bold" style="font-size: 20px" >${viajeCompleto.vehiculo.flota || 'N/A'}</span><br>
-                                    ${viajeCompleto.vehiculo.placa || 'PENDIENTE'}
-                                </td>
-                            </tr>
-                            ${despachosHtml}
-                        </tbody>
-                        <tfoot style="border-top: 2px solid #01050a; background-color: #d1ecf1; font-weight: 700; font-size:16px;">
-                            <tr>
-                                <td class="py-1 px-2">TOTAL LITROS</td>
-                                <td class="py-1 px-2">${new Intl.NumberFormat('es-ES').format(totalLitros)} Lts</td>
-                                <td class="py-1 px-2"></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-            `;
+        } else {
+             // Mostrar una fila si no hay despachos
+             despachosHtml = `
+                <tr style="font-size: 15px; font-weight: 500; background-color: #f8d7da;">
+                    <td colspan="2" class="px-2 text-center text-danger">No hay despachos asignados a este viaje.</td>
+                </tr>
+             `;
         }
+
+        const choferRowSpan = despachos.length > 0 ? despachos.length + 1 : 2; 
+
+        // Construcción del HTML de la tabla
+        return `
+            <div class="table-responsive mt-3" style="max-height: 400px; overflow-y: auto;">
+                <table class="table table-sm text-start table-borderless" style="font-size: 0.8rem; width: 100%; border: 1px solid #dee2e6;">
+                    <thead class="bg-primary text-white">
+                        <tr style="font-weight: 700">
+                            <th class="py-1 px-2" style="width: 50%;">Despacho / Cliente</th>
+                            <th class="py-1 px-2 text-end" style="width: 25%;">Litros</th>
+                            <th class="py-1 px-2 text-center" style="background-color: #34495e; color: #fff; width: 25%;">Unidad / Personal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom: 1px solid #01050a; background-color:white;">
+                            <td colspan="2" class="px-2" style="border-right: 1px solid #dee2e6;">
+                                <small class="text-muted">Fecha Salida: ${new Date(viajeCompleto.fecha_salida).toLocaleDateString('es-ES')}</small><br>
+                                <strong class="text-info">Destino: [${viajeCompleto.destino_ciudad}]</strong>
+                            </td>
+                            
+                            <!-- Celda unificada para Chofer/Unidad -->
+                            <td rowspan="${choferRowSpan + 1}" style="vertical-align: middle; text-align:center; background-color:#e9ecef;">
+                                <span class="text-black fw-bold d-block" style="font-size: 18px" >${flota}</span>
+                                <small class="d-block text-muted mb-2">${placa}</small>
+                                <hr class="my-1 border-secondary">
+                                <span class="fw-bold d-block text-success" style="font-size: 14px;">Chofer: ${choferNombre}</span>
+                                ${ayudante ? `<span class="d-block text-dark" style="font-size: 14px;">Ayudante: ${ayudante}</span>` : ''}
+                            </td>
+                        </tr>
+                        ${despachosHtml}
+                    </tbody>
+                    <tfoot style="border-top: 2px solid #01050a; background-color: #d1ecf1; font-weight: 700; font-size:16px;">
+                        <tr>
+                            <td class="py-1 px-2" style="border-right: 1px solid #01050a;">TOTAL LITROS</td>
+                            <td class="py-1 px-2 text-end">${new Intl.NumberFormat('es-ES').format(totalLitros)} Lts</td>
+                            <td class="py-1 px-2"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="alert alert-light text-muted p-2 mt-3" style="font-size: 0.9em; border-left: 5px solid #0d6efd;">
+                Estatus: <span class="fw-bold text-uppercase text-danger">${viajeCompleto.status}</span> | Custodias: ${viajeCompleto.custodia_count || 0}
+            </div>
+        `;
+    }
+
 
         // =====================================================================
         // 2. CONVERSIÓN DE DATA AL FORMATO DE FULLCALENDAR
