@@ -56,7 +56,7 @@ class ViajesController extends Controller
         $choferes = Chofer::with('persona')->get();
         $vehiculos = Vehiculo::where('estatus', 1)->where('es_flota',true)->get(['id', 'placa', 'flota']);
         $destino = TabuladorViatico::pluck('destino')->unique();
-        $clientes = Cliente::where('status',1)->get(['id','nombre']);
+        $clientes = Cliente::where('status',1)->get(['id','nombre','alias']);
         
         return view('viajes.create', compact('choferes', 'vehiculos', 'destino', 'clientes'));
     }
