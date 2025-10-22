@@ -135,35 +135,11 @@ class InventarioController extends BaseController
 
         $validator = Validator::make($request->all(), [
             'id_usuario' => 'sometimes|required|exists:users,id',
-            'prioridad' => 'sometimes|required|integer|in:1,2',
-            'estatus' => 'sometimes|required|integer',
+
             'id_almacen' => 'sometimes|required|exists:almacenes,id',
             'codigo' => 'sometimes|required|string|max:50|unique:inventario,codigo,' . $id,
-            'codigo_fabricante' => 'nullable|string|max:50',
-            'fabricante' => 'sometimes|required|string|max:100',
-            'referencia' => 'sometimes|required|string|max:50',
             'descripcion' => 'sometimes|required|string|max:200',
-            'existencia' => 'sometimes|required|numeric|min:0',
-            'costo' => 'sometimes|required|numeric|min:0',
-            'costo_div' => 'sometimes|required|numeric|min:0',
-            'existencia_minima' => 'sometimes|required|integer|min:0',
-            'marca' => 'sometimes|required|integer',
-            'modelo' => 'sometimes|required|integer',
-            'salida_motivo' => 'nullable|string',
-            'salida_fecha' => 'nullable|date',
-            'salida_id_usuario' => 'nullable|exists:users,id',
-            'fecha_in' => 'sometimes|required|string|max:10',
-            'observacion' => 'nullable|string|max:200',
-            'avatar' => 'nullable|string',
-            'factura_referencia' => 'nullable|string|max:100',
-            'grupo' => 'sometimes|required|string|max:100',
-            'codigo_interno' => 'sometimes|required|string|max:100',
-            'clasificacion' => 'sometimes|required|integer',
-            'incorporacion' => 'sometimes|required|integer',
-            'existencia_maxima' => 'nullable|integer|min:0',
-            'condicion' => 'sometimes|required|integer',
-            'fecha_conteo' => 'nullable|date',
-            'serialized' => 'nullable|integer',
+            'existencia' => 'sometimes|required|numeric|min:0'
         ]);
 
         if ($validator->fails()) {
