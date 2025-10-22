@@ -537,7 +537,7 @@ class ViajesController extends Controller
             ];
         });
 
-        dd($viajesData);
+        //dd($viajesData);
         return view('viajes.calendario_viajes', [
             'viajesDataJson' => $viajesData->toJson()
         ]);

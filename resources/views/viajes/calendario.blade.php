@@ -61,40 +61,7 @@
             // =====================================================================
             
             // Usamos la estructura de tu modelo Viaje: destino_ciudad, fecha_salida, status.
-            const viajesData = [
-                {
-                    id: 101,
-                    destino: 'BARQUISIMETO',
-                    chofer: 'Carlos Pérez',
-                    status: 'EN_CURSO',
-                    fecha_salida: '2025-10-22', // Hoy
-                    duracion_dias: 3
-                },
-                {
-                    id: 102,
-                    destino: 'MARACAIBO',
-                    chofer: 'Ana Gómez',
-                    status: 'PENDIENTE_ASIGNACION',
-                    fecha_salida: '2025-10-24',
-                    duracion_dias: 2
-                },
-                {
-                    id: 103,
-                    destino: 'VALENCIA',
-                    chofer: 'Ricardo Días',
-                    status: 'COMPLETADO',
-                    fecha_salida: '2025-10-15',
-                    duracion_dias: 1
-                },
-                {
-                    id: 104,
-                    destino: 'PLANTA GUAYANA',
-                    chofer: 'Luis Rojas',
-                    status: 'EN_CURSO',
-                    fecha_salida: '2025-11-01',
-                    duracion_dias: 4
-                },
-            ];
+            const viajesData = JSON.parse('{{$viajesDataJson}}');
 
             // =====================================================================
             // 2. CONVERSIÓN DE DATA AL FORMATO DE FULLCALENDAR
