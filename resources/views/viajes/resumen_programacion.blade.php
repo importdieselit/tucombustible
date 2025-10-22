@@ -60,9 +60,9 @@
                             <strong>[{{ $viaje->destino_ciudad }}]</strong>
                         </td>
                         <td rowspan="{{$viaje->despachos->count()+1}}" style="vertical-align: middle; text-align:center; font-size: 20px;">
-                            <span class="fw-bold">{{ $viaje->chofer->persona->name ?? 'PENDIENTE' }}</span><br>
+                            <span class="fw-bold">{{ $viaje->chofer->persona->nombre ?? 'PENDIENTE' }}</span><br>
                             @if($viaje->ayudante)
-                                <span class="d-block">Ayudante: {{ $viaje->ayudante->persona->name ?? 'N/A' }}</span>
+                                <span class="d-block">Ayudante: {{ $viaje->ayudante->persona->nombre ?? 'N/A' }}</span>
                             @endif
                         </td>
                         <td rowspan="{{$viaje->despachos->count()+1}}" style="vertical-align: middle; text-align:center">
@@ -74,9 +74,9 @@
 
                       @foreach($viaje->despachos as $index => $despacho)
                       @php($TotalLitros += $despacho->litros ?? 0)
-                        <tr style="font-size: 18px; font-weight: 600;">
+                        <tr style="font-size: 17px; font-weight: 600;">
                             <td>{{ $despacho->cliente->nombre ?? $despacho->otro_cliente ?? 'Cliente Null' }}</td>
-                            <td>{{ number_format($despacho->litros, 2)}} L</td>
+                            <td>{{ number_format($despacho->litros, 2)}} Lts</td>
                         </tr>
                       @endforeach
 
