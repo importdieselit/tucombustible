@@ -124,6 +124,11 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        $('.select2').select2({
+            dropdownParent: $('#crearPedidoModal'),
+            placeholder: "Buscar cliente...",
+            allowClear: true
+        });
         const despachosTableBody = document.getElementById('despachos-table').getElementsByTagName('tbody')[0];
         const addDespachoButton = document.getElementById('add-despacho');
         // Inicializa el índice para que continúe donde se quedó si hay old('despachos')
@@ -181,7 +186,7 @@
 
             // Columna Cliente Registrado
             newRow.insertCell(0).innerHTML = `
-                <select name="despachos[${index}][cliente_id]" class="form-select form-select-sm cliente-select" ${initialData.otro_cliente ? 'disabled' : ''}>
+                <select name="despachos[${index}][cliente_id]" class="form-select form-select-sm cliente-select select2" ${initialData.otro_cliente ? 'disabled' : ''}>
                     <option value="">-- Seleccione Cliente --</option>
                     ${clienteOptions}
                 </select>
