@@ -181,7 +181,9 @@
 
             // Interacción del usuario (Manejo de clics en eventos)
             eventClick: function(info) {
+                console.log('Evento clickeado:', info.event);
                 const viajeCompleto = info.event.extendedProps.data;
+                console.log('Viaje completo seleccionado:', viajeCompleto);
                 const htmlContent = generateSummaryHtml(viajeCompleto);
 
                 Swal.fire({
