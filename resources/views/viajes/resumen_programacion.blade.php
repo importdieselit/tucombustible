@@ -129,8 +129,6 @@
 
     // Mensaje inicial de bienvenida/instrucción
     // Se ejecuta tan pronto como el DOM esté listo
-    statusMessage.textContent = 'Pulsa el botón verde para capturar el área del reporte.';
-    statusMessage.classList.remove('hidden');
 
 
     /**

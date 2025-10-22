@@ -244,6 +244,8 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
         Route::post('/aprobado', [MovimientoCombustibleController::class, 'storeAprobado'])->name('storeAprobado');
 
     });
+
+    Route::get('/viajes/calendario', [ViajesController::class, 'calendar'])->name('viajes.calendario');
   
     Route::get('/alertas', [AlertaController::class, 'index'])->name('alertas.index');
     Route::get('/alertas/read/{id}', [AlertaController::class, 'markAsRead'])->name('alertas.read');

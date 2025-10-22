@@ -489,4 +489,15 @@ class ViajesController extends Controller
         return view('viajes.resumen_programacion', compact('viajes', 'totalViaticosPresupuestados'));
     }
 
+    // En ViajesController.php
+    public function calendar()
+    {
+        // **TODO:** Aquí debes cargar la data real de tus viajes.
+        // Ejemplo: $viajes = Viaje::where('status', '!=', 'CANCELADO')->get();
+        // Luego pasarías esta data a la vista: return view('viajes.calendario', compact('viajes'));
+
+        // Por ahora, solo devuelve la vista con la data simulada en el script.
+        return view('viajes.calendario'); 
+    }
+
 }
