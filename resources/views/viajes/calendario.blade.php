@@ -6,7 +6,7 @@
         /* Estilos generales para el contenedor y la fuente */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #f4f6f8;
+            background-color: #080808;
         }
 
         /* Estilo para el contenedor principal del calendario */
@@ -32,7 +32,7 @@
         }
         .fc-event-COMPLETADO {
             background-color: #bfdbfe !important; /* Azul claro */
-            border-color: #3b82f6 !important;
+            border-color: #0c0c0c !important;
             color: #1e3a8a !important;
             opacity: 0.7; /* Menor opacidad para terminados */
         }
@@ -55,7 +55,7 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            
+
             const viajesDataJsonString = '{!! $viajesDataJson !!}';
 
             console.log('Cargando datos de viajes para el calendario...');
