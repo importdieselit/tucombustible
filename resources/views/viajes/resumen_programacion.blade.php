@@ -44,8 +44,8 @@
             <table class="table table-sm" style="font-size: 0.75rem;">
                 <thead class="bg-primary text-white">
                     <tr style="font-weight: 700">
-                        <th class="py-1"><img src="{{ asset('img/logo1.png') }}" alt="logo empresa" style="width: 300px"></th>
-                        <th class="py-1">Litros</th>
+                        <th class="py-1"><img src="{{ asset('img/logo1.png') }}" alt="logo empresa" style="width: 250px"></th>
+                        <th class="py-1" width="30%">Litros</th>
                         <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;">CHOFER / AYUDANTE</th>
                         <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;">UNIDAD</th>
                     </tr>
@@ -76,7 +76,7 @@
                       @php($TotalLitros += $despacho->litros ?? 0)
                         <tr style="font-size: 15px; font-weight: 500;">
                             <td>{{ $despacho->cliente->nombre ?? $despacho->otro_cliente ?? 'Cliente Null' }}</td>
-                            <td>{{ number_format($despacho->litros, 2)}} Lts</td>
+                            <td>{{ number_format($despacho->litros, 0)}} Lts</td>
                         </tr>
                       @endforeach
 
