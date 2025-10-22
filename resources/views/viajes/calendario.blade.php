@@ -66,98 +66,155 @@
             console.log('JSON de Viajes:', viajesDataJsonString);
             
             // Deserializar el JSON pasado desde el controlador
-            const viajesData = JSON.parse(viajesDataJsonString);
-            console.log('Datos de Viajes (Objeto JS):', viajesData);
-            // =====================================================================
-            // 2. CONVERSIÓN DE DATA AL FORMATO DE FULLCALENDAR
-            // =====================================================================
+    try {
+        const viajesData = JSON.parse(viajesDataJsonString);
+        console.log('Datos de Viajes (Objeto JS):', viajesData);
+
+        // =====================================================================
+        // 1. FUNCIÓN AUXILIAR: GENERAR TABLA HTML PARA SWEETALERT
+        // =====================================================================
+
+        function generateSummaryHtml(viajeCompleto) {
+            // Verificar si el ayudante es un objeto Chofer (con persona.nombre) o un string simple
+            const ayudanteNombre = viajeCompleto.ayudante_chofer 
+                                   ? (viajeCompleto.ayudante_chofer.persona?.nombre || 'N/A')
+                                   : (viajeCompleto.ayudante || 'N/A');
             
-            const events = viajesData.map(viaje => {
-                // Función auxiliar para calcular la fecha de fin (FullCalendar usa 'end' no inclusive)
-                const endDate = new Date(viaje.fecha_salida);
-                endDate.setDate(endDate.getDate() + viaje.duracion_dias);
+            let totalLitros = 0;
+            let despachosHtml = '';
 
-                // Formateamos la fecha de fin para FullCalendar (YYYY-MM-DD)
-                const endFormatted = endDate.toISOString().split('T')[0];
-//[${viaje.status}]
-                return {
-                    id: viaje.id,
-                    title: ` ${viaje.cliente}`,
-                    desc:` ${viaje.cliente} ${viaje.destino} (${viaje.chofer})`,
-                    start: viaje.fecha_salida,
-                    end: endFormatted, // La fecha de fin es exclusiva
-                    allDay: true, // Asumimos que la planificación es por días completos
-                    classNames: ['fc-event', `fc-event-${viaje.status}`,'text-black'], // Clases CSS para colorear
-                    style: 'color: black !important;',
-                    extendedProps: {
-                        status: viaje.status
-                    }
-                };
+            // Generar filas de despachos
+            viajeCompleto.despachos.forEach(despacho => {
+                const clienteNombre = despacho.cliente ? (despacho.cliente.nombre || despacho.otro_cliente) : (despacho.otro_cliente || 'Cliente Null');
+                const litros = despacho.litros || 0;
+                totalLitros += litros;
+
+                despachosHtml += `
+                    <tr style="font-size: 15px; font-weight: 500;">
+                        <td class="px-2">${clienteNombre}</td>
+                        <td class="px-2">${new Intl.NumberFormat('es-ES').format(litros)} Lts</td>
+                    </tr>
+                `;
             });
 
+            // Usamos un formato compacto similar a tu vista Blade
+            return `
+                <div class="table-responsive mt-3" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-sm text-start" style="font-size: 0.8rem; width: 100%;">
+                        <thead class="bg-primary text-white">
+                            <tr style="font-weight: 700">
+                                <th class="py-1 px-2" style="width: 50%;">Destino / Cliente</th>
+                                <th class="py-1 px-2" style="width: 25%;">Litros</th>
+                                <th class="py-1 px-2 text-center" style="background-color: #6c757d; width: 25%;">Unidad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #01050a; background-color:#f8f9fa;">
+                                <td colspan="2" class="px-2">
+                                    Despacho ${new Date(viajeCompleto.fecha_salida).toLocaleDateString('es-ES')}<br>
+                                    <strong class="text-primary">Destino: [${viajeCompleto.destino_ciudad}]</strong>
+                                    <p class="mb-0 mt-1">
+                                        <span class="fw-bold">Chofer:</span> ${viajeCompleto.chofer.persona.nombre || 'PENDIENTE'}<br>
+                                        ${viajeCompleto.ayudante ? `<span class="fw-bold">Ayudante:</span> ${ayudanteNombre}` : ''}
+                                    </p>
+                                </td>
+                                <td rowspan="${(viajeCompleto.despachos.length) + 2}" style="vertical-align: middle; text-align:center; background-color:#e9ecef;">
+                                    <span class="text-black fw-bold" style="font-size: 20px" >${viajeCompleto.vehiculo.flota || 'N/A'}</span><br>
+                                    ${viajeCompleto.vehiculo.placa || 'PENDIENTE'}
+                                </td>
+                            </tr>
+                            ${despachosHtml}
+                        </tbody>
+                        <tfoot style="border-top: 2px solid #01050a; background-color: #d1ecf1; font-weight: 700; font-size:16px;">
+                            <tr>
+                                <td class="py-1 px-2">TOTAL LITROS</td>
+                                <td class="py-1 px-2">${new Intl.NumberFormat('es-ES').format(totalLitros)} Lts</td>
+                                <td class="py-1 px-2"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            `;
+        }
 
-            // =====================================================================
-            // 3. INICIALIZACIÓN DEL CALENDARIO
-            // =====================================================================
-            const calendarEl = document.getElementById('calendar');
+        // =====================================================================
+        // 2. CONVERSIÓN DE DATA AL FORMATO DE FULLCALENDAR
+        // =====================================================================
 
-            const calendar = new FullCalendar.Calendar(calendarEl, {
-                // Configuración básica
-                locale: 'es', // Usar idioma español
-                initialView: 'dayGridMonth', // Vista inicial: Mes
-                headerToolbar: {
-                    left: 'prev,next today',
-                    center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,timeGridDay' // Opciones de vista
-                },
-                
-                // Eventos
-                events: events, // Carga los eventos generados arriba
+        const events = viajesData.map(viaje => {
+            // ... (Lógica de fechas idéntica)
+            const endDate = new Date(viaje.fecha_salida);
+            endDate.setDate(endDate.getDate() + (viaje.duracion_dias || 1)); // Asegura al menos 1 día
+            const endFormatted = endDate.toISOString().split('T')[0];
 
-                // Interacción del usuario (Manejo de clics en eventos)
-                eventClick: function(info) {
-                    const statusText = info.event.extendedProps.status;
-                    
-                    Swal.fire({
-                        title: info.event.title,
-                        html: `
-                            <p><strong>ID Viaje:</strong> #${info.event.id}</p>
-                            <p><strong>Fecha Inicio:</strong> ${info.event.start.toLocaleDateString()}</p>
-                            <p><strong>${info.event.desc}</strong></p>
-                            <p><strong>Estatus:</strong> <span class="badge" style="background-color: ${info.event.classNames.includes('fc-event-EN_CURSO') ? '#10b981' : (info.event.classNames.includes('fc-event-PENDIENTE_ASIGNACION') ? '#ef4444' : '#3b82f6')}; color: white;">${statusText}</span></p>
-                            <p class="mt-3">¿Deseas ver los detalles o editar la planificación?</p>
-                        `,
-                        icon: 'info',
-                        showCancelButton: true,
-                        confirmButtonText: 'Ver/Editar Viaje',
-                        cancelButtonText: 'Cerrar'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            // En un entorno real, esto redirigiría a la ruta de edición de viaje.
-                            window.location.href = `/viajes/${info.event.id}/edit`;
-                        }
-                    });
-                },
-                
-                // Opcional: Permitir arrastrar y redimensionar (si tu usuario tiene permisos de planificación)
-                editable: true, 
-                eventDrop: function(info) {
-                    // Muestra una notificación si el usuario mueve un viaje
-                    Swal.fire({
-                        toast: true,
-                        position: 'top-end',
-                        icon: 'warning',
-                        title: `Viaje movido. Enviar nueva fecha (${info.event.startStr}) al servidor.`,
-                        showConfirmButton: false,
-                        timer: 3000
-                    });
-                    // En un sistema real, aquí harías una llamada AJAX para actualizar la fecha en la base de datos.
+            return {
+                id: viaje.id,
+                title: `[${viaje.status}] ${viaje.cliente || 'Viaje'} a ${viaje.destino_ciudad}`,
+                start: viaje.fecha_salida,
+                end: endFormatted,
+                allDay: true,
+                classNames: ['fc-event', `fc-event-${viaje.status}`,'text-black'],
+                // Guardamos el objeto COMPLETO del viaje en extendedProps
+                extendedProps: {
+                    data: viaje // Aquí guardamos toda la información (vehiculo, despachos, etc.)
                 }
-            });
-
-            // Renderizar el calendario
-            calendar.render();
+            };
         });
+
+        // =====================================================================
+        // 3. INICIALIZACIÓN DEL CALENDARIO
+        // =====================================================================
+        const calendarEl = document.getElementById('calendar');
+
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            // ... (Configuración básica)
+            locale: 'es', 
+            initialView: 'dayGridMonth', 
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            
+            // Eventos
+            events: events,
+
+            // Interacción del usuario (Manejo de clics en eventos)
+            eventClick: function(info) {
+                const viajeCompleto = info.event.extendedProps.data;
+                const htmlContent = generateSummaryHtml(viajeCompleto);
+
+                Swal.fire({
+                    title: `<h5 class="text-primary">${viajeCompleto.cliente || 'Viaje Programado'}</h5>`,
+                    html: htmlContent,
+                    icon: 'info',
+                    width: '85%', // Ancho adaptado para la tabla
+                    showCancelButton: true,
+                    confirmButtonText: '<i class="bi bi-pencil-square me-2"></i> Ver / Editar Viaje',
+                    cancelButtonText: 'Cerrar',
+                    focusConfirm: false,
+                    showCloseButton: true,
+                    customClass: {
+                        container: 'custom-swal-container',
+                        popup: 'custom-swal-popup',
+                        title: 'custom-swal-title'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Redirigir a la ruta de edición de viaje.
+                        window.location.href = `/viajes/${info.event.id}/edit`;
+                    }
+                });
+            },
+            // ... (Otros callbacks)
+        });
+
+        calendar.render();
+
+    } catch (e) {
+        console.error('Error al inicializar el calendario o parsear JSON:', e);
+    }
+});
     </script>
 @endpush
 
