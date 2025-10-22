@@ -177,7 +177,7 @@
             newRow.id = `row-${index}`;
             
             // Obtener las opciones de cliente del servidor para el HTML
-            const clienteOptions = `@foreach($clientes as $cliente)<option value=\"{{ $cliente->id }}\">{{ $cliente->nombre }}</option>@endforeach`;
+            const clienteOptions = `@foreach($clientes as $cliente)<option value=\"{{ $cliente->id }}\">{{ is_null($cliente->alias)?$cliente->nombre:$cliente->alias }}</option>@endforeach`;
 
             // Columna Cliente Registrado
             newRow.insertCell(0).innerHTML = `
