@@ -62,7 +62,6 @@
                         <td rowspan="{{$viaje->despachos->count()+1}}" style="vertical-align: middle; text-align:center; font-size: 18px;">
                             <span class="fw-bold">{{ $viaje->chofer->persona->nombre ?? 'PENDIENTE' }}</span><br>
                             @if($viaje->ayudante)
-                            {{dd($viaje->ayudante_chofer->persona)}}
                                 <span class="d-block">Ayudante: {{ $viaje->ayudante_chofer->persona->nombre ?? 'N/A' }}</span>
                             @endif
                         </td>
