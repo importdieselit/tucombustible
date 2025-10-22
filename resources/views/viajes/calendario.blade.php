@@ -45,6 +45,9 @@
             font-size: 0.85rem;
             font-weight: 600;
         }
+        .fc-event-main {
+            color: #070707 !important;
+        }
     </style>
 @endpush
 
