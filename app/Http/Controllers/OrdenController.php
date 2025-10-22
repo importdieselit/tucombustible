@@ -369,6 +369,12 @@ class OrdenController extends BaseController
             $orden->id_us_out = Auth::id(); // Usuario que cierra la orden
             $orden->save();
 
+            $vehiculo = Vehiculo::find($orden->id_vehiculo);
+            if($vehiculo){
+                $vehiculo->estatus = 1; // Disponible
+                $vehiculo->save();
+            }   
+
             Session::flash('success', 'Orden de trabajo cerrada exitosamente.');
             return response()->json(['success' => true, 'message' => 'Orden de trabajo cerrada exitosamente']);
         } catch (ModelNotFoundException $e) {
@@ -392,6 +398,12 @@ class OrdenController extends BaseController
             $orden->id_us_out = Auth::id(); // Usuario que cierra la orden
             $orden->save();
 
+            $vehiculo = Vehiculo::find($orden->id_vehiculo);
+            if($vehiculo){
+                $vehiculo->estatus = 1; // Disponible
+                $vehiculo->save();
+            }
+
             Session::flash('success', 'Orden de trabajo cerrada exitosamente.');
                    return response()->json(['success' => true, 'message' => 'Orden de trabajo anulada exitosamente']);
      
@@ -412,6 +424,12 @@ class OrdenController extends BaseController
             $orden->hora_out = null;
             $orden->id_us_out =null; // Usuario que cierra la orden
             $orden->save();
+
+            $vehiculo = Vehiculo::find($orden->id_vehiculo);
+            if($vehiculo){
+                $vehiculo->estatus = 3; // En mantenimiento
+                $vehiculo->save();
+            }
 
             Session::flash('success', 'Orden de trabajo Reactivada exitosamente.');
             return response()->json(['success' => true, 'message' => 'Orden de trabajo Reactivada exitosamente']);

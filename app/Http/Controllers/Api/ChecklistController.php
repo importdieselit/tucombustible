@@ -315,7 +315,7 @@ class ChecklistController extends Controller
                     'v.updated_at',
                 ])
                 ->where('v.id', $id)
-                ->where('v.estatus', 1)
+                //->where('v.estatus', 1)
                 ->first();
 
             if (!$vehiculo) {
