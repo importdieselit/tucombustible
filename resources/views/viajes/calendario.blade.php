@@ -6,7 +6,7 @@
         /* Estilos generales para el contenedor y la fuente */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #080808;
+            background-color: #f4f6f8;
         }
 
         /* Estilo para el contenedor principal del calendario */
@@ -32,7 +32,7 @@
         }
         .fc-event-COMPLETADO {
             background-color: #bfdbfe !important; /* Azul claro */
-            border-color: #0c0c0c !important;
+            border-color: #0d0d0e !important;
             color: #1e3a8a !important;
             opacity: 0.7; /* Menor opacidad para terminados */
         }
@@ -55,7 +55,7 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-
+            
             const viajesDataJsonString = '{!! $viajesDataJson !!}';
 
             console.log('Cargando datos de viajes para el calendario...');
@@ -75,14 +75,14 @@
 
                 // Formateamos la fecha de fin para FullCalendar (YYYY-MM-DD)
                 const endFormatted = endDate.toISOString().split('T')[0];
-
+//[${viaje.status}]
                 return {
                     id: viaje.id,
-                    title: `[${viaje.status}] ${viaje.destino} (${viaje.chofer})`,
+                    title: ` ${viaje.destino} (${viaje.chofer})`,
                     start: viaje.fecha_salida,
                     end: endFormatted, // La fecha de fin es exclusiva
                     allDay: true, // Asumimos que la planificación es por días completos
-                    classNames: ['fc-event', `fc-event-${viaje.status}`], // Clases CSS para colorear
+                    classNames: ['fc-event', `fc-event-${viaje.status}`,'text-black'], // Clases CSS para colorear
                     extendedProps: {
                         status: viaje.status
                     }
