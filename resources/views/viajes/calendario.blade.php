@@ -15,7 +15,7 @@
             margin: 40px auto;
             padding: 20px;
             background: #ffffff;
-            color: #070707;
+            color: #070707 !important;
             border-radius: 12px;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
         }
@@ -84,6 +84,7 @@
                     end: endFormatted, // La fecha de fin es exclusiva
                     allDay: true, // Asumimos que la planificación es por días completos
                     classNames: ['fc-event', `fc-event-${viaje.status}`,'text-black'], // Clases CSS para colorear
+                    style: 'color: black !important;',
                     extendedProps: {
                         status: viaje.status
                     }
