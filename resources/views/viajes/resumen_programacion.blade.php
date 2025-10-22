@@ -66,7 +66,7 @@
                             @endif
                         </td>
                         <td rowspan="{{$viaje->despachos->count()+1}}" style="vertical-align: middle; text-align:center">
-                            <span class="text-black fw-bold" style="font-size: 40px" >{{  $viaje->vehiculo->flota }}</span><br>
+                            <span class="text-black fw-bold" style="font-size: 30px" >{{  $viaje->vehiculo->flota }}</span><br>
                                 {{ $viaje->vehiculo->placa ?? 'PENDIENTE' }}
                             
                         </td>
