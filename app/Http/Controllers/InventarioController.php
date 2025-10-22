@@ -48,33 +48,10 @@ class InventarioController extends BaseController
     {
         $validator = Validator::make($request->all(), [
             'id_usuario' => 'required|exists:users,id',
-            'prioridad' => 'required|integer|in:1,2',
-            'estatus' => 'required|integer',
             'id_almacen' => 'required|exists:almacenes,id',
             'codigo' => 'required|string|max:50|unique:inventario',
-            'codigo_fabricante' => 'nullable|string|max:50',
-            'fabricante' => 'required|string|max:100',
-            'referencia' => 'required|string|max:50',
-            'descripcion' => 'required|string|max:200',
-            'existencia' => 'required|numeric|min:0',
-            'costo' => 'required|numeric|min:0',
-            'costo_div' => 'required|numeric|min:0',
-            'existencia_minima' => 'required|integer|min:0',
-            'marca' => 'required|integer',
-            'modelo' => 'required|integer',
-            'fecha_in' => 'required|string|max:10', // Considerar 'date' para validación
-            'observacion' => 'nullable|string|max:200',
-            'avatar' => 'nullable|string',
-            'factura_referencia' => 'nullable|string|max:100',
-            'grupo' => 'required|string|max:100',
-            'codigo_interno' => 'required|string|max:100',
-            'clasificacion' => 'required|integer',
-            'incorporacion' => 'required|integer',
-            'existencia_maxima' => 'nullable|integer|min:0',
-            'condicion' => 'required|integer',
-            'fecha_conteo' => 'nullable|date',
-            'serialized' => 'nullable|integer',
-        ]);
+            'descripcion' => 'required|string|max:200'
+            ]);
 
         if ($validator->fails()) {
             return redirect()->route('inventario.create')
