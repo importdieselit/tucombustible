@@ -55,15 +55,15 @@
     
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // =====================================================================
-            // 1. DATA SIMULADA DE VIAJES
-            // ESTA DATA DEBE SER REEMPLAZADA POR LA CONSULTA REAL A TU CONTROLADOR
-            // =====================================================================
+            
+            const viajesDataJsonString = '{!! $viajesDataJson !!}';
+
             console.log('Cargando datos de viajes para el calendario...');
-            console.log('JSON de Viajes:', {{$viajesDataJson}});
-            // Usamos la estructura de tu modelo Viaje: destino_ciudad, fecha_salida, status.
-            const viajesData = JSON.parse('{!! $viajesDataJson !!}');
-            console.log('Datos de Viajes:', viajesData);
+            console.log('JSON de Viajes:', viajesDataJsonString);
+            
+            // Deserializar el JSON pasado desde el controlador
+            const viajesData = JSON.parse(viajesDataJsonString);
+            console.log('Datos de Viajes (Objeto JS):', viajesData);
             // =====================================================================
             // 2. CONVERSIÓN DE DATA AL FORMATO DE FULLCALENDAR
             // =====================================================================
