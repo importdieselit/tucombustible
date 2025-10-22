@@ -113,7 +113,7 @@ class ViajesController extends Controller
     public function show(Viaje $viaje)
     {
          // Eager load todas las relaciones necesarias para la vista de detalle
-        $viaje->load(['chofer.persona', 'ayudante.persona', 'vehiculo', 'despachos.cliente', 'viaticos.ajustadoPor']);   
+        $viaje->load(['chofer.persona', 'ayudante_chofer.persona', 'vehiculo', 'despachos.cliente', 'viaticos.ajustadoPor']);   
         return view('viajes.show', compact('viaje'));
     }
 
@@ -464,7 +464,7 @@ class ViajesController extends Controller
      public function resumenProgramacion($id = null)
     {
         // 1. Inicializa la query builder
-        $query = Viaje::with(['chofer.persona', 'ayudante.persona', 'vehiculo', 'despachos.cliente', 'viaticos']);
+        $query = Viaje::with(['chofer.persona', 'ayudante_chofer.persona', 'vehiculo', 'despachos.cliente', 'viaticos']);
 
         // Excluir cancelados
         $query->where('status', '!=', 'CANCELADO');
@@ -494,7 +494,7 @@ class ViajesController extends Controller
     {
 
        // 1. Consulta con las relaciones necesarias para el calendario
-        $query = Viaje::with(['chofer.persona', 'ayudante.persona', 'vehiculo', 'despachos.cliente', 'viaticos']);
+        $query = Viaje::with(['chofer.persona', 'ayudante_chofer.persona', 'vehiculo', 'despachos.cliente', 'viaticos']);
         $query->where('status', '!=', 'CANCELADO');
         
         $viajes = $query->get();
