@@ -74,7 +74,7 @@ class VehiculoController extends BaseController
     {
         $marcas = Marca::pluck('marca', 'id');
         $modelos = Modelo::pluck('modelo', 'id');
-        $clientes = Cliente::pluck('name', 'id');
+        $clientes = Cliente::pluck('nombre', 'id');
         $tiposVehiculo = TipoVehiculo::pluck('tipo', 'id');
         
         // La lógica de la vista se hereda del BaseController, pero con los datos adicionales.
