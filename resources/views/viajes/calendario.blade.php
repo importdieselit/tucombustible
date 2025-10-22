@@ -91,9 +91,9 @@
         // Generar filas de despachos
         if (despachos.length > 0) {
             despachos.forEach(despacho => {
-                const clienteNombre = despacho.cliente ? (despacho.cliente.nombre || despacho.otro_cliente) : (despacho.otro_cliente || 'Cliente Desconocido');
+                const clienteNombre = despacho.cliente ? despacho.cliente :'Cliente Desconocido';
                 const litros = despacho.litros || 0;
-                totalLitros += litros;
+                totalLitros += Intl.NumberFormat('es-ES').format(litros);
 
                 despachosHtml += `
                     <tr style="font-size: 15px; font-weight: 500;">
