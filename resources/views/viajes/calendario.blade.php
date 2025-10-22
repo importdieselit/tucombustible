@@ -62,7 +62,7 @@
             
             // Usamos la estructura de tu modelo Viaje: destino_ciudad, fecha_salida, status.
             const viajesData = @json($viajesDataJson);
-
+            console.log('Datos de Viajes:', viajesData);
             // =====================================================================
             // 2. CONVERSIÓN DE DATA AL FORMATO DE FULLCALENDAR
             // =====================================================================
