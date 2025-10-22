@@ -105,12 +105,13 @@
                                         @error('fecha_in')<div class="text-danger mt-1">{{ $message }}</div>@enderror
                                     </div>
                                     <div class="col-md-6">
-                                        <label for="disp" class="form-label text-primary">Disponibilidad</label>
-                                        <select name="disp" id="disp" class="form-control">
-                                            <option value="1" {{ old('disp', $item->disp ?? '') == '1' ? 'selected' : '' }}>Disponible</option>
-                                            <option value="0" {{ old('disp', $item->disp ?? '') == '0' ? 'selected' : '' }}>No Disponible</option>
+                                        <label for="estatus" class="form-label text-primary">Estatus</label>
+                                        <select name="estatus" id="estatus" class="form-control">
+                                            <option value="1" {{ old('estatus', $item->estatus ?? '') == '1' ? 'selected' : '' }}>Disponible</option>
+                                            <option value="2" {{ old('estatus', $item->estatus ?? '') == '2' ? 'selected' : '' }}>En Mantenimiento</option>
+                                            <option value="3" {{ old('estatus', $item->estatus ?? '') == '3' ? 'selected' : '' }}>Inactivo</option>
                                         </select>
-                                        @error('disp')<div class="text-danger mt-1">{{ $message }}</div>@enderror
+                                        @error('estatus')<div class="text-danger mt-1">{{ $message }}</div>@enderror
                                     </div>
                                 </div>
                             </div>
@@ -253,24 +254,16 @@
                                         @error('id_usuario')<div class="text-danger mt-1">{{ $message }}</div>@enderror
                                     </div>
                                     <div class="col-md-6">
-                                        <label for="id_tipo_vehiculo" class="form-label text-primary">Tipo de Vehículo</label>
-                                        <select name="id_tipo_vehiculo" id="id_tipo_vehiculo" class="form-control">
+                                        <label for="tipo" class="form-label text-primary">Tipo de Vehículo</label>
+                                        <select name="tipo" id="tipo" class="form-control">
                                             <option value="">Seleccione un tipo</option>
                                             @foreach($tiposVehiculo as $id => $tipo)
-                                                <option value="{{ $id }}" {{ old('id_tipo_vehiculo', $item->id_tipo_vehiculo ?? '') == $id ? 'selected' : '' }}>{{ $tipo }}</option>
+                                                <option value="{{ $id }}" {{ old('tipo', $item->tipo ?? '') == $id ? 'selected' : '' }}>{{ $tipo }}</option>
                                             @endforeach
                                         </select>
                                         @error('id_tipo_vehiculo')<div class="text-danger mt-1">{{ $message }}</div>@enderror
                                     </div>
-                                    <div class="col-md-6">
-                                        <label for="estatus" class="form-label text-primary">Estatus</label>
-                                        <select name="estatus" id="estatus" class="form-control">
-                                            <option value="1" {{ old('estatus', $item->estatus ?? '') == '1' ? 'selected' : '' }}>Disponible</option>
-                                            <option value="2" {{ old('estatus', $item->estatus ?? '') == '2' ? 'selected' : '' }}>En Mantenimiento</option>
-                                            <option value="3" {{ old('estatus', $item->estatus ?? '') == '3' ? 'selected' : '' }}>Inactivo</option>
-                                        </select>
-                                        @error('estatus')<div class="text-danger mt-1">{{ $message }}</div>@enderror
-                                    </div>
+                                    
                                     <div class="col-md-6">
                                         <label for="condicion" class="form-label text-primary">Condición</label>
                                         <input type="text" class="form-control" id="condicion" name="condicion" value="{{ old('condicion', $item->condicion ?? '') }}">

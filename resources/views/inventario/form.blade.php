@@ -79,7 +79,7 @@
                             <select name="id_almacen" id="id_almacen" class="form-control" required>
                                 <option value="">Seleccione un almacén</option>
                                 @foreach ($almacenes as $almacen)
-                                    <option value="{{ $almacen->id }}" @selected(old('id_almacen', $item->id_almacen ?? '') == $almacen->id)>
+                                    <option value="{{ $almacen->id }}" >
                                         {{ $almacen->nombre }}
                                     </option>
                                 @endforeach
@@ -88,8 +88,8 @@
                         <div class="mb-3">
                             <label for="prioridad" class="form-label">Prioridad</label>
                             <select name="prioridad" id="prioridad" class="form-control" required>
-                                <option value="1" @selected(old('prioridad', $item->prioridad ?? '') == 1)>1 > Normal</option>
-                                <option value="2" @selected(old('prioridad', $item->prioridad ?? '') == 2)>2 > Alta</option>
+                                <option value="1" >1 > Normal</option>
+                                <option value="2" >2 > Alta</option>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -129,19 +129,19 @@
                         </div>
                         <div class="mb-3">
                             <label for="estatus" class="form-label">Estatus</label>
-                            <input type="number" name="estatus" id="estatus" value="{{ old('estatus', $item->estatus ?? '') }}" class="form-control" required>
+                            <input type="text" name="estatus" id="estatus" value="{{ old('estatus', $item->estatus ?? '') }}" class="form-control" required>
                         </div>
                         <div class="mb-3">
                             <label for="marca" class="form-label">Marca</label>
-                            <input type="number" name="marca" id="marca" value="{{ old('marca', $item->marca ?? '') }}" class="form-control" required>
+                            <input type="text" name="marca" id="marca" value="{{ old('marca', $item->marca ?? '') }}" class="form-control" required>
                         </div>
                         <div class="mb-3">
                             <label for="modelo" class="form-label">Modelo</label>
-                            <input type="number" name="modelo" id="modelo" value="{{ old('modelo', $item->modelo ?? '') }}" class="form-control" required>
+                            <input type="text" name="modelo" id="modelo" value="{{ old('modelo', $item->modelo ?? '') }}" class="form-control" required>
                         </div>
                         <div class="mb-3">
                             <label for="clasificacion" class="form-label">Clasificación</label>
-                            <input type="number" name="clasificacion" id="clasificacion" value="{{ old('clasificacion', $item->clasificacion ?? '') }}" class="form-control" required>
+                            <input type="text" name="clasificacion" id="clasificacion" value="{{ old('clasificacion', $item->clasificacion ?? '') }}" class="form-control" required>
                         </div>
                     </div>
                 </div>

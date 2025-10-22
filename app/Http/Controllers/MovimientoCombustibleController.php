@@ -97,13 +97,15 @@ class MovimientoCombustibleController extends Controller
             ];
         })->toArray();
 
+        $tanquesDisponibles = Deposito::select('nivel_actual_litros as disponible', 'serial as nombre','capacidad_litros as capacidad','id')->get();
+
         // 5. Camiones cargados.
         // Asumimos que tienes un campo 'estado' en la tabla de vehículos o una relación
         // que te permite saber si un camión está cargado.
         // Por ejemplo, un estado 'cargado' o 'en_ruta_con_combustible'.
         $camionesCargados = VehiculoPrecargado::where('estatus', 0)->count();
         $vehiculosDisponibles = Vehiculo::where('estatus', 1)->where('id_cliente',$user->cliente_id)->get();
-        $vehiculos = Vehiculo::where('estatus', 1)->where('es_flota',true)->get('placa')->toArray();
+        $vehiculos = Vehiculo::where('estatus', 1)->where('es_flota',true)->get();
         // Pasamos todos los datos a la vista.
         return view('combustible.index', compact(
             'clientes', 
@@ -117,6 +119,7 @@ class MovimientoCombustibleController extends Controller
             'nivelPromedio',
             'pedidos',
             'vehiculosDisponibles',
+            'tanquesDisponibles',
             'vehiculos'
         ));
     }

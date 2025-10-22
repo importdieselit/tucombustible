@@ -1,1 +1,11 @@
 [27-Aug-2025 19:12:37 UTC] PHP Fatal error:  Trait "App\Traits\GeneratesAlerts" not found in /home/impormot/public_html/tucombustible/app/Http/Controllers/OrdenController.php on line 19
+[07-Oct-2025 19:48:22 UTC] PHP Warning:  require(/home/impormot/public_html/tucombustible/vendor/composer/../google/apiclient-services/autoload.php): Failed to open stream: No such file or directory in /home/impormot/public_html/tucombustible/vendor/composer/autoload_real.php on line 41
+[07-Oct-2025 19:48:22 UTC] PHP Warning:  require(/home/impormot/public_html/tucombustible/vendor/composer/../google/apiclient-services/autoload.php): Failed to open stream: No such file or directory in /home/impormot/public_html/tucombustible/vendor/composer/autoload_real.php on line 41
+[07-Oct-2025 19:48:22 UTC] PHP Fatal error:  Uncaught Error: Failed opening required '/home/impormot/public_html/tucombustible/vendor/composer/../google/apiclient-services/autoload.php' (include_path='.:/opt/cpanel/ea-php81/root/usr/share/pear') in /home/impormot/public_html/tucombustible/vendor/composer/autoload_real.php:41
+Stack trace:
+#0 /home/impormot/public_html/tucombustible/vendor/composer/autoload_real.php(45): {closure}('1f87db08236948d...', '/home/impormot/...')
+#1 /home/impormot/public_html/tucombustible/vendor/autoload.php(25): ComposerAutoloaderInitc61ff82cbf0142a401a48a8161e1595a::getLoader()
+#2 /home/impormot/public_html/tucombustible/public/index.php(34): require('/home/impormot/...')
+#3 {main}
+  thrown in /home/impormot/public_html/tucombustible/vendor/composer/autoload_real.php on line 41
+[09-Oct-2025 16:52:17 America/Caracas] PHP Fatal error:  Cannot redeclare App\Http\Controllers\IntegracionIAController::handleUserFound() in /home/impormot/public_html/tucombustible/app/Http/Controllers/IntegracionIAController.php on line 188

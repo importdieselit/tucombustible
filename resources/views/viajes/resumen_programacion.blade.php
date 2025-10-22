@@ -7,20 +7,27 @@
 <!-- Cargar librerías necesarias para la impresión/captura -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <!-- Uso jQuery.print.js para simular PrintArea.js (se abre el diálogo de impresión/PDF) -->
-<script src="{{asset('js/jquery.PrintArea.js')}}"></script>
+<script src="{{asset('js/jquery.PrintArea.js')}}" defer></script>
 
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="text-primary"><i class="bi bi-calendar-check me-2"></i> Programación de Viajes Pendientes</h1>
         
         <!-- Botón para Capturar la Imagen/Imprimir -->
-        <button id="btn-descargar-reporte" class="btn btn-primary shadow-sm">
+        <button id="print" class="btn btn-primary shadow-sm">
             <i class="bi bi-camera me-2"></i> Capturar y Descargar Reporte
+        </button>
+         <button id="captureButton" class="btn btn-primary shadow-sm">
+            <i class="bi bi-camera me-2"></i> Capturar a portapapeles
         </button>
     </div>
 
     <!-- Contenedor del Reporte (El área que será capturada, simplificada) -->
-    <div id="reporte-area" class="card shadow-sm p-3 bg-white border border-primary" style="width: 50%">
+    <div style="width: 50%">
+        <div id="statusMessage" class="text-center p-3 rounded-lg bg-yellow-100 text-yellow-800 hidden mb-4">
+            Procesando...
+        </div>
+    <div id="reporte-area" class="card shadow-sm p-3 bg-white border border-primary printableArea" >
         
         <!-- Encabezado del Reporte Simplificado -->
         <div class="text-center mb-3">
@@ -92,25 +99,102 @@
             Generado por el Sistema de Viajes.
         </div>
     </div>
-    
+    </div>
+    <!-- Área donde se mostrará el canvas generado (opcional, para debug/visualización) -->
+        <div id="outputContainer" class="mt-8 pt-4 border-t border-gray-300">
+        </div>
 </div>
+@push('scripts')
+    
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const printArea = $('#reporte-area');
-        const downloadButton = document.getElementById('btn-descargar-reporte');
+   document.addEventListener('DOMContentLoaded', function() {
+    // IMPORTANTE: Se asume que jQuery ($) está cargado antes de este script.
 
-        downloadButton.addEventListener('click', function() {
-            // Usando jQuery.print.js para simular la funcionalidad de PrintArea
-            // Esto abrirá el diálogo de impresión (el usuario puede Guardar como PDF o Imprimir).
-            printArea.printArea({
-                globalStyles: true,
-                mediaPrint: false,
-                iframe: true,
-                manuallyCopyFormValues: false,
-                deferred: $.Deferred()
+    // 1. Obtención de Elementos DOM/jQuery
+    // Obtenemos el elemento DOM nativo de la colección jQuery con [0]
+    const printableArea = $("div.printableArea")[0]; 
+    
+    // Obtenemos los demás elementos nativos
+    const captureButton = document.getElementById('captureButton');
+    const statusMessage = document.getElementById('statusMessage');
+    const outputContainer = document.getElementById('outputContainer');
+
+    // Validación inicial para asegurar que los elementos críticos existan
+    if (!printableArea || !captureButton || !statusMessage || !outputContainer) {
+        console.error("Faltan elementos DOM críticos (printableArea, captureButton, statusMessage, o outputContainer).");
+        return; // Salir si no se puede inicializar correctamente
+    }
+
+    // Mensaje inicial de bienvenida/instrucción
+    // Se ejecuta tan pronto como el DOM esté listo
+    statusMessage.textContent = 'Pulsa el botón verde para capturar el área del reporte.';
+    statusMessage.classList.remove('hidden');
+
+
+    /**
+     * Función principal para capturar el área HTML y copiarla al portapapeles.
+     */
+    async function captureAndCopyToClipboard() {
+        // 1. Mostrar estado de carga y deshabilitar botón
+        statusMessage.textContent = 'Generando imagen...';
+        statusMessage.classList.remove('hidden', 'bg-red-100', 'text-red-800', 'bg-green-100', 'text-green-800');
+        statusMessage.classList.add('bg-yellow-100', 'text-yellow-800');
+        captureButton.disabled = true;
+        outputContainer.innerHTML = ''; // Limpiar previsualización anterior
+
+        try {
+            // 2. Generar el Canvas a partir del elemento DOM (ya corregido a 'printableArea[0]')
+            const canvas = await html2canvas(printableArea, {
+                scale: 2, // Aumenta la escala para mejor calidad de imagen
+                logging: false, // Desactiva logs de html2canvas
+                useCORS: true // Necesario si hay imágenes o recursos externos
             });
-        });
-    });
+
+            // Opcional: Mostrar el canvas generado en el DOM
+           // outputContainer.appendChild(canvas);
+
+            // 3. Convertir el Canvas a un Blob (formato de datos binarios)
+            const imageBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            
+            if (!imageBlob) {
+                throw new Error('No se pudo generar el Blob de la imagen.');
+            }
+
+            // 4. Copiar la imagen (Blob) al portapapeles usando el Clipboard API
+            const item = new ClipboardItem({ "image/png": imageBlob });
+            await navigator.clipboard.write([item]);
+
+            // 5. Éxito
+            statusMessage.textContent = '¡Éxito! La imagen ha sido copiada al portapapeles. Ahora puedes pegarla (Ctrl+V).';
+            statusMessage.classList.replace('bg-yellow-100', 'bg-green-100');
+            statusMessage.classList.replace('text-yellow-800', 'text-green-800');
+
+        } catch (error) {
+            // 6. Manejo de Errores
+            let errorMessage = 'Error desconocido al copiar.';
+
+            if (error.name === 'NotAllowedError' || (error.message && error.message.includes('permission'))) {
+                errorMessage = 'Permiso denegado: El navegador requiere que la página esté en un contexto seguro (HTTPS) o que el usuario interactúe primero para usar el Clipboard API.';
+            } else {
+                console.error('Error durante la captura o copia:', error);
+                errorMessage = `Error al generar/copiar la imagen: ${error.message}`;
+            }
+            
+            statusMessage.textContent = errorMessage;
+            statusMessage.classList.replace('bg-yellow-100', 'bg-red-100');
+            statusMessage.classList.replace('text-yellow-800', 'text-red-800');
+
+        } finally {
+            // 7. Reestablecer el botón
+            captureButton.disabled = false;
+        }
+    }
+
+    // 8. Asignar el evento al botón
+    captureButton.addEventListener('click', captureAndCopyToClipboard);
+});
 </script>
+@endpush
 @endsection

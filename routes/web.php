@@ -29,6 +29,7 @@ use App\Http\Controllers\InspeccionController;
 use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\AforoController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\DataDeletionController;
 use App\Http\Controllers\ViajesController;
 
@@ -76,6 +77,8 @@ Route::get('/vehiculos/{vehiculo_id}/inspeccion/salida', [InspeccionController::
 Route::post('/inspecciones', [InspeccionController::class, 'store'])->name('inspeccion.store');
 Route::get('/inspecciones', [InspeccionController::class, 'list'])->name('inspeccion.list');
 Route::get('/inspecciones-dashboard', [InspeccionController::class, 'index'])->name('inspeccion.index');
+
+Route::get('search/global', [SearchController::class, 'globalSearch'])->name('search.global');
 
 // Ruta para ver el detalle de la inspección
 Route::get('/inspecciones/{inspeccion_id}', [InspeccionController::class, 'show'])->name('inspeccion.show');

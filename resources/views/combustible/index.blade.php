@@ -409,6 +409,7 @@
                         <th scope="col"># Pedido</th>
                         <th scope="col">Cliente</th>
                         <th scope="col">Cantidad (L)</th>
+                        <th scope="col">Observacion</th>
                         <th scope="col">Estado</th>
                         <th scope="col">Fecha de Creación</th>
                         <th></th>
@@ -438,7 +439,7 @@
                         <th scope="col"># Solicitud</th>
                         <th scope="col">Cliente</th>
                         <th scope="col">Tipo</th>
-                        <th scope="col">Descripción</th>
+                        <th scope="col">Observacion</th>
                         <th scope="col">Estado</th>
                     </tr>
                 </thead>
@@ -487,8 +488,8 @@
                                 <h6 class="m-0">{{ $deposito->serial }} ({{ $deposito->producto }})</h6>
                                 <p class="text-muted m-0"><small>Nivel: {{ $percentage }}%</small></p>
                                 <p class="text-black m-0 "><small>{{ $deposito->nivel_actual_litros }}/{{ $deposito->capacidad_litros }} Litros</small>  
-                                    <i class="rounded fa fa-pencil ajustar-btn" data-id="{{$deposito->id}}"></i>
-                                    <a href="{{ route('depositos.aforo.show', ['deposito' => $deposito->id]) }}">
+                                    <i class="rounded fa fa-pencil ajustar-btn" style="cursor: pointer" data-id="{{$deposito->id}}" onclick="openAjusteModal({{$deposito->id}})"></i>
+                                    <a href="{{ route('depositos.aforo.show', ['deposito' => $deposito->id]) }}" target="_blank">
                                         <i class="rounded fa fa-table"></i>
                                     </a>
                                 </p>    
@@ -654,7 +655,7 @@
         console.log('Pedidos:', @json($pedidos));
         console.log('Solicitudes:', @json($solicitudes));    
         console.log('Notificaciones:', @json($notificaciones));
-const pedidos = @json($pedidos);
+        const pedidos = @json($pedidos);
 // const solicitudes = @json($solicitudes);
 // const notificaciones = @json($notificaciones);
 
@@ -717,10 +718,11 @@ const pedidos = @json($pedidos);
 
 // Data de prueba para vehículos y tanques
 const vehiculosDisponibles = @json($vehiculosDisponibles);
-const tanquesDisponibles = [
-    { id: 1, nombre: 'Tanque Principal 10k L', capacidad: 10000, disponible: 8500 },
-    { id: 2, nombre: 'Tanque Secundario 5k L', capacidad: 5000, disponible: 4000 }
-];
+const tanquesDisponibles = @json($tanquesDisponibles);
+// [
+//     { id: 1, nombre: 'Tanque Principal 10k L', capacidad: 10000, disponible: 8500 },
+//     { id: 2, nombre: 'Tanque Secundario 5k L', capacidad: 5000, disponible: 4000 }
+// ];
 
 function renderizarPedidos() {
     const tbody = document.getElementById('pedidos-table-body');
@@ -731,6 +733,7 @@ function renderizarPedidos() {
         row.innerHTML = `
             <td>${pedido.id}</td>
             <td>${pedido.cliente}</td>
+            <td>${pedido.cantidad} L</td>
             <td>${pedido.cantidad} L</td>
             <td><span class="badge ${pedido.estado === 'Pendiente' ? 'bg-danger' : 'bg-success'}">${pedido.estado}</span></td>
             <td>${pedido.fecha}</td>
@@ -1010,6 +1013,7 @@ function mostrarDetallesPedido(id) {
                 <p><strong>Estado:</strong> <span class="badge ${pedido.estado === 'Pendiente' ? 'bg-danger' : 'bg-success'}">${pedido.estado}</span></p>
                 <p><strong>Fecha:</strong> ${pedido.fecha}</p>
                 <p><strong>Vehículo Asignado:</strong> ${pedido.vehiculo || 'No asignado'}</p>
+                <p><strong>Observacion:</strong> ${pedido.observaciones}'}</p>
             `,
             confirmButtonText: 'Cerrar'
         });
@@ -1080,6 +1084,12 @@ function mostrarDetallesPedido(id) {
             // Ocultar vistas por defecto
             clientesListContainer.classList.add('hidden');
             sucursalDetailsContainer.classList.add('hidden');
+
+             document.querySelectorAll('.ajustar-btn').forEach(button => {
+                button.addEventListener('click', (e) => openAjusteModal(e.target.dataset.id));
+            });
+             document.getElementById('btn-submit-ajuste').addEventListener('click', submitAjuste);
+            document.getElementById('btn-crear-despacho').addEventListener('click', mostrarSelectorTipoDespacho);
 
             // Lógica para el gráfico de Highcharts con drilldown
             Highcharts.chart('chart-container', {
@@ -1284,11 +1294,7 @@ function mostrarDetallesPedido(id) {
                     });
                 });
             });
-             document.querySelectorAll('.ajustar-btn').forEach(button => {
-                button.addEventListener('click', (e) => openAjusteModal(e.target.dataset.id));
-            });
-             document.getElementById('btn-submit-ajuste').addEventListener('click', submitAjuste);
-            document.getElementById('btn-crear-despacho').addEventListener('click', mostrarSelectorTipoDespacho);
+            
 
             const btnInspeccion = document.getElementById('btn-inspeccion-salida');
             if (btnInspeccion) {
@@ -1333,7 +1339,7 @@ async function mostrarSelectorTipoDespacho() {
 
 async function mostrarFormularioDespacho() {
     // Genera las opciones para los selectores
-    const cisternaOptions = cisternasDisponibles.map(c => `<option value="${c}">${c}</option>`).join('');
+    const cisternaOptions = cisternasDisponibles.map(c => `<option value="${c.id}">[${c.id}] - ${c.placa}</option>`).join('');
     const depositoOptions = tanquesDisponibles.map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
     const clienteOptions = clientesDisponibles.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
 
@@ -1346,7 +1352,7 @@ async function mostrarFormularioDespacho() {
                     <select id="swal-cisterna" class="form-select">${cisternaOptions}</select>
                 </div>
                 <div class="col-12 text-start">
-                    <label class="form-label">Depósito de Origen</label>
+                    <label class="form-label">Depósito</label>
                     <select id="swal-deposito" class="form-select">${depositoOptions}</select>
                 </div>
                 <div class="col-12 text-start">
@@ -1359,7 +1365,7 @@ async function mostrarFormularioDespacho() {
                 </div>
                 <div class="col-12 text-start">
                     <label class="form-label">Observación</label>
-                    <textarea id="swal-observacion" class="form-control"></textarea>
+                    <textarea id="swal-observaciones" class="form-control"></textarea>
                 </div>
             </div>
         `,
@@ -1371,12 +1377,12 @@ async function mostrarFormularioDespacho() {
                 return false;
             }
             return {
-                tipo: 'lode',
-                cisterna: document.getElementById('swal-cisterna').value,
+                vehiculo_id: document.getElementById('swal-cisterna').value,
                 deposito_id: document.getElementById('swal-deposito').value,
                 cliente_id: document.getElementById('swal-cliente').value,
-                cantidad: cantidad,
-                observacion: document.getElementById('swal-observacion').value
+                cantidad_litros: cantidad,
+                observaciones: document.getElementById('swal-observaciones').value,
+                tipo:'DIESEL'
             };
         }
     });
@@ -1437,7 +1443,7 @@ async function submitDespacho(data) {
     });
     
     try {
-        const response = await fetch('/api/despachos/crear', {
+        const response = await fetch('/despacho', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

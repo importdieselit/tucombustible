@@ -233,6 +233,16 @@ class OrdenController extends BaseController
             }
 
             $vehiculo = Vehiculo::find($request->id_vehiculo);
+            
+             $kmRecorridos = is_numeric($request->kilometraje) ? (int)$request->kilometraje : 0;
+            $kmVehiculo = $vehiculo ? $vehiculo->kilometraje : 0;
+                        // Actualizar el kilometraje del vehículo si es mayor al actual
+            if(is_numeric($kmRecorridos) && $kmRecorridos >0){
+                $km=$kmRecorridos - $kmVehiculo;
+                $vehiculo->kilometraje = $kmRecorridos;
+                $vehiculo->km_contador += $km;
+                $vehiculo->km_mantt += $km;
+            }
             if($orden->tipo=='Mantenimiento'|| $orden->tipo=='Preventivo'){
                 $vehiculo->estatus = 3;
             }else{

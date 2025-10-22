@@ -55,6 +55,7 @@
                         <th>Cliente</th>
                         <th>Cantidad Solicitada</th>
                         <th>Fecha de Solicitud</th>
+                        <th>Observacion</th>
                         <th>Estatus</th>
                         <th class="text-center">Acciones</th>
                     </tr>
@@ -66,6 +67,7 @@
                             <td>{{ $pedido->cliente->nombre ?? 'N/A' }}</td>
                             <td>{{ number_format($pedido->cantidad_solicitada, 2, ',', '.') }} Lt</td>
                             <td>{{ $pedido->fecha_solicitud->format('d/m/Y') }}</td>
+                            <td>{{ $pedido->observaciones }}  {{$pedido->observaciones_admin}}</td>
                             <td>
                                 <span class="badge" style="background-color: {{ $pedido->color_estado }};">
                                     {{ ucfirst($pedido->estado) }}
@@ -86,7 +88,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center">No hay pedidos pendientes de aprobación.</td>
+                            <td colspan="7" class="text-center">No hay pedidos pendientes de aprobación.</td>
                         </tr>
                     @endforelse
                 </tbody>

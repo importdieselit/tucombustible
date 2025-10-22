@@ -23,6 +23,7 @@
                         <th>Cliente</th>
                         <th>Cantidad Aprobada</th>
                         <th>Fecha de Aprobación</th>
+                        <th>Observaciones</th>
                         <th>Estatus</th>
                         <th class="text-center">Acciones</th>
                     </tr>
@@ -34,6 +35,7 @@
                             <td>{{ $pedido->cliente->nombre ?? 'N/A' }}</td>
                             <td>{{ number_format($pedido->cantidad_aprobada, 2, ',', '.') }} Lt</td>
                             <td>{{ $pedido->fecha_aprobacion->format('d/m/Y') }}</td>
+                            <td>{{$pedido->observaciones}} {{ $pedido->observaciones_admin }}</td>
                             <td>
                                 <span class="badge bg-success">{{ $pedido->estado }}</span>
                             </td>
@@ -84,7 +86,7 @@
                         <hr>
                         <div class="mb-3">
                             <label for="swal-vehiculo" class="form-label">Vehículo que recibe</label>
-                            <select id="swal-vehiculo" class="swal2-select form-select w-50">
+                            <select id="swal-vehiculo" class="swal2-select form-select w-75">
                                 <option value="">Seleccione un vehículo</option>
                                 @foreach ($vehiculos as $vehiculo)
                                     <option value="{{ $vehiculo->id }}">{{ $vehiculo->flota }} - {{ $vehiculo->placa }}</option>
@@ -93,12 +95,16 @@
                         </div>
                         <div class="mb-3">
                             <label for="swal-deposito" class="form-label">Depósito de origen</label>
-                            <select id="swal-deposito" class="swal2-select form-select w-50">
+                            <select id="swal-deposito" class="swal2-select form-select w-75">
                                 <option value="">Seleccione un depósito</option>
                                 @foreach ($depositos as $deposito)
-                                    <option value="{{ $deposito->id }}">{{ $deposito->nombre }} (Disp: {{ number_format($deposito->nivel_actual_litros, 2, ',', '.') }} Lt)</option>
+                                    <option value="{{ $deposito->id }}">{{ $deposito->serial }} (Disp: {{ number_format($deposito->nivel_actual_litros, 2, ',', '.') }} Lt)</option>
                                 @endforeach
                             </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="swal-deposito" class="form-label">Observacion</label>
+                                <textarea id="swal-observacion" class="swal2-textarea w-75 form-control" placeholder="Ingrese una observación (opcional)"></textarea>
                         </div>
                     `,
                     icon: 'question',
@@ -108,17 +114,18 @@
                     preConfirm: () => {
                         const vehiculoId = document.getElementById('swal-vehiculo').value;
                         const depositoId = document.getElementById('swal-deposito').value;
+                        const observacion = document.getElementById('swal-observacion').value;
 
                         if (!vehiculoId || !depositoId) {
                             Swal.showValidationMessage('Por favor, selecciona un vehículo y un depósito.');
                             return false;
                         }
 
-                        return { vehiculoId, depositoId };
+                        return { vehiculoId, depositoId, observacion};
                     }
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        const { vehiculoId, depositoId } = result.value;
+                        const { vehiculoId, depositoId, observacion } = result.value;
                         
                         // Creamos campos de input ocultos para enviar los IDs seleccionados
                         const vehiculoInput = document.createElement('input');
@@ -132,6 +139,12 @@
                         depositoInput.name = 'deposito_id';
                         depositoInput.value = depositoId;
                         form.appendChild(depositoInput);
+                        const observacionInput = document.createElement('input');
+                        observacionInput.type = 'hidden';
+                        observacionInput.name = 'observacion';
+                        observacionInput.value = observacion;
+                        form.appendChild(observacionInput);
+
 
                         // Enviamos el formulario
                         form.submit();

@@ -83,16 +83,62 @@ class ChecklistController extends Controller
             'descripciones.*' => 'nullable|string|max:255'
         ]);
 
+        DB::beginTransaction();
         try {
-            DB::beginTransaction();
             
-            // Parsear respuestas si viene como string
+            // 1. PRIMERO: Parsear respuestas si viene como string
             $respuestas = $request->respuestas;
             if (is_string($respuestas)) {
                 $respuestas = json_decode($respuestas, true);
             }
 
-            // Crear la inspección
+            // 2. AHORA: Procesar lógica de negocio con respuestas ya decodificadas
+            $vehiculo = Vehiculo::find($request->vehiculo_id);
+            $isCriticalFailure = false;
+            
+            // Nombres de los ítems críticos a verificar
+            $criticalItems = [
+                'Vehiculo Operativo?',
+                'Apto para Carga de Combustible?'
+            ];
+
+            // Verificar respuestas críticas y kilometraje
+            if (is_array($respuestas)) {
+                foreach ($respuestas as $seccion) {
+                    if (isset($seccion['items'])) {
+                        foreach ($seccion['items'] as $item) {
+                            $label = $item['label'] ?? null;
+                            $value = $item['value'] ?? null;
+                            
+                            // Actualizar kilometraje
+                            if ($label == 'Km. Recorridos' && $vehiculo) {
+                                $kmRecorridos = is_numeric($value) ? (int)$value : 0;
+                                $kmVehiculo = $vehiculo->kilometraje ?? 0;
+                                
+                                if (is_numeric($value) && $value > 0 && $value > $kmVehiculo) {
+                                    $km = $kmRecorridos - $kmVehiculo;
+                                    $vehiculo->kilometraje = $value;
+                                    $vehiculo->km_contador += $km;
+                                    $vehiculo->km_mantt += $km;
+                                    $vehiculo->save();
+                                }
+                            }
+                            
+                            // Verificar ítems críticos
+                            if (in_array($label, $criticalItems)) {
+                                $normalizedValue = is_string($value) ? strtolower($value) : $value;
+                                
+                                if ($normalizedValue === 'no' || $normalizedValue === false || $normalizedValue === 0) {
+                                    $isCriticalFailure = true;
+                                    break 2;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 3. Crear la inspección
             $inspeccion = Inspeccion::create([
                 'vehiculo_id' => $request->vehiculo_id,
                 'checklist_id' => $request->checklist_id,
@@ -101,16 +147,14 @@ class ChecklistController extends Controller
                 'respuesta_json' => json_encode($respuestas)
             ]);
 
-            // Procesar y guardar imágenes si existen
+            // 4. Procesar y guardar imágenes si existen
             if ($request->hasFile('imagenes')) {
                 $imagenes = $request->file('imagenes');
                 $descripciones = $request->input('descripciones', []);
 
                 foreach ($imagenes as $index => $imagen) {
-                    // Guardar imagen en storage
                     $ruta = $imagen->store('inspecciones/' . $inspeccion->id, 'public');
 
-                    // Crear registro en la tabla inspeccion_imagenes
                     InspeccionImagen::create([
                         'inspeccion_id' => $inspeccion->id,
                         'ruta_imagen' => $ruta,
@@ -119,6 +163,12 @@ class ChecklistController extends Controller
                         'orden' => $index
                     ]);
                 }
+            }
+
+            // 5. Actualizar estatus del vehículo si hubo fallo crítico
+            if ($isCriticalFailure && $vehiculo && $vehiculo->estatus != 3) {
+                $vehiculo->estatus = 3; // 3 = No Operativo
+                $vehiculo->save();
             }
 
             DB::commit();
@@ -130,12 +180,18 @@ class ChecklistController extends Controller
                     'inspeccion_id' => $inspeccion->id,
                     'fecha' => $inspeccion->created_at->format('Y-m-d H:i:s'),
                     'estatus' => $inspeccion->estatus_general,
-                    'imagenes_guardadas' => $inspeccion->imagenes()->count()
+                    'imagenes_guardadas' => $inspeccion->imagenes()->count(),
+                    'vehiculo_estatus_actualizado' => $isCriticalFailure
                 ]
             ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
+            
+            // Log del error para debug
+            \Log::error('Error al guardar inspección: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Error al guardar la inspección: ' . $e->getMessage()
