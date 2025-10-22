@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Checklist;
 use App\Models\Inspeccion;
+use App\Models\InspeccionImagen;
 use App\Models\Vehiculo;
 
 class ChecklistController extends Controller
@@ -75,18 +77,51 @@ class ChecklistController extends Controller
         $request->validate([
             'vehiculo_id' => 'required|exists:vehiculos,id',
             'checklist_id' => 'required|exists:checklist,id',
-            'respuestas' => 'required|array',
-            'estatus_general' => 'required|in:OK,WARNING,ALERT'
+            'respuestas' => 'required',
+            'estatus_general' => 'required|in:OK,WARNING,ALERT',
+            'imagenes.*' => 'nullable|image|max:5120', // 5MB máximo por imagen
+            'descripciones.*' => 'nullable|string|max:255'
         ]);
 
         try {
+            DB::beginTransaction();
+            
+            // Parsear respuestas si viene como string
+            $respuestas = $request->respuestas;
+            if (is_string($respuestas)) {
+                $respuestas = json_decode($respuestas, true);
+            }
+
+            // Crear la inspección
             $inspeccion = Inspeccion::create([
                 'vehiculo_id' => $request->vehiculo_id,
                 'checklist_id' => $request->checklist_id,
                 'usuario_id' => auth()->id(),
                 'estatus_general' => $request->estatus_general,
-                'respuesta_json' => json_encode($request->respuestas)
+                'respuesta_json' => json_encode($respuestas)
             ]);
+
+            // Procesar y guardar imágenes si existen
+            if ($request->hasFile('imagenes')) {
+                $imagenes = $request->file('imagenes');
+                $descripciones = $request->input('descripciones', []);
+
+                foreach ($imagenes as $index => $imagen) {
+                    // Guardar imagen en storage
+                    $ruta = $imagen->store('inspecciones/' . $inspeccion->id, 'public');
+
+                    // Crear registro en la tabla inspeccion_imagenes
+                    InspeccionImagen::create([
+                        'inspeccion_id' => $inspeccion->id,
+                        'ruta_imagen' => $ruta,
+                        'descripcion' => $descripciones[$index] ?? null,
+                        'tipo_evidencia' => 'general',
+                        'orden' => $index
+                    ]);
+                }
+            }
+
+            DB::commit();
 
             return response()->json([
                 'success' => true,
@@ -94,11 +129,13 @@ class ChecklistController extends Controller
                 'data' => [
                     'inspeccion_id' => $inspeccion->id,
                     'fecha' => $inspeccion->created_at->format('Y-m-d H:i:s'),
-                    'estatus' => $inspeccion->estatus_general
+                    'estatus' => $inspeccion->estatus_general,
+                    'imagenes_guardadas' => $inspeccion->imagenes()->count()
                 ]
             ]);
 
         } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Error al guardar la inspección: ' . $e->getMessage()
@@ -146,7 +183,13 @@ class ChecklistController extends Controller
     public function showInspeccion($id)
     {
         try {
-            $inspeccion = Inspeccion::with(['vehiculo:id,placa,marca,modelo,color', 'checklist:id,titulo,checklist'])
+            $inspeccion = Inspeccion::with([
+                    'vehiculo:id,placa,marca,modelo,color', 
+                    'checklist:id,titulo,checklist',
+                    'imagenes' => function($query) {
+                        $query->orderBy('orden');
+                    }
+                ])
                 ->where('id', $id)
                 ->where('usuario_id', auth()->id())
                 ->first();
@@ -160,6 +203,11 @@ class ChecklistController extends Controller
 
             // Decodificar las respuestas JSON
             $inspeccion->respuestas_decodificadas = json_decode($inspeccion->respuesta_json, true);
+            
+            // Agregar URLs completas a las imágenes
+            $inspeccion->imagenes->each(function($imagen) {
+                $imagen->url_completa = asset('storage/' . $imagen->ruta_imagen);
+            });
 
             return response()->json([
                 'success' => true,

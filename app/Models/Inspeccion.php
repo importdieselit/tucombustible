@@ -38,4 +38,15 @@ class Inspeccion extends Model
     {
         return $this->belongsTo(User::class, 'usuario_id');
     }
+    
+    public function imagenes()
+    {
+        return $this->hasMany(InspeccionImagen::class, 'inspeccion_id')->orderBy('orden');
+    }
+    
+    // Método auxiliar para obtener todas las rutas de imágenes
+    public function getRutasImagenes()
+    {
+        return $this->imagenes()->pluck('ruta_imagen')->toArray();
+    }
 }
