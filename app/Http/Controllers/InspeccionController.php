@@ -138,6 +138,7 @@ public function store(Request $request)
     {
         // Carga la inspección y el vehículo relacionado
         $inspeccion = Inspeccion::with('vehiculo')->findOrFail($inspeccion_id);
+        $imagenes = $inspeccion->imagenes()->get();
         
         // Si la columna respuesta_json no está casteada, asegúrate de decodificarla.
         $respuesta = is_string($inspeccion->respuesta_json) 
@@ -147,7 +148,7 @@ public function store(Request $request)
         // El título del documento para la vista
         $titulo = $respuesta['checklist_name'] ?? 'Inspección de Vehículo';
 
-        return view('checklist.show', compact('inspeccion', 'respuesta', 'titulo'));
+        return view('checklist.show', compact('inspeccion', 'imagenes','respuesta', 'titulo'));
     }
 
     public function exportPdf($inspeccion_id)

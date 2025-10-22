@@ -48,6 +48,26 @@ p {
                     @endforeach
                 @endif
             @endforeach
+            <div>
+                <h4 class="mt-4 border-bottom pb-2">Imágenes Adjuntas</h4>
+                @if($imagenes->isEmpty())
+                    <p class="text-muted">No hay imágenes adjuntas para esta inspección.</p>
+                @else
+                    <div class="row">
+                        @foreach($imagenes as $imagen)
+                            <div class="col-md-4 mb-3">
+                                <div class="card">
+                                    <img src="{{ asset('storage/' . $imagen->ruta_imagen) }}" class="card-img-top" alt="Imagen de Inspección">
+                                    <div class="card-body">
+                                        <p class="card-text text-center">Subida el {{ $imagen->created_at->format('d/m/Y H:i') }}</p>
+                                        <p>{{$imagen->descripcion}}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
 
         </div>
     </div>

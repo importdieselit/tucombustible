@@ -52,6 +52,7 @@ class InventarioController extends BaseController
             'codigo' => 'required|string|max:50|unique:inventario',
             'descripcion' => 'required|string|max:200'
             ]);
+            
 
         if ($validator->fails()) {
             return redirect()->route('inventario.create')
