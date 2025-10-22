@@ -366,6 +366,17 @@ $data = [
         </div>
         @endif
 
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+            @include('partials.access_card', [
+                'route' => route('viajes.calendario'),
+                'icon' => 'fa-calendar',
+                'title' => 'Planificacion',
+                'color' => 'bg-warning',
+                'target' => '_blank',
+                'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
+            ])
+        </div>
+
         {{-- =============================================== --}}
         {{-- TARJETA DE CONFIGURACIÓN GENERAL (ID 5) --}}
         {{-- =============================================== --}}
