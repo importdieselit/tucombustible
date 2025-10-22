@@ -47,7 +47,7 @@ class InventarioController extends BaseController
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'id_usuario' => 'required|exists:users,id',
+            //'id_usuario' => 'required|exists:users,id',
             'id_almacen' => 'required|exists:almacenes,id',
             'codigo' => 'required|string|max:50|unique:inventario',
             'descripcion' => 'required|string|max:200'
