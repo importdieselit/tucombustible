@@ -15,6 +15,7 @@
             margin: 40px auto;
             padding: 20px;
             background: #ffffff;
+            color: #070707;
             border-radius: 12px;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
         }
@@ -33,7 +34,7 @@
         .fc-event-COMPLETADO {
             background-color: #bfdbfe !important; /* Azul claro */
             border-color: #0d0d0e !important;
-            color: #1e3a8a !important;
+            color: #070707 !important;
             opacity: 0.7; /* Menor opacidad para terminados */
         }
         
@@ -78,7 +79,7 @@
 //[${viaje.status}]
                 return {
                     id: viaje.id,
-                    title: ` ${viaje.destino} (${viaje.chofer})`,
+                    title: ` ${viaje.cliente} ${viaje.destino} (${viaje.chofer})`,
                     start: viaje.fecha_salida,
                     end: endFormatted, // La fecha de fin es exclusiva
                     allDay: true, // Asumimos que la planificación es por días completos

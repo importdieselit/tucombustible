@@ -528,6 +528,7 @@ class ViajesController extends Controller
             return [
                 'id' => $viaje->id,
                 'destino' => $viaje->destino_ciudad,
+                'cliente' => $viaje->despachos->first()->cliente->nombre ?? $viaje->despachos->first()->otro_cliente ?? 'Cliente Desconocido',
                 'chofer' => $nombreChofer,
                 'status' => $viaje->status,
                 'fecha_salida' => $viaje->fecha_salida,
