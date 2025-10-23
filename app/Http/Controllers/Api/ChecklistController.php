@@ -87,13 +87,11 @@ class ChecklistController extends Controller
             'descripciones.*' => 'nullable|string|max:255'
         ]);
 
-         $usuarios = User::whereIn('id', $usuarioIds)
-                          ->whereNotNull('fcm_token')
-                          ->get();
-
+        
         DB::beginTransaction();
         try {
-            
+        
+            $chofer='N/A';
             // 1. PRIMERO: Parsear respuestas si viene como string
             $respuestas = $request->respuestas;
             if (is_string($respuestas)) {
@@ -112,11 +110,15 @@ class ChecklistController extends Controller
 
             // Verificar respuestas críticas y kilometraje
             if (is_array($respuestas)) {
+                
                 foreach ($respuestas as $seccion) {
                     if (isset($seccion['items'])) {
                         foreach ($seccion['items'] as $item) {
                             $label = $item['label'] ?? null;
                             $value = $item['value'] ?? null;
+                            if($label =='Nombre'){
+                                $chofer=$value;
+                            }
                             
                             // Actualizar kilometraje
                             if ($label == 'Km. Recorridos' && $vehiculo) {
@@ -228,23 +230,56 @@ class ChecklistController extends Controller
             }elseif($vehiculo->estatus==2){
                 $vehiculo->estatus=1;
                 Alerta::create([
-                'id_usuario' => null, // null para todos los admins
-                'id_rel' => $inspeccion->id,
-                'fecha' => now(),
-                'observacion' => "Ingreso de Unidad {$vehiculo->flota} {$vehiculo->placa}",
-                'estatus' => 0,
-                'accion' => "/inspecciones/{$inspeccion->id}" // Ruta al detalle de la inspección
-            ]);
+                    'id_usuario' => null, // null para todos los admins
+                    'id_rel' => $inspeccion->id,
+                    'fecha' => now(),
+                    'observacion' => "Ingreso de Unidad {$vehiculo->flota} {$vehiculo->placa}",
+                    'estatus' => 0,
+                    'accion' => "/inspecciones/{$inspeccion->id}" // Ruta al detalle de la inspección
+                ]);
+
+                $data=[
+                    'id_usuario' => null, // null para todos los admins
+                    'id_rel' => $inspeccion->id,
+                    'fecha' => now(),
+                    'observacion' => "Unidad {$vehiculo->flota} Ingresando a Patio.",
+                    'estatus' => 0,
+                    'accion' => "/inspecciones/{$inspeccion->id}" // Ruta al detalle de la inspección
+                ];
+                
+                 FcmNotificationService::enviarNotification(
+                        "Unidad {$vehiculo->flota} Ingresando a Patio con {$chofer}",  
+                        "Unidad {$vehiculo->flota} Ingresando a Patio con {$chofer}",
+                        $data
+                    );
+
+
+
             }else{
                 $vehiculo->estatus=2;
                 Alerta::create([
-                'id_usuario' => null, // null para todos los admins
-                'id_rel' => $inspeccion->id,
-                'fecha' => now(),
-                'observacion' => "Salida de vehículo {$vehiculo->placa}.",
-                'estatus' => 0,
-                'accion' => "/inspecciones/{$inspeccion->id}" // Ruta al detalle de la inspección
-            ]);
+                    'id_usuario' => null, // null para todos los admins
+                    'id_rel' => $inspeccion->id,
+                    'fecha' => now(),
+                    'observacion' => "Salida de vehículo {$vehiculo->placa}.",
+                    'estatus' => 0,
+                    'accion' => "/inspecciones/{$inspeccion->id}" // Ruta al detalle de la inspección
+                ]);
+                
+                $data=[
+                    'id_usuario' => null, // null para todos los admins
+                    'id_rel' => $inspeccion->id,
+                    'fecha' => now(),
+                    'observacion' => "Unidad {$vehiculo->flota} Saliendo a Ruta con {$chofer}.",
+                    'estatus' => 0,
+                    'accion' => "/inspecciones/{$inspeccion->id}" // Ruta al detalle de la inspección
+                ];
+                
+                 FcmNotificationService::enviarNotification(
+                        "Unidad {$vehiculo->flota} Saliendo a Ruta con {$chofer}",  
+                        "Unidad {$vehiculo->flota} Saliendo a Ruta con {$chofer}",
+                        $data
+                    );
             }
             $vehiculo->save();
             DB::commit();
