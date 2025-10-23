@@ -114,7 +114,18 @@
 
         // Construcción del HTML de la tabla
         return `
-            <div class="table-responsive mt-3" style="max-height: 400px; overflow-y: auto;">
+        <div class="d-flex justify-content-rigth gap-2 mt-4 flex-wrap">
+                <button id="print" class="btn btn-info shadow-sm">
+                    <i class="bi bi-print me-2"></i>
+                </button>
+                <button id="copyToClipboardBtn" class="btn btn-secondary shadow-sm">
+                    <i class="bi bi-clipboard me-2"></i>
+                </button>
+            </div>
+            <div id="statusMessage" class="text-center p-3 rounded-lg bg-yellow-100 text-yellow-800 hidden mb-4">
+                Procesando...
+            </div>
+            <div class="table-responsive mt-3 printableArea" style="max-height: 400px; overflow-y: auto;">
                 <table class="table table-sm text-start table-borderless" style="font-size: 0.8rem; width: 100%; border: 1px solid #dee2e6;">
                     <thead class="bg-primary text-white">
                         <tr style="font-weight: 700">
@@ -131,7 +142,7 @@
                             </td>
                             
                             <!-- Celda unificada para Chofer/Unidad -->
-                            <td rowspan="${choferRowSpan + 1}" style="vertical-align: middle; text-align:center; background-color:#e9ecef;">
+                            <td rowspan="${choferRowSpan + 1}" style="vertical-align: middle; text-align:center; background-color: navajowhite;">
                                 <span class="text-black fw-bold d-block" style="font-size: 18px" >${flota}</span>
                                 <small class="d-block text-muted mb-2">${placa}</small>
                                 <hr class="my-1 border-secondary">
@@ -141,7 +152,7 @@
                         </tr>
                         ${despachosHtml}
                     </tbody>
-                    <tfoot style="border-top: 2px solid #01050a; background-color: #d1ecf1; font-weight: 700; font-size:16px;">
+                    <tfoot style="border-top: 2px solid #01050a; background-color: #FFF; font-weight: 700; font-size:16px;">
                         <tr>
                             <td class="py-1 px-2" style="border-right: 1px solid #01050a;">TOTAL LITROS</td>
                             <td class="py-1 px-2 text-end">${new Intl.NumberFormat('es-ES').format(totalLitros)} Lts</td>
@@ -150,14 +161,7 @@
                     </tfoot>
                 </table>
             </div>
-                        <div class="d-flex justify-content-center gap-2 mt-4 flex-wrap">
-                <button id="print" class="btn btn-info shadow-sm">
-                    <i class="bi bi-print me-2"></i>
-                </button>
-                <button id="copyToClipboardBtn" class="btn btn-secondary shadow-sm">
-                    <i class="bi bi-clipboard me-2"></i>
-                </button>
-            </div>
+                        
         `;
     }
 
