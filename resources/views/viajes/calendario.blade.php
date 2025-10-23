@@ -65,7 +65,7 @@
 
         document.addEventListener('DOMContentLoaded', function() {
 
-         async function captureElement(elementId) {
+          async function captureElement(elementId) {
                     const element = document.getElementById(elementId);
                     if (!element) {
                         Swal.showValidationMessage(`Error: No se encontró el elemento con ID: ${elementId}`);
@@ -79,36 +79,57 @@
                         willOpen: () => Swal.showLoading(),
                     });
                     
+                    // CRÍTICO: Guardar el padre original para recolocar el elemento
+                    const originalParent = element.parentElement;
+                    let imageBlob = null;
+                    
                     try {
-                        // CRÍTICO: Configuración de html2canvas para modales
+                        // 1. MOVER EL ELEMENTO FUERA DEL MODAL (al body)
+                        // Esto elimina las influencias de CSS de SweetAlert que confunden a html2canvas
+                        element.classList.add('h2c-moving');
+                        document.body.appendChild(element);
+
+                        // 2. CAPTURAR EN EL CONTEXTO DEL BODY
                         const canvas = await html2canvas(element, { 
-                            scale: 2, // Mejora la resolución
+                            scale: 2, 
                             useCORS: true,
                             logging: false,
                             backgroundColor: '#ffffff', 
-                            // CLAVE: Compensar el scroll, que SweetAlert a menudo manipula
+                            // Opciones de compensación de scroll/transformaciones ya no son tan críticas, 
+                            // pero se mantienen para robustez.
                             scrollY: -window.scrollY, 
-                            // CLAVE: Ayuda a encontrar el elemento dentro del iframe clonado
                             allowTaint: true, 
-                            // Opcional: Ayuda a definir el contexto de la ventana clonada
-                            windowWidth: document.body.scrollWidth,
-                            windowHeight: document.body.scrollHeight
                         });
-
+                        
+                        // 3. DEVOLVER EL ELEMENTO A SU PADRE ORIGINAL DENTRO DEL MODAL
+                        originalParent.appendChild(element);
+                        element.classList.remove('h2c-moving');
+                        
                         loadingSwal.close();
                         
-                        return new Promise(resolve => {
-                            // Devolver la imagen en formato Blob (PNG)
+                        imageBlob = await new Promise(resolve => {
                             canvas.toBlob(resolve, 'image/png');
                         });
                         
                     } catch (error) {
                         loadingSwal.close();
-                        // Dejamos este console.error para debug
                         console.error('Error al generar canvas con html2canvas:', error); 
-                        Swal.fire({ icon: 'error', title: 'Error de Captura', text: 'No se pudo generar el reporte de imagen. Revisa la consola para más detalles.' });
+                        Swal.fire({ 
+                            icon: 'error', 
+                            title: 'Error de Captura', 
+                            text: 'No se pudo generar el reporte de imagen. Revisa la consola para más detalles.' 
+                        });
+                        
+                        // Asegurar que si falla, el elemento regrese si no lo hizo antes
+                        if (originalParent && element.parentElement !== originalParent) {
+                            originalParent.appendChild(element);
+                        }
+                        element.classList.remove('h2c-moving');
+                        
                         return null;
                     }
+
+                    return imageBlob;
                 }
             
             const viajesDataJsonString = '{!! $viajesDataJson !!}';
