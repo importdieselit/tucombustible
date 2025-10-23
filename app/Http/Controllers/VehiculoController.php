@@ -110,12 +110,14 @@ class VehiculoController extends BaseController
         try {
             Vehiculo::create($request->all());
             Session::flash('success', 'Vehiculo creado exitosamente.');
+            Log::info('Vehiculo creado exitosamente.');
         } catch (\Exception $e) {
             \Log::info('Error al crear el registro: ' . $e->getMessage());
             Session::flash('error', 'Error al crear el registro: ' . $e->getMessage());
+
         }
 
-        return Redirect::route('vehiculo.list');
+        return Redirect::route('vehiculos.list');
 
     }
 
