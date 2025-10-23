@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Orden;
 use App\Models\Vehiculo; // Asumimos la existencia de este modelo
 use App\Models\Personal; // Asumimos la existencia de un modelo de personal/mecanicos
+use App\Services\FcmNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Session;
@@ -257,6 +258,21 @@ class OrdenController extends BaseController
             'accion' => route('ordenes.show', $orden->id), // Ruta para ver la orden.
             'dias' => 0,
         ]);
+
+        $data=[
+            'id_usuario' => $userId, // ID del usuario responsable de la orden.
+            'id_rel' => $orden->id, // ID de la orden.
+            'observacion' => 'Se te ha asignado una nueva orden de trabajo: ' . $orden->nro_orden.' a '.$orden->resposable,
+            'accion' => route('ordenes.show', $orden->id), // Ruta para ver la orden.
+            'dias' => 0,
+        ];
+                
+                 FcmNotificationService::enviarNotification(
+                        "Se abrio orden de Trabajo {$orden->nro_orden} a {$vehiculo->flota}",  
+                        "Creada orden de Trabajo {$orden->nro_orden} a {$vehiculo->flota} por {$orden->descripcion_1}. Responsable {$orden->responsable}",
+                        $data
+                    );
+        
         // Mensaje de éxito
         Session::flash('success', 'Orden de trabajo creada exitosamente.');
 
