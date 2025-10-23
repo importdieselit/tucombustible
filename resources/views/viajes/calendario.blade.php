@@ -118,7 +118,7 @@
                 <button id="print" class="btn btn-info shadow-sm">
                     <i class="bi bi-print me-2"></i>
                 </button>
-                <button id="copyToClipboardBtn" class="btn btn-secondary shadow-sm">
+                <button id="copyToClipboardBtn" class="btn btn-secondary shadow-sm" onclick="CopyToClipboard()">
                     <i class="bi bi-clipboard me-2"></i>
                 </button>
             </div>

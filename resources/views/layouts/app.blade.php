@@ -73,12 +73,12 @@
 
 
 
-    async function captureAndCopyToClipboard() {
+    async function CopyToClipboard() {
         // 1. Mostrar estado de carga y deshabilitar botón
             statusMessage.textContent = 'Generando imagen...';
             statusMessage.classList.remove('hidden', 'bg-red-100', 'text-red-800', 'bg-green-100', 'text-green-800');
             statusMessage.classList.add('bg-yellow-100', 'text-yellow-800');
-            captureButton.disabled = true;
+            $(this).disabled = true;
             outputContainer.innerHTML = ''; // Limpiar previsualización anterior
 
             try {
@@ -125,12 +125,10 @@
 
             } finally {
                 // 7. Reestablecer el botón
-                captureButton.disabled = false;
+                $(this).disabled = false;
             }
         }
-
-        // 8. Asignar el evento al botón
-        captureButton.addEventListener('click', captureAndCopyToClipboard);
+       
     });
 
     </script>
