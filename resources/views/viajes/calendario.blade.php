@@ -127,7 +127,7 @@
                         <tr style="border-bottom: 1px solid #01050a; background-color:white;">
                             <td colspan="2" class="px-2" style="border-right: 1px solid #dee2e6;">
                                 <small class="text-muted">Fecha Salida: ${new Date(viajeCompleto.fecha_salida).toLocaleDateString('es-ES')}</small><br>
-                                <strong class="text-info">Destino: [${viajeCompleto.destino_ciudad}]</strong>
+                                <strong class="text-info">Destino: [${viajeCompleto.destino}]</strong>
                             </td>
                             
                             <!-- Celda unificada para Chofer/Unidad -->
