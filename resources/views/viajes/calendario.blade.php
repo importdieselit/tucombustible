@@ -54,10 +54,11 @@
 @push('scripts')
     <!-- 1. Carga de las librerías de FullCalendar (Core + Plugins) -->
     <!-- Se recomienda usar la versión más reciente con los plugins necesarios -->
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
-    <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.11/locales/es.global.min.js'></script> <!-- Soporte para español -->
-    
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script> 
     <script>
+        @once('fullcalendar')
         document.addEventListener('DOMContentLoaded', function() {
 
              async function CopyToClipboard() {
@@ -277,7 +278,7 @@
                     icon: 'info',
                     width: '50%', // Ancho adaptado para la tabla
                     showCancelButton: true,
-                    confirmButtonText: '<i class="bi bi-pencil-square me-2"></i> Ver / Editar Viaje',
+                    confirmButtonText: '<i class="bi bi-pencil-square me-2"></i> Ver',
                     cancelButtonText: 'Cerrar',
                     focusConfirm: false,
                     showCloseButton: true,
@@ -285,7 +286,61 @@
                         container: 'custom-swal-container',
                         popup: 'custom-swal-popup',
                         title: 'custom-swal-title'
-                    }
+                    },
+                    didOpen: (modal) => {
+                                const downloadBtn = modal.querySelector('#downloadReportBtn');
+                                const copyBtn = modal.querySelector('#copyToClipboardBtn');
+                                
+                                const summaryId = downloadBtn.getAttribute('data-summary-id');
+                                
+                                // Listener para Descargar
+                                if (downloadBtn) {
+                                    downloadBtn.addEventListener('click', async () => {
+                                        // Usamos un botón de acción de SweetAlert para el cierre automático
+                                        
+                                        const imageBlob = await captureElement(summaryId);
+                                        
+                                        if (imageBlob) {
+                                            const url = URL.createObjectURL(imageBlob);
+                                            const a = document.createElement('a');
+                                            a.href = url;
+                                            a.download = `Reporte_Viaje_${viajeCompleto.id}_${new Date().toISOString().slice(0, 10)}.png`;
+                                            document.body.appendChild(a);
+                                            a.click();
+                                            document.body.removeChild(a);
+                                            URL.revokeObjectURL(url);
+                                            // Se muestra un éxito de forma inmediata
+                                            Swal.close(); 
+                                            Swal.fire('Descarga Exitosa', 'El reporte PNG ha sido descargado.', 'success');
+                                        }
+                                    });
+                                }
+
+                                // Listener para Copiar al Portapapeles
+                                if (copyBtn) {
+                                    copyBtn.addEventListener('click', async () => {
+                                        
+                                        const imageBlob = await captureElement(summaryId);
+                                        
+                                        if (imageBlob) {
+                                            try {
+                                                // La API de Clipboard es moderna, pero podría fallar en algunos iframes (Canvas)
+                                                // Usamos la API asíncrona (ClipboardItem)
+                                                const item = new ClipboardItem({ [imageBlob.type]: imageBlob });
+                                                await navigator.clipboard.write([item]);
+                                                Swal.close(); 
+                                                Swal.fire('Copiado', 'Reporte copiado al portapapeles (Ctrl+V para pegar).', 'success');
+                                            } catch (err) {
+                                                console.error('Error al copiar al portapapeles. Posiblemente por restricciones de seguridad:', err);
+                                                Swal.close(); 
+                                                // Fallback si falla la copia de imagen
+                                                Swal.fire('Atención', 'No se pudo copiar la imagen directamente. Intenta usar la opción de "Descargar Reporte".', 'warning');
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+                            
                 }).then((result) => {
                     if (result.isConfirmed) {
                         // Redirigir a la ruta de edición de viaje.
