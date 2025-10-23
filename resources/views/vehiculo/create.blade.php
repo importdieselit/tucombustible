@@ -242,6 +242,22 @@
                                         <input type="text" class="form-control" id="certif_reg" name="certif_reg" value="{{ old('certif_reg', $item->certif_reg ?? '') }}">
                                         @error('certif_reg')<div class="text-danger mt-1">{{ $message }}</div>@enderror
                                     </div>
+                                    <div class="col-md-6">
+                                        <label for="rcv">RCV</label>    
+                                        <input type="date"  class="form-control" id="rcv" name="rcv" value="{{ old('rcv', $item->rcv ?? '') }}">
+                                        @error('rcv')<div class="text-danger mt-1">{{ $message }}</div>@enderror
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="racda">RACDA</label>    
+                                        <input type="date"  class="form-control" id="racda" name="racda" value="{{ old('racda', $item->racda ?? '') }}">
+                                        @error('racda')<div class="text-danger mt-1">{{ $message }}</div>@enderror
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="rotc_venc">ROTC</label>    
+                                        <input type="date"  class="form-control" id="rotc_venc" name="rotc_venc" value="{{ old('rotc_venc', $item->rotc_venc ?? '') }}">
+                                        @error('rotc_venc')<div class="text-danger mt-1">{{ $message }}</div>@enderror
+                                    </div>
+                                    
                                 </div>
                             </div>
                             
