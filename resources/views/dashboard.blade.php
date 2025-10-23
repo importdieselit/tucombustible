@@ -50,9 +50,11 @@ $mantenimientosPendientes = 4; //Mantenimiento::where('estatus', 'pendiente')->c
 // KPI: Inventario bajo (existencia < existencia_minima)
 $inventarioBajo = Inventario::whereColumn('existencia', '<', 'existencia_minima')->count();
 
-// KPI: Eficiencia de flota - Se deja como un valor fijo ya que la lógica es muy compleja
-$eficienciaFlota = $totalVehiculos > 0 ? round((($unidades_disponibles) / $totalVehiculos) * 100, 0) : 0; // Ejemplo simple 
-
+// Fórmula de Eficiencia: (Unidades Disponibles / Total Unidades) * 100
+$eficienciaActual = $totalVehiculos > 0 
+    ? ($unidades_disponibles / $totalVehiculos) * 100 
+    : 0; 
+$eficienciaFlota = round($eficienciaActual, 0);
 // Tabla de órdenes recientes
 $ordenesRecientes = Orden::orderBy('created_at', 'desc')->limit(3)->get();
 $alertasRecientes = Alerta::orderBy('id_alerta', 'desc')->limit(5)->get();
