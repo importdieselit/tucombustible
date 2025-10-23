@@ -126,7 +126,7 @@
                 Procesando...
             </div>
             <div class="table-responsive mt-3 printableArea" style="max-height: 400px; overflow-y: auto;">
-                <table class="table table-sm text-start table-borderless" style="font-size: 0.8rem; width: 100%; border: 1px solid #dee2e6;">
+                <table class="table table-sm text-start table-borderless" style="font-size: 0.8rem; width: 100%;     border: 2px solid #000; background-color: #FFF !important;">
                     <thead class="bg-primary text-white">
                         <tr style="font-weight: 700">
                             <th class="py-1 px-2" style="width: 50%;">Despacho / Cliente</th>
