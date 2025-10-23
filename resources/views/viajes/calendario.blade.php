@@ -178,7 +178,7 @@
 
             return {
                 id: viaje.id,
-                title: `[${viaje.status}] ${viaje.cliente || 'Viaje'} a ${viaje.destino_ciudad}`,
+                title: `${viaje.cliente || 'Viaje'} a ${viaje.destino}`,
                 start: viaje.fecha_salida,
                 end: endFormatted,
                 allDay: true,
