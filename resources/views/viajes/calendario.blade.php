@@ -66,6 +66,7 @@
         document.addEventListener('DOMContentLoaded', function() {
 
          async function captureElement(elementId) {
+                    console.log('Capturando elemento para reporte PNG:', elementId);
                     const element = document.getElementById(elementId);
                     if (!element) {
                         Swal.showValidationMessage(`Error: No se encontró el elemento con ID: ${elementId}`);
@@ -166,9 +167,6 @@
                 <button id="copyToClipboardBtn" class="btn btn-secondary shadow-sm">
                     <i class="fa fa-clipboard me-2"></i>
                 </button>
-            </div>
-            <div id="statusMessage" class="text-center p-3 rounded-lg bg-yellow-100 text-yellow-800 hidden mb-4">
-                Procesando...
             </div>
             <div id="${summaryTableId}" class="table-responsive mt-3 printableArea" style="max-height: 400px; overflow-y: auto;">
                 <table class="table table-sm text-start table-borderless" style="font-size: 0.8rem; width: 100%;     border: 2px solid #000; background-color: #FFF !important;">
@@ -285,7 +283,7 @@
                                 if (downloadBtn) {
                                     downloadBtn.addEventListener('click', async () => {
                                         // Usamos un botón de acción de SweetAlert para el cierre automático
-                                        
+                                        console.log('Iniciando descarga de reporte PNG...'+summaryId);
                                         const imageBlob = await captureElement(summaryId);
                                         
                                         if (imageBlob) {
