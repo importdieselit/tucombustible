@@ -62,7 +62,7 @@
             const printableArea = document.querySelector('.printableArea');
             const statusMessage = document.getElementById('statusMessage');
             const outputContainer = document.getElementById('outputContainer');
-            
+
         document.addEventListener('DOMContentLoaded', function() {
 
              async function CopyToClipboard() {
@@ -177,10 +177,10 @@
         return `
         <div class="d-flex justify-content-rigth gap-2 mt-4 flex-wrap">
                 <button id="print" class="btn btn-info shadow-sm">
-                    <i class="bi bi-print me-2"></i>
+                    <i class="fa fa-print me-2"></i>
                 </button>
-                <button id="copyToClipboardBtn" class="btn btn-secondary shadow-sm" onclick="CopyToClipboard()">
-                    <i class="bi bi-clipboard me-2"></i>
+                <button id="copyToClipboardBtn" class="btn btn-secondary shadow-sm">
+                    <i class="fa fa-clipboard me-2"></i>
                 </button>
             </div>
             <div id="statusMessage" class="text-center p-3 rounded-lg bg-yellow-100 text-yellow-800 hidden mb-4">
