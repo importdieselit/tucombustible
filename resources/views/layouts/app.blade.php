@@ -70,10 +70,11 @@
                 $(".noPrint").show();
                 $(".siPrint").hide();
             });
+        });
 
 
 
-        function CopyToClipboard() {
+        function CopyToClipboard () {
         // 1. Mostrar estado de carga y deshabilitar botón
             statusMessage.textContent = 'Generando imagen...';
             statusMessage.classList.remove('hidden', 'bg-red-100', 'text-red-800', 'bg-green-100', 'text-green-800');
@@ -128,8 +129,6 @@
                 $(this).disabled = false;
             }
         }
-       
-    });
 
     </script>
 </body>
