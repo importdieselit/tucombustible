@@ -156,7 +156,7 @@
         }
 
         const choferRowSpan = despachos.length > 0 ? despachos.length + 1 : 2; 
-
+        const summaryTableId = `viaje-summary-${viajeCompleto.id}`;
         // Construcción del HTML de la tabla
         return `
         <div class="d-flex justify-content-rigth gap-2 mt-4 flex-wrap">
@@ -170,7 +170,7 @@
             <div id="statusMessage" class="text-center p-3 rounded-lg bg-yellow-100 text-yellow-800 hidden mb-4">
                 Procesando...
             </div>
-            <div class="table-responsive mt-3 printableArea" style="max-height: 400px; overflow-y: auto;">
+            <div id="${summaryTableId}" class="table-responsive mt-3 printableArea" style="max-height: 400px; overflow-y: auto;">
                 <table class="table table-sm text-start table-borderless" style="font-size: 0.8rem; width: 100%;     border: 2px solid #000; background-color: #FFF !important;">
                     <thead class="bg-primary text-white">
                         <tr style="font-weight: 700">
