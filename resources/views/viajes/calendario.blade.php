@@ -78,7 +78,7 @@
         
         // Extracción segura de datos
         const choferNombre = viajeCompleto.chofer || 'PENDIENTE';
-        const ayudante = viajeCompleto.ayudante || null); 
+        const ayudante = viajeCompleto.ayudante || null; 
         const flota = viajeCompleto.vehiculo || 'PENDIENTE';
         const placa = viajeCompleto.placa || 'N/A';
         
