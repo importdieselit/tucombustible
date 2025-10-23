@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
 use Maatwebsite\Excel\Facades\Excel;  
 use Illuminate\Support\Facades\Schema;  
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Clase base para controladores de recursos CRUD que infiere el modelo.
@@ -160,6 +162,7 @@ abstract class BaseController extends Controller
             $this->model->create($request->all());
             Session::flash('success', class_basename($this->model) . ' creado exitosamente.');
         } catch (\Exception $e) {
+            Log::info('Error al crear el registro: ' . $e->getMessage());
             Session::flash('error', 'Error al crear el registro: ' . $e->getMessage());
         }
 

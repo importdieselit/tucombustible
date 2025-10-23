@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Schema;
 use App\Traits\GenerateAlerts;
 use App\Traits\PluralizaEnEspanol;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 
 class VehiculoController extends BaseController
@@ -106,9 +107,16 @@ class VehiculoController extends BaseController
         // Creamos una instancia de nuestro Form Request y validamos los datos.
         // Esto lanzará una excepción y redirigirá si la validación falla.
         app(VehiculoStoreRequest::class);
-        
-        // Si la validación pasa, continuamos y llamamos al método store del padre.
-        return parent::store($request);
+        try {
+            Vehiculo::create($request->all());
+            Session::flash('success', 'Vehiculo creado exitosamente.');
+        } catch (\Exception $e) {
+            \Log::info('Error al crear el registro: ' . $e->getMessage());
+            Session::flash('error', 'Error al crear el registro: ' . $e->getMessage());
+        }
+
+        return Redirect::route('vehiculo.list');
+
     }
 
      public function importForm()

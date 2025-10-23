@@ -31,8 +31,8 @@ class VehiculoStoreRequest extends FormRequest
             // La regla 'unique' ahora ignora el ID del vehículo actual si existe.
             'placa' => 'required|string|max:255|unique:vehiculos,placa,' . $vehiculoId,
             'marca' => 'required|integer|exists:marcas,id',
-            'modelo' => 'required|integer|exists:modelos,id',
-            'anno' => 'required|integer|min:1900|max:' . (date('Y') + 1),
+            //'modelo' => 'required|integer|exists:modelos,id',
+            //'anno' => 'required|integer|min:1900|max:' . (date('Y') + 1),
             'id_usuario' => 'nullable|integer|exists:users,id',
             'estatus' => 'nullable|string|max:255',
             'tipo'  => 'nullable|integer|exists:tipos_vehiculo,id',
