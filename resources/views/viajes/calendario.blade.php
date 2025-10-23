@@ -150,6 +150,14 @@
                     </tfoot>
                 </table>
             </div>
+                        <div class="d-flex justify-content-center gap-2 mt-4 flex-wrap">
+                <button id="print" class="btn btn-info shadow-sm">
+                    <i class="bi bi-print me-2"></i>
+                </button>
+                <button id="copyToClipboardBtn" class="btn btn-secondary shadow-sm">
+                    <i class="bi bi-clipboard me-2"></i>
+                </button>
+            </div>
         `;
     }
 
@@ -207,7 +215,7 @@
                     title: `<h5 class="text-primary">${viajeCompleto.cliente || 'Viaje Programado'}</h5>`,
                     html: htmlContent,
                     icon: 'info',
-                    width: '85%', // Ancho adaptado para la tabla
+                    width: '50%', // Ancho adaptado para la tabla
                     showCancelButton: true,
                     confirmButtonText: '<i class="bi bi-pencil-square me-2"></i> Ver / Editar Viaje',
                     cancelButtonText: 'Cerrar',
