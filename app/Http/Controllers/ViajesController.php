@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Viaje;
 use App\Models\TabuladorViatico;
+use App\Services\FcmNotificationService;
 use App\Models\ViaticoViaje;
 use App\Models\User;
 use App\Models\Vehiculo;
@@ -230,7 +231,7 @@ class ViajesController extends Controller
 
             // 4. Crear los registros de DespachoViaje
             $cantidadDespachos = count($request->despachos);
-            
+            $totalLitros = 0;
             foreach ($request->despachos as $despachoData) {
                 DespachoViaje::create([
                     'viaje_id' => $viaje->id,
@@ -238,8 +239,21 @@ class ViajesController extends Controller
                     'otro_cliente' => $despachoData['otro_cliente'] ?? null,
                     'litros' => $despachoData['litros'],
                 ]);
+                $totalLitros += $despachoData['litros'];
             }
-
+            $data=[
+                    'viaje_id' => $viaje->id,
+                    'cliente_id' => $despachoData['cliente_id'] ?? null,
+                    'otro_cliente' => $despachoData['otro_cliente'] ?? null,
+                    'litros' => $despachoData['litros'],
+                    'total_litros' => $totalLitros
+                ];
+                
+                 FcmNotificationService::enviarNotification(
+                        "Nuevo viaje creado a {$viaje->destino_ciudad} con {$cantidadDespachos} despachos. Total Litros: {$totalLitros}",  
+                        "Nuevo viaje creado a {$viaje->destino_ciudad} con {$cantidadDespachos} despachos. Total Litros: {$totalLitros}",
+                        $data
+                    );
             // 5. Generar el Cuadro de Viáticos automáticamente (con correcciones y desglose)
             $this->generarCuadroViaticos($viaje, $tabulador, $cantidadDespachos);
             
