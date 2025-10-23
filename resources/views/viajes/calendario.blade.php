@@ -150,9 +150,6 @@
                     </tfoot>
                 </table>
             </div>
-            <div class="alert alert-light text-muted p-2 mt-3" style="font-size: 0.9em; border-left: 5px solid #0d6efd;">
-                Estatus: <span class="fw-bold text-uppercase text-danger">${viajeCompleto.status}</span> | Custodias: ${viajeCompleto.custodia_count || 0}
-            </div>
         `;
     }
 
