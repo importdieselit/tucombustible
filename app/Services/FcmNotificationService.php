@@ -578,7 +578,7 @@ class FcmNotificationService
     {
         try {
             // Obtener usuarios a notificar
-            $idsCliente = User::where('id_cliente', 348)
+            $idsCliente = User::where('cliente_id', 348)
                                     ->pluck('id')
                                     ->toArray();
 
@@ -594,7 +594,7 @@ class FcmNotificationService
                                     ->whereNotNull('fcm_token')
                                     ->get();
             if ($usuarios->isEmpty()) {
-                \Log::warning('No se encontraron usuarios con tokens FCM para notificar preregistro');
+                \Log::warning('No se encontraron usuarios con tokens FCM para notificar');
                 return;
             }
 
@@ -631,7 +631,7 @@ class FcmNotificationService
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error enviando notificación de preregistro: ' . $e->getMessage());
+            Log::error('Error enviando notificación: ' . $e->getMessage());
         }
     }
 }
