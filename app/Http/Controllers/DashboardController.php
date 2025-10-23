@@ -54,7 +54,7 @@ class DashboardController extends Controller
         $totalTanques = Tanque::count();
         $unidades_con_orden_abierta = Vehiculo::VehiculosConOrdenAbierta()->count();
         $unidades_en_mantenimiento = Vehiculo::countVehiculosEnMantenimiento();
-        $unidades_disponibles = Vehiculo::where('es_flora',true)->where('estatus',1)->count();
+        $unidades_disponibles = Vehiculo::where('es_flota',true)->where('estatus',1)->count();
 
         // Puedes añadir más información, como las últimas 5 órdenes
         $ultimasOrdenes = Orden::orderBy('id', 'desc')->take(5)->get();
