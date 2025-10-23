@@ -210,6 +210,8 @@
 
         const choferRowSpan = despachos.length > 0 ? despachos.length + 1 : 2; 
         const summaryTableId = `viaje-summary-${viajeCompleto.id}`;
+        const rutaLogo = "{!!  asset('img/logo1.png') !!}";
+        console.log('Ruta del logo para el reporte:', rutaLogo);
         // Construcción del HTML de la tabla
         return `
         <div class="d-flex justify-content-rigth gap-2 mt-4 flex-wrap">
@@ -224,7 +226,9 @@
                 <table class="table table-sm text-start table-borderless" style="font-size: 0.8rem; width: 100%;     border: 2px solid #000; background-color: #FFF !important;">
                     <thead class="bg-primary text-white">
                         <tr style="font-weight: 700">
-                            <th class="py-1 px-2" style="width: 50%;">Despacho / Cliente</th>
+                            <th class="py-1 px-2" style="width: 50%;">
+                                <img src="${rutaLogo}" alt="logo empresa" style="width: 250px">
+                                Despacho / Cliente</th>
                             <th class="py-1 px-2 text-end" style="width: 25%;">Litros</th>
                             <th class="py-1 px-2 text-center" style="background-color: #34495e; color: #fff; width: 25%;">Unidad / Personal</th>
                         </tr>
