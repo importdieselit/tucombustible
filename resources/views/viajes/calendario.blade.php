@@ -66,14 +66,12 @@
         document.addEventListener('DOMContentLoaded', function() {
 
          async function captureElement(elementId) {
-                    console.log('Capturando elemento para reporte PNG:', elementId);
                     const element = document.getElementById(elementId);
                     if (!element) {
                         Swal.showValidationMessage(`Error: No se encontró el elemento con ID: ${elementId}`);
                         return null;
                     }
 
-                    // Necesitamos volver a abrir un SweetAlert para el loading
                     const loadingSwal = Swal.fire({
                         title: 'Generando Reporte...',
                         allowOutsideClick: false,
@@ -82,13 +80,19 @@
                     });
                     
                     try {
-                        // html2canvas debe apuntar al elemento visible
+                        // CRÍTICO: Configuración de html2canvas para modales
                         const canvas = await html2canvas(element, { 
-                            scale: 2, // Aumenta la resolución para mejor calidad
+                            scale: 2, // Mejora la resolución
                             useCORS: true,
                             logging: false,
-                            // Opciones para asegurar que no capture el fondo del modal si es posible
                             backgroundColor: '#ffffff', 
+                            // CLAVE: Compensar el scroll, que SweetAlert a menudo manipula
+                            scrollY: -window.scrollY, 
+                            // CLAVE: Ayuda a encontrar el elemento dentro del iframe clonado
+                            allowTaint: true, 
+                            // Opcional: Ayuda a definir el contexto de la ventana clonada
+                            windowWidth: document.body.scrollWidth,
+                            windowHeight: document.body.scrollHeight
                         });
 
                         loadingSwal.close();
@@ -100,8 +104,9 @@
                         
                     } catch (error) {
                         loadingSwal.close();
-                        console.error('Error al generar canvas con html2canvas:', error);
-                        Swal.fire({ icon: 'error', title: 'Error de Captura', text: 'No se pudo generar el reporte de imagen.' });
+                        // Dejamos este console.error para debug
+                        console.error('Error al generar canvas con html2canvas:', error); 
+                        Swal.fire({ icon: 'error', title: 'Error de Captura', text: 'No se pudo generar el reporte de imagen. Revisa la consola para más detalles.' });
                         return null;
                     }
                 }
