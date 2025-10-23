@@ -401,6 +401,7 @@ class AuthController extends Controller
         }
     }
 
+
     /**
      * Enviar notificación FCM individual usando el servicio existente
      */

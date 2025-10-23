@@ -29,6 +29,7 @@ use App\Models\ResumenDiario;
 use App\Models\Inventario;
 use App\Models\Viaje;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 
 // KPI: Vehículos en operación
 $totalVehiculos = Vehiculo::where('es_flota',true)->count();

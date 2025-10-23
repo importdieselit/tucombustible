@@ -10,6 +10,10 @@ use App\Models\Checklist;
 use App\Models\Inspeccion;
 use App\Models\InspeccionImagen;
 use App\Models\Vehiculo;
+use App\Models\Alerta;
+use App\Services\FcmNotificationService;
+
+
 
 class ChecklistController extends Controller
 {
@@ -83,6 +87,10 @@ class ChecklistController extends Controller
             'descripciones.*' => 'nullable|string|max:255'
         ]);
 
+         $usuarios = User::whereIn('id', $usuarioIds)
+                          ->whereNotNull('fcm_token')
+                          ->get();
+
         DB::beginTransaction();
         try {
             
@@ -120,7 +128,7 @@ class ChecklistController extends Controller
                                     $vehiculo->kilometraje = $value;
                                     $vehiculo->km_contador += $km;
                                     $vehiculo->km_mantt += $km;
-                                    $vehiculo->save();
+                                    
                                 }
                             }
                             
@@ -147,6 +155,32 @@ class ChecklistController extends Controller
                 'respuesta_json' => json_encode($respuestas)
             ]);
 
+            if($vehiculo->km_mantt>4800){
+                Alerta::create([
+                    'id_usuario' => null, // null para todos los admins
+                    'id_rel' => $inspeccion->id,
+                    'fecha' => now(),
+                    'observacion' => "Unidad {$vehiculo->flota} requiere planificacion para Servicio de Mantenimiento.",
+                    'estatus' => 0,
+                    'accion' => "/inspecciones/{$inspeccion->id}" // Ruta al detalle de la inspección
+                ]);
+                $data=[
+                    'id_usuario' => null, // null para todos los admins
+                    'id_rel' => $inspeccion->id,
+                    'fecha' => now(),
+                    'observacion' => "Unidad {$vehiculo->flota} requiere planificacion para Servicio de Mantenimiento.",
+                    'estatus' => 0,
+                    'accion' => "/inspecciones/{$inspeccion->id}" // Ruta al detalle de la inspección
+                ];
+                
+                 FcmNotificationService::enviarNotification(
+                        "Unidad {$vehiculo->flota} requiere Mantenimiento",  
+                        "Unidad {$vehiculo->flota} requiere planificacion para Servicio de Mantenimiento. presenta acumulados {$vehiculo->km_mantt}km",
+                        $data
+                    );
+            }
+            
+
             // 4. Procesar y guardar imágenes si existen
             if ($request->hasFile('imagenes')) {
                 $imagenes = $request->file('imagenes');
@@ -168,9 +202,51 @@ class ChecklistController extends Controller
             // 5. Actualizar estatus del vehículo si hubo fallo crítico
             if ($isCriticalFailure && $vehiculo && $vehiculo->estatus != 3) {
                 $vehiculo->estatus = 3; // 3 = No Operativo
-                $vehiculo->save();
-            }
 
+                Alerta::create([
+                    'id_usuario' => null, // null para todos los admins
+                    'id_rel' => $inspeccion->id,
+                    'fecha' => now(),
+                    'observacion' => "Inspección para vehículo {$vehiculo->placa} con estado **No Operativo o apto para El Viaje**. Requiere revisión.",
+                    'estatus' => 0,
+                    'accion' => "/inspecciones/{$inspeccion->id}" // Ruta al detalle de la inspección
+                ]);
+                $data=[
+                    'id_usuario' => null, // null para todos los admins
+                    'id_rel' => $inspeccion->id,
+                    'fecha' => now(),
+                    'observacion' => "Inspección para vehículo {$vehiculo->placa} con estado **No Operativo o apto para El Viaje**. Requiere revisión.",
+                    'estatus' => 0,
+                    'accion' => "/inspecciones/{$inspeccion->id}" // Ruta al detalle de la inspección
+                ];
+                FcmNotificationService::enviarNotification(
+                        "Unidad {$vehiculo->flota} Marcada No Operativa en Inspeccion",  
+                        "Unidad {$vehiculo->flota} requiere Revision de Mantenimiento. Fue marcada como no operativa durante la inspeccion",
+                        $data
+                    );
+
+            }elseif($vehiculo->estatus==2){
+                $vehiculo->estatus=1;
+                Alerta::create([
+                'id_usuario' => null, // null para todos los admins
+                'id_rel' => $inspeccion->id,
+                'fecha' => now(),
+                'observacion' => "Ingreso de Unidad {$vehiculo->flota} {$vehiculo->placa}",
+                'estatus' => 0,
+                'accion' => "/inspecciones/{$inspeccion->id}" // Ruta al detalle de la inspección
+            ]);
+            }else{
+                $vehiculo->estatus=2;
+                Alerta::create([
+                'id_usuario' => null, // null para todos los admins
+                'id_rel' => $inspeccion->id,
+                'fecha' => now(),
+                'observacion' => "Salida de vehículo {$vehiculo->placa}.",
+                'estatus' => 0,
+                'accion' => "/inspecciones/{$inspeccion->id}" // Ruta al detalle de la inspección
+            ]);
+            }
+            $vehiculo->save();
             DB::commit();
 
             return response()->json([

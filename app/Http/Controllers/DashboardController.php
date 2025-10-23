@@ -11,6 +11,7 @@ use App\Models\Pedido;
 use App\Models\MovimientoCombustible;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Carbon;
 class DashboardController extends Controller
 {
     public function index()

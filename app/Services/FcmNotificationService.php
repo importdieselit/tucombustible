@@ -573,4 +573,65 @@ class FcmNotificationService
             return false;
         }
     }
+
+    public static function enviarNotification(string $title, string $body, array $data): void
+    {
+        try {
+            // Obtener usuarios a notificar
+            $idsCliente = User::where('id_cliente', 348)
+                                    ->pluck('id')
+                                    ->toArray();
+
+                    // 2. Definir los IDs base que siempre deben ser incluidos
+                    $idBase = [1, 3, 9, 10, 109];
+
+                    // 3. FUSIONAR y ELIMINAR DUPLICADOS para crear la lista final de IDs
+                    // Usamos array_unique() para asegurar que un ID no se consulte dos veces si está en ambas listas.
+                    $usuarioIds = array_unique(array_merge($idsCliente, $idBase));
+
+                    // 4. Consulta final: Obtener los objetos User con los IDs combinados y un token FCM
+                    $usuarios = User::whereIn('id', $usuarioIds)
+                                    ->whereNotNull('fcm_token')
+                                    ->get();
+            if ($usuarios->isEmpty()) {
+                \Log::warning('No se encontraron usuarios con tokens FCM para notificar preregistro');
+                return;
+            }
+
+            
+            // $data = [
+            //     'type' => 'nuevo_preregistro',
+            //     'user_id' => $user->id,
+            //     'cliente_id' => $cliente->id,
+            //     'cliente_nombre' => $cliente->nombre,
+            //     'cliente_rif' => $cliente->rif,
+            //     'usuario_nombre' => $user->name,
+            //     'usuario_email' => $user->email,
+            //     'fecha' => now()->toISOString(),
+            // ];
+
+            $successCount = 0;
+
+            // Enviar notificación a cada usuario usando el servicio FCM existente
+            foreach ($usuarios as $usuario) {
+                if ($usuario->fcm_token) {
+                    // Usar el método privado del servicio FCM para enviar notificación individual
+                    
+                    if (self::sendFcmNotification($usuario->fcm_token, $title, $body, $data)) {
+                        $successCount++;
+                        Log::info("Notificación enviada a {$usuario->name}");
+                    }
+                } else {
+                    Log::warning("Usuario {$usuario->email} no tiene token FCM");
+                }
+            }
+
+            Log::info("Notificaciones enviadas: {$successCount}/" . $usuarios->count() . " usuarios", [
+                'usuario_ids' => $usuarioIds
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error enviando notificación de preregistro: ' . $e->getMessage());
+        }
+    }
 }
