@@ -25,6 +25,7 @@ use App\Models\Deposito;
 use App\Models\User;
 use App\Models\Alerta;
 use App\Models\Mantenimiento;
+use App\Models\ResumenDiario;
 use App\Models\Inventario;
 use App\Models\Viaje;
 use Illuminate\Support\Facades\DB;
@@ -70,6 +71,31 @@ $data = [
     $ordenesPorEstatus[2] ?? 0, // Suponiendo 2 es pendiente
     $ordenesPorEstatus[1] ?? 0  // Suponiendo 1 es en proceso
 ];
+
+
+
+$historicoReal = ResumenDiario::where('fecha', '>=', Carbon::today()->subDays(6))
+    ->orderBy('fecha', 'asc')
+    ->get();
+
+// Preparar datos para Chart.js
+$chartLabels = $historicoReal->map(function($item) {
+    return Carbon::parse($item->fecha)->format('d/M');
+})->toArray();
+
+// Usamos el campo 'disponibilidad' (eficiencia)
+$chartDataCierre = $historicoReal->pluck('disponibilidad')->toArray();
+
+// Para simular el valor de 'Inicio del Día' para el gráfico,
+// usamos el valor de cierre del día anterior (o 0 si es el primer día).
+$chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal) {
+    if ($key === 0) {
+        return 0; // O un valor inicial de referencia
+    }
+    return $historicoReal[$key - 1]->disponibilidad;
+})->toArray();
+
+
 ?>
 
 <div class="container-fluid">

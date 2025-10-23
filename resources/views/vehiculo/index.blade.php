@@ -5,6 +5,7 @@ $total_vehiculos = App\Models\Vehiculo::misVehiculos()->count();
 $unidades_con_orden_abierta = App\Models\Vehiculo::VehiculosConOrdenAbierta()->count();
 $unidades_en_mantenimiento = App\Models\Vehiculo::countVehiculosEnMantenimiento();
 $unidades_disponibles = App\Models\Vehiculo::Disponibles()->count();
+$unidades_en_servicio = App\Models\Vehiculo::EnServicio()->count();
 @endphp
 @section('title', 'Dashboard de Vehículos')
 
@@ -37,7 +38,7 @@ $unidades_disponibles = App\Models\Vehiculo::Disponibles()->count();
                 <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#ffc10710;">
                     <i class="fa fa-car text-warning" style="font-size:2rem;"></i>
                 </span>
-                <h2 class="fw-bold text-warning">0</h2>
+                <h2 class="fw-bold text-warning">{{ $unidades_en_servicio }}</h2>
                 <div class="text-muted small">En Ruta/Servicio</div>
             </div>
         </div>
