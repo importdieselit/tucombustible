@@ -54,6 +54,8 @@
     
     <script src="{{ mix('js/app.js') }}"></script>
     <script src="{{ asset('js/alerts.js') }}"></script>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
     @stack('scripts')
     <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -70,9 +72,12 @@
                 $(".noPrint").show();
                 $(".siPrint").hide();
             });
-        });
 
 
+
+   
+       
+    });
 
     </script>
 </body>
