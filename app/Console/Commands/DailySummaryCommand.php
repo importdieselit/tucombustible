@@ -42,7 +42,7 @@ class DailySummaryCommand extends Command
         // ----------------------------------------------------------------------
         $totalVehiculos = Vehiculo::where('es_flota', true)->count();
         $unidadesDisponibles = Vehiculo::where('es_flota', true)
-            ->where('status',1) // Asumiendo que status 1 = disponible
+            ->where('estatus',1) // Asumiendo que status 1 = disponible
             ->count(); 
 
         $disponibilidad = $totalVehiculos > 0 
