@@ -161,10 +161,10 @@
         // Construcción del HTML de la tabla
         return `
         <div class="d-flex justify-content-rigth gap-2 mt-4 flex-wrap">
-                <button id="print" class="btn btn-info shadow-sm">
+                <button id="print" class="btn btn-info shadow-sm" data-summary-id="${summaryTableId}">
                     <i class="fa fa-print me-2"></i>
                 </button>
-                <button id="copyToClipboardBtn" class="btn btn-secondary shadow-sm">
+                <button id="copyToClipboardBtn" data-summary-id="${summaryTableId}"   class="btn btn-secondary shadow-sm">
                     <i class="fa fa-clipboard me-2"></i>
                 </button>
             </div>
