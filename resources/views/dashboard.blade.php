@@ -30,7 +30,7 @@ use App\Models\Viaje;
 use Illuminate\Support\Facades\DB;
 
 // KPI: Vehículos en operación
-$totalVehiculos = Vehiculo::count();
+$totalVehiculos = Vehiculo::where('es_flota',true)->count();
 
 // KPI: Órdenes activas (ejemplo: estatus 1 = activo/en proceso, 2 = pendiente)
 $ordenesActivas = Orden::whereIn('estatus', [1, 2])->count();
@@ -51,7 +51,7 @@ $mantenimientosPendientes = 4; //Mantenimiento::where('estatus', 'pendiente')->c
 $inventarioBajo = Inventario::whereColumn('existencia', '<', 'existencia_minima')->count();
 
 // KPI: Eficiencia de flota - Se deja como un valor fijo ya que la lógica es muy compleja
-$eficienciaFlota = 92; 
+$eficienciaFlota = $totalVehiculos > 0 ? round((($unidades_disponibles) / $totalVehiculos) * 100, 0) : 0; // Ejemplo simple 
 
 // Tabla de órdenes recientes
 $ordenesRecientes = Orden::orderBy('created_at', 'desc')->limit(3)->get();
@@ -90,7 +90,7 @@ $data = [
                         </div>
                         <div>
                             <h5 class="card-title mb-0">Vehículos</h5>
-                            <h2 class="fw-bold">{{ $totalVehiculos }}</h2>
+                            <h2 class="fw-bold">{{ $unidades_disponibles }}</h2>
                             <small class="text-muted">En operación</small>
                         </div>
                     </div>

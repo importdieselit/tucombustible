@@ -130,9 +130,7 @@
                         // 3. DEVOLVER EL ELEMENTO A SU PADRE ORIGINAL DENTRO DEL MODAL
                         originalParent.appendChild(element);
                         element.classList.remove('h2c-moving');
-                        
                         loadingSwal.close();
-                        
                         imageBlob = await new Promise(resolve => {
                             canvas.toBlob(resolve, 'image/png');
                         });
@@ -150,14 +148,11 @@
                         if (originalParent && element.parentElement !== originalParent) {
                             originalParent.appendChild(element);
                         }
-                        element.classList.remove('h2c-moving');
-                        
+                        element.classList.remove('h2c-moving');   
                         return null;
                     }
-
                     return imageBlob;
-                }
-            
+                }  
             const viajesDataJsonString = '{!! $viajesDataJson !!}';
 
             console.log('Cargando datos de viajes para el calendario...');
@@ -228,7 +223,7 @@
                         <tr style="font-weight: 700">
                             <th class="py-1 px-2" style="width: 50%;">
                                 <img src="${rutaLogo}" alt="logo empresa" style="width: 250px">
-                                Despacho / Cliente</th>
+                            </th>
                             <th class="py-1 px-2 text-end" style="width: 25%;">Litros</th>
                             <th class="py-1 px-2 text-center" style="background-color: #34495e; color: #fff; width: 25%;">Unidad / Personal</th>
                         </tr>
@@ -236,6 +231,7 @@
                     <tbody>
                         <tr style="border-bottom: 1px solid #01050a; background-color:white;">
                             <td colspan="2" class="px-2" style="border-right: 1px solid #dee2e6;">
+                                Despacho / Cliente
                                 <small class="text-muted">Fecha Salida: ${new Date(viajeCompleto.fecha_salida).toLocaleDateString('es-ES')}</small><br>
                                 <strong class="text-info">Destino: [${viajeCompleto.destino}]</strong>
                             </td>

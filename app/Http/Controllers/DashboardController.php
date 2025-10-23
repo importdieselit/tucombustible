@@ -51,6 +51,9 @@ class DashboardController extends Controller
         $totalUsuarios = User::count();
         $totalOrdenesAbiertas = Orden::where('estatus', 'Abierta')->count(); // Asumiendo que 'estatus' tiene este valor
         $totalTanques = Tanque::count();
+        $unidades_con_orden_abierta = Vehiculo::VehiculosConOrdenAbierta()->count();
+        $unidades_en_mantenimiento = Vehiculo::countVehiculosEnMantenimiento();
+        $unidades_disponibles = Vehiculo::Disponibles()->count();
 
         // Puedes añadir más información, como las últimas 5 órdenes
         $ultimasOrdenes = Orden::orderBy('id', 'desc')->take(5)->get();
@@ -60,7 +63,10 @@ class DashboardController extends Controller
             'totalUsuarios',
             'totalOrdenesAbiertas',
             'totalTanques',
-            'ultimasOrdenes'
+            'ultimasOrdenes',
+            'unidades_con_orden_abierta',
+            'unidades_en_mantenimiento',
+            'unidades_disponibles'
         ));
     }
 }
