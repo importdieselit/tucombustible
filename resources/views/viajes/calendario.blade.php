@@ -48,6 +48,33 @@
         .fc-event-main {
             color: #070707 !important;
         }
+
+        /* Estilo para el popup de SweetAlert personalizado */
+        .custom-swal-popup {
+             max-width: 900px !important; /* Permite que el ancho sea flexible hasta 900px */
+             width: 90% !important; /* Asegura responsividad */
+             border-radius: 12px;
+        }
+        .swal2-actions {
+            flex-direction: column !important;
+            gap: 10px;
+        }
+        
+        /* Estilo CRÍTICO para la corrección: oculta el elemento mientras se mueve,
+           pero sin ocupar espacio, evitando parpadeo */
+        .h2c-moving {
+            position: absolute !important;
+            top: -9999px !important;
+            left: -9999px !important;
+            z-index: -1 !important;
+            visibility: hidden;
+            display: block !important;
+            width: auto !important; /* Asegura que tome su ancho natural */
+            height: auto !important; /* Asegura que tome su altura natural */
+            /* Es CRÍTICO quitar cualquier propiedad de transformación que el modal pudiera aplicar */
+            transform: none !important; 
+            transition: none !important;
+        }
     </style>
 @endpush
 
@@ -91,7 +118,7 @@
 
                         // 2. CAPTURAR EN EL CONTEXTO DEL BODY
                         const canvas = await html2canvas(element, { 
-                            scale: 2, 
+                            scale: 1, 
                             useCORS: true,
                             logging: false,
                             backgroundColor: '#ffffff', 
