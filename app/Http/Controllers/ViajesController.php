@@ -518,8 +518,6 @@ class ViajesController extends Controller
                 $duracionDias = 2;
             }
 
-            // Nombre del chofer: Chofer::persona->nombre (asumiendo que 'persona' es la relación con el modelo User o Persona)
-            $nombreChofer = $viaje->chofer->persona->nombre ?? 'Sin Asignar';
             
             // Calcular fecha final (FullCalendar usa end de forma NO inclusiva)
             // Añadir $duracionDias días a la fecha de salida.
@@ -529,7 +527,7 @@ class ViajesController extends Controller
                 'id' => $viaje->id,
                 'destino' => $viaje->destino_ciudad,
                 'cliente' => $viaje->despachos->first()->cliente->nombre ?? $viaje->despachos->first()->otro_cliente ?? 'Cliente Desconocido',
-                'chofer' => $nombreChofer,
+                'chofer' => $viaje->chofer->persona->nombre ?? 'Sin Asignar',
                 'ayudante' => $viaje->ayudante_chofer->persona->nombre ?? 'Sin Asignar',
                 'vehiculo' => $viaje->vehiculo->flota ?? 'Sin Asignar',
                 'placa' => $viaje->vehiculo->placa ?? 'Sin Asignar',

@@ -77,10 +77,10 @@
         function generateSummaryHtml(viajeCompleto) {
         
         // Extracción segura de datos
-        const choferNombre = viajeCompleto.chofer?.persona?.nombre || 'PENDIENTE';
-        const ayudante = viajeCompleto.ayudante_chofer?.persona?.nombre || (viajeCompleto.ayudante || null); 
-        const flota = viajeCompleto.vehiculo?.flota || 'PENDIENTE';
-        const placa = viajeCompleto.vehiculo?.placa || 'N/A';
+        const choferNombre = viajeCompleto.chofer || 'PENDIENTE';
+        const ayudante = viajeCompleto.ayudante || null); 
+        const flota = viajeCompleto.vehiculo || 'PENDIENTE';
+        const placa = viajeCompleto.placa || 'N/A';
         
         // *** CORRECCIÓN CRÍTICA: Asegurar que despachos es un array, si no, usar [] ***
         const despachos = Array.isArray(viajeCompleto.despachos) ? viajeCompleto.despachos : [];
@@ -92,9 +92,8 @@
         if (despachos.length > 0) {
             despachos.forEach(despacho => {
                 const clienteNombre = despacho.cliente ? despacho.cliente :'Cliente Desconocido';
-                const litros = despacho.litros || 0;
-                totalLitros += Intl.NumberFormat('es-ES').format(litros);
-
+                const litros = parseFloat(despacho.litros) || 0; 
+                totalLitros += litros; 
                 despachosHtml += `
                     <tr style="font-size: 15px; font-weight: 500;">
                         <td class="px-2" style="border-right: 1px solid #dee2e6; color:#495057;">${clienteNombre}</td>
