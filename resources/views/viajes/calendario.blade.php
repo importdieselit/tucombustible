@@ -292,7 +292,7 @@
                         title: 'custom-swal-title'
                     },
                     didOpen: (modal) => {
-                                const downloadBtn = modal.querySelector('#downloadReportBtn');
+                                const downloadBtn = modal.querySelector('#print');
                                 const copyBtn = modal.querySelector('#copyToClipboardBtn');
                                 
                                 const summaryId = downloadBtn.getAttribute('data-summary-id');
