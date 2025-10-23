@@ -118,7 +118,7 @@
 
                         // 2. CAPTURAR EN EL CONTEXTO DEL BODY
                         const canvas = await html2canvas(element, { 
-                            scale: 1, 
+                            scale: 2, 
                             useCORS: true,
                             logging: false,
                             backgroundColor: '#ffffff', 
