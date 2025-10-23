@@ -67,7 +67,6 @@
             top: -9999px !important;
             left: -9999px !important;
             z-index: -1 !important;
-            visibility: hidden;
             display: block !important;
             width: auto !important; /* Asegura que tome su ancho natural */
             height: auto !important; /* Asegura que tome su altura natural */
