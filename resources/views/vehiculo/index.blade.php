@@ -35,8 +35,8 @@ $historicoEficiencia = [
 
 <div class="row g-4 mb-4">
 
-     <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
+     <div class="col-xl-3 col-md-2">
+            <div class="card shadow-sm border-0 text-center">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
