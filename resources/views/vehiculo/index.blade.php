@@ -13,14 +13,14 @@ $eficienciaActual = round($eficienciaActual, 2);
 
 $historicoEficiencia = [
     // Simulación de 7 días de histórico
-    ['date' => Carbon::today()->subDays(6)->toDateString(), 'start_efficiency' => 70.0, 'end_efficiency' => 72.5],
-    ['date' => Carbon::today()->subDays(5)->toDateString(), 'start_efficiency' => 72.5, 'end_efficiency' => 75.0],
-    ['date' => Carbon::today()->subDays(4)->toDateString(), 'start_efficiency' => 75.0, 'end_efficiency' => 78.0],
-    ['date' => Carbon::today()->subDays(3)->toDateString(), 'start_efficiency' => 78.0, 'end_efficiency' => 80.5],
-    ['date' => Carbon::today()->subDays(2)->toDateString(), 'start_efficiency' => 80.5, 'end_efficiency' => 79.2],
-    ['date' => Carbon::today()->subDays(1)->toDateString(), 'start_efficiency' => 79.2, 'end_efficiency' => 82.1],
+    ['date' => Illuminate\Support\Carbon::today()->subDays(6)->toDateString(), 'start_efficiency' => 70.0, 'end_efficiency' => 72.5],
+    ['date' => Illuminate\Support\Carbon::today()->subDays(5)->toDateString(), 'start_efficiency' => 72.5, 'end_efficiency' => 75.0],
+    ['date' => Illuminate\Support\Carbon::today()->subDays(4)->toDateString(), 'start_efficiency' => 75.0, 'end_efficiency' => 78.0],
+    ['date' => Illuminate\Support\Carbon::today()->subDays(3)->toDateString(), 'start_efficiency' => 78.0, 'end_efficiency' => 80.5],
+    ['date' => Illuminate\Support\Carbon::today()->subDays(2)->toDateString(), 'start_efficiency' => 80.5, 'end_efficiency' => 79.2],
+    ['date' => Illuminate\Support\Carbon::today()->subDays(1)->toDateString(), 'start_efficiency' => 79.2, 'end_efficiency' => 82.1],
     // Hoy: se usa la eficiencia actual como valor de cierre
-    ['date' => Carbon::today()->toDateString(), 'start_efficiency' => 82.1, 'end_efficiency' => $eficienciaActual], 
+    ['date' => Illuminate\Support\Carbon::today()->toDateString(), 'start_efficiency' => 82.1, 'end_efficiency' => $eficienciaActual], 
 ];
 @endphp
 @section('title', 'Dashboard de Vehículos')
