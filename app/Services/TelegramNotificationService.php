@@ -1,69 +1,77 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Services;
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use App\Services\TelegramNotificationService;
+use Illuminate\Support\Facades\Request;
 
-class TelegramController extends Controller
+
+/**
+ * Clase de Servicio para manejar las notificaciones a través de la API de Telegram.
+ * Encapsula la lógica de comunicación con la API.
+ */
+class TelegramNotificationService
 {
-    /**
-     * Token de tu Bot de Telegram.
-     * PRÁCTICA SUGERIDA: Usar env('TELEGRAM_BOT_TOKEN')
-     */
-    protected $botToken = '8267350827:AAGWkn8hFmqIyQmW1ojlKk-eTfXke5um1Po'; 
+    protected $botToken;
+    protected $chatId;
+    protected $apiUrlBase = 'https://api.telegram.org/bot';
 
-    /**
-     * ID del chat o grupo de destino. (Debe ser un ID numérico, probablemente negativo para grupos)
-     * PRÁCTICA SUGERIDA: Usar env('TELEGRAM_CHAT_ID')
-     */
-    protected $chatId = '-1002935486238'; 
-
-    /**
-     * Recibe la imagen capturada desde el frontend y la envía a un grupo de Telegram.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
- // Inyección de dependencias: Laravel automáticamente provee una instancia del servicio
-    public function __construct(TelegramNotificationService $telegramService)
+    public function __construct()
     {
-        $this->telegramService = $telegramService;
+        // Obtener credenciales desde el archivo .env (PRÁCTICA SUGERIDA)
+        // Requerirá que configures TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID en tu .env
+        $this->botToken = env('TELEGRAM_BOT_TOKEN', '8267350827:AAGWkn8hFmqIyQmW1ojlKk-eTfXke5um1Po');
+        $this->chatId = env('TELEGRAM_CHAT_ID', '-1002935486238');
     }
-    
-    // --- MÉTODO PARA ENVIAR SOLO TEXTO (HTTP Wrapper) ---
 
     /**
-     * Envía un mensaje de texto simple a Telegram (Endpoint HTTP).
-     * * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
+     * Envía un mensaje de texto simple a un chat de Telegram.
+     * * @param string $message El texto del mensaje.
+     * @param string|null $overrideChatId ID del chat de destino (si se necesita un chat diferente al predeterminado).
+     * @return bool Retorna true si el envío fue exitoso, false en caso contrario.
      */
-    public function sendMessage(Request $request)
+    public function sendMessage(string $message, string $overrideChatId = null): bool
     {
-        // 1. Validación de la solicitud para el texto
-        $request->validate([
-            'message' => 'required|string|min:1|max:4096', 
-        ]);
+        $targetChatId = $overrideChatId ?? $this->chatId;
 
-        $text = $request->input('message');
+        if ($this->botToken === '8267350827:AAGWkn8hFmqIyQmW1ojlKk-eTfXke5um1Po' || $targetChatId === '-1002935486238') {
+             Log::error('Error de Configuración de Telegram: Token o Chat ID no configurados en .env.');
+             return false;
+        }
 
-        // 2. Delegar la tarea al servicio
-        $success = $this->telegramService->sendMessage($text);
+        $apiUrl = "{$this->apiUrlBase}{$this->botToken}/sendMessage";
+        
+        try {
+            $response = Http::post($apiUrl, [
+                'chat_id' => $targetChatId,
+                'text' => $message,
+                'parse_mode' => 'MarkdownV2', // Permite formato enriquecido
+            ]);
 
-        // 3. Devolver respuesta
-        if ($success) {
-            return response()->json(['message' => 'Mensaje enviado a Telegram con éxito.'], 200);
-        } else {
-            // El servicio ya registró el error, solo devolvemos una respuesta genérica
-            return response()->json([
-                'message' => 'Error al enviar el mensaje de texto a Telegram. Revise los logs del servidor para más detalles.',
-            ], 500);
+            if ($response->successful() && $response->json('ok') === true) {
+                Log::info("Mensaje de texto enviado a Telegram con éxito. Chat ID: {$targetChatId}");
+                return true;
+            } else {
+                Log::error('Error al enviar mensaje de texto a Telegram:', [
+                    'response_body' => $response->body(),
+                    'status' => $response->status()
+                ]);
+                return false;
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Excepción al enviar texto a Telegram:', ['error' => $e->getMessage()]);
+            return false;
         }
     }
-
-    public function sendPhoto(Request $request)
+    
+    // Aquí puedes añadir más métodos, como sendPhoto, usando el mismo principio
+    /**
+     * Envía una foto a un chat de Telegram.
+     * public function sendPhoto(string $filePath, string $caption = null, string $overrideChatId = null): bool { ... }
+     */
+      public function sendPhoto(Request $request)
     {
         // 1. Validación de la solicitud
         $request->validate([

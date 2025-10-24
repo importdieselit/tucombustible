@@ -180,6 +180,7 @@ class ChecklistController extends Controller
                         "Unidad {$vehiculo->flota} requiere planificacion para Servicio de Mantenimiento. presenta acumulados {$vehiculo->km_mantt}km",
                         $data
                     );
+                    
             }
             
 
