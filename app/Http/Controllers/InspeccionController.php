@@ -175,7 +175,7 @@ public function store(Request $request)
     {
         // 1. Obtener las inspecciones
         // Cargamos las relaciones del vehículo y el usuario que inspeccionó para mostrar sus nombres/placas.
-        $inspecciones = Inspeccion::with(['vehiculo','vehiculo.marca','vehiculo.modelo', 'usuario'])
+        $inspecciones = Inspeccion::with(['vehiculo', 'usuario'])
                                   ->orderBy('created_at', 'desc')
                                   ->paginate(15); // Paginamos para listas grandes
         
