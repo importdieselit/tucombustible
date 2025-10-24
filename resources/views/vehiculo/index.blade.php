@@ -125,10 +125,10 @@ $chartDataCierre = array_column($historicoEficiencia, 'disponibilidad');
                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
                                 Eficiencia de Flota 
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            <div class="h2 mb-0 font-weight-bold text-gray-800">
                                 {{ $eficienciaActual }}%
                             </div>
-                            <small class="text-muted">
+                            <small class="h5 text-muted">
                                 {{ $unidades_disponibles }} / {{ $total_flota }} Unidades Disponibles
                             </small>
                         </div>
