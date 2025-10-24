@@ -170,11 +170,11 @@ $chartDataCierre = array_column($historicoEficiencia, 'disponibilidad');
         <div class="col-xl-8 col-lg-7 mb-4">
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Histórico de Eficiencia de Flota (7 Días)</h6>
+                    <h6 class="m-0 font-weight-bold text-primary">Histórico de Eficiencia de Flota (15 Días)</h6>
                 </div>
                 <div class="card-body">
                     <div class="chart-area">
-                        <canvas id="eficienciaHistoricoChart" style="max-height: 400px;"></canvas>
+                        <canvas id="eficienciaHistoricoChart" style="height: 300px; "></canvas>
                     </div>
                 </div>
             </div>
