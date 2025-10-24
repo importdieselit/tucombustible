@@ -58,16 +58,16 @@ class Inspeccion extends Model
         if (empty($sections)) {
             return null;
         }
-
-        $items = $sections[0]['items'] ?? [];
-        
-        // Buscar el ítem por su 'label' si no estás seguro de que siempre será el primer índice (items[0])
-        foreach ($items as $item) {
-            if (($item['label'] ?? null) === 'Responsable de inspeccion') {
-                return $item['value'] ?? null;
+        foreach ($sections as $section) {
+            if (isset($section['label']) && $section['label'] === 'Información General') {
+                $items = $section['items'] ?? [];
+                foreach ($items as $item) {
+                    if (isset($item['label']) && $item['label'] === 'Responsable de inspeccion') {
+                        return $item['value'] ?? null;
+                    }
+                }
             }
         }
-
         return null; // Valor no encontrado
     }
 }
