@@ -389,7 +389,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const chartDataCierre = @json($chartDataCierre);
     // 3. Registrar el plugin antes de inicializar el gráfico
     Chart.register(ChartDataLabels);
-    
+
     new Chart(ctxEficiencia, {
         type: 'line',
         data: {
@@ -460,10 +460,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         weight: 'bold',
                         size: 12,
                     },
-                    formatter: function(value, context) {
-                        // Formatear el valor (ej. 85 -> "85%")
-                        // Usamos toFixed(1) para mostrar un decimal si es necesario
-                        return value.toFixed(1) + '%';
+                     formatter: function(value, context) {
+                        const numericValue = parseFloat(value);
+                        if (isNaN(numericValue)) {
+                            return 'N/A'; 
+                        }
+                        return numericValue.toFixed(1) + '%';
                     }
                 }
             }
