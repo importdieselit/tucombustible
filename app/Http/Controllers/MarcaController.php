@@ -26,7 +26,7 @@ class MarcaController extends BaseController
         $marcaId = $request->input('marca_id');
         
         // Busca todos los modelos que pertenecen a la marca seleccionada
-        $modelos = Modelo::where('id_marca', $marcaId)->pluck('marca', 'id');
+        $modelos = Modelo::where('id_marca', $marcaId)->pluck('modelo', 'id');
         
         // Retorna los modelos como una respuesta JSON
         return response()->json($modelos);
