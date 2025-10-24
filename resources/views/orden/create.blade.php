@@ -31,7 +31,7 @@
                     <label for="id_vehiculo" class="form-label">Vehículo</label>
                     
                     @if(!is_null($vehiculo))
-                    <h3 class="text-primary">{{ $vehiculo->placa }} - {{ $vehiculo->marca }} {{ $vehiculo->modelo }}</h3>
+                    <h3 class="text-primary">{{$vehiculo->flota}} {{ $vehiculo->placa }} - {{ $vehiculo->marca()->marca }} {{ $vehiculo->modelo()->modelo }}</h3>
                     <hr>
                     <input type="hidden" name="id_vehiculo" value="{{ $vehiculo->id }}">
                     <input type="hidden" name="placa" value="{{ $vehiculo->placa }}">
