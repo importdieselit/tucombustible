@@ -27,14 +27,19 @@ class VehiculoObserver
      */
     public function updating(Vehiculo $vehiculo)
     {
+
+         Log::debug("OBSERVER: [Vehiculo: {$vehiculo->placa}] Evento 'updating' iniciado.");
         // 1. Verificar si el campo km_mantt ha sido modificado
         if ($vehiculo->isDirty('km_mantt')) {
             $newKm = (int) $vehiculo->km_mantt;
             $oldKm = (int) $vehiculo->getOriginal('km_mantt');
+             Log::debug("OBSERVER: [Vehiculo: {$vehiculo->placa}] 'km_mantt' modificado. Antes: {$oldKm} | Ahora: {$newKm}.");
 
+           
             // 2. Verificar la condición: el nuevo KM supera el límite Y el KM anterior NO lo superaba.
             if ($newKm >= self::LIMITE_KM_MANTENIMIENTO && $oldKm < self::LIMITE_KM_MANTENIMIENTO) {
-                
+                   Log::warning("OBSERVER: [Vehiculo: {$vehiculo->placa}] UMBRAL DE MANTENIMIENTO ({$newKm} KM) SUPERADO. Enviando notificación.");
+             
                 $message = 
                     "*⚠️ ALERTA DE MANTENIMIENTO PREVENTIVO ⚠️*\n\n" .
                     "La unidad: {$vehiculo->flota} *{$vehiculo->placa}* ha cruzado el umbral de los " . self::LIMITE_KM_MANTENIMIENTO . " KM.\n" .
@@ -46,8 +51,13 @@ class VehiculoObserver
                 $this->telegramService->sendMessage($message);
 
                 Log::warning("Alerta de mantenimiento para {$vehiculo->placa} enviada a Telegram.");
+            } else {
+                Log::debug("OBSERVER: [Vehiculo: {$vehiculo->placa}] Modificación de 'km_mantt' no supera el umbral de alerta ({$newKm} < " . self::LIMITE_KM_MANTENIMIENTO . ").");
             }
+        } else {
+            Log::debug("OBSERVER: [Vehiculo: {$vehiculo->placa}] 'km_mantt' no modificado. Continuando...");
         }
+        
     }
 
     /**
