@@ -94,12 +94,13 @@
                     </label>
                     <input 
                         type="file" 
-                        name="fotos_orden" 
+                        name="fotos_orden[]" 
                         id="fotos_orden" 
                         class="form-control" 
                         accept="image/*" 
                         capture="environment" 
                         required
+                        multiple
                     >
                     <small class="form-text text-muted">En dispositivos móviles, esto abrirá la cámara trasera.</small>
                 </div>
@@ -153,38 +154,83 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="searchSupplyModalLabel">Buscar Suministro</h5>
+                <h5 class="modal-title" id="searchSupplyModalLabel">Gestionar Repuestos</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-3">
-                    <input type="text" class="form-control" id="supplySearchInput" placeholder="Buscar por código o descripción...">
+                
+                {{-- Navegación por pestañas --}}
+                <ul class="nav nav-tabs mb-3" id="supplyTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="search-tab" data-bs-toggle="tab" data-bs-target="#search-pane" type="button" role="tab" aria-controls="search-pane" aria-selected="true">
+                            <i class="bi bi-list-check me-2"></i> Buscar en Inventario
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual-pane" type="button" role="tab" aria-controls="manual-pane" aria-selected="false">
+                            <i class="bi bi-pencil-square me-2"></i> Añadir Manualmente
+                        </button>
+                    </li>
+                </ul>
+
+                {{-- Contenido de las pestañas --}}
+                <div class="tab-content" id="supplyTabsContent">
+                    
+                    {{-- Pestaña 1: Búsqueda en Inventario --}}
+                    <div class="tab-pane fade show active" id="search-pane" role="tabpanel" aria-labelledby="search-tab" tabindex="0">
+                        <div class="mb-3">
+                            <input type="text" id="supply-search-input" class="form-control" placeholder="Buscar por código o descripción...">
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 15%;">Código</th>
+                                        <th style="width: 40%;">Descripción</th>
+                                        <th style="width: 15%;">Existencia</th>
+                                        <th style="width: 15%;">Cantidad</th>
+                                        <th style="width: 15%;" class="text-center"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="search-results-body">
+                                    <tr><td colspan="5" class="text-center text-muted">Escribir para buscar repuestos.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    {{-- Pestaña 2: Entrada Manual --}}
+                    <div class="tab-pane fade" id="manual-pane" role="tabpanel" aria-labelledby="manual-tab" tabindex="0">
+                        <div class="alert alert-info" role="alert">
+                            Use esta opción para registrar suministros que no están en el inventario.
+                        </div>
+                        <div class="mb-3">
+                            <label for="manual-descripcion" class="form-label">Descripción</label>
+                            <input type="text" id="manual-descripcion" class="form-control" placeholder="Ej: Tornillos Varios, Limpiaparabrisas Genérico" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="manual-cantidad" class="form-label">Cantidad</label>
+                            <input type="number" id="manual-cantidad" class="form-control" value="1" min="1" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="manual-cantidad" class="form-label">Precio</label>
+                            <input type="number" id="manual-cantidad" class="form-control" value="1" min="1" >
+                        </div>
+                        <div class="text-end">
+                            <button type="button" class="btn btn-warning" id="add-manual-supply-btn">
+                                <i class="bi bi-plus-square me-2"></i> Añadir Suministro Manual
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead>
-                            <tr>
-                                <th>Código</th>
-                                <th>Descripción</th>
-                                <th>Existencia</th>
-                                <th>Cantidad</th>
-                                <th>Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody id="searchResultsTable">
-                            {{-- Los resultados de la búsqueda se mostrarán aquí --}}
-                        </tbody>
-                    </table>
-                </div>
+
             </div>
-           
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
 </div>
-
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
