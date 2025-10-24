@@ -49,4 +49,25 @@ class Inspeccion extends Model
     {
         return $this->imagenes()->pluck('ruta_imagen')->toArray();
     }
+
+     public function getResponsableInspeccionAttribute()
+    {
+        // Ruta al valor: sections[0] -> items[0] -> value
+        $sections = $this->respuesta_json['sections'] ?? [];
+
+        if (empty($sections)) {
+            return null;
+        }
+
+        $items = $sections[0]['items'] ?? [];
+        
+        // Buscar el ítem por su 'label' si no estás seguro de que siempre será el primer índice (items[0])
+        foreach ($items as $item) {
+            if (($item['label'] ?? null) === 'Responsable de inspeccion') {
+                return $item['value'] ?? null;
+            }
+        }
+
+        return null; // Valor no encontrado
+    }
 }

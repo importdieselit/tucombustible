@@ -54,7 +54,7 @@
                                     <span class="badge bg-{{ $color }}">{{ $inspeccion->estatus_general }}</span>
                                 </td>
                                 <td>
-                                    {{ $inspeccion->usuario->name ?? 'Sistema' }}
+                                    {{ $inspeccion->getResponsableInspeccionAttribute() ?? 'Sistema' }}
                                 </td>
                                 <td>
                                     {{ $inspeccion->created_at->format('d/m/Y H:i A') }}
