@@ -2,12 +2,13 @@
 @php
 $unidades_con_alerta = App\Models\Vehiculo::getUnidadesConDocumentosVencidos(Auth::user()->cliente_id)->count(); 
 $total_vehiculos = App\Models\Vehiculo::misVehiculos()->count(); 
+$total_flota = App\Models\Vehiculo::miFlota()->count(); 
 $unidades_con_orden_abierta = App\Models\Vehiculo::VehiculosConOrdenAbierta()->count();
 $unidades_en_mantenimiento = App\Models\Vehiculo::countVehiculosEnMantenimiento();
 $unidades_disponibles = App\Models\Vehiculo::Disponibles()->count();
 $unidades_en_servicio = App\Models\Vehiculo::EnServicio()->count();
-$eficienciaActual = $total_vehiculos > 0 
-    ? ($unidades_disponibles / $total_vehiculos) * 100 
+$eficienciaActual = $total_flota > 0 
+    ? ($unidades_disponibles / $total_flota) * 100 
     : 0; 
 $eficienciaActual = round($eficienciaActual, 2); 
 
@@ -130,7 +131,7 @@ $historicoEficiencia = [
                                 {{ $eficienciaActual }}%
                             </div>
                             <small class="text-muted">
-                                {{ $unidades_disponibles }} / {{ $total_vehiculos }} Unidades Disponibles
+                                {{ $unidades_disponibles }} / {{ $total_flota }} Unidades Disponibles
                             </small>
                         </div>
                         <div class="col-auto">
