@@ -387,6 +387,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // Datos inyectados desde PHP
     const chartLabels = @json($chartLabels);
     const chartDataCierre = @json($chartDataCierre);
+    // 3. Registrar el plugin antes de inicializar el gráfico
+    Chart.register(ChartDataLabels);
     
     new Chart(ctxEficiencia, {
         type: 'line',
