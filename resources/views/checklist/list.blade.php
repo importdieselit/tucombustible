@@ -44,7 +44,7 @@
                                     <span class="badge bg-info text-dark">{{ $inspeccion->vehiculo->placa ?? 'N/A' }}</span>
                                 </td>
                                 <td>
-                                    {{ $inspeccion->vehiculo->marca ?? 'Desconocida' }} {{ $inspeccion->vehiculo->modelo ?? '' }}
+                                    {{$inspeccion->vehiculo->flota}} {{ $inspeccion->vehiculo->marca ?? 'Desconocida' }} {{ $inspeccion->vehiculo->modelo ?? '' }}
                                 </td>
                                 <td>
                                     @php

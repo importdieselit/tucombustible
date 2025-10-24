@@ -34,7 +34,7 @@ class DailySummaryCommand extends Command
      */
     public function handle()
     {
-        $today = Carbon::today();
+        $today = Carbon::now();
         $this->info("Iniciando cálculo del resumen diario para la fecha: {$today->toDateString()}");
 
         // ----------------------------------------------------------------------
@@ -103,9 +103,9 @@ class DailySummaryCommand extends Command
         // ----------------------------------------------------------------------
         // 5. ALMACENAR O ACTUALIZAR EL REGISTRO
         // ----------------------------------------------------------------------
-        ResumenDiario::updateOrCreate(
-            ['fecha' => $today],
+        ResumenDiario::create(
             [
+                'fecha' => $today,
                 'plan' => $mantenimientosPlan,
                 'real' => $mantenimientosReal,
                 'disponibilidad' => $disponibilidad,

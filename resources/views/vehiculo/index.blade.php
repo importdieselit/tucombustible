@@ -6,6 +6,22 @@ $unidades_con_orden_abierta = App\Models\Vehiculo::VehiculosConOrdenAbierta()->c
 $unidades_en_mantenimiento = App\Models\Vehiculo::countVehiculosEnMantenimiento();
 $unidades_disponibles = App\Models\Vehiculo::Disponibles()->count();
 $unidades_en_servicio = App\Models\Vehiculo::EnServicio()->count();
+$eficienciaActual = $total_vehiculos > 0 
+    ? ($unidades_disponibles / $total_vehiculos) * 100 
+    : 0; 
+$eficienciaActual = round($eficienciaActual, 2); /
+
+$historicoEficiencia = [
+    // Simulación de 7 días de histórico
+    ['date' => Carbon::today()->subDays(6)->toDateString(), 'start_efficiency' => 70.0, 'end_efficiency' => 72.5],
+    ['date' => Carbon::today()->subDays(5)->toDateString(), 'start_efficiency' => 72.5, 'end_efficiency' => 75.0],
+    ['date' => Carbon::today()->subDays(4)->toDateString(), 'start_efficiency' => 75.0, 'end_efficiency' => 78.0],
+    ['date' => Carbon::today()->subDays(3)->toDateString(), 'start_efficiency' => 78.0, 'end_efficiency' => 80.5],
+    ['date' => Carbon::today()->subDays(2)->toDateString(), 'start_efficiency' => 80.5, 'end_efficiency' => 79.2],
+    ['date' => Carbon::today()->subDays(1)->toDateString(), 'start_efficiency' => 79.2, 'end_efficiency' => 82.1],
+    // Hoy: se usa la eficiencia actual como valor de cierre
+    ['date' => Carbon::today()->toDateString(), 'start_efficiency' => 82.1, 'end_efficiency' => $eficienciaActual], 
+];
 @endphp
 @section('title', 'Dashboard de Vehículos')
 
@@ -18,6 +34,29 @@ $unidades_en_servicio = App\Models\Vehiculo::EnServicio()->count();
 </div>
 
 <div class="row g-4 mb-4">
+
+     <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Eficiencia de Flota 
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ $eficienciaActual }}%
+                            </div>
+                            <small class="text-muted">
+                                {{ $unidadesDisponibles }} / {{ $totalVehiculos }} Unidades Disponibles
+                            </small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-graph-up-arrow fa-2x text-gray-300" style="font-size: 2.5rem; color: #10b981;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     <!-- KPIs principales -->
     <div class="col-md-2">
         <div class="card shadow-sm border-0 text-center">
@@ -125,6 +164,21 @@ $unidades_en_servicio = App\Models\Vehiculo::EnServicio()->count();
     </div>
     
     <!-- Gráfica de vehículos por estatus -->
+
+     
+        <!-- Gráfico 1: Histórico de Eficiencia de Flota (NUEVO GRÁFICO DE LÍNEA) -->
+        <div class="col-xl-8 col-lg-7 mb-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Histórico de Eficiencia de Flota (7 Días)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="eficienciaHistoricoChart" style="max-height: 400px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
     <div class="col-lg-6">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-0">
@@ -327,7 +381,7 @@ document.addEventListener('DOMContentLoaded', function () {
         data: {
             labels: ['Disponible', 'En servicio', 'En Mantenimiento', 'Fuera Servicio'],
             datasets: [{
-                data: [{{$unidades_disponibles}}, 0, {{$unidades_en_mantenimiento }}, {{ $unidades_con_orden_abierta-$unidades_en_mantenimiento}}],
+                data: [{{$unidades_disponibles}}, {{$unidades_en_servicio}}, {{$unidades_en_mantenimiento }}, {{ $unidades_con_orden_abierta-$unidades_en_mantenimiento}}],
                 backgroundColor: ['#28a745', '#ffc107', '#007bff', '#dc3545'],
             }]
         },

@@ -69,7 +69,7 @@ class ViajesController extends Controller
         // Cargar los recursos necesarios para la asignación
         // Asumiendo que Chofer::with('persona') es la forma correcta de cargar los choferes disponibles
         $choferes = Chofer::with('persona')->get(); 
-        $vehiculos = Vehiculo::where('estatus', 1)->where('es_flota',true)->get(['id', 'placa', 'flota']);
+        $vehiculos = Vehiculo::where('es_flota',true)->get(['id', 'placa', 'flota']);
         $clientes = Cliente::where('status',1)->get(['id','nombre']);
 
         //  if($viaje->chofer_id != null){
