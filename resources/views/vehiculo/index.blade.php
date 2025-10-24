@@ -47,7 +47,7 @@ $historicoEficiencia = [
                                 {{ $eficienciaActual }}%
                             </div>
                             <small class="text-muted">
-                                {{ $unidadesDisponibles }} / {{ $totalVehiculos }} Unidades Disponibles
+                                {{ $unidades_disponibles }} / {{ $total_vehiculos }} Unidades Disponibles
                             </small>
                         </div>
                         <div class="col-auto">
