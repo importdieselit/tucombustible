@@ -53,8 +53,9 @@ class Inspeccion extends Model
      public function getResponsableInspeccionAttribute()
     {
         // Ruta al valor: sections[0] -> items[0] -> value
+         $this->respuesta_json = json_decode($this->respuesta_json, true);
         $sections = $this->respuesta_json['sections'] ?? [];
-        dd($sections);
+        //dd($sections);
         if (empty($sections)) {
             return null;
         }

@@ -54,27 +54,8 @@
                                     <span class="badge bg-{{ $color }}">{{ $inspeccion->estatus_general }}</span>
                                 </td>
                                 <td>
-                                    @php
-                                        $inspeccion->respuesta_json = json_decode($inspeccion->respuesta_json, true);
-                                        //dd($inspeccion->respuesta_json);
-                                        $sections = $inspeccion->respuesta_json['sections'] ?? [];
-        dd($sections);
-        if (empty($sections)) {
-            return null;
-        }
-        foreach ($sections as $section) {
-            if (isset($section['label']) && $section['label'] === 'Información General') {
-                $items = $section['items'] ?? [];
-                foreach ($items as $item) {
-                    if (isset($item['label']) && $item['label'] === 'Responsable de inspeccion') {
-                        return $item['value'] ?? null;
-                    }
-                }
-            }
-        }
-        @endphp
-                                    @endphp
-                                    {{ dd($inspeccion->getResponsableInspeccionAttribute())}}  ?? 'Sistema' 
+                                    
+                                    {{ $inspeccion->getResponsableInspeccionAttribute() ?? 'Sistema' }}
                                 </td>
                                 <td>
                                     {{ $inspeccion->created_at->format('d/m/Y H:i A') }}
