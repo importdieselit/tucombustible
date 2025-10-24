@@ -56,7 +56,7 @@
                                 <td>
                                     @php
                                         $inspeccion->respuesta_json = json_decode($inspeccion->respuesta_json, true);
-                                        dd($inspeccion->respuesta_json);
+                                        //dd($inspeccion->respuesta_json);
                                         $sections = $inspeccion->respuesta_json['sections'] ?? [];
         dd($sections);
         if (empty($sections)) {
