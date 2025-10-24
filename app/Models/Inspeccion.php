@@ -54,7 +54,7 @@ class Inspeccion extends Model
     {
         // Ruta al valor: sections[0] -> items[0] -> value
         $sections = $this->respuesta_json['sections'] ?? [];
-
+        dd($sections);
         if (empty($sections)) {
             return null;
         }
