@@ -41,11 +41,12 @@ class TelegramNotificationService
         // }
 
         $apiUrl = "{$this->apiUrlBase}{$this->botToken}/sendMessage";
+          $safeMessage = $this->escapeMarkdownV2($message);
         
         try {
             $response = Http::post($apiUrl, [
                 'chat_id' => $targetChatId,
-                'text' => $message,
+                'text' => $safeMessage,
                 'parse_mode' => 'MarkdownV2', // Permite formato enriquecido
             ]);
 
@@ -132,5 +133,30 @@ class TelegramNotificationService
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+       /* Escapa todos los caracteres especiales usados en MarkdownV2 de Telegram.
+     * Necesario para prevenir el error 'Bad Request: can't parse entities'.
+     * Fuente: https://core.telegram.org/bots/api#markdownv2-style
+     *
+     * @param string $text El texto original con formato (o sin formato)
+     * @return string El texto con los caracteres especiales escapados.
+     */
+    private function escapeMarkdownV2(string $text): string
+    {
+        // Lista de caracteres especiales que deben ser escapados en MarkdownV2
+        // Los caracteres ya escapados (con un '\' delante) no se tocan.
+        $reserved = [
+            '_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', 
+            '-', '=', '|', '{', '}', '.', '!'
+        ];
+
+        // Usamos una función anónima con preg_replace_callback para manejar las excepciones
+        $safeText = preg_replace_callback('/([_*\[\]()~`>#+\-=|{}.!])/', function ($matches) {
+            // El primer elemento de $matches[1] es el carácter reservado encontrado.
+            return '\\' . $matches[1];
+        }, $text);
+
+        return $safeText;
     }
 }
