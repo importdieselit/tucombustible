@@ -44,7 +44,6 @@ class TelegramNotificationService
           $safeMessage = $this->escapeMarkdownV2($message);
         
         try {
-            Log::info("Enviando mensaje a Telegram. Chat ID: {$targetChatId}");
             $response = Http::post($apiUrl, [
                 'chat_id' => $targetChatId,
                 'text' => $safeMessage,
@@ -52,7 +51,6 @@ class TelegramNotificationService
             ]);
 
             if ($response->successful() && $response->json('ok') === true) {
-                Log::info("Mensaje de texto enviado a Telegram con éxito. Chat ID: {$targetChatId}");
                 return true;
             } else {
                 Log::error('Error al enviar mensaje de texto a Telegram:', [
