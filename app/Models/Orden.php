@@ -107,4 +107,9 @@ class Orden extends Model
     {
         return $this->belongsTo(PlanMantenimiento::class, 'id_plan', 'id_plan');
     }
+    public function fotos()
+{
+    // Asegúrate de que tu modelo OrdenFoto esté importado
+    return $this->hasMany(OrdenFoto::class, 'orden_id'); 
+}   
 }

@@ -21,7 +21,7 @@
         <h5 class="card-title m-0">Datos de la Orden</h5>
     </div>
     <div class="card-body">
-        <form action="{{ route('ordenes.store') }}" method="POST" id="orden-form">
+        <form action="{{ route('ordenes.store') }}" method="POST" id="orden-form"  enctype="multipart/form-data">
             @csrf
             {{-- Datos de la Orden --}}
            <input type="hidden" name="estatus"  value="2"> {{-- Estatus "Abierta" --}}
@@ -86,6 +86,23 @@
                 <label for="descripcion_1" class="form-label">Descripción del Problema/Tarea</label>
                 <textarea class="form-control" id="descripcion_1" name="descripcion_1" rows="4" required></textarea>
             </div>
+
+            <div class="col-md-6 mb-3">
+                    <label for="foto_vehiculo" class="form-label">
+                        Registro Fotografico (Usar Cámara en Móvil)
+                        <i class="bi bi-camera-fill text-primary ms-1"></i> 
+                    </label>
+                    <input 
+                        type="file" 
+                        name="fotos_orden" 
+                        id="fotos_orden" 
+                        class="form-control" 
+                        accept="image/*" 
+                        capture="environment" 
+                        required
+                    >
+                    <small class="form-text text-muted">En dispositivos móviles, esto abrirá la cámara trasera.</small>
+                </div>
             <hr class="my-4">
             
             {{-- Sección de Suministros --}}

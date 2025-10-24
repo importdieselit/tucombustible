@@ -3,21 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\Orden;
-use App\Models\Vehiculo; // Asumimos la existencia de este modelo
-use App\Models\Personal; // Asumimos la existencia de un modelo de personal/mecanicos
+use App\Models\Vehiculo; 
+use App\Models\Personal; 
 use App\Services\FcmNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
-use App\Models\TipoOrden; // Asegúrate de importar el modelo TipoOrden
-use App\Models\EstatusData; // Asegúrate de importar el modelo EstatusData
-use Carbon\Carbon; // Para manejo de
+use App\Models\TipoOrden; 
+use App\Models\EstatusData; 
+use Carbon\Carbon; 
 use Illuminate\Support\Facades\Auth;
-use App\Models\InventarioSuministro; // Asegúrate de importar el modelo
+use App\Models\InventarioSuministro; 
 use App\Traits\GenerateAlerts;
 use Illuminate\Support\Facades\Redirect;
-use App\Models\Inventario; // Asegúrate de importar el modelo Inventario
+use App\Models\Inventario; 
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class OrdenController extends BaseController
 {
@@ -230,6 +232,27 @@ class OrdenController extends BaseController
                         'anulacion' => null,
                         'destino' => null,
                     ]);
+                }
+            }
+
+            // 2. Manejar la subida de MÚLTIPLES FOTOS
+            if ($request->hasFile('fotos_orden')) {
+                Log::debug("Controlador Orden: Se detectaron " . count($request->file('fotos_orden')) . " archivos para subir.");
+                
+                foreach ($request->file('fotos_orden') as $file) {
+                    
+                    // Almacenar el archivo y obtener la ruta. 
+                    // Se usa el disco 'public' y se guarda en la carpeta 'ordenes_fotos'.
+                    $path = Storage::disk('public')->put('ordenes_fotos', $file);
+                    
+                    // Crear el registro en la tabla orden_fotos
+                    $orden->fotos()->create([
+                        'ruta_archivo' => $path,
+                        // Aquí podrías generar una descripción si fuera necesario
+                        'descripcion' => "Foto de evidencia inicial para Orden #{$orden->id}",
+                    ]);
+                    
+                    Log::debug("Controlador Orden: Foto guardada: {$path}");
                 }
             }
 
