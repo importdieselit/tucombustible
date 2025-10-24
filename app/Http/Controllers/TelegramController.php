@@ -12,13 +12,13 @@ class TelegramController extends Controller
      * Token de tu Bot de Telegram.
      * PRÁCTICA SUGERIDA: Usar env('TELEGRAM_BOT_TOKEN')
      */
-    protected $botToken = '8278356133:AAFbPIiY77YEdFbRoO8JSpF83UKaSM2X-dM'; 
+    protected $botToken = '8267350827:AAGWkn8hFmqIyQmW1ojlKk-eTfXke5um1Po'; 
 
     /**
      * ID del chat o grupo de destino. (Debe ser un ID numérico, probablemente negativo para grupos)
      * PRÁCTICA SUGERIDA: Usar env('TELEGRAM_CHAT_ID')
      */
-    protected $chatId = '+YONFb8H0Fxg5ODNh'; 
+    protected $chatId = '-1002935486238'; 
 
     /**
      * Recibe la imagen capturada desde el frontend y la envía a un grupo de Telegram.
