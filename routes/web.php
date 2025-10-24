@@ -269,6 +269,8 @@ Route::put('/viajes/{id}/assign', [ViajesController::class, 'processAssignment']
 
     Route::post('/send-telegram-photo', [TelegramController::class, 'sendPhoto'])
     ->name('telegram.send.photo');
+    Route::post('/send-telegram-message', [TelegramController::class, 'sendMessage'])->name('telegram.send.message');
+
     // Rutas para historial de mantenimiento
     //Route::get('/vehiculos/{vehiculo}/historial', [HistorialMantenimientoController::class, 'showByVehiculo'])->name('vehiculos.historial');
 

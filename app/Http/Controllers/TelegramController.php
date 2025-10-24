@@ -26,6 +26,58 @@ class TelegramController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
+
+
+public function sendMessage(Request $request)
+    {
+        // 1. Validación de la solicitud para el texto
+        $request->validate([
+            'message' => 'required|string|min:1|max:4096', // Max length for Telegram text messages
+        ]);
+
+        $text = $request->input('message');
+        $apiUrl = "https://api.telegram.org/bot{$this->botToken}/sendMessage";
+        
+        // // Verificación de credenciales (usar variables de entorno en un entorno real)
+        // if ($this->botToken === 'TU_TELEGRAM_BOT_TOKEN_AQUI' || $this->chatId === 'TU_CHAT_ID_AQUI') {
+        //      return response()->json([
+        //         'message' => 'Error: Configuración de Telegram pendiente. Actualice el token y el chat ID en TelegramController.php.', 
+        //     ], 500);
+        // }
+
+        try {
+            $response = Http::post($apiUrl, [
+                'chat_id' => $this->chatId,
+                'text' => $text,
+                'parse_mode' => 'MarkdownV2', // Permite formato de texto enriquecido (negritas, cursivas, etc.)
+            ]);
+
+            // 2. Verificar si la respuesta de Telegram es exitosa
+            if ($response->successful() && $response->json('ok') === true) {
+                Log::info("Mensaje de texto enviado a Telegram con éxito. Chat ID: {$this->chatId}");
+                return response()->json(['message' => 'Mensaje enviado a Telegram con éxito.'], 200);
+            } else {
+                // Registrar el error detallado de la API de Telegram
+                Log::error('Error al enviar mensaje de texto a Telegram:', [
+                    'response' => $response->body(),
+                    'status' => $response->status()
+                ]);
+                return response()->json([
+                    'message' => 'Error al enviar el mensaje de texto a Telegram.', 
+                    'telegram_error' => $response->json('description', 'Error desconocido del API')
+                ], 500);
+            }
+
+        } catch (\Exception $e) {
+            // Manejo de excepciones generales
+            Log::error('Excepción al manejar el envío de texto a Telegram:', ['error' => $e->getMessage()]);
+            return response()->json([
+                'message' => 'Error interno del servidor al procesar la solicitud.', 
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function sendPhoto(Request $request)
     {
         // 1. Validación de la solicitud
