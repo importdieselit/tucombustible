@@ -412,7 +412,7 @@ document.addEventListener('DOMContentLoaded', function () {
             responsive: true,
             scales: {
                 x: {
-                    offset: true,
+                    //offset: true,
                     title: {
                         display: true,
                         text: 'Fecha'
