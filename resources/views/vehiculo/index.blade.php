@@ -35,28 +35,7 @@ $historicoEficiencia = [
 
 <div class="row g-4 mb-4">
 
-     <div class="col-xl-3 col-md-2">
-            <div class="card shadow-sm border-0 text-center">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Eficiencia de Flota 
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ $eficienciaActual }}%
-                            </div>
-                            <small class="text-muted">
-                                {{ $unidades_disponibles }} / {{ $total_vehiculos }} Unidades Disponibles
-                            </small>
-                        </div>
-                        <div class="col-auto">
-                            <i class="bi bi-graph-up-arrow fa-2x text-gray-300" style="font-size: 2.5rem; color: #10b981;"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+     
     <!-- KPIs principales -->
     <div class="col-md-2">
         <div class="card shadow-sm border-0 text-center">
@@ -134,11 +113,33 @@ $historicoEficiencia = [
             </a>
         </div>
     </div>
+    
 </div>
 
 <div class="row g-4 mb-4">
     <!-- Acciones rápidas -->
     <div class="col-lg-3">
+            <div class="card shadow-sm border-0 text-center">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Eficiencia de Flota 
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                {{ $eficienciaActual }}%
+                            </div>
+                            <small class="text-muted">
+                                {{ $unidades_disponibles }} / {{ $total_vehiculos }} Unidades Disponibles
+                            </small>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-graph-up-arrow fa-2x text-gray-300" style="font-size: 2.5rem; color: #10b981;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-0">
                 <h5 class="mb-0">Acciones rápidas</h5>
