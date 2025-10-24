@@ -55,12 +55,12 @@ class Inspeccion extends Model
         // Ruta al valor: sections[0] -> items[0] -> value
          $this->respuesta_json = json_decode($this->respuesta_json, true);
         $sections = $this->respuesta_json['sections'] ?? [];
-        dd($sections);
+        //dd($sections);
         if (empty($sections)) {
             return null;
         }
         foreach ($sections as $section) {
-            if (isset($section['label']) && $section['label'] === 'Información General') {
+            if (isset($section['section_title']) && $section['section_title'] === 'Información General') {
                 $items = $section['items'] ?? [];
                 foreach ($items as $item) {
                     if (isset($item['label']) && $item['label'] === 'Responsable de inspeccion') {
