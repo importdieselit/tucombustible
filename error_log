@@ -69,3 +69,4 @@
 [24-Oct-2025 06:00:02 America/New_York] PHP Parse error:  syntax error, unexpected '=>' (T_DOUBLE_ARROW) in /home/impormot/public_html/tucombustible/cron_check_bajo_disponible_admin.php on line 25
 [24-Oct-2025 07:00:02 America/New_York] PHP Parse error:  syntax error, unexpected '=>' (T_DOUBLE_ARROW) in /home/impormot/public_html/tucombustible/cron_check_bajo_disponible.php on line 25
 [24-Oct-2025 08:00:02 America/New_York] PHP Parse error:  syntax error, unexpected '=>' (T_DOUBLE_ARROW) in /home/impormot/public_html/tucombustible/cron_check_bajo_disponible_admin.php on line 25
+[24-Oct-2025 10:00:03 America/New_York] PHP Parse error:  syntax error, unexpected '=>' (T_DOUBLE_ARROW) in /home/impormot/public_html/tucombustible/cron_check_bajo_disponible_admin.php on line 25
