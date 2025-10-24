@@ -410,16 +410,9 @@ document.addEventListener('DOMContentLoaded', function () {
         options: {
             maintainAspectRatio: false,
             responsive: true,
-            layout: {
-                padding: {
-                    left: 20,
-                    right: 20,
-                    top: 30, // Un poco más de margen en la parte superior para las etiquetas
-                    bottom: 20
-                }
-            },
             scales: {
                 x: {
+                    offset: true,
                     title: {
                         display: true,
                         text: 'Fecha'
