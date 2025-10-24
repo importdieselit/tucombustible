@@ -35,10 +35,10 @@ class TelegramNotificationService
     {
         $targetChatId = $overrideChatId ?? $this->chatId;
 
-        if ($this->botToken === '8267350827:AAGWkn8hFmqIyQmW1ojlKk-eTfXke5um1Po' || $targetChatId === '-1002935486238') {
-             Log::error('Error de Configuración de Telegram: Token o Chat ID no configurados en .env.');
-             return false;
-        }
+        // if ($this->botToken === '8267350827:AAGWkn8hFmqIyQmW1ojlKk-eTfXke5um1Po' || $targetChatId === '-1002935486238') {
+        //      Log::error('Error de Configuración de Telegram: Token o Chat ID no configurados en .env.');
+        //      return false;
+        // }
 
         $apiUrl = "{$this->apiUrlBase}{$this->botToken}/sendMessage";
         
