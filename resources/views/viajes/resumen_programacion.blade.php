@@ -15,10 +15,14 @@
         
         <!-- Botón para Capturar la Imagen/Imprimir -->
         <button id="print" class="btn btn-primary shadow-sm">
-            <i class="bi bi-camera me-2"></i> Capturar y Descargar Reporte
+            <i class="fa fa-camera me-2"></i> Capturar y Descargar Reporte
         </button>
          <button id="captureButton" class="btn btn-primary shadow-sm">
-            <i class="bi bi-camera me-2"></i> Capturar a portapapeles
+            <i class="fa fa-camera me-2"></i> Capturar a portapapeles
+        </button>
+         <!-- NUEVO BOTÓN: Enviar a Telegram -->
+        <button id="sendTelegramButton" class="btn btn-info shadow-sm">
+            <i class="fa fa-telegram me-2"></i> Enviar a Telegram
         </button>
     </div>
 
@@ -118,6 +122,7 @@
     
     // Obtenemos los demás elementos nativos
     const captureButton = document.getElementById('captureButton');
+    const sendTelegramButton = document.getElementById('sendTelegramButton');
     const statusMessage = document.getElementById('statusMessage');
     const outputContainer = document.getElementById('outputContainer');
 
@@ -192,6 +197,161 @@
 
     // 8. Asignar el evento al botón
     captureButton.addEventListener('click', captureAndCopyToClipboard);
+
+ async function sendChartToTelegram() {
+            sendTelegramButton.disabled = true;
+            showStatus('Capturando reporte y preparando envío a Telegram...', 'info');
+
+            try {
+                const element = printableArea;
+                if (!element) {
+                    throw new Error(`Elemento con ID '${elementToCaptureId}' no encontrado. ¡Verifique el ID!`);
+                }
+
+                // 1. Capturar el elemento con html2canvas
+                const canvas = await html2canvas(element, {
+                    // Importante para manejar imágenes externas o CORS, si las hubiera
+                    allowTaint: true, 
+                    useCORS: true,
+                    // Permite capturar contenido que pueda estar fuera de la vista (scroll)
+                    scrollX: 0, 
+                    scrollY: 0,
+                    windowWidth: document.documentElement.offsetWidth,
+                    windowHeight: document.documentElement.offsetHeight,
+                    scale: 2, // Mayor calidad para el envío
+                });
+
+                // 2. Obtener la imagen como un Blob
+                const imageBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                
+                // 3. Crear FormData para enviar el archivo al servidor
+                const formData = new FormData();
+                formData.append('chart_image', imageBlob, 'reporte_programacion.png');
+                formData.append('caption', `*Reporte de Programación de Viajes*\nFecha: ${new Date().toLocaleDateString('es-VE')}`);
+                
+                // 4. Enviar al endpoint de Laravel 
+                // Asegúrate de que esta ruta POST esté definida en tu Laravel
+                const response = await fetch('{{ route('telegram.send.photo') }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}' // Protección CSRF de Laravel
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || `Error ${response.status}: Fallo en el servidor al enviar a Telegram.`);
+                }
+
+                // 5. Éxito
+                showStatus('¡Éxito! El reporte ha sido enviado al grupo de Telegram.', 'success');
+
+            } catch (error) {
+                console.error('Error al enviar a Telegram:', error);
+                showStatus(`Error al enviar a Telegram: ${error.message}`, 'error');
+
+            } finally {
+                // 6. Reestablecer el botón
+                sendTelegramButton.disabled = false;
+            }
+        }
+
+        // 7. Asignar evento al nuevo botón
+        if (sendTelegramButton) {
+            sendTelegramButton.addEventListener('click', sendChartToTelegram);
+        }
+        
+        // 8. Código existente de Copiar a Portapapeles (para no borrarlo)
+        const captureButton = document.getElementById('captureButton');
+        if (captureButton) {
+            captureButton.addEventListener('click', async function() {
+                // Lógica de captura y copia a portapapeles existente
+                showStatus('Capturando y copiando imagen al portapapeles...', 'info');
+                try {
+                     const element = document.getElementById(elementToCaptureId);
+                     const canvas = await html2canvas(element, { scale: 2 });
+                     
+                     // Convertir a Blob y luego a ClipboardItem
+                     const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                     const item = new ClipboardItem({'image/png': blob});
+                     await navigator.clipboard.write([item]);
+                     
+                     showStatus('¡Éxito! La imagen ha sido copiada al portapapeles. Ahora puedes pegarla (Ctrl+V).', 'success');
+
+                } catch (error) {
+                     let errorMessage = 'Error desconocido al copiar.';
+                     if (error.name === 'NotAllowedError' || (error.message && error.message.includes('permission'))) {
+                         errorMessage = 'Permiso denegado: El navegador requiere que la página esté en un contexto seguro (HTTPS) o que el usuario interactúe primero para usar el Clipboard API.';
+                     } else {
+                         console.error('Error durante la captura o copia:', error);
+                         errorMessage = `Error al generar/copiar la imagen: ${error.message}`;
+                     }
+                     showStatus(errorMessage, 'error');
+                }
+            });
+        }
+    
+    async function sendReportToTelegram() {
+        sendTelegramButton.disabled = true;
+        showStatus('Capturando área del reporte y preparando envío a Telegram...', 'info');
+
+        try {
+            // Buscamos el primer elemento con la clase .printableArea
+            const element = document.querySelector(elementToCaptureSelector);
+            if (!element) {
+                throw new Error(`Elemento con selector '${elementToCaptureSelector}' no encontrado. ¡Verifique la clase!`);
+            }
+
+            // 1. Capturar el elemento con html2canvas
+            const canvas = await html2canvas(element, {
+                allowTaint: true, 
+                useCORS: true,
+                // Mejor calidad para la imagen
+                scale: 2, 
+            });
+
+            // 2. Obtener la imagen como un Blob (archivo binario)
+            const imageBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            
+            // 3. Crear FormData para enviar el archivo al servidor (POST request)
+            const formData = new FormData();
+            formData.append('chart_image', imageBlob, 'reporte_programacion.png');
+            formData.append('caption', `*Reporte de Programación de Viajes*\nGenerado el: ${new Date().toLocaleString('es-VE')}`);
+            
+            // 4. Enviar al endpoint de Laravel (ruta que debe existir: telegram.send.photo)
+            const response = await fetch('{{ route('telegram.send.photo') }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}' // Protección CSRF de Laravel
+                },
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `Error ${response.status}: Fallo en el servidor al enviar a Telegram.`);
+            }
+
+            // 5. Éxito
+            showStatus('¡Éxito! El reporte ha sido enviado al grupo de Telegram.', 'success');
+
+        } catch (error) {
+            console.error('Error al enviar a Telegram:', error);
+            // Mostrar mensaje amigable al usuario
+            showStatus(`Error al enviar a Telegram: ${error.message}`, 'error');
+
+        } finally {
+            // 6. Reestablecer el botón
+            sendTelegramButton.disabled = false;
+        }
+    }
+
+    // 7. Asignar evento al nuevo botón
+    if (sendTelegramButton) {
+        sendTelegramButton.addEventListener('click', sendReportToTelegram);
+    }
+    
 });
 </script>
 @endpush

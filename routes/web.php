@@ -32,6 +32,7 @@ use App\Http\Controllers\AforoController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\DataDeletionController;
 use App\Http\Controllers\ViajesController;
+use App\Http\Controllers\TelegramController;
 
 use App\Models\Deposito;
 
@@ -266,6 +267,8 @@ Route::put('/viajes/{id}/assign', [ViajesController::class, 'processAssignment']
     Route::put('viaticos/tabulador/update', [ViajesController::class, 'tabuladorUpdate'])->name('viaticos.tabulador.update');
     Route::put('viaticos/parametros/update', [ViajesController::class, 'parametrosUpdate'])->name('viaticos.parametros.update');
 
+    Route::post('/send-telegram-photo', [TelegramController::class, 'sendPhoto'])
+    ->name('telegram.send.photo');
     // Rutas para historial de mantenimiento
     //Route::get('/vehiculos/{vehiculo}/historial', [HistorialMantenimientoController::class, 'showByVehiculo'])->name('vehiculos.historial');
 
