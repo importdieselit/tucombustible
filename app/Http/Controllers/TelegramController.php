@@ -34,13 +34,13 @@ class TelegramController extends Controller
             'caption' => 'nullable|string|max:1024' // Descripción opcional
         ]);
 
-        // Verificación de credenciales (para evitar envíos fallidos si no se han configurado)
-        if ($this->botToken === '8278356133:AAFbPIiY77YEdFbRoO8JSpF83UKaSM2X-dM' || $this->chatId === '+YONFb8H0Fxg5ODNh') {
-             // Es preferible usar un log o lanzar una excepción real en un entorno de producción.
-             return response()->json([
-                'message' => 'Error: Configuración de Telegram pendiente. Por favor, actualice el token y el chat ID en TelegramController.php.', 
-            ], 500);
-        }
+        // // Verificación de credenciales (para evitar envíos fallidos si no se han configurado)
+        // if ($this->botToken === '8278356133:AAFbPIiY77YEdFbRoO8JSpF83UKaSM2X-dM' || $this->chatId === '+YONFb8H0Fxg5ODNh') {
+        //      // Es preferible usar un log o lanzar una excepción real en un entorno de producción.
+        //      return response()->json([
+        //         'message' => 'Error: Configuración de Telegram pendiente. Por favor, actualice el token y el chat ID en TelegramController.php.', 
+        //     ], 500);
+        // }
 
         try {
             // Obtener el archivo y la descripción
