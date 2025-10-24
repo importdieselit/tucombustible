@@ -37,9 +37,9 @@ class VehiculoObserver
                 
                 $message = 
                     "*⚠️ ALERTA DE MANTENIMIENTO PREVENTIVO ⚠️*\n\n" .
-                    "La unidad: *{$vehiculo->placa}* ha cruzado el umbral de los " . self::LIMITE_KM_MANTENIMIENTO . " KM.\n" .
+                    "La unidad: {$vehiculo->flota} *{$vehiculo->placa}* ha cruzado el umbral de los " . self::LIMITE_KM_MANTENIMIENTO . " KM.\n" .
                     "• *KM Actual:* `{$newKm}` KM\n" .
-                    "• *Tipo:* {$vehiculo->tipo}\n\n" .
+                    //"• *Tipo:* {$vehiculo->tipo}\n\n" .
                     "*Acción:* Requiere revisión inmediata para mantenimiento preventivo.";
 
                 // 3. Enviar la notificación de forma asíncrona (opcional) o síncrona
@@ -61,8 +61,8 @@ class VehiculoObserver
         // Ejemplo de uso: mensaje de bienvenida para la nueva unidad.
         $message = 
             "*✅ Nuevo Vehículo Registrado ✅*\n\n" .
-            "La unidad *{$vehiculo->placa}* ha sido dada de alta en el sistema.\n" .
-            "• *Tipo:* {$vehiculo->tipo}\n" .
+            "La unidad {$vehiculo->flota} *{$vehiculo->placa}* ha sido dada de alta en el sistema.\n" .
+            //"• *Tipo:* {$vehiculo->tipo}\n" .
             "• *KM Inicial de Mantenimiento:* `{$vehiculo->km_mantt}` KM";
 
         $this->telegramService->sendMessage($message);
