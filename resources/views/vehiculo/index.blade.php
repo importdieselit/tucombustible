@@ -447,6 +447,21 @@ document.addEventListener('DOMContentLoaded', function () {
                             return label;
                         }
                     }
+                },
+                datalabels: {
+                    align: 'end', // Posiciona la etiqueta al final del punto (arriba)
+                    anchor: 'end', // Similar a align, asegura que se mueva hacia afuera
+                    offset: 8, // Separación del punto
+                    color: '#333333', // Color del texto de la etiqueta
+                    font: {
+                        weight: 'bold',
+                        size: 10,
+                    },
+                    formatter: function(value, context) {
+                        // Formatear el valor (ej. 85 -> "85%")
+                        // Usamos toFixed(1) para mostrar un decimal si es necesario
+                        return value.toFixed(1) + '%';
+                    }
                 }
             }
         }
