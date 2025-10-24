@@ -23,6 +23,16 @@ $historicoEficiencia = [
     // Hoy: se usa la eficiencia actual como valor de cierre
     ['date' => Illuminate\Support\Carbon::today()->toDateString(), 'start_efficiency' => 82.1, 'end_efficiency' => $eficienciaActual], 
 ];
+
+
+// Preparar datos para Chart.js
+$chartLabels = array_map(function($date) {
+    return  Illuminate\Support\Carbon::parse($date)->format('d/M');
+}, array_column($historicoEficiencia, 'date'));
+
+$chartDataInicio = array_column($historicoEficiencia, 'start_efficiency');
+$chartDataCierre = array_column($historicoEficiencia, 'end_efficiency');
+
 @endphp
 @section('title', 'Dashboard de Vehículos')
 
@@ -376,6 +386,97 @@ $historicoEficiencia = [
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+
+
+
+
+// =======================================================
+    // GRÁFICO 1: Histórico de Eficiencia (Línea)
+    // =======================================================
+    var ctxEficiencia = document.getElementById('eficienciaHistoricoChart').getContext('2d');
+    
+    // Datos inyectados desde PHP
+    const chartLabels = @json($chartLabels);
+    const chartDataInicio = @json($chartDataInicio);
+    const chartDataCierre = @json($chartDataCierre);
+    
+    new Chart(ctxEficiencia, {
+        type: 'line',
+        data: {
+            labels: chartLabels,
+            datasets: [
+                {
+                    label: 'Cierre del Día',
+                    data: chartDataCierre,
+                    borderColor: '#10b981', // Verde
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#10b981',
+                },
+                {
+                    label: 'Inicio del Día',
+                    data: chartDataInicio,
+                    borderColor: '#3b82f6', // Azul (un poco más tenue)
+                    backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                    fill: false,
+                    tension: 0.3,
+                    pointRadius: 3,
+                    pointStyle: 'rectRot',
+                }
+            ]
+        },
+        options: {
+            maintainAspectRatio: false,
+            responsive: true,
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Fecha'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Eficiencia (%)'
+                    },
+                    beginAtZero: false,
+                    // Asegurar que el eje Y termine en 100%
+                    suggestedMax: 100, 
+                    ticks: {
+                        callback: function(value, index, ticks) {
+                            return value + '%';
+                        }
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += new Intl.NumberFormat('es-ES', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(context.parsed.y / 100);
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+
+
     // Gráfica de vehículos por estatus
     var ctx = document.getElementById('vehiculosEstatusChart').getContext('2d');
     new Chart(ctx, {
