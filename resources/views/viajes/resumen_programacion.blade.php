@@ -202,9 +202,7 @@
     
     async function sendReportToTelegram() {
         sendTelegramButton.disabled = true;
-        showStatus('Capturando área del reporte y preparando envío a Telegram...', 'info');
-
-        try {
+       try {
             // Buscamos el primer elemento con la clase .printableArea
             const element = printableArea;
             if (!element) {
@@ -242,12 +240,12 @@
             }
 
             // 5. Éxito
-            showStatus('¡Éxito! El reporte ha sido enviado al grupo de Telegram.', 'success');
+          
 
         } catch (error) {
             console.error('Error al enviar a Telegram:', error);
             // Mostrar mensaje amigable al usuario
-            showStatus(`Error al enviar a Telegram: ${error.message}`, 'error');
+       //     showStatus(`Error al enviar a Telegram: ${error.message}`, 'error');
 
         } finally {
             // 6. Reestablecer el botón
