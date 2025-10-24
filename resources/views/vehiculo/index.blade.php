@@ -7,31 +7,19 @@ $unidades_con_orden_abierta = App\Models\Vehiculo::VehiculosConOrdenAbierta()->c
 $unidades_en_mantenimiento = App\Models\Vehiculo::countVehiculosEnMantenimiento();
 $unidades_disponibles = App\Models\Vehiculo::Disponibles()->count();
 $unidades_en_servicio = App\Models\Vehiculo::EnServicio()->count();
+$historicoEficiencia = App\Models\ResumenDiario::where('fecha', '>=', now()->subDays(15))->orderBy('fecha')->get();
 $eficienciaActual = $total_flota > 0 
     ? ($unidades_disponibles / $total_flota) * 100 
     : 0; 
 $eficienciaActual = round($eficienciaActual, 2); 
 
-$historicoEficiencia = [
-    // Simulación de 7 días de histórico
-    ['date' => Illuminate\Support\Carbon::today()->subDays(6)->toDateString(), 'start_efficiency' => 70.0, 'end_efficiency' => 72.5],
-    ['date' => Illuminate\Support\Carbon::today()->subDays(5)->toDateString(), 'start_efficiency' => 72.5, 'end_efficiency' => 75.0],
-    ['date' => Illuminate\Support\Carbon::today()->subDays(4)->toDateString(), 'start_efficiency' => 75.0, 'end_efficiency' => 78.0],
-    ['date' => Illuminate\Support\Carbon::today()->subDays(3)->toDateString(), 'start_efficiency' => 78.0, 'end_efficiency' => 80.5],
-    ['date' => Illuminate\Support\Carbon::today()->subDays(2)->toDateString(), 'start_efficiency' => 80.5, 'end_efficiency' => 79.2],
-    ['date' => Illuminate\Support\Carbon::today()->subDays(1)->toDateString(), 'start_efficiency' => 79.2, 'end_efficiency' => 82.1],
-    // Hoy: se usa la eficiencia actual como valor de cierre
-    ['date' => Illuminate\Support\Carbon::today()->toDateString(), 'start_efficiency' => 82.1, 'end_efficiency' => $eficienciaActual], 
-];
-
 
 // Preparar datos para Chart.js
 $chartLabels = array_map(function($date) {
     return  Illuminate\Support\Carbon::parse($date)->format('d/M');
-}, array_column($historicoEficiencia, 'date'));
+}, array_column($historicoEficiencia, 'fecha'));
 
-$chartDataInicio = array_column($historicoEficiencia, 'start_efficiency');
-$chartDataCierre = array_column($historicoEficiencia, 'end_efficiency');
+$chartDataCierre = array_column($historicoEficiencia, 'disponibilidad');
 
 @endphp
 @section('title', 'Dashboard de Vehículos')
@@ -397,7 +385,6 @@ document.addEventListener('DOMContentLoaded', function () {
     
     // Datos inyectados desde PHP
     const chartLabels = @json($chartLabels);
-    const chartDataInicio = @json($chartDataInicio);
     const chartDataCierre = @json($chartDataCierre);
     
     new Chart(ctxEficiencia, {
@@ -414,16 +401,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     tension: 0.3,
                     pointRadius: 4,
                     pointBackgroundColor: '#10b981',
-                },
-                {
-                    label: 'Inicio del Día',
-                    data: chartDataInicio,
-                    borderColor: '#3b82f6', // Azul (un poco más tenue)
-                    backgroundColor: 'rgba(59, 130, 246, 0.05)',
-                    fill: false,
-                    tension: 0.3,
-                    pointRadius: 3,
-                    pointStyle: 'rectRot',
                 }
             ]
         },
