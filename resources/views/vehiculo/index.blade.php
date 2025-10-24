@@ -456,7 +456,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     color: '#333333', // Color del texto de la etiqueta
                     font: {
                         weight: 'bold',
-                        size: 10,
+                        size: 12,
                     },
                     formatter: function(value, context) {
                         // Formatear el valor (ej. 85 -> "85%")
