@@ -7,7 +7,7 @@ $unidades_con_orden_abierta = App\Models\Vehiculo::VehiculosConOrdenAbierta()->c
 $unidades_en_mantenimiento = App\Models\Vehiculo::countVehiculosEnMantenimiento();
 $unidades_disponibles = App\Models\Vehiculo::Disponibles()->count();
 $unidades_en_servicio = App\Models\Vehiculo::EnServicio()->count();
-$historicoEficiencia = App\Models\ResumenDiario::where('fecha', '>=', now()->subDays(15))->orderBy('fecha')->get();
+$historicoEficiencia = App\Models\ResumenDiario::where('fecha', '>=', now()->subDays(15))->orderBy('fecha')->get()->toArray();
 $eficienciaActual = $total_flota > 0 
     ? ($unidades_disponibles / $total_flota) * 100 
     : 0; 
