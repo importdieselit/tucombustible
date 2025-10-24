@@ -9,7 +9,7 @@ $unidades_en_servicio = App\Models\Vehiculo::EnServicio()->count();
 $eficienciaActual = $total_vehiculos > 0 
     ? ($unidades_disponibles / $total_vehiculos) * 100 
     : 0; 
-$eficienciaActual = round($eficienciaActual, 2); /
+$eficienciaActual = round($eficienciaActual, 2); 
 
 $historicoEficiencia = [
     // Simulación de 7 días de histórico
