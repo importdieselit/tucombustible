@@ -186,11 +186,13 @@ class Vehiculo extends Model
     {
         $tiposMantenimiento = ['Preventivo', 'Mantenimiento'];
 
-        $query->whereHas('ordenes', function ($q) use ($tiposMantenimiento) {
-            // Estatus de orden abierta y tipo de mantenimiento
-            $q->where('estatus', 5)->where('es_flota', true)
-              ->whereIn('tipo', $tiposMantenimiento);
-        }); 
+        // $query->whereHas('ordenes', function ($q) use ($tiposMantenimiento) {
+        //     // Estatus de orden abierta y tipo de mantenimiento
+        //     $q->where('estatus', 5)->where('es_flota', true)
+        //       ->whereIn('tipo', $tiposMantenimiento);
+        // });
+        
+         $query->where('estatus', 5)->where('es_flota', true);
     }
 
     /**
@@ -199,9 +201,10 @@ class Vehiculo extends Model
      */
     public function scopeVehiculosConOrdenAbierta(Builder $query): void
     {
-        $query->whereHas('ordenes', function ($q) {
-            $q->whereIn('estatus', [3,5])->where('es_flota', true);
-        });
+        // $query->whereHas('ordenes', function ($q) {
+        //     $q->whereIn('estatus', [3,5])->where('es_flota', true);
+        // });
+        $query->whereIn('estatus', [3,5])->where('es_flota', true);
     }
 
     /**
