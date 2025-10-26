@@ -21,20 +21,20 @@ return new class extends Migration
                   ->onDelete('cascade')
                   ->comment('ID del vehículo planificado para mantenimiento.');
 
-            $table->foreignId('creado_por_id')
+            $table->foreignId('user_id')
                   ->nullable()
                   ->constrained('users')
                   ->onDelete('set null')
                   ->comment('Usuario que planificó el mantenimiento.');
 
-            $table->date('fecha_programada')
+            $table->date('fecha')
                   ->comment('Día específico en que el mantenimiento debe realizarse.');
 
             // Tipo de mantenimiento (M1, M2, M3, M4, etc.)
-            $table->string('tipo_mantenimiento', 50)
+            $table->string('tipo', 50)
                   ->comment('Tipo de mantenimiento (ej: M1, M2, Servicio de 10k, etc.).');
             
-            $table->text('descripcion_plan')->nullable()
+            $table->text('descripcion')->nullable()
                   ->comment('Descripción breve de las tareas a realizar.');
 
             // ID de la Orden de Trabajo generada (Será NULL hasta que se genere la OT)
@@ -43,6 +43,15 @@ return new class extends Migration
                   ->constrained('ordenes')
                   ->onDelete('set null')
                   ->comment('Referencia a la Orden de Trabajo generada a partir de esta planificación.');
+
+            $table->foreignId('plan_id')
+                  ->nullable()
+                  ->constrained('plan_mantenimiento')
+                  ->onDelete('set null');
+            
+            $table->integer('km')
+                  ->nullable()
+                  ->comment('Kilometraje estimado al momento del mantenimiento.');
 
             // Estado de la planificación: 1: Programado, 2: OT Generada, 3: Cancelado
             $table->integer('estatus')->default(1)

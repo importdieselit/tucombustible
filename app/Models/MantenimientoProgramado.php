@@ -16,12 +16,11 @@ class MantenimientoProgramado extends Model
         'vehiculo_id',
         'plan_id',
         'fecha',
-        'semana',
         'tipo',
-        'nro_orden',
+        'descripcion',
         'orden_id',
         'km',
-        'status',
+        'estatus',
     ];
 
     protected $casts = [

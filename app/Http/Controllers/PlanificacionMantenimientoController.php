@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use App\Models\PlanMantenimiento;
 
 class PlanificacionMantenimientoController extends Controller
 {
@@ -94,14 +95,16 @@ class PlanificacionMantenimientoController extends Controller
 
         try {
             $vehiculo= Vehiculo::findOrFail($request->vehiculo_id);
+            $plan = PlanMantenimiento::find($request->tipo_mantenimiento);
             // 1. Crear la Planificación de Mantenimiento
             $planificacion = MantenimientoProgramado::create([
                 'vehiculo_id' => $request->vehiculo_id,
-                'plan_id' => $request->plan_id ?? null ,
+                'plan_id' => $plan->plan_id ?? null ,
                 'fecha' => $request->fecha_programada,
-                'tipo' => $request->tipo_mantenimiento,
+                'tipo' => $plan->short ?? $request->tipo_mantenimiento,
+                'descripcion' => $plan->titulo ?? null,
                 'km' => $vehiculo->km_mantt ?? null,
-                'status' => 1, // Programado
+                'estatus' => 1, // Programado
             ]);
 
             // 2. Generar la Orden de Trabajo (OT) inmediatamente
@@ -109,10 +112,11 @@ class PlanificacionMantenimientoController extends Controller
             // y con la fecha de entrada como la fecha_programada.
             $orden = Orden::create([
                 'vehiculo_id' => $request->vehiculo_id,
-                'titulo' => "Mantenimiento Programado: {$request->tipo_mantenimiento}",
-                'descripcion' => "Planificado para el {$request->fecha_programada}. Tipo de servicio: {$request->tipo_mantenimiento}. Descripción: {$request->descripcion_plan}",
+                'tipo' => "Mantenimiento",
+                'descripcion_1' => "Planificado para el {$request->fecha_programada}. Tipo de servicio: {$plan->titulo}.",
+                'descripcion' => " Descripción: {$plan->descripcion}",
                 'prioridad' => 'Media', // Por ser planificado
-                'estatus' => 1, // 1: Programada (para no sacarla de servicio aún)
+                'estatus' => 3, // 1: Programada (para no sacarla de servicio aún)
                 'fecha_in' => $request->fecha_programada, // La fecha clave es la programada
                 'usuario_id' => $userId
             ]);
@@ -120,7 +124,6 @@ class PlanificacionMantenimientoController extends Controller
             // 3. Actualizar la Planificación con el ID de la OT y cambiar estatus
             $planificacion->update([
                 'orden_id' => $orden->id,
-                'nro_orden' => $orden->nro_orden,
                 'estatus' => 2, // OT Generada
             ]);
 
