@@ -131,7 +131,7 @@
                 eventClick: function(info) {
                     const props = info.event.extendedProps;
                     const statusText = props.estatus === 2 
-                        ? '<span class="badge bg-success"><i class="bi bi-check-circle"></i> OT Generada (#<a href="/ordenes/' + props.orden_id + '" target="_blank">' + props.orden_id + '</a>)</span>'
+                        ? '<span class=""><i class="bi bi-check-circle"></i> OT Generada (#<a href="/ordenes/' + props.orden_id + '" target="_blank">' + props.orden_id + '</a>)</span>'
                         : '<span class="badge bg-primary"><i class="bi bi-clock"></i> Programado</span>';
 
                     Swal.fire({
