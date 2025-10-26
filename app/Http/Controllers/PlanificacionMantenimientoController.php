@@ -85,8 +85,8 @@ class PlanificacionMantenimientoController extends Controller
     {
         $request->validate([
             'vehiculo_id' => 'required|exists:vehiculos,id',
-            'fecha' => 'required|date|after_or_equal:today',
-            'tipo' => 'required|string|max:50',
+            'fecha_programada' => 'required|date|after_or_equal:today',
+            'tipo_mantenimiento' => 'required|string|max:50',
     ]);
 
         $userId = auth()->id();
