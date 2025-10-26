@@ -65,8 +65,8 @@
                         <label for="tipo_mantenimiento" class="form-label">Tipo de Mantenimiento</label>
                         <select class="form-select" id="tipo_mantenimiento" name="tipo_mantenimiento" required>
                             <option value="" disabled selected>Seleccione el servicio</option>
-                            @foreach($tiposMantenimiento as $tipo)
-                                <option value="{{ $tipo }}">{{ $tipo }}</option>
+                            @foreach($tiposMantenimiento as $key => $value)
+                                <option value="{{ $key }}">{{ $value }}</option>
                             @endforeach
                         </select>
                     </div>

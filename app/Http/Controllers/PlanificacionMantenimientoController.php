@@ -93,13 +93,14 @@ class PlanificacionMantenimientoController extends Controller
         DB::beginTransaction();
 
         try {
+            $vehiculo= Vehiculo::findOrFail($request->vehiculo_id);
             // 1. Crear la Planificación de Mantenimiento
             $planificacion = MantenimientoProgramado::create([
                 'vehiculo_id' => $request->vehiculo_id,
                 'plan_id' => $request->plan_id ?? null ,
                 'fecha' => $request->fecha_programada,
                 'tipo' => $request->tipo_mantenimiento,
-                'km' => $request->km ?? null,
+                'km' => $vehiculo->km_mantt ?? null,
                 'status' => 1, // Programado
             ]);
 
