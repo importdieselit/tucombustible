@@ -193,7 +193,8 @@
                             confirmButtonText: 'Ver OT'
                         }).then((result) => {
                              if (result.isConfirmed) {
-                                window.location.href = `/ordenes/${body.orden_id}`; // Asume que tienes una ruta para ver la orden
+                                console.log('Ver OT:', body.orden_id);
+                                //window.location.href = `/ordenes/${body.orden_id}`; // Asume que tienes una ruta para ver la orden
                             }
                         });
                         

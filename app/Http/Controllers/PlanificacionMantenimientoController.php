@@ -43,12 +43,14 @@ class PlanificacionMantenimientoController extends Controller
         $start = $request->get('start');
         $end = $request->get('end');
 
-        $planificaciones = MantenimientoProgramado::whereBetween('fecha_programada', [$start, $end])
+        $planificaciones = MantenimientoProgramado::whereBetween('fecha', [$start, $end])
             ->with('vehiculo:id,flota,placa')
+            ->with('plan:id_plan,short,titulo')
+            ->with('orden:id,nro_orden')
             ->get();
 
         $eventos = $planificaciones->map(function ($plan) {
-            $title = "[{$plan->vehiculo->flota}] {$plan->tipo_mantenimiento}";
+            $title = "[{$plan->vehiculo->flota}] {$plan->tipo}";
             
             // Colores basados en el estatus
             $color = match ($plan->estatus) {
@@ -60,17 +62,17 @@ class PlanificacionMantenimientoController extends Controller
             return [
                 'id' => $plan->id,
                 'title' => $title,
-                'start' => $plan->fecha_programada->format('Y-m-d'),
+                'start' => $plan->fecha->format('Y-m-d'),
                 'allDay' => true,
                 'backgroundColor' => $color,
                 'borderColor' => $color,
                 'extendedProps' => [
                     'vehiculo_id' => $plan->vehiculo_id,
                     'placa' => $plan->vehiculo->placa,
-                    'tipo' => $plan->tipo_mantenimiento,
-                    'descripcion' => $plan->descripcion_plan,
+                    'tipo' => $plan->tipo,
+                    'descripcion' => $plan->descripcion,
                     'estatus' => $plan->estatus,
-                    'orden_id' => $plan->orden_id,
+                    'orden_id' => $plan->orden->nro_orden ?? null,
                 ]
             ];
         });
@@ -111,7 +113,7 @@ class PlanificacionMantenimientoController extends Controller
             // La OT se crea con estatus 'Programada' o 'Pendiente' (ej: 1) 
             // y con la fecha de entrada como la fecha_programada.
             $orden = Orden::create([
-                'vehiculo_id' => $request->vehiculo_id,
+                'id_vehiculo' => $request->vehiculo_id,
                 'tipo' => "Mantenimiento",
                 'descripcion_1' => "Planificado para el {$request->fecha_programada}. Tipo de servicio: {$plan->titulo}.",
                 'descripcion' => " Descripción: {$plan->descripcion}",
