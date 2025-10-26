@@ -55,7 +55,7 @@ class PlanificacionMantenimientoController extends Controller
             // Colores basados en el estatus
             $color = match ($plan->estatus) {
                 1 => '#4e73df', // Programado (Azul - Pendiente de OT)
-                2 => '#fcfdfdff', // OT Generada (Verde - Ya es una orden)
+                2 => '#1cc88a', // OT Generada (Verde - Ya es una orden)
                 default => '#f6c23e', // Otros/Cancelado (Amarillo)
             };
 
