@@ -17,6 +17,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use App\Models\DespachoViaje;
 use Illuminate\Support\Facades\DB;
+use App\Models\Persona;
 
 
 class ViajesController extends Controller
@@ -265,7 +266,7 @@ class ViajesController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             // El log ahora mostrará el mensaje de error completo
-            \Log::error('Error creando Viaje con Despachos: ' . $e->getMessage()); 
+            Log::error('Error creando Viaje con Despachos: ' . $e->getMessage()); 
             return back()->withInput()->with('error', 'Error del servidor al crear el viaje. Intente nuevamente. Detalles: ' . $e->getMessage());
         }
     }
@@ -564,5 +565,5 @@ class ViajesController extends Controller
             'viajesDataJson' => $viajesData->toJson()
         ]);
     }
-
+    
 }

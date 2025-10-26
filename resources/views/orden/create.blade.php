@@ -236,6 +236,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Objeto para mantener los suministros seleccionados
         const selectedSupplies = {};
+        let manualSupplyCounter = 0; // Contador para IDs únicos de suministros manuales
 
         // Elementos del DOM
         const supplySearchInput = document.getElementById('supplySearchInput');
@@ -283,6 +284,7 @@
 
         // Renderiza los suministros seleccionados en la tabla principal
         const renderSuppliesTable = () => {
+            const hiddenInput = document.getElementById('suministros-input');
             selectedSuppliesTable.innerHTML = '';
             hiddenInputsContainer.innerHTML = '';
             for (const id in selectedSupplies) {
@@ -354,6 +356,41 @@
                 renderSuppliesTable();
             }
         });
+
+         // Función para añadir suministro manual
+    function addManualSupply(descripcion, cantidad) {
+        if (!descripcion || cantidad <= 0) {
+             // Usar una función de feedback más robusta que Swal o un mensaje en el modal
+             console.error("Faltan datos para el suministro manual.");
+             return;
+        }
+
+        // Generar un ID temporal único para este suministro manual
+        manualSupplyCounter++;
+        const manualId = 'MANUAL_' + manualSupplyCounter;
+
+        const itemData = {
+            id: manualId,
+            codigo: 'N/A', // No tiene código de inventario
+            descripcion: descripcion,
+            existencia: 'N/A', // No tiene existencia de inventario
+            cantidad: cantidad
+        };
+
+        selectedSupplies[manualId] = itemData;
+        renderSuppliesTable();
+
+        // Limpiar el formulario manual
+        document.getElementById('manual-descripcion').value = '';
+        document.getElementById('manual-cantidad').value = 1;
+
+        // Cerrar el modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('searchSupplyModal'));
+        if (modal) {
+            modal.hide();
+        }
+    }
+
     });
 </script>
 @endpush

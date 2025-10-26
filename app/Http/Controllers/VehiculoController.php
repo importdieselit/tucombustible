@@ -112,7 +112,7 @@ class VehiculoController extends BaseController
             Session::flash('success', 'Vehiculo creado exitosamente.');
             Log::info('Vehiculo creado exitosamente.');
         } catch (\Exception $e) {
-            \Log::info('Error al crear el registro: ' . $e->getMessage());
+            Log::info('Error al crear el registro: ' . $e->getMessage());
             Session::flash('error', 'Error al crear el registro: ' . $e->getMessage());
 
         }

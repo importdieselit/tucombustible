@@ -53,7 +53,7 @@ public function store(Request $request)
         foreach ($respuestaJson['sections'] as $section) {
            
             // Función auxiliar para procesar los items, ya sea directamente o dentro de subsecciones
-            $processItems = function ($items) use (&$estatusGeneral, &$warningFound) {
+            $processItems = function ($items) use (&$estatusGeneral, &$warningFound, &$fail) {
                 foreach ($items as $item) {
                     // Si es booleano, y es falso -> WARNING
                     if ($item['response_type'] === 'boolean' && $item['value'] === false) {

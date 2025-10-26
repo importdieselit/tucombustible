@@ -73,10 +73,10 @@ class Orden extends Model
         return $this->belongsTo(User::class, 'id_usuario', 'id');
     }
 
-    public function taller()
-    {
-        return $this->belongsTo(Taller::class, 'id_taller', 'id'); // Asumiendo un modelo Taller
-    }
+    // public function taller()
+    // {
+    //     return $this->belongsTo(Taller::class, 'id_taller', 'id'); // Asumiendo un modelo Taller
+    // }
 
     public function vehiculo()
     {

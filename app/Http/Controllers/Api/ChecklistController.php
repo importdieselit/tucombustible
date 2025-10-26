@@ -12,6 +12,7 @@ use App\Models\InspeccionImagen;
 use App\Models\Vehiculo;
 use App\Models\Alerta;
 use App\Services\FcmNotificationService;
+use Illuminate\Support\Facades\Log;
 
 
 
@@ -301,8 +302,8 @@ class ChecklistController extends Controller
             DB::rollBack();
             
             // Log del error para debug
-            \Log::error('Error al guardar inspección: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            Log::error('Error al guardar inspección: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             
             return response()->json([
                 'success' => false,
