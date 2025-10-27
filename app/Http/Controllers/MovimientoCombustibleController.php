@@ -412,6 +412,16 @@ public function createPrecarga()
             if($vehiculo){
                 $texto.='unidad '.$vehiculo->flota.' ';
             }
+
+            if($request->cisterna_id){
+                $cisterna=Vehiculo::find($request->cisterna_id);
+            
+                $texto.='unidad '.$cisterna->flota.' ';
+            }
+
+            if($request->nombre_despacho){
+                $texto.='a '.$request->nombre_despacho.' ';
+            }
             // Crear el registro del movimiento
             $movimiento = new MovimientoCombustible();
             $movimiento->created_at = $request->fecha;
