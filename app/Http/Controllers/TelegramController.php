@@ -136,6 +136,8 @@ public function handleWebhook(Request $request)
         $data = $request->all();
         $message = $data['message'] ?? null;
 
+        $botpressUrl = 'https://webhook.botpress.cloud/bf3ba980-bc5e-40fb-8029-88f9ec975e39';
+
         // Si no hay mensaje o texto, ignorar
         if (!$message || !isset($message['text'])) {
             return response()->json(['status' => 'ignored'], 200);
@@ -143,6 +145,60 @@ public function handleWebhook(Request $request)
 
         $chatId = $message['chat']['id'];
         $text = $message['text'];
+
+        try {
+            $botpressResponse = Http::post($botpressUrl, [
+                // Botpress necesita un ID de usuario único para la sesión.
+                // Usamos el chatId de Telegram como ID de usuario de Botpress.
+                'userId' => $chatId,
+                'text' => $text,
+                'source_app' => 'Laravel-Telegram-Proxy'
+                // Otros parámetros requeridos por tu Botpress
+            ])->json();
+            
+            Log::info('enviando '.$botpressResponse);
+            
+            // ----------------------------------------------------
+            // PASO 2: Procesar la respuesta de Botpress
+            // ----------------------------------------------------
+            
+            $finalResponseText = "Lo siento, la IA no devolvió un mensaje claro.";
+            $actionData = null; 
+
+            // NOTA: La estructura de la respuesta de Botpress varía. 
+            // Debes ajustarla a la estructura real que te devuelva.
+            if (isset($botpressResponse['responses'][0]['text'])) {
+                $finalResponseText = $botpressResponse['responses'][0]['text'];
+            }
+
+            // Si Botpress incluyó una "Acción" o "Metadata"
+            if (isset($botpressResponse['action_data'])) {
+                $actionData = $botpressResponse['action_data'];
+                
+                // Lógica para ejecutar la acción de DB basada en Botpress
+                if ($actionData['intent'] === 'INTENT_DESPACHO') {
+                    $finalResponseText = $this->processBotpressAction($actionData);
+                }
+            }
+            
+            // ----------------------------------------------------
+            // PASO 3: Enviar la respuesta final a Telegram
+            // ----------------------------------------------------
+            Log::info('enviado a botpress'.$finalResponseText);
+            // Usamos el servicio inyectado para la respuesta
+            $this->telegramService->processMessage($finalResponseText); 
+
+        } catch (\Exception $e) {
+            Log::error('Error de comunicación con Botpress o procesamiento de acción:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'text' => $text
+            ]);
+            
+            $errorMessage = "⚠️ Ocurrió un error al conectar con el sistema de IA.";
+            $this->telegramService->sendMessageToChatId($chatId, $errorMessage);
+            return response()->json(['status' => 'error'], 500);
+        }
 
         try {
             // 1. Detectar el patrón y ejecutar la acción
