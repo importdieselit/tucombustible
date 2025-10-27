@@ -25,11 +25,14 @@
                     <i class="bi bi-check-circle"></i> Reactivar Orden
                 </button>
             @endif
+            <button id="print" class="btn btn-primary">
+                    <i class="fa fa-print"></i> Imprimir
+            </button>
         </div>
     </div>
 </div>
 
-<div class="card shadow-sm mb-4">
+<div class="card shadow-sm mb-4 printableArea">
     <div class="card-header bg-white">
         <h5 class="card-title m-0">Detalles de la Orden</h5>
     </div>
@@ -40,11 +43,15 @@
                     <li class="list-group-item"><strong>Vehículo:</strong> {{ $orden->vehiculo()->flota ?? 'N/A' }} ({{ $orden->vehiculo()->placa ?? 'N/A' }})</li>
                     <li class="list-group-item"><strong>Responsable Asignado:</strong> {{ $orden->responsable ?? 'N/A' }}</li>
                     <li class="list-group-item"><strong>Kilometraje:</strong> {{ number_format($orden->kilometraje ?? 0, 0, ',', '.') }}</li>
-                    <li class="list-group-item"><strong>Tipo de Orden:</strong> {{ $orden->tipo_orden->nombre ?? 'N/A' }}</li>
-                    <li class="list-group-item"><strong>Estatus:</strong> <span class="badge bg-{{ $orden->estatus()->css }}" title="{{ $orden->estatus()->descripcion }}">
+                    <li class="list-group-item"><strong>Tipo de Orden:</strong> {{ $orden->tipo ?? 'N/A' }}</li>
+                    <li class="list-group-item"><strong>Estatus:</strong> <span class="noPrint badge bg-{{ $orden->estatus()->css }}" title="{{ $orden->estatus()->descripcion }}">
                             <i class="mr-1 fa-solid {{ $orden->estatus()->icon_orden }}"></i>
                            {{ $orden->estatus()->orden }}
-                        </span></li>
+                        </span>
+                        <span class="siPrint" style="display: none">
+                           {{ $orden->estatus()->orden }}
+                        </span>
+                    </li>
                 </ul>
             </div>
             <div class="col-md-6">
@@ -57,7 +64,11 @@
                            {{ Carbon::parse($orden->fecha_in)->format('d/m/Y') ?? 'N/A' }}
                         a las 
                         {{ Carbon::parse($orden->hora_in)->format('h:i a') ?? 'N/A' }}
-                     <li class="list-group-item"><strong>Cierre:</strong> {{ $orden->fecha_out ?? 'N/A' }} a las {{ $orden->hora_out ?? 'N/A' }}</li>
+                     <li class="list-group-item">
+                    <strong>Cierre:</strong> 
+                        {{ Carbon::parse($orden->fecha_out)->format('d/m/Y') ?? 'N/A' }}
+                        a las 
+                        {{ Carbon::parse($orden->hora_out)->format('h:i a') ?? 'N/A' }}</li>
                     {{-- <li class="list-group-item"><strong>Tiempo Promedio:</strong> {{ $orden->tiempo_promedio ?? 'N/A' }} días</li> --}}
                 </ul>
             </div>

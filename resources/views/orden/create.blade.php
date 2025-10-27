@@ -21,340 +21,278 @@
         <h5 class="card-title m-0">Datos de la Orden</h5>
     </div>
     <div class="card-body">
-        <form action="{{ route('ordenes.store') }}" method="POST" id="orden-form"  enctype="multipart/form-data">
+        {{-- Se añade un campo oculto para el modo de guardado --}}
+        <form action="{{ route('ordenes.store') }}" method="POST" id="orden-form" enctype="multipart/form-data">
             @csrf
-            {{-- Datos de la Orden --}}
-           <input type="hidden" name="estatus"  value="2"> {{-- Estatus "Abierta" --}}
-           <input type="hidden" name="fecha_in"  value="{{ date('Y-m-d') }}">
+            <input type="hidden" name="estatus" value="2"> {{-- Estatus "Abierta" --}}
+            <input type="hidden" name="fecha_in" value="{{ date('Y-m-d') }}">
+            <input type="hidden" name="guardar_modo" id="guardar-modo" value="orden_normal">
+
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="id_vehiculo" class="form-label">Vehículo</label>
-                    
-                    @if(!is_null($vehiculo))
-                    <h3 class="text-primary">{{$vehiculo->flota}} {{ $vehiculo->placa }} - {{ $vehiculo->marca()->marca }} {{ $vehiculo->modelo()->modelo }}</h3>
-                    <hr>
-                    <input type="hidden" name="id_vehiculo" value="{{ $vehiculo->id }}">
-                    <input type="hidden" name="placa" value="{{ $vehiculo->placa }}">
-
-                    @else
-
                     <select class="form-select" id="id_vehiculo" name="id_vehiculo" required>
                         <option value="">Seleccione un vehículo</option>
-                        @foreach ($vehiculos as $vehiculo)
-                            <option value="{{ $vehiculo->id }}">{{ $vehiculo->placa }} - {{ $vehiculo->marca()->marca }} {{ $vehiculo->modelo()->modelo }}</option>
-                        @endforeach
-                    </select>
-
-                    @endif
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="nro_orden" class="form-label">Número de Orden</label>
-                    <input type="text" class="form-control"  id="nro_orden" name="nro_orden" value="{{ $nro_orden }}" required>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="id_tipo_orden" class="form-label">Tipo de Orden</label>
-                    <select class="form-select" id="id_tipo_orden" name="tipo" required>
-                        <option value="">Seleccione el tipo</option>
-                        @foreach ($tipos as $tipo)
-                            <option value="{{ $tipo->nombre }}">{{ $tipo->nombre }}</option>
-                        @endforeach
+                        {{-- Ejemplo de carga de vehículos (debes cargarlos desde el controller) --}}
+                        {{-- @foreach($vehiculos as $vehiculo)
+                            <option value="{{ $vehiculo->id }}">{{ $vehiculo->flota }} - {{ $vehiculo->placa }}</option>
+                        @endforeach --}}
+                         <option value="1">Flota 1 - ABC-123</option>
+                         <option value="2">Flota 2 - XYZ-456</option>
                     </select>
                 </div>
-            </div>
-
-            <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label for="kilometraje" class="form-label">Kilometraje</label>
-                    <input type="number" class="form-control" id="kilometraje" name="kilometraje" required>
+                    <label for="tipo" class="form-label">Tipo de Orden</label>
+                    <select class="form-select" id="tipo" name="tipo" required>
+                        <option value="Mantenimiento">Mantenimiento</option>
+                        <option value="Reparación">Reparación</option>
+                    </select>
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label for="responsable" class="form-label">Responsable Asignado</label>
-                    <input type="text" class="form-control" id="responsable" name="responsable" required>
-                    {{-- <select class="form-select" id="responsable" name="responsable" required>
-                        <option value="">Seleccione un responsable</option>
-                        @foreach ($personal as $persona)
-                            <option value="{{ $persona->id_personal }}">{{ $persona->nombre }} - {{ $persona->cargo }}</option>
-                        @endforeach
-                    </select> --}}
+                    <label for="prioridad" class="form-label">Prioridad</label>
+                    <select class="form-select" id="prioridad" name="prioridad" required>
+                        <option value="Baja">Baja</option>
+                        <option value="Media" selected>Media</option>
+                        <option value="Alta">Alta</option>
+                    </select>
+                </div>
+                 <div class="col-md-6 mb-3">
+                    <label for="km_actual" class="form-label">Kilometraje Actual</label>
+                    <input type="number" class="form-control" id="km_actual" name="km_actual" value="" required>
                 </div>
             </div>
 
             <div class="mb-3">
-                <label for="descripcion_1" class="form-label">Descripción del Problema/Tarea</label>
-                <textarea class="form-control" id="descripcion_1" name="descripcion_1" rows="4" required></textarea>
+                <label for="descripcion_1" class="form-label">Resumen del Problema / Servicio</label>
+                <input type="text" class="form-control" id="descripcion_1" name="descripcion_1" required>
             </div>
-
-            <div class="col-md-6 mb-3">
-                    <label for="foto_vehiculo" class="form-label">
-                        Registro Fotografico (Usar Cámara en Móvil)
-                        <i class="bi bi-camera-fill text-primary ms-1"></i> 
-                    </label>
-                    <input 
-                        type="file" 
-                        name="fotos_orden[]" 
-                        id="fotos_orden" 
-                        class="form-control" 
-                        accept="image/*" 
-                        capture="environment" 
-                        required
-                        multiple
-                    >
-                    <small class="form-text text-muted">En dispositivos móviles, esto abrirá la cámara trasera.</small>
-                </div>
-            <hr class="my-4">
+            <div class="mb-3">
+                <label for="descripcion" class="form-label">Descripción Detallada (Opcional)</label>
+                <textarea class="form-control" id="descripcion" name="descripcion" rows="3"></textarea>
+            </div>
             
-            {{-- Sección de Suministros --}}
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="m-0">Suministros Solicitados</h5>
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#searchSupplyModal">
-                    <i class="bi bi-plus-circle me-1"></i> Añadir Suministro
+             <h5 class="card-title mt-4 mb-3">Suministros y Materiales</h5>
+             <div class="alert alert-info">
+                 <i class="bi bi-info-circle-fill me-2"></i>
+                 Los suministros agregados se guardarán como **USO de Inventario** si hay existencias, o como **SOLICITUD de Compra** si no hay existencia o si se agregan manualmente.
+             </div>
+
+            <div class="d-flex justify-content-end mb-3">
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#searchSupplyModal">
+                    <i class="bi bi-search me-1"></i> Buscar Suministro
+                </button>
+                 <button type="button" class="btn btn-outline-secondary ms-2" data-bs-toggle="modal" data-bs-target="#manualSupplyModal">
+                    <i class="bi bi-plus-circle me-1"></i> Agregar Suministro Manual
                 </button>
             </div>
-            
+
             <div class="table-responsive">
-                <table class="table table-bordered table-striped" id="selectedSuppliesTable">
-                    <thead>
+                <table class="table table-bordered table-hover" id="selectedSuppliesTable">
+                    <thead class="table-light">
                         <tr>
-                            <th>Código</th>
+                            <th>Código / Tipo</th>
                             <th>Descripción</th>
                             <th>Cantidad</th>
+                            <th>Estado</th> {{-- Muestra si es USO o COMPRA --}}
                             <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {{-- Los suministros seleccionados se renderizarán aquí con JS --}}
+                        {{-- Filas de suministros seleccionados se insertarán aquí por JS --}}
                     </tbody>
                 </table>
             </div>
+            
+            {{-- Input oculto para enviar los suministros al controlador --}}
+            <input type="hidden" name="suministros_data" id="suministros-data">
+            
+            <hr class="mt-4">
 
-            {{-- Aquí se añadirán inputs ocultos para los suministros seleccionados --}}
-            <div id="hidden-inputs-container"></div>
-             <div>
-                Estatus Orden
-                       <select name="estatus" id="estatus" class="form-control">
-                                            <option value="2" selected>Abierta</option>
-                                            <option value="1" >Cerrada</option>
-                                            <option value="4" >Anulada</option>
-                                        </select>
-                        
-            </div>
-            <div class="mt-4 d-flex justify-content-between">
-                <a href="{{ route('ordenes.list') }}" class="btn btn-secondary">Cancelar</a>
-                <button type="submit" class="btn btn-primary">Guardar Orden</button>
+            {{-- Botones de acción --}}
+            <div class="d-flex justify-content-between">
+                <a href="{{ route('ordenes.index') }}" class="btn btn-outline-secondary">Cancelar</a>
+                
+                {{-- Botón principal para crear la orden y usar/solicitar suministros --}}
+                <button type="submit" class="btn btn-primary" id="btn-crear-orden">
+                    <i class="bi bi-save me-1"></i> Crear Orden y Guardar Suministros
+                </button>
             </div>
         </form>
     </div>
 </div>
 
-{{-- Modal para buscar suministros --}}
-<div class="modal fade" id="searchSupplyModal" tabindex="-1" aria-labelledby="searchSupplyModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+{{-- MODAL PARA BUSCAR SUMINISTROS EN INVENTARIO --}}
+@include('ordenes.partials.search_supply_modal') {{-- Asume que tienes un partial para buscar --}}
+
+{{-- MODAL PARA AGREGAR SUMINISTRO MANUAL --}}
+<div class="modal fade" id="manualSupplyModal" tabindex="-1" aria-labelledby="manualSupplyModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="searchSupplyModalLabel">Gestionar Repuestos</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-secondary text-white">
+                <h5 class="modal-title" id="manualSupplyModalLabel">Agregar Suministro Manual (Solicitar Compra)</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                
-                {{-- Navegación por pestañas --}}
-                <ul class="nav nav-tabs mb-3" id="supplyTabs" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="search-tab" data-bs-toggle="tab" data-bs-target="#search-pane" type="button" role="tab" aria-controls="search-pane" aria-selected="true">
-                            <i class="bi bi-list-check me-2"></i> Buscar en Inventario
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual-pane" type="button" role="tab" aria-controls="manual-pane" aria-selected="false">
-                            <i class="bi bi-pencil-square me-2"></i> Añadir Manualmente
-                        </button>
-                    </li>
-                </ul>
-
-                {{-- Contenido de las pestañas --}}
-                <div class="tab-content" id="supplyTabsContent">
-                    
-                    {{-- Pestaña 1: Búsqueda en Inventario --}}
-                    <div class="tab-pane fade show active" id="search-pane" role="tabpanel" aria-labelledby="search-tab" tabindex="0">
-                        <div class="mb-3">
-                            <input type="text" id="supply-search-input" class="form-control" placeholder="Buscar por código o descripción...">
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table table-sm table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 15%;">Código</th>
-                                        <th style="width: 40%;">Descripción</th>
-                                        <th style="width: 15%;">Existencia</th>
-                                        <th style="width: 15%;">Cantidad</th>
-                                        <th style="width: 15%;" class="text-center"></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="search-results-body">
-                                    <tr><td colspan="5" class="text-center text-muted">Escribir para buscar repuestos.</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    
-                    {{-- Pestaña 2: Entrada Manual --}}
-                    <div class="tab-pane fade" id="manual-pane" role="tabpanel" aria-labelledby="manual-tab" tabindex="0">
-                        <div class="alert alert-info" role="alert">
-                            Use esta opción para registrar suministros que no están en el inventario.
-                        </div>
-                        <div class="mb-3">
-                            <label for="manual-descripcion" class="form-label">Descripción</label>
-                            <input type="text" id="manual-descripcion" class="form-control" placeholder="Ej: Tornillos Varios, Limpiaparabrisas Genérico" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="manual-cantidad" class="form-label">Cantidad</label>
-                            <input type="number" id="manual-cantidad" class="form-control" value="1" min="1" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="manual-cantidad" class="form-label">Precio</label>
-                            <input type="number" id="manual-cantidad" class="form-control" value="1" min="1" >
-                        </div>
-                        <div class="text-end">
-                            <button type="button" class="btn btn-warning" id="add-manual-supply-btn">
-                                <i class="bi bi-plus-square me-2"></i> Añadir Suministro Manual
-                            </button>
-                        </div>
-                    </div>
+                <p>El suministro manual se registra como una **Solicitud de Compra** (OC) para que el administrador la apruebe. No se descontará del inventario.</p>
+                <div class="mb-3">
+                    <label for="manual-descripcion" class="form-label">Descripción del Ítem</label>
+                    <input type="text" class="form-control" id="manual-descripcion" required>
                 </div>
-
+                <div class="mb-3">
+                    <label for="manual-cantidad" class="form-label">Cantidad Requerida</label>
+                    <input type="number" class="form-control" id="manual-cantidad" value="1" min="1" required>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" id="add-manual-supply-btn">
+                    <i class="bi bi-plus me-1"></i> Añadir Solicitud
+                </button>
             </div>
         </div>
     </div>
 </div>
+
+@endsection
+
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Objeto para mantener los suministros seleccionados
-        const selectedSupplies = {};
+    $(document).ready(function() {
+        // Objeto global para almacenar los suministros seleccionados.
+        // La clave es el ID o un ID temporal para manuales.
+        // Se añade una nueva propiedad: 'tipo' (USO, COMPRA)
+        let selectedSupplies = {};
+        let manualSupplyCounter = 0;
+        const selectedSuppliesTableBody = document.querySelector('#selectedSuppliesTable tbody');
+        const suministrosDataInput = document.getElementById('suministros-data');
 
-        // Elementos del DOM
-        const supplySearchInput = document.getElementById('supplySearchInput');
-        const searchResultsTable = document.getElementById('searchResultsTable');
-        const selectedSuppliesTable = document.getElementById('selectedSuppliesTable').querySelector('tbody');
-        const hiddenInputsContainer = document.getElementById('hidden-inputs-container');
-
-        // Función para buscar suministros
-        const searchSupplies = (query) => {
-            if (query.length < 2) {
-                searchResultsTable.innerHTML = '';
-                return;
-            }
-            fetch(`{{ route('ordenes.search-supplies') }}?query=${query}`)
-                .then(response => response.json())
-                .then(data => {
-                    renderSearchResults(data);
-                });
-        };
-
-        // Renderiza los resultados de la búsqueda
-        const renderSearchResults = (data) => {
+        // Función para renderizar la tabla principal
+        function renderSuppliesTable() {
             let html = '';
-            if (data.length > 0) {
-                data.forEach(item => {
+            let hasSupplies = false;
+
+            for (const id in selectedSupplies) {
+                if (selectedSupplies.hasOwnProperty(id)) {
+                    hasSupplies = true;
+                    const item = selectedSupplies[id];
+                    
+                    // Determinar el tipo y el color para la fila
+                    const isManual = id.startsWith('MANUAL_');
+                    const isLowStock = !isManual && (item.cantidad > item.existencia);
+                    
+                    // Si es manual o sin existencia, es SOLICITUD DE COMPRA (COMPRA)
+                    const tipo = isManual || isLowStock ? 'COMPRA' : 'USO';
+                    const badgeClass = tipo === 'USO' ? 'badge bg-success' : 'badge bg-warning text-dark';
+                    const codigoDisplay = isManual ? 'N/A (Manual)' : item.codigo;
+                    const existenciaDisplay = isManual ? 'N/A' : item.existencia;
+
+                    // Asignar el tipo de forma persistente
+                    item.tipo = tipo; 
+
                     html += `
                         <tr>
-                            <td>${item.codigo}</td>
+                            <td>${codigoDisplay}</td>
                             <td>${item.descripcion}</td>
-                            <td>${item.existencia}</td>
-                            <td><input type="number" class="form-control search-quantity" value="1" min="1" max="${item.existencia}"></td>
+                            <td>${item.cantidad}</td>
+                            <td><span class="${badgeClass}">${tipo}</span></td>
                             <td>
-                                <button type="button" class="btn btn-success btn-sm add-supply" data-item-id="${item.id}">
-                                    Añadir
+                                <button type="button" class="btn btn-sm btn-danger remove-supply" data-item-id="${id}">
+                                    <i class="bi bi-trash"></i>
                                 </button>
                             </td>
                         </tr>
                     `;
-                });
-            } else {
-                html = `<tr><td colspan="5" class="text-center">No se encontraron resultados.</td></tr>`;
+                }
             }
-            searchResultsTable.innerHTML = html;
-        };
-
-        // Renderiza los suministros seleccionados en la tabla principal
-        const renderSuppliesTable = () => {
-            selectedSuppliesTable.innerHTML = '';
-            hiddenInputsContainer.innerHTML = '';
-            for (const id in selectedSupplies) {
-                const item = selectedSupplies[id];
-                const row = `
-                    <tr>
-                        <td>${item.codigo}</td>
-                        <td>${item.descripcion}</td>
-                        <td>${item.cantidad}</td>
-                        <td>
-                            <button type="button" class="btn btn-danger btn-sm remove-supply" data-item-id="${item.id}">
-                                Eliminar
-                            </button>
-                        </td>
-                    </tr>
-                `;
-                selectedSuppliesTable.innerHTML += row;
-
-                // Añade inputs ocultos para el formulario
-                const hiddenInput = `
-                    <input type="hidden" name="supplies[${item.id}][item_id]" value="${item.id}">
-                    <input type="hidden" name="supplies[${item.id}][cantidad]" value="${item.cantidad}">
-                `;
-                hiddenInputsContainer.innerHTML += hiddenInput;
+            
+            if (!hasSupplies) {
+                html = '<tr><td colspan="5" class="text-center text-muted">Aún no se han añadido suministros.</td></tr>';
             }
-        };
+            
+            selectedSuppliesTableBody.innerHTML = html;
+            
+            // Actualizar el campo oculto para enviar al servidor
+            suministrosDataInput.value = JSON.stringify(Object.values(selectedSupplies));
+        }
 
-        // Manejar el evento de búsqueda con un pequeño retraso (debounce)
-        let timeout = null;
-        supplySearchInput.addEventListener('keyup', function() {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => {
-                searchSupplies(this.value);
-            }, 300);
+        // --- MANEJO DE SUMINISTROS DE INVENTARIO (BÚSQUEDA) ---
+        // La lógica de búsqueda y adición se mantiene igual, 
+        // pero ahora la renderización interna determina si es USO o COMPRA.
+        
+        // Manejar la adición de un suministro desde el modal de búsqueda
+        $('#searchSupplyTableBody').on('click', '.add-supply', function(e) {
+            const itemId = e.target.dataset.itemId;
+            const row = e.target.closest('tr');
+            const quantityInput = row.querySelector('.search-quantity');
+            const quantity = parseInt(quantityInput.value, 10);
+            
+            const itemData = {
+                id: itemId,
+                codigo: row.cells[0].textContent,
+                descripcion: row.cells[1].textContent,
+                existencia: parseInt(row.cells[2].textContent, 10),
+                cantidad: quantity
+            };
+
+            // Si ya existe, se actualiza, si no, se añade
+            selectedSupplies[itemId] = itemData;
+            
+            renderSuppliesTable();
+            
+            // Cerrar el modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('searchSupplyModal'));
+            modal.hide();
         });
 
-        // Manejar el evento de agregar un suministro desde el modal
-        searchResultsTable.addEventListener('click', function(e) {
-            if (e.target.classList.contains('add-supply')) {
-                const itemId = e.target.dataset.itemId;
-                const row = e.target.closest('tr');
-                const quantityInput = row.querySelector('.search-quantity');
-                const quantity = parseInt(quantityInput.value, 10);
-                
-                const itemData = {
-                    id: itemId,
-                    codigo: row.cells[0].textContent,
-                    descripcion: row.cells[1].textContent,
-                    existencia: parseInt(row.cells[2].textContent, 10),
-                    cantidad: quantity
-                };
 
-                // Si ya existe, se actualiza, si no, se añade
-                selectedSupplies[itemId] = itemData;
-                
-                renderSuppliesTable();
-                
-                // Cerrar el modal
-                const modal = bootstrap.Modal.getInstance(document.getElementById('searchSupplyModal'));
+        // --- MANEJO DE SUMINISTROS MANUALES (SOLICITUD DE COMPRA) ---
+        document.getElementById('add-manual-supply-btn').addEventListener('click', function() {
+            const descripcion = document.getElementById('manual-descripcion').value.trim();
+            const cantidad = parseInt(document.getElementById('manual-cantidad').value, 10);
+            
+            if (!descripcion || cantidad <= 0) {
+                 Swal.fire('Error', 'La descripción y la cantidad requerida son obligatorias.', 'error');
+                 return;
+            }
+
+            // Generar un ID temporal único para este suministro manual
+            manualSupplyCounter++;
+            const manualId = 'MANUAL_' + manualSupplyCounter;
+
+            const itemData = {
+                id: manualId,
+                codigo: 'N/A', // No tiene código de inventario
+                descripcion: descripcion,
+                existencia: 0, // Fuerza la solicitud de compra
+                cantidad: cantidad
+            };
+
+            selectedSupplies[manualId] = itemData;
+            renderSuppliesTable();
+
+            // Limpiar el formulario manual
+            document.getElementById('manual-descripcion').value = '';
+            document.getElementById('manual-cantidad').value = 1;
+
+            // Cerrar el modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('manualSupplyModal'));
+            if (modal) {
                 modal.hide();
             }
         });
 
-        // Manejar el evento de eliminar un suministro de la tabla principal
-        selectedSuppliesTable.addEventListener('click', function(e) {
-            if (e.target.classList.contains('remove-supply')) {
-                const itemId = e.target.dataset.itemId;
+
+        // --- LÓGICA DE ELIMINACIÓN ---
+        selectedSuppliesTableBody.addEventListener('click', function(e) {
+            if (e.target.closest('.remove-supply')) {
+                const itemId = e.target.closest('.remove-supply').dataset.itemId;
                 delete selectedSupplies[itemId];
                 renderSuppliesTable();
             }
         });
+
+        // Inicializar la tabla vacía
+        renderSuppliesTable();
     });
 </script>
 @endpush
-@endsection

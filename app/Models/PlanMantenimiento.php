@@ -14,63 +14,25 @@ class PlanMantenimiento extends Model
 
     protected $fillable = [
         'id_usuario',
-        'nombre_plan',
+        'titulo',
         'descripcion',
-        'kilometraje_programado',
-        'fecha_programada',
-        'estatus',
-        'ultima_actualizacion_km',
-        'ultima_actualizacion_fecha',
-        'created_by',
-        'updated_by',
-        'id_tipo_vehiculo',
+        'kilometraje',
+        'tiempo',
+        'short',
+        'rango_min_t',
+        'rango_max_t',
+        'rango_min_k',
+        'rango_max_k',
     ];
 
     protected $casts = [
-        'id_usuario' => 'integer',
-        'kilometraje_programado' => 'integer',
-        'fecha_programada' => 'date',
-        'estatus' => 'integer',
-        'ultima_actualizacion_km' => 'integer',
-        'ultima_actualizacion_fecha' => 'date',
-        'created_by' => 'integer',
-        'updated_by' => 'integer',
-        'id_tipo_vehiculo' => 'integer',
+        'kilometraje' => 'integer',
+        'tiempo' => 'integer',
+        'rango_min_t' => 'integer',
+        'rango_max_t' => 'integer',
+        'rango_min_k' => 'integer',
+        'rango_max_k' => 'integer'
     ];
 
-    // Relaciones
-    public function usuario()
-    {
-        return $this->belongsTo(User::class, 'id_usuario', 'id');
-    }
-
-    // public function mantenimiento()
-    // {
-    //     return $this->belongsTo(Mantenimiento::class, 'id_mantenimiento', 'id_mantenimiento');
-    // }
-
-    public function vehiculo()
-    {
-        return $this->belongsTo(Vehiculo::class, 'id_vehiculo', 'id');
-    }
-
-    public function tipoVehiculo()
-    {
-        return $this->belongsTo(TipoVehiculo::class, 'id_tipo_vehiculo', 'id');
-    }
-
-    public function createdBy()
-    {
-        return $this->belongsTo(User::class, 'created_by', 'id');
-    }
-
-    public function updatedBy()
-    {
-        return $this->belongsTo(User::class, 'updated_by', 'id');
-    }
-
-    public function suministros()
-    {
-        return $this->hasMany(PlanMantenimientoSuministro::class, 'id_plan', 'id_plan');
-    }
+    
 }

@@ -38,8 +38,8 @@ class VehiculoObserver
              
                 $message = 
                     "*⚠️ ALERTA DE MANTENIMIENTO PREVENTIVO ⚠️*\n\n" .
-                    "La unidad: {$vehiculo->flota} *{$vehiculo->placa}* ha cruzado el umbral de los " . self::LIMITE_KM_MANTENIMIENTO . " KM.\n" .
-                    "• *KM Actual:* `{$newKm}` KM\n" .
+                    "La unidad: {$vehiculo->flota} *{$vehiculo->placa}* ha cruzado el umbral de los " . self::LIMITE_KM_MANTENIMIENTO . " Km.\n" .
+                    "• *Km Actual:* `{$newKm}` Km\n" .
                     //"• *Tipo:* {$vehiculo->tipo}\n\n" .
                     "*Acción:* Requiere revisión inmediata para mantenimiento preventivo.";
 
@@ -64,7 +64,7 @@ class VehiculoObserver
             "*✅ Nuevo Vehículo Registrado ✅*\n\n" .
             "La unidad {$vehiculo->flota} *{$vehiculo->placa}* ha sido dada de alta en el sistema.\n" .
             //"• *Tipo:* {$vehiculo->tipo}\n" .
-            "• *KM Inicial de Mantenimiento:* `{$vehiculo->km_mantt}` KM";
+            "• *Km Inicial de Mantenimiento:* `{$vehiculo->km_mantt}` KM";
 
         $this->telegramService->sendMessage($message);
     }

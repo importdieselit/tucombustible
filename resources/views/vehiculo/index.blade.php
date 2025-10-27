@@ -149,12 +149,13 @@ $chartDataCierre = array_column($historicoEficiencia, 'disponibilidad');
                     <i class="fa fa-plus"></i> Registrar Vehículo
                 </a>
                 @endif
-                 @if(Auth::user()->canAccess('read', 10))
-
+               
                 <a href="{{ route('vehiculos.list') }}" class="btn btn-outline-secondary w-100 mb-2">
                     <i class="fa fa-list"></i> Ver Listado
                 </a>
-                @endif
+                <a href="{{ route('mantenimiento.planificacion.index') }}" class="btn btn-outline-secondary w-100 mb-2">
+                    <i class="fa fa-list"></i> Planificar Mantenimiento
+                </a>
                  
                 <a href="#" class="btn btn-outline-info w-100">
                     <i class="fa fa-file-excel"></i> Exportar Excel

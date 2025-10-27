@@ -66,6 +66,19 @@
             $costoPorKm = $kmTotales > 0 ? $gastoCombustible / $kmTotales : 0;
             @endphp
 @endphp
+@if($item->estatus==3 || $item->estatus ==5)
+        @php
+            $orden=App\Models\Orden::where('id_vehiculo',$item->id)->where('estatus',2)->get()->first();
+            if($orden){
+                $fecha=$orden->fecha_in;
+                $duracionDias = Illuminate\Support\Carbon::parse($fecha)->diffInDays(Illuminate\Support\Carbon::parse(now()));
+                $insumos_usados = App\Models\InventarioSuministro::with('inventario')->where('id_orden', $orden->id)->get();
+            
+            }
+        @endphp
+    @endif
+
+
 @section('content')
 <div class="container-fluid">
     <div class="row page-titles mb-4">
@@ -114,11 +127,15 @@
                             @if ($estatusInfo)
                                 <span class="badge bg-{{ $estatusInfo['css'] }}" title="{{ $estatusInfo['descripcion'] }}">
                                     <i class="mr-1 fa-solid {{ $estatusInfo['icon'] }}"></i>
-                                    {{ $estatusInfo['nombre'] }}
+                                    {{ $estatusInfo['auto'] }}
+                                    @if($orden)
+                                        hace {{$duracionDias ?? 0}} dias
+                                    @endif
                                 </span>
                             @else
                                 <span class="badge bg-secondary">Desconocido</span>
                             @endif
+
                         </span></div>
                         <div class="col-sm-6 mb-3"><span class="info-label">Disponibilidad:</span> <span class="info-value">{{ $item->disp ? 'Sí' : 'No' }}</span></div>
                     </div>
@@ -160,6 +177,52 @@
             </div>
         </div>
     </div>
+
+    @if($item->estatus==3 || $item->estatus ==5)
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white">
+                <h5 class="card-title m-0">Detalles de la Orden</h5>
+            </div>
+            <div class="card-body">
+                <h5>Descripción del Problema/Tarea</h5>
+                <p>{{ $orden->descripcion_1 ?? 'No hay descripción.' }}</p>
+
+                <hr>
+                <h5>Observaciones</h5>
+                <p>{{ $orden->observacion ?? 'No hay observaciones.' }}</p>
+
+                <hr>
+                <h5>Insumos Utilizados</h5>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Cantidad</th>
+                            <th>Costo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($insumos_usados as $insumo)
+                            <tr>
+                                <td>{{ $insumo->inventario->codigo ?? 'N/A' }}</td>
+                                <td>{{ $insumo->inventario->descripcion ?? 'N/A' }}</td>
+                                <td>{{ $insumo->cantidad ?? 'N/A' }}</td>
+                                <td>${{ number_format($insumo->inventario->costo * $insumo->cantidad, 2, ',', '.') }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="3" class="text-center">No se han registrado insumos para esta orden.</td>
+                            </tr>
+                        @endforelse
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>Total Costo:</strong></td>
+                            <td><strong>${{ number_format($insumos_usados->sum(fn($insumo) => $insumo->inventario->costo * $insumo->cantidad), 2, ',', '.') }}</strong></td>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
     
     <div class="row">
         {{-- Tarjeta de Detalles Técnicos --}}

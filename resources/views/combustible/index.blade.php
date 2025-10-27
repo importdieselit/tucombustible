@@ -214,10 +214,10 @@
                 <i class="fas fa-money-bill-wave text-info me-3" style="font-size: 3rem;"></i>
                 <div>
                     <h2 class="h4 fw-bold text-black mb-0" id="main-title">
-                        Estado General de los Depositos
+                        Estado General de los Tanques
                     </h2>
                     <p class="text-sm text-muted mb-0" id="main-subtitle">
-                        Resumen del cupo disponible de todos los depositos.
+                        Resumen del cupo disponible de todos los tanques.
                     </p>
                 </div>
             </div>
@@ -244,6 +244,35 @@
         <div class="row g-4 mb-5">
 
 
+
+            <div class="col-12 col-md-6 col-lg-3">
+                <a href="{{route('combustible.list')}}" class="card-link" >
+                    <div class="card h-100 p-4 d-flex flex-column justify-content-center text-center">
+                        <i class="fas fa-truck-ramp-box stat-card-icon mb-2 text-warning"></i>
+                        <h4 class="fw-bold mb-1">Compras</h4>
+                        <h3>{{ $totales['entradas'] }} Ltrs</h3>
+                        <h5>desde {{date('d/m/Y',strtotime($totales['periodo_inicio']))}}</h5>
+                    </div>
+                </a>
+            </div>
+            <div class="col-12 col-md-6 col-lg-3">
+                <a href="{{route('combustible.list')}}" class="card-link" >
+                    <div class="card h-100 p-4 d-flex flex-column justify-content-center text-center">
+                        <i class="fas fa-truck-ramp-box stat-card-icon mb-2 text-warning"></i>
+                        <h4 class="fw-bold mb-1">Ventas</h4>
+                        <h3>{{ $totales['salidas'] }} Ltrs</h3>
+                        <h5>desde {{date('d/m/Y',strtotime($totales['periodo_inicio']))}}</h5>
+                    </div>
+                </a>
+            </div>
+            <div class="col-12 col-md-6 col-lg-3">
+                <a href="{{route('combustible.list')}}" class="card-link" >
+                    <div class="card h-100 p-4 d-flex flex-column justify-content-center text-center">
+                        <i class="fas fa-list stat-card-icon mb-2 text-black"></i>
+                        <h3 class="fw-bold mb-1">Ver Movimientos</h3>
+                    </div>
+                </a>
+            </div>
 
             <div class="col-12 col-md-6 col-lg-3">
                 <a href="{{route('combustible.pedidos')}}" class="card-link" >
@@ -286,9 +315,14 @@
             {{-- <button class="btn btn-primary-custom btn-lg rounded-pill px-4 py-2 shadow-lg fs-5" data-bs-toggle="modal" data-bs-target="#hacerPedidoModal">
                 <i class="fas fa-plus-circle me-2"></i> Hacer Pedido
             </button> --}}
-            <button class="btn btn-primary-custom btn-lg rounded-pill px-4 py-2 shadow-lg fs-5" id="btn-crear-despacho">
+            <a href="{{route('combustible.recarga')}}" class="btn btn-primary-custom btn-lg rounded-pill px-4 py-2 shadow-lg fs-5" id="btn-crear-carga">
+                <i class="fa fa-truck me-2"></i> Carga
+            </a>
+            
+            <a href="{{route('combustible.despacho')}}" class="btn btn-primary-custom btn-lg rounded-pill px-4 py-2 shadow-lg fs-5" id="btn-crear-">
                 <i class="fa fa-truck me-2"></i> Nuevo Despacho
-            </button>
+            </a>
+
 
             <button class="btn btn-warning btn-lg rounded-pill px-4 py-2 shadow-lg fs-5" id="btn-inspeccion-salida">
                 <i class="fa fa-clipboard-check me-2"></i> Checkout Vehículo
@@ -472,7 +506,7 @@
         
         <div class="card shadow-sm p-4 h-100">
             <div class="card-header bg-white">
-                <h5 class="card-title m-0">Niveles de Depósitos tipo {{ $tipo->producto }}</h5>
+                <h5 class="card-title m-0">Niveles de Tanques tipo {{ $tipo->producto }}</h5>
             </div>
             <div class="card-body bg-white">
                 <ul class="list-group list-group-flush">

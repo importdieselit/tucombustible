@@ -57,7 +57,7 @@
                     <tr class="clickable-row" data-id="{{ $orden->id }}">
                         <td>{{ $orden->id }}</td>
                         <td>{{ $orden->nro_orden }}</td>
-                        <td>{{ $orden->vehiculo()->placa }}</td>
+                        <td>{{ $orden->vehiculo()?$orden->vehiculo()->flota.' '.$orden->vehiculo()->placa:null }}</td>
                         <td>{{ $orden->tipo }}</td>
                         <td>
                             @if(isset($orden->created_at) && $orden->created_at)
@@ -110,7 +110,10 @@
                     topStart: {
                         buttons: ['csv', 'excel', 'pdf', 'print']
                     }
-                }
+                },
+                "order": [
+                    [ 0, 'desc' ] 
+                ]
             });
 
             // Lógica para redirigir al hacer clic en una fila

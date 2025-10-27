@@ -244,6 +244,12 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
                         <h2 class="fw-bold">{{ $eficienciaFlota }}%</h2>
                         <small class="text-muted">Último mes</small>
                     </div>
+                    <div>
+                        <h5 class="card-title mb-0">Mantenimientos Programados</h5>
+                        <h2 class="fw-bold">{{ $programados }}</h2>
+                        <h2 class="fw-bold text-danger">{{ $programadosHoy }} hoy</h2>
+                        <small class="text-muted">Último mes</small>
+                    </div>
                 </div>
             </div>
         </div>
@@ -268,6 +274,17 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
             ])
         </div>
         @endif
+        
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+            @include('partials.access_card', [
+                'route' => route('mantenimiento.planificacion.index'),
+                'icon' => 'fa-calendar',
+                'title' => 'Planificacion Mantenimiento',
+                'color' => 'bg-warning',
+                'target' => '_blank',
+                'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
+            ])
+        </div>
         
         {{-- =============================================== --}}
         {{-- TARJETA DE ÓRDENES DE MANTENIMIENTO (ID 2) --}}
@@ -399,7 +416,7 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
             @include('partials.access_card', [
                 'route' => route('viajes.calendario'),
                 'icon' => 'fa-calendar',
-                'title' => 'Planificacion',
+                'title' => 'Planificacion Combustible',
                 'color' => 'bg-warning',
                 'target' => '_blank',
                 'bg_opacity' => 'rgba(0, 123, 255, 0.15)'

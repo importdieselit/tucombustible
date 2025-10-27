@@ -53,7 +53,8 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" xintegrity="sha384-0m1rA4j8C5bT2XqP2r2k8sH2wJ5xK0xL9Q9z9n0B4E8G5J/B7V7P" crossorigin="anonymous"></script>
     
     <script src="{{ mix('js/app.js') }}"></script>
-    <script src="{{ asset('js/alerts.js') }}"></script>
+    <script src="{{ asset('js/alerts.js') }}" defer></script>
+    <script src="{{ asset('js/jquery.PrintArea.js') }}"></script>
     
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
     @stack('scripts')
@@ -72,10 +73,6 @@
                 $(".noPrint").show();
                 $(".siPrint").hide();
             });
-
-
-
-   
        
     });
 

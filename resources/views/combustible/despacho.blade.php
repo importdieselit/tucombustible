@@ -53,7 +53,7 @@
                             <option value="">Seleccione un depósito</option>
                             @foreach ($depositos as $deposito)
                                 <option value="{{ $deposito->id }}" {{ old('deposito_id') == $deposito->id ? 'selected' : '' }}>
-                                    {{ $deposito->nombre }} (Nivel: {{ $deposito->nivel_actual_litros }} L / {{ $deposito->capacidad_litros }} L)
+                                    {{ $deposito->serial }} (Nivel: {{ $deposito->nivel_actual_litros }} L / {{ $deposito->capacidad_litros }} L)
                                 </option>
                             @endforeach
                         </select>
@@ -124,20 +124,6 @@
                             <label for="placa" class="form-label">Placa <span class="text-danger">*</span></label>
                             <input type="text" class="form-control @error('placa') is-invalid @enderror" id="placa" name="placa" value="{{ old('placa') }}">
                             @error('placa')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="marca" class="form-label">Marca <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('marca') is-invalid @enderror" id="marca" name="marca" value="{{ old('marca') }}">
-                            @error('marca')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="modelo" class="form-label">Modelo <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('modelo') is-invalid @enderror" id="modelo" name="modelo" value="{{ old('modelo') }}">
-                            @error('modelo')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>

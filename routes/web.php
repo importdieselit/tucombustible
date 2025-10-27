@@ -33,6 +33,7 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\DataDeletionController;
 use App\Http\Controllers\ViajesController;
 use App\Http\Controllers\TelegramController;
+use App\Http\Controllers\PlanificacionMantenimientoController;
 
 use App\Models\Deposito;
 
@@ -270,6 +271,17 @@ Route::put('/viajes/{id}/assign', [ViajesController::class, 'processAssignment']
     Route::post('/send-telegram-photo', [TelegramController::class, 'sendPhoto'])
     ->name('telegram.send.photo');
     Route::post('/send-telegram-message', [TelegramController::class, 'sendMessage'])->name('telegram.send.message');
+
+    Route::get('eventos', [ViajesController::class, 'getCombinedEventos'])->name('eventos');
+
+     Route::get('/mantenimiento/planificacion', [PlanificacionMantenimientoController::class, 'index'])
+         ->name('mantenimiento.planificacion.index');
+    
+    Route::get('/api/mantenimiento/eventos', [PlanificacionMantenimientoController::class, 'getEventos'])
+         ->name('mantenimiento.planificacion.eventos');
+
+    Route::post('/api/mantenimiento/planificar', [PlanificacionMantenimientoController::class, 'store'])
+         ->name('mantenimiento.planificacion.store');
 
     // Rutas para historial de mantenimiento
     //Route::get('/vehiculos/{vehiculo}/historial', [HistorialMantenimientoController::class, 'showByVehiculo'])->name('vehiculos.historial');
