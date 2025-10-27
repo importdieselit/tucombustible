@@ -82,7 +82,7 @@
                             $orden=App\Models\Orden::where('id_vehiculo',$vehiculo->id)->where('estatus',2)->get()->first();
                             if($orden){
                                 $fecha=$orden->fecha_in;
-                                $duracionDias = Carbon::parse($fecha)->diffInDays(Carbon::parse(now()));
+                                $duracionDias = Illuminate\Support\Carbon::parse($fecha)->diffInDays(Illuminate\Support\Carbon::parse(now()));
                             }
                             @endphp
                         @endif
