@@ -44,10 +44,14 @@
                     <li class="list-group-item"><strong>Responsable Asignado:</strong> {{ $orden->responsable ?? 'N/A' }}</li>
                     <li class="list-group-item"><strong>Kilometraje:</strong> {{ number_format($orden->kilometraje ?? 0, 0, ',', '.') }}</li>
                     <li class="list-group-item"><strong>Tipo de Orden:</strong> {{ $orden->tipo_orden->nombre ?? 'N/A' }}</li>
-                    <li class="list-group-item"><strong>Estatus:</strong> <span class="badge bg-{{ $orden->estatus()->css }}" title="{{ $orden->estatus()->descripcion }}">
+                    <li class="list-group-item"><strong>Estatus:</strong> <span class="noPrint badge bg-{{ $orden->estatus()->css }}" title="{{ $orden->estatus()->descripcion }}">
                             <i class="mr-1 fa-solid {{ $orden->estatus()->icon_orden }}"></i>
                            {{ $orden->estatus()->orden }}
-                        </span></li>
+                        </span>
+                        <span class="siPrint" style="display: none"><i class="mr-1 fa-solid {{ $orden->estatus()->icon_orden }}"></i>
+                           {{ $orden->estatus()->orden }}
+                        </span>
+                    </li>
                 </ul>
             </div>
             <div class="col-md-6">
