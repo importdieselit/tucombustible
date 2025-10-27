@@ -274,7 +274,7 @@
 
             // Realizar la llamada AJAX (Asumimos una ruta 'supplies.search' que devuelve JSON)
             $.ajax({
-                url: '{{ route("supplies.search") }}', // RUTA DE EJEMPLO: DEBES CREAR ESTA RUTA EN LARAVEL
+                url: '{{ route("ordenes.search-supplies") }}', // RUTA DE EJEMPLO: DEBES CREAR ESTA RUTA EN LARAVEL
                 method: 'GET',
                 data: { query: query },
                 success: function(response) {
