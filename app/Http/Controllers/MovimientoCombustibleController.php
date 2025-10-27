@@ -324,14 +324,15 @@ public function createPrecarga()
         try {
             // 2. Buscar el depósito para actualizar el nivel
             $deposito = Deposito::findOrFail($request->deposito_id);
-            
+
             // Verificación para no exceder la capacidad
             $nuevo_nivel = $deposito->nivel_actual_litros + $request->cantidad_litros;
             if ($nuevo_nivel > $deposito->capacidad_litros) {
                 Session::flash('error', 'La cantidad de recarga excede la capacidad del depósito. Nivel actual: ' . $deposito->nivel_actual_litros . ' L. Capacidad: ' . $deposito->capacidad_litros . ' L.');
                 return Redirect::back()->withInput();
             }
-
+            $inicial=$deposito->nivel_actual_litros;
+            $final=$deposito->nivel_actual_litros+$request->cantidad_litros;
             // 3. Crear el registro del movimiento
             $movimiento = new MovimientoCombustible();
             $movimiento->created_at = $request->fecha; // Asignar la fecha del formulario
@@ -340,6 +341,8 @@ public function createPrecarga()
             $movimiento->proveedor_id = $request->proveedor_id;
             $movimiento->cantidad_litros = $request->cantidad_litros;
             $movimiento->observaciones = $request->observaciones;
+            $movimiento->cant_inicial = $inicial;
+            $movimiento->cant_final = $final;
             $movimiento->save();
             
             // 4. Actualizar el nivel actual del depósito
@@ -403,6 +406,8 @@ public function createPrecarga()
                 Session::flash('error', 'No hay suficiente combustible en el depósito. Nivel actual: ' . $deposito->nivel_actual_litros . ' L.');
                 return Redirect::back()->withInput();
             }
+            $inicial=$deposito->nivel_actual_litros;
+            $final=$deposito->nivel_actual_litros-$request->cantidad_litros;
             $cliente=Cliente::find($request->cliente_id);
             $vehiculo=Vehiculo::find($request->vehiculo_id);
             $texto='Carga a ';
@@ -420,7 +425,7 @@ public function createPrecarga()
             }
 
             if($request->nombre_despacho){
-                $texto.='a '.$request->nombre_despacho.' ';
+                $texto.=' '.$request->nombre_despacho.' ';
             }
             // Crear el registro del movimiento
             $movimiento = new MovimientoCombustible();
@@ -431,6 +436,8 @@ public function createPrecarga()
             $movimiento->vehiculo_id = $request->vehiculo_id;
             $movimiento->cantidad_litros = $request->cantidad_litros;
             $movimiento->observaciones = $texto.$request->observaciones;
+            $movimiento->cant_inicial=$inicial;
+            $movimiento->cant_final=$final;
             $movimiento->save();
 
             // Actualizar el nivel actual del depósito

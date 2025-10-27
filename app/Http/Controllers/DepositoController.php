@@ -75,6 +75,8 @@ class DepositoController extends BaseController
             $movimiento->deposito_id = $request->deposito_id;
             $movimiento->cantidad_litros = abs($variacion);
             $movimiento->observaciones = $request->observacion;
+            $movimiento->cant_inicial =$deposito->nivel_actual_litros;
+            $movimiento->cant_final= $request->nivel_actual_litros;
             $movimiento->save();
 
 
