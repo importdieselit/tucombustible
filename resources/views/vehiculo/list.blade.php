@@ -106,9 +106,11 @@
                                 @endif
                                 <span class="badge bg-{{ $estatusInfo->css }}" title="{{ $estatusInfo->descripcion }}">
                                     <i class="mr-1 fa-solid {{ $estatusInfo->icon_auto }}"></i>
+                                    {{ $estatusInfo->auto }}
                                     @if($orden)
                                         hace {{$duracionDias ?? 0}} dias
                                     @endif
+
                                 </span>
                                 @if($orden)
                                 </a> 
