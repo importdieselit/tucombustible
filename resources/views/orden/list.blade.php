@@ -57,8 +57,8 @@
                     <tr class="clickable-row" data-id="{{ $orden->id }}">
                         <td>{{ $orden->id }}</td>
                         <td>{{ $orden->nro_orden }}</td>
-                        <td>{{ $orden->vehiculo()->placa }}</td>
-                        <td>{{ $orden->tipo }}</td>
+                        <td>{{ $orden->vehiculo?$orden->vehiculo()->placa:null }}</td>
+                        <td>{{ $orden->tipo }}</td>)
                         <td>
                             @if(isset($orden->created_at) && $orden->created_at)
                                 {{ $orden->created_at->format('d/m/Y') }}
