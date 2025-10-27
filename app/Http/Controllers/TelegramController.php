@@ -184,7 +184,7 @@ public function handleWebhook(Request $request)
         
         if (preg_match($pattern, $text, $matches)) {
             $cliente_txt = trim($matches[1]);
-            $tanque_txt = trim($matches['2']);
+            $tanque_txt = trim($matches[2]);
             $cantidad = (int)$matches[3];
 
             // 1. Búsqueda de cliente y tanque
@@ -201,8 +201,8 @@ public function handleWebhook(Request $request)
 
             // 2. Lógica de Actualización de la DB
             
-            if ($tanque->stock < $cantidad) {
-                return "⚠️ Aviso: El tanque **{$tanque->serial}** solo tiene {$tanque->stock} litros disponibles. No se pudo realizar el despacho de {$cantidad}L.";
+            if ($tanque->nivel_alerta_litros < $cantidad) {
+                return "⚠️ Aviso: El tanque **{$tanque->serial}** solo tiene {$tanque->nivel_alerta_litros} litros disponibles. No se pudo realizar el despacho de {$cantidad}L.";
             }
 
             // Realizar la resta del stock (Descomenta esto en producción)
