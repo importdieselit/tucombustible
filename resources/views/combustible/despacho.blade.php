@@ -53,7 +53,7 @@
                             <option value="">Seleccione un depósito</option>
                             @foreach ($depositos as $deposito)
                                 <option value="{{ $deposito->id }}" {{ old('deposito_id') == $deposito->id ? 'selected' : '' }}>
-                                    {{ $deposito->nombre }} (Nivel: {{ $deposito->nivel_actual_litros }} L / {{ $deposito->capacidad_litros }} L)
+                                    {{ $deposito->serial }} (Nivel: {{ $deposito->nivel_actual_litros }} L / {{ $deposito->capacidad_litros }} L)
                                 </option>
                             @endforeach
                         </select>
