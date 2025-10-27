@@ -57,11 +57,11 @@
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         {{-- Muestra una etiqueta de tipo de movimiento --}}
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                            @if($movimiento->tipo == 'entrada') bg-green-500 text-white
-                                            @elseif($movimiento->tipo == 'salida') bg-red-500 text-white
+                                            @if($movimiento->tipo_movimiento == 'entrada') bg-green-500 text-white
+                                            @elseif($movimiento->tipo_movimiento == 'salida') bg-red-500 text-white
                                             @else bg-gray-500 text-white
                                             @endif">
-                                            {{ ucfirst($movimiento->tipo_movimientos) }}
+                                            {{ ucfirst($movimiento->tipo_movimiento) }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
