@@ -112,4 +112,15 @@ class Orden extends Model
     // Asegúrate de que tu modelo OrdenFoto esté importado
     return $this->hasMany(OrdenFoto::class, 'orden_id'); 
 }   
+
+    // // En el modelo App\Models\Orden
+    // public function solicitudesSuministros()
+    // {
+    //     return $this->hasMany(SolicitudMaterial::class, 'orden_trabajo_id');
+    // }
+    // En el modelo App\Models\SolicitudMaterial
+    // public function ordenCompra()
+    // {
+    //     return $this->belongsTo(OrdenCompra::class, 'orden_compra_id'); // Puede ser null
+    // }
 }

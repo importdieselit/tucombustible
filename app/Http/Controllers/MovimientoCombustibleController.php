@@ -409,7 +409,9 @@ public function createPrecarga()
             if($cliente){
                 $texto.=$cliente->nombre.' ';
             }
-            if($vehiculo)
+            if($vehiculo){
+                $texto.='unidad '.$vehiculo->flota.' ';
+            }
             // Crear el registro del movimiento
             $movimiento = new MovimientoCombustible();
             $movimiento->created_at = $request->fecha;
@@ -418,7 +420,7 @@ public function createPrecarga()
             $movimiento->cliente_id = $request->cliente_id;
             $movimiento->vehiculo_id = $request->vehiculo_id;
             $movimiento->cantidad_litros = $request->cantidad_litros;
-            $movimiento->observaciones = $request->observaciones;
+            $movimiento->observaciones = $texto.$request->observaciones;
             $movimiento->save();
 
             // Actualizar el nivel actual del depósito
