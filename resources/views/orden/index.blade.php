@@ -4,7 +4,6 @@
 
 @section('content')
 <div class="container-fluid mt-4">
-     @if(Auth::user()->canAccess('create', 10))
     <div class="row page-titles mb-4">
         
         <div class="col-12 d-flex justify-content-between align-items-center">
@@ -14,7 +13,6 @@
             </a>
         </div>
     </div>
-    @endif
 
     {{-- Filtros --}}
     {{-- Primera fila de métricas --}}

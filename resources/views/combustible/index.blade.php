@@ -265,6 +265,14 @@
                     </div>
                 </a>
             </div>
+            <div class="col-12 col-md-6 col-lg-3">
+                <a href="{{route('combustible.list')}}" class="card-link" >
+                    <div class="card h-100 p-4 d-flex flex-column justify-content-center text-center">
+                        <i class="fas fa-list stat-card-icon mb-2 text-black"></i>
+                        <h3 class="fw-bold mb-1">Ver Movimientos</h3>
+                    </div>
+                </a>
+            </div>
 
             <div class="col-12 col-md-6 col-lg-3">
                 <a href="{{route('combustible.pedidos')}}" class="card-link" >
