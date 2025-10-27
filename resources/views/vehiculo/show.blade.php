@@ -127,7 +127,7 @@
                             @if ($estatusInfo)
                                 <span class="badge bg-{{ $estatusInfo['css'] }}" title="{{ $estatusInfo['descripcion'] }}">
                                     <i class="mr-1 fa-solid {{ $estatusInfo['icon'] }}"></i>
-                                    {{ $estatusInfo['nombre'] }}
+                                    {{ $estatusInfo['auto'] }}
                                     @if($orden)
                                         hace {{$duracionDias ?? 0}} dias
                                     @endif
