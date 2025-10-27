@@ -72,7 +72,7 @@
             if($orden){
                 $fecha=$orden->fecha_in;
                 $duracionDias = Illuminate\Support\Carbon::parse($fecha)->diffInDays(Illuminate\Support\Carbon::parse(now()));
-                $insumos_usados = InventarioSuministro::with('inventario')->where('id_orden', $orden->id)->get();
+                $insumos_usados = App\Models\InventarioSuministro::with('inventario')->where('id_orden', $orden->id)->get();
             
             }
         @endphp
