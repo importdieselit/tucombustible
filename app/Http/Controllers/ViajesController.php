@@ -565,4 +565,97 @@ class ViajesController extends Controller
         ]);
     }
 
+    /**
+     * API: Obtener datos del calendario de viajes (para Flutter)
+     */
+    public function getCalendarioApi(Request $request)
+    {
+        try {
+            // Consulta con las relaciones necesarias
+            $query = Viaje::with(['chofer.persona', 'ayudante_chofer.persona', 'vehiculo', 'despachos.cliente', 'viaticos']);
+            
+            // Filtrar por rango de fechas si se proporciona
+            if ($request->has('fecha_inicio')) {
+                $query->whereDate('fecha_salida', '>=', $request->fecha_inicio);
+            }
+            
+            if ($request->has('fecha_fin')) {
+                $query->whereDate('fecha_salida', '<=', $request->fecha_fin);
+            }
+            
+            // Excluir cancelados
+            $query->where('status', '!=', 'CANCELADO');
+            
+            $viajes = $query->orderBy('fecha_salida', 'asc')->get();
+            
+            // Transformar al formato para la app
+            $viajesData = $viajes->map(function ($viaje) {
+                // Calcular total de litros
+                $totalLitros = $viaje->despachos->sum('litros');
+                
+                // Verificar si tiene pernocta
+                $tienePernocta = $viaje->viaticos->contains(function ($viatico) {
+                    return stripos($viatico->concepto, 'pernocta') !== false && 
+                           ($viatico->monto_ajustado ?? $viatico->monto_base) > 0;
+                });
+                
+                $duracionDias = $tienePernocta ? 2 : 1;
+                
+                return [
+                    'id' => $viaje->id,
+                    'destino_ciudad' => $viaje->destino_ciudad,
+                    'fecha_salida' => $viaje->fecha_salida,
+                    'status' => $viaje->status,
+                    'duracion_dias' => $duracionDias,
+                    'total_litros' => $totalLitros,
+                    
+                    // Información del chofer
+                    'chofer' => [
+                        'id' => $viaje->chofer_id,
+                        'nombre' => $viaje->chofer->persona->nombre ?? 'PENDIENTE',
+                    ],
+                    
+                    // Información del ayudante
+                    'ayudante' => $viaje->ayudante ? [
+                        'id' => $viaje->ayudante,
+                        'nombre' => $viaje->ayudante_chofer->persona->nombre ?? 'N/A',
+                    ] : null,
+                    
+                    // Información del vehículo
+                    'vehiculo' => [
+                        'id' => $viaje->vehiculo_id,
+                        'flota' => $viaje->vehiculo->flota ?? 'PENDIENTE',
+                        'placa' => $viaje->vehiculo->placa ?? 'N/A',
+                    ],
+                    
+                    // Despachos
+                    'despachos' => $viaje->despachos->map(function($despacho) {
+                        return [
+                            'id' => $despacho->id,
+                            'cliente_id' => $despacho->cliente_id,
+                            'cliente_nombre' => $despacho->cliente->nombre ?? $despacho->otro_cliente ?? 'Cliente Desconocido',
+                            'litros' => $despacho->litros,
+                        ];
+                    }),
+                    
+                    // Información adicional
+                    'custodia_count' => $viaje->custodia_count ?? 0,
+                    'has_viatico' => $viaje->has_viatico ?? false,
+                ];
+            });
+            
+            return response()->json([
+                'success' => true,
+                'viajes' => $viajesData,
+            ], 200);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener calendario de viajes',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 }

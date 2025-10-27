@@ -23,6 +23,8 @@ use App\Http\Controllers\Apis\ReportesController;
 use App\Http\Controllers\Api\ChecklistController;
 use App\Http\Controllers\IntegracionIAController;
 use App\Http\Controllers\Apis\ConductorController;
+use App\Http\Controllers\Apis\IncidenciaController;
+use App\Http\Controllers\ViajesController;
 
 
 /*
@@ -264,13 +266,28 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/pedidos/{pedidoId}/iniciar-viaje', [ConductorController::class, 'iniciarViaje']);
         Route::post('/pedidos/{pedidoId}/completar-entrega', [ConductorController::class, 'completarEntrega']);
         
-        // Incidencias
+        // Incidencias (antiguas - relacionadas con pedidos)
         Route::post('/pedidos/{pedidoId}/reportar-incidencia', [ConductorController::class, 'reportarIncidencia']);
-        Route::get('/incidencias', [ConductorController::class, 'incidencias']);
+        Route::get('/incidencias-pedidos', [ConductorController::class, 'incidencias']);
         
         // Disponibilidad
         Route::post('/actualizar-disponibilidad', [ConductorController::class, 'actualizarDisponibilidad']);
     });
+    
+    // Incidencias (nuevo sistema completo)
+    Route::prefix('incidencias')->group(function () {
+        // Rutas para conductores
+        Route::get('/', [IncidenciaController::class, 'index']); // Listar mis incidencias
+        Route::post('/', [IncidenciaController::class, 'store']); // Crear incidencia
+        Route::get('/{id}', [IncidenciaController::class, 'show']); // Ver detalle
+        
+        // Rutas para administradores
+        Route::get('/admin/todas', [IncidenciaController::class, 'indexAdmin']); // Listar todas (admin)
+        Route::patch('/admin/{id}/estado', [IncidenciaController::class, 'updateEstado']); // Actualizar estado (admin)
+    });
+    
+    // Viajes - Calendario (Solo Super Admin)
+    Route::get('/viajes/calendario', [ViajesController::class, 'getCalendarioApi']);
     
 }); 
 
