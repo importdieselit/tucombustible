@@ -128,20 +128,6 @@
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="marca" class="form-label">Marca <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('marca') is-invalid @enderror" id="marca" name="marca" value="{{ old('marca') }}">
-                            @error('marca')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="modelo" class="form-label">Modelo <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('modelo') is-invalid @enderror" id="modelo" name="modelo" value="{{ old('modelo') }}">
-                            @error('modelo')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-6 mb-3">
                             <label for="nombre_despacho" class="form-label">Nombre de a quien se Despachó <span class="text-danger">*</span></label>
                             <input type="text" class="form-control @error('nombre_despacho') is-invalid @enderror" id="nombre_despacho" name="nombre_despacho" value="{{ old('nombre_despacho') }}">
                             @error('nombre_despacho')

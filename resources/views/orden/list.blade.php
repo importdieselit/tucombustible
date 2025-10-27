@@ -7,7 +7,10 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/2.0.7/css/dataTables.dataTables.css" />
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.dataTables.css" />
 @endpush
-
+@php
+    $data->sortBy('id','desc');
+@endphp
+@endphp
 @section('content')
 <div class="row mb-4">
     <div class="col-12">
