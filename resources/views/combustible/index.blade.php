@@ -250,7 +250,7 @@
                         <i class="fas fa-truck-ramp-box stat-card-icon mb-2 text-warning"></i>
                         <h4 class="fw-bold mb-1">Compras</h4>
                         <h3>{{ $totales['entradas'] }} Ltrs</h3>
-                        <h5>desde {{date('d/m/Y',$totales['periodo_inicio'])}}</h5>
+                        <h5>desde {{date('d/m/Y',strtotime($totales['periodo_inicio']))}}</h5>
                     </div>
                 
             </div>
