@@ -244,6 +244,13 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
                         <h2 class="fw-bold">{{ $eficienciaFlota }}%</h2>
                         <small class="text-muted">Último mes</small>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <div class="card-body d-flex align-items-center">
                     <div>
                         <h5 class="card-title mb-0">Mantenimientos Programados</h5>
                         <h2 class="fw-bold">{{ $programados }}</h2>
