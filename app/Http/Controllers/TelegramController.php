@@ -180,7 +180,7 @@ public function handleWebhook(Request $request)
     protected function processMessage(string $text): string
     {
         // Usar REGEX (Expresiones Regulares) para buscar el patrón específico
-        $pattern = '/abastecio unidad de (.+?) con el surtidor tanque (.+?) (\d+) litros/i';
+        $pattern = '/abastecio unidad de (.+?) con el del surtidor tanque (.+?) (\d+) litros/i';
         
         if (preg_match($pattern, $text, $matches)) {
             $cliente_txt = trim($matches[1]);
