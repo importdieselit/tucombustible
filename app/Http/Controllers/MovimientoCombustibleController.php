@@ -403,7 +403,13 @@ public function createPrecarga()
                 Session::flash('error', 'No hay suficiente combustible en el depósito. Nivel actual: ' . $deposito->nivel_actual_litros . ' L.');
                 return Redirect::back()->withInput();
             }
-
+            $cliente=Cliente::find($request->cliente_id);
+            $vehiculo=Vehiculo::find($request->vehiculo_id);
+            $texto='Carga a ';
+            if($cliente){
+                $texto.=$cliente->nombre.' ';
+            }
+            if($vehiculo)
             // Crear el registro del movimiento
             $movimiento = new MovimientoCombustible();
             $movimiento->created_at = $request->fecha;
