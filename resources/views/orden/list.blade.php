@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.dataTables.css" />
 @endpush
 @php
-    $data->sortBy('id','desc');
+    $data->orderBy('id','desc');
 @endphp
 @endphp
 @section('content')
