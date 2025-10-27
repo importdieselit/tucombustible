@@ -78,6 +78,7 @@
                                                 <p>Cliente: {{ $movimiento->cliente->nombre }}</p>
                                             @endif
                                             @if($movimiento->cisterna)
+                                                {{dd($movimiento->cisterna)}}
                                                 <p>Cisterna: {{ $movimiento->cisterna()->flota }}</p>
                                             @endif
                                             @if($movimiento->vehiculo)
