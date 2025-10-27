@@ -25,11 +25,14 @@
                     <i class="bi bi-check-circle"></i> Reactivar Orden
                 </button>
             @endif
+            <button id="print" class="btn btn-primary">
+                    <i class="fa fa-print"></i> Imprimir
+            </button>
         </div>
     </div>
 </div>
 
-<div class="card shadow-sm mb-4">
+<div class="card shadow-sm mb-4 printableArea">
     <div class="card-header bg-white">
         <h5 class="card-title m-0">Detalles de la Orden</h5>
     </div>
