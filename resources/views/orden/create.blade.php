@@ -278,7 +278,7 @@
                 method: 'GET',
                 data: { query: query },
                 success: function(response) {
-                    renderSearchResults(response.data); // Asume que el controlador devuelve { data: [...] }
+                    renderSearchResults(response); // Asume que el controlador devuelve { data: [...] }
                 },
                 error: function(xhr) {
                     searchResultsBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error al cargar el inventario.</td></tr>';
