@@ -66,9 +66,9 @@
             $costoPorKm = $kmTotales > 0 ? $gastoCombustible / $kmTotales : 0;
             @endphp
 @endphp
-@if($vehiculo->estatus==3 || $vehiculo->estatus ==5)
+@if($item->estatus==3 || $item->estatus ==5)
         @php
-            $orden=App\Models\Orden::where('id_vehiculo',$vehiculo->id)->where('estatus',2)->get()->first();
+            $orden=App\Models\Orden::where('id_vehiculo',$item->id)->where('estatus',2)->get()->first();
             if($orden){
                 $fecha=$orden->fecha_in;
                 $duracionDias = Illuminate\Support\Carbon::parse($fecha)->diffInDays(Illuminate\Support\Carbon::parse(now()));
@@ -178,7 +178,7 @@
         </div>
     </div>
 
-    @if($vehiculo->estatus==3 || $vehiculo->estatus ==5)
+    @if($item->estatus==3 || $item->estatus ==5)
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-white">
                 <h5 class="card-title m-0">Detalles de la Orden</h5>
