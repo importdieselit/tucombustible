@@ -282,7 +282,7 @@
             searchResultsBody.innerHTML = '<tr><td colspan="5" class="text-center"><i class="bi bi-arrow-clockwise spin"></i> Buscando...</td></tr>';
             
             // Reemplaza con tu ruta real de API
-            const searchUrl = '{{ route('inventario.search') }}'; 
+            const searchUrl = '{{ route('ordenes.search-supplies') }}'; 
 
             $.ajax({
                 url: searchUrl,

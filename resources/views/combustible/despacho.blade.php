@@ -155,19 +155,12 @@
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="vehiculo_surtido" class="form-label">Vehículo Surtido (del cliente) <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('vehiculo_surtido') is-invalid @enderror" id="vehiculo_surtido" name="vehiculo_surtido" value="{{ old('vehiculo_surtido') }}">
-                            @error('vehiculo_surtido')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-6 mb-3">
                             <label for="cisterna_id" class="form-label">Cisterna Utilizada <span class="text-danger">*</span></label>
                             <select class="form-select @error('cisterna_id') is-invalid @enderror" id="cisterna_id" name="cisterna_id">
                                 <option value="">Seleccione una cisterna</option>
                                 @foreach ($cisternas as $cisterna)
                                     <option value="{{ $cisterna->id }}" {{ old('cisterna_id') == $cisterna->id ? 'selected' : '' }}>
-                                        {{ $cisterna->placa }} - {{ $cisterna->serial }}
+                                        {{ $cisterna->flota }} {{ $cisterna->placa }}
                                     </option>
                                 @endforeach
                             </select>
