@@ -56,6 +56,8 @@ Route::get('/politica-eliminacion-datos', [DataDeletionController::class, 'showR
 // Usamos el mismo endpoint que definimos antes para simplificar.
 Route::post('/solicitud-eliminacion-datos', [DataDeletionController::class, 'submitRequest'])->name('data.deletion.submit');
 
+Route::post('/telegram/webhook', [TelegramController::class, 'handleWebhook']);
+
 Route::middleware(['auth'])->group(function () {
     // Dashboard principal
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

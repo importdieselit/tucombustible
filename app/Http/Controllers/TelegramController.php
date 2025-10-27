@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Deposito;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use App\Models\Cliente;
 use App\Services\TelegramNotificationService;
 
 class TelegramController extends Controller
@@ -124,5 +126,70 @@ class TelegramController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+
+    public function handleWebhook(Request $request)
+    {
+        Log::info('Webhook de Telegram recibido:', $request->all());
+
+        $data = $request->all();
+        $message = $data['message'] ?? null;
+
+        // Si no hay mensaje o texto, ignorar
+        if (!$message || !isset($message['text'])) {
+            return response()->json(['status' => 'ignored'], 200);
+        }
+
+        $chatId = $message['chat']['id'];
+        $text = $message['text'];
+
+        // 1. Detectar el patrón y ejecutar la acción
+        $response = $this->processMessage($text);
+
+        // 2. Enviar respuesta de vuelta al usuario
+        $this->sendTelegramMessage($chatId, $response);
+
+        return response()->json(['status' => 'success'], 200);
+    }
+
+    /**
+     * Lógica principal para detectar el patrón y actualizar la DB.
+     * Ejemplo: "despacho a cliente X de tanque Y 100 litros"
+     */
+    protected function processMessage(string $text): string
+    {
+        // Usar REGEX (Expresiones Regulares) para buscar el patrón específico
+        $pattern = '/abastecio unidad de (.+?) con el surtidor tanque (.+?) (\d+) litros/i';
+        
+        if (preg_match($pattern, $text, $matches)) {
+            // $matches[1]: nombre del cliente
+            // $matches[2]: nombre del tanque/depósito
+            // $matches[3]: cantidad (litros)
+            
+            $cliente_txt = trim($matches[1]);
+            $tanque_txt = trim($matches[2]);
+            $cantidad = (int)$matches[3];
+
+            $cliente= Cliente::where('nombre','like','%'.$cliente_txt.'%')->get()->first();
+            $tanque= Deposito::where('serial','like',$tanque_txt)->get()->first();
+
+            // --- Lógica de Base de Datos ---
+            
+            // Simulación de la actualización de la DB (Asegúrate de implementar la lógica real)
+            // Ejemplo: $tanqueModel = Tanque::where('nombre', $tanque)->first();
+            // if ($tanqueModel) {
+            //     $tanqueModel->stock -= $cantidad;
+            //     $tanqueModel->save();
+            //     return "✅ Despacho de {$cantidad}L al cliente '{$cliente}' registrado. El tanque '{$tanque}' actualizado.";
+            // }
+
+            return "✅ Despacho detectado y procesado: Cliente: **{$cliente->nombre}**, Tanque: **{$tanque->serial}**, Cantidad: **{$cantidad}** litros. (Simulación de DB)";
+
+        } else if (strtolower($text) === '/start' || strtolower($text) === 'hola') {
+            return "¡Hola! Soy el Bot de Reporte de Despachos. Puedes reportar una acción con el formato: 'despacho a cliente [NOMBRE] de tanque [NOMBRE] [CANTIDAD] litros'.";
+        }
+        
+        return "Lo siento, no entendí el formato. Por favor, usa el formato: 'despacho a cliente [NOMBRE] de tanque [NOMBRE] [CANTIDAD] litros'.";
     }
 }
