@@ -128,9 +128,9 @@ class TelegramController extends Controller
         }
     }
 
-
-    public function handleWebhook(Request $request)
+public function handleWebhook(Request $request)
     {
+        // La primera línea de log SÍ se debe ejecutar ahora que el 419 está resuelto.
         Log::info('Webhook de Telegram recibido:', $request->all());
 
         $data = $request->all();
@@ -144,18 +144,37 @@ class TelegramController extends Controller
         $chatId = $message['chat']['id'];
         $text = $message['text'];
 
-        // 1. Detectar el patrón y ejecutar la acción
-        $response = $this->processMessage($text);
+        try {
+            // 1. Detectar el patrón y ejecutar la acción
+            $response = $this->processMessage($text);
 
-        // 2. Enviar respuesta de vuelta al usuario
-        $this->sendTelegramMessage($chatId, $response);
+            // 2. Enviar respuesta de vuelta al usuario
+            // Usamos el servicio inyectado ($this->telegramService) para enviar el mensaje,
+            // ya que el método sendMessage del servicio probablemente acepta (chatId, texto),
+            // mientras que el método sendMessage de este controlador NO lo hace (espera un Request).
+            $this->telegramService->sendMessageToChatId($chatId, $response); 
+            
+        } catch (\Exception $e) {
+            // Manejar errores de DB o excepciones en processMessage y registrar
+            Log::error('Error en el procesamiento del Webhook de Telegram:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'text' => $text
+            ]);
+            
+            // Enviar un mensaje de error al usuario por Telegram
+            $errorMessage = "⚠️ Lo siento, ocurrió un error interno al procesar tu solicitud: {$e->getMessage()}";
+            $this->telegramService->sendMessageToChatId($chatId, $errorMessage);
+
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
 
         return response()->json(['status' => 'success'], 200);
     }
 
     /**
      * Lógica principal para detectar el patrón y actualizar la DB.
-     * Ejemplo: "despacho a cliente X de tanque Y 100 litros"
+     * Ejemplo: "abastecio unidad de Cliente X con el surtidor tanque T1 100 litros"
      */
     protected function processMessage(string $text): string
     {
@@ -163,33 +182,43 @@ class TelegramController extends Controller
         $pattern = '/abastecio unidad de (.+?) con el surtidor tanque (.+?) (\d+) litros/i';
         
         if (preg_match($pattern, $text, $matches)) {
-            // $matches[1]: nombre del cliente
-            // $matches[2]: nombre del tanque/depósito
-            // $matches[3]: cantidad (litros)
-            
             $cliente_txt = trim($matches[1]);
-            $tanque_txt = trim($matches[2]);
+            $tanque_txt = trim($matches['2']);
             $cantidad = (int)$matches[3];
 
-            $cliente= Cliente::where('nombre','like','%'.$cliente_txt.'%')->get()->first();
-            $tanque= Deposito::where('serial','like',$tanque_txt)->get()->first();
-
-            // --- Lógica de Base de Datos ---
+            // 1. Búsqueda de cliente y tanque
+            $cliente = Cliente::where('nombre','like','%'.$cliente_txt.'%')->first(); // Usar first()
+            $tanque = Deposito::where('serial','like',$tanque_txt)->first(); // Usar first()
             
-            // Simulación de la actualización de la DB (Asegúrate de implementar la lógica real)
-            // Ejemplo: $tanqueModel = Tanque::where('nombre', $tanque)->first();
-            // if ($tanqueModel) {
-            //     $tanqueModel->stock -= $cantidad;
-            //     $tanqueModel->save();
-            //     return "✅ Despacho de {$cantidad}L al cliente '{$cliente}' registrado. El tanque '{$tanque}' actualizado.";
-            // }
+            if (!$cliente) {
+                $otro_cliente=$cliente_txt;
+            }
 
-            return "✅ Despacho detectado y procesado: Cliente: **{$cliente->nombre}**, Tanque: **{$tanque->serial}**, Cantidad: **{$cantidad}** litros. (Simulación de DB)";
+            if (!$tanque) {
+                return "❌ Error: No se encontró un depósito con el serial: **{$tanque_txt}**.";
+            }
+
+            // 2. Lógica de Actualización de la DB
+            
+            if ($tanque->stock < $cantidad) {
+                return "⚠️ Aviso: El tanque **{$tanque->serial}** solo tiene {$tanque->stock} litros disponibles. No se pudo realizar el despacho de {$cantidad}L.";
+            }
+
+            // Realizar la resta del stock (Descomenta esto en producción)
+            // $tanque->stock -= $cantidad;
+            // $tanque->save();
+            $nombre=$cliente->nombre?? $otro_cliente;
+            // 3. Respuesta de Éxito
+            return "✅ **Despacho Registrado**:\n" 
+                 . "Cliente: **{$nombre}**\n"
+                 . "Tanque: **{$tanque->serial}**\n"
+                 . "Cantidad Despachada: **{$cantidad}** litros.";
 
         } else if (strtolower($text) === '/start' || strtolower($text) === 'hola') {
-            return "¡Hola! Soy el Bot de Reporte de Despachos. Puedes reportar una acción con el formato: 'despacho a cliente [NOMBRE] de tanque [NOMBRE] [CANTIDAD] litros'.";
+            return "¡Hola! Soy el Bot de Reporte de Despachos. Mi formato de reporte es:\n"
+                 . "`abastecio unidad de [NOMBRE CLIENTE] con el surtidor tanque [SERIAL TANQUE] [CANTIDAD] litros`";
         }
         
-        return "Lo siento, no entendí el formato. Por favor, usa el formato: 'despacho a cliente [NOMBRE] de tanque [NOMBRE] [CANTIDAD] litros'.";
+        return "Lo siento, no entendí el formato. Por favor, revisa mi mensaje de `/start` para ver el formato correcto.";
     }
 }

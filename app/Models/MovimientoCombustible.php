@@ -21,6 +21,7 @@ class MovimientoCombustible extends Model
         'deposito_id',
         'proveedor_id',
         'cliente_id',
+        'otro_cliente',
         'cantidad_litros',
         'observaciones',
         'vehiculo_id',
