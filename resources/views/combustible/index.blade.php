@@ -248,8 +248,8 @@
             <div class="col-12 col-md-6 col-lg-3">
                     <div class="card h-100 p-4 d-flex flex-column justify-content-center text-center">
                         <i class="fas fa-truck-ramp-box stat-card-icon mb-2 text-warning"></i>
-                        <h3 class="fw-bold mb-1">Compras</h3>
-                        <p class="text-muted mb-0">{{ $totales['entradas'] }} Ltrs</p>
+                        <h4 class="fw-bold mb-1">Compras</h4>
+                        <h3>{{ $totales['entradas'] }} Ltrs</h3>
                         <h5>desde {{$totales['periodo_inicio']}}</h5>
                     </div>
                 
