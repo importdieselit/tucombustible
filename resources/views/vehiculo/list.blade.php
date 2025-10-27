@@ -75,6 +75,7 @@
                 </thead>
                 <tbody>
                     @foreach ($data as $index => $vehiculo)
+                    @php($orden=false);
                      @if($vehiculo->estatus==3 || $vehiculo->estatus ==5)
                         @php
                             $orden=App/Models/Orden::where('id_vehiculo',$vehiculo->id)->where('estatus',2)->get()->first();
