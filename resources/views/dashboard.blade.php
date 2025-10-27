@@ -246,8 +246,8 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
                     </div>
                     <div>
                         <h5 class="card-title mb-0">Mantenimientos Programados</h5>
-                        <h2 class="fw-bold">{{ $Pprogramados }}</h2>
-                        <h2 class="fw-bold text-danger">{{ $PprogramadosHoy }} hoy</h2>
+                        <h2 class="fw-bold">{{ $programados }}</h2>
+                        <h2 class="fw-bold text-danger">{{ $programadosHoy }} hoy</h2>
                         <small class="text-muted">Último mes</small>
                     </div>
                 </div>

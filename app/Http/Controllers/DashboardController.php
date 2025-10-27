@@ -6,6 +6,7 @@ use App\Models\Vehiculo;
 use App\Models\User;
 use App\Models\Orden;
 use App\Models\Tanque;
+use App\Models\MantenimientoProgramado;
 use App\Models\Cliente;
 use App\Models\Pedido;
 use App\Models\MovimientoCombustible;
@@ -55,6 +56,8 @@ class DashboardController extends Controller
         $unidades_con_orden_abierta = Vehiculo::VehiculosConOrdenAbierta()->count();
         $unidades_en_mantenimiento = Vehiculo::countVehiculosEnMantenimiento();
         $unidades_disponibles = Vehiculo::where('es_flota',true)->where('estatus',1)->count();
+        $programados=MantenimientoProgramado::whereDate('fecha','>=',now())->count();
+        $programadosHoy=MantenimientoProgramado::whereDate('fecha',now())->count();
 
         // Puedes añadir más información, como las últimas 5 órdenes
         $ultimasOrdenes = Orden::orderBy('id', 'desc')->take(5)->get();
@@ -67,7 +70,9 @@ class DashboardController extends Controller
             'ultimasOrdenes',
             'unidades_con_orden_abierta',
             'unidades_en_mantenimiento',
-            'unidades_disponibles'
+            'unidades_disponibles',
+            'programados',
+            'programadosHoy'
         ));
     }
 }
