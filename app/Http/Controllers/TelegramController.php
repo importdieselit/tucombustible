@@ -147,12 +147,13 @@ public function handleWebhook(Request $request)
         try {
             // 1. Detectar el patrón y ejecutar la acción
             $response = $this->processMessage($text);
+            Log::info($response);
 
             // 2. Enviar respuesta de vuelta al usuario
             // Usamos el servicio inyectado ($this->telegramService) para enviar el mensaje,
             // ya que el método sendMessage del servicio probablemente acepta (chatId, texto),
             // mientras que el método sendMessage de este controlador NO lo hace (espera un Request).
-            $this->telegramService->sendMessageToChatId($chatId, $response); 
+            $this->telegramService->sendMessage($response); 
             
         } catch (\Exception $e) {
             // Manejar errores de DB o excepciones en processMessage y registrar
@@ -164,7 +165,7 @@ public function handleWebhook(Request $request)
             
             // Enviar un mensaje de error al usuario por Telegram
             $errorMessage = "⚠️ Lo siento, ocurrió un error interno al procesar tu solicitud: {$e->getMessage()}";
-            $this->telegramService->sendMessageToChatId($chatId, $errorMessage);
+            $this->telegramService->sendMessage($errorMessage);
 
             return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
