@@ -307,9 +307,14 @@
             {{-- <button class="btn btn-primary-custom btn-lg rounded-pill px-4 py-2 shadow-lg fs-5" data-bs-toggle="modal" data-bs-target="#hacerPedidoModal">
                 <i class="fas fa-plus-circle me-2"></i> Hacer Pedido
             </button> --}}
-            <button class="btn btn-primary-custom btn-lg rounded-pill px-4 py-2 shadow-lg fs-5" id="btn-crear-despacho">
+            <a href="{{route('combustible.recarga')}}" class="btn btn-primary-custom btn-lg rounded-pill px-4 py-2 shadow-lg fs-5" id="btn-crear-carga">
+                <i class="fa fa-truck me-2"></i> Carga
+            </a>
+            
+            <a href="{{route('despachos.list')}}" class="btn btn-primary-custom btn-lg rounded-pill px-4 py-2 shadow-lg fs-5" id="btn-crear-">
                 <i class="fa fa-truck me-2"></i> Nuevo Despacho
-            </button>
+            </a>
+
 
             <button class="btn btn-warning btn-lg rounded-pill px-4 py-2 shadow-lg fs-5" id="btn-inspeccion-salida">
                 <i class="fa fa-clipboard-check me-2"></i> Checkout Vehículo
