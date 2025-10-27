@@ -147,6 +147,11 @@ public function handleWebhook(Request $request)
         $text = $message['text'];
 
         try {
+            Log::info('enviando. '.json_encode([
+                'userId' => $chatId,
+                'text' => $text,
+                'source_app' => 'Laravel-Telegram-Proxy'
+            ]));
             $botpressResponse = Http::post($botpressUrl, [
                 // Botpress necesita un ID de usuario único para la sesión.
                 // Usamos el chatId de Telegram como ID de usuario de Botpress.
@@ -156,7 +161,7 @@ public function handleWebhook(Request $request)
                 // Otros parámetros requeridos por tu Botpress
             ])->json();
             
-            Log::info('enviando '.$botpressResponse);
+            Log::info('recibiendo: '.$botpressResponse);
             
             // ----------------------------------------------------
             // PASO 2: Procesar la respuesta de Botpress
