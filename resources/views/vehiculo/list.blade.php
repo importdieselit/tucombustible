@@ -102,7 +102,7 @@
                             @endphp
                             @if ($estatusInfo)
                                 @if($orden)
-                                 <a href="{{route('ordenes',$orden->id)}}" style="decoration:none; cursor: pointer;" target="_blank">   
+                                 <a href="/ordenes/{{$orden->id}} " style="decoration:none; cursor: pointer;" target="_blank" >   
                                 @endif
                                 <span class="badge bg-{{ $estatusInfo->css }}" title="{{ $estatusInfo->descripcion }}">
                                     <i class="mr-1 fa-solid {{ $estatusInfo->icon_auto }}"></i>
