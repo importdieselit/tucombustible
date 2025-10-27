@@ -73,7 +73,7 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
                                         {{-- Lógica condicional para mostrar los detalles del movimiento --}}
                 
-                                        @if($movimiento->tipo == 'salida')
+                                        @if($movimiento->tipo_movimiento == 'salida')
                                             @if($movimiento->cliente)
                                                 <p>Cliente: {{ $movimiento->cliente->nombre }}</p>
                                             @endif
@@ -83,7 +83,7 @@
                                             @if($movimiento->vehiculo)
                                                 <p>Vehículo: {{ $movimiento->vehiculo->placa }}</p>
                                             @endif
-                                        @elseif($movimiento->tipo == 'entrada')
+                                        @elseif($movimiento->tipo_movimiento == 'entrada')
                                             @if($movimiento->proveedor)
                                                 <p>Proveedor: {{ $movimiento->proveedor->nombre }}</p>
                                             @endif
