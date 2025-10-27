@@ -272,6 +272,8 @@ Route::put('/viajes/{id}/assign', [ViajesController::class, 'processAssignment']
     ->name('telegram.send.photo');
     Route::post('/send-telegram-message', [TelegramController::class, 'sendMessage'])->name('telegram.send.message');
 
+    Route::get('eventos', [ViajesController::class, 'getCombinedEventos'])->name('eventos');
+
      Route::get('/mantenimiento/planificacion', [PlanificacionMantenimientoController::class, 'index'])
          ->name('mantenimiento.planificacion.index');
     

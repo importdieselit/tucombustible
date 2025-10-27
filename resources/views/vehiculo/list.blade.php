@@ -75,6 +75,15 @@
                 </thead>
                 <tbody>
                     @foreach ($data as $index => $vehiculo)
+                     @if($vehiculo->estatus==3 || $vehiculo->estatus ==5)
+                        @php
+                            $orden=App/Models/Orden::where('id_vehiculo',$vehiculo->id)->where('estatus',2)->get()->first();
+                            if($orden){
+                                $fecha=$orden->fecha_in;
+                                $duracionDias = Carbon::parse($fecha)->diffInDays(Carbon::parse(now()));
+                            }
+                            @endphp
+                        @endif
                     <tr class="clickable-row" data-id="{{ $vehiculo->id }}">
                         <td>{{ $index + 1 }}</td>
                         <td>{{ $vehiculo->flota ?? 'N/A' }}</td>
@@ -90,10 +99,18 @@
                                 $estatusInfo = $estatusData->get($vehiculo->estatus);
                             @endphp
                             @if ($estatusInfo)
+                                @if($orden)
+                                 <a href="{{route('ordenes.show',['id'=>$orden->id])}}" style="decoration:none; cursor: pointer;" target="_blank">   
+                                @endif
                                 <span class="badge bg-{{ $estatusInfo->css }}" title="{{ $estatusInfo->descripcion }}">
                                     <i class="mr-1 fa-solid {{ $estatusInfo->icon_auto }}"></i>
-                                    {{ $estatusInfo->auto }}
+                                    @if($orden)
+                                        hace {{$duracionDias ?? 0}} dias
+                                    @endif
                                 </span>
+                                @if($orden)
+                                </a> 
+                                @endif
                             @else
                                 <span class="badge bg-gray">Desconocido</span>
                             @endif

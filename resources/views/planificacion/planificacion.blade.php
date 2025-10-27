@@ -138,7 +138,7 @@
                         title: `Planificación de Mantenimiento`,
                         html: `
                             <p class="text-start mt-3">
-                                <strong>Vehículo:</strong> ${info.event.title.split(']')[0].replace('[', '')}]<br>
+                                <strong>Vehículo:</strong> ${info.event.title.split(']')[0].replace('[', '')}<br>
                                 <strong>Placa:</strong> ${props.placa}<br>
                                 <strong>Tipo:</strong> ${props.tipo}<br>
                                 <strong>Fecha:</strong> ${info.event.start.toLocaleDateString()}<br>

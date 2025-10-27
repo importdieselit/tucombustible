@@ -106,6 +106,26 @@ class MovimientoCombustibleController extends Controller
         $camionesCargados = VehiculoPrecargado::where('estatus', 0)->count();
         $vehiculosDisponibles = Vehiculo::where('estatus', 1)->where('id_cliente',$user->cliente_id)->get();
         $vehiculos = Vehiculo::where('estatus', 1)->where('es_flota',true)->get();
+
+        $fechaInicio = Carbon::now()->subDays(30)->toDateString();
+        $resumen = DB::table('movimiento_combustible')
+            ->where('created_at', '>=', $fechaInicio)
+            ->groupBy('tipo_movimiento')
+            ->select('tipo_movimiento', DB::raw('SUM(litros) as total_litros'))
+            ->get();
+
+        // 3. Formatear el resultado para un objeto de resumen
+        $totales = ['entradas' => 0.0, 'salidas' => 0.0,'periodo_inicio' => $fechaInicio,'periodo_fin' => Carbon::now()->toDateString(),];
+
+        foreach ($resumen as $movimiento) {
+            $tipo = strtolower($movimiento->tipo_movimiento);
+            if (str_contains($tipo, 'entrada')) {
+                $totales['entradas'] = (float) $movimiento->total_litros;
+            } elseif (str_contains($tipo, 'salida')) {
+                $totales['salidas'] = (float) $movimiento->total_litros;
+            }
+        }
+
         // Pasamos todos los datos a la vista.
         return view('combustible.index', compact(
             'clientes', 
@@ -120,7 +140,8 @@ class MovimientoCombustibleController extends Controller
             'pedidos',
             'vehiculosDisponibles',
             'tanquesDisponibles',
-            'vehiculos'
+            'vehiculos',
+            'totales'
         ));
     }
 
