@@ -108,8 +108,7 @@ class MovimientoCombustibleController extends Controller
         $vehiculos = Vehiculo::where('estatus', 1)->where('es_flota',true)->get();
 
         $fechaInicio = Carbon::now()->subDays(30)->toDateString();
-        $resumen = DB::table('movimiento_combustible')
-            ->where('created_at', '>=', $fechaInicio)
+        $resumen = MovimientoCombustible::where('created_at', '>=', $fechaInicio)
             ->groupBy('tipo_movimiento')
             ->select('tipo_movimiento', DB::raw('SUM(litros) as total_litros'))
             ->get();
