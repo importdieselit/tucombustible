@@ -311,7 +311,7 @@
                 <i class="fa fa-truck me-2"></i> Carga
             </a>
             
-            <a href="{{route('despachos.list')}}" class="btn btn-primary-custom btn-lg rounded-pill px-4 py-2 shadow-lg fs-5" id="btn-crear-">
+            <a href="{{route('combustible.despacho')}}" class="btn btn-primary-custom btn-lg rounded-pill px-4 py-2 shadow-lg fs-5" id="btn-crear-">
                 <i class="fa fa-truck me-2"></i> Nuevo Despacho
             </a>
 
