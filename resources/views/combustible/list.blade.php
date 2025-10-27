@@ -20,39 +20,39 @@
 @endpush
 
 @section('content')
-    <div class="bg-slate-900 text-slate-100 font-sans p-4 min-h-screen">
+    <div class="font-sans p-4 min-h-screen">
         <div class="container mx-auto max-w-7xl">
-            <h1 class="text-3xl font-bold mb-6 text-center text-slate-200">Listado de Movimientos de Combustible</h1>
+            <h1 class="text-3xl font-bold mb-6 text-center ">Listado de Movimientos de Combustible</h1>
             
-            <div class="bg-slate-800 p-6 rounded-lg shadow-lg">
+            <div class=" p-6 rounded-lg shadow-lg">
                 <div class="overflow-x-auto rounded-lg">
-                    <table class="min-w-full divide-y divide-slate-700">
-                        <thead class="bg-slate-700">
+                    <table class="min-w-full divide-y ">
+                        <thead class="">
                             <tr>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium  uppercase tracking-wider">
                                     Fecha y Hora
                                 </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium  uppercase tracking-wider">
                                     Tipo
                                 </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium  uppercase tracking-wider">
                                     Depósito
                                 </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium  uppercase tracking-wider">
                                     Cantidad (L)
                                 </th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium  uppercase tracking-wider">
                                     Detalle
                                 </th>
                             </tr>
                         </thead>
-                        <tbody id="movimientos-listado" class="bg-slate-800 divide-y divide-slate-700">
+                        <tbody id="movimientos-listado" class=" divide-y ">
                             {{-- Bucle para iterar sobre los movimientos. La variable $movimientos debe ser pasada desde el controlador. --}}
                             @if(isset($movimientos) && count($movimientos) > 0)
                                 @foreach ($movimientos as $movimiento)
-                                <tr class="hover:bg-slate-700 transition-colors duration-150">
+                                <tr class=" transition-colors duration-150">
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-slate-200">{{ \Carbon\Carbon::parse($movimiento->created_at)->format('d/m/Y H:i') }}</div>
+                                        <div class="text-sm font-medium ">{{ \Carbon\Carbon::parse($movimiento->created_at)->format('d/m/Y H:i') }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         {{-- Muestra una etiqueta de tipo de movimiento --}}
@@ -65,12 +65,12 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-slate-300">{{ $movimiento->deposito->serial }}</div>
+                                        <div class="text-sm ">{{ $movimiento->deposito->serial }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-slate-300">{{ $movimiento->cantidad_litros }} L</div>
+                                        <div class="text-sm ">{{ $movimiento->cantidad_litros }} L</div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm ">
                                         {{-- Lógica condicional para mostrar los detalles del movimiento --}}
                 
                                         @if($movimiento->tipo_movimiento == 'salida')
@@ -99,7 +99,7 @@
                                 @endforeach
                             @else
                                 <tr>
-                                    <td colspan="5" class="px-6 py-4 text-center text-sm text-slate-400">
+                                    <td colspan="5" class="px-6 py-4 text-center text-sm ">
                                         No hay movimientos para mostrar.
                                     </td>
                                 </tr>
