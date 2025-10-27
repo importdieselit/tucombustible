@@ -12,6 +12,10 @@ class VerifyCsrfToken extends Middleware
      * @var array<int, string>
      */
     protected $except = [
-        //
+        // Añade aquí la ruta exacta de tu Webhook de Telegram
+        '/telegram/webhook', 
+        
+        // Si usaste la solución de WhatsApp, añádela también
+        '/whatsapp/webhook', 
     ];
 }
