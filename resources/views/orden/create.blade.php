@@ -286,7 +286,6 @@
                 }
             });
         }
-
         // Listener con debounce para la búsqueda en tiempo real
         searchInput.addEventListener('input', debounce(performSupplySearch, 300));
 
