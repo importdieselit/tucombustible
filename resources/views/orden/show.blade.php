@@ -48,7 +48,7 @@
                             <i class="mr-1 fa-solid {{ $orden->estatus()->icon_orden }}"></i>
                            {{ $orden->estatus()->orden }}
                         </span>
-                        <span class="siPrint" style="display: none"><i class="mr-1 fa-solid {{ $orden->estatus()->icon_orden }}"></i>
+                        <span class="siPrint" style="display: none">
                            {{ $orden->estatus()->orden }}
                         </span>
                     </li>
