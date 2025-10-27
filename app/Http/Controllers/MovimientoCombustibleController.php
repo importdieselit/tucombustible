@@ -110,7 +110,7 @@ class MovimientoCombustibleController extends Controller
         $fechaInicio = Carbon::now()->subDays(30)->toDateString();
         $resumen = MovimientoCombustible::where('created_at', '>=', $fechaInicio)
             ->groupBy('tipo_movimiento')
-            ->select('tipo_movimiento', DB::raw('SUM(litros) as total_litros'))
+            ->select('tipo_movimiento', DB::raw('SUM(cantidad_litros) as total_litros'))
             ->get();
 
         // 3. Formatear el resultado para un objeto de resumen
