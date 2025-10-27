@@ -250,15 +250,15 @@
                         <i class="fas fa-truck-ramp-box stat-card-icon mb-2 text-warning"></i>
                         <h4 class="fw-bold mb-1">Compras</h4>
                         <h3>{{ $totales['entradas'] }} Ltrs</h3>
-                        <h5>desde {{$totales['periodo_inicio']}}</h5>
+                        <h5>desde {{date('d/m/Y',$totales['periodo_inicio'])}}</h5>
                     </div>
                 
             </div>
             <div class="col-12 col-md-6 col-lg-3">
                     <div class="card h-100 p-4 d-flex flex-column justify-content-center text-center">
                         <i class="fas fa-truck-ramp-box stat-card-icon mb-2 text-warning"></i>
-                        <h3 class="fw-bold mb-1">Ventas</h3>
-                        <p class="text-muted mb-0">{{ $totales['salidas'] }} Ltrs</p>
+                        <h4 class="fw-bold mb-1">Ventas</h4>
+                        <h3>{{ $totales['salidas'] }} Ltrs</h3>
                         <h5>desde {{$totales['periodo_inicio']}}</h5>
                     </div>
                 
