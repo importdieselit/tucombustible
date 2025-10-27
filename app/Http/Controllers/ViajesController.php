@@ -17,9 +17,6 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use App\Models\DespachoViaje;
 use Illuminate\Support\Facades\DB;
-use App\Models\Persona;
-use Illuminate\Validation\ValidationException;
-use App\Models\MantenimientoProgramado;
 
 
 class ViajesController extends Controller
@@ -268,7 +265,7 @@ class ViajesController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             // El log ahora mostrará el mensaje de error completo
-            Log::error('Error creando Viaje con Despachos: ' . $e->getMessage()); 
+            \Log::error('Error creando Viaje con Despachos: ' . $e->getMessage()); 
             return back()->withInput()->with('error', 'Error del servidor al crear el viaje. Intente nuevamente. Detalles: ' . $e->getMessage());
         }
     }
@@ -562,178 +559,10 @@ class ViajesController extends Controller
             ];
         });
 
-
-        
-            // 2. Obtener Eventos de MANTENIMIENTO PROGRAMADO
-            $mantenimientos = MantenimientoProgramado::with(['vehiculo', 'plan', 'orden'])
-                ->whereBetween('fecha', [$start, $end])
-                ->whereIn('estatus', [1, 2, 3]) // Estatus 1: Programado, 2: OT Generada, 3: En Proceso (los que nos interesa ver en el calendario)
-                ->get();
-            
-            foreach ($mantenimientos as $mant) {
-                // El mantenimiento es un evento de un solo día (la fecha programada)
-                // FullCalendar necesita la fecha final (exclusive) + 1 día para un evento de día completo
-                $fechaFinMant = Carbon::parse($mant->fecha)->addDay()->format('Y-m-d'); 
-                
-                $mantenimientosData[] = [
-                    'id' => 'M-' . $mant->id, // Prefijo para evitar conflictos de ID con viajes
-                    'title' => 'MANTENIMIENTO: ' . ($mant->vehiculo->flota ?? 'Vehículo Desconocido'),
-                    'start' => $mant->fecha->format('Y-m-d'),
-                    'end' => $fechaFinMant, 
-                    'allDay' => true,
-                    // Clase para estilizar (ver calendario.blade.php)
-                    'className' => 'fc-event-MANT-' . $mant->estatus,
-                    'backgroundColor' => '#f97316', // Naranja base para mantenimientos
-                    'borderColor' => '#ea580c',
-                    'textColor' => '#fff',
-                    // Datos extendidos para el modal
-                    'extendedProps' => [
-                        'tipo' => 'mantenimiento', // Identificador de tipo
-                        'mantenimiento_id' => $mant->id,
-                        'orden_id' => $mant->orden_id,
-                        'vehiculo' => $mant->vehiculo->flota ?? 'N/A',
-                        'placa' => $mant->vehiculo->placa ?? 'N/A',
-                        'fecha_programada' => $mant->fecha->format('Y-m-d'), 
-                        'tipo_servicio' => $mant->tipo, // M1, M2, etc.
-                        'km_programado' => number_format($mant->km, 0, ',', '.'),
-                        'descripcion' => $mant->descripcion,
-                        'estatus' => $mant->estatus,
-                        'plan_titulo' => $mant->plan->titulo ?? 'N/A',
-                    ],
-                ];
-            }
-
-
         //dd($viajesData);
         return view('viajes.calendario', [
             'viajesDataJson' => $viajesData->toJson()
         ]);
     }
 
-     /**
-     * Devuelve los eventos de Viajes y Mantenimientos Programados para FullCalendar.
-     */
-    public function getEventos(Request $request)
-    {
-        try {
-            // Rango de fechas para filtrar
-            $start = Carbon::parse($request->start)->startOfDay();
-            $end = Carbon::parse($request->end)->endOfDay();
-            $eventos = [];
-
-            // 1. Obtener Eventos de VIAJES
-            $viajes = Viaje::with([
-                'chofer.persona', 
-                'ayudanteChofer.persona', 
-                'vehiculo', 
-                'despachos.cliente',
-            ])
-            ->whereBetween('fecha_salida', [$start, $end])
-            ->get();
-
-            foreach ($viajes as $viaje) {
-                // Calcular duración en días
-                $fechaFin = $viaje->fecha_llegada_estimada ? $viaje->fecha_llegada_estimada : $viaje->fecha_salida;
-                $duracionDias = Carbon::parse($viaje->fecha_salida)->diffInDays(Carbon::parse($fechaFin)) + 1;
-                
-                // FullCalendar necesita la fecha final (inclusive) + 1 día
-                $fechaFinCalendario = Carbon::parse($fechaFin)->addDay()->format('Y-m-d');
-
-                // Determinar el título y el color según el estado
-                $title = 'V: ' . ($viaje->vehiculo->flota ?? 'Sin Asignar') . ' - ' . ($viaje->destino_ciudad ?? 'Sin Destino');
-                $color = $this->getColorByStatus($viaje->status);
-
-                $eventos[] = [
-                    'id' => $viaje->id,
-                    'title' => $title,
-                    'start' => $viaje->fecha_salida,
-                    'end' => $fechaFinCalendario, 
-                    'allDay' => true,
-                    'backgroundColor' => $color['bg'],
-                    'borderColor' => $color['border'],
-                    'textColor' => $color['text'],
-                    'className' => 'fc-event-' . $viaje->status,
-                    // Datos extendidos para el modal
-                    'extendedProps' => [
-                        'tipo' => 'viaje', // Identificador de tipo
-                        'vehiculo' => $viaje->vehiculo->flota ?? 'N/A',
-                        'placa' => $viaje->vehiculo->placa ?? 'N/A',
-                        'chofer' => $viaje->chofer->persona->nombre ?? 'Sin Asignar',
-                        'ayudante' => $viaje->ayudante_chofer->persona->nombre ?? 'Sin Asignar',
-                        'destino' => $viaje->destino_ciudad ?? 'N/A',
-                        'status' => $viaje->status,
-                        // Se utiliza el primer cliente para el título del modal
-                        'cliente' => $viaje->despachos->first()->cliente->nombre ?? $viaje->despachos->first()->otro_cliente ?? 'Cliente Desconocido',
-                        'despachos'=> $viaje->despachos->map(function($despacho) {
-                            return [
-                                'cliente' => $despacho->cliente->nombre ?? $despacho->otro_cliente ?? 'Cliente Desconocido',
-                                'litros' => $despacho->litros,
-                            ];
-                        }),
-                    ],
-                ];
-            }
-
-
-            // 2. Obtener Eventos de MANTENIMIENTO PROGRAMADO
-            $mantenimientos = MantenimientoProgramado::with(['vehiculo', 'plan', 'orden'])
-                ->whereBetween('fecha', [$start, $end])
-                ->whereIn('estatus', [1, 2, 3]) // Estatus 1: Programado, 2: OT Generada, 3: En Proceso (los que nos interesa ver en el calendario)
-                ->get();
-            
-            foreach ($mantenimientos as $mant) {
-                // El mantenimiento es un evento de un solo día (la fecha programada)
-                // FullCalendar necesita la fecha final (exclusive) + 1 día para un evento de día completo
-                $fechaFinMant = Carbon::parse($mant->fecha)->addDay()->format('Y-m-d'); 
-                
-                $eventos[] = [
-                    'id' => 'M-' . $mant->id, // Prefijo para evitar conflictos de ID con viajes
-                    'title' => 'MANTENIMIENTO: ' . ($mant->vehiculo->flota ?? 'Vehículo Desconocido'),
-                    'start' => $mant->fecha->format('Y-m-d'),
-                    'end' => $fechaFinMant, 
-                    'allDay' => true,
-                    // Clase para estilizar (ver calendario.blade.php)
-                    'className' => 'fc-event-MANT-' . $mant->estatus,
-                    'backgroundColor' => '#f97316', // Naranja base para mantenimientos
-                    'borderColor' => '#ea580c',
-                    'textColor' => '#fff',
-                    // Datos extendidos para el modal
-                    'extendedProps' => [
-                        'tipo' => 'mantenimiento', // Identificador de tipo
-                        'mantenimiento_id' => $mant->id,
-                        'orden_id' => $mant->orden_id,
-                        'vehiculo' => $mant->vehiculo->flota ?? 'N/A',
-                        'placa' => $mant->vehiculo->placa ?? 'N/A',
-                        'fecha_programada' => $mant->fecha->format('Y-m-d'), 
-                        'tipo_servicio' => $mant->tipo, // M1, M2, etc.
-                        'km_programado' => number_format($mant->km, 0, ',', '.'),
-                        'descripcion' => $mant->descripcion,
-                        'estatus' => $mant->estatus,
-                        'plan_titulo' => $mant->plan->titulo ?? 'N/A',
-                    ],
-                ];
-            }
-            
-            return response()->json($eventos);
-
-        } catch (\Exception $e) {
-            Log::error("Error al obtener eventos combinados: " . $e->getMessage());
-            return response()->json(['error' => 'Error al cargar eventos: ' . $e->getMessage()], 500);
-        }
-    }
-
-    private function getColorByStatus($status)
-    {
-        switch ($status) {
-            case 'FINALIZADO':
-                return ['bg' => '#3b82f6', 'border' => '#2563eb', 'text' => '#ffffff']; // Azul
-            case 'EN_CURSO':
-                return ['bg' => '#10b981', 'border' => '#059669', 'text' => '#ffffff']; // Verde
-            case 'PENDIENTE_ASIGNACION':
-                return ['bg' => '#f97316', 'border' => '#ea580c', 'text' => '#ffffff']; // Naranja
-            case 'PROGRAMADO':
-            default:
-                return ['bg' => '#6366f1', 'border' => '#4f46e5', 'text' => '#ffffff']; // Índigo
-        }
-    }
 }
