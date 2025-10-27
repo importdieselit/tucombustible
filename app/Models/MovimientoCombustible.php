@@ -24,7 +24,8 @@ class MovimientoCombustible extends Model
         'cantidad_litros',
         'observaciones',
         'vehiculo_id',
-        'created_at'
+        'created_at',
+        'cisterna_id'
     ];
 
     /**

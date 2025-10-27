@@ -57,11 +57,11 @@
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         {{-- Muestra una etiqueta de tipo de movimiento --}}
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                            @if($movimiento->tipo == 'recarga') bg-green-500 text-white
-                                            @elseif($movimiento->tipo == 'despacho') bg-red-500 text-white
+                                            @if($movimiento->tipo == 'entrada') bg-green-500 text-white
+                                            @elseif($movimiento->tipo == 'salida') bg-red-500 text-white
                                             @else bg-gray-500 text-white
                                             @endif">
-                                            {{ ucfirst($movimiento->tipo) }}
+                                            {{ ucfirst($movimiento->tipo_movimientos) }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
@@ -72,27 +72,28 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
                                         {{-- Lógica condicional para mostrar los detalles del movimiento --}}
-                                        {{ $movimiento->observaciones }}<br>
-                                        @if($movimiento->tipo == 'despacho')
+                
+                                        @if($movimiento->tipo == 'salida')
                                             @if($movimiento->cliente)
                                                 <p>Cliente: {{ $movimiento->cliente->nombre }}</p>
                                             @endif
                                             @if($movimiento->cisterna)
-                                                <p>Cisterna: {{ $movimiento->cisterna->numero_cisterna }}</p>
+                                                <p>Cisterna: {{ $movimiento->cisterna()->flota }}</p>
                                             @endif
                                             @if($movimiento->vehiculo)
                                                 <p>Vehículo: {{ $movimiento->vehiculo->placa }}</p>
                                             @endif
-                                        @elseif($movimiento->tipo == 'recarga')
+                                        @elseif($movimiento->tipo == 'entrada')
                                             @if($movimiento->proveedor)
                                                 <p>Proveedor: {{ $movimiento->proveedor->nombre }}</p>
                                             @endif
-                                            @if($movimiento->responsable)
+                                            {{-- @if($movimiento->responsable)
                                                 <p>Responsable: {{ $movimiento->responsable->nombre }}</p>
-                                            @endif
+                                            @endif --}}
                                         @else
                                             <p>No se encontraron detalles.</p>
                                         @endif
+                                        {{ $movimiento->observaciones }}
                                     </td>
                                 </tr>
                                 @endforeach
