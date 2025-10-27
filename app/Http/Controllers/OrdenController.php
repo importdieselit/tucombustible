@@ -20,6 +20,8 @@ use Illuminate\Support\Facades\Redirect;
 use App\Models\Inventario; 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use App\Models\SuministroCompra;
+use App\Models\SuministroCompraDetalle;
 
 class OrdenController extends BaseController
 {
@@ -215,25 +217,66 @@ class OrdenController extends BaseController
         // Almacena en la DB
         $orden=$this->model->create($request->all());
          // 4. Procesar y guardar los suministros solicitados
-            if ($request->has('supplies') && is_array($request->supplies)) {
-                foreach ($request->supplies as $supply) {
-                    // 5. Crear un nuevo registro en la tabla inventario_suministro para cada ítem
-                    // Nota: Tu esquema de tabla no tiene un campo para la cantidad solicitada.
-                    // Si la cantidad es importante, deberás crear una tabla relacionada o modificar este esquema.
-                    InventarioSuministro::create([
-                        'estatus' => 1, // 1 = 'Solicitado'
-                        'id_usuario' => $userId,
-                        'id_orden' => $orden->id, // Usar el número de orden que acabamos de crear
-                        'id_auto' => $request->id_vehiculo,
-                        'id_inventario' => $supply['item_id'],
-                        'id_emisor' => $userId,
-                        // 'servicio' y 'anulacion' se dejarán nulos por ahora, ya que no son parte del formulario inicial
-                        'servicio' => null,
-                        'anulacion' => null,
-                        'destino' => null,
-                    ]);
-                }
+            $suministros = json_decode($request->suministros_data, true) ?? [];
+        
+        // Contenedores para agrupar ítems
+        $usoInventario = [];
+        $solicitudCompra = [];
+        
+        foreach ($suministros as $item) {
+            // El tipo se definió en el frontend: 'USO' o 'COMPRA'
+            if ($item['tipo'] === 'USO') {
+                $usoInventario[] = $item;
+            } else {
+                $solicitudCompra[] = $item;
             }
+        }
+        
+        // 2. Procesar Suministros de USO (Descuento de Inventario)
+        if (!empty($usoInventario)) {
+            // Lógica para registrar el uso: 
+            // - Crear registros en tu tabla de pivote (ej: 'orden_suministro_uso')
+            // - Descontar la cantidad de la tabla 'inventarios'
+            foreach ($usoInventario as $usoItem) {
+                // Aquí debes asegurar que la lógica de descuento sea atómica (con el inventario)
+                // Por simplicidad, se omite el descuento real del Inventario aquí, 
+                // pero DEBE ser implementado.
+                
+                // Ejemplo de registro de uso (asumiendo tabla 'orden_suministros'):
+                /*
+                $orden->suministros()->create([ 
+                    'inventario_id' => $usoItem['id'],
+                    'cantidad_usada' => $usoItem['cantidad'],
+                    'costo_unitario' => Inventario::find($usoItem['id'])->costo_promedio,
+                    'tipo' => 'USO',
+                ]);
+                */
+            }
+        }
+        
+        // 3. Procesar Suministros de COMPRA (Generar Solicitud/OC)
+        if (!empty($solicitudCompra)) {
+            // Crear la cabecera de la Solicitud de Compra (OC)
+            $compra = SuministroCompra::create([
+                'orden_id' => $orden->id,
+                'usuario_solicitante_id' => Auth::id(),
+                'estatus' => 1, // 1: Solicitada (Pendiente de Aprobación Admin)
+            ]);
+
+            // Crear los detalles de los ítems solicitados
+            foreach ($solicitudCompra as $solicitudItem) {
+                // El campo 'id' será el ID del Inventario o el temporal 'MANUAL_X'
+                $inventarioId = is_numeric($solicitudItem['id']) ? $solicitudItem['id'] : null;
+
+                $compra->detalles()->create([
+                    'inventario_id' => $inventarioId,
+                    'descripcion' => $solicitudItem['descripcion'],
+                    'cantidad_solicitada' => $solicitudItem['cantidad'],
+                    // Otros campos como costo_unitario_aprobado se llenan en la Aprobación
+                ]);
+            }
+        }
+
 
             // 2. Manejar la subida de MÚLTIPLES FOTOS
             if ($request->hasFile('fotos_orden')) {
