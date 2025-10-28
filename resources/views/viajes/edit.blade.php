@@ -114,7 +114,6 @@
                 <table class="table table-bordered table-sm" id="despachos-table">
                     <thead class="table-light">
                         <tr>
-                            <th style="width: 5%;">#</th>
                             <th style="width: 50%;">Cliente</th>
                                 <th style="width: 35%;">Otro Cliente (Si no está en lista)</th>
                             <th style="width: 25%;">Litros</th>
