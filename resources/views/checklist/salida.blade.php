@@ -23,7 +23,7 @@
 @push('scripts')
 <script>
     // 1. Obtener el JSON del blueprint desde Blade (Laravel lo castea a objeto JS)
-    const CHECKLIST_BLUEPRINT = @json($checklist->checklist??$cheklist);
+    const CHECKLIST_BLUEPRINT = @json($checklist->checklist??$checklist);
     const VEHICULO_DATA = @json($vehiculo);
     const container = document.getElementById('checklist-container');
     const form = document.getElementById('inspeccionForm');
