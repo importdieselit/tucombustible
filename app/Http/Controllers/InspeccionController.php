@@ -195,16 +195,16 @@ public function store(Request $request)
         // 1. Obtener datos de resumen (KPIs)
         $resumenAlertas = [
             // Contar inspecciones con estatus WARNING
-            'warnings' => Inspeccion::where('estatus_general', 'WARNING')->count(),
+            'warnings' => Inspeccion::whereIn('estatus_general', ['WARNING','ALERT'])->count(),
             
             // Contar órdenes de trabajo que no han sido cerradas (ej. estatus 'Abierta', 'En Revisión')
-            'ordenes_abiertas' => Orden::whereIn('estatus', ['En Revisión', 'En Reparación', 'Pendiente Repuestos'])->count(),
+            'ordenes_abiertas' => Orden::where('estatus', 2)->count(),
             
             // Contar vehículos con estatus de mantenimiento (asumiendo estatus=2)
-            'vehiculos_mantenimiento' => Vehiculo::where('estatus', 2)->count(),
+            'vehiculos_mantenimiento' => Vehiculo::where('estatus', 3)->count(),
         ];
         $user = auth()->user();
-        $vehiculosDisponibles = Vehiculo::where('estatus', 1)->where('es_flota',true)->get();
+        $vehiculosDisponibles = Vehiculo::where('es_flota',true)->get();
         
 
         // 2. Puedes agregar datos adicionales si tienes gráficos o tablas de resumen.

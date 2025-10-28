@@ -34,12 +34,9 @@
                     <label for="id_vehiculo" class="form-label">Vehículo</label>
                     <select class="form-select" id="id_vehiculo" name="id_vehiculo" required>
                         <option value="">Seleccione Vehículo</option>
-                        {{-- Ejemplo de opciones (reemplazar con datos reales de Laravel) --}}
-                        <option value="1">Camión A (Placa: AAA-111)</option>
-                        <option value="2">Remolque B (Placa: BBB-222)</option>
-                        {{-- @foreach ($vehiculos as $vehiculo)
+                       @foreach ($vehiculos as $vehiculo)
                             <option value="{{ $vehiculo->id }}">{{ $vehiculo->flota }} (Placa: {{ $vehiculo->placa }})</option>
-                        @endforeach --}}
+                        @endforeach
                     </select>
                 </div>
                 <div class="col-md-6 mb-3">

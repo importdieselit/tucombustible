@@ -112,6 +112,7 @@
                 <i class="fa fa-clipboard-check me-2"></i> Checkout Vehículo
             </button>
             @endif
+            
         </div>
     
 </div>
