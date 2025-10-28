@@ -162,7 +162,7 @@
             </div>
 
             <div class="d-flex justify-content-end mt-4">
-                <a href="{{ route('viaje.show', $viaje->id) }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Volver al Detalle</a>
+                <a href="{{ route('viajes.show', $viaje->id) }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Volver al Detalle</a>
             </div>
         </div>
     </div>
