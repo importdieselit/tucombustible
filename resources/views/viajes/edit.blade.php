@@ -135,7 +135,7 @@
                                             @enderror
                                         </td>
                                         <td>
-                                            <input type="text" name="despachos[{{$despacho->id}][otro_cliente]" class="form-control form-control-sm otro-cliente-input @error("despachos[{{$despacho->id}][otro_cliente]") is-invalid @enderror" placeholder="Nombre o Razón Social" value="{{ $despacho.->otro_cliente }}" {{ $despacho->cliente_id ? 'disabled' : '' }}>
+                                            <input type="text" name="despachos[{{$despacho->id}}][otro_cliente]" class="form-control form-control-sm otro-cliente-input @error("despachos[{{$despacho->id}][otro_cliente]") is-invalid @enderror" placeholder="Nombre o Razón Social" value="{{ $despacho.->otro_cliente }}" {{ $despacho->cliente_id ? 'disabled' : '' }}>
                                             @error("despachos.{$despacho->id}.otro_cliente")
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
