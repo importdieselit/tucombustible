@@ -3,7 +3,7 @@
 @section('content')
 <div class="container my-5">
     <h2>Inspección de Salida: {{ $vehiculo->placa }}</h2>
-    <p class="text-muted">Checklist: {{ $checklist->nombre }} (v{{ $checklist->version }})</p>
+    <p class="text-muted">Checklist: {{ $checklist->nombre ?? 'Check-In' }} (v{{ $checklist->version??null }})</p>
     
     <form id="inspeccionForm">
         @csrf
