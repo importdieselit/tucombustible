@@ -41,6 +41,9 @@
     </style>
 @endpush
 @php
+
+$orden=false;
+
      // NOTA: En una aplicación real, estos datos vendrían de la base de datos.
             $rutas = collect([
                 ['fecha' => '2024-05-15', 'origen' => 'Caracas', 'destino' => 'Valencia', 'km' => 170, 'conductor' => 'Pedro Pérez'],
@@ -66,6 +69,7 @@
             $costoPorKm = $kmTotales > 0 ? $gastoCombustible / $kmTotales : 0;
             @endphp
 @endphp
+
 @if($item->estatus==3 || $item->estatus ==5)
         @php
             $orden=App\Models\Orden::where('id_vehiculo',$item->id)->where('estatus',2)->get()->first();
