@@ -6,6 +6,7 @@ use App\Models\MovimientoCombustible;
 use App\Models\Deposito;
 use App\Models\Proveedor;
 use App\Models\Cliente;
+use App\Models\Parametro;
 use App\Models\Vehiculo;
 use App\Models\Pedido;
 use App\Models\VehiculoPrecargado;
@@ -74,9 +75,10 @@ class MovimientoCombustibleController extends Controller
             }
         }
        // dd($tipoDeposito);
+       $resguardo=Parametro::where('nombre','resguardo')->first()->valor;
         $totalCombustible = Deposito::whereIn('serial',['1','2','3','4'])->sum('nivel_actual_litros');
         $tanque00=Deposito::where('serial','00')->first();
-        $capacidadTotal = Deposito::whereIn('serial',['1','2','3','4'])->sum('capacidad_litros');
+        $capacidadTotal = Deposito::whereIn('serial',['1','2','3','4'])->sum('capacidad_litros')-$resguardo;
         $nivelPromedio = $capacidadTotal > 0 ? ($totalCombustible / $capacidadTotal) * 100 : 0;
         $nivelPromedio = round($nivelPromedio, 2);
 
