@@ -1,7 +1,7 @@
 @extends('layouts.app') 
 
 @section('content')
-{{dd(json_encode($checklist))}}
+{{dd(json_decode($checklist))}}
 <div class="container my-5">
     <h2>Inspección de Salida: {{ $vehiculo->placa }}</h2>
     <p class="text-muted">Checklist: {{ $checklist->nombre ?? $checklist->checklist_name }} (v{{ $checklist->version??null }})</p>
