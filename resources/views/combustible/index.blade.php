@@ -222,7 +222,7 @@
                 </div>
             </div>
             <div class="mt-4">
-                <p class="fw-bold mb-2">Total Disponible / Capacidad total</p>
+                <p class="fw-bold mb-2">Total Disponible / Capacidad total {{$resguardo}}</p>
                 <div class="d-flex align-items-center mb-2">
                     <h3 class="fw-bold mb-0 me-2">{{ number_format($totalCombustible, 2) }} L</h3>
                     <p class="text-muted mb-0">/ {{ $capacidadTotal-$resguardo }} L</p>
