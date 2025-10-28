@@ -34,7 +34,7 @@ class InspeccionController extends Controller
         $vehiculo = Vehiculo::findOrFail($vehiculo_id);
         if($inspeccion){
             $tipo='entrada';
-            $checklist=json_encode($inspeccion->respuesta_json);
+            $checklist=$inspeccion->respuesta_json;
         }else{
             $tipo='salida';
         }
