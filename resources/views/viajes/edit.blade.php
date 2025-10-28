@@ -124,7 +124,7 @@
                         @foreach($viaje->despachos as $despacho)
                                     <tr id="row-{{ $index }}">
                                         <td>
-                                            <select name="despachos[{{ $despacho->id }}][cliente_id]" class="form-select form-select-sm cliente-select @error("despachos[{{$despacho->id}][cliente_id]") is-invalid @enderror" {{ $despacho->otro_cliente? 'disabled' : '' }}>
+                                            <select name="despachos[{{ $despacho->id }}][cliente_id]" class="form-select form-select-sm cliente-select @error("despachos[{{$despacho->id}}][cliente_id]") is-invalid @enderror" {{ $despacho->otro_cliente? 'disabled' : '' }}>
                                                 <option value="">-- Seleccione Cliente --</option>
                                                 @foreach($clientes as $cliente)
                                                     <option value="{{ $cliente->id }}" {{ $despacho->cliente_id == $cliente->id ? 'selected' : '' }}>{{ $cliente->nombre }}</option>
@@ -135,13 +135,13 @@
                                             @enderror
                                         </td>
                                         <td>
-                                            <input type="text" name="despachos[{{$despacho->id}}][otro_cliente]" class="form-control form-control-sm otro-cliente-input @error("despachos[{{$despacho->id}][otro_cliente]") is-invalid @enderror" placeholder="Nombre o Razón Social" value="{{ $despacho.->otro_cliente }}" {{ $despacho->cliente_id ? 'disabled' : '' }}>
+                                            <input type="text" name="despachos[{{$despacho->id}}][otro_cliente]" class="form-control form-control-sm otro-cliente-input @error("despachos[{{$despacho->id}}][otro_cliente]") is-invalid @enderror" placeholder="Nombre o Razón Social" value="{{ $despacho.->otro_cliente }}" {{ $despacho->cliente_id ? 'disabled' : '' }}>
                                             @error("despachos.{$despacho->id}.otro_cliente")
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </td>
                                         <td>
-                                            <input type="number" name="despachos[{{ $despacho->id }}][litros]" class="form-control form-control-sm @error("despachos.{$despacho->id}.litros") is-invalid @enderror" placeholder="Cantidad" step="any" required value="{{ $despacho->litros") }}">
+                                            <input type="number" name="despachos[{{ $despacho->id }}][litros]" class="form-control form-control-sm @error("despachos.{$despacho->id}.litros") is-invalid @enderror" placeholder="Cantidad" step="any" required value="{{ $despacho->litros }}">
                                             @error("despachos.{$despacho->id}.litros")
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
