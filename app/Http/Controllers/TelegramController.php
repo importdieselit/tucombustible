@@ -136,8 +136,6 @@ public function handleWebhook(Request $request)
         $data = $request->all();
         $message = $data['message'] ?? null;
 
-        $botpressUrl = 'https://webhook.botpress.cloud/bf3ba980-bc5e-40fb-8029-88f9ec975e39';
-
         // Si no hay mensaje o texto, ignorar
         if (!$message || !isset($message['text'])) {
             return response()->json(['status' => 'ignored'], 200);
@@ -145,21 +143,38 @@ public function handleWebhook(Request $request)
 
         $chatId = $message['chat']['id'];
         $text = $message['text'];
+        
+        $botpressUrl = 'https://api.botpress.cloud/v1/bots/bf3ba980-bc5e-40fb-8029-88f9ec975e39/events'; 
+        $botpressToken = '8278356133:AAFbPIiY77YEdFbRoO8JSpF83UKaSM2X-dM'; 
 
         try {
-            Log::info('enviando. '.json_encode([
-                'userId' => $chatId,
+            // ----------------------------------------------------------------------
+            // ESTRUCTURA DE EVENTO REQUERIDA POR LA API DE BOTPRESS
+            // ----------------------------------------------------------------------
+            $payload = [
+                'type' => 'text', 
                 'text' => $text,
-                'source_app' => 'Laravel-Telegram-Proxy'
-            ]));
-            $botpressResponse = Http::post($botpressUrl, [
-                // Botpress necesita un ID de usuario único para la sesión.
-                // Usamos el chatId de Telegram como ID de usuario de Botpress.
-                'userId' => $chatId,
-                'text' => $text,
-                'source_app' => 'Laravel-Telegram-Proxy'
-                // Otros parámetros requeridos por tu Botpress
-            ])->json();
+                'source' => 'api',
+                'channel' => 'telegram',
+                'direction' => 'incoming',
+                'payload' => [
+                    'text' => $text,
+                    // Aquí se adjunta la data que tu nodo de código debe leer.
+                    'laravel_metadata' => [ 
+                        'source_app' => 'Laravel-Telegram-Proxy',
+                        // Puedes adjuntar cualquier otra data que necesites:
+                    ]
+                ],
+                'target' => (string) $chatId, // El usuario de Telegram
+                'target_type' => 'user',
+                'target_channel' => 'telegram' 
+            ];
+            
+
+            $botpressResponse = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $botpressToken,
+                'Content-Type' => 'application/json',
+            ])->post($botpressUrl, $payload)->json();
             
             Log::info('recibiendo: '.$botpressResponse);
             
