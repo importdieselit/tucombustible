@@ -144,6 +144,11 @@
                                         @error('km_mantt')<div class="text-danger mt-1">{{ $message }}</div>@enderror
                                     </div>
                                     <div class="col-md-6">
+                                        <label for="hrs_mantt" class="form-label text-primary">Horas de trabajo para Mantenimiento</label>
+                                        <input type="number" class="form-control" id="hrs_mantt" name="hrs_mantt" value="{{ old('hrs_mantt', $item->hrs_mantt ?? '') }}">
+                                        @error('hrs_mantt')<div class="text-danger mt-1">{{ $message }}</div>@enderror
+                                    </div>
+                                    <div class="col-md-6">
                                         <label for="tipo_combustible" class="form-label text-primary">Tipo de Combustible</label>
                                         <input type="text" class="form-control" id="tipo_combustible" name="tipo_combustible" value="{{ old('tipo_combustible', $item->tipo_combustible ?? '') }}">
                                         @error('tipo_combustible')<div class="text-danger mt-1">{{ $message }}</div>@enderror

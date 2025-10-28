@@ -110,7 +110,10 @@ class Vehiculo extends Model
         'racda', 
         'semcamer', 
         'homologacion_intt',
-        'permiso_intt'
+        'permiso_intt',
+        'hrs_mantt',
+        'hrs_contador',
+        'horas_trabajo'
     ];
     /**
      * The attributes that should be cast to native types.
