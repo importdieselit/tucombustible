@@ -503,6 +503,50 @@ class ViajesController extends Controller
         return view('viajes.resumen_programacion', compact('viajes', 'totalViaticosPresupuestados'));
     }
 
+    public function edit($id)
+{
+    $viaje = Viaje::findOrFail($id);
+         $choferes = Chofer::with('persona')->get();
+        $vehiculos = Vehiculo::where('estatus', 1)->where('es_flota',true)->get(['id', 'placa', 'flota']);
+        $destino = TabuladorViatico::pluck('destino')->unique();
+        $clientes = Cliente::where('status',1)->get(['id','nombre','alias']);
+        
+        
+    return view('viajes.edit', compact('viaje','choferes','vehiculos','destino','clientes'));
+}
+
+/**
+ * Actualiza el viaje especificado en la base de datos.
+ *
+ * @param  \Illuminate\Http\Request  $request
+ * @param  int  $id
+ * @return \Illuminate\Http\RedirectResponse
+ */
+public function update(Request $request, $id)
+{
+    // 1. Validar los datos del formulario
+    $request->validate([
+        'destino_ciudad' => 'required|string|max:100',
+        'fecha_salida' => 'required|date',
+        'status' => 'required|in:PENDIENTE_ASIGNACION,PENDIENTE_VIATICOS,EN_CURSO,FINALIZADO,CANCELADO',
+        // Añadir reglas de validación para Chofer, Vehículo, etc., si se editan
+    ]);
+
+    // 2. Encontrar el viaje y actualizar
+    $viaje = Viaje::findOrFail($id);
+    
+    $viaje->destino_ciudad = $request->input('destino_ciudad');
+    $viaje->fecha_salida = $request->input('fecha_salida');
+    $viaje->status = $request->input('status');
+    // $viaje->chofer_id = $request->input('chofer_id'); // Ejemplo de campo adicional
+    
+    $viaje->save();
+
+    // 3. Redirigir de vuelta a la vista de detalle con un mensaje de éxito
+    return redirect()->route('viaje.show', $viaje->id)
+                     ->with('success', '¡El viaje ha sido actualizado con éxito!');
+}
+
     // En ViajesController.php
     public function calendar()
     {
@@ -657,5 +701,107 @@ class ViajesController extends Controller
             ], 500);
         }
     }
+
+    /**
+ * Actualiza un campo específico del modelo Viaje mediante petición AJAX.
+ *
+ * @param  \Illuminate\Http\Request  $request
+ * @param  int  $id (ID del Viaje)
+ * @return \Illuminate\Http\JsonResponse
+ */
+public function updateField(Request $request, $id)
+{
+    // 1. Validación de campos (solo los que esperamos que se actualicen)
+    $request->validate([
+        'field' => 'required|string',
+        'value' => 'nullable',
+    ]);
+
+    $viaje = Viaje::findOrFail($id);
+    $field = $request->input('field');
+    $value = $request->input('value');
+    $allowedFields = ['destino_ciudad', 'fecha_salida', 'chofer_id', 'ayudante_id', 'vehiculo_id', 'status'];
+
+    if (!in_array($field, $allowedFields)) {
+        return response()->json(['message' => 'Campo no permitido para actualización.', 'status' => 'error'], 403);
+    }
+    
+    // 2. Actualización
+    try {
+        // Manejar el caso especial del ayudante (si el campo de la BD es 'ayudante_id')
+        if ($field === 'ayudante') {
+            $field = 'ayudante_id'; 
+        }
+
+        // Si el valor es nulo (ej. si se selecciona "Seleccione el ayudante"), guardamos null
+        $viaje->{$field} = empty($value) ? null : $value;
+        $viaje->save();
+        
+        return response()->json(['message' => 'Viaje actualizado.', 'status' => 'success'], 200);
+
+    } catch (\Exception $e) {
+        Log::error("Error AJAX al actualizar viaje #{$id} ({$field}): " . $e->getMessage());
+        return response()->json(['message' => 'Error de servidor al guardar el cambio.', 'status' => 'error'], 500);
+    }
+}
+
+
+/**
+ * Actualiza un campo específico de un Despacho mediante petición AJAX.
+ *
+ * @param  \Illuminate\Http\Request  $request
+ * @param  int  $viajeId (No usado, pero puede ser útil para logs)
+ * @param  int  $despachoId
+ * @return \Illuminate\Http\JsonResponse
+ */
+public function updateDespacho(Request $request, $viajeId, $despachoId)
+{
+    $request->validate([
+        'field' => 'required|string|in:litros,cliente_id,otro_cliente', // Solo permitir litros o cliente
+        'value' => 'nullable',
+    ]);
+
+    $despacho = DespachoViaje::findOrFail($despachoId);
+    $field = $request->input('field');
+    $value = $request->input('value');
+    
+    try {
+        if ($field === 'cliente_id') {
+            
+            if (empty($value)) {
+                // Si el valor es null/vacío, se asume que se está eliminando el cliente registrado
+                // y se apunta a 'otro_cliente' (un campo que debe ser un string).
+                // NOTA: Esto requiere que el campo 'otro_cliente' en el formulario sea editable 
+                // cuando 'cliente_id' es null.
+                $despacho->cliente_id = null;
+                // Dejamos 'otro_cliente' vacío o lo manejas con otra entrada en el formulario
+                $despacho->otro_cliente = $value; 
+            } else {
+                // Si se selecciona un Cliente de la lista (ID), cliente_id se establece
+                $despacho->cliente_id = (int)$value;
+                $despacho->otro_cliente = null; // Limpiar el campo de texto si se usa la lista
+            }
+            
+        } elseif ($field === 'litros') {
+            // Asegurarse de que sea un número válido
+            $despacho->litros = max(0, (float)$value);
+        }
+
+        $despacho->save();
+        
+        // Devolver el nuevo total de litros para actualizar el pie de la tabla
+        $totalLitros = $despacho->viaje->despachos->sum('litros');
+
+        return response()->json([
+            'message' => 'Despacho actualizado.', 
+            'status' => 'success',
+            'total_litros' => number_format($totalLitros, 2)
+        ], 200);
+
+    } catch (\Exception $e) {
+        Log::error("Error AJAX al actualizar despacho #{$despachoId}: " . $e->getMessage());
+        return response()->json(['message' => 'Error de servidor al guardar el cambio.', 'status' => 'error'], 500);
+    }
+}
 
 }

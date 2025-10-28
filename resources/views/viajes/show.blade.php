@@ -6,9 +6,16 @@
 <div class="container mt-5">
     <div class="card shadow-lg">
         <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-            <h3 class="mb-0"><i class="bi bi-truck me-2"></i> Detalle de Viaje #{{ $viaje->id }}</h3>
-            <a href="{{ route('viaje.list') }}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i> Volver al Listado</a>
-        </div>
+    <h3 class="mb-0"><i class="bi bi-truck me-2"></i> Detalle de Viaje #{{ $viaje->id }}</h3>
+    <div>
+        {{-- Nuevo Botón de Edición --}}
+        <a href="{{ route('viaje.edit', $viaje->id) }}" class="btn btn-warning btn-sm me-2">
+            <i class="bi bi-pencil"></i> Editar Viaje
+        </a>
+        
+        <a href="{{ route('viaje.list') }}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i> Volver al Listado</a>
+    </div>
+</div>
         <div class="card-body">
             
             <!-- Estatus y Fechas -->
@@ -41,7 +48,7 @@
             <div class="row g-3 mb-4">
                 <div class="col-md-4">
                     <p class="mb-0 fw-bold">Chofer Principal:</p>
-                    <p>{{ $viaje->chofer->persona->nombre_completo ?? 'N/A' }}</p>
+                    <p>{{ $viaje->chofer->persona->nombre ?? 'N/A' }}</p>
                 </div>
                 <div class="col-md-4">
                     <p class="mb-0 fw-bold">Vehículo:</p>
@@ -49,7 +56,7 @@
                 </div>
                 <div class="col-md-4">
                     <p class="mb-0 fw-bold">Ayudante:</p>
-                    <p>{{ $viaje->ayudante->persona->nombre_completo ?? 'N/A' }}</p>
+                    <p>{{ $viaje->ayudante_chofer->persona->nombre ?? 'N/A' }}</p>
                 </div>
             </div>
             
