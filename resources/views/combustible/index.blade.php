@@ -217,7 +217,7 @@
                         Estado General de los Tanques
                     </h2>
                     <p class="text-sm text-muted mb-0" id="main-subtitle">
-                        Resumen del cupo disponible de todos los tanques.
+                        Resumen del cupo disponible para venta.
                     </p>
                 </div>
             </div>
@@ -226,6 +226,21 @@
                 <div class="d-flex align-items-center mb-2">
                     <h3 class="fw-bold mb-0 me-2">{{ number_format($totalCombustible, 2) }} L</h3>
                     <p class="text-muted mb-0">/ {{ $capacidadTotal }} L</p>
+                </div>
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar {{ $isAlert ? 'progress-bar-danger' : 'progress-bar-custom' }}"
+                         role="progressbar"
+                         style="width: {{ $percentage }}%;"
+                         aria-valuenow="{{ $percentage }}"
+                         aria-valuemin="0"
+                         aria-valuemax="100"></div>
+                </div>
+            </div>
+            <div class="mt-4">
+                <p class="fw-bold mb-2">Total Disponible 00 / Capacidad total 00</p>
+                <div class="d-flex align-items-center mb-2">
+                    <h3 class="fw-bold mb-0 me-2">{{ number_format($tanque00->nivel_actual_litros, 2) }} L</h3>
+                    <p class="text-muted mb-0">/ {{ $tanque00->capacidad_litros }} L</p>
                 </div>
                 <div class="progress" style="height: 10px;">
                     <div class="progress-bar {{ $isAlert ? 'progress-bar-danger' : 'progress-bar-custom' }}"

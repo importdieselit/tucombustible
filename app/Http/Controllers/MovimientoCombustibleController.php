@@ -74,8 +74,9 @@ class MovimientoCombustibleController extends Controller
             }
         }
        // dd($tipoDeposito);
-        $totalCombustible = Deposito::sum('nivel_actual_litros');
-        $capacidadTotal = Deposito::sum('capacidad_litros');
+        $totalCombustible = Deposito::sum('nivel_actual_litros')->whereIn('serial',['1','2','3','4']);
+        $tanque00=Deposito::where('serial','00')->first();
+        $capacidadTotal = Deposito::sum('capacidad_litros')->whereIn('serial',['1','2','3','4']);
         $nivelPromedio = $capacidadTotal > 0 ? ($totalCombustible / $capacidadTotal) * 100 : 0;
         $nivelPromedio = round($nivelPromedio, 2);
 
@@ -140,7 +141,8 @@ class MovimientoCombustibleController extends Controller
             'vehiculosDisponibles',
             'tanquesDisponibles',
             'vehiculos',
-            'totales'
+            'totales',
+            'tanque00'
         ));
     }
 
