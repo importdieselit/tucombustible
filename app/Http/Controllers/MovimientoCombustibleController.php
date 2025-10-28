@@ -78,7 +78,8 @@ class MovimientoCombustibleController extends Controller
        $resguardo=Parametro::where('nombre','resguardo')->first()->valor;
         $totalCombustible = Deposito::whereIn('serial',['1','2','3','4'])->sum('nivel_actual_litros');
         $tanque00=Deposito::where('serial','00')->first();
-        $capacidadTotal = Deposito::whereIn('serial',['1','2','3','4'])->sum('capacidad_litros')-$resguardo;
+        $capacidadTotal = Deposito::whereIn('serial',['1','2','3','4'])->sum('capacidad_litros');
+        $capacidadTotal-=$resguardo;
         $nivelPromedio = $capacidadTotal > 0 ? ($totalCombustible / $capacidadTotal) * 100 : 0;
         $nivelPromedio = round($nivelPromedio, 2);
 
