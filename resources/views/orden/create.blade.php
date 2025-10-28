@@ -20,7 +20,7 @@
 
 <div class="card shadow-sm mb-4">
     <div class="card-header bg-white">
-        <h5 class="card-title m-0">Datos de la Orden</h5>
+        <h5 class="card-title m-0">Datos de la Orden {{$nro_orden}}</h5>
     </div>
     <div class="card-body">
         {{-- Se añade un campo oculto para el modo de guardado --}}
@@ -28,21 +28,29 @@
             @csrf
             <input type="hidden" name="estatus" value="2"> {{-- Estatus "Abierta" --}}
             <input type="hidden" name="fecha_in" value="{{ date('Y-m-d') }}">
+            <input type="hidden" name="nro_orden" value="{{$nro_orden}}">
             
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="id_vehiculo" class="form-label">Vehículo</label>
+                    @if(is_null($vehiculo))
                     <select class="form-select" id="id_vehiculo" name="id_vehiculo" required>
                         <option value="">Seleccione Vehículo</option>
                        @foreach ($vehiculos as $vehiculo)
                             <option value="{{ $vehiculo->id }}">{{ $vehiculo->flota }} (Placa: {{ $vehiculo->placa }})</option>
                         @endforeach
                     </select>
+                    @else
+                    <input type="hidden" name="vehiculo_id" value="{{$vehiculo->vehiculo_id}}">
+                    <input type="text" name="none" id="none" disabled value="{{$vehiculo->flota}} {{$vehiculo->placa}}">
+                    @endif
                 </div>
                 <div class="col-md-6 mb-3">
                     <label for="tipo" class="form-label">Tipo de Orden</label>
                     <select class="form-select" id="tipo" name="tipo" required>
-                        <option value="Reparación">Reparación</option>
+                        <option value="Preventivo">Preventivo</option>
+                        <option value="Revision">Revision</option>
+                        <option value="Correctivo">Correctivo</option>
                         <option value="Mantenimiento">Mantenimiento</option>
                     </select>
                 </div>
@@ -65,6 +73,10 @@
                         <option value="Alta">Alta</option>
                         <option value="Crítica">Crítica</option>
                     </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="responsable">Responsable</label>
+                    <input type="text" class="form-control" id="responsable" name="responsable">
                 </div>
                 <div class="col-md-6 mb-3">
                     <label for="fecha_prometida" class="form-label">Fecha de Cierre Prometida</label>
