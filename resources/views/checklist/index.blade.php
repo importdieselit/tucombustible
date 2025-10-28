@@ -147,7 +147,7 @@ async function mostrarSelectorVehiculoParaInspeccion() {
     // Convertir el array de vehículos a opciones para el input de SweetAlert2
     const inputOptions = vehiculosActivos.reduce((options, vehiculo) => {
         const tipoString = getTipoVehiculoString(vehiculo.tipo);
-        options[vehiculo.id] = `${vehiculo.placa} (${tipoString})`;
+        options[vehiculo.id] = `${vehiculo.flota} - ${vehiculo.placa} (${tipoString})`;
 
         return options;
     }, {});
