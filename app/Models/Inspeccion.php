@@ -15,7 +15,8 @@ class Inspeccion extends Model
         'checklist_id', 
         'usuario_id', 
         'estatus_general', 
-        'respuesta_json'
+        'respuesta_json',
+        'respuesta_in'
     ];
     
     // Crucial: Almacena el resultado completo como JSON

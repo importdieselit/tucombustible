@@ -75,7 +75,8 @@ Route::middleware(['auth'])->group(function () {
 
 
     // Formulario de inspección (usando el ID del checklist y del vehículo)
-Route::get('/vehiculos/{vehiculo_id}/inspeccion/salida', [InspeccionController::class, 'create'])->name('inspeccion.salida.create');
+Route::get('/vehiculos/inspeccion/{vehiculo_id}/{tipo}', [InspeccionController::class, 'create'])->name('inspeccion.create');
+
 
 // Guardar la inspección
 Route::post('/inspecciones', [InspeccionController::class, 'store'])->name('inspeccion.store');

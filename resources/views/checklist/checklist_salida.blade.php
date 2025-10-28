@@ -49,12 +49,13 @@
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 <div class="card p-4">
-                    <h1 class="h3 fw-bold mb-4 text-center">Checklist de Salida de Camión</h1>
+                    <h1 class="h3 fw-bold mb-4 text-center">Checklist de {{$tipo}} de Camión</h1>
                     <p class="text-muted text-center mb-4">
                         Por favor, verifique cada uno de los puntos antes de autorizar la salida del vehículo.
                     </p>
                     <form id="checklistForm" method="POST" action="{{ route('checklist.process') }}">
                         @csrf
+                        <input type="hidden" name="tipo" value="{{$tipo}}">
                         <div class="mb-4">
                             <label for="camion_id" class="form-label fw-bold">Seleccione el Camión</label>
                             <select class="form-select" id="camion_id" name="camion_id" required>

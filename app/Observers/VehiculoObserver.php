@@ -10,6 +10,7 @@ class VehiculoObserver
 {
     protected $telegramService;
     const LIMITE_KM_MANTENIMIENTO = 5000;
+    const LIMITE_HRS_MANTENIMIENTO = 200;
 
     // Inyectamos el servicio de notificaciones
     public function __construct(TelegramNotificationService $telegramService)
@@ -48,6 +49,26 @@ class VehiculoObserver
 
             } 
         } 
+
+        if ($vehiculo->isDirty('hrs_mantt')) {
+            $newHrs = (int) $vehiculo->hrs_mantt;
+            $oldHrs = (int) $vehiculo->getOriginal('hrs_mantt');
+           
+            // 2. Verificar la condición: el nuevo KM supera el límite Y el KM anterior NO lo superaba.
+            if ($newHrs >= self::LIMITE_HRS_MANTENIMIENTO && $oldHrs < self::LIMITE_HRS_MANTENIMIENTO) {
+             
+                $message = 
+                    "*⚠️ ALERTA DE MANTENIMIENTO PREVENTIVO ⚠️*\n\n" .
+                    "La unidad: {$vehiculo->flota} *{$vehiculo->placa}* ha cruzado el umbral de las " . self::LIMITE_HRS_MANTENIMIENTO . " Horas de Trabajo.\n" .
+                    "• *Horas de trabajo Actual:* `{$newHrs}` Hrs\n" .
+                    //"• *Tipo:* {$vehiculo->tipo}\n\n" .
+                    "*Acción:* Requiere revisión inmediata para mantenimiento preventivo.";
+
+                // 3. Enviar la notificación de forma asíncrona (opcional) o síncrona
+                $this->telegramService->sendMessage($message);
+
+            } 
+        }
         
     }
 

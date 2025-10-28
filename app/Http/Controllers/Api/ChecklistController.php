@@ -12,6 +12,7 @@ use App\Models\InspeccionImagen;
 use App\Models\Vehiculo;
 use App\Models\Alerta;
 use App\Services\FcmNotificationService;
+use App\Services\TelegramNotificationService;
 use Illuminate\Support\Facades\Log;
 
 
@@ -98,9 +99,11 @@ class ChecklistController extends Controller
             if (is_string($respuestas)) {
                 $respuestas = json_decode($respuestas, true);
             }
+            
 
             // 2. AHORA: Procesar lógica de negocio con respuestas ya decodificadas
             $vehiculo = Vehiculo::find($request->vehiculo_id);
+            $old_inspeccion=Inspeccion::where('vehiculo_id',$request->vehiculo_id)->first();
             $isCriticalFailure = false;
             
             // Nombres de los ítems críticos a verificar
@@ -150,39 +153,29 @@ class ChecklistController extends Controller
             }
 
             // 3. Crear la inspección
-            $inspeccion = Inspeccion::create([
-                'vehiculo_id' => $request->vehiculo_id,
-                'checklist_id' => $request->checklist_id,
-                'usuario_id' => auth()->id(),
-                'estatus_general' => $request->estatus_general,
-                'respuesta_json' => json_encode($respuestas)
-            ]);
-
-            if($vehiculo->km_mantt>4800){
-                Alerta::create([
-                    'id_usuario' => null, // null para todos los admins
-                    'id_rel' => $inspeccion->id,
-                    'fecha' => now(),
-                    'observacion' => "Unidad {$vehiculo->flota} requiere planificacion para Servicio de Mantenimiento.",
-                    'estatus' => 0,
-                    'accion' => "/inspecciones/{$inspeccion->id}" // Ruta al detalle de la inspección
+            if(!$old_inspeccion){
+                $inspeccion = Inspeccion::create([
+                    'vehiculo_id' => $request->vehiculo_id,
+                    'checklist_id' => $request->checklist_id,
+                    'usuario_id' => auth()->id(),
+                    'estatus_general' => $request->estatus_general,
+                    'respuesta_json' => json_encode($respuestas)
                 ]);
-                $data=[
-                    'id_usuario' => null, // null para todos los admins
-                    'id_rel' => $inspeccion->id,
-                    'fecha' => now(),
-                    'observacion' => "Unidad {$vehiculo->flota} requiere planificacion para Servicio de Mantenimiento.",
-                    'estatus' => 0,
-                    'accion' => "/inspecciones/{$inspeccion->id}" // Ruta al detalle de la inspección
-                ];
+            }else{
+                $old_inspeccion->respuesta_in=json_encode($respuestas);
+                $old_inspeccion->estatus_general=$request->estatusGeneral;
+                $old_inspeccion->save();
+                $createdAt = $old_inspeccion->created_at; 
+                $updatedAt = now();
                 
-                 FcmNotificationService::enviarNotification(
-                        "Unidad {$vehiculo->flota} requiere Mantenimiento",  
-                        "Unidad {$vehiculo->flota} requiere planificacion para Servicio de Mantenimiento. presenta acumulados {$vehiculo->km_mantt}km",
-                        $data
-                    );
-                    
+                $horasDuracion = $updatedAt->diffInHours($createdAt);
+                $vehiculo->horas_trabajo  += $horasDuracion;
+                $vehiculo->hrs_mantt  += $horasDuracion;
+                $vehiculo->hrs_contador   += $horasDuracion;    
+                $vehiculo->estatus = 2;
             }
+
+            
             
 
             // 4. Procesar y guardar imágenes si existen
@@ -203,87 +196,95 @@ class ChecklistController extends Controller
                 }
             }
 
-            // 5. Actualizar estatus del vehículo si hubo fallo crítico
-            if ($isCriticalFailure && $vehiculo && $vehiculo->estatus != 3) {
-                $vehiculo->estatus = 3; // 3 = No Operativo
+            $alertaAction = "/inspecciones/{$inspeccion->id}";
 
-                Alerta::create([
-                    'id_usuario' => null, // null para todos los admins
-                    'id_rel' => $inspeccion->id,
-                    'fecha' => now(),
-                    'observacion' => "Inspección para vehículo {$vehiculo->placa} con estado **No Operativo o apto para El Viaje**. Requiere revisión.",
-                    'estatus' => 0,
-                    'accion' => "/inspecciones/{$inspeccion->id}" // Ruta al detalle de la inspección
-                ]);
-                $data=[
-                    'id_usuario' => null, // null para todos los admins
-                    'id_rel' => $inspeccion->id,
-                    'fecha' => now(),
-                    'observacion' => "Inspección para vehículo {$vehiculo->placa} con estado **No Operativo o apto para El Viaje**. Requiere revisión.",
-                    'estatus' => 0,
-                    'accion' => "/inspecciones/{$inspeccion->id}" // Ruta al detalle de la inspección
-                ];
-                FcmNotificationService::enviarNotification(
-                        "Unidad {$vehiculo->flota} Marcada No Operativa en Inspeccion",  
-                        "Unidad {$vehiculo->flota} requiere Revision de Mantenimiento. Fue marcada como no operativa durante la inspeccion",
-                        $data
-                    );
+            // 2. Determinar el NUEVO estado del vehículo y el mensaje base
+            if ($isCriticalFailure) {
+                // 🔴 CONDICIÓN CRÍTICA: Prioridad alta, pasa a No Operativo (3)
+                $nuevoEstatus = 3; 
+                $observacionAlerta = "Inspección para vehículo {$vehiculo->placa} con estado **No Operativo**. Requiere revisión.";
+                $notifTitle = "Unidad {$vehiculo->flota} Marcada No Operativa en Inspeccion";
+                $notifBody = "Unidad {$vehiculo->flota} requiere Revisión de Mantenimiento. Fue marcada como no operativa durante la inspección.";
+                $telegramMessage = "🚨 *ALERTA CRÍTICA* - Unidad: **{$vehiculo->placa}** ({$vehiculo->flota}) marcada como **NO OPERATIVA** (Estatus 3). Motivo: Fallo Crítico en Inspección. Revisar: {$alertaAction}";
 
-            }elseif($vehiculo->estatus==2){
-                $vehiculo->estatus=1;
-                Alerta::create([
-                    'id_usuario' => null, // null para todos los admins
-                    'id_rel' => $inspeccion->id,
-                    'fecha' => now(),
-                    'observacion' => "Ingreso de Unidad {$vehiculo->flota} {$vehiculo->placa}",
-                    'estatus' => 0,
-                    'accion' => "/inspecciones/{$inspeccion->id}" // Ruta al detalle de la inspección
-                ]);
-
-                $data=[
-                    'id_usuario' => null, // null para todos los admins
-                    'id_rel' => $inspeccion->id,
-                    'fecha' => now(),
-                    'observacion' => "Unidad {$vehiculo->flota} Ingresando a Patio.",
-                    'estatus' => 0,
-                    'accion' => "/inspecciones/{$inspeccion->id}" // Ruta al detalle de la inspección
-                ];
+            } elseif ($vehiculo->estatus == 2) {
+                // 🟢 UNIDAD INGRESANDO: Estaba en ruta (2) y pasa a Operativo/Disponible (1)
+                $nuevoEstatus = 1;
+                $observacionAlerta = "Ingreso de Unidad {$vehiculo->flota} {$vehiculo->placa} a Patio. Inspección completada.";
+                $notifTitle = "Unidad {$vehiculo->flota} Ingresando a Patio";
+                $notifBody = "Unidad {$vehiculo->flota} ingresando a Patio con {$chofer}.";
+                $telegramMessage = "📥 *INGRESO* - Unidad: **{$vehiculo->placa}** ({$vehiculo->flota}) ingresa a patio. Nuevo Estatus: **Operativo** (1). Chofer: {$chofer}. Revisar: {$alertaAction}";
                 
-                 FcmNotificationService::enviarNotification(
-                        "Unidad {$vehiculo->flota} Ingresando a Patio con {$chofer}",  
-                        "Unidad {$vehiculo->flota} Ingresando a Patio con {$chofer}",
-                        $data
-                    );
-
-
-
-            }else{
-                $vehiculo->estatus=2;
-                Alerta::create([
-                    'id_usuario' => null, // null para todos los admins
-                    'id_rel' => $inspeccion->id,
-                    'fecha' => now(),
-                    'observacion' => "Salida de vehículo {$vehiculo->placa}.",
-                    'estatus' => 0,
-                    'accion' => "/inspecciones/{$inspeccion->id}" // Ruta al detalle de la inspección
-                ]);
-                
-                $data=[
-                    'id_usuario' => null, // null para todos los admins
-                    'id_rel' => $inspeccion->id,
-                    'fecha' => now(),
-                    'observacion' => "Unidad {$vehiculo->flota} Saliendo a Ruta con {$chofer}.",
-                    'estatus' => 0,
-                    'accion' => "/inspecciones/{$inspeccion->id}" // Ruta al detalle de la inspección
-                ];
-                
-                 FcmNotificationService::enviarNotification(
-                        "Unidad {$vehiculo->flota} Saliendo a Ruta con {$chofer}",  
-                        "Unidad {$vehiculo->flota} Saliendo a Ruta con {$chofer}",
-                        $data
-                    );
+            } else {
+                // 🟡 UNIDAD SALIENDO: No está en ruta (probablemente 1 - Operativo) y pasa a En Ruta (2)
+                $nuevoEstatus = 2;
+                $observacionAlerta = "Salida de vehículo {$vehiculo->placa}. Inspección completada.";
+                $notifTitle = "Salida de Unidad {$vehiculo->flota} en Inspeccion";
+                $notifBody = "Unidad {$vehiculo->flota} Saliendo a Ruta con {$chofer}.";
+                $telegramMessage = "📤 *SALIDA* - Unidad: **{$vehiculo->placa}** ({$vehiculo->flota}) saliendo a ruta. Nuevo Estatus: **En Ruta** (2). Chofer: {$chofer}. Revisar: {$alertaAction}";
             }
-            $vehiculo->save();
+
+
+            // 3. Aplicar el cambio de estatus (Solo si el estatus cambia)
+            if ($vehiculo->estatus != $nuevoEstatus) {
+                $vehiculo->estatus = $nuevoEstatus;
+                $vehiculo->save();
+            }
+
+
+            if($vehiculo->km_mantt>4800 || $vehiculo->hrs_mantt > 180){
+                Alerta::create([
+                    'id_usuario' => null, // null para todos los admins
+                    'id_rel' => $inspeccion->id,
+                    'fecha' => now(),
+                    'observacion' => "Unidad {$vehiculo->flota} requiere planificacion para Servicio de Mantenimiento.",
+                    'estatus' => 0,
+                    'accion' => "/inspecciones/{$inspeccion->id}" // Ruta al detalle de la inspección
+                ]);
+                $data=[
+                    'id_usuario' => null, // null para todos los admins
+                    'id_rel' => $inspeccion->id,
+                    'fecha' => now(),
+                    'observacion' => "Unidad {$vehiculo->flota} requiere planificacion para Servicio de Mantenimiento.",
+                    'estatus' => 0,
+                    'accion' => "/inspecciones/{$inspeccion->id}" // Ruta al detalle de la inspección
+                ];
+                
+                 FcmNotificationService::enviarNotification(
+                        "Unidad {$vehiculo->flota} requiere Mantenimiento",  
+                        "Unidad {$vehiculo->flota} requiere planificacion para Servicio de Mantenimiento. presenta acumulados {$vehiculo->km_mantt}km y {$vehiculo->hrs_mantt} horas de trabajo",
+                        $data
+                    );
+                    
+                    
+            }
+
+                        // 4. Crear los datos de la Alerta/Notificación (Estructura centralizada)
+            $alertaData = [
+                'id_usuario' => null, // null para todos los admins
+                'id_rel' => $inspeccion->id,
+                'fecha' => now(),
+                'observacion' => $observacionAlerta,
+                'estatus' => 0,
+                'accion' => $alertaAction
+            ];
+
+            // 5. Crear la Alerta en la Base de Datos
+            Alerta::create($alertaData);
+
+
+            // 6. Enviar Notificación Push (Usando la misma data para la carga útil)
+            FcmNotificationService::enviarNotification(
+                $notifTitle,
+                $notifBody,
+                $alertaData // Usamos el array $alertaData como $data para la notificación
+            );
+
+            // 7. Enviar Notificación a Telegram (Asumiendo que tienes un servicio para esto)
+            // Si utilizas el TelegramNotificationService que hemos trabajado antes:
+            // Asegúrate de que este servicio se inyecte o esté disponible en el contexto.
+            $this->telegramService->sendMessage($telegramMessage); // O TelegramNotificationService::sendMessageStatic(...)
+
             DB::commit();
 
             return response()->json([

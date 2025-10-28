@@ -26,13 +26,24 @@ class InspeccionController extends Controller
         if (!$checklist) {
             abort(404, 'Checklist de vehículos no encontrado.');
         }
+        $inspeccion = Inspeccion::where('vehiculo_id', $vehiculo_id)
+                         ->whereNull('respuesta_in') // <-- CORRECCIÓN AQUÍ
+                         ->first();
 
         // Obtener datos del vehículo (para pre-rellenar el formulario)
         $vehiculo = Vehiculo::findOrFail($vehiculo_id);
+        if($inspeccion){
+            $tipo='entrada';
+            $checklist=$inspeccion->respuesta_json;
+        }else{
+            $tipo='salida';
+        }
 
         return view('checklist.salida', [
             'checklist' => $checklist,
             'vehiculo' => $vehiculo,
+            'tipo' => $tipo,
+            'inspeccion'=>$inspeccion
         ]);
     }
 
@@ -42,6 +53,7 @@ public function store(Request $request)
             'vehiculo_id' => 'required|exists:vehiculos,id',
             'respuesta_json' => 'required|array', // JSON completo serializado desde JS
         ]);
+        
 
         $respuestaJson = $data['respuesta_json'];
         $checklistId = self::CHECKLIST_VEHICULOS_ID;
@@ -49,12 +61,32 @@ public function store(Request $request)
         $warningFound = false;
         $fail=0;
 
+            $vehiculo = Vehiculo::find($data['vehiculo_id']);
+             $old_inspeccion = Inspeccion::where('vehiculo_id', $data['vehiculo_id'])
+                         ->whereNull('respuesta_in') // <-- CORRECCIÓN AQUÍ
+                         ->first();
+
+        
         // 1. Determinar el Estatus General
         foreach ($respuestaJson['sections'] as $section) {
            
             // Función auxiliar para procesar los items, ya sea directamente o dentro de subsecciones
-            $processItems = function ($items) use (&$estatusGeneral, &$warningFound, &$fail) {
+            $processItems = function ($items) use (&$estatusGeneral, &$warningFound, &$fail,&$vehiculo) {
                 foreach ($items as $item) {
+                    
+                    if ($item['label'] == 'Km. Recorridos' ) {
+                        $value=$item['value'];
+                        $kmRecorridos = is_numeric($value) ? (int)$value : 0;
+                                $kmVehiculo = $vehiculo->kilometraje ?? 0;
+                                
+                                if (is_numeric($value) && $value > 0 && $value > $kmVehiculo) {
+                                    $km = $kmRecorridos - $kmVehiculo;
+                                    $vehiculo->kilometraje = $value;
+                                    $vehiculo->km_contador += $km;
+                                    $vehiculo->km_mantt += $km;
+                                    
+                                }
+                    }
                     // Si es booleano, y es falso -> WARNING
                     if ($item['response_type'] === 'boolean' && $item['value'] === false) {
                         $estatusGeneral = 'ADVERTENCIA';
@@ -98,18 +130,32 @@ public function store(Request $request)
         
         // 2. Guardar la Inspección
         // ... (Tu código de guardado sigue igual)
-        $inspeccion = Inspeccion::create([
-            'vehiculo_id' => $data['vehiculo_id'],
-            'checklist_id' => $checklistId,
-            'usuario_id' => Auth::id(),
-            'estatus_general' => $estatusGeneral,
-            // Asegúrate de guardar el JSON como string, si la columna `respuesta_json` no es un tipo JSON nativo.
-            'respuesta_json' => json_encode($respuestaJson), 
-        ]);
-        
+        if(!$old_inspeccion){
+            $inspeccion = Inspeccion::create([
+                'vehiculo_id' => $data['vehiculo_id'],
+                'checklist_id' => $checklistId,
+                'usuario_id' => Auth::id(),
+                'estatus_general' => $estatusGeneral,
+                // Asegúrate de guardar el JSON como string, si la columna `respuesta_json` no es un tipo JSON nativo.
+                'respuesta_json' => json_encode($respuestaJson), 
+            ]);
+            $vehiculo->estatus=1;
+        }else{
+            $old_inspeccion->respuesta_in=json_encode($respuestaJson);
+            $old_inspeccion->estatus_general=$estatusGeneral;
+            $old_inspeccion->save();
+            $createdAt = $old_inspeccion->created_at; 
+            $updatedAt = now();
+            
+            $horasDuracion = $updatedAt->diffInHours($createdAt);
+            $vehiculo->horas_trabajo  += $horasDuracion;
+            $vehiculo->hrs_mantt  += $horasDuracion;
+            $vehiculo->hrs_contador   += $horasDuracion;    
+            $vehiculo->estatus = 2;
+        }
+        $vehiculo->save();
         // 3. Sistema de Alertas y Notificaciones (Si no está OK)
         if ($estatusGeneral !== 'OK') {
-            $vehiculo = Vehiculo::find($data['vehiculo_id']);
             $placa = $vehiculo ? $vehiculo->placa : 'N/A';
             
             // Crear Alerta en la tabla de Alertas (para administradores)
@@ -118,7 +164,7 @@ public function store(Request $request)
                 'id_usuario' => null, // null para todos los admins
                 'id_rel' => $inspeccion->id,
                 'fecha' => now(),
-                'observacion' => "Inspección de salida para vehículo {$placa} con estado **{$estatusGeneral}**. Requiere revisión.",
+                'observacion' => "Inspección de {$request->tipo} para vehículo {$placa} con estado **{$estatusGeneral}**. Requiere revisión.",
                 'estatus' => 0,
                 'accion' => "/inspecciones/{$inspeccion->id}" // Ruta al detalle de la inspección
             ]);
