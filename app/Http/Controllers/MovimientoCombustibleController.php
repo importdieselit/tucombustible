@@ -145,7 +145,8 @@ class MovimientoCombustibleController extends Controller
             'tanquesDisponibles',
             'vehiculos',
             'totales',
-            'tanque00'
+            'tanque00',
+            'resguardo'
         ));
     }
 
