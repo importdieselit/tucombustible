@@ -257,7 +257,7 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
     
     Route::resource('viajes', ViajesController::class)->only(['create','store', 'index', 'show']);
     Route::get('viajes/dashboard', [ViajesController::class, 'dashboard'])->name('viajes.dashboard');
-    Route::get('viaje/list', [ViajesController::class, 'list'])->name('viaje.list');
+    Route::get('viaje/list', [ViajesController::class, 'list'])->name('viajes.list');
     Route::get('/viajes/{id}/assign', [ViajesController::class, 'assign'])->name('viajes.assign');
 Route::put('/viajes/{id}/assign', [ViajesController::class, 'processAssignment'])->name('viajes.processAssignment');    
     Route::get('viajes/{viaje}/viaticos/edit', [ViajesController::class, 'editViaticos'])->name('viajes.viaticos.edit');

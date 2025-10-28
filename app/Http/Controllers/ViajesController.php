@@ -73,11 +73,11 @@ class ViajesController extends Controller
         $clientes = Cliente::where('status',1)->get(['id','nombre']);
 
         //  if($viaje->chofer_id != null){
-        //     return redirect()->route('viaje.list')->with('info', 'El viaje ya tiene chofer asignado.');
+        //     return redirect()->route('viajes.list')->with('info', 'El viaje ya tiene chofer asignado.');
         //  }
         
         //  if($viaje->vehiculo_id != null){
-        //     return redirect()->route('viaje.list')->with('info', 'El viaje ya tiene vehículo asignado.');
+        //     return redirect()->route('viajes.list')->with('info', 'El viaje ya tiene vehículo asignado.');
         //  }
         
         return view('viajes.assign', compact('viaje', 'choferes', 'vehiculos', 'clientes'));
@@ -103,7 +103,7 @@ class ViajesController extends Controller
             'status' => 'COMPLETADO', // Cambia el estado para el siguiente paso (Viáticos)
         ]);
 
-        return redirect()->route('viaje.list')->with('success', 
+        return redirect()->route('viajes.list')->with('success', 
             "Asignación de recursos completada para el viaje a {$viaje->destino_ciudad}. Estado: PENDIENTE DE VIÁTICOS.");
     }
 
@@ -321,7 +321,7 @@ class ViajesController extends Controller
         // $viaje->status = 'VIATICOS_APROBADOS';
         // $viaje->save();
 
-        return redirect()->route('viaje.list');
+        return redirect()->route('viajes.list');
     }
 
     
