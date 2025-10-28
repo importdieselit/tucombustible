@@ -222,10 +222,10 @@
                 </div>
             </div>
             <div class="mt-4">
-                <p class="fw-bold mb-2">Total Disponible / Capacidad total {{$resguardo}}</p>
+                <p class="fw-bold mb-2">Total Disponible / Capacidad total</p>
                 <div class="d-flex align-items-center mb-2">
                     <h3 class="fw-bold mb-0 me-2">{{ number_format($totalCombustible, 2) }} L</h3>
-                    <p class="text-muted mb-0">/ {{ $capacidadTotal-$resguardo }} L</p>
+                    <p class="text-muted mb-0">/ {{ $capacidadTotal }} L</p>
                 </div>
                 <div class="progress" style="height: 10px;">
                     <div class="progress-bar {{ $isAlert ? 'progress-bar-danger' : 'progress-bar-custom' }}"
@@ -558,7 +558,7 @@
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
                                 <h6 class="m-0">Total </h6>
-                                <p>{{$total}}/{{$capacidadTotal-$resguardo }}</p>
+                                <p>{{$total}}/{{$capacidadTotal }}</p>
                                 <p class="text-muted m-0"><small>Nivel: {{$tipo->nivel}}%</small></p>
                             </div>
                             <div class="progress" style="width: 150px; height: 20px;">

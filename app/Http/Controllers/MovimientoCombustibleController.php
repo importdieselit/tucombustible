@@ -79,7 +79,7 @@ class MovimientoCombustibleController extends Controller
         $totalCombustible = Deposito::whereIn('serial',['1','2','3','4'])->sum('nivel_actual_litros');
         $tanque00=Deposito::where('serial','00')->first();
         $capacidadTotal = Deposito::whereIn('serial',['1','2','3','4'])->sum('capacidad_litros');
-        $capacidadTotal-=$resguardo;
+        $totalCombustible-=$resguardo;
         $nivelPromedio = $capacidadTotal > 0 ? ($totalCombustible / $capacidadTotal) * 100 : 0;
         $nivelPromedio = round($nivelPromedio, 2);
 
