@@ -197,7 +197,7 @@ public function handleWebhook(Request $request)
                 
                 // Lógica para ejecutar la acción de DB basada en Botpress
                 if ($actionData['intent'] === 'INTENT_DESPACHO') {
-                    $finalResponseText = $this->processBotpressAction($actionData);
+                    $finalResponseText = $this->processMessage($actionData);
                 }
             }
             
@@ -206,7 +206,7 @@ public function handleWebhook(Request $request)
             // ----------------------------------------------------
             Log::info('enviado a botpress'.$finalResponseText);
             // Usamos el servicio inyectado para la respuesta
-            $this->telegramService->processMessage($finalResponseText); 
+            $this->processMessage($finalResponseText); 
 
         } catch (\Exception $e) {
             Log::error('Error de comunicación con Botpress o procesamiento de acción:', [
@@ -216,35 +216,35 @@ public function handleWebhook(Request $request)
             ]);
             
             $errorMessage = "⚠️ Ocurrió un error al conectar con el sistema de IA.";
-            $this->telegramService->sendMessageToChatId($chatId, $errorMessage);
+            $this->telegramService->sendMessage($errorMessage);
             return response()->json(['status' => 'error'], 500);
         }
 
-        try {
-            // 1. Detectar el patrón y ejecutar la acción
-            $response = $this->processMessage($text);
-            Log::info($response);
+        // try {
+        //     // 1. Detectar el patrón y ejecutar la acción
+        //     $response = $this->processMessage($text);
+        //     Log::info($response);
 
-            // 2. Enviar respuesta de vuelta al usuario
-            // Usamos el servicio inyectado ($this->telegramService) para enviar el mensaje,
-            // ya que el método sendMessage del servicio probablemente acepta (chatId, texto),
-            // mientras que el método sendMessage de este controlador NO lo hace (espera un Request).
-            $this->telegramService->sendMessage($response); 
+        //     // 2. Enviar respuesta de vuelta al usuario
+        //     // Usamos el servicio inyectado ($this->telegramService) para enviar el mensaje,
+        //     // ya que el método sendMessage del servicio probablemente acepta (chatId, texto),
+        //     // mientras que el método sendMessage de este controlador NO lo hace (espera un Request).
+        //     $this->telegramService->sendMessage($response); 
             
-        } catch (\Exception $e) {
-            // Manejar errores de DB o excepciones en processMessage y registrar
-            Log::error('Error en el procesamiento del Webhook de Telegram:', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'text' => $text
-            ]);
+        // } catch (\Exception $e) {
+        //     // Manejar errores de DB o excepciones en processMessage y registrar
+        //     Log::error('Error en el procesamiento del Webhook de Telegram:', [
+        //         'error' => $e->getMessage(),
+        //         'trace' => $e->getTraceAsString(),
+        //         'text' => $text
+        //     ]);
             
-            // Enviar un mensaje de error al usuario por Telegram
-            $errorMessage = "⚠️ Lo siento, ocurrió un error interno al procesar tu solicitud: {$e->getMessage()}";
-            $this->telegramService->sendMessage($errorMessage);
+        //     // Enviar un mensaje de error al usuario por Telegram
+        //     $errorMessage = "⚠️ Lo siento, ocurrió un error interno al procesar tu solicitud: {$e->getMessage()}";
+        //     $this->telegramService->sendMessage($errorMessage);
 
-            return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
-        }
+        //     return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+        // }
 
         return response()->json(['status' => 'success'], 200);
     }
