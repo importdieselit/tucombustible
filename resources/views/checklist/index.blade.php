@@ -87,7 +87,7 @@
                     <i class="fa-solid fa-truck fa-4x text-success mb-3"></i>
                     <h5 class="card-title">Gestión de Vehículos</h5>
                     <p class="card-text text-muted">Accede a la lista de vehículos para crear una nueva Orden de Trabajo.</p>
-                    <a href="{{ route('vehiculos.index') }}" class="btn btn-success w-100">Ir a Vehículos</a>
+                    <a href="{{ route('vehiculos.list') }}" class="btn btn-success w-100">Ir a Vehículos</a>
                 </div>
             </div>
         </div>
@@ -98,7 +98,7 @@
                     <i class="fa-solid fa-file-invoice fa-4x text-warning mb-3"></i>
                     <h5 class="card-title">Órdenes de Trabajo (OT)</h5>
                     <p class="card-text text-muted">Revisa, edita y cierra las órdenes de trabajo de mantenimiento.</p>
-                    <a href="{{ route('ordenes.index') ?? '#' }}" class="btn btn-warning w-100">Gestionar Órdenes</a>
+                    <a href="{{ route('ordenes.list') ?? '#' }}" class="btn btn-warning w-100">Gestionar Órdenes</a>
                 </div>
             </div>
         </div>
