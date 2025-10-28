@@ -22,7 +22,7 @@
             </button>
         </form>
         
-        <a href="{{ route('viaje.list') }}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i> Volver al Listado</a>
+        <a href="{{ route('viajes.list') }}" class="btn btn-light btn-sm"><i class="bi bi-arrow-left"></i> Volver al Listado</a>
     </div>
 </div>
         <div class="card-body">

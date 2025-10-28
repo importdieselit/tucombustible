@@ -17,11 +17,11 @@
     <div class="mb-3 d-flex justify-content-between align-items-center">
         <div>
             <span class="fw-bold me-2">Filtrar por Estatus:</span>
-            <a href="{{ route('viaje.list') }}" class="btn btn-sm btn-outline-primary @unless(request('status')) active @endunless">Todos</a>
-            <a href="{{ route('viaje.list', ['status' => 'PENDIENTE_ASIGNACION']) }}" class="btn btn-sm btn-outline-danger @if(request('status') === 'PENDIENTE_ASIGNACION') active @endif">Pendiente Asignacion</a>
-            <a href="{{ route('viaje.list', ['status' => 'PENDIENTE_VIATICOS']) }}" class="btn btn-sm btn-outline-warning @if(request('status') === 'PENDIENTE_VIATICOS') active @endif">Pendiente Viáticos</a>
-            <a href="{{ route('viaje.list', ['status' => 'ASIGNADO']) }}" class="btn btn-sm btn-outline-info @if(request('status') === 'ASIGNADO') active @endif">Asignado</a>
-            <a href="{{ route('viaje.list', ['status' => 'COMPLETADO']) }}" class="btn btn-sm btn-outline-success @if(request('status') === 'COMPLETADO') active @endif">Completado</a>
+            <a href="{{ route('viajes.list') }}" class="btn btn-sm btn-outline-primary @unless(request('status')) active @endunless">Todos</a>
+            <a href="{{ route('viajes.list', ['status' => 'PENDIENTE_ASIGNACION']) }}" class="btn btn-sm btn-outline-danger @if(request('status') === 'PENDIENTE_ASIGNACION') active @endif">Pendiente Asignacion</a>
+            <a href="{{ route('viajes.list', ['status' => 'PENDIENTE_VIATICOS']) }}" class="btn btn-sm btn-outline-warning @if(request('status') === 'PENDIENTE_VIATICOS') active @endif">Pendiente Viáticos</a>
+            <a href="{{ route('viajes.list', ['status' => 'ASIGNADO']) }}" class="btn btn-sm btn-outline-info @if(request('status') === 'ASIGNADO') active @endif">Asignado</a>
+            <a href="{{ route('viajes.list', ['status' => 'COMPLETADO']) }}" class="btn btn-sm btn-outline-success @if(request('status') === 'COMPLETADO') active @endif">Completado</a>
         </div>
         <a href="{{ route('viajes.index') }}" class="btn btn-info shadow-sm">
             <i class="fa fa-home"></i> Volver a Inicio
