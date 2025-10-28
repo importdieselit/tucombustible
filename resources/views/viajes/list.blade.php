@@ -99,7 +99,7 @@
                             @method('DELETE')
                             <button type="button" class="btn btn-sm btn-danger" title="Eliminar Viaje" 
                                     onclick="confirmDelete('{{ $viaje->id }}', '{{ $viaje->destino_ciudad }}')">
-                                <i class="bi bi-trash"></i>
+                                <i class="fa fa-trash"></i>
                             </button>
                         </form>
                     </td>
