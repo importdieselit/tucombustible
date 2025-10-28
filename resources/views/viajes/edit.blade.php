@@ -122,7 +122,7 @@
                     </thead>
                     <tbody>
                         @foreach($viaje->despachos as $despacho)
-                                    <tr id="row-{{ $index }}">
+                                    <tr id="row-{{ $depacho->id }}">
                                         <td>
                                             <select name="despachos[{{ $despacho->id }}][cliente_id]" class="form-select form-select-sm cliente-select @error("despachos[{{$despacho->id}}][cliente_id]") is-invalid @enderror" {{ $despacho->otro_cliente? 'disabled' : '' }}>
                                                 <option value="">-- Seleccione Cliente --</option>
