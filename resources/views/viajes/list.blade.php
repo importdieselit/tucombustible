@@ -94,7 +94,14 @@
                                 <i class="fa fa-journal-text"></i> Resumen
                             </a>
                         @endif
-                        
+                        <form action="{{ route('viajes.destroy', $viaje->id) }}" method="POST" class="d-inline" id="delete-form-list-{{ $viaje->id }}">
+                            @csrf
+                            @method('DELETE')
+                            <button type="button" class="btn btn-sm btn-danger" title="Eliminar Viaje" 
+                                    onclick="confirmDelete('{{ $viaje->id }}', '{{ $viaje->destino_ciudad }}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
                     </td>
                 </tr>
                 @empty
@@ -109,4 +116,28 @@
     <!-- En un proyecto real, se colocaría la paginación aquí -->
     {{-- $viajes->links() --}}
 </div>
+<script>
+/**
+ * Muestra una alerta de confirmación antes de enviar el formulario de eliminación.
+ * @param {string} id - El ID del viaje a eliminar.
+ * @param {string} destino - El destino del viaje para personalizar el mensaje.
+ */
+function confirmDelete(id, destino) {
+    const confirmation = confirm(`¿Estás absolutamente seguro de eliminar el Viaje #${id} a ${destino}? \n\nEsta acción es IRREVERSIBLE y eliminará todos los despachos asociados.`);
+    
+    if (confirmation) {
+        // Si el usuario confirma, buscar el formulario y enviarlo
+        const formId = `delete-form-${id}`;
+        const formListId = `delete-form-list-${id}`;
+        
+        let form = document.getElementById(formId) || document.getElementById(formListId);
+        
+        if (form) {
+            form.submit();
+        } else {
+            alert("Error: No se encontró el formulario de eliminación.");
+        }
+    }
+}
+</script>
 @endsection

@@ -804,4 +804,37 @@ public function updateDespacho(Request $request, $viajeId, $despachoId)
     }
 }
 
+public function destroy($id)
+{
+    $viaje = Viaje::findOrFail($id);
+
+    try {
+        // Iniciar Transacción
+        DB::beginTransaction();
+
+        // 1. Eliminar los despachos relacionados (Requerido por el usuario)
+        // Asume que tu modelo Viaje tiene una relación despachos()
+        $despachos_eliminados = $viaje->despachos()->count();
+        $viaje->despachos()->delete(); 
+
+        // 2. Eliminar el viaje
+        $viaje->delete();
+
+        // Si todo va bien, confirmar la transacción
+        DB::commit();
+
+        return redirect()->route('viajes.list')
+                         ->with('success', "✅ El Viaje #{$id} a {$viaje->destino_ciudad} (y {$despachos_eliminados} despachos) ha sido eliminado correctamente.");
+
+    } catch (\Exception $e) {
+        // Si algo falla, revertir los cambios
+        DB::rollBack();
+        
+        Log::error("Error al eliminar el viaje #{$id}: " . $e->getMessage()); 
+        
+        return redirect()->route('viajes.list')
+                         ->with('error', "❌ Error crítico al intentar eliminar el viaje #{$id}. Consulte los logs.");
+    }
+}
+
 }

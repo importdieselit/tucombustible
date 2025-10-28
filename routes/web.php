@@ -262,6 +262,7 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
 Route::put('/viajes/{id}/assign', [ViajesController::class, 'processAssignment'])->name('viajes.processAssignment');    
     Route::get('viajes/{viaje}/viaticos/edit', [ViajesController::class, 'editViaticos'])->name('viajes.viaticos.edit');
     Route::put('viajes/{viaje}/viaticos', [ViajesController::class, 'updateViaticos'])->name('viajes.viaticos.update');
+    Route::delete('/viajes/{id}', [ViajesController::class, 'destroy'])->name('viajes.destroy');
     // Muestra el formulario de edición
 Route::get('/viajes/{id}/edit', [ViajesController::class, 'edit'])->name('viaje.edit');
 
