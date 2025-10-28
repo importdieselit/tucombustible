@@ -170,7 +170,7 @@ public function handleWebhook(Request $request)
                 'target_channel' => 'telegram' 
             ];
             
-            Log::info('enviando a botpress:  '.$payload);
+            Log::info('enviando a botpress:  '.json_encode($payload));
 
             $botpressResponse = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $botpressToken,
