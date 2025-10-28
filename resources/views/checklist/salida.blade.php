@@ -3,7 +3,7 @@
 @section('content')
 <div class="container my-5">
     <h2>Inspección de Salida: {{ $vehiculo->placa }}</h2>
-    <p class="text-muted">Checklist: {{ $checklist->nombre ?? 'Check-In' }} (v{{ $checklist->version??null }})</p>
+    <p class="text-muted">Checklist: {{ $checklist->nombre ?? $checklist->checklist_name }} (v{{ $checklist->version??null }})</p>
     
     <form id="inspeccionForm">
         @csrf
@@ -23,7 +23,7 @@
 @push('scripts')
 <script>
     // 1. Obtener el JSON del blueprint desde Blade (Laravel lo castea a objeto JS)
-    const CHECKLIST_BLUEPRINT = @json($checklist->checklist);
+    const CHECKLIST_BLUEPRINT = @json($checklist->checklist??$cheklist);
     const VEHICULO_DATA = @json($vehiculo);
     const container = document.getElementById('checklist-container');
     const form = document.getElementById('inspeccionForm');
