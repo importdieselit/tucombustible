@@ -116,40 +116,40 @@
                         <tr>
                             <th style="width: 5%;">#</th>
                             <th style="width: 50%;">Cliente</th>
+                                <th style="width: 35%;">Otro Cliente (Si no está en lista)</th>
                             <th style="width: 25%;">Litros</th>
-                            <th style="width: 20%;">Tipo</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($viaje->despachos as $index => $despacho)
-                        <tr data-despacho-id="{{ $despacho->id }}">
-                            <td>{{ $index + 1 }}</td>
-                            <td>
-                                {{-- Select para Cliente Registrado --}}
-                                <select class="form-select despacho-field" data-despacho-id="{{ $despacho->id }}" data-field="cliente_id">
-                                    <option value="">-- OTRO CLIENTE --</option>
-                                    {{-- El loop de clientes debe ser pasado desde el controlador: $clientes --}}
-                                    @foreach($clientes as $cliente)
-                                        <option value="{{ $cliente->id }}" {{ $despacho->cliente_id == $cliente->id ? 'selected' : '' }}>
-                                            {{ $cliente->nombre }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                
-                                {{-- Input para 'otro_cliente' - Solo visible si cliente_id es NULL --}}
-                                {{-- NOTA: La lógica del controlador maneja que si cliente_id tiene valor, otro_cliente es null --}}
-                            </td>
-                            <td>
-                                <input type="number" step="0.01" class="form-control despacho-field" 
-                                       data-despacho-id="{{ $despacho->id }}" data-field="litros" 
-                                       value="{{ number_format($despacho->litros, 2, '.', '') }}">
-                            </td>
-                            <td>
-                                <span class="badge bg-{{ $despacho->cliente_id ? 'primary' : 'success' }}">
-                                    {{ $despacho->cliente_id ? 'Registrado' : 'Otro Cliente' }}
-                                </span>
-                            </td>
-                        </tr>
+                        @foreach($viaje->despachos as $despacho)
+                                    <tr id="row-{{ $index }}">
+                                        <td>
+                                            <select name="despachos[{{ $despacho->id }}][cliente_id]" class="form-select form-select-sm cliente-select @error("despachos[{{$despacho->id}][cliente_id]") is-invalid @enderror" {{ $despacho->otro_cliente? 'disabled' : '' }}>
+                                                <option value="">-- Seleccione Cliente --</option>
+                                                @foreach($clientes as $cliente)
+                                                    <option value="{{ $cliente->id }}" {{ $despacho->cliente_id == $cliente->id ? 'selected' : '' }}>{{ $cliente->nombre }}</option>
+                                                @endforeach
+                                            </select>
+                                            @error("despachos[{{ $despacho->id }}][cliente_id]")
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </td>
+                                        <td>
+                                            <input type="text" name="despachos[{{$despacho->id}][otro_cliente]" class="form-control form-control-sm otro-cliente-input @error("despachos[{{$despacho->id}][otro_cliente]") is-invalid @enderror" placeholder="Nombre o Razón Social" value="{{ $despacho.->otro_cliente }}" {{ $despacho->cliente_id ? 'disabled' : '' }}>
+                                            @error("despachos.{$despacho->id}.otro_cliente")
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </td>
+                                        <td>
+                                            <input type="number" name="despachos[{{ $despacho->id }}][litros]" class="form-control form-control-sm @error("despachos.{$despacho->id}.litros") is-invalid @enderror" placeholder="Cantidad" step="any" required value="{{ $despacho->litros") }}">
+                                            @error("despachos.{$despacho->id}.litros")
+                                                <div class="invalid-feedback">{{ $message }}</div>
+                                            @enderror
+                                        </td>
+                                        <td>
+                                            <button type="button" class="btn btn-danger btn-sm remove-despacho" data-index="{{ $despacho->id }}"><i class="bi bi-trash"></i></button>
+                                        </td>
+                                    </tr>
                         @endforeach
                     </tbody>
                     <tfoot class="table-secondary">
