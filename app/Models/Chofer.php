@@ -74,4 +74,48 @@ class Chofer extends Model
     {
         return Carbon::parse($this->licencia_vencimiento)->lt(now());
     }
+
+    public function scopeSearch($query, $term)
+    {
+        if (empty($term)) {
+            return $query;
+        }
+
+        $term = '%' . $term . '%';
+
+        return $query->where(function ($q) use ($term) {
+            // Campos del propio modelo Chofer
+            $q->where('licencia_numero', 'like', $term)
+              ->orWhere('tipo_licencia', 'like', $term)
+              ->orWhere('cargo', 'like', $term)
+              ->orWhere('documento_vialidad_numero', 'like', $term);
+
+            // Buscar en la relación Persona (ej. nombre, apellido, documento)
+            $q->orWhereHas('persona', function ($qPersona) use ($term) {
+                $qPersona->where('nombre', 'like', $term)
+                         ->orWhere('apellido', 'like', $term)
+                         ->orWhere('documento', 'like', $term);
+            });
+
+            // Buscar en la relación Vehiculo (ej. placa, modelo)
+            $q->orWhereHas('vehiculo', function ($qVehiculo) use ($term) {
+                $qVehiculo->where('placa', 'like', $term)
+                          ->orWhere('modelo', 'like', $term);
+            });
+        });
+    }
+
+    public function viajes()
+        {
+            return $this->hasMany(Viaje::class, 'chofer_id');
+        }
+
+    public function viajes_ayudante()
+        {
+            return $this->hasMany(Viaje::class, 'ayudante');
+        }
+        
+
+        
+
 }

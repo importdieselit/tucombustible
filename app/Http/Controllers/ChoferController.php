@@ -23,7 +23,7 @@ class ChoferController extends BaseController
     public function index()
     {
         // Datos de ejemplo para el dashboard (simulados)
-        $totalChoferes = Chofer::count();
+        $totalChoferes = Chofer::where('cargo','CHOFER')->count();
         $choferesDisponibles = Chofer::whereNull('vehiculo_id')->count();
         $choferesEnRuta = Chofer::whereNotNull('vehiculo_id')->count();
 

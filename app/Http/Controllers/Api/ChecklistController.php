@@ -11,6 +11,10 @@ use App\Models\Inspeccion;
 use App\Models\InspeccionImagen;
 use App\Models\Vehiculo;
 use App\Models\Alerta;
+use App\Models\Viaje;
+use App\Models\Orden;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use App\Services\FcmNotificationService;
 use App\Services\TelegramNotificationService;
 use Illuminate\Support\Facades\Log;
@@ -19,6 +23,8 @@ use Illuminate\Support\Facades\Log;
 
 class ChecklistController extends Controller
 {
+    use TelegramNotificationService;
+    use FcmNotificationService;
     /**
      * Obtener todos los checklists activos
      */
@@ -103,7 +109,9 @@ class ChecklistController extends Controller
 
             // 2. AHORA: Procesar lógica de negocio con respuestas ya decodificadas
             $vehiculo = Vehiculo::find($request->vehiculo_id);
-            $old_inspeccion=Inspeccion::where('vehiculo_id',$request->vehiculo_id)->first();
+            $old_inspeccion=Inspeccion::where('vehiculo_id',$request->vehiculo_id)->where('checklist_id',1)
+                         ->whereNull('respuesta_in') // <-- CORRECCIÓN AQUÍ
+                         ->first();
             $isCriticalFailure = false;
             
             // Nombres de los ítems críticos a verificar
@@ -161,22 +169,29 @@ class ChecklistController extends Controller
                     'estatus_general' => $request->estatus_general,
                     'respuesta_json' => json_encode($respuestas)
                 ]);
+
+                if($request->checklist_id==2){
+                    $orden=Orden::where('id_vehiculo',$request->vehiculo_id)->where('estatus',2)->where('inspeccion_id',null)->first();
+                    if($orden){
+                        $orden->inspeccion_id=$inspeccion->id;
+                        $orden->save();
+                    }
+                }   
+
             }else{
                 $old_inspeccion->respuesta_in=json_encode($respuestas);
                 $old_inspeccion->estatus_general=$request->estatusGeneral;
                 $old_inspeccion->save();
                 $createdAt = $old_inspeccion->created_at; 
                 $updatedAt = now();
-                
-                $horasDuracion = $updatedAt->diffInHours($createdAt);
-                $vehiculo->horas_trabajo  += $horasDuracion;
-                $vehiculo->hrs_mantt  += $horasDuracion;
-                $vehiculo->hrs_contador   += $horasDuracion;    
-                $vehiculo->estatus = 2;
-            }
-
-            
-            
+                if($request->checklist_id==1){
+                    $horasDuracion = $updatedAt->diffInHours($createdAt);
+                    $vehiculo->horas_trabajo  += $horasDuracion;
+                    $vehiculo->hrs_mantt  += $horasDuracion;
+                    $vehiculo->hrs_contador   += $horasDuracion;    
+                    $vehiculo->estatus = 2;
+                }
+            }           
 
             // 4. Procesar y guardar imágenes si existen
             if ($request->hasFile('imagenes')) {

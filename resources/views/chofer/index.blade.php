@@ -48,7 +48,7 @@
         <div class="col-lg-6 mb-4">
             <div class="card shadow-sm">
                 <div class="card-header bg-white">
-                    <h5 class="card-title m-0">Rendimiento por Calificación</h5>
+                    <h5 class="card-title m-0">Rendimiento por Calificación (demo)</h5>
                 </div>
                 <div class="card-body">
                     <canvas id="rendimientoChart" style="height: 300px;"></canvas>
@@ -59,7 +59,7 @@
         <div class="col-lg-6 mb-4">
             <div class="card shadow-sm">
                 <div class="card-header bg-white">
-                    <h5 class="card-title m-0">Reporte de Incidencias</h5>
+                    <h5 class="card-title m-0">Reporte de Incidencias (demo)</h5>
                 </div>
                 <div class="card-body">
                     <canvas id="incidenciasChart" style="height: 300px;"></canvas>

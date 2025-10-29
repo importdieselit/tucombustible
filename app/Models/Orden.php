@@ -42,7 +42,8 @@ class Orden extends Model
         'chfr',
         'responsable',
         'parent',
-        'id_vehiculo'
+        'id_vehiculo',
+        'id_inspeccion'
     ];
 
     protected $casts = [
@@ -51,7 +52,7 @@ class Orden extends Model
         'taller_externo' => 'integer',
         'nro_orden' => 'string',
         'estatus' => 'string', // Asumiendo que es varchar de tu migración anterior
-        'id_auto' => 'integer',
+        'id_vehiculo' => 'integer',
         'kilometraje' => 'integer',
         'id_us_in' => 'integer',
         'fecha_in' => 'date',
