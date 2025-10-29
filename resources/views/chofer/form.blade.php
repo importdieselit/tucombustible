@@ -80,21 +80,38 @@
                         @enderror
                     </div>
                     <div class="col-md-6 mb-3">
+                        <label for="tipo_licencia" class="form-label">Tipo de Licencia <span class="text-danger">*</span></label>
+                        <input type="text" name="tipo_licencia" value="{{ old('tipo_licencia', $chofer->tipo_licencia ?? '') }}" class="form-control">
+                    </div>
+                    <div class="col-md-6 mb-3">
                         <label for="licencia_vencimiento" class="form-label">Fecha de Vencimiento Licencia <span class="text-danger">*</span></label>
                         <input type="date" class="form-control @error('licencia_vencimiento') is-invalid @enderror" id="licencia_vencimiento" name="licencia_vencimiento" value="{{ old('licencia_vencimiento', $chofer->licencia_vencimiento ?? '') }}" required>
                         @error('licencia_vencimiento')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
+
                     <div class="col-md-6 mb-3">
-                        <label for="documento_vialidad_numero" class="form-label">Número Documento Vialidad</label>
-                        <input type="text" class="form-control @error('documento_vialidad_numero') is-invalid @enderror" id="documento_vialidad_numero" name="documento_vialidad_numero" value="{{ old('documento_vialidad_numero', $chofer->documento_vialidad_numero ?? '') }}">
+                        <label for="cerificado_medico" class="form-label">Certificado Médico <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="cerificado_medico" name="cerificado_medico" value="{{ old('cerificado_medico', $chofer->cerificado_medico ?? '') }}" required>
+                    </div>  
+                    <div>
+                        <label for="cetificado_medico_vencimiento" class="form-label">Fecha de Vencimiento Certificado Médico </label>
+                        <input type="date" class="form-control" id="cetificado_medico_vencimiento" name="cetificado_medico_vencimiento" value="{{ old('cetificado_medico_vencimiento', $chofer->cetificado_medico_vencimiento ?? '') }}">
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="documento_vialidad_numero" class="form-label">Aprobacion de Pdvsa</label>
+                        <input type="checkbox" class="form-check-input" id="documento_vialidad_numero" name="documento_vialidad_numero" value="{{ old('documento_vialidad_numero', $chofer->documento_vialidad_numero ?? '1') }}">
+
                         @error('documento_vialidad_numero')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
+                    
                     <div class="col-md-6 mb-3">
-                        <label for="documento_vialidad_vencimiento" class="form-label">Fecha de Vencimiento Documento Vialidad</label>
+                        <label for="documento_vialidad_vencimiento" class="form-label">Fecha de Vencimiento </label>
                         <input type="date" class="form-control @error('documento_vialidad_vencimiento') is-invalid @enderror" id="documento_vialidad_vencimiento" name="documento_vialidad_vencimiento" value="{{ old('documento_vialidad_vencimiento', $chofer->documento_vialidad_vencimiento ?? '') }}">
                         @error('documento_vialidad_vencimiento')
                             <div class="invalid-feedback">{{ $message }}</div>

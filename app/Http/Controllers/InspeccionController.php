@@ -274,7 +274,7 @@ public function store(Request $request)
                 'id_usuario' => null, // null para todos los admins
                 'id_rel' => $inspeccion->id,
                 'fecha' => now(),
-                'observacion' => "Inspección de {$request->tipo} para vehículo {$placa} con estado **{$estatusGeneral}**. Requiere revisión.",
+                'observacion' => "Inspección de Mantenimiento para vehículo {$placa} con estado **{$estatusGeneral}**. Requiere revisión.",
                 'estatus' => 0,
                 'accion' => "/inspecciones/{$inspeccion->id}" 
             ]);
