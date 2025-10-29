@@ -96,9 +96,7 @@ class ChoferController extends BaseController
         $request->validate([
             'nombre' => 'required|string|max:255',
             'dni' => 'required|string|max:255|unique:personas',
-            'dni_exp' => 'required|date',
             'telefono' => 'nullable|string|max:255',
-            'licencia_numero' => 'required|string|max:255|unique:choferes',
             'licencia_vencimiento' => 'required|date',
             'documento_vialidad_numero' => 'nullable|string|max:255',
             'documento_vialidad_vencimiento' => 'nullable|date',
@@ -113,11 +111,12 @@ class ChoferController extends BaseController
             $persona->dni = $request->dni;
             $persona->dni_exp = $request->dni_exp;
             $persona->telefono = $request->telefono;
+
             // Si tu formulario tiene más campos de Persona, agrégalos aquí.
             $persona->save();
 
             // Crear el registro en la tabla 'choferes'
-            Chofer::create(array_merge($request->only('licencia_numero', 'licencia_vencimiento', 'documento_vialidad_numero', 'documento_vialidad_vencimiento', 'vehiculo_id'), ['persona_id' => $persona->id]));
+            Chofer::create(array_merge($request->only('licencia_numero', 'certificado_medico', 'certificado_medico_vencimiento', 'tipo_licencia', 'cargo', 'licencia_vencimiento', 'documento_vialidad_numero', 'documento_vialidad_vencimiento', 'vehiculo_id'), ['persona_id' => $persona->id]));
 
             DB::commit();
             Session::flash('success', 'Chofer registrado exitosamente.');
@@ -186,9 +185,7 @@ class ChoferController extends BaseController
         $request->validate([
             'nombre' => 'required|string|max:255',
             'dni' => 'required|string|max:255|unique:personas,dni,' . $chofer->persona_id,
-            'dni_exp' => 'required|date',
             'telefono' => 'nullable|string|max:255',
-            'licencia_numero' => 'required|string|max:255|unique:choferes,licencia_numero,' . $chofer->id,
             'licencia_vencimiento' => 'required|date',
             'documento_vialidad_numero' => 'nullable|string|max:255',
             'documento_vialidad_vencimiento' => 'nullable|date',
@@ -198,7 +195,7 @@ class ChoferController extends BaseController
         DB::beginTransaction();
         try {
             $chofer->persona->update($request->only('nombre', 'dni', 'dni_exp', 'telefono'));
-            $chofer->update($request->only('licencia_numero', 'licencia_vencimiento', 'documento_vialidad_numero', 'documento_vialidad_vencimiento', 'vehiculo_id'));
+            $chofer->update($request->only('licencia_numero', 'licencia_vencimiento', 'documento_vialidad_numero', 'documento_vialidad_vencimiento', 'vehiculo_id', 'tipo_licencia', 'cargo', 'certificado_medico', 'certificado_medico_vencimiento'));
             DB::commit();
             Session::flash('success', 'Información del chofer actualizada exitosamente.');
             return Redirect::route('choferes.list');
