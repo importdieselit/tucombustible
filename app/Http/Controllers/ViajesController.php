@@ -220,12 +220,19 @@ class ViajesController extends Controller
 
         try {
             DB::beginTransaction();
-
+            $status = 'PENDIENTE_ASIGNACION';
+            if($request->chofer_id != null && $request->vehiculo_id != null){
+                $status = 'PROGRAMADO';
+            }
+            //
             // 3. Crear el Viaje ÚNICO
             $viaje = Viaje::create([
                 'destino_ciudad' => $request->destino_ciudad,
                 'fecha_salida' => $request->fecha_salida,
-                'status' => 'PENDIENTE_ASIGNACION',
+                'status' => $status,
+                'chofer_id' => $request->chofer_id,
+                'vehiculo_id' => $request->vehiculo_id,
+                'ayudante' => $reqeust->ayudante ?? 0,
                 // Los campos opcionales como chofer_id y vehiculo_id se dejan nulos aquí.
             ]);
 
@@ -265,7 +272,7 @@ class ViajesController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             // El log ahora mostrará el mensaje de error completo
-            \Log::error('Error creando Viaje con Despachos: ' . $e->getMessage()); 
+            Log::error('Error creando Viaje con Despachos: ' . $e->getMessage()); 
             return back()->withInput()->with('error', 'Error del servidor al crear el viaje. Intente nuevamente. Detalles: ' . $e->getMessage());
         }
     }

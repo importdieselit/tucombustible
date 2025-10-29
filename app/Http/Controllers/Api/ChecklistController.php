@@ -23,8 +23,6 @@ use Illuminate\Support\Facades\Log;
 
 class ChecklistController extends Controller
 {
-    use TelegramNotificationService;
-    use FcmNotificationService;
     /**
      * Obtener todos los checklists activos
      */
