@@ -25,7 +25,7 @@ p {
         <div class="card-header py-3 bg-{{ $inspeccion->estatus_general === 'OK' ? 'success' : 'warning' }}">
             <h6 class="m-0 font-weight-bold text-white">
                 Estatus General: {{ $inspeccion->estatus_general }}
-                <span class="float-end">Inspeccionado por: {{ $inspeccion->usuario->name ?? 'Sistema' }} el {{ $inspeccion->created_at->format('d/m/Y H:i') }}</span>
+                <span class="float-end">Inspeccionado por: {{ $inspeccion->usuario->name ?? 'Sistema' }} el {{ $inspeccion->created_at->format('d/m/Y h:i a') }}</span>
             </h6>
         </div>
         <div class="card-body">
