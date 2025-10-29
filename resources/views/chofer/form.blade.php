@@ -54,7 +54,7 @@
                     </div>
                     <div class="col-md-6 mb-3">
                         <label for="dni_exp" class="form-label">Cédula Fecha de Expedición <span class="text-danger">*</span></label>
-                        <input type="date" class="form-control @error('dni_exp') is-invalid @enderror" id="dni_exp" name="dni_exp" value="{{ old('dni_exp', $chofer->persona->dni_exp ?? '') }}" required>
+                        <input type="date" class="form-control @error('dni_exp') is-invalid @enderror" id="dni_exp" name="dni_exp" value="{{ old('dni_exp', $chofer->persona->dni_exp ?? '') }}" >
                         @error('dni_exp')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -74,7 +74,7 @@
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label for="licencia_numero" class="form-label">Número de Licencia <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control @error('licencia_numero') is-invalid @enderror" id="licencia_numero" name="licencia_numero" value="{{ old('licencia_numero', $chofer->licencia_numero ?? '') }}" required>
+                        <input type="text" class="form-control @error('licencia_numero') is-invalid @enderror" id="licencia_numero" name="licencia_numero" value="{{ old('licencia_numero', $chofer->licencia_numero ?? '') }}" >
                         @error('licencia_numero')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -93,7 +93,7 @@
 
                     <div class="col-md-6 mb-3">
                         <label for="cerificado_medico" class="form-label">Certificado Médico <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="cerificado_medico" name="cerificado_medico" value="{{ old('cerificado_medico', $chofer->cerificado_medico ?? '') }}" required>
+                        <input type="text" class="form-control" id="cerificado_medico" name="cerificado_medico" value="{{ old('cerificado_medico', $chofer->cerificado_medico ?? '') }}" >
                     </div>  
                     <div>
                         <label for="cetificado_medico_vencimiento" class="form-label">Fecha de Vencimiento Certificado Médico </label>
