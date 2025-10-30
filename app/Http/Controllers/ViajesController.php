@@ -232,7 +232,7 @@ class ViajesController extends Controller
                 'status' => $status,
                 'chofer_id' => $request->chofer_id,
                 'vehiculo_id' => $request->vehiculo_id,
-                'ayudante' => $reqeust->ayudante ?? 0,
+                'ayudante' => $request->ayudante ?? 0,
                 // Los campos opcionales como chofer_id y vehiculo_id se dejan nulos aquí.
             ]);
 
