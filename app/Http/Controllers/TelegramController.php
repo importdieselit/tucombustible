@@ -22,6 +22,9 @@ class TelegramController extends Controller
      * PRÁCTICA SUGERIDA: Usar env('TELEGRAM_CHAT_ID')
      */
     protected $chatId = '-1002935486238'; 
+    
+    protected $botpressUrl = 'https://api.botpress.cloud/v1/bots/bf3ba980-bc5e-40fb-8029-88f9ec975e39/events'; 
+    protected $botpressToken = '8278356133:AAFbPIiY77YEdFbRoO8JSpF83UKaSM2X-dM'; 
 
     /**
      * Recibe la imagen capturada desde el frontend y la envía a un grupo de Telegram.
@@ -128,7 +131,154 @@ class TelegramController extends Controller
         }
     }
 
-public function handleWebhook(Request $request)
+
+ public function handleWebhook(Request $request)
+    {
+        // 1. Verificar si hay un mensaje de texto
+        $update = $request->all();
+
+        if (isset($update['message']['text'])) {
+            $text = $update['message']['text'];
+            $chat_id = $update['message']['chat']['id'];
+            $user_id = $update['message']['from']['id'] ?? null;
+
+            // 2. Intentar procesar con lógica local (Prioridad 1)
+            $localResponse = $this->processLocalPatterns($text);
+
+            if ($localResponse) {
+                // Si la respuesta local existe (el patrón coincidió), enviarla directamente.
+                $this->telegramService->sendMessage($chat_id, $localResponse, 'Markdown');
+            } else {
+                // 3. Fallback: Si no coincide con ningún patrón local, delegar a Botpress (Prioridad 2)
+                $botpressResponse = $this->sendToBotpress($text,$chat_id, $user_id);
+
+                if ($botpressResponse) {
+                    // Procesar y enviar la respuesta de Botpress
+                    $this->telegramService->sendMessage($chat_id, $botpressResponse, 'HTML');
+                } else {
+                    // Mensaje de fallback final (si Botpress también falla o no responde)
+                    $this->telegramService->sendMessage($chat_id, "Lo siento, no pude procesar tu solicitud ni a través de mis patrones ni con Botpress. Por favor, revisa el formato.");
+                }
+            }
+
+        } else if (isset($update['message']['photo'])) {
+            // Manejar mensajes con fotos si es necesario
+            $this->telegramService->sendMessage($update['message']['chat']['id'], "Gracias por la foto, pero solo proceso mensajes de texto.", 'Markdown');
+        }
+
+        return response('OK', 200);
+    }
+
+
+
+     private function processLocalPatterns(string $text): ?string
+    {
+        $text = trim($text);
+
+        // 1. Patrón de ayuda o bienvenida
+        if (strtolower($text) === '/start' || strtolower($text) === 'hola') {
+            return "¡Hola! Soy el Bot de Reporte de Despachos. Mi formato de reporte es:\n"
+                 . "`abastecio unidad de [NOMBRE CLIENTE] con el surtidor tanque [SERIAL TANQUE] [CANTIDAD] litros`\n"
+                 . "Ejemplo: `abastecio unidad de Transportes C.A. con el surtidor tanque TQ001 500 litros`";
+        }
+        
+        // 2. Patrón de Despacho (Expresión Regular más robusta para capturar los datos)
+        $pattern = '/^abastecio unidad de (.*?) con el surtidor tanque (.*?) (\d+(?:[.,]\d+)?)\s*litros/i';
+
+        if (preg_match($pattern, $text, $matches)) {
+            // Lógica de Despacho
+            list(, $cliente_txt, $tanque_txt, $cantidad_txt) = $matches;
+
+            // Normalizar cantidad a formato decimal (reemplazar coma por punto)
+            $cantidad = (float)str_replace(',', '.', $cantidad_txt);
+            
+            // Buscar Cliente (usando LIKE por si hay variaciones)
+            $cliente = Cliente::where('nombre', 'LIKE', "%{$cliente_txt}%")->first();
+            $tanque = Deposito::where('serial', $tanque_txt)->first();
+
+            $otro_cliente = $cliente ? null : $cliente_txt;
+
+            if (!$tanque) {
+                return "❌ Error: No se encontró un depósito con el serial: **{$tanque_txt}**.";
+            }
+
+            // Lógica de validación de stock
+            if ($tanque->stock < $cantidad) {
+                // Usar $tanque->stock en lugar de nivel_alerta_litros para el stock real
+                return "⚠️ Aviso: El tanque **{$tanque->serial}** solo tiene {$tanque->stock} litros disponibles. No se pudo realizar el despacho de {$cantidad}L.";
+            }
+
+            // Realizar la resta del stock (DESCOMENTAR EN PRODUCCIÓN)
+            // $tanque->stock -= $cantidad;
+            // $tanque->save();
+            $nombre = $cliente->nombre ?? $otro_cliente;
+
+            // 3. Respuesta de Éxito
+            return "✅ **Despacho Registrado**:\n"
+                 . "Cliente: **{$nombre}**\n"
+                 . "Tanque: **{$tanque->serial}**\n"
+                 . "Cantidad Despachada: **{$cantidad}** litros.";
+        }
+        
+        // Si no coincide con ningún patrón conocido, retorna null
+        return null;
+    }
+
+     private function sendToBotpress(string $message,$chatId, $userId): ?string
+    {
+        Log::info("Delegando a Botpress: " . $message);
+
+        
+        
+        $payload = [
+                'type' => 'text', 
+                'text' => $message,
+                'source' => 'api',
+                'channel' => 'telegram',
+                'direction' => 'incoming',
+                'payload' => [
+                    'text' => $message,
+                    // Aquí se adjunta la data que tu nodo de código debe leer.
+                    'laravel_metadata' => [ 
+                        'source_app' => 'Laravel-Telegram-Proxy',
+                        // Puedes adjuntar cualquier otra data que necesites:
+                    ]
+                ],
+                'target' => (string) $chatId, // El usuario de Telegram
+                'target_type' => 'user',
+                'target_channel' => 'telegram' 
+            ];
+    
+        try {
+
+            Log::info("enviado a botpress:  ".json_encode($payload));
+            
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $this->botpressToken,
+                'Content-Type' => 'application/json',
+            ])->post($this->botpressUrl, $payload);
+            
+            Log::info("Respuesta de Botpress (Status {$response->status()}): " . $response->body());
+    
+            if ($response->successful()) {
+                $body = $response->json();
+                
+                // Botpress a menudo devuelve una lista de respuestas. Buscamos la primera de tipo 'text'.
+                $reply = collect($body['responses'] ?? [])->firstWhere('type', 'text');
+    
+                return $reply['text'] ?? "Recibí una respuesta de Botpress, pero no contenía texto legible.";
+
+            } else {
+                Log::error("Error al enviar a Botpress. Estado: " . $response->status() . " Body: " . $response->body());
+                return null;
+            }
+        } catch (\Exception $e) {
+            Log::error("Excepción al comunicarse con Botpress: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    public function handleWebhook_old(Request $request)
     {
         // La primera línea de log SÍ se debe ejecutar ahora que el 419 está resuelto.
         Log::info('Webhook de Telegram recibido:', $request->all());
@@ -299,4 +449,60 @@ public function handleWebhook(Request $request)
         
         return "Lo siento, no entendí el formato. Por favor, revisa mi mensaje de `/start` para ver el formato correcto.";
     }
+
+    function parseInventarioAforoInicial(string $text): array
+{
+    // Array para almacenar todos los datos extraídos
+    $data = [
+        'tanques' => [],
+        'resguardo_litros' => 0.0,
+        'disponible_venta_litros' => 0.0,
+        'exito' => false,
+    ];
+
+    // Función auxiliar para limpiar la cadena de números (reemplaza coma por punto y convierte a float)
+    $cleanValue = function (string $value): float {
+        return (float)str_replace(',', '.', str_replace('.', '', $value)); // Maneja el formato de miles y decimales
+    };
+    
+    // --- 1. EXTRACCIÓN DE DATOS DE TANQUES ---
+    // Patrón: Tanque N DSL [CM] cm = [LITROS] lts.
+    // Grupos de captura: 1=Número de tanque, 2=CM, 3=Litros
+    $patternTanques = '/Tanque\s+(\d+)\s+DSL\s*([\d\.,]+)\s*cm\s*=\s*([\d\.,]+)\s*lts\./i';
+
+    if (preg_match_all($patternTanques, $text, $matches, PREG_SET_ORDER)) {
+        foreach ($matches as $match) {
+            $data['tanques'][] = [
+                'tanque_id' => (int)$match[1],
+                'cm' => $cleanValue($match[2]),
+                'litros' => $cleanValue($match[3]),
+            ];
+        }
+    }
+
+    // --- 2. EXTRACCIÓN DE VOLUMEN EN RESGUARDO ---
+    // Patrón: En resguardo del Ministerio de agricultura y tierras [LITROS] lts.
+    // Grupo de captura: 1=Litros
+    $patternResguardo = '/En\s+resguardo.*?tierras\s*([\d\.,]+)\s*lts\./si';
+    
+    if (preg_match($patternResguardo, $text, $matchResguardo)) {
+        $data['resguardo_litros'] = $cleanValue($matchResguardo[1]);
+    }
+
+    // --- 3. EXTRACCIÓN DE VOLUMEN DISPONIBLE PARA LA VENTA ---
+    // Patrón: Disponibles para la venta = [LITROS] lts.
+    // Grupo de captura: 1=Litros
+    $patternDisponible = '/Disponibles\s+para\s+la\s+venta\s*=\s*([\d\.,]+)\s*lts\./si';
+
+    if (preg_match($patternDisponible, $text, $matchDisponible)) {
+        $data['disponible_venta_litros'] = $cleanValue($matchDisponible[1]);
+    }
+    
+    // Si se extrajo algo, consideramos que fue un éxito
+    if (!empty($data['tanques']) || $data['resguardo_litros'] > 0 || $data['disponible_venta_litros'] > 0) {
+        $data['exito'] = true;
+    }
+
+    return $data;
+}
 }

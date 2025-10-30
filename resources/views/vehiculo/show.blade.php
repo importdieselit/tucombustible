@@ -196,6 +196,7 @@ $orden=false;
                 <p>{{ $orden->observacion ?? 'No hay observaciones.' }}</p>
 
                 <hr>
+                @if($insumos_usados)
                 <h5>Insumos Utilizados</h5>
                 <table class="table table-striped">
                     <thead>
@@ -221,9 +222,10 @@ $orden=false;
                         @endforelse
                         <tr>
                             <td colspan="3" class="text-end"><strong>Total Costo:</strong></td>
-                            <td><strong>${{ number_format($insumos_usados->sum(fn($insumo) => $insumo->inventario->costo * $insumo->cantidad), 2, ',', '.') }}</strong></td>
+                            <td><strong>$ @if($insumos_usados) {{ number_format($insumos_usados->sum(fn($insumo) => $insumo->inventario->costo * $insumo->cantidad), 2, ',', '.') }} @endif</strong></td>
                     </tbody>
                 </table>
+                @endif
             </div>
         </div>
     @endif
