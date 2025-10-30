@@ -225,6 +225,7 @@ class TelegramController extends Controller
 
         // Primero, verificamos si el mensaje tiene la estructura general de Aforo
         if (preg_match($aforo_header_pattern, $text) && preg_match($aforo_detail_pattern, $text)) {
+            Log::info('actualizacion de aforo');
             
             $success_messages = [];
             $error_messages = [];

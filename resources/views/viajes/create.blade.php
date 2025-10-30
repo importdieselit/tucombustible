@@ -41,7 +41,7 @@
                     <select name="vehiculo_id" id="vehiculo_id" class="form-select @error('vehiculo_id') is-invalid @enderror" required>
                         <option value="">Seleccione el vehículo</option>
                         @foreach($vehiculos as $vehiculo)
-                            <option value="{{ $vehiculo->id }}" {{ old('vehiculo_id', $viaje->vehiculo_id) == $vehiculo->id ? 'selected' : '' }}>
+                            <option value="{{ $vehiculo->id }}" >
                                 {{ $vehiculo->placa }} - {{ $vehiculo->flota }}
                             </option>
                         @endforeach
