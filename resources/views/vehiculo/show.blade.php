@@ -43,6 +43,7 @@
 @php
 
 $orden=false;
+$insumos_usados=false;
 
      // NOTA: En una aplicación real, estos datos vendrían de la base de datos.
             $rutas = collect([
