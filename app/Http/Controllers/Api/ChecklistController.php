@@ -23,8 +23,19 @@ use Illuminate\Support\Facades\Log;
 
 class ChecklistController extends Controller
 {
+
+    protected $telegramService;
+
+    public function __construct(TelegramNotificationService $telegramService)
+    {
+        // Laravel automáticamente provee la instancia del servicio
+        $this->telegramService = $telegramService;
+    }
+
     /**
      * Obtener todos los checklists activos
+     * 
+     * 
      */
     public function index()
     {
@@ -297,7 +308,7 @@ class ChecklistController extends Controller
             // 7. Enviar Notificación a Telegram (Asumiendo que tienes un servicio para esto)
             // Si utilizas el TelegramNotificationService que hemos trabajado antes:
             // Asegúrate de que este servicio se inyecte o esté disponible en el contexto.
-            TelegramNotificationService::sendMessage($telegramMessage); // O TelegramNotificationService::sendMessageStatic(...)
+            $this->telegramService->sendMessage($telegramMessage); // O TelegramNotificationService::sendMessageStatic(...)
 
             DB::commit();
 
