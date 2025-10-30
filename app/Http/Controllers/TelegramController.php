@@ -176,14 +176,14 @@ class TelegramController extends Controller
         $text = trim($text);
 
         // 1. Patrón de ayuda o bienvenida
-        if (strtolower($text) === '/start' || strtolower($text) === 'hola') {
+        if (strtolower($text) === '/start' || strtolower($text) === 'holaBot') {
             return "¡Hola! Soy el Bot de Reporte de Despachos. Mi formato de reporte es:\n"
                  . "`abastecio unidad de [NOMBRE CLIENTE] con el surtidor tanque [SERIAL TANQUE] [CANTIDAD] litros`\n"
                  . "Ejemplo: `abastecio unidad de Transportes C.A. con el surtidor tanque TQ001 500 litros`";
         }
         
         // 2. Patrón de Despacho (Expresión Regular más robusta para capturar los datos)
-        $pattern = '/^abastecio unidad de (.*?) con el surtidor tanque (.*?) (\d+(?:[.,]\d+)?)\s*litros/i';
+        $pattern = '/^\/?abasteci[oó] unidad de (.+?) con el surtidor del? tanque (.+?) (\d+) litros/iu';
 
         if (preg_match($pattern, $text, $matches)) {
             // Lógica de Despacho
@@ -220,9 +220,72 @@ class TelegramController extends Controller
                  . "Cantidad Despachada: **{$cantidad}** litros.";
         }
         
+        $aforo_header_pattern = '/^(?:Aforo inicial inventario área de almacenamiento Impordiesel:\s*\n)?/iu';
+        $aforo_detail_pattern = '/(Tanque\s*\d+)\s+DSL\s*\n\s*([\d,]+)\s+cm\s*=\s*([\d,]+)\s+lts\./iu';
+
+        // Primero, verificamos si el mensaje tiene la estructura general de Aforo
+        if (preg_match($aforo_header_pattern, $text) && preg_match($aforo_detail_pattern, $text)) {
+            
+            $success_messages = [];
+            $error_messages = [];
+
+            // Extraemos todos los detalles de los tanques
+            if (preg_match_all($aforo_detail_pattern, $text, $matches, PREG_SET_ORDER)) {
+                
+                foreach ($matches as $match) {
+                    $serial_txt = trim($match[1]); // e.g., 'Tanque 1'
+                    $cm_txt = trim($match[2]);     // e.g., '224,5'
+                    $litros_txt = trim($match[3]); // e.g., '36683,08'
+
+                    // Normalizar cantidad a formato decimal (reemplazar coma por punto para PHP)
+                    $litros = (float)str_replace(',', '.', $litros_txt);
+                    $cm = (float)str_replace(',', '.', $cm_txt);
+                    
+                    // Buscar Tanque en DB
+                    $tanque = Deposito::where('serial', $serial_txt)->first();
+
+                    if ($tanque) {
+                        // Lógica de Actualización: Stock y Nivel en CM
+                        // DESCOMENTAR EN PRODUCCIÓN:
+                        $tanque->nivel_actual_litros = $litros; 
+                        //$tanque->nivel_cm = $cm;
+                        $tanque->save(); 
+                        
+                        $success_messages[] = "Tanque **{$serial_txt}** actualizado a **{$litros_txt}** Lts ({$cm_txt} cm).";
+
+                    } else {
+                        $error_messages[] = "Tanque **{$serial_txt}**: No se encontró un depósito con ese serial.";
+                    }
+                }
+
+                if (!empty($success_messages)) {
+                    // Construir la respuesta final de éxito
+                    $response = "✅ **Aforo Inicial Registrado y Stock Actualizado**:\n"
+                        . implode("\n", $success_messages);
+                    
+                    if (!empty($error_messages)) {
+                        $response .= "\n\n⚠️ Errores encontrados:\n" . implode("\n", $error_messages);
+                    }
+                    
+                    // Se puede añadir un mensaje para los lts disponibles para la venta si se desea capturarlo
+                    if (preg_match('/Disponibles para la venta = ([\d,]+) lts/iu', $text, $disponibles_match)) {
+                    $response .= "\n\n(Total disponible en el reporte: {$disponibles_match[1]} lts)";
+                    }
+
+                    return $response;
+                }
+            }
+        }
+        
+
+
+        
         // Si no coincide con ningún patrón conocido, retorna null
         return null;
     }
+
+
+    
 
      private function sendToBotpress(string $message,$chatId, $userId): ?string
     {
