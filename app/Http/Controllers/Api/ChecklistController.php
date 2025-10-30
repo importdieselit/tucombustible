@@ -189,6 +189,7 @@ class ChecklistController extends Controller
                     $vehiculo->hrs_contador   += $horasDuracion;    
                     $vehiculo->estatus = 2;
                 }
+                $inspeccion=$old_inspeccion;
             }           
 
             // 4. Procesar y guardar imágenes si existen
