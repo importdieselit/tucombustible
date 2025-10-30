@@ -164,7 +164,7 @@ class ChecklistController extends Controller
                     'vehiculo_id' => $request->vehiculo_id,
                     'checklist_id' => $request->checklist_id,
                     'usuario_id' => auth()->id(),
-                    'estatus_general' => $request->estatus_general,
+                    'estatus_general' => $request->estatus_general ?? 'OK',
                     'respuesta_json' => json_encode($respuestas)
                 ]);
 
