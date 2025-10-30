@@ -727,7 +727,7 @@ public function updateField(Request $request, $id)
     $viaje = Viaje::findOrFail($id);
     $field = $request->input('field');
     $value = $request->input('value');
-    $allowedFields = ['destino_ciudad', 'fecha_salida', 'chofer_id', 'ayudante_id', 'vehiculo_id', 'status'];
+    $allowedFields = ['destino_ciudad', 'fecha_salida', 'chofer_id', 'ayudante', 'vehiculo_id', 'status'];
 
     if (!in_array($field, $allowedFields)) {
         return response()->json(['message' => 'Campo no permitido para actualización.', 'status' => 'error'], 403);
@@ -737,7 +737,7 @@ public function updateField(Request $request, $id)
     try {
         // Manejar el caso especial del ayudante (si el campo de la BD es 'ayudante_id')
         if ($field === 'ayudante') {
-            $field = 'ayudante_id'; 
+            $field = 'ayudante'; 
         }
 
         // Si el valor es nulo (ej. si se selecciona "Seleccione el ayudante"), guardamos null
