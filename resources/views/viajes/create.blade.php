@@ -36,7 +36,7 @@
                         @enderror
                     </div>
 
-                    <div class="mb-4">
+                    <div class="col-md-6">
                     <label for="vehiculo_id" class="form-label fw-bold">Vehículo Asignado</label>
                     <select name="vehiculo_id" id="vehiculo_id" class="form-select @error('vehiculo_id') is-invalid @enderror" required>
                         <option value="">Seleccione el vehículo</option>
