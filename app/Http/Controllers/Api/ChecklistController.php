@@ -178,7 +178,7 @@ class ChecklistController extends Controller
 
             }else{
                 $old_inspeccion->respuesta_in=json_encode($respuestas);
-                $old_inspeccion->estatus_general=$request->estatusGeneral;
+                $old_inspeccion->estatus_general=$request->estatusGeneral??'OK';
                 $old_inspeccion->save();
                 $createdAt = $old_inspeccion->created_at; 
                 $updatedAt = now();
