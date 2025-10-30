@@ -297,7 +297,7 @@ class ChecklistController extends Controller
             // 7. Enviar Notificación a Telegram (Asumiendo que tienes un servicio para esto)
             // Si utilizas el TelegramNotificationService que hemos trabajado antes:
             // Asegúrate de que este servicio se inyecte o esté disponible en el contexto.
-            $this->telegramService->sendMessage($telegramMessage); // O TelegramNotificationService::sendMessageStatic(...)
+            TelegramNotificationService::sendMessage($telegramMessage); // O TelegramNotificationService::sendMessageStatic(...)
 
             DB::commit();
 
