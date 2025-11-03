@@ -111,7 +111,7 @@ class DepositoController extends BaseController
         // 3. Aplicar la lógica solicitada.
         // Usamos una pequeña tolerancia (epsilon) para evitar problemas de coma flotante, 
         // aunque para 0.5 no suele ser tan crítico.
-        if ($parteDecimal > 0.5000001) { 
+        if ($parteDecimal >= 0.5) { 
             // Si el decimal es > 0.5, ajustamos a 0.5.
             $valorRedondeado = $parteEntera + 0.5;
         } else {

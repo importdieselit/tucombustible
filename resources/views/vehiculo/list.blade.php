@@ -203,7 +203,10 @@
                     topStart: {
                         buttons: ['csv', 'excel', 'pdf', 'print']
                     }
-                }
+                },
+                "order": [
+                    [ 8, 'desc' ] 
+                ]
             });
 
             // Lógica para redirigir al hacer clic en una fila
