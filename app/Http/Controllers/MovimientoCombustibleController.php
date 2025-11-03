@@ -14,6 +14,7 @@ use App\Models\TabuladorViatico;
 use App\Models\VehiculoPrecargado;
 use App\Models\Planta;
 use App\Models\Chofer;
+use App\Models\CompraCombustible;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
@@ -788,6 +789,9 @@ public function createPrecarga()
                 'fecha' => $request->fecha_requerida,
                 'estatus' => 'PENDIENTE_ASIGNACION',
                 'tipo' => $request->tipo,
+                'vehiculo_id' => $request->vehiculo_id,
+                'chofer_id' => $request->chofer_id,
+                'cisterna' => $request->cisterna,
                 'usuario_solicitante_id' => Auth::id(),
             ]);
 
