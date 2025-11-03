@@ -6,9 +6,11 @@ use App\Models\MovimientoCombustible;
 use App\Models\Deposito;
 use App\Models\Proveedor;
 use App\Models\Cliente;
+use App\Models\DespachoViaje;
 use App\Models\Parametro;
 use App\Models\Vehiculo;
 use App\Models\Pedido;
+use App\Models\TabuladorViatico;
 use App\Models\VehiculoPrecargado;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -20,6 +22,7 @@ use Illuminate\Support\Carbon;
 use App\Traits\GenerateAlerts;
 use Illuminate\Support\Facades\Auth;
 use App\Services\FcmNotificationService;
+use App\Services\TelegramNotificationService;   
 
 /**
  * Controlador para gestionar los movimientos de combustible (recarga y despacho).
@@ -27,6 +30,17 @@ use App\Services\FcmNotificationService;
 class MovimientoCombustibleController extends Controller
 {
     use GenerateAlerts;
+
+    protected $fcmService;
+    protected $telegramService;
+
+    public function __construct(
+        FcmNotificationService $fcmService, 
+        TelegramNotificationService $telegramService
+    ) {
+        $this->fcmService = $fcmService;
+        $this->telegramService = $telegramService;
+    }
 
 
 
@@ -189,9 +203,9 @@ class MovimientoCombustibleController extends Controller
                     'aprobado',
                     $validatedData['observaciones_admin']
                 );
-                \Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por aprobación de pedido");
+                Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por aprobación de pedido");
             } catch (\Exception $e) {
-                \Log::error("Error enviando notificación FCM: " . $e->getMessage());
+                Log::error("Error enviando notificación FCM: " . $e->getMessage());
                 // No fallar la operación principal por error en notificación
             }
             // Actualizar el saldo del cliente (se resta la cantidad aprobada)
@@ -536,9 +550,9 @@ public function createPrecarga()
                     'aprobado',
                     $pedido->observaciones_admin
                 );
-                \Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por aprobación de pedido");
+                Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por aprobación de pedido");
             } catch (\Exception $e) {
-                \Log::error("Error enviando notificación FCM: " . $e->getMessage());
+                Log::error("Error enviando notificación FCM: " . $e->getMessage());
                 // No fallar la operación principal por error en notificación
             }
 
@@ -605,7 +619,7 @@ public function createPrecarga()
     {
         // 1. Validar los datos de la solicitud
         $request->validate([
-            'vehiculo_id' => 'required|exists:vehiculos,id',
+            'vehiculo_id' => 'required|exists:vehiculos,id',    
             'deposito_id' => 'required|exists:depositos,id',
         ]);
         
@@ -694,9 +708,9 @@ public function createPrecarga()
                     'en_proceso',
                     $pedido->observaciones_admin
                 );
-                \Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por aprobación de pedido");
+                Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por aprobación de pedido");
             } catch (\Exception $e) {
-                \Log::error("Error enviando notificación FCM: " . $e->getMessage());
+                Log::error("Error enviando notificación FCM: " . $e->getMessage());
                 // No fallar la operación principal por error en notificación
             }
 
@@ -708,9 +722,9 @@ public function createPrecarga()
                     'Baja Disponibilidad', 
                     'Estimado cliente su disponibilidad actual es de '.($cliente->disponible - $cantidadDespachar).' Litros de su cupo de '.$cliente->cupo.' se recomienda tomar previsiones'
                 );
-                \Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por aprobación de pedido");
+                Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por aprobación de pedido");
             } catch (\Exception $e) {
-                \Log::error("Error enviando notificación FCM: " . $e->getMessage());
+                Log::error("Error enviando notificación FCM: " . $e->getMessage());
                 // No fallar la operación principal por error en notificación
             }
 
@@ -727,5 +741,151 @@ public function createPrecarga()
         }
 
         return redirect()->route('combustible.aprobados');
+    }
+
+    /**
+     * Muestra el formulario para crear una nueva solicitud.
+     */
+    public function createCompra()
+    {
+        // Data de prueba o real para los selectores
+        $proveedores = Proveedor::all(['id', 'nombre']);
+        $plantas = Planta::all(['id', 'nombre', 'ciudad']); 
+        $choferes = Chofer::whereNotNull('documento_de_vialidad')
+                                      ->where('activo', true)
+                                      ->where('cargo', 'CHOFER')
+                                      ->whereDoesntHave('viajes', function ($query) use ($fecha) {
+                                          $query->where('fecha_salida', $fecha)
+                                                ->whereIn('status', ['PROGRAMADO','COMPLETADO', 'EN_CURSO']);
+                                      })
+                                      ->get();
+
+        return view('combustible.compra', compact('proveedores', 'plantas'));
+    }
+
+    /**
+     * Almacena la solicitud, realiza la planificación y notifica.
+     */
+    public function storeCompra(Request $request)
+    {
+        $request->validate([
+            'proveedor_id' => 'required|exists:proveedores,id',
+            'cantidad_litros' => 'required|integer|min:100',
+            'planta_destino_id' => 'required|exists:plantas,id',
+            'fecha' => 'required|date|after_or_equal:today',
+            'vehiculo_id' => 'required|exists:vehiculos,id',
+            'chofer_id' => 'required|exists:choferes,id',
+            'ayudante_id' => 'nullable|exists:ayudantes,id'
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // 1. CREAR LA SOLICITUD DE COMBUSTIBLE
+            $solicitud = CompraCombustible::create([
+                'proveedor_id' => $request->proveedor_id,
+                'cantidad_litros' => $request->cantidad_litros,
+                'planta_destino_id' => $request->planta_destino_id,
+                'fecha' => $request->fecha_requerida,
+                'estatus' => 'PENDIENTE_ASIGNACION',
+                'tipo' => $request->tipo,
+                'usuario_solicitante_id' => Auth::id(),
+            ]);
+
+            // 2. PLANIFICACIÓN Y ASIGNACIÓN DE RECURSOS
+            $planta = Planta::find($solicitud->planta_destino_id);
+            $destino = TabuladorViatico::find($planta->viatico_id);
+            $cantidad = $solicitud->cantidad_litros;
+            $fecha = $solicitud->fecha_requerida;
+
+
+            // 3. CREAR LA PLANIFICACIÓN (Viaje)
+            $viaje = Viaje::create([
+                'solicitud_combustible_id' => $solicitud->id,
+                'vehiculo_id' => $request->vehiculo_id,
+                'chofer_id' => $request->chofer_id,
+                'ayudante_id' => $request->ayudante_id ?? null, // Ayudante es opcional
+                'destino_ciudad' => $destino->id ?? 'N/A', 
+                'fecha_salida' => $fecha,
+                'status' => 'Programado'
+            ]);
+
+             DespachoViaje::create([
+                    'viaje_id' => $viaje->id,
+                    'otro_cliente' => 'PDVSA '.$destino->destino_ciudad,
+                    'litros' => $request->cantidad_litros
+                ]);
+
+            // 4. ACTUALIZAR LA SOLICITUD
+            $solicitud->update([
+                'estatus' => 'PROGRAMADO',
+                'viaje_id' => $viaje->id,
+            ]);
+
+
+            DB::commit();
+
+            // 5. NOTIFICACIÓN DE PLANIFICACIÓN EXITOSA
+            $this->enviarNotificaciones($viaje, $solicitud, $choferDisponible, $ayudanteDisponible);
+
+            return redirect()->route('combustible.index')->with('success', 'Solicitud de combustible creada y viaje de carga planificado y asignado con éxito (ID Viaje: ' . $viaje->id . ').');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error en el flujo de Solicitud/Planificación de Combustible: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Ocurrió un error en el sistema al procesar la solicitud.');
+        }
+    }
+
+    /**
+     * Función para enviar notificaciones a los involucrados.
+     * @param Viaje $viaje
+     * @param SolicitudCombustible $solicitud
+     * @param Chofer $chofer
+     * @param Ayudante|null $ayudante
+     */
+    protected function enviarNotificaciones(Viaje $viaje, SolicitudCombustible $solicitud, Chofer $chofer, ?Ayudante $ayudante): void
+    {
+        $mensaje = "✅ Planificación de Carga de Combustible CREADA:\n"
+                 . "Carga: {$solicitud->cantidad_litros} Litros\n"
+                 . "Destino: {$viaje->destino_nombre} ({$viaje->destino_ciudad})\n"
+                 . "Fecha: {$viaje->fecha_salida}\n"
+                 . "Unidad Asignada: {$viaje->vehiculo->flota}\n"
+                 . "Chofer: {$chofer->persona->nombre }\n"
+                 . ($ayudante ? "Ayudante: {$ayudante->persona->nombre }" : "Ayudante: No Asignado");
+
+        // 1. Notificación a Telegram (Ejemplo de Alerta General)
+        try {
+            // El servicio TelegramNotificationService debe tener un método como sendNotification
+            $this->telegramService->sendNotification($mensaje);
+        } catch (\Exception $e) {
+            Log::error("Error enviando notificación a Telegram: " . $e->getMessage());
+        }
+
+        // 2. Notificación FCM (Alertas y fcmNotification)
+        // Podrías enviar la notificación al token del chofer y a los usuarios de logística
+        try {
+            $tokens = [];
+            // Asume que el modelo Chofer tiene el token_fcm relacionado con su usuario
+            if ($chofer->user && $chofer->user->token_fcm) {
+                $tokens[] = $chofer->user->token_fcm;
+            }
+            // Tokens de usuarios de logística/administración
+            $logisticaTokens = \App\Models\User::where('rol', 'logistica')->pluck('token_fcm')->toArray();
+            $tokens = array_merge($tokens, $logisticaTokens);
+
+            if (!empty($tokens)) {
+                 $this->fcmService->sendNotificationToUsers(
+                    $tokens, 
+                    "Carga de Combustible Planificada (ID Viaje: {$viaje->id})", 
+                    "Tienes asignada una carga de {$solicitud->cantidad_litros}L para el {$viaje->fecha_salida}."
+                );
+            }
+        } catch (\Exception $e) {
+            Log::error("Error enviando notificación FCM: " . $e->getMessage());
+        }
+
+        // 3. (Opcional) Implementación de Alertas Web
+        // Esto se manejaría generalmente con Eventos de Laravel y un listener de Broadcast.
+        // Alert::create(['mensaje' => "Nueva Planificación de Combustible: ID {$viaje->id}", 'tipo' => 'info']);
     }
 }

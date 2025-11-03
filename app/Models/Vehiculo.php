@@ -11,6 +11,9 @@ use App\Models\Cliente;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Traits\FiltroPorCliente;
+use App\Models\PlanMantenimiento;
+use App\Models\Viaje;
+use App\Models\CompraCombustible;
 use Google\Service\ApigeeRegistry\Build;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -177,6 +180,15 @@ class Vehiculo extends Model
     {
         // Ajusta 'id_vehiculo' si el nombre de la llave foránea en la tabla 'ordenes' es diferente
         return $this->hasMany(Orden::class, 'id_vehiculo'); 
+    }
+    public function viajes()
+    {
+        return $this->hasMany(Viaje::class, 'id_vehiculo');
+    }
+
+    public function compraCombustible()
+    {
+        return $this->hasMany(CompraCombustible::class, 'id_vehiculo');
     }
 
      public static function countVehiculosEnMantenimiento(): int

@@ -136,7 +136,7 @@ class TelegramController extends Controller
     {
         // 1. Verificar si hay un mensaje de texto
         $update = $request->all();
-
+        Log::info($update);
         if (isset($update['message']['text'])) {
             $text = $update['message']['text'];
             $chat_id = $update['message']['chat']['id'];

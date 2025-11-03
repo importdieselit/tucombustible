@@ -21,13 +21,22 @@ use Illuminate\Support\Facades\Log;
 // Función para mostrar mensajes con timestamp
 function logMessage($message, $type = 'info') {
     $timestamp = date('Y-m-d H:i:s');
-    $prefix = match($type) {
-        'error' => '❌',
-        'warning' => '⚠️',
-        'success' => '✅',
-        'info' => '🔍',
-        default => '📋'
-    };
+
+     $prefix = '📋'; // Default
+    switch($type) {
+        case 'error':
+            $prefix = '❌';
+            break;
+        case 'warning':
+            $prefix = '⚠️';
+            break;
+        case 'success':
+            $prefix = '✅';
+            break;
+        case 'info':
+            $prefix = '🔍';
+            break;
+    }
     
     echo "[{$timestamp}] {$prefix} {$message}\n";
     

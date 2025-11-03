@@ -57,7 +57,7 @@ class DailySummaryCommand extends Command
         // ----------------------------------------------------------------------
         
         // Planificados (Plan): Asumimos que es el total de planificados en el rango de hoy
-        $mantenimientosPlan = Vehiculo::where('km_mantt','>' ,4800)->count();      
+        $mantenimientosPlan = Vehiculo::where('km_mantt','>' ,4800)->orWhere('hrs_mantt','>' ,180)->count();      
         // $mantenimientosPlan = Mantenimiento::where('status', 'PLANIFICADO')
         //     ->whereDate('fecha_programada', $today)
         //     ->count();

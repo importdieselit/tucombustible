@@ -227,9 +227,9 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
         
         Route::post('/pedidos/{id}/aprobar', [MovimientoCombustibleController::class, 'aprobar'])->name('aprobar');
         Route::post('/pedidos/{id}/rechazar', [MovimientoCombustibleController::class, 'rechazar'])->name('rechazar');
-
-
-
+        
+        Route::get('/compra/crear', [MovimientoCombustibleController::class, 'createCompra'])->name('createCompra');
+        Route::post('combustible/solicitud', [MovimientoCombustibleController::class, 'storeCompra'])->name('storeCompra');
     
         // Ruta para aprobar un pedido
         Route::post('/pedido/{id}/aprobar', [PedidoController::class, 'aprobar'])->name('pedido.aprobar');
