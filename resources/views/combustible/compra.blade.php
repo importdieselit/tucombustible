@@ -46,9 +46,9 @@
                             <option value="">Seleccione una Planta</option>
                             {{-- Placeholder: Iterar sobre una colección de plantas --}}
                             @foreach($plantas as $planta)
-                                <option value="{{ $planta->id }}">{{ $planta->nombre }} ({{ $planta->ciudad }})</option>
+                                <option value="{{ $planta->id }}">{{ $planta->alias ?? $planta->nombre }}</option>
                             @endforeach
-                        </select>
+                         </select>
                     </div>
 
                     <!-- Fecha Requerida (Día) -->
