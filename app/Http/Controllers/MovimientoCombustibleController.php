@@ -755,7 +755,6 @@ public function createPrecarga()
         $proveedores = Proveedor::all(['id', 'nombre']);
         $plantas = Planta::all(['id', 'nombre', 'alias']); 
         $choferes = Chofer::whereNotNull('documento_vialidad_numero')
-                                      ->where('activo', true)
                                       ->where('cargo', 'CHOFER')
                                       ->whereDoesntHave('viajes', function ($query) use ($fecha) {
                                           $query->where('fecha_salida', $fecha)
