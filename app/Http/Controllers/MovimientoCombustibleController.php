@@ -761,6 +761,8 @@ public function createPrecarga()
                                                 ->whereIn('status', ['PROGRAMADO','COMPLETADO', 'EN_CURSO']);
                                       })->with('persona')
                                       ->get();
+        $vehiculos = Vehiculo::where('es_flota', 1)->whereIn('tipo', [3,2])->whereIn('estatus', [1,2])->get();
+        
 
         return view('combustible.compra', compact('proveedores', 'plantas', 'choferes'));
     }

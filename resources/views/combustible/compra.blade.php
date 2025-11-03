@@ -58,6 +58,28 @@
                         <div class="form-text">Día en el que se debe realizar la carga.</div>
                     </div>
                     <div class="col-md-6">
+                        <label for="chofer">Unidad</label>
+                        <select name="vehiculo_id" id="vehiculo_id" class="form-select" required>
+                            <option value="">Seleccione un Vehiculo</option>
+                            @foreach($vehiculos as $vehiculo)
+                                @if($vehiculo->tipo==3)
+                                    <option value="{{ $vehiculo->id }}">{{ $vehiculo->flota }} {{ $vehiculo->placa }}</option>
+                                @endif
+                            @endforeach 
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="chofer">Cisterna</label>
+                        <select name="cisterna_id" id="cisterna_id" class="form-select" required>
+                            <option value="">Seleccione una cisterna</option>
+                            @foreach($vehiculos as $cisterna)
+                                @if($cisterna->tipo==2)
+                                    <option value="{{ $cisterna->id }}">{{ $cisterna->flota }} {{ $cisterna->placa }}</option>
+                                @endif
+                            @endforeach 
+                        </select>
+                    </div>
+                    <div class="col-md-6">
                         <label for="chofer">Chofer</label>
                         <select name="chofer_id" id="chofer_id" class="form-select" required>
                             <option value="">Seleccione un Chofer</option>
@@ -65,6 +87,14 @@
                                 <option value="{{ $chofer->id }}">{{ $chofer->persona->nombre }}</option>
                             @endforeach 
                         </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="tipo">Tipo Compra</label>
+                        <select name="tipo" id="tipo" class="form-select" required>
+                            <option value="DIESEL">DIESEL</option>
+                            <option value="M.G.O.">M.G.O.</option>
+                        </select>
+                    </div>
 
                 </div>
 
