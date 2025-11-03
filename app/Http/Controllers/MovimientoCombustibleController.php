@@ -12,6 +12,7 @@ use App\Models\Vehiculo;
 use App\Models\Pedido;
 use App\Models\TabuladorViatico;
 use App\Models\VehiculoPrecargado;
+use App\Models\Planta;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
