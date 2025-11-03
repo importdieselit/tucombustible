@@ -57,6 +57,15 @@
                         <input type="date" class="form-control" id="fecha_requerida" name="fecha_requerida" min="{{ date('Y-m-d') }}" required>
                         <div class="form-text">Día en el que se debe realizar la carga.</div>
                     </div>
+                    <div class="col-md-6">
+                        <label for="chofer">Chofer</label>
+                        <select name="chofer_id" id="chofer_id" class="form-select" required>
+                            <option value="">Seleccione un Chofer</option>
+                            @foreach($choferes as $chofer)
+                                <option value="{{ $chofer->id }}">{{ $chofer->nombre }}</option>
+                            @endforeach 
+                        </select>
+
                 </div>
 
                 <hr class="my-4">
