@@ -70,6 +70,7 @@
                         <th>Tipo</th>
                         <th>Kilometraje</th>
                         <th>Estatus</th>
+                        <th>Dias Fuera de servicio</th>
                         <th>Documentos Vencidos</th>
                     </tr>
                 </thead>
@@ -107,10 +108,6 @@
                                 <span class="badge bg-{{ $estatusInfo->css }}" title="{{ $estatusInfo->descripcion }}">
                                     <i class="mr-1 fa-solid {{ $estatusInfo->icon_auto }}"></i>
                                     {{ $estatusInfo->auto }}
-                                    @if($orden)
-                                        hace {{$duracionDias ?? 0}} dias
-                                    @endif
-
                                 </span>
                                 @if($orden)
                                 </a> 
@@ -118,6 +115,15 @@
                             @else
                                 <span class="badge bg-gray">Desconocido</span>
                             @endif
+                        </td>
+                        <td>
+                                @if($orden)
+                                 <a href="/ordenes/{{$orden->id}} " style="decoration:none; cursor: pointer;" target="_blank" >   
+                                        hace {{$duracionDias ?? 0}} dias
+                                </a> 
+                                @else
+                                    n/a
+                                @endif                            
                         </td>
                         <td>
                            @php
