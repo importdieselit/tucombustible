@@ -143,8 +143,7 @@ class DepositoController extends BaseController
                  . "Nivel Actual Cm: {$request->nuevo_nivel} Cm\n"
                  . "Litros Disponibles: : {$deposito->nivel_actual_litros} Ltrs\n"
                  . "Variacion : {$variacion} Ltrs\n"
-                 . "Unidad Asignada: {$viaje->vehiculo->flota}\n"
-                 . "Chofer: {$chofer->persona->nombre }";
+                 . "Observacion: {$request->observaciones}\n";
 
         // 1. Notificación a Telegram (Ejemplo de Alerta General)
         try {
