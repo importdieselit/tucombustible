@@ -15,6 +15,7 @@ use App\Models\VehiculoPrecargado;
 use App\Models\Planta;
 use App\Models\Chofer;
 use App\Models\CompraCombustible;
+use App\Models\Viaje;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
@@ -829,7 +830,7 @@ public function createPrecarga()
             DB::commit();
 
             // 5. NOTIFICACIÓN DE PLANIFICACIÓN EXITOSA
-            $this->enviarNotificaciones($viaje, $solicitud, $choferDisponible, $ayudanteDisponible);
+            $this->enviarNotificaciones($viaje, $solicitud, $chofer);
 
             return redirect()->route('combustible.index')->with('success', 'Solicitud de combustible creada y viaje de carga planificado y asignado con éxito (ID Viaje: ' . $viaje->id . ').');
 
@@ -847,7 +848,7 @@ public function createPrecarga()
      * @param Chofer $chofer
      * @param Ayudante|null $ayudante
      */
-    protected function enviarNotificaciones(Viaje $viaje, SolicitudCombustible $solicitud, Chofer $chofer, ?Ayudante $ayudante): void
+    protected function enviarNotificaciones(Viaje $viaje, CompraCombustible $solicitud, Chofer $chofer, ?Ayudante $ayudante): void
     {
         $mensaje = "✅ Planificación de Carga de Combustible CREADA:\n"
                  . "Carga: {$solicitud->cantidad_litros} Litros\n"
@@ -860,33 +861,32 @@ public function createPrecarga()
         // 1. Notificación a Telegram (Ejemplo de Alerta General)
         try {
             // El servicio TelegramNotificationService debe tener un método como sendNotification
-            $this->telegramService->sendNotification($mensaje);
+            $this->telegramService->sendMessage($mensaje);
         } catch (\Exception $e) {
             Log::error("Error enviando notificación a Telegram: " . $e->getMessage());
         }
 
         // 2. Notificación FCM (Alertas y fcmNotification)
         // Podrías enviar la notificación al token del chofer y a los usuarios de logística
-        try {
-            $tokens = [];
-            // Asume que el modelo Chofer tiene el token_fcm relacionado con su usuario
-            if ($chofer->user && $chofer->user->token_fcm) {
-                $tokens[] = $chofer->user->token_fcm;
-            }
-            // Tokens de usuarios de logística/administración
-            $logisticaTokens = \App\Models\User::where('rol', 'logistica')->pluck('token_fcm')->toArray();
-            $tokens = array_merge($tokens, $logisticaTokens);
+        // try {
+        //     $tokens = [];
+        //     // Asume que el modelo Chofer tiene el token_fcm relacionado con su usuario
+        //     if ($chofer->user && $chofer->user->token_fcm) {
+        //         $tokens[] = $chofer->user->token_fcm;
+        //     }
+        //     // Tokens de usuarios de logística/administración
+        //     $tokens = array_merge($tokens, $logisticaTokens);
 
-            if (!empty($tokens)) {
-                 $this->fcmService->sendNotificationToUsers(
-                    $tokens, 
-                    "Carga de Combustible Planificada (ID Viaje: {$viaje->id})", 
-                    "Tienes asignada una carga de {$solicitud->cantidad_litros}L para el {$viaje->fecha_salida}."
-                );
-            }
-        } catch (\Exception $e) {
-            Log::error("Error enviando notificación FCM: " . $e->getMessage());
-        }
+        //     if (!empty($tokens)) {
+        //          $this->fcmService->sendNotificationToUsers(
+        //             $tokens, 
+        //             "Carga de Combustible Planificada (ID Viaje: {$viaje->id})", 
+        //             "Tienes asignada una carga de {$solicitud->cantidad_litros}L para el {$viaje->fecha_salida}."
+        //         );
+        //     }
+        // } catch (\Exception $e) {
+        //     Log::error("Error enviando notificación FCM: " . $e->getMessage());
+        // }
 
         // 3. (Opcional) Implementación de Alertas Web
         // Esto se manejaría generalmente con Eventos de Laravel y un listener de Broadcast.

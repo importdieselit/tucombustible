@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Session;
 use App\Http\Controllers\BaseController;
+use App\Models\Aforo;
 use Illuminate\Support\Facades\Log;
 use App\Models\MovimientoCombustible;
 
@@ -87,9 +88,34 @@ class DepositoController extends BaseController
      public function ajusteDinamic(Request $request)
     {
         $deposito=Deposito::find($request->id);
-        $variacion=$deposito->nivel_actual_litros - $request->nuevo_nivel;
-        $deposito->nivel_actual_litros= $request->nuevo_nivel;
-        $deposito->save();
+
+        $parteEntera = floor($request->nuevo_nivel);
+
+        // 2. Obtener la parte decimal (siempre un valor entre 0 y 1).
+        $parteDecimal = $valor - $parteEntera;
+        $valorRedondeado = 0.0;
+
+        // 3. Aplicar la lógica solicitada.
+        // Usamos una pequeña tolerancia (epsilon) para evitar problemas de coma flotante, 
+        // aunque para 0.5 no suele ser tan crítico.
+        if ($parteDecimal > 0.5000001) { 
+            // Si el decimal es > 0.5, ajustamos a 0.5.
+            $valorRedondeado = $parteEntera + 0.5;
+        } else {
+            // Si el decimal es <= 0.5, ajustamos a 0.0 (la parte entera).
+            $valorRedondeado = $parteEntera;
+        }
+
+        // Es importante devolver un float, aunque se vea como entero, para futuras comparaciones.
+        $nuevoNivel = (float)number_format($valorRedondeado, 1, '.', '');
+        
+        $litrosActual=Aforo::where('profundidad_cm', $nuevoNivel)->first();
+        if($litrosActual){
+            $variacion=$deposito->nivel_actual_litros - $litrosActual->litros;
+            
+            $deposito->nivel_actual_litros= $litrosActual->litros;
+    
+            $deposito->save();
 
         // 3. Crear el registro del movimiento
             $movimiento = new MovimientoCombustible();
@@ -103,6 +129,12 @@ class DepositoController extends BaseController
 
         return response()->json([
             'message' => 'Nivel ajustado con éxito.',
+            'nuevo_nivel' => round($deposito->nivel_actual_litros, 2),
+            'capacidad' => $deposito->capacidad_litros
+        ]);
+    }
+    return response()->json([
+            'message' => 'Nivel no ajustado.',
             'nuevo_nivel' => round($deposito->nivel_actual_litros, 2),
             'capacidad' => $deposito->capacidad_litros
         ]);

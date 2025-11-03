@@ -592,9 +592,9 @@
                 <div class="modal-body">
                     <form id="ajustarNivelForm">
                         <input type="hidden" id="deposito-id">
-                        <p class="text-sm"><strong>Nivel Actual:</strong> <span id="modal-nivel-actual"></span> / <span id="capacidad-litros"></span> L</p>
+                        <p class="text-sm"><strong>Nivel Actual:</strong> <span id="modal-nivel-actual"></span> / <span id="capacidad-litros"></span> Litros</p>
                         <div class="mb-3">
-                            <label for="nuevo_nivel" class="form-label">Nuevo Nivel (Litros)</label>
+                            <label for="nuevo_nivel" class="form-label">Nuevo Nivel (Cm)</label>
                             <input type="number" step="0.01" class="form-control " id="nuevo_nivel" name="nuevo_nivel" required>
                         </div>
                         <div class="mb-3">

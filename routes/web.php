@@ -36,6 +36,7 @@ use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\PlanificacionMantenimientoController;
 
 use App\Models\Deposito;
+use App\Models\MovimientoCombustible;
 
 // Agrega otros controladores según los modelos y tablas
 
@@ -228,9 +229,10 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
         Route::post('/pedidos/{id}/aprobar', [MovimientoCombustibleController::class, 'aprobar'])->name('aprobar');
         Route::post('/pedidos/{id}/rechazar', [MovimientoCombustibleController::class, 'rechazar'])->name('rechazar');
         
-        Route::get('/compra/crear', [MovimientoCombustibleController::class, 'createCompra'])->name('createCompra');
+        Route::get('/compra/crear', [MovimientoCombustibleController::class, 'createCo mpra'])->name('createCompra');
         Route::post('combustible/solicitud', [MovimientoCombustibleController::class, 'storeCompra'])->name('storeCompra');
-    
+        Route::get('compras',[MovimientoCombustibleController::class, 'comprasList'])->name('compras');
+
         // Ruta para aprobar un pedido
         Route::post('/pedido/{id}/aprobar', [PedidoController::class, 'aprobar'])->name('pedido.aprobar');
 
