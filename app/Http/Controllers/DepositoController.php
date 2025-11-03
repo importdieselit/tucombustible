@@ -92,7 +92,7 @@ class DepositoController extends BaseController
         $parteEntera = floor($request->nuevo_nivel);
 
         // 2. Obtener la parte decimal (siempre un valor entre 0 y 1).
-        $parteDecimal = $valor - $parteEntera;
+        $parteDecimal = $request->nuevo_nivel - $parteEntera;
         $valorRedondeado = 0.0;
 
         // 3. Aplicar la lógica solicitada.
