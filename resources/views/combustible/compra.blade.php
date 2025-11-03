@@ -17,7 +17,7 @@
         </div>
         <div class="card-body">
             <!-- Formulario de Solicitud -->
-            <form action="{{ route('compra.combustible.store') }}" method="POST">
+            <form action="{{ route('combustible.compraStore') }}" method="POST">
                 @csrf
                 <div class="row g-3">
                     <!-- Proveedor -->
