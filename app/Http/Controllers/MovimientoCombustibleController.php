@@ -13,6 +13,7 @@ use App\Models\Pedido;
 use App\Models\TabuladorViatico;
 use App\Models\VehiculoPrecargado;
 use App\Models\Planta;
+use App\Models\Chofer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
@@ -749,9 +750,10 @@ public function createPrecarga()
      */
     public function createCompra()
     {
+        $fecha = now()->format('Y-m-d');
         // Data de prueba o real para los selectores
         $proveedores = Proveedor::all(['id', 'nombre']);
-        $plantas = Planta::all(['id', 'nombre', 'ciudad']); 
+        $plantas = Planta::all(['id', 'nombre', 'alias']); 
         $choferes = Chofer::whereNotNull('documento_de_vialidad')
                                       ->where('activo', true)
                                       ->where('cargo', 'CHOFER')
