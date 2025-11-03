@@ -759,7 +759,7 @@ public function createPrecarga()
                                       ->whereDoesntHave('viajes', function ($query) use ($fecha) {
                                           $query->where('fecha_salida', $fecha)
                                                 ->whereIn('status', ['PROGRAMADO','COMPLETADO', 'EN_CURSO']);
-                                      })
+                                      })->with('persona')
                                       ->get();
 
         return view('combustible.compra', compact('proveedores', 'plantas', 'choferes'));

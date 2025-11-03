@@ -62,7 +62,7 @@
                         <select name="chofer_id" id="chofer_id" class="form-select" required>
                             <option value="">Seleccione un Chofer</option>
                             @foreach($choferes as $chofer)
-                                <option value="{{ $chofer->id }}">{{ $chofer->nombre }}</option>
+                                <option value="{{ $chofer->id }}">{{ $chofer->persona->nombre }}</option>
                             @endforeach 
                         </select>
 
