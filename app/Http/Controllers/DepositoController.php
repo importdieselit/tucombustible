@@ -11,9 +11,22 @@ use App\Http\Controllers\BaseController;
 use App\Models\Aforo;
 use Illuminate\Support\Facades\Log;
 use App\Models\MovimientoCombustible;
+use App\Services\TelegramNotificationService;
 
 class DepositoController extends BaseController
 {
+
+    protected $fcmService;
+    protected $telegramService;
+
+    public function __construct(
+    //    FcmNotificationService $fcmService, 
+        TelegramNotificationService $telegramService
+    ) {
+      //  $this->fcmService = $fcmService;
+        $this->telegramService = $telegramService;
+    }
+
      public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -125,6 +138,22 @@ class DepositoController extends BaseController
             $movimiento->cantidad_litros = $variacion;
             $movimiento->observaciones = $request->observacion;
             $movimiento->save();
+
+            $mensaje = "✅ Nivel Actual ajuste Tanque {$deposito->serial}:\n"
+                 . "Nivel Actual Cm: {$request->nuevo_nivel} Cm\n"
+                 . "Litros Disponibles: : {$deposito->nivel_actual_litros} Ltrs\n"
+                 . "Variacion : {$variacion} Ltrs\n"
+                 . "Unidad Asignada: {$viaje->vehiculo->flota}\n"
+                 . "Chofer: {$chofer->persona->nombre }";
+
+        // 1. Notificación a Telegram (Ejemplo de Alerta General)
+        try {
+            // El servicio TelegramNotificationService debe tener un método como sendNotification
+            $this->telegramService->sendMessage($mensaje);
+        } catch (\Exception $e) {
+            Log::error("Error enviando notificación a Telegram: " . $e->getMessage());
+        }
+
 
 
         return response()->json([
