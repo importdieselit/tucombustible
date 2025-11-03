@@ -109,7 +109,7 @@ class DepositoController extends BaseController
         // Es importante devolver un float, aunque se vea como entero, para futuras comparaciones.
         $nuevoNivel = (float)number_format($valorRedondeado, 1, '.', '');
         
-        $litrosActual=Aforo::where('profundidad_cm', $nuevoNivel)->first();
+        $litrosActual=Aforo::where('profundidad_cm', $nuevoNivel)->where('deposito_id', $request->id)->first();
         if($litrosActual){
             $variacion=$deposito->nivel_actual_litros - $litrosActual->litros;
             
