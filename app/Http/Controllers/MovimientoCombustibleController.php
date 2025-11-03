@@ -754,7 +754,7 @@ public function createPrecarga()
         // Data de prueba o real para los selectores
         $proveedores = Proveedor::all(['id', 'nombre']);
         $plantas = Planta::all(['id', 'nombre', 'alias']); 
-        $choferes = Chofer::whereNotNull('documento_de_vialidad_numero')
+        $choferes = Chofer::whereNotNull('documento_vialidad_numero')
                                       ->where('activo', true)
                                       ->where('cargo', 'CHOFER')
                                       ->whereDoesntHave('viajes', function ($query) use ($fecha) {
