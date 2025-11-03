@@ -750,21 +750,19 @@ public function createPrecarga()
      */
     public function createCompra()
     {
-        $fecha = now()->format('Y-m-d');
         // Data de prueba o real para los selectores
         $proveedores = Proveedor::all(['id', 'nombre']);
         $plantas = Planta::all(['id', 'nombre', 'alias']); 
         $choferes = Chofer::whereNotNull('documento_vialidad_numero')   
                                       ->where('cargo', 'CHOFER')
-                                      ->whereDoesntHave('viajes', function ($query) use ($fecha) {
-                                          $query->where('fecha_salida', $fecha)
-                                                ->whereIn('status', ['PROGRAMADO','COMPLETADO', 'EN_CURSO']);
+                                      ->whereDoesntHave('viajes', function ($query)  {
+                                          $query->whereIn('status', ['PROGRAMADO','COMPLETADO', 'EN_CURSO']);
                                       })->with('persona')
                                       ->get();
         $vehiculos = Vehiculo::where('es_flota', 1)->whereIn('tipo', [3,2])->whereIn('estatus', [1,2])->get();
         
 
-        return view('combustible.compra', compact('proveedores', 'plantas', 'choferes'));
+        return view('combustible.compra', compact('proveedores', 'plantas', 'choferes','vehiculos'));
     }
 
     /**
