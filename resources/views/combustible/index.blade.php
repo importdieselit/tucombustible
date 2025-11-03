@@ -978,7 +978,7 @@ function openAjusteModal(id) {
     document.getElementById('deposito-id').value = id;
     document.getElementById('modal-nivel-actual').textContent = nivelActual;
     document.getElementById('capacidad-litros').textContent = capacidad;
-    document.getElementById('nuevo_nivel').value = nivelActual;
+    //document.getElementById('nuevo_nivel').value = nivelActual;
     document.getElementById('observacion').value = '';
     
     // Mostrar el modal
