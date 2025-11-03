@@ -119,10 +119,10 @@
                         <td>
                                 @if($orden)
                                  <a href="/ordenes/{{$orden->id}} " style="decoration:none; cursor: pointer;" target="_blank" >   
-                                        hace {{$duracionDias ?? 0}} dias
+                                        {{$duracionDias ?? 0}} dias
                                 </a> 
                                 @else
-                                    n/a
+                                    0
                                 @endif                            
                         </td>
                         <td>
