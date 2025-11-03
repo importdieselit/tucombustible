@@ -87,7 +87,7 @@
                             }
                             @endphp
                         @endif
-                    <tr class="clickable-row" data-id="{{ $vehiculo->id }}">
+                    <tr class="clickable-row @if($duracionDias>3) bg-danger @endif"  data-id="{{ $vehiculo->id }}">
                         <td>{{ $index + 1 }}</td>
                         <td>{{ $vehiculo->flota ?? 'N/A' }}</td>
                         {{-- <td>{{ $vehiculo->cliente->nombre ?? 'N/A' }}</td> --}}
@@ -119,7 +119,7 @@
                         <td>
                                 @if($orden)
                                  <a href="/ordenes/{{$orden->id}} " style="decoration:none; cursor: pointer;" target="_blank" >   
-                                        {{$duracionDias ?? 0}} dias
+                                        {{$duracionDias ?? 0}}
                                 </a> 
                                 @else
                                     0
