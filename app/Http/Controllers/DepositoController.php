@@ -139,11 +139,11 @@ class DepositoController extends BaseController
             $movimiento->observaciones = $request->observacion;
             $movimiento->save();
 
-            $mensaje = "✅ Nivel Actual ajuste Tanque {$deposito->serial}:\n"
-                 . "Nivel Actual Cm: {$request->nuevo_nivel} Cm\n"
-                 . "Litros Disponibles: : {$deposito->nivel_actual_litros} Ltrs\n"
-                 . "Variacion : {$variacion} Ltrs\n"
-                 . "Observacion: {$request->observaciones}\n";
+            $mensaje = "✅ Nivel Tanque {$deposito->serial}:\n"
+                 . "Nivel Actual: {$request->nuevo_nivel} Cm\n"
+                 . "Disponibles: {$deposito->nivel_actual_litros} Ltrs\n"
+                 . "Variacion: {$variacion} Ltrs\n"
+                 . "Observacion: {$request->observacion}\n";
 
         // 1. Notificación a Telegram (Ejemplo de Alerta General)
         try {
