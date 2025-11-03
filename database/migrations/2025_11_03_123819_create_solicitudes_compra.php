@@ -13,8 +13,19 @@ class CreateSolicitudesCompra extends Migration
      */
     public function up()
     {
-        Schema::create('solicitudes_compra', function (Blueprint $table) {
+        Schema::create('compra_combustible', function (Blueprint $table) {
             $table->id();
+            $table->integer('proveedor_id');
+            $table->integer('deposito_id');
+            $table->integer('cantidad_litros');
+            $table->integer('planta_destino_id');
+            $table->date('fecha');
+            $table->integer('vehiculo_id');
+            $table->integer('cisterna');
+            $table->string('estatus'); // Ej: PROGRAMADA, ASIGNADA, COMPRADA, COMPLETADA, CANCELADA
+            $table->integer('viaje_id'); // Enlace a la planificación de viaje de entrega/carga
+            $table->string('observaciones');
+            $table->string('tipo');
             $table->timestamps();
         });
     }
@@ -26,6 +37,6 @@ class CreateSolicitudesCompra extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('solicitudes_compra');
+        Schema::dropIfExists('compra_combustible');
     }
 }
