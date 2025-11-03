@@ -1,10 +1,4 @@
 <?php
-/**
- * Script para revisar clientes con bajo disponible y enviar notificaciones SOLO a super admins
- * Este script se ejecuta cada hora como cron job en cPanel
- * 
- * Uso: php cron_check_bajo_disponible_admin.php [--dry-run]
- */
 
 // Configuración de rutas
 $basePath = __DIR__;

@@ -1,11 +1,4 @@
 <?php
-/**
- * Script para revisar clientes con bajo disponible y enviar notificaciones
- * Este script se puede ejecutar como cron job en cPanel
- * 
- * Uso: php cron_check_bajo_disponible.php [--dry-run]
- */
-
 // Configuración de rutas
 $basePath = __DIR__;
 require_once $basePath . '/vendor/autoload.php';

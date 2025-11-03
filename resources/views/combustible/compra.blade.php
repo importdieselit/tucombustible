@@ -95,6 +95,10 @@
                             <option value="M.G.O.">M.G.O.</option>
                         </select>
                     </div>
+                    <div class="col-md-12">
+                        <label for="observaciones">Observaciones</label>
+                        <textarea name="observaciones" id="observaciones" class="form-control" cols="30" rows="10"></textarea>
+                    </div>
 
                 </div>
 
