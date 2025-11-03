@@ -755,9 +755,7 @@ public function createPrecarga()
         $plantas = Planta::all(['id', 'nombre', 'alias']); 
         $choferes = Chofer::whereNotNull('documento_vialidad_numero')   
                                       ->where('cargo', 'CHOFER')
-                                      ->whereDoesntHave('viajes', function ($query)  {
-                                          $query->whereIn('status', ['PROGRAMADO','COMPLETADO', 'EN_CURSO']);
-                                      })->with('persona')
+                                      ->with('persona')
                                       ->get();
         $vehiculos = Vehiculo::where('es_flota', 1)->whereIn('tipo', [3,2])->whereIn('estatus', [1,2])->get();
         
