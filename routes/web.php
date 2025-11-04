@@ -235,6 +235,10 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
         Route::post('/solicitud', [MovimientoCombustibleController::class, 'storeCompra'])->name('storeCompra');
         Route::get('/compras',[MovimientoCombustibleController::class, 'comprasList'])->name('compras');
 
+        Route::get('/flete/crear', [MovimientoCombustibleController::class, 'createFlete'])->name('createFlete');
+        Route::post('/store-flete', [MovimientoCombustibleController::class, 'storeFlete'])->name('storeFlete');
+        Route::get('/fletes',[MovimientoCombustibleController::class, 'fleteList'])->name('compras');
+
         // Ruta para aprobar un pedido
         Route::post('/pedido/{id}/aprobar', [PedidoController::class, 'aprobar'])->name('pedido.aprobar');
 

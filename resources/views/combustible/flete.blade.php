@@ -1,213 +1,258 @@
 @extends('layouts.app')
 
-@section('title', 'Crear Solicitud de Compra de Combustible')
+@section('title', 'Planificar Nuevo Viaje con Despachos')
 
 @section('content')
-<div class="container mt-4">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h1 class="mb-2 text-primary">Solicitud de Compra de Combustible</h1>
-            <p class="text-muted">Inicie el proceso de compra indicando la cantidad, proveedor y detalles de la carga.</p>
-        </div>
-    </div>
-
-    <div class="card shadow-sm">
-        <div class="card-header bg-white">
-            <h5 class="card-title m-0">Detalles de la Solicitud</h5>
+<div class="container mt-5">
+    <div class="card shadow-lg">
+        <div class="card-header bg-success text-white">
+            <h3 class="mb-0"><i class="bi bi-calendar-plus me-2"></i> Planificación de Flete</h3>
         </div>
         <div class="card-body">
-            <!-- Formulario de Solicitud -->
-            <form action="{{ route('combustible.storeCompra') }}" method="POST">
+            @if(session('error'))
+                <div class="alert alert-danger">{{ session('error') }}</div>
+            @endif
+            
+            <!-- El formulario enviará a ViajesController@store -->
+            <form action="{{ route('combustible.storeFlete') }}" method="POST">
                 @csrf
-                <div class="row g-3">
+                
+                <!-- 1. Detalle del Viaje (Fijo) -->
+                <h4 class="mt-4 mb-3 text-success border-bottom pb-1">Detalles del Flete</h4>
+                <div class="row g-3 mb-4">
                     
-                    <!-- Proveedor de Combustible -->
+                    
+                    <!-- Planta Destino (Carga) -->
                     <div class="col-md-6">
-                        <label for="proveedor_id" class="form-label">Proveedor de Combustible</label>
-                        <select class="form-select" id="proveedor_id" name="proveedor_id" required>
-                            <option value="">Seleccione un Proveedor</option>
-                            @foreach($proveedores as $proveedor)
-                                <option value="{{ $proveedor->id }}" @if(old('proveedor_id') == $proveedor->id) selected @endif>{{ $proveedor->nombre }}</option>
+                        <label for="planta_destino_id" class="form-label">Planta de Carga/Destino</label>
+                        <select class="form-select" id="planta_destino_id" name="planta_destino_id" required>
+                            <option value="">Seleccione una Planta</option>
+                            {{-- Placeholder: Iterar sobre una colección de plantas --}}
+                            @foreach($plantas as $planta)
+                                <option value="{{ $planta->id }}">{{ $planta->alias ?? $planta->nombre }}</option>
+                            @endforeach
+                         </select>
+                    </div>
+
+                    <!-- Ciudad de Destino -->
+                    <div class="col-md-9">
+                        <label for="destino_ciudad" class="form-label fw-bold">Ciudad de Destino</label>
+                        <select name="destino_ciudad" id="destino_ciudad" class="form-select @error('destino_ciudad') is-invalid @enderror" required>
+                            <option value="">Seleccione un destino del Tabulador</option>
+                            
+                            <!-- Cargar las ciudades del tabulador (se asume que se pasan en $ciudades) -->
+                             @foreach($destino as $ciudad)
+                                <option value="{{ $ciudad }}" {{ old('destino_ciudad') == $ciudad ? 'selected' : '' }}>{{ $ciudad }}</option>
+                            @endforeach
+                            
+                        </select>
+                        @error('destino_ciudad')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    {{-- FECHA DE SALIDA --}}
+                    <div class="col-md-6">
+                        <label for="fecha_salida" class="form-label fw-bold">Fecha de Salida</label>
+                        <input type="date" name="fecha_salida" id="fecha_salida" class="form-control @error('fecha_salida') is-invalid @enderror" value="{{ old('fecha_salida', date('Y-m-d')) }}" required>
+                        @error('fecha_salida')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    {{-- VEHÍCULO --}}
+                    <div class="col-md-6">
+                        <label for="vehiculo_id" class="form-label fw-bold">Vehículo (Flota)</label>
+                        <select name="vehiculo_id" id="vehiculo_id" class="form-select select-or-other" data-other-field="otro_vehiculo">
+                            <option value="">Seleccione un Vehículo</option>
+                            <!-- Se asume que $vehiculos es un array de objetos Vehiculo -->
+                            @foreach($vehiculos as $vehiculo)
+                                <option value="{{ $vehiculo->id }}" @if(old('vehiculo_id') == $vehiculo->id) selected @endif>{{ $vehiculo->flota }} ({{ $vehiculo->placa }})</option>
                             @endforeach
                         </select>
+                        @error('vehiculo_id')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
-                    
-                    <!-- Litros -->
+
+                    {{-- CHOFER --}}
                     <div class="col-md-6">
-                        <label for="litros" class="form-label">Cantidad (Litros)</label>
-                        <input type="number" class="form-control" id="litros" name="litros" value="{{ old('litros') }}" min="1" required>
-                    </div>
-                    
-                    <!-- Tipo Compra -->
-                    <div class="col-md-6">
-                        <label for="tipo">Tipo Compra</label>
-                        <select name="tipo" id="tipo" class="form-select" required>
-                            <option value="INDUSTRIAL" @if(old('tipo') == 'INDUSTRIAL') selected @endif>DIESEL INDUSTRIAL</option>
-                            <option value="M.G.O." @if(old('tipo') == 'M.G.O.') selected @endif>DIESEL MARINO (M.G.O.)</option>
+                        <label for="chofer_id" class="form-label fw-bold">Chofer</label>
+                        <select name="chofer_id" id="chofer_id" class="form-select @error('chofer_id') is-invalid @enderror" >
+                            <option value="">Seleccione el chofer</option>
+                            <!-- Este loop debe cargar los usuarios con rol 'chofer' -->
+                         
+                            @foreach($choferes as $chofer)
+                                @if($chofer->cargo == 'CHOFER' )                            
+                                    <option value="{{ $chofer->id }}" {{ old('chofer_id') == $chofer->id ? 'selected' : '' }}>{{ $chofer->persona->nombre }}</option>
+                                @endif
+                          @endforeach
                         </select>
+                        @error('chofer_id')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
-
-                    <!-- Switch para FLETE -->
-                    <div class="col-md-6 d-flex align-items-center">
-                        <div class="form-check form-switch pt-4">
-                            <input class="form-check-input" type="checkbox" id="es_flete_switch" name="es_flete" value="1" @if(old('es_flete')) checked @endif>
-                            <label class="form-check-label fw-bold text-danger" for="es_flete_switch">
-                                Unidad de Flete / Transporte Externo
-                            </label>
-                        </div>
+                    {{-- AYUDANTE --}}
+                    <div class="col-md-6">
+                        <label for="ayudante_id" class="form-label fw-bold">Ayudante</label>
+                        <select name="ayudante" id="ayudante" class="form-select @error('ayudante') is-invalid @enderror">
+                            <option value="">Seleccione el Ayudante</option>
+                            <!-- Este loop debe cargar los usuarios con rol 'chofer' -->
+                          
+                            @foreach($choferes as $chofer)
+                                @if($chofer->cargo == 'AYUDANTE' || $chofer->cargo == 'AYUDANTE DE CHOFER')
+                                    <option value="{{ $chofer->id }}" {{ old('ayudante') == $chofer->id ? 'selected' : '' }}>{{ $chofer->persona->nombre }}</option>
+                                @endif
+                            @endforeach
+                        </select>
+                        @error('ayudante')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
                     </div>
+                   
                 </div>
 
-                <h5 class="mt-4 mb-3 text-secondary">Detalles de Logística</h5>
-                <div class="row g-3">
-                    <!-- Contenedor para UNIDAD INTERNA (Visible por defecto, con SELECTS) -->
-                    <div id="unidades-internas" class="row g-3" style="display: {{ old('es_flete') ? 'none' : 'flex' }};">
-                        
-                        <!-- Unidad de Despacho (Vehículo) - SELECT (Interno) -->
-                        <div class="col-md-6">
-                            <label for="vehiculo_id" class="form-label">Unidad de Despacho (Flota Interna)</label>
-                            <select class="form-select" id="vehiculo_id" name="vehiculo_id">
-                                <option value="">Seleccione una Unidad</option>
-                                @foreach($vehiculos as $vehiculo)
-                                    <option value="{{ $vehiculo->id }}" @if(old('vehiculo_id') == $vehiculo->id) selected @endif>{{ $vehiculo->flota }} - {{ $vehiculo->placa }}</option>
+                <!-- 2. Tabla de Despachos (Se mantiene la funcionalidad actual) -->
+                <h4 class="mt-4 mb-3 text-success border-bottom pb-1">Despachos del Flete</h4>
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 40%;">Cliente</th>
+                                <th style="width: 25%;">Litros Despachados</th>
+                                <th style="width: 25%;">Observación</th>
+                                <th style="width: 10%;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="despachos-table-body">
+                            {{-- Las filas se gestionan con JavaScript. Se usa PHP para restaurar en caso de error. --}}
+                            @if(old('despachos'))
+                                @foreach(old('despachos') as $index => $despacho)
+                                    @include('viajes._despacho_row', ['index' => $index, 'clientes' => $clientes, 'despacho' => $despacho])
                                 @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Chofer - SELECT (Interno) -->
-                        <div class="col-md-6">
-                            <label for="chofer_id" class="form-label">Chofer (Interno)</label>
-                            <select class="form-select" id="chofer_id" name="chofer_id">
-                                <option value="">Seleccione un Chofer</option>
-                                @foreach($choferes as $chofer)
-                                    <option value="{{ $chofer->id }}" @if(old('chofer_id') == $chofer->id) selected @endif>{{ $chofer->persona->nombre }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Ayudante - SELECT (Interno) -->
-                        <div class="col-md-6">
-                            <label for="ayudante" class="form-label">Ayudante (Interno) <small>(Opcional)</small></label>
-                            <select class="form-select" id="ayudante" name="ayudante">
-                                <option value="">Seleccione un Ayudante</option>
-                                @foreach($ayudantes as $ayudante)
-                                    <option value="{{ $ayudante->id }}" @if(old('ayudante') == $ayudante->id) selected @endif>{{ $ayudante->persona->nombre }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        
-                    </div>
-                    
-                    <!-- Contenedor para FLETE (Oculto por defecto, con TEXT INPUTS) -->
-                    <div id="unidades-flete" class="row g-3" style="display: {{ old('es_flete') ? 'flex' : 'none' }};">
-                        
-                        <!-- Otro Vehículo - TEXT INPUT -->
-                        <div class="col-md-6">
-                            <label for="otro_vehiculo" class="form-label">Unidad (Flete)</label>
-                            <input type="text" class="form-control" id="otro_vehiculo" name="otro_vehiculo" value="{{ old('otro_vehiculo') }}" placeholder="Ej: Placa ABC-123 o Nombre de la unidad">
-                        </div>
-
-                        <!-- Otro Chofer - TEXT INPUT -->
-                        <div class="col-md-6">
-                            <label for="otro_chofer" class="form-label">Chofer (Flete)</label>
-                            <input type="text" class="form-control" id="otro_chofer" name="otro_chofer" value="{{ old('otro_chofer') }}" placeholder="Nombre del Chofer">
-                        </div>
-
-                        <!-- Otro Ayudante - TEXT INPUT -->
-                        <div class="col-md-6">
-                            <label for="otro_ayudante" class="form-label">Ayudante (Flete) <small>(Opcional)</small></label>
-                            <input type="text" class="form-control" id="otro_ayudante" name="otro_ayudante" value="{{ old('otro_ayudante') }}" placeholder="Nombre del Ayudante">
-                        </div>
-
-                    </div>
-                    
-                    <!-- Observaciones (siempre visible) -->
-                    <div class="col-md-12 mt-4">
-                        <label for="observaciones">Observaciones</label>
-                        <textarea name="observaciones" id="observaciones" class="form-control" cols="30" rows="5">@if(old('observaciones')){{ old('observaciones') }}@endif</textarea>
-                    </div>
-
+                            @endif
+                        </tbody>
+                    </table>
                 </div>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="add-despacho-btn">
+                    <i class="bi bi-plus-circle me-1"></i> Agregar Otro Despacho
+                </button>
 
-                <hr class="my-4">
 
-                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                    <button type="submit" class="btn btn-primary btn-lg">
-                        <i class="bi bi-file-earmark-plus me-2"></i> Crear Solicitud y Planificar
+                <div class="mt-5 d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="bi bi-send-check me-2"></i> Planificar y Crear Flete
                     </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+{{-- TEMPLATE para una fila de despacho (se asume que existe _despacho_row.blade.php o se define aquí) --}}
+@if(!View::exists('viajes._despacho_row'))
+    @php
+        // Si la vista parcial no existe, la definimos aquí para que el JS pueda usarla como base
+        $clientes = $clientes ?? []; // Asumir que $clientes está disponible
+    @endphp
+    <script id="despacho-row-template" type="text/template">
+        <tr data-row-id="{INDEX}">
+            {{-- Cliente/Otro Cliente --}}
+            <td>
+                <div class="input-group">
+                    <input type="text" name="despachos[{INDEX}][otro_cliente]" id="otro_cliente_{INDEX}" class="form-control form-control-sm other-client-input select-or-other-input" data-select-field="cliente_id_{INDEX}" placeholder="Otro Cliente Manual">
+                </div>
+            </td>
+            {{-- Litros Despachados --}}
+            <td>
+                <input type="number" name="despachos[{INDEX}][litros]" class="form-control form-control-sm" min="1" required>
+            </td>
+            {{-- Observación --}}
+            <td>
+                <input type="text" name="despachos[{INDEX}][observacion]" class="form-control form-control-sm" placeholder="Detalles del despacho">
+            </td>
+            {{-- Acción --}}
+            <td class="text-center">
+                <button type="button" class="btn btn-danger btn-sm remove-despacho" title="Eliminar Despacho">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        </tr>
+    </script>
+@endif
 @endsection
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const esFleteSwitch = document.getElementById('es_flete_switch');
-        const unidadesInternasDiv = document.getElementById('unidades-internas');
-        const unidadesFleteDiv = document.getElementById('unidades-flete');
+    document.addEventListener('DOMContentLoaded', function() {
+        const despachosTableBody = document.getElementById('despachos-table-body');
+        const addDespachoButton = document.getElementById('add-despacho-btn');
+        
+        let rowIndex = despachosTableBody.rows.length; // Inicializa el índice con el número de filas existentes
 
+        // --- LÓGICA DE ASIGNACIÓN MANUAL (VEHÍCULO, CHOFER, AYUDANTE) ---
+               
+       const esFleteSwitch = document.getElementById('es_flete');
+       
         // Selects de unidades internas
         const vehiculoSelect = document.getElementById('vehiculo_id');
         const choferSelect = document.getElementById('chofer_id');
         const ayudanteSelect = document.getElementById('ayudante'); // ID original: ayudante
         
-        // Inputs de flete
-        const otroVehiculoInput = document.getElementById('otro_vehiculo');
-        const otroChoferInput = document.getElementById('otro_chofer');
+        // --- LÓGICA DE DESPACHOS DINÁMICOS (Se mantiene la lógica anterior y se integra el select-or-other en cada fila) ---
+
+        /**
+         * Aplica la lógica de exclusividad de Cliente/Otro Cliente a una fila.
+         * @param {HTMLTableRowElement} row - El elemento <tr>
+         */
+    
+
+        /**
+         * Crea una nueva fila de despacho.
+         */
+        function createRow() {
+            let template = document.getElementById('despacho-row-template').innerHTML;
+            // Reemplazar los marcadores de posición
+            template = template.replace(/{INDEX}/g, rowIndex);
+            
+            // Insertar la fila y obtener la referencia
+            despachosTableBody.insertAdjacentHTML('beforeend', template);
+            const newRow = despachosTableBody.lastElementChild;
+    \
+            rowIndex++; // Aumentar el índice para la próxima fila
+        }
         
-        // Función para alternar la visibilidad y el atributo 'required'
-        function toggleFleteFields() {
-            const isFlete = esFleteSwitch.checked;
+        // ------------------- INICIALIZACIÓN -------------------
+        
+        // 1. Si no hay filas de old('despachos'), agrega la primera fila.
+        // Esto previene duplicados si la validación falla y Laravel ya restauró las filas.
+        if (despachosTableBody.rows.length === 0) {
+             createRow();
+        } else {
+             // 2. Si hay filas de old('despachos'), aplicarles la lógica de exclusividad
+            Array.from(despachosTableBody.rows).forEach(applyExclusivityLogic);
+        }
 
-            if (isFlete) {
-                // Modo FLETE
-                unidadesInternasDiv.style.display = 'none';
-                unidadesFleteDiv.style.display = 'flex';
-                
-                // Desactivar 'required' para selects internos y limpiar
-                vehiculoSelect.removeAttribute('required');
-                choferSelect.removeAttribute('required');
-                vehiculoSelect.value = '';
-                choferSelect.value = '';
-                ayudanteSelect.value = ''; // Opcional, solo se limpia
+        
+        // Manejador del botón 'Agregar Despacho'
+        addDespachoButton.addEventListener('click', createRow);
 
-                // Establecer 'required' para inputs de flete (Unidad, Chofer, Proveedor)
-                otroVehiculoInput.setAttribute('required', 'required');
-                otroChoferInput.setAttribute('required', 'required');
+        // Manejador del botón 'Eliminar' (Delegación de eventos)
+        despachosTableBody.addEventListener('click', function(e) {
+            if (e.target.closest('.remove-despacho')) {
+                const button = e.target.closest('.remove-despacho');
+                const row = button.closest('tr');
                 
-            } else {
-                // Modo INTERNO
-                unidadesInternasDiv.style.display = 'flex';
-                unidadesFleteDiv.style.display = 'none';
-
-                // Establecer 'required' para selects internos
-                vehiculoSelect.setAttribute('required', 'required');
-                choferSelect.setAttribute('required', 'required');
-                
-                // Desactivar 'required' para inputs de flete y limpiar
-                otroVehiculoInput.removeAttribute('required');
-                otroChoferInput.removeAttribute('required');
-                
-                otroVehiculoInput.value = '';
-                otroChoferInput.value = '';
-                document.getElementById('otro_ayudante').value = ''; // Limpiar ayudante opcional
+                // Solo eliminar si quedan más de 1 filas
+                if (despachosTableBody.rows.length > 1) {
+                    row.remove();
+                } else {
+                    // Mensaje de feedback alternativo a alert()
+                    console.warn('Debe haber al menos un despacho por viaje.'); 
+                }
             }
-        }
+        });
 
-        // Agregar listener al switch
-        esFleteSwitch.addEventListener('change', toggleFleteFields);
-
-        // Asegurar que los campos 'required' iniciales se apliquen si es necesario
-        if (!esFleteSwitch.checked) {
-            vehiculoSelect.setAttribute('required', 'required');
-            choferSelect.setAttribute('required', 'required');
-        }
-        
-        // Ejecutar la función para asegurar el estado inicial correcto (manejo de old() data)
-        toggleFleteFields(); 
     });
 </script>
 @endpush

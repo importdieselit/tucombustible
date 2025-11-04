@@ -772,6 +772,29 @@ public function createPrecarga()
         return view('combustible.compra', compact('proveedores', 'plantas', 'choferes','vehiculos','ayudantes'));
     }
 
+
+        public function createFlete()
+    {
+        // Data de prueba o real para los selectores
+        $proveedores = Proveedor::all(['id', 'nombre']);
+        $plantas = Planta::all(['id', 'nombre', 'alias']); 
+        $choferes = Chofer::whereNotNull('documento_vialidad_numero')   
+                                      ->where('cargo', 'CHOFER')
+                                      ->with('persona')
+                                      ->get();
+        $destino = TabuladorViatico::where('id','>',5)->pluck('destino')->unique();
+
+        $ayudantes = Chofer::whereNull('documento_vialidad_numero')   
+                                      ->with('persona')
+                                      ->get();
+
+        $vehiculos = Vehiculo::where('es_flota', 1)->whereIn('tipo', [3,2])->whereIn('estatus', [1,2])->get();
+        
+
+        return view('combustible.flete', compact('proveedores', 'plantas', 'choferes','vehiculos','ayudantes','destino'));
+    }
+
+
     /**
      * Almacena la solicitud, realiza la planificación y notifica.
      */

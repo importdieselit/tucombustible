@@ -35,6 +35,14 @@
                 </div>
             </div>
         </div>
+        <div class="col">
+            <div class="card h-100 shadow border-start border-4 border-success">
+                <div class="card-body">
+                    <h5 class="card-title text-success"><i class="bi bi-calendar-plus me-2"></i> Planificación Fletes</h5>
+                    <a href="{{ route('combustible.createFlete') }}" class="btn btn-success w-100">Crear y Asignar Flete</a>
+                </div>
+            </div>
+        </div>
 {{-- 
         <!-- Tarjeta 2: Edición y Aprobación de Viáticos -->
         <div class="col">
