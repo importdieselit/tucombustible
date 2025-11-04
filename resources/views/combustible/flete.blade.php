@@ -17,30 +17,20 @@
         </div>
         <div class="card-body">
             <!-- Formulario de Solicitud -->
-            <form action="{{ route('combustible.storeFlete') }}" method="POST">
+            <form action="{{ route('combustible.storeCompra') }}" method="POST">
                 @csrf
                 <div class="row g-3">
                     
-                     <!-- Planta Destino (Carga) -->
+                    <!-- Proveedor de Combustible -->
                     <div class="col-md-6">
-                        <label for="planta_destino_id" class="form-label">Planta de Carga/Destino</label>
-                        <select class="form-select" id="planta_destino_id" name="planta_destino_id" required>
-                            <option value="">Seleccione una Planta</option>
-                            {{-- Placeholder: Iterar sobre una colección de plantas --}}
-                            @foreach($plantas as $planta)
-                                <option value="{{ $planta->id }}">{{ $planta->alias ?? $planta->nombre }}</option>
+                        <label for="proveedor_id" class="form-label">Proveedor de Combustible</label>
+                        <select class="form-select" id="proveedor_id" name="proveedor_id" required>
+                            <option value="">Seleccione un Proveedor</option>
+                            @foreach($proveedores as $proveedor)
+                                <option value="{{ $proveedor->id }}" @if(old('proveedor_id') == $proveedor->id) selected @endif>{{ $proveedor->nombre }}</option>
                             @endforeach
-                         </select>
+                        </select>
                     </div>
-
-                    <!-- Fecha Requerida (Día) -->
-                    <div class="col-md-6">
-                        <label for="fecha_requerida" class="form-label">Fecha Requerida de Carga</label>
-                        <input type="date" class="form-control" id="fecha_requerida" name="fecha_requerida" min="{{ date('Y-m-d') }}" required>
-                        <div class="form-text">Día en el que se debe realizar la carga.</div>
-                    </div>                 
-                    
-                    
                     
                     <!-- Litros -->
                     <div class="col-md-6">
@@ -75,31 +65,18 @@
                         
                         <!-- Unidad de Despacho (Vehículo) - SELECT (Interno) -->
                         <div class="col-md-6">
-                            <label for="chofer">Unidad</label>
-                            <select name="vehiculo_id" id="vehiculo_id" class="form-select" required>
-                                <option value="">Seleccione un Vehiculo</option>
+                            <label for="vehiculo_id" class="form-label">Unidad de Despacho (Flota Interna)</label>
+                            <select class="form-select" id="vehiculo_id" name="vehiculo_id">
+                                <option value="">Seleccione una Unidad</option>
                                 @foreach($vehiculos as $vehiculo)
-                                    @if($vehiculo->tipo==3)
-                                        <option value="{{ $vehiculo->id }}">{{ $vehiculo->flota }} {{ $vehiculo->placa }}</option>
-                                    @endif
-                                @endforeach 
+                                    <option value="{{ $vehiculo->id }}" @if(old('vehiculo_id') == $vehiculo->id) selected @endif>{{ $vehiculo->flota }} - {{ $vehiculo->placa }}</option>
+                                @endforeach
                             </select>
                         </div>
-                        <div class="col-md-6">
-                            <label for="chofer">Cisterna</label>
-                            <select name="cisterna_id" id="cisterna_id" class="form-select" required>
-                                <option value="">Seleccione una cisterna</option>
-                                @foreach($vehiculos as $cisterna)
-                                    @if($cisterna->tipo==2)
-                                        <option value="{{ $cisterna->id }}">{{ $cisterna->flota }} {{ $cisterna->placa }}</option>
-                                    @endif
-                                @endforeach 
-                            </select>
-                        </div>
-                        
+
                         <!-- Chofer - SELECT (Interno) -->
                         <div class="col-md-6">
-                            <label for="chofer_id" class="form-label">Chofer (propio)</label>
+                            <label for="chofer_id" class="form-label">Chofer (Interno)</label>
                             <select class="form-select" id="chofer_id" name="chofer_id">
                                 <option value="">Seleccione un Chofer</option>
                                 @foreach($choferes as $chofer)
@@ -110,7 +87,7 @@
 
                         <!-- Ayudante - SELECT (Interno) -->
                         <div class="col-md-6">
-                            <label for="ayudante" class="form-label">Ayudante (propio) <small>(Opcional)</small></label>
+                            <label for="ayudante" class="form-label">Ayudante (Interno) <small>(Opcional)</small></label>
                             <select class="form-select" id="ayudante" name="ayudante">
                                 <option value="">Seleccione un Ayudante</option>
                                 @foreach($ayudantes as $ayudante)
@@ -126,19 +103,19 @@
                         
                         <!-- Otro Vehículo - TEXT INPUT -->
                         <div class="col-md-6">
-                            <label for="otro_vehiculo" class="form-label">Unidad (Externo)</label>
+                            <label for="otro_vehiculo" class="form-label">Unidad (Flete)</label>
                             <input type="text" class="form-control" id="otro_vehiculo" name="otro_vehiculo" value="{{ old('otro_vehiculo') }}" placeholder="Ej: Placa ABC-123 o Nombre de la unidad">
                         </div>
 
                         <!-- Otro Chofer - TEXT INPUT -->
                         <div class="col-md-6">
-                            <label for="otro_chofer" class="form-label">Chofer (Externo)</label>
+                            <label for="otro_chofer" class="form-label">Chofer (Flete)</label>
                             <input type="text" class="form-control" id="otro_chofer" name="otro_chofer" value="{{ old('otro_chofer') }}" placeholder="Nombre del Chofer">
                         </div>
 
                         <!-- Otro Ayudante - TEXT INPUT -->
                         <div class="col-md-6">
-                            <label for="otro_ayudante" class="form-label">Ayudante (Esterno)</label>
+                            <label for="otro_ayudante" class="form-label">Ayudante (Flete) <small>(Opcional)</small></label>
                             <input type="text" class="form-control" id="otro_ayudante" name="otro_ayudante" value="{{ old('otro_ayudante') }}" placeholder="Nombre del Ayudante">
                         </div>
 

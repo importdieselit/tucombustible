@@ -230,10 +230,12 @@ class ViajesController extends Controller
                 'destino_ciudad' => $request->destino_ciudad,
                 'fecha_salida' => $request->fecha_salida,
                 'status' => $status,
-                'chofer_id' => $request->chofer_id,
-                'vehiculo_id' => $request->vehiculo_id,
+                'chofer_id' => $request->chofer_id ?? 0,
+                'vehiculo_id' => $request->vehiculo_id ?? 0,
                 'ayudante' => $request->ayudante ?? 0,
-                // Los campos opcionales como chofer_id y vehiculo_id se dejan nulos aquí.
+                'otro_chofer' => $request->otro_chofer_id ?? null,
+                'otro_vehiculo' => $request->otro_vehiculo_id ?? null,
+                'otro_ayudante' => $request->otro_ayudante_id ?? null
             ]);
 
             // 4. Crear los registros de DespachoViaje

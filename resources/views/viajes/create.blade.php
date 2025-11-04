@@ -6,7 +6,7 @@
 <div class="container mt-5">
     <div class="card shadow-lg">
         <div class="card-header bg-success text-white">
-            <h3 class="mb-0"><i class="bi bi-calendar-plus me-2"></i> Planificación de Viaje y Despachos</h3>
+            <h3 class="mb-0"><i class="bi bi-calendar-plus me-2"></i> Planificación de Despachos</h3>
         </div>
         <div class="card-body">
             @if(session('error'))
@@ -21,16 +21,7 @@
                 <h4 class="mt-4 mb-3 text-success border-bottom pb-1">Detalles del Viaje</h4>
                 <div class="row g-3 mb-4">
                     
-                    {{-- Campo de FLETE --}}
-                    <div class="col-md-3 d-flex align-items-center">
-                        <div class="form-check form-switch pt-4">
-                            <input class="form-check-input" type="checkbox" id="es_flete" name="es_flete" value="1" 
-                                {{ old('es_flete') ? 'checked' : '' }}>
-                            <label class="form-check-label fw-bold" for="es_flete">
-                                ¿Es Flete?
-                            </label>
-                        </div>
-                    </div>
+                    
                     
                     <!-- Ciudad de Destino -->
                     <div class="col-md-9">
@@ -66,7 +57,16 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-
+{{-- Campo de FLETE --}}
+                    <div class="col-md-3 d-flex align-items-center">
+                        <div class="form-check form-switch pt-4">
+                            <input class="form-check-input" type="checkbox" id="es_flete" name="es_flete" value="1" 
+                                {{ old('es_flete') ? 'checked' : '' }}>
+                            <label class="form-check-label fw-bold" for="es_flete">
+                                ¿unidades externas?
+                            </label>
+                        </div>
+                    </div>
                     {{-- VEHÍCULO --}}
                     <div class="col-md-6">
                         <label for="vehiculo_id" class="form-label fw-bold">Vehículo (Flota)</label>
