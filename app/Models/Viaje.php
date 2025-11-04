@@ -28,6 +28,7 @@ class Viaje extends Model
         'has_viatico',
         'cliente_id',
         'otro_cliente',
+        'usuario_id'
     ];
 
     /**
@@ -67,4 +68,8 @@ class Viaje extends Model
     {
         return $this->hasMany(DespachoViaje::class, 'viaje_id');
     }   
+    public function usuario(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'usuario_id');
+    }
 }

@@ -776,6 +776,7 @@ public function createPrecarga()
      */
     public function storeCompra(Request $request)
     {
+        $userId = Auth::id();
         $request->validate([
             //'proveedor_id' => 'required|exists:proveedores,id',
             'cantidad_litros' => 'required|integer|min:100',
@@ -804,7 +805,7 @@ public function createPrecarga()
             // 2. PLANIFICACIÓN Y ASIGNACIÓN DE RECURSOS
             $planta = Planta::find($request->planta_destino_id);
             $destino = TabuladorViatico::find($planta->id_tabulador_viatico);
-            dd($destino);
+            //dd($destino);
             $cantidad = $solicitud->cantidad_litros;
             $fecha = $solicitud->fecha_requerida;
 
@@ -815,14 +816,16 @@ public function createPrecarga()
                 'vehiculo_id' => $request->vehiculo_id,
                 'chofer_id' => $request->chofer_id,
                 'ayudante' => $request->ayudante ?? null, // Ayudante es opcional
-                'destino_ciudad' => $destino->id ?? 'N/A', 
+                'destino_ciudad' => $destino->nombre ?? 'N/A', 
                 'fecha_salida' => $fecha,
-                'status' => 'Programado'
+                'status' => 'Programado',
+                'usuario_id' => $userId
+                
             ]);
 
             $chofer=Chofer::find($request->chofer_id)->with('persona')->get();
             $ayudante=Chofer::find($request->ayudante)->with('persona')->get();
-
+            dd($viaje);
 
              DespachoViaje::create([
                     'viaje_id' => $viaje->id,
