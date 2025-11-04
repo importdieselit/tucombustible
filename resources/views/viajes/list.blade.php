@@ -47,13 +47,13 @@
             </thead>
             <tbody>
                 @forelse($viajes as $viaje)
-                @if(!is_null($viaje->chofer_id))
+                @if($viaje->chofer_id == 0)
+                    @php($viaje->chofer = $viaje->otro_chofer ?? 'sin asignar')
+                @elseif(!is_null($viaje->chofer_id))
                     @php($chofer=  \App\Models\Chofer::find($viaje->chofer_id))
                     @php($persona=  \App\Models\Persona::find($chofer->persona_id))
                     
                      @php($viaje->chofer = $persona ? $persona->nombre : 'sin asignar')
-                @elseif($viaje->chofer_id == 0)
-                    @php($viaje->chofer = $viaje->otro_chofer ?? 'sin asignar')
                 @endif
                 @if($viaje->vehiculo_id==0)
                     @php($viaje->vehiculo = $viaje->otro_vehiculo ?? 'sin asignar')
