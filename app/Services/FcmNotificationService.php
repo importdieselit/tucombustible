@@ -63,6 +63,35 @@ class FcmNotificationService
         }
     }
 
+
+     public static function sendNotification(User $user, string $title, string $text): bool
+    {
+        try {
+            // Buscar el usuario cliente asociado al pedido
+            //$clienteU = User::where('cliente_id', $cliente->cliente_id)->first();
+            
+            if (!$user || !$user->fcm_token) {
+                Log::warning("No se encontró token FCM para el Usuario {$user->id}");
+                return false;
+            }
+
+            // Preparar datos de la notificación
+            $title = $title;
+            $body = $text;
+            $data =  $data = [
+                'type' => 'nuevo_notificacion',
+                'user_id' => $user->id,
+            ]; 
+          
+            // Enviar notificación
+            return self::sendFcmNotification($user->fcm_token, $title, $body, $data);
+
+        } catch (\Exception $e) {
+            Log::error("Error enviando notificación de cambio de estatus: " . $e->getMessage());
+            return false;
+        }
+    }
+
     /**
      * Enviar notificación de asignación de pedido al conductor
      */

@@ -16,6 +16,7 @@ use App\Models\Planta;
 use App\Models\Chofer;
 use App\Models\CompraCombustible;
 use App\Models\Viaje;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
@@ -759,10 +760,15 @@ public function createPrecarga()
                                       ->where('cargo', 'CHOFER')
                                       ->with('persona')
                                       ->get();
+
+        $ayudante = Chofer::whereNull('documento_vialidad_numero')   
+                                      ->with('persona')
+                                      ->get();
+
         $vehiculos = Vehiculo::where('es_flota', 1)->whereIn('tipo', [3,2])->whereIn('estatus', [1,2])->get();
         
 
-        return view('combustible.compra', compact('proveedores', 'plantas', 'choferes','vehiculos'));
+        return view('combustible.compra', compact('proveedores', 'plantas', 'choferes','vehiculos','ayudante'));
     }
 
     /**
@@ -814,6 +820,10 @@ public function createPrecarga()
                 'status' => 'Programado'
             ]);
 
+            $chofer=Chofer::find($request->chofer_id)->with('persona')->get();
+            $ayudante=Chofer::find($request->ayudante_id)->with('persona')->get();
+
+
              DespachoViaje::create([
                     'viaje_id' => $viaje->id,
                     'otro_cliente' => 'PDVSA '.$destino->destino_ciudad,
@@ -830,7 +840,7 @@ public function createPrecarga()
             DB::commit();
 
             // 5. NOTIFICACIÓN DE PLANIFICACIÓN EXITOSA
-            $this->enviarNotificaciones($viaje, $solicitud, $chofer);
+            $this->enviarNotificaciones($viaje, $solicitud, $chofer,$ayudante);
 
             return redirect()->route('combustible.index')->with('success', 'Solicitud de combustible creada y viaje de carga planificado y asignado con éxito (ID Viaje: ' . $viaje->id . ').');
 
@@ -850,6 +860,7 @@ public function createPrecarga()
      */
     protected function enviarNotificaciones(Viaje $viaje, CompraCombustible $solicitud, Chofer $chofer, ?Ayudante $ayudante): void
     {
+        
         $mensaje = "✅ Planificación de Carga de Combustible CREADA:\n"
                  . "Carga: {$solicitud->cantidad_litros} Litros\n"
                  . "Destino: {$viaje->destino_nombre} ({$viaje->destino_ciudad})\n"
@@ -868,25 +879,25 @@ public function createPrecarga()
 
         // 2. Notificación FCM (Alertas y fcmNotification)
         // Podrías enviar la notificación al token del chofer y a los usuarios de logística
-        // try {
-        //     $tokens = [];
-        //     // Asume que el modelo Chofer tiene el token_fcm relacionado con su usuario
-        //     if ($chofer->user && $chofer->user->token_fcm) {
-        //         $tokens[] = $chofer->user->token_fcm;
-        //     }
-        //     // Tokens de usuarios de logística/administración
-        //     $tokens = array_merge($tokens, $logisticaTokens);
-
-        //     if (!empty($tokens)) {
-        //          $this->fcmService->sendNotificationToUsers(
-        //             $tokens, 
-        //             "Carga de Combustible Planificada (ID Viaje: {$viaje->id})", 
-        //             "Tienes asignada una carga de {$solicitud->cantidad_litros}L para el {$viaje->fecha_salida}."
-        //         );
-        //     }
-        // } catch (\Exception $e) {
-        //     Log::error("Error enviando notificación FCM: " . $e->getMessage());
-        // }
+         try {
+            $logisticaTokens=User::whereIn('perfil_id', [1,2,6,7,8,11,12,18] )->whereNotNull('fcm_token')->pluck('fcm_token')->toArray();
+             $tokens = [];
+             // Asume que el modelo Chofer tiene el token_fcm relacionado con su usuario
+             if ($chofer->user && $chofer->user->token_fcm) {
+                 $tokens[] = $chofer->user->token_fcm;
+             }
+             // Tokens de usuarios de logística/administración
+             $tokens = array_merge($tokens, $logisticaTokens);
+            if (!empty($tokens)) {
+                  $this->fcmService->sendNotification(
+                     $tokens, 
+                     "Carga de Combustible Planificada (ID Viaje: {$viaje->id})", 
+                     "{$chofer->persona->nombre} Tienes asignada una carga de {$solicitud->cantidad_litros} para el {$viaje->fecha_salida}."
+                 );
+             }
+         } catch (\Exception $e) {
+             Log::error("Error enviando notificación FCM: " . $e->getMessage());
+        }
 
         // 3. (Opcional) Implementación de Alertas Web
         // Esto se manejaría generalmente con Eventos de Laravel y un listener de Broadcast.

@@ -18,8 +18,10 @@ class CompraCombustible extends Model
     protected $fillable = [
         'proveedor_id',
         'cantidad_litros',
+        'cantidad_recibida',
         'planta_destino_id',
         'fecha',
+        'tipo',
         'vehiculo_id',
         'cisterna',
         'estatus', // Ej: PROGRAMADA, ASIGNADA, COMPRADA, COMPLETADA, CANCELADA

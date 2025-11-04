@@ -87,10 +87,10 @@
                     <table class="table table-hover table-striped">
                         <thead class="table-light">
                             <tr>
-                                <th>OT / Solicitud ID</th>
+                                <th>ID</th>
                                 <th>Vehículo (Flota/Placa)</th>
                                 <th>Tipo de Unidad</th>
-                                <th>Cantidad Solicitado</th>
+                                <th>Cantidad Solicitada</th>
                                 <th>Cantidad Recibida</th>
                                 <th>Fecha</th>
                                 <th>Estatus</th>

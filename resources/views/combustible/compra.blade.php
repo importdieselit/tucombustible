@@ -24,10 +24,9 @@
                     <div class="col-md-6">
                         <label for="proveedor_id" class="form-label">Proveedor</label>
                         <select class="form-select" id="proveedor_id" name="proveedor_id" required>
-                            <option value="">Seleccione un Proveedor</option>
                             {{-- Placeholder: Iterar sobre una colección de proveedores --}}
                             @foreach($proveedores as $proveedor)
-                                <option value="{{ $proveedor->id }}">{{ $proveedor->nombre }}</option>
+                                <option value="{{ $proveedor->id }}" selected>{{ $proveedor->nombre }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -89,10 +88,19 @@
                         </select>
                     </div>
                     <div class="col-md-6">
+                        <label for="ayudante">Ayudante</label>
+                        <select name="ayudante" id="ayudante" class="form-select" required>
+                            <option value="">Seleccione un Ayudante</option>
+                            @foreach($ayudantes as $ayudante)
+                                <option value="{{ $ayudante->id }}">{{ $ayudante->persona->nombre }}</option>
+                            @endforeach 
+                        </select>
+                    </div>
+                    <div class="col-md-6">
                         <label for="tipo">Tipo Compra</label>
                         <select name="tipo" id="tipo" class="form-select" required>
-                            <option value="DIESEL">DIESEL</option>
-                            <option value="M.G.O.">M.G.O.</option>
+                            <option value="INDUSTRIAL">DIESEL INDUSTRIAL</option>
+                            <option value="M.G.O.">DIESEL MARINO (M.G.O.)</option>
                         </select>
                     </div>
                     <div class="col-md-12">
