@@ -842,11 +842,11 @@ public function createPrecarga()
             // 5. NOTIFICACIÓN DE PLANIFICACIÓN EXITOSA
             $this->enviarNotificaciones($viaje, $solicitud, $chofer,$ayudante);
 
-            return redirect()->route('combustible.index')->with('success', 'Solicitud de combustible creada y viaje de carga planificado y asignado con éxito (ID Viaje: ' . $viaje->id . ').');
+            return redirect()->route('combustible.compras')->with('success', 'Solicitud de combustible creada y viaje de carga planificado y asignado con éxito (ID Viaje: ' . $viaje->id . ').');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Error en el flujo de Solicitud/Planificación de Combustible: " . $e->getMessage());
+            Log::error("Error en el flujo de Compra/Planificación de Combustible: " . $e->getMessage());
             return redirect()->back()->with('error', 'Ocurrió un error en el sistema al procesar la solicitud.');
         }
     }

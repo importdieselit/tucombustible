@@ -34,7 +34,7 @@
                     <!-- Cantidad (Litros) -->
                     <div class="col-md-6">
                         <label for="cantidad_litros" class="form-label">Cantidad (Litros)</label>
-                        <input type="number" class="form-control" id="cantidad_litros" name="cantidad_litros" min="100" required>
+                        <input type="number" class="form-control" id="cantidad_litros" name="cantidad_litros" min="100" value="{{old('cantidad_litros')}}" required>
                         <div class="form-text">Mínimo 100 litros. Esta cantidad se usará para filtrar la unidad de transporte.</div>
                     </div>
 
@@ -45,7 +45,7 @@
                             <option value="">Seleccione una Planta</option>
                             {{-- Placeholder: Iterar sobre una colección de plantas --}}
                             @foreach($plantas as $planta)
-                                <option value="{{ $planta->id }}">{{ $planta->alias ?? $planta->nombre }}</option>
+                                <option value="{{ $planta->id }}" @if(old('planta_destino_id') == $planta->id) selected @endif>{{ $planta->alias ?? $planta->nombre }}</option>
                             @endforeach
                          </select>
                     </div>
@@ -62,7 +62,7 @@
                             <option value="">Seleccione un Vehiculo</option>
                             @foreach($vehiculos as $vehiculo)
                                 @if($vehiculo->tipo==3)
-                                    <option value="{{ $vehiculo->id }}">{{ $vehiculo->flota }} {{ $vehiculo->placa }}</option>
+                                    <option value="{{ $vehiculo->id }}" @if(old('vehiculo_id') == $vehiculo->id) selected @endif>{{ $vehiculo->flota }} {{ $vehiculo->placa }}</option>
                                 @endif
                             @endforeach 
                         </select>
@@ -73,7 +73,7 @@
                             <option value="">Seleccione una cisterna</option>
                             @foreach($vehiculos as $cisterna)
                                 @if($cisterna->tipo==2)
-                                    <option value="{{ $cisterna->id }}">{{ $cisterna->flota }} {{ $cisterna->placa }}</option>
+                                    <option value="{{ $cisterna->id }}" @if(old('cisterna_id') == $cisterna->id) selected @endif>{{ $cisterna->flota }} {{ $cisterna->placa }}</option>
                                 @endif
                             @endforeach 
                         </select>
@@ -83,7 +83,7 @@
                         <select name="chofer_id" id="chofer_id" class="form-select" required>
                             <option value="">Seleccione un Chofer</option>
                             @foreach($choferes as $chofer)
-                                <option value="{{ $chofer->id }}">{{ $chofer->persona->nombre }}</option>
+                                <option value="{{ $chofer->id }}" @if(old('chofer_id') == $chofer->id) selected @endif> {{ $chofer->persona->nombre }}</option>
                             @endforeach 
                         </select>
                     </div>
@@ -92,20 +92,24 @@
                         <select name="ayudante" id="ayudante" class="form-select" required>
                             <option value="">Seleccione un Ayudante</option>
                             @foreach($ayudantes as $ayudante)
-                                <option value="{{ $ayudante->id }}">{{ $ayudante->persona->nombre }}</option>
+                                <option value="{{ $ayudante->id }}" @if(old('ayudante') == $ayudante->id) selected @endif>{{ $ayudante->persona->nombre }}</option>
                             @endforeach 
                         </select>
                     </div>
                     <div class="col-md-6">
                         <label for="tipo">Tipo Compra</label>
                         <select name="tipo" id="tipo" class="form-select" required>
-                            <option value="INDUSTRIAL">DIESEL INDUSTRIAL</option>
-                            <option value="M.G.O.">DIESEL MARINO (M.G.O.)</option>
+                            <option value="INDUSTRIAL" @if(old('tipo') == 'INDUSTRIAL') selected @endif>DIESEL INDUSTRIAL</option>
+                            <option value="M.G.O." @if(old('tipo') == 'M.G.O.') selected @endif>DIESEL MARINO (M.G.O.)</option>
                         </select>
                     </div>
                     <div class="col-md-12">
                         <label for="observaciones">Observaciones</label>
-                        <textarea name="observaciones" id="observaciones" class="form-control" cols="30" rows="10"></textarea>
+                        <textarea name="observaciones" id="observaciones" class="form-control" cols="30" rows="10">
+                            @if(old('observaciones'))
+                                {{ old('observaciones') }}
+                            @endif
+                        </textarea>
                     </div>
 
                 </div>
