@@ -864,19 +864,24 @@ public function createPrecarga()
      */
     protected function enviarNotificaciones(Viaje $viaje, CompraCombustible $solicitud, Chofer $chofer, ?Chofer $ayudante): void
     {
-        $chofer = Chofer::find($chofer->id)->with('persona')->get();
+        $choferP = Persona::find($chofer->persona_id);
+        $choferU=User::find($chofer->user_id);
+        $ayudanteP = null;
+        $ayudanteU=null;
         if ($ayudante) {
-            $ayudante = Persona::find($ayudante->id)->get();
+            $ayudanteP = Persona::find($ayudante->persona_id);
+            $ayudanteU=User::find($ayudante->user_id);
         }
+        $vehiculo=Vehiculo::find($viaje->vehiculo_id);
 
         
         $mensaje = "✅ Planificación de Carga de Combustible CREADA:\n"
                  . "Carga: {$solicitud->cantidad_litros} Litros\n"
-                 . "Destino: {$viaje->destino_nombre} ({$viaje->destino_ciudad})\n"
+                 . "Destino: PDVSA {$viaje->destino_ciudad}\n"
                  . "Fecha: {$viaje->fecha_salida}\n"
-                 . "Unidad Asignada: {$viaje->vehiculo->flota}\n"
-                 . "Chofer: {$chofer->persona->nombre }\n"
-                 . ($ayudante ? "Ayudante: {$ayudante->nombre }" : "Ayudante: No Asignado");
+                 . "Unidad Asignada: {$vehiculo->flota}\n"
+                 . "Chofer: {$choferP->nombre }\n"
+                 . ($ayudante ? "Ayudante: {$ayudanteP->nombre }" : "Ayudante: No Asignado");
 
         // 1. Notificación a Telegram (Ejemplo de Alerta General)
         try {
@@ -892,9 +897,12 @@ public function createPrecarga()
             $logisticaTokens=User::whereIn('perfil_id', [1,2,6,7,8,11,12,18] )->whereNotNull('fcm_token')->pluck('fcm_token')->toArray();
              $tokens = [];
              // Asume que el modelo Chofer tiene el token_fcm relacionado con su usuario
-             if ($chofer->user && $chofer->user->token_fcm) {
-                 $tokens[] = $chofer->user->token_fcm;
+             if ($choferU && $choferU->token_fcm) {
+                 $tokens[] = $choferU->token_fcm;
              }
+             if ($ayudanteU && $ayudanteU->token_fcm) {
+                 $tokens[] = $ayudanteU->token_fcm;
+             }  
              // Tokens de usuarios de logística/administración
              $tokens = array_merge($tokens, $logisticaTokens);
             if (!empty($tokens)) {
