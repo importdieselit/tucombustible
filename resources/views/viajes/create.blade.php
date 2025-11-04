@@ -241,66 +241,56 @@
         
         // Función para alternar la visibilidad y el atributo 'required'
         function toggleFleteFields() {
-            const isFlete = esFleteSwitch.checked;
+            const isFlete = esFleteSwitch && esFleteSwitch.checked;
+
+            const show = (el) => el && (el.closest('div').style.display = 'flex');
+            const hide = (el) => el && (el.closest('div').style.display = 'none');
+            const setReq = (el, req = true) => el && (req ? el.setAttribute('required', 'required') : el.removeAttribute('required'));
+            const clearVal = (el) => el && (el.value = '');
 
             if (isFlete) {
                 // Modo FLETE
-                vehiculoSelect.parent('div').style.display = 'none';
-                otroVehiculoInput.parent('div').style.display = 'flex';
-                
-                choferSelect.parent('div').style.display = 'none';
-                otroChoferInput.parent('div').style.display = 'flex';
-                
-                ayudanteSelect.parent('div').style.display = 'none'; // Opcional, solo se oculta
-                document.getElementById('otro_ayudante').parent('div').style.display = 'flex'; // Opcional, se muestra
-                
-                // Desactivar 'required' para selects internos y limpiar
-                vehiculoSelect.removeAttribute('required');
-                choferSelect.removeAttribute('required');
-                vehiculoSelect.value = '';
-                choferSelect.value = '';
-                ayudanteSelect.value = ''; // Opcional, solo se limpia
+                hide(vehiculoSelect);
+                hide(choferSelect);
+                hide(ayudanteSelect);
+                show(otroVehiculoInput);
+                show(otroChoferInput);
+                show(otroAyudanteInput);
 
-                // Establecer 'required' para inputs de flete (Unidad, Chofer, Proveedor)
-                otroVehiculoInput.setAttribute('required', 'required');
-                otroChoferInput.setAttribute('required', 'required');
-                
+                setReq(vehiculoSelect, false);
+                setReq(choferSelect, false);
+                clearVal(vehiculoSelect);
+                clearVal(choferSelect);
+                clearVal(ayudanteSelect);
+
+                setReq(otroVehiculoInput, true);
+                setReq(otroChoferInput, true);
             } else {
                 // Modo INTERNO
-                vehiculoSelect.parent('div').style.display = 'flex';
-                otroVehiculoInput.parent('div').style.display = 'none';
-                
-                choferSelect.parent('div').style.display = 'flex';
-                otroChoferInput.parent('div').style.display = 'none';
-                
-                ayudanteSelect.parent('div').style.display = 'flex'; // Opcional, se muestra
-                document.getElementById('otro_ayudante').parent('div').style.display = 'none'; // Opcional, se oculta
+                show(vehiculoSelect);
+                show(choferSelect);
+                show(ayudanteSelect);
+                hide(otroVehiculoInput);
+                hide(otroChoferInput);
+                hide(otroAyudanteInput);
 
+                setReq(vehiculoSelect, true);
+                setReq(choferSelect, true);
+                setReq(otroVehiculoInput, false);
+                setReq(otroChoferInput, false);
 
-                // Establecer 'required' para selects internos
-                vehiculoSelect.setAttribute('required', 'required');
-                choferSelect.setAttribute('required', 'required');
-                
-                // Desactivar 'required' para inputs de flete y limpiar
-                otroVehiculoInput.removeAttribute('required');
-                otroChoferInput.removeAttribute('required');
-                
-                otroVehiculoInput.value = '';
-                otroChoferInput.value = '';
-                document.getElementById('otro_ayudante').value = ''; // Limpiar ayudante opcional
+                clearVal(otroVehiculoInput);
+                clearVal(otroChoferInput);
+                clearVal(otroAyudanteInput);
             }
+
+        }
+        // Listener del switch
+        if (esFleteSwitch) {
+            esFleteSwitch.addEventListener('change', toggleFleteFields);
         }
 
-        // Agregar listener al switch
-        esFleteSwitch.addEventListener('change', toggleFleteFields);
-
-        // Asegurar que los campos 'required' iniciales se apliquen si es necesario
-        if (!esFleteSwitch.checked) {
-            vehiculoSelect.setAttribute('required', 'required');
-            choferSelect.setAttribute('required', 'required');
-        }
-        
-        // Ejecutar la función para asegurar el estado inicial correcto (manejo de old() data)
+// Estado inicial correctoa función para asegurar el estado inicial correcto (manejo de old() data)
         toggleFleteFields(); 
 
         // --- LÓGICA DE DESPACHOS DINÁMICOS (Se mantiene la lógica anterior y se integra el select-or-other en cada fila) ---
