@@ -978,7 +978,7 @@ public function createPrecarga()
             // El servicio TelegramNotificationService debe tener un método como sendNotification
             $this->telegramService->sendMessage($mensaje);
         
-            return redirect()->route('viajes.lists')->with('success', 'Solicitud de combustible creada y viaje de carga planificado y asignado con éxito (ID Viaje: ' . $viaje->id . ').');
+            return redirect()->route('viajes.list')->with('success', 'Solicitud de Flete creada y viaje de carga planificado y asignado con éxito (ID Viaje: ' . $viaje->id . ').');
             //return redirect()->route('combustible.compras')->with('success', 'Solicitud de combustible creada y viaje de carga planificado y asignado con éxito (ID Viaje: ' . $viaje->id . ').');
 
         } catch (\Exception $e) {
