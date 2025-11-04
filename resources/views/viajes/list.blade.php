@@ -52,10 +52,15 @@
                     @php($persona=  \App\Models\Persona::find($chofer->persona_id))
                     
                      @php($viaje->chofer = $persona ? $persona->nombre : 'sin asignar')
-                @else
-                    @php($viaje->chofer = 'sin asignar')
+                @elseif($viaje->chofer_id == 0)
+                    @php($viaje->chofer = $viaje->otro_chofer ?? 'sin asignar')
                 @endif
-                 @php($viaje->vehiculo = $viaje->vehiculo_id ? \App\Models\Vehiculo::find($viaje->vehiculo_id)->placa : 'N/A')
+                @if($viaje->vehiculo_id==0)
+                    @php($viaje->vehiculo = $viaje->otro_vehiculo ?? 'sin asignar')
+                @else
+                    @php($viaje->vehiculo = $viaje->vehiculo_id ? \App\Models\Vehiculo::find($viaje->vehiculo_id)->placa : 'N/A')
+                @endif
+            
                 <tr>
                     <td>{{ $viaje->id }}</td>
                     <td>[{{ $viaje->destino_ciudad }}] {{ $viaje->cliente?$viaje->cliente->nombre:($viaje->otro_cliente ??'N/A')}}</td>

@@ -28,7 +28,10 @@ class Viaje extends Model
         'has_viatico',
         'cliente_id',
         'otro_cliente',
-        'usuario_id'
+        'usuario_id',
+        'otro_vehiculo',
+        'otro_chofer',
+        'otro_ayudante'
     ];
 
     /**
