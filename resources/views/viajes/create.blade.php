@@ -226,53 +226,81 @@
         let rowIndex = despachosTableBody.rows.length; // Inicializa el índice con el número de filas existentes
 
         // --- LÓGICA DE ASIGNACIÓN MANUAL (VEHÍCULO, CHOFER, AYUDANTE) ---
+               
+       const esFleteSwitch = document.getElementById('es_flete_switch');
+       
+        // Selects de unidades internas
+        const vehiculoSelect = document.getElementById('vehiculo_id');
+        const choferSelect = document.getElementById('chofer_id');
+        const ayudanteSelect = document.getElementById('ayudante'); // ID original: ayudante
         
-        const resourcePairs = [
-            { selectId: 'vehiculo_id', otherId: 'otro_vehiculo' },
-            { selectId: 'chofer_id', otherId: 'otro_chofer' },
-            { selectId: 'ayudante', otherId: 'otro_ayudante' },
-        ];
+        // Inputs de flete
+        const otroVehiculoInput = document.getElementById('otro_vehiculo');
+        const otroChoferInput = document.getElementById('otro_chofer');
+        
+        // Función para alternar la visibilidad y el atributo 'required'
+        function toggleFleteFields() {
+            const isFlete = esFleteSwitch.checked;
 
-        function setupExclusivity(selectId, otherId) {
-            const selectEl = document.getElementById(selectId);
-            const otherEl = document.getElementById(otherId);
+            if (isFlete) {
+                // Modo FLETE
+                vehiculoSelect.style.display = 'none';
+                otroVehiculoInput.style.display = 'flex';
+                
+                choferSelect.style.display = 'none';
+                otroChoferInput.style.display = 'flex';
+                
+                ayudanteSelect.style.display = 'none'; // Opcional, solo se oculta
+                document.getElementById('otro_ayudante').style.display = 'flex'; // Opcional, se muestra
+                
+                // Desactivar 'required' para selects internos y limpiar
+                vehiculoSelect.removeAttribute('required');
+                choferSelect.removeAttribute('required');
+                vehiculoSelect.value = '';
+                choferSelect.value = '';
+                ayudanteSelect.value = ''; // Opcional, solo se limpia
 
-            if (!selectEl || !otherEl) return;
+                // Establecer 'required' para inputs de flete (Unidad, Chofer, Proveedor)
+                otroVehiculoInput.setAttribute('required', 'required');
+                otroChoferInput.setAttribute('required', 'required');
+                
+            } else {
+                // Modo INTERNO
+                vehiculoSelect.style.display = 'flex';
+                otroVehiculoInput.style.display = 'none';
+                
+                choferSelect.style.display = 'flex';
+                otroChoferInput.style.display = 'none';
+                
+                ayudanteSelect.style.display = 'flex'; // Opcional, se muestra
+                document.getElementById('otro_ayudante').style.display = 'none'; // Opcional, se oculta
 
-            // Manejar cambio en el SELECT
-            selectEl.addEventListener('change', function() {
-                // Si selecciona una opción válida (no "")
-                if (this.value) {
-                    otherEl.value = ''; // Limpia el campo manual
-                    otherEl.disabled = true; // Deshabilita el campo manual
-                } else {
-                    otherEl.disabled = false; // Habilita si no hay selección
-                }
-            });
 
-            // Manejar cambio en el campo MANUAL/OTRO
-            otherEl.addEventListener('input', function() {
-                // Si el campo manual tiene texto
-                if (this.value.trim() !== '') {
-                    selectEl.value = ''; // Limpia el select
-                    selectEl.disabled = true; // Deshabilita el select
-                } else {
-                    selectEl.disabled = false; // Habilita si está vacío
-                }
-            });
-
-            // Inicialización al cargar, por si hay valores de old()
-            if (selectEl.value) {
-                otherEl.disabled = true;
-            }
-            if (otherEl.value) {
-                selectEl.disabled = true;
+                // Establecer 'required' para selects internos
+                vehiculoSelect.setAttribute('required', 'required');
+                choferSelect.setAttribute('required', 'required');
+                
+                // Desactivar 'required' para inputs de flete y limpiar
+                otroVehiculoInput.removeAttribute('required');
+                otroChoferInput.removeAttribute('required');
+                
+                otroVehiculoInput.value = '';
+                otroChoferInput.value = '';
+                document.getElementById('otro_ayudante').value = ''; // Limpiar ayudante opcional
             }
         }
-        
-        // Aplica la lógica a cada par de recursos
-        resourcePairs.forEach(pair => setupExclusivity(pair.selectId, pair.otherId));
 
+        // Agregar listener al switch
+        esFleteSwitch.addEventListener('change', toggleFleteFields);
+
+        // Asegurar que los campos 'required' iniciales se apliquen si es necesario
+        if (!esFleteSwitch.checked) {
+            vehiculoSelect.setAttribute('required', 'required');
+            choferSelect.setAttribute('required', 'required');
+        }
+        
+        // Ejecutar la función para asegurar el estado inicial correcto (manejo de old() data)
+        toggleFleteFields(); 
 
         // --- LÓGICA DE DESPACHOS DINÁMICOS (Se mantiene la lógica anterior y se integra el select-or-other en cada fila) ---
 
