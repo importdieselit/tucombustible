@@ -865,7 +865,7 @@ public function createPrecarga()
     {
         $chofer = Chofer::find($chofer->id)->with('persona')->get();
         if ($ayudante) {
-            $ayudante = Chofer::find($ayudante->id)->with('persona')->get();
+            $ayudante = Persona::find($ayudante->id)->get();
         }
 
         
@@ -875,7 +875,7 @@ public function createPrecarga()
                  . "Fecha: {$viaje->fecha_salida}\n"
                  . "Unidad Asignada: {$viaje->vehiculo->flota}\n"
                  . "Chofer: {$chofer->persona->nombre }\n"
-                 . ($ayudante ? "Ayudante: {$ayudante->persona->nombre }" : "Ayudante: No Asignado");
+                 . ($ayudante ? "Ayudante: {$ayudante->nombre }" : "Ayudante: No Asignado");
 
         // 1. Notificación a Telegram (Ejemplo de Alerta General)
         try {
