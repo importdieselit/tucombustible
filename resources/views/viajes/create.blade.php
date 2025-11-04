@@ -93,12 +93,15 @@
                     {{-- CHOFER --}}
                     <div class="col-md-6">
                         <label for="chofer_id" class="form-label fw-bold">Chofer</label>
-                        <select name="chofer_id" id="chofer_id" class="form-select select-or-other" data-other-field="otro_chofer" required>
-                            <option value="">Seleccione un Chofer</option>
-                            <!-- Se asume que $choferes es un array de objetos Chofer con relación Persona -->
+                        <select name="chofer_id" id="chofer_id" class="form-select @error('chofer_id') is-invalid @enderror" >
+                            <option value="">Seleccione el chofer</option>
+                            <!-- Este loop debe cargar los usuarios con rol 'chofer' -->
+                         
                             @foreach($choferes as $chofer)
-                                <option value="{{ $chofer->id }}" @if(old('chofer_id') == $chofer->id) selected @endif>{{ $chofer->persona->nombre }}</option>
-                            @endforeach
+                                @if($chofer->cargo == 'CHOFER' )                            
+                                    <option value="{{ $chofer->id }}" {{ old('chofer_id') == $chofer->id ? 'selected' : '' }}>{{ $chofer->persona->nombre }}</option>
+                                @endif
+                          @endforeach
                         </select>
                         <small class="text-muted">Seleccione un chofer de la lista o ingrese uno manual.</small>
                         @error('chofer_id')
@@ -112,19 +115,21 @@
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
                     </div>
-
                     {{-- AYUDANTE --}}
                     <div class="col-md-6">
                         <label for="ayudante_id" class="form-label fw-bold">Ayudante</label>
-                        <select name="ayudante_id" id="ayudante_id" class="form-select select-or-other" data-other-field="otro_ayudante">
-                            <option value="">Seleccione un Ayudante (Opcional)</option>
-                            <!-- Se asume que $ayudantes es un array de objetos Chofer/Personal con relación Persona -->
-                            @foreach($ayudantes as $ayudante)
-                                <option value="{{ $ayudante->id }}" @if(old('ayudante_id') == $ayudante->id) selected @endif>{{ $ayudante->persona->nombre }}</option>
+                        <select name="ayudante" id="ayudante" class="form-select @error('ayudante') is-invalid @enderror">
+                            <option value="">Seleccione el Ayudante</option>
+                            <!-- Este loop debe cargar los usuarios con rol 'chofer' -->
+                          
+                            @foreach($choferes as $chofer)
+                                @if($chofer->cargo == 'AYUDANTE' || $chofer->cargo == 'AYUDANTE DE CHOFER')
+                                    <option value="{{ $chofer->id }}" {{ old('ayudante') == $chofer->id ? 'selected' : '' }}>{{ $chofer->persona->nombre }}</option>
+                                @endif
                             @endforeach
                         </select>
                         <small class="text-muted">Seleccione un ayudante de la lista o ingrese uno manual.</small>
-                        @error('ayudante_id')
+                        @error('ayudante')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
                     </div>
@@ -225,7 +230,7 @@
         const resourcePairs = [
             { selectId: 'vehiculo_id', otherId: 'otro_vehiculo' },
             { selectId: 'chofer_id', otherId: 'otro_chofer' },
-            { selectId: 'ayudante_id', otherId: 'otro_ayudante' },
+            { selectId: 'ayudante', otherId: 'otro_ayudante' },
         ];
 
         function setupExclusivity(selectId, otherId) {
