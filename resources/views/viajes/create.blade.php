@@ -245,14 +245,14 @@
 
             if (isFlete) {
                 // Modo FLETE
-                vehiculoSelect.parent.style.display = 'none';
-                otroVehiculoInput.parent.style.display = 'flex';
+                vehiculoSelect.parent('div').style.display = 'none';
+                otroVehiculoInput.parent('div').style.display = 'flex';
                 
-                choferSelect.parent.style.display = 'none';
-                otroChoferInput.parent.style.display = 'flex';
+                choferSelect.parent('div').style.display = 'none';
+                otroChoferInput.parent('div').style.display = 'flex';
                 
-                ayudanteSelect.parent.style.display = 'none'; // Opcional, solo se oculta
-                document.getElementById('otro_ayudante').parent.style.display = 'flex'; // Opcional, se muestra
+                ayudanteSelect.parent('div').style.display = 'none'; // Opcional, solo se oculta
+                document.getElementById('otro_ayudante').parent('div').style.display = 'flex'; // Opcional, se muestra
                 
                 // Desactivar 'required' para selects internos y limpiar
                 vehiculoSelect.removeAttribute('required');
@@ -267,14 +267,14 @@
                 
             } else {
                 // Modo INTERNO
-                vehiculoSelect.parent.style.display = 'flex';
-                otroVehiculoInput.parent.style.display = 'none';
+                vehiculoSelect.parent('div').style.display = 'flex';
+                otroVehiculoInput.parent('div').style.display = 'none';
                 
-                choferSelect.parent.style.display = 'flex';
-                otroChoferInput.parent.style.display = 'none';
+                choferSelect.parent('div').style.display = 'flex';
+                otroChoferInput.parent('div').style.display = 'none';
                 
-                ayudanteSelect.parent.style.display = 'flex'; // Opcional, se muestra
-                document.getElementById('otro_ayudante').parent.style.display = 'none'; // Opcional, se oculta
+                ayudanteSelect.parent('div').style.display = 'flex'; // Opcional, se muestra
+                document.getElementById('otro_ayudante').parent('div').style.display = 'none'; // Opcional, se oculta
 
 
                 // Establecer 'required' para selects internos
