@@ -17,6 +17,7 @@ use App\Models\Chofer;
 use App\Models\CompraCombustible;
 use App\Models\Viaje;
 use App\Models\User;
+use App\Models\Persona;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
