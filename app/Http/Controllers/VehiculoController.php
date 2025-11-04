@@ -21,6 +21,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Schema;
 use App\Traits\GenerateAlerts;
 use App\Traits\PluralizaEnEspanol;
+use App\Models\VehiculoFoto;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
@@ -108,7 +109,10 @@ class VehiculoController extends BaseController
         // Esto lanzará una excepción y redirigirá si la validación falla.
         app(VehiculoStoreRequest::class);
         try {
-            Vehiculo::create($request->all());
+            $vehiculo=Vehiculo::create($request->all());
+
+            $this->handleFotoUpload($request, $vehiculo);
+
             Session::flash('success', 'Vehiculo creado exitosamente.');
             Log::info('Vehiculo creado exitosamente.');
         } catch (\Exception $e) {
@@ -120,6 +124,71 @@ class VehiculoController extends BaseController
         return Redirect::route('vehiculos.list');
 
     }
+
+    public function update(VehiculoStoreRequest $request, Vehiculo $vehiculo)
+    {
+        DB::beginTransaction();
+        try {
+            // 1. Actualizar datos del vehículo
+            $vehiculo->update($request->validated());
+
+            // 2. Manejar la carga de imágenes (nuevas imágenes)
+            $this->handleFotoUpload($request, $vehiculo);
+            
+            // 3. Manejar eliminación de fotos si se enviaron IDs a eliminar
+            if ($request->has('fotos_a_eliminar')) {
+                $idsParaEliminar = explode(',', $request->input('fotos_a_eliminar'));
+                VehiculoFoto::whereIn('id', $idsParaEliminar)
+                            ->where('vehiculo_id', $vehiculo->id)
+                            ->delete();
+                // Opcionalmente, eliminar los archivos físicos del disco aquí
+            }
+
+            DB::commit();
+            Session::flash('success', 'Vehículo actualizado exitosamente!');
+            return Redirect::route('vehiculos.index');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error al actualizar vehículo: " . $e->getMessage());
+            Session::flash('error', 'Hubo un error al actualizar el vehículo.');
+            return Redirect::back()->withInput();
+        }
+    }
+
+    /**
+     * Lógica para guardar las fotos.
+     * @param Request $request
+     * @param Vehiculo $vehiculo
+     */
+    protected function handleFotoUpload(Request $request, Vehiculo $vehiculo)
+    {
+        if ($request->hasFile('fotos')) {
+            $is_principal_set = $vehiculo->fotos()->where('es_principal', true)->exists();
+
+            foreach ($request->file('fotos') as $index => $foto) {
+                // Guarda la imagen en storage/app/public/vehiculos/
+                $ruta = $foto->store('public/vehiculos');
+
+                // Quita el prefijo 'public/' para obtener la ruta accesible
+                $ruta_accesible = str_replace('public/', 'storage/', $ruta); 
+                
+                // Determina si es la primera foto y no hay principal aún
+                $es_principal = false;
+                if (!$is_principal_set && $index === 0 && $vehiculo->fotos()->count() === 0) {
+                    $es_principal = true;
+                    $is_principal_set = true;
+                }
+
+                VehiculoFoto::create([
+                    'vehiculo_id' => $vehiculo->id,
+                    'ruta' => $ruta_accesible,
+                    'es_principal' => $es_principal,
+                ]);
+            }
+        }
+    }
+    
 
      public function importForm()
     {

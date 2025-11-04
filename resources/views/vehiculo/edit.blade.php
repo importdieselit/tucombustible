@@ -243,6 +243,35 @@
                                         <input type="text" class="form-control" id="certif_reg" name="certif_reg" value="{{ old('certif_reg', $item->certif_reg ?? '') }}">
                                         @error('certif_reg')<div class="text-danger mt-1">{{ $message }}</div>@enderror
                                     </div>
+                                    <h5 class="mb-3 text-info"><i class="bi bi-camera-fill me-2"></i> Fotos del Vehículo</h5>
+
+                                {{-- Campo para subir múltiples fotos --}}
+                                <div class="mb-3">
+                                    <label for="fotos" class="form-label">Subir Nuevas Fotos (Múltiples Archivos)</label>
+                                    <input type="file" class="form-control" id="fotos" name="fotos[]" multiple accept="image/*">
+                                    <small class="form-text text-muted">Seleccione una o más imágenes nuevas. Las fotos existentes se gestionan abajo.</small>
+                                    @error('fotos') <div class="text-danger">{{ $message }}</div> @enderror
+                                    @error('fotos.*') <div class="text-danger">{{ $message }}</div> @enderror
+                                </div>
+                                
+                                {{-- Galería de fotos existentes en modo edición --}}
+                                @if(isset($item) && $item->fotos->count() > 0)
+                                    <h6 class="mt-4 mb-2">Fotos Existentes (Click para marcar/desmarcar para **Eliminar**)</h6>
+                                    <div class="row g-2" id="galeria-edicion">
+                                        @foreach($item->fotos as $foto)
+                                            <div class="col-4 col-sm-3 col-lg-2 position-relative foto-existente" data-foto-id="{{ $foto->id }}">
+                                                <img src="{{ asset($foto->ruta) }}" class="img-fluid rounded shadow-sm cursor-pointer" alt="Foto del Vehículo" onclick="toggleFotoEliminar(this)">
+                                                {{-- Overlay que aparece al marcar para eliminar --}}
+                                                <div class="overlay-eliminar d-none">
+                                                    <i class="bi bi-x-circle-fill text-danger fs-3"></i>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    {{-- Input oculto para almacenar los IDs de las fotos a eliminar --}}
+                                    <input type="hidden" name="fotos_a_eliminar" id="fotos_a_eliminar" value="">
+                                @endif
+ 
                                 </div>
                             </div>
                             
