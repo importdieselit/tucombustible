@@ -825,7 +825,7 @@ public function createPrecarga()
 
             $chofer=Chofer::find($request->chofer_id)->with('persona')->get();
             $ayudante=Chofer::find($request->ayudante)->with('persona')->get();
-            dd($viaje);
+           // dd($viaje);
 
              DespachoViaje::create([
                     'viaje_id' => $viaje->id,
