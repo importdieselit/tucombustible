@@ -26,13 +26,15 @@
                 <div class="card-body">
                     {{-- Formulario dinámico para crear o editar --}}
                     {{-- El código verifica si $item existe para usar la ruta UPDATE y el método PUT --}}
-                    <form action="{{ isset($item) ? route('vehiculos.update', $item->id) : route('vehiculos.store') }}" method="POST" enctype="multipart/form-data">
+                    <form action="{{ isset($item) ? route('vehiculos.updatev', $item->id) : route('vehiculos.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         {{-- Si estamos editando, usamos el método PUT --}}
                         @if (isset($item))
                             @method('PUT')
                         @endif
-                        
+                        <input type="hidden" name="id" value="{{ isset($item) ? $item->id : '' }}">
+
+"
                         <ul class="nav nav-tabs" id="myTab" role="tablist">
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link active" id="info-basica-tab" data-bs-toggle="tab" data-bs-target="#info-basica" type="button" role="tab" aria-controls="info-basica" aria-selected="true">

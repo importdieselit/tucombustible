@@ -230,7 +230,7 @@ class ChecklistController extends Controller
                 $observacionAlerta = "Inspección para vehículo {$vehiculo->placa} con estado **No Operativo**. Requiere revisión.";
                 $notifTitle = "Unidad {$vehiculo->flota} Marcada No Operativa en Inspeccion";
                 $notifBody = "Unidad {$vehiculo->flota} requiere Revisión de Mantenimiento. Fue marcada como no operativa durante la inspección.";
-                $telegramMessage = "🚨 *ALERTA CRÍTICA* - Unidad: **{$vehiculo->placa}** ({$vehiculo->flota}) marcada como **NO OPERATIVA** (Estatus 3). Motivo: Fallo Crítico en Inspección. Revisar: {$alertaAction}";
+                $telegramMessage = "🚨 *ALERTA CRÍTICA* - Unidad: **{$vehiculo->placa}** ({$vehiculo->flota}) marcada como **NO OPERATIVA**. Motivo: Fallo Crítico en Inspección. Revisar: {$alertaAction}";
 
             } elseif ($vehiculo->estatus == 2) {
                 // 🟢 UNIDAD INGRESANDO: Estaba en ruta (2) y pasa a Operativo/Disponible (1)
@@ -238,7 +238,7 @@ class ChecklistController extends Controller
                 $observacionAlerta = "Ingreso de Unidad {$vehiculo->flota} {$vehiculo->placa} a Patio. Inspección completada.";
                 $notifTitle = "Unidad {$vehiculo->flota} Ingresando a Patio";
                 $notifBody = "Unidad {$vehiculo->flota} ingresando a Patio con {$chofer}.";
-                $telegramMessage = "📥 *INGRESO* - Unidad: **{$vehiculo->placa}** ({$vehiculo->flota}) ingresa a patio. Nuevo Estatus: **Operativo** (1). Chofer: {$chofer}. Revisar: {$alertaAction}";
+                $telegramMessage = "📥 *INGRESO* - Unidad: **{$vehiculo->placa}** ({$vehiculo->flota}) ingresa a patio. Nuevo Estatus: **Operativo**. Chofer: {$chofer}. Revisar: {$alertaAction}";
                 
             } else {
                 // 🟡 UNIDAD SALIENDO: No está en ruta (probablemente 1 - Operativo) y pasa a En Ruta (2)
@@ -246,7 +246,7 @@ class ChecklistController extends Controller
                 $observacionAlerta = "Salida de vehículo {$vehiculo->placa}. Inspección completada.";
                 $notifTitle = "Salida de Unidad {$vehiculo->flota} en Inspeccion";
                 $notifBody = "Unidad {$vehiculo->flota} Saliendo a Ruta con {$chofer}.";
-                $telegramMessage = "📤 *SALIDA* - Unidad: **{$vehiculo->placa}** ({$vehiculo->flota}) saliendo a ruta. Nuevo Estatus: **En Ruta** (2). Chofer: {$chofer}. Revisar: {$alertaAction}";
+                $telegramMessage = "📤 *SALIDA* - Unidad: **{$vehiculo->placa}** ({$vehiculo->flota}) saliendo a ruta. Nuevo Estatus: **En Ruta**  Chofer: {$chofer}. Revisar: {$alertaAction}";
             }
 
 

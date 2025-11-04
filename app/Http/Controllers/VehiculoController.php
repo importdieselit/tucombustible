@@ -125,8 +125,11 @@ class VehiculoController extends BaseController
 
     }
 
-    public function update(VehiculoStoreRequest $request, Vehiculo $vehiculo)
+    public function updateV(Request $request)
     {
+        $vehiculo=Vehiculo::findOrFail($request->id);
+        
+        app(VehiculoStoreRequest::class);
         DB::beginTransaction();
         try {
             // 1. Actualizar datos del vehículo
