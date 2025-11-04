@@ -823,8 +823,8 @@ public function createPrecarga()
                 
             ]);
 
-            $chofer=Chofer::find($request->chofer_id)->with('persona')->get();
-            $ayudante=Chofer::find($request->ayudante)->with('persona')->get();
+            $chofer=Chofer::find($request->chofer_id);
+            $ayudante=Chofer::find($request->ayudante);
            // dd($viaje);
 
              DespachoViaje::create([
@@ -861,8 +861,13 @@ public function createPrecarga()
      * @param Chofer $chofer
      * @param Ayudante|null $ayudante
      */
-    protected function enviarNotificaciones(Viaje $viaje, CompraCombustible $solicitud, Chofer $chofer, ?Ayudante $ayudante): void
+    protected function enviarNotificaciones(Viaje $viaje, CompraCombustible $solicitud, Chofer $chofer, ?Chofer $ayudante): void
     {
+        $chofer = Chofer::find($chofer->id)->with('persona')->get();
+        if ($ayudante) {
+            $ayudante = Chofer::find($ayudante->id)->with('persona')->get();
+        }
+
         
         $mensaje = "✅ Planificación de Carga de Combustible CREADA:\n"
                  . "Carga: {$solicitud->cantidad_litros} Litros\n"
