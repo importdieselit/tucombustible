@@ -223,11 +223,12 @@
     document.addEventListener('DOMContentLoaded', function() {
         const despachosTableBody = document.getElementById('despachos-table-body');
         const addDespachoButton = document.getElementById('add-despacho-btn');
+        
         let rowIndex = despachosTableBody.rows.length; // Inicializa el índice con el número de filas existentes
 
         // --- LÓGICA DE ASIGNACIÓN MANUAL (VEHÍCULO, CHOFER, AYUDANTE) ---
                
-       const esFleteSwitch = document.getElementById('es_flete_switch');
+       const esFleteSwitch = document.getElementById('es_flete');
        
         // Selects de unidades internas
         const vehiculoSelect = document.getElementById('vehiculo_id');
