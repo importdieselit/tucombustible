@@ -257,7 +257,7 @@
                                 </div>
                                 
                                 {{-- Galería de fotos existentes en modo edición --}}
-                                @if(isset($item) && $item->fotos->count() > 0)
+                                @if(isset($item) && $item->fotos && $item->fotos->count() > 0)
                                     <h6 class="mt-4 mb-2">Fotos Existentes (Click para marcar/desmarcar para **Eliminar**)</h6>
                                     <div class="row g-2" id="galeria-edicion">
                                         @foreach($item->fotos as $foto)
