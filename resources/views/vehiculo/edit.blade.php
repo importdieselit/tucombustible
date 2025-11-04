@@ -250,7 +250,7 @@
                                 {{-- Campo para subir múltiples fotos --}}
                                 <div class="mb-3">
                                     <label for="fotos" class="form-label">Subir Nuevas Fotos (Múltiples Archivos)</label>
-                                    <input type="file" class="form-control" id="fotos" name="fotos[]" multiple accept="image/*">
+                                    <input type="file" class="form-control" id="fotos" name="fotos[]" multiple capture="environment"  accept="image/*">
                                     <small class="form-text text-muted">Seleccione una o más imágenes nuevas. Las fotos existentes se gestionan abajo.</small>
                                     @error('fotos') <div class="text-danger">{{ $message }}</div> @enderror
                                     @error('fotos.*') <div class="text-danger">{{ $message }}</div> @enderror
