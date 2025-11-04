@@ -830,7 +830,7 @@ public function createPrecarga()
 
              DespachoViaje::create([
                     'viaje_id' => $viaje->id,
-                    'otro_cliente' => 'PDVSA '.$destino->destino_ciudad,
+                    'otro_cliente' => 'PDVSA '.$destino->destino,
                     'litros' => $request->cantidad_litros
                 ]);
 
