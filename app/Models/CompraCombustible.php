@@ -27,6 +27,11 @@ class CompraCombustible extends Model
         'observaciones',
         'estatus', // Ej: PROGRAMADA, ASIGNADA, COMPRADA, COMPLETADA, CANCELADA
         'viaje_id', // Enlace a la planificación de viaje de entrega/carga
+        'flete',
+        'otro_vehiculo',
+        'otro_chofer',
+        'otro_proveedor',
+        'otro_ayudante'
     ];
 
     protected $casts = [
