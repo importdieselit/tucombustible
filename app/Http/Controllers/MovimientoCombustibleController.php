@@ -796,7 +796,7 @@ public function createPrecarga()
                 'estatus' => 'PENDIENTE_ASIGNACION',
                 'tipo' => $request->tipo,
                 'vehiculo_id' => $request->vehiculo_id,
-                'cisterna' => $request->cisterna,
+                'cisterna' => $request->cisterna_id,
                 'observaciones' => $request->observaciones
                 //'usuario_solicitante_id' => Auth::id(),
             ]);
