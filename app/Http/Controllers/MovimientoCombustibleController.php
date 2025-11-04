@@ -879,6 +879,108 @@ public function createPrecarga()
         }
     }
 
+
+    public function storeFlete(Request $request)
+    {
+        $userId = Auth::id();
+        $request->validate([
+            //'proveedor_id' => 'required|exists:proveedores,id',
+            'cantidad_litros' => 'required|integer|min:100',
+            'planta_destino_id' => 'required|exists:plantas,id',
+            'fecha' => 'required|date|after_or_equal:today',
+            'vehiculo_id' => 'required|exists:vehiculos,id',
+            'chofer_id' => 'required|exists:choferes,id',
+            //'ayudante' => 'nullable|exists:chofere,id'
+        ]);
+        DB::beginTransaction();
+        try {
+            // 1. CREAR LA SOLICITUD DE COMBUSTIBLE
+            $solicitud = CompraCombustible::create([
+                'proveedor_id' => $request->proveedor_id,
+                'cantidad_litros' => $request->cantidad_litros,
+                'planta_destino_id' => $request->planta_destino_id,
+                'fecha' => $request->fecha_salida,
+                'estatus' => 'PENDIENTE_ASIGNACION',
+                'tipo' => $request->tipo,
+                'vehiculo_id' => $request->vehiculo_id,
+                //'observaciones' => $request->observaciones
+                //'usuario_solicitante_id' => Auth::id(),
+            ]);
+
+            // 2. PLANIFICACIÓN Y ASIGNACIÓN DE RECURSOS
+            $planta = Planta::find($request->planta_destino_id);
+            $plantaDestino = TabuladorViatico::find($planta->id_tabulador_viatico);
+
+            //dd($destino);
+            $cantidad = $request->cantidad_litros;
+            $fecha = $solicitud->fecha_salida;
+
+
+            // 3. CREAR LA PLANIFICACIÓN (Viaje)
+            $viaje = Viaje::create([
+                'solicitud_combustible_id' => $solicitud->id,
+                'vehiculo_id' => $request->vehiculo_id,
+                'chofer_id' => $request->chofer_id,
+                'ayudante' => $request->ayudante ?? null, // Ayudante es opcional
+                'destino_ciudad' => $plantaDestino->destino.' -> '.$request->destino_ciudad ?? 'N/A', 
+                'fecha_salida' => $fecha,
+                'status' => 'Programado',
+                'usuario_id' => $userId
+                
+            ]);
+
+            $chofer=Chofer::find($request->chofer_id);
+            $ayudante=Chofer::find($request->ayudante);
+           // dd($viaje);
+
+           foreach ($request->despachos as $index => $despacho) {
+                if (empty($despacho['cliente_id']) && empty($despacho['otro_cliente'])) {
+                    return back()->withInput()->withErrors([
+                        "despachos.$index.cliente_id" => 'Debe seleccionar un cliente o especificar "Otro Cliente".',
+                        "despachos.$index.otro_cliente" => 'Debe seleccionar un cliente o especificar "Otro Cliente".',
+                    ]);
+                }
+            }
+
+            // 2. Buscar tarifa en el Tabulador para el destino principal
+            $tabulador = TabuladorViatico::where('destino', $request->destino_ciudad)->first();
+
+            if (!$tabulador) {
+                return back()->withInput()->with('error', 'No se encontró una tarifa de viáticos para esa ciudad.');
+            }
+
+            $cantidadDespachos = count($request->despachos);
+            $totalLitros = 0;
+            foreach ($request->despachos as $despachoData) {
+                DespachoViaje::create([
+                    'viaje_id' => $viaje->id,
+                    'otro_cliente' => $despachoData['cliente'] ?? null,
+                    'litros' => $despachoData['litros'],
+                ]);
+                $totalLitros += $despachoData['litros'];
+            }
+            // 4. ACTUALIZAR LA SOLICITUD
+            $solicitud->update([
+                'estatus' => 'PROGRAMADO',
+                'viaje_id' => $viaje->id,
+            ]);
+
+
+            DB::commit();
+
+            // 5. NOTIFICACIÓN DE PLANIFICACIÓN EXITOSA
+            $this->enviarNotificaciones($viaje, $solicitud, $chofer,$ayudante);
+
+            return redirect()->route('viajes.lists')->with('success', 'Solicitud de combustible creada y viaje de carga planificado y asignado con éxito (ID Viaje: ' . $viaje->id . ').');
+            //return redirect()->route('combustible.compras')->with('success', 'Solicitud de combustible creada y viaje de carga planificado y asignado con éxito (ID Viaje: ' . $viaje->id . ').');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error en el flujo de Compra/Planificación de Combustible: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Ocurrió un error en el sistema al procesar la solicitud.');
+        }
+    }
+
     /**
      * Función para enviar notificaciones a los involucrados.
      * @param Viaje $viaje
@@ -899,9 +1001,9 @@ public function createPrecarga()
         $vehiculo=Vehiculo::find($viaje->vehiculo_id);
 
         
-        $mensaje = "✅ Planificación de Carga de Combustible CREADA:\n"
+        $mensaje = "✅ Planificación de Flete de Combustible CREADA:\n"
                  . "Carga: {$solicitud->cantidad_litros} Litros\n"
-                 . "Destino: PDVSA {$viaje->destino_ciudad}\n"
+                 . "Ruta: PDVSA {$viaje->destino_ciudad}\n"
                  . "Fecha: {$viaje->fecha_salida}\n"
                  . "Unidad Asignada: {$vehiculo->flota}\n"
                  . "Chofer: {$choferP->nombre }\n"
