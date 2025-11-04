@@ -803,7 +803,6 @@ public function createPrecarga()
 
             // 2. PLANIFICACIÓN Y ASIGNACIÓN DE RECURSOS
             $planta = Planta::find($request->planta_destino_id);
-            dd($planta);
             $destino = TabuladorViatico::find($planta->id_tabulador_viatico);
             dd($destino);
             $cantidad = $solicitud->cantidad_litros;
