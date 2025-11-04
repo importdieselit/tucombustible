@@ -807,8 +807,8 @@ public function createPrecarga()
             $planta = Planta::find($request->planta_destino_id);
             $destino = TabuladorViatico::find($planta->id_tabulador_viatico);
             //dd($destino);
-            $cantidad = $solicitud->cantidad_litros;
-            $fecha = $solicitud->fecha_requerida;
+            $cantidad = $request->cantidad_litros;
+            $fecha = $solicitud->fecha;
 
 
             // 3. CREAR LA PLANIFICACIÓN (Viaje)
@@ -817,7 +817,7 @@ public function createPrecarga()
                 'vehiculo_id' => $request->vehiculo_id,
                 'chofer_id' => $request->chofer_id,
                 'ayudante' => $request->ayudante ?? null, // Ayudante es opcional
-                'destino_ciudad' => $destino->nombre ?? 'N/A', 
+                'destino_ciudad' => $destino->destino ?? 'N/A', 
                 'fecha_salida' => $fecha,
                 'status' => 'Programado',
                 'usuario_id' => $userId
@@ -881,7 +881,8 @@ public function createPrecarga()
                  . "Fecha: {$viaje->fecha_salida}\n"
                  . "Unidad Asignada: {$vehiculo->flota}\n"
                  . "Chofer: {$choferP->nombre }\n"
-                 . ($ayudante ? "Ayudante: {$ayudanteP->nombre }" : "Ayudante: No Asignado");
+                 . ($ayudante ? "Ayudante: {$ayudanteP->nombre }" : "Ayudante: No Asignado")
+                 . "\n\n{$solicitud->observaciones}";
 
         // 1. Notificación a Telegram (Ejemplo de Alerta General)
         try {
