@@ -24,6 +24,7 @@ class CompraCombustible extends Model
         'tipo',
         'vehiculo_id',
         'cisterna',
+        'observaciones',
         'estatus', // Ej: PROGRAMADA, ASIGNADA, COMPRADA, COMPLETADA, CANCELADA
         'viaje_id', // Enlace a la planificación de viaje de entrega/carga
     ];
