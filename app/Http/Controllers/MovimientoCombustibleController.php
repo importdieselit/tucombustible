@@ -785,7 +785,7 @@ public function createPrecarga()
             'chofer_id' => 'required|exists:choferes,id',
             'ayudante_id' => 'nullable|exists:ayudantes,id'
         ]);
-
+        dd($request->all());
         DB::beginTransaction();
         try {
             // 1. CREAR LA SOLICITUD DE COMBUSTIBLE

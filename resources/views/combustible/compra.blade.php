@@ -105,11 +105,7 @@
                     </div>
                     <div class="col-md-12">
                         <label for="observaciones">Observaciones</label>
-                        <textarea name="observaciones" id="observaciones" class="form-control" cols="30" rows="10">
-                            @if(old('observaciones'))
-                                {{ old('observaciones') }}
-                            @endif
-                        </textarea>
+                        <textarea name="observaciones" id="observaciones" class="form-control" cols="30" rows="10">@if(old('observaciones')){{ old('observaciones') }}@endif</textarea>
                     </div>
 
                 </div>
