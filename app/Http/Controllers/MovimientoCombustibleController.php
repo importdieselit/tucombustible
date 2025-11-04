@@ -912,8 +912,12 @@ public function createPrecarga()
             $plantaDestino = TabuladorViatico::find($planta->id_tabulador_viatico);
 
             //dd($destino);
-            $cantidad = $request->cantidad_litros;
-            //$fecha = $solicitud->fecha_salida;
+            $vehiculo = Vehiculo::find($request->vehiculo_id);
+            $chofer = Chofer::find($request->chofer_id);
+            $ayudante = null;
+            if(!empty($request->ayudante)){
+                $ayudante = Chofer::find($request->ayudante);
+            }
 
 
             // 3. CREAR LA PLANIFICACIÓN (Viaje)
@@ -929,9 +933,6 @@ public function createPrecarga()
                 
             ]);
 
-            $chofer=Chofer::find($request->chofer_id);
-            $ayudante=Chofer::find($request->ayudante);
-           // dd($viaje);
 
            foreach ($request->despachos as $index => $despacho) {
                 if (empty($despacho['cliente']) && empty($despacho['otro_cliente'])) {
@@ -959,18 +960,24 @@ public function createPrecarga()
                 ]);
                 $totalLitros += $despachoData['litros'];
             }
-            // 4. ACTUALIZAR LA SOLICITUD
-            $solicitud->update([
-                'estatus' => 'PROGRAMADO',
-                'viaje_id' => $viaje->id,
-            ]);
 
 
             DB::commit();
 
             // 5. NOTIFICACIÓN DE PLANIFICACIÓN EXITOSA
-            $this->enviarNotificaciones($viaje, $solicitud, $chofer,$ayudante);
+            
+        $mensaje = "✅ Planificación de Flete de Combustible CREADA:\n"
+                 . "Carga: {$viaje->cantidad_litros} Litros\n"
+                 . "Ruta: PDVSA {$viaje->destino_ciudad}\n"
+                 . "Fecha: {$viaje->fecha_salida}\n"
+                 . "Unidad Asignada: {$vehiculo->flota}\n"
+                 . "Chofer: {$chofer->persona()->nombre }\n"
+                 . ($ayudante ? "Ayudante: {$ayudante->persona()->nombre }" : "Ayudante: No Asignado");
 
+        // 1. Notificación a Telegram (Ejemplo de Alerta General)
+            // El servicio TelegramNotificationService debe tener un método como sendNotification
+            $this->telegramService->sendMessage($mensaje);
+        
             return redirect()->route('viajes.lists')->with('success', 'Solicitud de combustible creada y viaje de carga planificado y asignado con éxito (ID Viaje: ' . $viaje->id . ').');
             //return redirect()->route('combustible.compras')->with('success', 'Solicitud de combustible creada y viaje de carga planificado y asignado con éxito (ID Viaje: ' . $viaje->id . ').');
 
@@ -1001,7 +1008,7 @@ public function createPrecarga()
         $vehiculo=Vehiculo::find($viaje->vehiculo_id);
 
         
-        $mensaje = "✅ Planificación de Flete de Combustible CREADA:\n"
+        $mensaje = "✅ Planificación de Carga de Combustible CREADA:\n"
                  . "Carga: {$solicitud->cantidad_litros} Litros\n"
                  . "Ruta: PDVSA {$viaje->destino_ciudad}\n"
                  . "Fecha: {$viaje->fecha_salida}\n"
