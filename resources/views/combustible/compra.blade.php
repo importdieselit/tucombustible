@@ -113,12 +113,6 @@
                             <input type="text" class="form-control" id="otro_chofer" name="otro_chofer" value="{{ old('otro_chofer') }}" placeholder="Nombre del Chofer">
                         </div>
 
-                        <!-- Otro Proveedor - TEXT INPUT (Proveedor del servicio de flete) -->
-                        <div class="col-md-6">
-                            <label for="otro_proveedor" class="form-label">Proveedor del Servicio (Flete)</label>
-                            <input type="text" class="form-control" id="otro_proveedor" name="otro_proveedor" value="{{ old('otro_proveedor') }}" placeholder="Nombre de la empresa de Flete">
-                        </div>
-
                         <!-- Otro Ayudante - TEXT INPUT -->
                         <div class="col-md-6">
                             <label for="otro_ayudante" class="form-label">Ayudante (Flete) <small>(Opcional)</small></label>
@@ -163,7 +157,6 @@
         // Inputs de flete
         const otroVehiculoInput = document.getElementById('otro_vehiculo');
         const otroChoferInput = document.getElementById('otro_chofer');
-        const otroProveedorInput = document.getElementById('otro_proveedor');
         
         // Función para alternar la visibilidad y el atributo 'required'
         function toggleFleteFields() {
@@ -184,7 +177,6 @@
                 // Establecer 'required' para inputs de flete (Unidad, Chofer, Proveedor)
                 otroVehiculoInput.setAttribute('required', 'required');
                 otroChoferInput.setAttribute('required', 'required');
-                otroProveedorInput.setAttribute('required', 'required');
                 
             } else {
                 // Modo INTERNO
@@ -198,11 +190,9 @@
                 // Desactivar 'required' para inputs de flete y limpiar
                 otroVehiculoInput.removeAttribute('required');
                 otroChoferInput.removeAttribute('required');
-                otroProveedorInput.removeAttribute('required');
                 
                 otroVehiculoInput.value = '';
                 otroChoferInput.value = '';
-                otroProveedorInput.value = '';
                 document.getElementById('otro_ayudante').value = ''; // Limpiar ayudante opcional
             }
         }

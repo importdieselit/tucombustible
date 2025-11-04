@@ -20,253 +20,313 @@
                 <!-- 1. Detalle del Viaje (Fijo) -->
                 <h4 class="mt-4 mb-3 text-success border-bottom pb-1">Detalles del Viaje</h4>
                 <div class="row g-3 mb-4">
+                    
+                    {{-- Campo de FLETE --}}
+                    <div class="col-md-3 d-flex align-items-center">
+                        <div class="form-check form-switch pt-4">
+                            <input class="form-check-input" type="checkbox" id="es_flete" name="es_flete" value="1" 
+                                {{ old('es_flete') ? 'checked' : '' }}>
+                            <label class="form-check-label fw-bold" for="es_flete">
+                                ¿Es Flete?
+                            </label>
+                        </div>
+                    </div>
+                    
                     <!-- Ciudad de Destino -->
-                    <div class="col-md-6">
+                    <div class="col-md-9">
                         <label for="destino_ciudad" class="form-label fw-bold">Ciudad de Destino</label>
                         <select name="destino_ciudad" id="destino_ciudad" class="form-select @error('destino_ciudad') is-invalid @enderror" required>
                             <option value="">Seleccione un destino del Tabulador</option>
                             
-                            <!-- Cargar las ciudades del TabuladorViatico -->
-                            @foreach($destino as $ciudad)
-                                <option value="{{ $ciudad }}" {{ old('destino_ciudad') == $ciudad ? 'selected' : '' }}>{{ $ciudad }}</option>
+                            <!-- Cargar las ciudades del tabulador (se asume que se pasan en $ciudades) -->
+                            @foreach($ciudades as $ciudad)
+                                <option value="{{ $ciudad }}" @if(old('destino_ciudad') == $ciudad) selected @endif>{{ $ciudad }}</option>
                             @endforeach
+                            
                         </select>
                         @error('destino_ciudad')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    <div class="col-md-6">
-                    <label for="vehiculo_id" class="form-label fw-bold">Vehículo Asignado</label>
-                    <select name="vehiculo_id" id="vehiculo_id" class="form-select @error('vehiculo_id') is-invalid @enderror" required>
-                        <option value="">Seleccione el vehículo</option>
-                        @foreach($vehiculos as $vehiculo)
-                            <option value="{{ $vehiculo->id }}" >
-                                {{ $vehiculo->placa }} - {{ $vehiculo->flota }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('vehiculo_id')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-
-
-                    <!-- Chofer -->
-                    <div class="col-md-6">
-                        <label for="chofer_id" class="form-label fw-bold">Chofer Principal</label>
-                         <select name="chofer_id" id="chofer_id" class="form-select @error('chofer_id') is-invalid @enderror" >
-                            <option value="">Seleccione el chofer</option>
-                            <!-- Este loop debe cargar los usuarios con rol 'chofer' -->
-                         
-                            @foreach($choferes as $chofer)
-                                @if($chofer->cargo == 'CHOFER' )                            
-                                    <option value="{{ $chofer->id }}" {{ old('chofer_id') == $chofer->id ? 'selected' : '' }}>{{ $chofer->persona->nombre }}</option>
-                                @endif
-                          @endforeach
-                        </select>
-                        @error('chofer_id')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    
-                    <!-- Ayudante -->
-                    <div class="col-md-3">
-                        <label for="ayudantes" class="form-label fw-bold">Ayudante</label>
-                       <select name="ayudante" id="ayudante" class="form-select @error('ayudante') is-invalid @enderror">
-                            <option value="">Seleccione el Ayudante</option>
-                            <!-- Este loop debe cargar los usuarios con rol 'chofer' -->
-                          
-                            @foreach($choferes as $chofer)
-                                @if($chofer->cargo == 'AYUDANTE' || $chofer->cargo == 'AYUDANTE DE CHOFER')
-                                    <option value="{{ $chofer->id }}" {{ old('ayudante') == $chofer->id ? 'selected' : '' }}>{{ $chofer->persona->nombre }}</option>
-                                @endif
-                            @endforeach
-                        </select>
-                        @error('ayudante')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                
-
-                    <!-- Fecha de Salida -->
+                    {{-- FECHA DE SALIDA --}}
                     <div class="col-md-6">
                         <label for="fecha_salida" class="form-label fw-bold">Fecha de Salida</label>
-                        <input type="date" name="fecha_salida" id="fecha_salida" class="form-control @error('fecha_salida') is-invalid @enderror" value="{{ old('fecha_salida', now()->toDateString()) }}" required>
+                        <input type="date" name="fecha_salida" id="fecha_salida" class="form-control @error('fecha_salida') is-invalid @enderror" value="{{ old('fecha_salida', date('Y-m-d')) }}" required>
                         @error('fecha_salida')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
+
+                    {{-- DURACIÓN ESTIMADA (DÍAS) --}}
+                    <div class="col-md-6">
+                        <label for="duracion_dias" class="form-label fw-bold">Duración Estimada (Días)</label>
+                        <input type="number" name="duracion_dias" id="duracion_dias" class="form-control @error('duracion_dias') is-invalid @enderror" value="{{ old('duracion_dias', 1) }}" min="1" required>
+                        @error('duracion_dias')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    {{-- VEHÍCULO --}}
+                    <div class="col-md-6">
+                        <label for="vehiculo_id" class="form-label fw-bold">Vehículo (Flota)</label>
+                        <select name="vehiculo_id" id="vehiculo_id" class="form-select select-or-other" data-other-field="otro_vehiculo">
+                            <option value="">Seleccione un Vehículo</option>
+                            <!-- Se asume que $vehiculos es un array de objetos Vehiculo -->
+                            @foreach($vehiculos as $vehiculo)
+                                <option value="{{ $vehiculo->id }}" @if(old('vehiculo_id') == $vehiculo->id) selected @endif>{{ $vehiculo->flota }} ({{ $vehiculo->placa }})</option>
+                            @endforeach
+                        </select>
+                        <small class="text-muted">Seleccione un vehículo de la flota o ingrese uno manual.</small>
+                        @error('vehiculo_id')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-6">
+                        <label for="otro_vehiculo" class="form-label fw-bold">Opcional: Otro Vehículo</label>
+                        <input type="text" name="otro_vehiculo" id="otro_vehiculo" class="form-control select-or-other-input" data-select-field="vehiculo_id" placeholder="Ej: Camión Externo X">
+                        @error('otro_vehiculo')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    {{-- CHOFER --}}
+                    <div class="col-md-6">
+                        <label for="chofer_id" class="form-label fw-bold">Chofer</label>
+                        <select name="chofer_id" id="chofer_id" class="form-select select-or-other" data-other-field="otro_chofer" required>
+                            <option value="">Seleccione un Chofer</option>
+                            <!-- Se asume que $choferes es un array de objetos Chofer con relación Persona -->
+                            @foreach($choferes as $chofer)
+                                <option value="{{ $chofer->id }}" @if(old('chofer_id') == $chofer->id) selected @endif>{{ $chofer->persona->nombre }}</option>
+                            @endforeach
+                        </select>
+                        <small class="text-muted">Seleccione un chofer de la lista o ingrese uno manual.</small>
+                        @error('chofer_id')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-6">
+                        <label for="otro_chofer" class="form-label fw-bold">Opcional: Otro Chofer</label>
+                        <input type="text" name="otro_chofer" id="otro_chofer" class="form-control select-or-other-input" data-select-field="chofer_id" placeholder="Ej: Pedro García (Externo)">
+                        @error('otro_chofer')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    {{-- AYUDANTE --}}
+                    <div class="col-md-6">
+                        <label for="ayudante_id" class="form-label fw-bold">Ayudante</label>
+                        <select name="ayudante_id" id="ayudante_id" class="form-select select-or-other" data-other-field="otro_ayudante">
+                            <option value="">Seleccione un Ayudante (Opcional)</option>
+                            <!-- Se asume que $ayudantes es un array de objetos Chofer/Personal con relación Persona -->
+                            @foreach($ayudantes as $ayudante)
+                                <option value="{{ $ayudante->id }}" @if(old('ayudante_id') == $ayudante->id) selected @endif>{{ $ayudante->persona->nombre }}</option>
+                            @endforeach
+                        </select>
+                        <small class="text-muted">Seleccione un ayudante de la lista o ingrese uno manual.</small>
+                        @error('ayudante_id')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-6">
+                        <label for="otro_ayudante" class="form-label fw-bold">Opcional: Otro Ayudante</label>
+                        <input type="text" name="otro_ayudante" id="otro_ayudante" class="form-control select-or-other-input" data-select-field="ayudante_id" placeholder="Ej: José Martínez (Externo)">
+                        @error('otro_ayudante')
+                            <div class="invalid-feedback d-block">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
 
-                <!-- 2. Sección de Despachos (Dinámico) -->
-                <h4 class="mt-4 mb-3 text-success border-bottom pb-1 d-flex justify-content-between align-items-center">
-                    Detalles de Despachos 
-                    <button type="button" class="btn btn-sm btn-primary" id="add-despacho">
-                        <i class="bi bi-plus-circle"></i> Agregar Despacho
-                    </button>
-                </h4>
-                
+                <!-- 2. Tabla de Despachos (Se mantiene la funcionalidad actual) -->
+                <h4 class="mt-4 mb-3 text-success border-bottom pb-1">Despachos del Viaje</h4>
                 <div class="table-responsive">
-                    <table class="table table-bordered align-middle" id="despachos-table">
+                    <table class="table table-bordered align-middle">
                         <thead class="table-light">
                             <tr>
-                                <th style="width: 35%;">Cliente Registrado</th>
-                                <th style="width: 35%;">Otro Cliente (Si no está en lista)</th>
-                                <th style="width: 20%;">Litros</th>
+                                <th style="width: 40%;">Cliente/Otro Cliente</th>
+                                <th style="width: 25%;">Litros Despachados</th>
+                                <th style="width: 25%;">Observación</th>
                                 <th style="width: 10%;">Acción</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <!-- Las filas se añadirán aquí mediante JavaScript -->
-                            
-                            <!-- Manejo de errores de validación de Laravel para filas existentes (si el formulario falla) -->
+                        <tbody id="despachos-table-body">
+                            {{-- Las filas se gestionan con JavaScript. Se usa PHP para restaurar en caso de error. --}}
                             @if(old('despachos'))
                                 @foreach(old('despachos') as $index => $despacho)
-                                    <tr id="row-{{ $index }}">
-                                        <td>
-                                            <select name="despachos[{{ $index }}][cliente_id]" class="form-select form-select-sm cliente-select @error("despachos.{$index}.cliente_id") is-invalid @enderror" {{ old("despachos.{$index}.otro_cliente") ? 'disabled' : '' }}>
-                                                <option value="">-- Seleccione Cliente --</option>
-                                                @foreach($clientes as $cliente)
-                                                    <option value="{{ $cliente->id }}" {{ old("despachos.{$index}.cliente_id") == $cliente->id ? 'selected' : '' }}>{{ $cliente->nombre }}</option>
-                                                @endforeach
-                                            </select>
-                                            @error("despachos.{$index}.cliente_id")
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </td>
-                                        <td>
-                                            <input type="text" name="despachos[{{ $index }}][otro_cliente]" class="form-control form-control-sm otro-cliente-input @error("despachos.{$index}.otro_cliente") is-invalid @enderror" placeholder="Nombre o Razón Social" value="{{ old("despachos.{$index}.otro_cliente") }}" {{ old("despachos.{$index}.cliente_id") ? 'disabled' : '' }}>
-                                            @error("despachos.{$index}.otro_cliente")
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </td>
-                                        <td>
-                                            <input type="number" name="despachos[{{ $index }}][litros]" class="form-control form-control-sm @error("despachos.{$index}.litros") is-invalid @enderror" placeholder="Cantidad" step="any" required value="{{ old("despachos.{$index}.litros") }}">
-                                            @error("despachos.{$index}.litros")
-                                                <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </td>
-                                        <td>
-                                            <button type="button" class="btn btn-danger btn-sm remove-despacho" data-index="{{ $index }}"><i class="bi bi-trash"></i></button>
-                                        </td>
-                                    </tr>
+                                    @include('viajes._despacho_row', ['index' => $index, 'clientes' => $clientes, 'despacho' => $despacho])
                                 @endforeach
                             @endif
-
                         </tbody>
                     </table>
                 </div>
-                
-                <!-- Este error general es para cuando el array 'despachos' está vacío -->
-                @error('despachos')
-                    <div class="alert alert-danger mt-2">Debe agregar al menos un despacho.</div>
-                @enderror
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="add-despacho-btn">
+                    <i class="bi bi-plus-circle me-1"></i> Agregar Otro Despacho
+                </button>
 
-                <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-success btn-lg mt-3">
-                        <i class="bi bi-save me-2"></i> Crear Viaje (Pendiente de Asignación)
+
+                <div class="mt-5 d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="bi bi-send-check me-2"></i> Planificar y Crear Viaje
                     </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+{{-- TEMPLATE para una fila de despacho (se asume que existe _despacho_row.blade.php o se define aquí) --}}
+@if(!View::exists('viajes._despacho_row'))
+    @php
+        // Si la vista parcial no existe, la definimos aquí para que el JS pueda usarla como base
+        $clientes = $clientes ?? []; // Asumir que $clientes está disponible
+    @endphp
+    <script id="despacho-row-template" type="text/template">
+        <tr data-row-id="{INDEX}">
+            {{-- Cliente/Otro Cliente --}}
+            <td>
+                <div class="input-group">
+                    <select name="despachos[{INDEX}][cliente_id]" id="cliente_id_{INDEX}" class="form-select form-select-sm client-select select-or-other-client" data-other-field="otro_cliente_{INDEX}">
+                        <option value="">Seleccione Cliente</option>
+                        @foreach($clientes as $cliente)
+                            <option value="{{ $cliente->id }}">{{ $cliente->nombre }}</option>
+                        @endforeach
+                    </select>
+                    <input type="text" name="despachos[{INDEX}][otro_cliente]" id="otro_cliente_{INDEX}" class="form-control form-control-sm other-client-input select-or-other-input" data-select-field="cliente_id_{INDEX}" placeholder="Otro Cliente Manual">
+                </div>
+            </td>
+            {{-- Litros Despachados --}}
+            <td>
+                <input type="number" name="despachos[{INDEX}][litros]" class="form-control form-control-sm" min="1" required>
+            </td>
+            {{-- Observación --}}
+            <td>
+                <input type="text" name="despachos[{INDEX}][observacion]" class="form-control form-control-sm" placeholder="Detalles del despacho">
+            </td>
+            {{-- Acción --}}
+            <td class="text-center">
+                <button type="button" class="btn btn-danger btn-sm remove-despacho" title="Eliminar Despacho">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+        </tr>
+    </script>
+@endif
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        $('.select2').select2({
-            placeholder: "Buscar cliente...",
-            allowClear: true
-        });
-        const despachosTableBody = document.getElementById('despachos-table').getElementsByTagName('tbody')[0];
-        const addDespachoButton = document.getElementById('add-despacho');
-        // Inicializa el índice para que continúe donde se quedó si hay old('despachos')
-        let despachoIndex = {{ old('despachos') ? max(array_keys(old('despachos'))) + 1 : 0 }};
+        const despachosTableBody = document.getElementById('despachos-table-body');
+        const addDespachoButton = document.getElementById('add-despacho-btn');
+        let rowIndex = despachosTableBody.rows.length; // Inicializa el índice con el número de filas existentes
+
+        // --- LÓGICA DE ASIGNACIÓN MANUAL (VEHÍCULO, CHOFER, AYUDANTE) ---
         
-        // Función para aplicar la lógica de exclusividad
-        const applyExclusivityLogic = (row) => {
-            const select = row.querySelector('.cliente-select');
-            const input = row.querySelector('.otro-cliente-input');
-            
-            if (!select || !input) return; // Salir si los elementos no existen
-            
-            // Listener para el Select
-            select.addEventListener('change', function() {
+        const resourcePairs = [
+            { selectId: 'vehiculo_id', otherId: 'otro_vehiculo' },
+            { selectId: 'chofer_id', otherId: 'otro_chofer' },
+            { selectId: 'ayudante_id', otherId: 'otro_ayudante' },
+        ];
+
+        function setupExclusivity(selectId, otherId) {
+            const selectEl = document.getElementById(selectId);
+            const otherEl = document.getElementById(otherId);
+
+            if (!selectEl || !otherEl) return;
+
+            // Manejar cambio en el SELECT
+            selectEl.addEventListener('change', function() {
+                // Si selecciona una opción válida (no "")
                 if (this.value) {
-                    input.value = '';
-                    input.disabled = true;
+                    otherEl.value = ''; // Limpia el campo manual
+                    otherEl.disabled = true; // Deshabilita el campo manual
                 } else {
-                    // Solo habilitar si el input no tiene valor
-                    if (!input.value) {
-                        input.disabled = false;
-                    }
+                    otherEl.disabled = false; // Habilita si no hay selección
                 }
             });
-            
-            // Listener para el Input
-            input.addEventListener('input', function() {
-                if (this.value) {
-                    select.value = '';
-                    select.disabled = true;
+
+            // Manejar cambio en el campo MANUAL/OTRO
+            otherEl.addEventListener('input', function() {
+                // Si el campo manual tiene texto
+                if (this.value.trim() !== '') {
+                    selectEl.value = ''; // Limpia el select
+                    selectEl.disabled = true; // Deshabilita el select
                 } else {
-                    // Solo habilitar si el select no tiene valor
-                    if (!select.value) {
-                        select.disabled = false;
-                    }
+                    selectEl.disabled = false; // Habilita si está vacío
                 }
             });
-            
-            // Lógica de estado inicial (necesaria para filas viejas o al cargar)
-            if (select.value) {
-                input.disabled = true;
-            } else if (input.value) {
-                select.disabled = true;
+
+            // Inicialización al cargar, por si hay valores de old()
+            if (selectEl.value) {
+                otherEl.disabled = true;
             }
-        };
+            if (otherEl.value) {
+                selectEl.disabled = true;
+            }
+        }
+        
+        // Aplica la lógica a cada par de recursos
+        resourcePairs.forEach(pair => setupExclusivity(pair.selectId, pair.otherId));
 
-        // Plantilla de la Fila
-        const createRow = (initialData = {}) => {
-            const index = despachoIndex++;
-            const newRow = despachosTableBody.insertRow();
-            newRow.id = `row-${index}`;
+
+        // --- LÓGICA DE DESPACHOS DINÁMICOS (Se mantiene la lógica anterior y se integra el select-or-other en cada fila) ---
+
+        /**
+         * Aplica la lógica de exclusividad de Cliente/Otro Cliente a una fila.
+         * @param {HTMLTableRowElement} row - El elemento <tr>
+         */
+        function applyExclusivityLogic(row) {
+            const selectEl = row.querySelector('.client-select');
+            const otherEl = row.querySelector('.other-client-input');
             
-            // Obtener las opciones de cliente del servidor para el HTML
-            const clienteOptions = `@foreach($clientes as $cliente)<option value=\"{{ $cliente->id }}\">{{ is_null($cliente->alias)?$cliente->nombre:$cliente->alias }}</option>@endforeach`;
+            if (!selectEl || !otherEl) return;
 
-            // Columna Cliente Registrado
-            newRow.insertCell(0).innerHTML = `
-                <select name="despachos[${index}][cliente_id]" class="form-select form-select-sm cliente-select select2" ${initialData.otro_cliente ? 'disabled' : ''}>
-                    <option value="">-- Seleccione Cliente --</option>
-                    ${clienteOptions}
-                </select>
-            `;
+            selectEl.addEventListener('change', function() {
+                if (this.value) {
+                    otherEl.value = '';
+                    otherEl.disabled = true;
+                } else {
+                    otherEl.disabled = false;
+                }
+            });
 
-            // Columna Otro Cliente
-            newRow.insertCell(1).innerHTML = `
-                <input type="text" name="despachos[${index}][otro_cliente]" class="form-control form-control-sm otro-cliente-input" placeholder="Nombre o Razón Social" ${initialData.cliente_id ? 'disabled' : ''}>
-            `;
+            otherEl.addEventListener('input', function() {
+                if (this.value.trim() !== '') {
+                    selectEl.value = '';
+                    selectEl.disabled = true;
+                } else {
+                    selectEl.disabled = false;
+                }
+            });
+            
+            // Inicialización
+            if (selectEl.value) {
+                otherEl.disabled = true;
+            } else if (otherEl.value) {
+                selectEl.disabled = true;
+            }
+        }
 
-            // Columna Litros
-            newRow.insertCell(2).innerHTML = `
-                <input type="number" name="despachos[${index}][litros]" class="form-control form-control-sm" placeholder="Cantidad" step="any" required>
-            `;
 
-            // Columna Acción
-            newRow.insertCell(3).innerHTML = `
-                <button type="button" class="btn btn-danger btn-sm remove-despacho" data-index="${index}"><i class="bi bi-trash"></i></button>
-            `;
+        /**
+         * Crea una nueva fila de despacho.
+         */
+        function createRow() {
+            let template = document.getElementById('despacho-row-template').innerHTML;
+            // Reemplazar los marcadores de posición
+            template = template.replace(/{INDEX}/g, rowIndex);
+            
+            // Insertar la fila y obtener la referencia
+            despachosTableBody.insertAdjacentHTML('beforeend', template);
+            const newRow = despachosTableBody.lastElementChild;
             
             // Aplicar la lógica de exclusividad a la nueva fila
             applyExclusivityLogic(newRow);
-        };
+
+            rowIndex++; // Aumentar el índice para la próxima fila
+        }
         
-        // ----------------------------------------------------
-        // Lógica de Inicialización
-        // ----------------------------------------------------
+        // ------------------- INICIALIZACIÓN -------------------
         
         // 1. Si no hay filas de old('despachos'), agrega la primera fila.
         // Esto previene duplicados si la validación falla y Laravel ya restauró las filas.
@@ -281,7 +341,7 @@
         // Manejador del botón 'Agregar Despacho'
         addDespachoButton.addEventListener('click', createRow);
 
-        // Manejador del botón 'Eliminar'
+        // Manejador del botón 'Eliminar' (Delegación de eventos)
         despachosTableBody.addEventListener('click', function(e) {
             if (e.target.closest('.remove-despacho')) {
                 const button = e.target.closest('.remove-despacho');
@@ -291,9 +351,8 @@
                 if (despachosTableBody.rows.length > 1) {
                     row.remove();
                 } else {
-                    // Cambiado de alert() a un mensaje en el console para cumplir con las reglas del ambiente
-                    console.error('Debe haber al menos un despacho por viaje.'); 
-                    // Podrías añadir un pequeño modal o toast aquí en un entorno real.
+                    // Mensaje de feedback alternativo a alert()
+                    console.warn('Debe haber al menos un despacho por viaje.'); 
                 }
             }
         });
