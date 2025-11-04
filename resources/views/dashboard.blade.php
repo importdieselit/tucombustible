@@ -395,7 +395,7 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
             @include('partials.access_card', [
                 'route' => route('viajes.index'),
                 'icon' => 'fa-route',
-                'title' => 'Viajes',
+                'title' => 'Cargas / Despachos',
                 'color' => 'bg-primary',
                 'target' => '_blank',
                 'bg_opacity' => 'rgba(0, 123, 255, 0.15)'

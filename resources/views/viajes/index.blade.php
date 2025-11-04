@@ -19,13 +19,23 @@
         <div class="col">
             <div class="card h-100 shadow border-start border-4 border-success">
                 <div class="card-body">
-                    <h5 class="card-title text-success"><i class="bi bi-calendar-plus me-2"></i> Planificación Rápida</h5>
+                    <h5 class="card-title text-success"><i class="bi bi-calendar-plus me-2"></i> Planificación Despachos</h5>
                     <p class="card-text">Inicia un nuevo viaje, define el destino y los días estimados. El sistema generará el cuadro de viáticos automáticamente.</p>
-                    <a href="{{ route('viajes.create') }}" class="btn btn-success w-100">Crear y Asignar Viaje</a>
+                    <a href="{{ route('viajes.create') }}" class="btn btn-success w-100">Crear y Asignar Despacho</a>
                 </div>
             </div>
         </div>
 
+        <div class="col">
+            <div class="card h-100 shadow border-start border-4 border-success">
+                <div class="card-body">
+                    <h5 class="card-title text-success"><i class="bi bi-calendar-plus me-2"></i> Planificación Compras</h5>
+                    <p class="card-text">Inicia una nueva carga, define el origen y la unidad a realizar la carga.</p>
+                    <a href="{{ route('combustible.createCompra') }}" class="btn btn-success w-100">Crear y Asignar compra</a>
+                </div>
+            </div>
+        </div>
+{{-- 
         <!-- Tarjeta 2: Edición y Aprobación de Viáticos -->
         <div class="col">
             <div class="card h-100 shadow border-start border-4 border-warning">
@@ -36,7 +46,7 @@
                     <a href="{{ route('viajes.list') }}?status=PENDIENTE_VIATICOS" class="btn btn-warning w-100">Revisar Viáticos</a>
                 </div>
             </div>
-        </div>
+        </div> --}}
 
         <!-- Tarjeta 3: Historial y Trazabilidad -->
         <div class="col">
