@@ -218,7 +218,6 @@
             // Insertar la fila y obtener la referencia
             despachosTableBody.insertAdjacentHTML('beforeend', template);
             const newRow = despachosTableBody.lastElementChild;
-    \
             rowIndex++; // Aumentar el índice para la próxima fila
         }
         

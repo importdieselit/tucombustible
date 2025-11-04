@@ -337,11 +337,9 @@
             let template = document.getElementById('despacho-row-template').innerHTML;
             // Reemplazar los marcadores de posición
             template = template.replace(/{INDEX}/g, rowIndex);
-            
             // Insertar la fila y obtener la referencia
             despachosTableBody.insertAdjacentHTML('beforeend', template);
             const newRow = despachosTableBody.lastElementChild;
-            
             // Aplicar la lógica de exclusividad a la nueva fila
             applyExclusivityLogic(newRow);
 
