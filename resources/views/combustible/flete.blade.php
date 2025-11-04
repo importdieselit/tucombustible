@@ -35,7 +35,7 @@
                     </div>
 
                     <!-- Ciudad de Destino -->
-                    <div class="col-md-9">
+                    <div class="col-md-6">
                         <label for="destino_ciudad" class="form-label fw-bold">Ciudad de Destino</label>
                         <select name="destino_ciudad" id="destino_ciudad" class="form-select @error('destino_ciudad') is-invalid @enderror" required>
                             <option value="">Seleccione un destino del Tabulador</option>
@@ -51,6 +51,13 @@
                         @enderror
                     </div>
 
+                    <div class="col-md-6">
+                        <label for="cantidad_litros" class="form-label fw-bold">Cantidad Litros</label>
+                        <input type="number" name="cantidad_litros" id="cantidad_litros" class="form-control @error('cantidad_litros') is-invalid @enderror" value="{{ old('fecha_salida', date('Y-m-d')) }}" required>
+                        @error('cantidad_litros')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
                     {{-- FECHA DE SALIDA --}}
                     <div class="col-md-6">
                         <label for="fecha_salida" class="form-label fw-bold">Fecha de Salida</label>

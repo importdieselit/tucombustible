@@ -887,7 +887,7 @@ public function createPrecarga()
             //'proveedor_id' => 'required|exists:proveedores,id',
             'cantidad_litros' => 'required|integer|min:100',
             'planta_destino_id' => 'required|exists:plantas,id',
-            'fecha' => 'required|date|after_or_equal:today',
+            'fecha_salida' => 'required|date|after_or_equal:today',
             'vehiculo_id' => 'required|exists:vehiculos,id',
             'chofer_id' => 'required|exists:choferes,id',
             //'ayudante' => 'nullable|exists:chofere,id'
@@ -901,7 +901,7 @@ public function createPrecarga()
                 'planta_destino_id' => $request->planta_destino_id,
                 'fecha' => $request->fecha_salida,
                 'estatus' => 'PENDIENTE_ASIGNACION',
-                'tipo' => $request->tipo,
+                'tipo' => $request->tipo ?? 'INDUSTRIAL',
                 'vehiculo_id' => $request->vehiculo_id,
                 //'observaciones' => $request->observaciones
                 //'usuario_solicitante_id' => Auth::id(),
@@ -934,7 +934,7 @@ public function createPrecarga()
            // dd($viaje);
 
            foreach ($request->despachos as $index => $despacho) {
-                if (empty($despacho['cliente_id']) && empty($despacho['otro_cliente'])) {
+                if (empty($despacho['cliente']) && empty($despacho['otro_cliente'])) {
                     return back()->withInput()->withErrors([
                         "despachos.$index.cliente_id" => 'Debe seleccionar un cliente o especificar "Otro Cliente".',
                         "despachos.$index.otro_cliente" => 'Debe seleccionar un cliente o especificar "Otro Cliente".',
@@ -954,7 +954,7 @@ public function createPrecarga()
             foreach ($request->despachos as $despachoData) {
                 DespachoViaje::create([
                     'viaje_id' => $viaje->id,
-                    'otro_cliente' => $despachoData['cliente'] ?? null,
+                    'otro_cliente' => $despachoData['otro_cliente'] ?? null,
                     'litros' => $despachoData['litros'],
                 ]);
                 $totalLitros += $despachoData['litros'];
