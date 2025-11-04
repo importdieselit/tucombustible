@@ -39,8 +39,8 @@
                             <option value="">Seleccione un destino del Tabulador</option>
                             
                             <!-- Cargar las ciudades del tabulador (se asume que se pasan en $ciudades) -->
-                            @foreach($ciudades as $ciudad)
-                                <option value="{{ $ciudad }}" @if(old('destino_ciudad') == $ciudad) selected @endif>{{ $ciudad }}</option>
+                             @foreach($destino as $ciudad)
+                                <option value="{{ $ciudad }}" {{ old('destino_ciudad') == $ciudad ? 'selected' : '' }}>{{ $ciudad }}</option>
                             @endforeach
                             
                         </select>
