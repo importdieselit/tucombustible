@@ -150,7 +150,7 @@
 </div>
 
 {{-- TEMPLATE para una fila de despacho (se asume que existe _despacho_row.blade.php o se define aquí) --}}
-@if(!View::exists('viajes._despacho_row'))
+@if(!View::exists('viajes._flete_row'))
     @php
         // Si la vista parcial no existe, la definimos aquí para que el JS pueda usarla como base
         $clientes = $clientes ?? []; // Asumir que $clientes está disponible
