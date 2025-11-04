@@ -895,17 +895,17 @@ public function createPrecarga()
         DB::beginTransaction();
         try {
             // 1. CREAR LA SOLICITUD DE COMBUSTIBLE
-            $solicitud = CompraCombustible::create([
-                'proveedor_id' => $request->proveedor_id,
-                'cantidad_litros' => $request->cantidad_litros,
-                'planta_destino_id' => $request->planta_destino_id,
-                'fecha' => $request->fecha_salida,
-                'estatus' => 'PENDIENTE_ASIGNACION',
-                'tipo' => $request->tipo ?? 'INDUSTRIAL',
-                'vehiculo_id' => $request->vehiculo_id,
-                //'observaciones' => $request->observaciones
-                //'usuario_solicitante_id' => Auth::id(),
-            ]);
+            // $solicitud = CompraCombustible::create([
+            //     'proveedor_id' => 1,
+            //     'cantidad_litros' => $request->cantidad_litros,
+            //     'planta_destino_id' => $request->planta_destino_id,
+            //     'fecha' => $request->fecha_salida,
+            //     'estatus' => 'PENDIENTE_ASIGNACION',
+            //     'tipo' => $request->tipo ?? 'INDUSTRIAL',
+            //     'vehiculo_id' => $request->vehiculo_id,
+            //     //'observaciones' => $request->observaciones
+            //     //'usuario_solicitante_id' => Auth::id(),
+            // ]);
 
             // 2. PLANIFICACIÓN Y ASIGNACIÓN DE RECURSOS
             $planta = Planta::find($request->planta_destino_id);
@@ -913,17 +913,17 @@ public function createPrecarga()
 
             //dd($destino);
             $cantidad = $request->cantidad_litros;
-            $fecha = $solicitud->fecha_salida;
+            //$fecha = $solicitud->fecha_salida;
 
 
             // 3. CREAR LA PLANIFICACIÓN (Viaje)
             $viaje = Viaje::create([
-                'solicitud_combustible_id' => $solicitud->id,
+               // 'solicitud_combustible_id' => $solicitud->id,
                 'vehiculo_id' => $request->vehiculo_id,
                 'chofer_id' => $request->chofer_id,
                 'ayudante' => $request->ayudante ?? null, // Ayudante es opcional
                 'destino_ciudad' => $plantaDestino->destino.' -> '.$request->destino_ciudad ?? 'N/A', 
-                'fecha_salida' => $fecha,
+                'fecha_salida' => $request->fecha_salida,
                 'status' => 'Programado',
                 'usuario_id' => $userId
                 
