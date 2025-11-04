@@ -777,13 +777,13 @@ public function createPrecarga()
     public function storeCompra(Request $request)
     {
         $request->validate([
-            'proveedor_id' => 'required|exists:proveedores,id',
+            //'proveedor_id' => 'required|exists:proveedores,id',
             'cantidad_litros' => 'required|integer|min:100',
             'planta_destino_id' => 'required|exists:plantas,id',
             'fecha' => 'required|date|after_or_equal:today',
             'vehiculo_id' => 'required|exists:vehiculos,id',
             'chofer_id' => 'required|exists:choferes,id',
-            'ayudante_id' => 'nullable|exists:ayudantes,id'
+            //'ayudante' => 'nullable|exists:chofere,id'
         ]);
         dd($request->all());
         DB::beginTransaction();
@@ -814,14 +814,14 @@ public function createPrecarga()
                 'solicitud_combustible_id' => $solicitud->id,
                 'vehiculo_id' => $request->vehiculo_id,
                 'chofer_id' => $request->chofer_id,
-                'ayudante_id' => $request->ayudante_id ?? null, // Ayudante es opcional
+                'ayudante' => $request->ayudante ?? null, // Ayudante es opcional
                 'destino_ciudad' => $destino->id ?? 'N/A', 
                 'fecha_salida' => $fecha,
                 'status' => 'Programado'
             ]);
 
             $chofer=Chofer::find($request->chofer_id)->with('persona')->get();
-            $ayudante=Chofer::find($request->ayudante_id)->with('persona')->get();
+            $ayudante=Chofer::find($request->ayudante)->with('persona')->get();
 
 
              DespachoViaje::create([
