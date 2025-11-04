@@ -64,13 +64,13 @@
                             <strong>[{{ $viaje->destino_ciudad }}]</strong>
                         </td>
                         <td rowspan="{{$viaje->despachos->count()+1}}" style="vertical-align: middle; text-align:center; font-size: 18px;">
-                            <span class="fw-bold">{{ ucwords($viaje->chofer->persona->nombre ?? 'PENDIENTE') }}</span><br>
+                            <span class="fw-bold">{{ ucwords($viaje->chofer_id==0?$viaje->otro_chofer:$viaje->chofer->persona->nombre ?? 'PENDIENTE') }}</span><br>
                             @if($viaje->ayudante)
-                                <span class="d-block">{{ ucwords($viaje->ayudante_chofer->persona->nombre ?? 'N/A') }}</span>
+                                <span class="d-block">{{ ucwords($viaje->ayudante==0?$viaje->otro_ayudante: $viaje->ayudante_chofer->persona->nombre ?? 'N/A') }}</span>
                             @endif
                         </td>
                         <td rowspan="{{$viaje->despachos->count()+1}}" style="vertical-align: middle; text-align:center">
-                            <span class="text-black fw-bold" style="font-size: 30px" >{{  $viaje->vehiculo->flota }}</span><br>
+                            <span class="text-black fw-bold" style="font-size: 30px" >{{ $viaje->vehiculo_id==0?$viaje->otro_vehiculo: $viaje->vehiculo->flota }}</span><br>
                                 {{ $viaje->vehiculo->placa ?? 'PENDIENTE' }}
                             
                         </td>
