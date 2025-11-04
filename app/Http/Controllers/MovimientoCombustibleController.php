@@ -792,11 +792,12 @@ public function createPrecarga()
                 'proveedor_id' => $request->proveedor_id,
                 'cantidad_litros' => $request->cantidad_litros,
                 'planta_destino_id' => $request->planta_destino_id,
-                'fecha' => $request->fecha_requerida,
+                'fecha' => $request->fecha,
                 'estatus' => 'PENDIENTE_ASIGNACION',
                 'tipo' => $request->tipo,
                 'vehiculo_id' => $request->vehiculo_id,
                 'cisterna' => $request->cisterna,
+                'observaciones' => $request->observaciones
                 //'usuario_solicitante_id' => Auth::id(),
             ]);
 
@@ -840,7 +841,7 @@ public function createPrecarga()
             // 5. NOTIFICACIÓN DE PLANIFICACIÓN EXITOSA
             $this->enviarNotificaciones($viaje, $solicitud, $chofer,$ayudante);
 
-            return redirect()->route('combustible.compras')->with('success', 'Solicitud de combustible creada y viaje de carga planificado y asignado con éxito (ID Viaje: ' . $viaje->id . ').');
+            //return redirect()->route('combustible.compras')->with('success', 'Solicitud de combustible creada y viaje de carga planificado y asignado con éxito (ID Viaje: ' . $viaje->id . ').');
 
         } catch (\Exception $e) {
             DB::rollBack();
