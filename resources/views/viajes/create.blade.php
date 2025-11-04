@@ -77,13 +77,12 @@
                                 <option value="{{ $vehiculo->id }}" @if(old('vehiculo_id') == $vehiculo->id) selected @endif>{{ $vehiculo->flota }} ({{ $vehiculo->placa }})</option>
                             @endforeach
                         </select>
-                        <small class="text-muted">Seleccione un vehículo de la flota o ingrese uno manual.</small>
                         @error('vehiculo_id')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="col-md-6">
-                        <label for="otro_vehiculo" class="form-label fw-bold">Opcional: Otro Vehículo</label>
+                    <div class="col-md-6" style="display: none">
+                        <label for="otro_vehiculo" class="form-label fw-bold">Vehiculo Externo</label>
                         <input type="text" name="otro_vehiculo" id="otro_vehiculo" class="form-control select-or-other-input" data-select-field="vehiculo_id" placeholder="Ej: Camión Externo X">
                         @error('otro_vehiculo')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -103,13 +102,12 @@
                                 @endif
                           @endforeach
                         </select>
-                        <small class="text-muted">Seleccione un chofer de la lista o ingrese uno manual.</small>
                         @error('chofer_id')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="col-md-6">
-                        <label for="otro_chofer" class="form-label fw-bold">Opcional: Otro Chofer</label>
+                    <div class="col-md-6" style="display: none">
+                        <label for="otro_chofer" class="form-label fw-bold">Chofer Externo</label>
                         <input type="text" name="otro_chofer" id="otro_chofer" class="form-control select-or-other-input" data-select-field="chofer_id" placeholder="Ej: Pedro García (Externo)">
                         @error('otro_chofer')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -128,13 +126,12 @@
                                 @endif
                             @endforeach
                         </select>
-                        <small class="text-muted">Seleccione un ayudante de la lista o ingrese uno manual.</small>
                         @error('ayudante')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="col-md-6">
-                        <label for="otro_ayudante" class="form-label fw-bold">Opcional: Otro Ayudante</label>
+                    <div class="col-md-6" style="display: none">
+                        <label for="otro_ayudante" class="form-label fw-bold">Ayudante</label>
                         <input type="text" name="otro_ayudante" id="otro_ayudante" class="form-control select-or-other-input" data-select-field="ayudante_id" placeholder="Ej: José Martínez (Externo)">
                         @error('otro_ayudante')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -238,6 +235,7 @@
         // Inputs de flete
         const otroVehiculoInput = document.getElementById('otro_vehiculo');
         const otroChoferInput = document.getElementById('otro_chofer');
+        const otroAyudanteInput = document.getElementById('otro_ayudante'); // ID original: otro_ayudante
         
         // Función para alternar la visibilidad y el atributo 'required'
         function toggleFleteFields() {
