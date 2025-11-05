@@ -170,7 +170,7 @@ async function mostrarSelectorVehiculoParaInspeccion() {
     if (vehiculoId) {
         // Redirigir a la ruta definida en el InspeccionController
         // La ruta usa el ID del vehículo seleccionado
-        const urlInspeccion = `/vehiculos/${vehiculoId}/inspeccion/salida`;
+        const urlInspeccion = `/vehiculos/inspeccion/${vehiculoId}/salida`;
         
         Swal.fire({
             title: 'Cargando Checklist...',
