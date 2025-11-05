@@ -26,7 +26,7 @@
                 <div class="card-body">
                     {{-- Formulario dinámico para crear o editar --}}
                     {{-- El código verifica si $item existe para usar la ruta UPDATE y el método PUT --}}
-                    <form action="{{ isset($item) ? route('vehiculos.updatev', $item->id) : route('vehiculos.store') }}" method="POST" enctype="multipart/form-data">
+                    <form action="{{ isset($item) ? route('vehiculos.updatev', ['id' => $item->id]) : route('vehiculos.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         {{-- Si estamos editando, usamos el método PUT --}}
                         @if (isset($item))
@@ -239,11 +239,6 @@
                                         @error('poliza_numero')<div class="text-danger mt-1">{{ $message }}</div>@enderror
                                     </div>
                                     <div class="col-md-6">
-                                        <label for="id_poliza" class="form-label text-primary">ID de Póliza</label>
-                                        <input type="number" class="form-control" id="id_poliza" name="id_poliza" value="{{ old('id_poliza', $item->id_poliza ?? '') }}">
-                                        @error('id_poliza')<div class="text-danger mt-1">{{ $message }}</div>@enderror
-                                    </div>
-                                    <div class="col-md-6">
                                         <label for="tipo_poliza" class="form-label text-primary">Tipo de Póliza</label>
                                         <input type="text" class="form-control" id="tipo_poliza" name="tipo_poliza" value="{{ old('tipo_poliza', $item->tipo_poliza ?? '') }}">
                                         @error('tipo_poliza')<div class="text-danger mt-1">{{ $message }}</div>@enderror
@@ -308,7 +303,7 @@
                                     </div>
                                     <div class="col-md-6">
                                         <label for="ubicacion" class="form-label text-primary">Ubicación</label>
-                                        <input type="number" class="form-control" id="ubicacion" name="ubicacion" value="{{ old('ubicacion', $item->ubicacion ?? '') }}">
+                                        <input type="text" class="form-control" id="ubicacion" name="ubicacion" value="{{ old('ubicacion', $item->ubicacion ?? '') }}">
                                         @error('ubicacion')<div class="text-danger mt-1">{{ $message }}</div>@enderror
                                     </div>
                                     <div class="col-md-6">
@@ -318,7 +313,7 @@
                                     </div>
                                     <div class="col-md-6">
                                         <label for="sucursal" class="form-label text-primary">Sucursal</label>
-                                        <input type="number" class="form-control" id="sucursal" name="sucursal" value="{{ old('sucursal', $item->sucursal ?? '') }}">
+                                        <input type="text" class="form-control" id="sucursal" name="sucursal" value="{{ old('sucursal', $item->sucursal ?? '') }}">
                                         @error('sucursal')<div class="text-danger mt-1">{{ $message }}</div>@enderror
                                     </div>
                                     <div class="col-md-12">

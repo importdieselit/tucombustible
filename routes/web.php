@@ -80,7 +80,7 @@ Route::get('/vehiculos/inspeccion/{vehiculo_id}/{tipo}', [InspeccionController::
 
 
 // Guardar la inspección
-Route::post('vehiculos/updatev', [VehiculoController::class, 'updatev'])->name('vehiculos.updatev');
+Route::put('vehiculos/updatev/{id}', [VehiculoController::class, 'updatev'])->name('vehiculos.updatev');
 e('inspeccion.store');
 Route::post('/inspecciones', [InspeccionController::class, 'store'])->name('inspeccion.store');
 Route::get('/inspecciones', [InspeccionController::class, 'list'])->name('inspeccion.list');

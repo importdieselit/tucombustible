@@ -238,8 +238,6 @@ class VehiculoController extends BaseController
 
                 //     if ($modeloNombre && $marcaId) {
                 //         $modelo = Modelo::firstOrCreate(
-                //             ['nombre' => $modeloNombre, 'id_marca' => $marcaId],
-                //             ['id_marca' => $marcaId]
                 //         );
                 //         $modeloId = $modelo->id;
                 //     }
