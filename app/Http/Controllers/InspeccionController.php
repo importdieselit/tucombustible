@@ -89,7 +89,7 @@ public function store(Request $request)
                     }
                     // Si es booleano, y es falso -> WARNING
                     if ($item['response_type'] === 'boolean' && $item['value'] === false) {
-                        $estatusGeneral = 'ADVERTENCIA';
+                        $estatusGeneral = 'ATENCION';
                         $warningFound = true;
                         $fail++;
                         if ($fail >= 5) {
@@ -98,7 +98,7 @@ public function store(Request $request)
                     }
                     // Si es compuesto, y el estado es falso -> WARNING
                     if ($item['response_type'] === 'composite' && isset($item['value']['status']) && $item['value']['status'] === false) {
-                        $estatusGeneral = 'ADVERTENCIA';
+                        $estatusGeneral = 'ATENCION';
                         $warningFound = true;
                         $fail++;
                         if ($fail >= 5) {
@@ -209,7 +209,7 @@ public function store(Request $request)
                     }
                     // Si es booleano, y es falso -> WARNING
                     if ($item['response_type'] === 'boolean' && $item['value'] === false) {
-                        $estatusGeneral = 'ADVERTENCIA';
+                        $estatusGeneral = 'ATENCION';
                         $warningFound = true;
                         $fail++;
                         if ($fail >= 5) {
@@ -218,7 +218,7 @@ public function store(Request $request)
                     }
                     // Si es compuesto, y el estado es falso -> WARNING
                     if ($item['response_type'] === 'composite' && isset($item['value']['status']) && $item['value']['status'] === false) {
-                        $estatusGeneral = 'ADVERTENCIA';
+                        $estatusGeneral = 'ATENCION';
                         $warningFound = true;
                         $fail++;
                         if ($fail >= 5) {
@@ -330,8 +330,8 @@ public function store(Request $request)
         // 2. Definir los colores/estilos para el estatus (opcional pero muy visual)
         $estatusColores = [
             'OK' => 'success',
-            'WARNING' => 'warning',
-            'ALERT' => 'danger',
+            'ATENCION' => 'warning',
+            'ALERTA' => 'danger',
             'N/A' => 'secondary',
         ];
 
@@ -341,7 +341,7 @@ public function store(Request $request)
       public function index()
     {
         $resumenAlertas = [
-            'warnings' => Inspeccion::whereIn('estatus_general', ['WARNING','ALERT'])->count(),
+            'warnings' => Inspeccion::whereIn('estatus_general', ['ATENCION','ALERTA'])->count(),
             'ordenes_abiertas' => Orden::where('estatus', 2)->count(),
             'vehiculos_mantenimiento' => Vehiculo::where('estatus', 3)->count(),
         ];
