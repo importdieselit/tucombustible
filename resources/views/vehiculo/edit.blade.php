@@ -116,6 +116,7 @@
                                         @error('estatus')<div class="text-danger mt-1">{{ $message }}</div>@enderror
                                     </div>
 
+                                     <h5 class="mb-3 text-info"><i class="bi bi-camera-fill me-2"></i> Fotos del Vehículo</h5>
                                     {{-- Campo para subir múltiples fotos --}}
                                 <div class="mb-3">
                                     <label for="fotos" class="form-label">Subir Nuevas Fotos (Múltiples Archivos)</label>
@@ -272,9 +273,7 @@
                                         <input type="text" class="form-control" id="certif_reg" name="certif_reg" value="{{ old('certif_reg', $item->certif_reg ?? '') }}">
                                         @error('certif_reg')<div class="text-danger mt-1">{{ $message }}</div>@enderror
                                     </div>
-                                    <h5 class="mb-3 text-info"><i class="bi bi-camera-fill me-2"></i> Fotos del Vehículo</h5>
-
-                                
+                                                               
  
                                 </div>
                             </div>
