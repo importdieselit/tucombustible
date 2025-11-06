@@ -60,6 +60,67 @@
                     <h6 class="text-muted mt-3">Vehículo Asignado</h6>
                     <p class="font-weight-bold">{{ $chofer->vehiculo ? $chofer->vehiculo->placa . ' - ' . $chofer->vehiculo->marca : 'No asignado' }}</p>
                 </div>
+                <div class="card-body">
+                    @if(!is_null($chofer->soporte_documento))
+                        @php
+                            $documentos= explode($chofer->soporte_documento,';')
+                        @endphp
+                        @foreach($documentos as $documento)
+                            @php 
+                                // Esto es una forma básica en PHP/Blade de obtener la extensión
+                                $extension = pathinfo(asset('storage/choferes/documentos/'.$documento), PATHINFO_EXTENSION);
+                                $extension = strtolower($extension);
+                                $ruta_soporte = asset('storage/choferes/documentos/' . $documento);
+                            @endphp
+                            @if(in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif']))
+                                <div class="text-center mb-4 border rounded p-3 bg-light">
+                                    <img src="{{ $ruta_soporte }}" 
+                                        alt="Documento de Soporte - Imagen" 
+                                        class="img-fluid rounded shadow-sm"
+                                        style="max-height: 80vh; border: 1px solid #ddd;">
+                                </div>
+                            @elseif($extension === 'pdf')
+                                <div class="mb-4">
+                                    <h5 class="text-danger mb-3"><i class="bi bi-file-pdf-fill me-1"></i> Documento PDF</h5>
+                                    
+                                    {{-- Opción 1: Usar la etiqueta <iframe> para incrustar --}}
+                                    <div class="embed-responsive embed-responsive-16by9" style="height: 600px; width: 100%;">
+                                        <iframe src="{{ $ruta_soporte }}" 
+                                                style="width: 100%; height: 100%; border: none;"
+                                                title="Documento PDF de Soporte"
+                                                loading="lazy">
+                                            <p>Este navegador no soporta iframes. <a href="{{ $ruta_soporte }}" target="_blank">Descargar PDF</a></p>
+                                        </iframe>
+                                    </div>
+
+                                    {{-- Botón de descarga para PDF --}}
+                                    <div class="text-center mt-3">
+                                        <a href="{{ $ruta_soporte }}" target="_blank" class="btn btn-outline-danger">
+                                            <i class="bi bi-cloud-arrow-down-fill me-2"></i> Abrir o Descargar PDF en Pestaña Nueva
+                                        </a>
+                                    </div>
+                                </div>
+
+                            {{-- Lógica para Otros Tipos de Archivos (Fallback) --}}
+                            @else
+                                <div class="alert alert-warning text-center">
+                                    <p class="mb-2"><i class="bi bi-file-earmark-exclamation me-2"></i> **Tipo de archivo no compatible para previsualización directa ({{ strtoupper($extension) }}).**</p>
+                                    <p class="mb-0">Solo se previsualizan Imágenes y PDF.</p>
+                                </div>
+                                {{-- Botón de descarga general --}}
+                                <div class="text-center mt-3">
+                                    <a href="{{ $ruta_soporte }}" target="_blank" class="btn btn-warning">
+                                        <i class="bi bi-cloud-arrow-down-fill me-2"></i> Descargar Archivo ({{ strtoupper($extension) }})
+                                    </a>
+                                </div>
+                            @endif
+                        @endforeach
+                    @else
+                        <div class="alert alert-info text-center">
+                            <i class="bi bi-info-circle me-2"></i> No hay ningún documento o imagen de soporte asociado.
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
 
