@@ -63,7 +63,7 @@
                 <div class="card-body">
                     @if(!is_null($chofer->soporte_documento))
                         @php
-                            $documentos= explode($chofer->soporte_documento,';')
+                            $documentos= explode($chofer->soporte_documento,';');
                             dd($documentos);
                         @endphp
                         @foreach($documentos as $documento)
