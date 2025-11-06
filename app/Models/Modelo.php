@@ -66,4 +66,9 @@ class Modelo extends Model
     {
         return $this->belongsTo(Marca::class, 'id_marca', 'id');
     }
+    public function tipo()
+    {
+        return $this->belongsTo(TipoVehiculo::class, 'tipo', 'id');
+    }
+    
 }

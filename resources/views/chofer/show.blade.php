@@ -144,7 +144,7 @@
                                     <tr>
                                         <td>{{ $viaje['ruta'] }}</td>
                                         <td>{{ $viaje['fecha'] }}</td>
-                                        <td>{{ $viaje['incidencias'] }}</td>
+                                        <td>{{ $viaje['incidencias'] ?? 'No hay incidencias'}}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
