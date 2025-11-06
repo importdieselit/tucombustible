@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Chofer;
 use App\Models\Vehiculo;
 use App\Models\Persona;
+use App\Models\ViaticoViaje;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Redirect;
