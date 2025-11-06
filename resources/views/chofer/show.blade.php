@@ -151,7 +151,7 @@
                                         }
 
                                         $pago->get()->first();
-
+                                        dd($pago);
                                     @endphp
                                     <tr>
                                         <td>{{ $viaje['ruta'] }}</td>
