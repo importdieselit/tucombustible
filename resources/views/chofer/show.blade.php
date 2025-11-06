@@ -143,7 +143,8 @@
                             <tbody>
                                 @foreach ($historialViajes as $viaje)
                                     @php
-                                        $pago= App\Models\ViaticoViaje::where('viaje_id', $viaje->id);
+                                    dd($viaje);
+                                        $pago= App\Models\ViaticoViaje::where('viaje_id', $viaje->viaje_id);
                                         if($chofer->cargo=='CHOFER'){
                                             $pago->where('concepto','Pago Chofer');
                                         }else{
