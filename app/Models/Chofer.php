@@ -35,6 +35,10 @@ class Chofer extends Model
         'cargo',
         'certificado_medico',
         'certificado_medico_vencimiento',
+        'foto',
+        'soporte_documento',
+        'soporte_licencia',
+        'soporte_certificado'
     ];
 
     /**

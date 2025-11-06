@@ -30,7 +30,11 @@
                 </div>
                 <div class="card-body">
                     <div class="d-flex flex-column align-items-center text-center">
-                        <i class="fas fa-user-circle fa-8x text-secondary mb-3"></i>
+                        @if(is_null($chofer->foto))
+                            <i class="fas fa-user-circle fa-8x text-secondary mb-3"></i>
+                        @else
+                            <img src="{{ asset('storage/choferes/fotos/' . $chofer->foto) }}" class="text-secondary mb-3 round" alt="foto {{ $chofer->persona->nombre }}">
+                        @endif
                         <h4 class="mb-0">{{ $chofer->persona->nombre }}</h4>
                         <p class="text-muted">{{ $chofer->persona->dni }}</p>
                     </div>
