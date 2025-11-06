@@ -18,7 +18,7 @@
             </div>
         </div>
     </div>
-
+{{dd($chofer)}}
     <div class="row">
         <div class="col-lg-5 col-md-12 mb-4">
             <div class="card shadow-sm">
