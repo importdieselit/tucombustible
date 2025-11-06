@@ -145,12 +145,12 @@
                                     @php
                                         $pago= App\Models\ViaticoViaje::where('viaje_id', $viaje['viaje_id']);
                                         if($chofer->cargo=='CHOFER'){
-                                            $pago->where('concepto','Pago Chofer');
+                                            $pago=$pago->where('concepto','Pago Chofer');
                                         }else{
-                                            $pago->where('concepto','Pago Ayudantes');
+                                            $pago=$pago->where('concepto','Pago Ayudantes');
                                         }
 
-                                        $pago->get()->first();
+                                        $pago=$pago->get()->first();
                                         dd($pago);
                                     @endphp
                                     <tr>
