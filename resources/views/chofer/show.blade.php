@@ -143,7 +143,7 @@
                                 @foreach ($historialViajes as $viaje)
                                     <tr>
                                         <td>{{ $viaje['ruta'] }}</td>
-                                        <td>{{ date(strtotime($viaje['fecha']),'d/m/Y') }}</td>
+                                        <td>{{ date('d/m/Y',strtotime($viaje['fecha'])) }}</td>
                                         <td>{{ $viaje['incidencias'] ?? 'No hay incidencias'}}</td>
                                     </tr>
                                 @endforeach
