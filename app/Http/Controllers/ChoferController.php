@@ -144,7 +144,7 @@ class ChoferController extends BaseController
         $chofer->load('persona', 'vehiculo');
 
         // Datos de ejemplo para el historial y rendimiento del chofer (simulados)
-        $historialViajes = $chofer->viajes()->select('destino_ciudad as ruta','fecha_salida as fecha')->orderBy('fecha_salida', 'desc')->limit(10)->get()->toArray();
+        $historialViajes = $chofer->viajes()->select('destino_ciudad as ruta','fecha_salida as fecha','id')->orderBy('fecha_salida', 'desc')->limit(10)->get()->toArray();
 
         $graficaRendimiento = [
             'labels' => ['Enero', 'Febrero', 'Marzo', 'Abril'],
