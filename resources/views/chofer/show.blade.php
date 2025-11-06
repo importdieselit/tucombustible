@@ -137,14 +137,27 @@
                                     <th>Ruta</th>
                                     <th>Fecha</th>
                                     <th>Incidencias</th>
+                                    <th>Pago</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($historialViajes as $viaje)
+                                    @php
+                                        $pago= ViaticoViaje::where('viaje_id', $viaje->id);
+                                        if($chofer->cargo=='CHOFER'){
+                                            $pago->where('concepto','Pago Chofer');
+                                        }else{
+                                            $pago->where('concepto','Pago Ayudantes');
+                                        }
+
+                                        $pago->get()->first();
+
+                                    @endphp
                                     <tr>
                                         <td>{{ $viaje['ruta'] }}</td>
                                         <td>{{ date('d/m/Y',strtotime($viaje['fecha'])) }}</td>
                                         <td>{{ $viaje['incidencias'] ?? 'No hay incidencias'}}</td>
+                                        <td>{{ $pago->monto }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
