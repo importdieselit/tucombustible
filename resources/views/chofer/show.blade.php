@@ -18,7 +18,7 @@
             </div>
         </div>
     </div>
-{{dd($chofer)}}
+
     <div class="row">
         <div class="col-lg-5 col-md-12 mb-4">
             <div class="card shadow-sm">
@@ -64,6 +64,7 @@
                     @if(!is_null($chofer->soporte_documento))
                         @php
                             $documentos= explode($chofer->soporte_documento,';')
+                            dd($documentos);
                         @endphp
                         @foreach($documentos as $documento)
                             @php 
