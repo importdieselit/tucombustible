@@ -33,7 +33,7 @@
                         @if(is_null($chofer->foto))
                             <i class="fas fa-user-circle fa-8x text-secondary mb-3"></i>
                         @else
-                            <img src="{{ asset('storage/choferes/foto/' . $chofer->foto) }}" class="text-secondary mb-3 round" alt="foto {{ $chofer->persona->nombre }}">
+                            <img src="{{ asset('storage/choferes/foto/' . $chofer->foto) }}" class="text-secondary mb-3 round" style="border-radius: 50%; height: 250px;" alt="foto {{ $chofer->persona->nombre }}">
                         @endif
                         <h4 class="mb-0">{{ $chofer->persona->nombre }}</h4>
                         <p class="text-muted">{{ $chofer->persona->dni }}</p>
