@@ -157,7 +157,7 @@
                                         <td>{{ $viaje['ruta'] }}</td>
                                         <td>{{ date('d/m/Y',strtotime($viaje['fecha'])) }}</td>
                                         <td>{{ $viaje['incidencias'] ?? 'No hay incidencias'}}</td>
-                                        <td>{{ $pago->monto }}</td>
+                                        <td>{{ $pago->monto_ajustado ?? $pago->monto_base }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
