@@ -123,6 +123,7 @@ $insumos_usados=false;
                             <div class="col-sm-6 mb-3">
                                 <img src="{{ asset('storage/vehiculos/' . $foto->ruta) }}" class="img-fluid h-200" alt="">
                             </div>
+                        <div class="col-sm-6 mb-3">
                         @endif
                         <div class="col-sm-6 mb-3"><span class="info-label">Flota:</span> <span class="info-value">{{ $item->flota }}</span></div>
                         <div class="col-sm-6 mb-3"><span class="info-label">Placa:</span> <span class="info-value">{{ $item->placa }}</span></div>
@@ -130,6 +131,9 @@ $insumos_usados=false;
                         <div class="col-sm-6 mb-3"><span class="info-label">Modelo:</span> <span class="info-value">{{ $item->modelo_rel->nombre ?? 'N/A' }}</span></div>
                         <div class="col-sm-6 mb-3"><span class="info-label">Año:</span> <span class="info-value">{{ $item->anno }}</span></div>
                         <div class="col-sm-6 mb-3"><span class="info-label">Color:</span> <span class="info-value">{{ $item->color }}</span></div>
+                        @if(!is_null($foto))
+                            </div>
+                        @endif
                         <div class="col-sm-6 mb-3"><span class="info-label">Estatus:</span> <span class="info-value">
                             @php
                                 $estatusInfo = $estatusData->get($item->estatus);
