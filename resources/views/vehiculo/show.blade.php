@@ -122,7 +122,6 @@ $insumos_usados=false;
                         @if(!is_null($foto))
                             <div class="col-sm-6 mb-3">
                                 <img src="{{ asset('storage/vehiculos/' . $foto->ruta) }}" class="img-fluid h-200" alt="">
-                            
                             </div>
                         @endif
                         <div class="col-sm-6 mb-3"><span class="info-label">Flota:</span> <span class="info-value">{{ $item->flota }}</span></div>
