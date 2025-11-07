@@ -54,7 +54,7 @@ public function store(Request $request)
             'respuesta_json' => 'required|array', // JSON completo serializado desde JS
         ]);
         
-
+        $chofer= null;
         $respuestaJson = $data['respuesta_json'];
         $checklistId = self::CHECKLIST_VEHICULOS_ID;
         $estatusGeneral = 'OK';
@@ -72,8 +72,11 @@ public function store(Request $request)
         foreach ($respuestaJson['sections'] as $section) {
            
             // Función auxiliar para procesar los items, ya sea directamente o dentro de subsecciones
-            $processItems = function ($items) use (&$estatusGeneral, &$warningFound, &$fail,&$vehiculo) {
+            $processItems = function ($items) use (&$estatusGeneral, &$warningFound, &$fail,&$vehiculo,&$section) {
                 foreach ($items as $item) {
+                    if($section['section_title']=='Datos del Conductor' && $item['label']=='Nombre'){
+                        $chofer=$item['value'];
+                    }
                     
                     if ($item['label'] == 'Km. Recorridos' ) {
                         $value=$item['value'];
@@ -89,20 +92,20 @@ public function store(Request $request)
                     }
                     // Si es booleano, y es falso -> WARNING
                     if ($item['response_type'] === 'boolean' && $item['value'] === false) {
-                        $estatusGeneral = 'ATENCION';
+                        $estatusGeneral = 'WARNING';
                         $warningFound = true;
                         $fail++;
                         if ($fail >= 5) {
-                            $estatusGeneral = 'ALERTA';
+                            $estatusGeneral = 'ALERT';
                         }
                     }
                     // Si es compuesto, y el estado es falso -> WARNING
                     if ($item['response_type'] === 'composite' && isset($item['value']['status']) && $item['value']['status'] === false) {
-                        $estatusGeneral = 'ATENCION';
+                        $estatusGeneral = 'WARNING';
                         $warningFound = true;
                         $fail++;
                         if ($fail >= 5) {
-                            $estatusGeneral = 'ALERTA';
+                            $estatusGeneral = 'ALERT';
                         }
                         return; // Detiene la función auxiliar
                     }
@@ -209,20 +212,20 @@ public function store(Request $request)
                     }
                     // Si es booleano, y es falso -> WARNING
                     if ($item['response_type'] === 'boolean' && $item['value'] === false) {
-                        $estatusGeneral = 'ATENCION';
+                        $estatusGeneral = 'WARNING';
                         $warningFound = true;
                         $fail++;
                         if ($fail >= 5) {
-                            $estatusGeneral = 'ALERTA';
+                            $estatusGeneral = 'ALERT';
                         }
                     }
                     // Si es compuesto, y el estado es falso -> WARNING
                     if ($item['response_type'] === 'composite' && isset($item['value']['status']) && $item['value']['status'] === false) {
-                        $estatusGeneral = 'ATENCION';
+                        $estatusGeneral = 'WARNING';
                         $warningFound = true;
                         $fail++;
                         if ($fail >= 5) {
-                            $estatusGeneral = 'ALERTA';
+                            $estatusGeneral = 'ALERT';
                         }
                         return; // Detiene la función auxiliar
                     }
@@ -330,8 +333,8 @@ public function store(Request $request)
         // 2. Definir los colores/estilos para el estatus (opcional pero muy visual)
         $estatusColores = [
             'OK' => 'success',
-            'ATENCION' => 'warning',
-            'ALERTA' => 'danger',
+            'WARNING' => 'warning',
+            'ALERT' => 'danger',
             'N/A' => 'secondary',
         ];
 
@@ -341,7 +344,7 @@ public function store(Request $request)
       public function index()
     {
         $resumenAlertas = [
-            'warnings' => Inspeccion::whereIn('estatus_general', ['ATENCION','ALERTA'])->count(),
+            'warnings' => Inspeccion::whereIn('estatus_general', ['WARNING','ALERT'])->count(),
             'ordenes_abiertas' => Orden::where('estatus', 2)->count(),
             'vehiculos_mantenimiento' => Vehiculo::where('estatus', 3)->count(),
         ];

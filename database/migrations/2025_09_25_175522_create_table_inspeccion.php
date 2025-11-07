@@ -18,7 +18,7 @@ class CreateTableInspeccion extends Migration
             $table->unsignedBigInteger('vehiculo_id');
             $table->unsignedBigInteger('checklist_id'); // ID del blueprint usado
             $table->unsignedBigInteger('usuario_id');   // Quién realizó la inspección
-            $table->enum('estatus_general', ['OK', 'ATENCION', 'ALERTA'])->default('OK');
+            $table->enum('estatus_general', ['OK', 'WARNING', 'ALERT'])->default('OK');
             // Usamos 'longText' para el JSON largo, o 'json' si tu DB lo soporta bien
             $table->longText('respuesta_json'); 
             $table->timestamps();

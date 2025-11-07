@@ -30,7 +30,7 @@
                         </div>
                     </div>
                 </div>
-                <a href="{{ route('inspeccion.list', ['estatus' => 'ATENCION']) }}" class="small-box-footer text-white text-end p-2 d-block">Revisar <i class="fa-solid fa-arrow-circle-right"></i></a>
+                <a href="{{ route('inspeccion.list', ['estatus' => 'WARNING']) }}" class="small-box-footer text-white text-end p-2 d-block">Revisar <i class="fa-solid fa-arrow-circle-right"></i></a>
             </div>
         </div>
         

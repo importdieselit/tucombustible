@@ -237,7 +237,7 @@
                             <p class="text-sm text-slate-400">${deposito.producto}</p>
                         </div>
                         <span class="px-3 py-1 rounded-full text-xs font-semibold ${isAlert ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}">
-                            ${isAlert ? 'ALERTA' : 'OK'}
+                            ${isAlert ? 'ALERT' : 'OK'}
                         </span>
                     </div>
                     <div class="tank-container rounded-lg">
