@@ -121,7 +121,7 @@ $insumos_usados=false;
                     <div class="row">
                         @if(!is_null($foto))
                             <div class="col-sm-6 mb-3">
-                                <img src="{{ asset('storage/vehiculos/' . $foto->ruta) }}" class="img-fluid h-200" alt="">
+                                <img src="{{ asset('storage/vehiculos/' . $foto->ruta) }}" class="img-fluid h-200" alt="" style="border-radius: 5%;border: solid;height: 400px;">
                             </div>
                         <div class="col-sm-6 mb-3">
                         @endif
