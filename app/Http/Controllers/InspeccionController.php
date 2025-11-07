@@ -54,7 +54,7 @@ public function store(Request $request)
             'respuesta_json' => 'required|array', // JSON completo serializado desde JS
         ]);
         
-        $chofer= null;
+        $chofer= 'n/a';
         $respuestaJson = $data['respuesta_json'];
         $checklistId = self::CHECKLIST_VEHICULOS_ID;
         $estatusGeneral = 'OK';
@@ -72,9 +72,9 @@ public function store(Request $request)
         foreach ($respuestaJson['sections'] as $section) {
            
             // Función auxiliar para procesar los items, ya sea directamente o dentro de subsecciones
-            $processItems = function ($items) use (&$estatusGeneral, &$warningFound, &$fail,&$vehiculo,&$section) {
+            $processItems = function ($items) use (&$estatusGeneral, &$warningFound, &$fail,&$vehiculo,&$chofer) {
                 foreach ($items as $item) {
-                    if($section['section_title']=='Datos del Conductor' && $item['label']=='Nombre'){
+                    if($item['label']=='Nombre'){
                         $chofer=$item['value'];
                     }
                     

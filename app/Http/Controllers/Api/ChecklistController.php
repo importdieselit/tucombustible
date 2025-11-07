@@ -135,8 +135,10 @@ class ChecklistController extends Controller
                 foreach ($respuestas as $seccion) {
                     if (isset($seccion['items'])) {
                         foreach ($seccion['items'] as $item) {
+
                             $label = $item['label'] ?? null;
                             $value = $item['value'] ?? null;
+                            
                             if($label =='Nombre'){
                                 $chofer=$value;
                             }
@@ -246,7 +248,7 @@ class ChecklistController extends Controller
                 $observacionAlerta = "Salida de vehículo {$vehiculo->placa}. Inspección completada.";
                 $notifTitle = "Salida de Unidad {$vehiculo->flota} en Inspeccion";
                 $notifBody = "Unidad {$vehiculo->flota} Saliendo a Ruta con {$chofer}.";
-                $telegramMessage = "📤 *SALIDA* - Unidad: **{$vehiculo->placa}** ({$vehiculo->flota}) saliendo a ruta. Nuevo Estatus: **En Ruta**  Chofer: {$chofer}. Revisar: {$alertaAction}";
+                $telegramMessage = "📤 *SALIDA* - Unidad: **{$vehiculo->placa}** ({$vehiculo->flota}) saliendo a ruta . Nuevo Estatus: **En Ruta**  Chofer: {$chofer}. Revisar: {$alertaAction}";
             }
 
 
