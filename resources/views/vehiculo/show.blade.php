@@ -68,7 +68,7 @@ $insumos_usados=false;
             $gastoCombustible = $consumoTotalLitros * $precioLitroCombustible;
             $kmTotales = $historialMensual->sum('km');
             $costoPorKm = $kmTotales > 0 ? $gastoCombustible / $kmTotales : 0;
-            @endphp
+    $foto= App\Models\VehiculoFoto::where('vehiculo_id',$item->id)->where('es_principal',true)->get()->first();
 @endphp
 
 @if($item->estatus==3 || $item->estatus ==5)
@@ -119,6 +119,12 @@ $insumos_usados=false;
                 <div class="card-header">Información General</div>
                 <div class="card-body">
                     <div class="row">
+                        @if(!is_null($foto))
+                            <div class="col-sm-6 mb-3">
+                                <img src="{{ asset('storage/vehiculos/' . $foro->ruta) }}" class="img-fluid h-200" alt="">
+                            
+                            </div>
+                        @endif
                         <div class="col-sm-6 mb-3"><span class="info-label">Flota:</span> <span class="info-value">{{ $item->flota }}</span></div>
                         <div class="col-sm-6 mb-3"><span class="info-label">Placa:</span> <span class="info-value">{{ $item->placa }}</span></div>
                         <div class="col-sm-6 mb-3"><span class="info-label">Marca:</span> <span class="info-value">{{ $item->marca_rel->nombre ?? 'N/A' }}</span></div>
