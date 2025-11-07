@@ -131,9 +131,7 @@ $insumos_usados=false;
                         <div class="col-sm-6 mb-3"><span class="info-label">Modelo:</span> <span class="info-value">{{ $item->modelo_rel->nombre ?? 'N/A' }}</span></div>
                         <div class="col-sm-6 mb-3"><span class="info-label">Año:</span> <span class="info-value">{{ $item->anno }}</span></div>
                         <div class="col-sm-6 mb-3"><span class="info-label">Color:</span> <span class="info-value">{{ $item->color }}</span></div>
-                        @if(!is_null($foto))
-                            </div>
-                        @endif
+                        
                         <div class="col-sm-6 mb-3"><span class="info-label">Estatus:</span> <span class="info-value">
                             @php
                                 $estatusInfo = $estatusData->get($item->estatus);
@@ -152,6 +150,9 @@ $insumos_usados=false;
 
                         </span></div>
                         <div class="col-sm-6 mb-3"><span class="info-label">Disponibilidad:</span> <span class="info-value">{{ $item->disp ? 'Sí' : 'No' }}</span></div>
+                        @if(!is_null($foto))
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
