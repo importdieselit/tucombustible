@@ -1035,7 +1035,7 @@ function openAjusteModal(id) {
     ajustarNivelModal.show();
 }
 
-function openResguardoModal() {
+function openAjusteResguardo() {
     const resguardoDiv = document.getElementById(`resguardo-info`);
     
     // Obtener los datos del HTML usando .dataset
