@@ -11,6 +11,8 @@ use App\Http\Controllers\BaseController;
 use App\Models\Aforo;
 use Illuminate\Support\Facades\Log;
 use App\Models\MovimientoCombustible;
+use App\Services\FcmNotificationService;
+use App\Models\Parametro;
 use App\Services\TelegramNotificationService;
 
 class DepositoController extends BaseController
@@ -98,6 +100,18 @@ class DepositoController extends BaseController
 
         Session::flash('success', 'Depósito actualizado exitosamente.');
         return redirect()->route('depositos.index');
+    }
+
+    public function ajusteResguardo(Request $request)
+    {
+        $resguardo=Parametro::where('nombre','resguardo')->first();
+        $resguardo->valor=$request->nuevo_resguardo;
+        $resguardo->save();
+
+        return response()->json([
+            'message' => 'Resguardo ajustado con éxito.',
+            'nuevo_nivel' => round($resguardo->valor, 2)
+        ]);
     }
 
      public function ajusteDinamic(Request $request)

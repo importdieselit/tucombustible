@@ -1044,7 +1044,7 @@ function openAjusteResguardo() {
     const ajustarResguardoModal = new bootstrap.Modal(document.getElementById('ajustarResguardoModal'));
     
     // Llenar los campos del modal
-    document.getElementById('actual-resguardo').text =nivelActual;
+    document.getElementById('actual-resguardo').textContent =nivelActual;
     document.getElementById('nuevo_resguardo').value = nivelActual;
     document.getElementById('observacion_resguardo').value = '';
     
