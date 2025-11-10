@@ -641,7 +641,7 @@
                 <div class="modal-body">
                     <form id="ajustarReguardoForm">
                         <input type="hidden" id="resguardo">
-                        <p class="text-sm"><strong>Cantidad Actual:</strong> <span id="modal-resguardo"></span> Litros</p>
+                        <p class="text-sm"><strong>Cantidad Actual:</strong> <span id="actual-resguardo"></span> Litros</p>
                         <div class="mb-3">
                             <label for="nuevo_resguardo" class="form-label">Nuevo Valor</label>
                             <input type="number" step="0.01" class="form-control " id="nuevo_resguardo" name="nuevo_resguardo" required>
@@ -1044,8 +1044,8 @@ function openAjusteResguardo() {
     const ajustarResguardoModal = new bootstrap.Modal(document.getElementById('ajustarResguardoModal'));
     
     // Llenar los campos del modal
-    document.getElementById('nuevo-resguardo').value =nivelActual;
-    //document.getElementById('nuevo_nivel').value = nivelActual;
+    document.getElementById('actual-resguardo').text =nivelActual;
+    document.getElementById('nuevo_resguardo').value = nivelActual;
     document.getElementById('observacion_resguardo').value = '';
     
     // Mostrar el modal
