@@ -556,6 +556,14 @@
                         </li>
                     @endforeach
                     <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div id="resguardo-info" data-nivel="{{ $resguardo }}" >
+                                <h6 class="m-0">Resguardo </h6>
+                                <p class="text-black m-0 "><small><span id="reguardo-span">{{ $resguardo }} Litros</span></small>  
+                                    <i class="rounded fa fa-pencil ajustar-btn" style="cursor: pointer" data-id="" onclick="openAjusteResguardo()"></i>
+                                </p>    
+                            </div>
+                        </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div>
                                 <h6 class="m-0">Total </h6>
                                 <p>{{$total}}/{{$capacidadTotal }}</p>
@@ -573,6 +581,9 @@
                             </div>
                     </li>
                 </ul>
+                <button id="sendTelegramButton" class="btn btn-info shadow-sm">
+                    <i class="fa fa-telegram me-2"></i> Enviar a Telegram
+                </button>
             </div>
         </div>
 
@@ -606,6 +617,36 @@
                 <div class="modal-footer border-top-0">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-primary" id="btn-submit-ajuste">Guardar Ajuste</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Ajuste de Nivel -->
+    <div class="modal fade" id="ajustarResguardoModal" tabindex="-1" aria-labelledby="ajustarResguardoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered text-dark">
+            <div class="modal-content bg-custom-dark rounded-3 shadow-lg">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title" id="ajustarResguardoModalLabel">Ajustar Cantidad de Resguardo</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="ajustarReguardoForm">
+                        <input type="hidden" id="resguardo">
+                        <p class="text-sm"><strong>Cantidad Actual:</strong> <span id="modal-resguardo"></span> Litros</p>
+                        <div class="mb-3">
+                            <label for="nuevo_resguardo" class="form-label">Nuevo Valor</label>
+                            <input type="number" step="0.01" class="form-control " id="nuevo_resguardo" name="nuevo_resguardo" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="observacion" class="form-label">Observación</label>
+                            <textarea class="form-control " id="observacion_resguardo" name="observacion_resguardo" rows="3" required placeholder="Describe el motivo del ajuste."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btn-submit-resguardo">Guardar Ajuste</button>
                 </div>
             </div>
         </div>
@@ -985,6 +1026,23 @@ function openAjusteModal(id) {
     ajustarNivelModal.show();
 }
 
+function openResguardoModal() {
+    const resguardoDiv = document.getElementById(`resguardo-info`);
+    
+    // Obtener los datos del HTML usando .dataset
+    const nivelActual = parseFloat(depositoDiv.dataset.nivel);
+    
+    const ajustarResguardoModal = new bootstrap.Modal(document.getElementById('ajustarResguardoModal'));
+    
+    // Llenar los campos del modal
+    document.getElementById('nuevo-resguardo').value =nivelActual;
+    //document.getElementById('nuevo_nivel').value = nivelActual;
+    document.getElementById('observacion_resguardo').value = '';
+    
+    // Mostrar el modal
+    ajustarNivelModal.show();
+}
+
 // Asegúrate de que este token CSRF esté en tu <head> de Blade
 // <meta name="csrf-token" content="{{ csrf_token() }}">
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -1039,6 +1097,53 @@ async function submitAjuste(e) {
             // Cerrar el modal y mostrar un mensaje de éxito
             const ajustarNivelModal = bootstrap.Modal.getInstance(document.getElementById('ajustarNivelModal'));
             ajustarNivelModal.hide();
+            Swal.fire('¡Ajuste Guardado!', data.message, 'success');
+        } else {
+            Swal.fire('Error', data.error || 'Ocurrió un error al guardar el ajuste.', 'error');
+        }
+    } catch (error) {
+        console.error('Error en la solicitud:', error);
+        Swal.fire('Error', 'Hubo un problema de conexión. Intente de nuevo.', 'error');
+    } finally {
+        btnSubmit.disabled = false;
+    }
+}
+
+
+async function submitResguardo(e) {
+    e.preventDefault(); // Evita el envío tradicional del formulario
+
+    const nuevoResguardo = document.getElementById('nuevo_resguardo').value;
+    const observacionresg = document.getElementById('observacion_resguardo').value;
+
+    const btnSubmit = document.getElementById('btn-submit-resguardo');
+    btnSubmit.disabled = true; // Deshabilita el botón mientras se envía
+
+    try {
+        const response = await fetch(`/depositos/ajusteresguardo`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+            },
+            body: JSON.stringify({
+                id: 'resguardo-span',
+                nuevo_resguardo: nuevoResguardo ,
+                observacion: observacionresg
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Actualizar la vista dinámicamente
+            const depositoInfo = document.getElementById(`${id}`);
+            
+            // Actualizar los datos del DOM
+            depositoInfo.dataset.nivel = data.nuevo_resguardo;
+            depositoInfo.textContent = nuevoResguardo.toFixed(2);
+            const ajustarResguardoModal = bootstrap.Modal.getInstance(document.getElementById('ajustarResguardoModal'));
+            ajustarResguardoModal.hide();
             Swal.fire('¡Ajuste Guardado!', data.message, 'success');
         } else {
             Swal.fire('Error', data.error || 'Ocurrió un error al guardar el ajuste.', 'error');
@@ -1570,5 +1675,64 @@ async function mostrarSelectorVehiculoParaInspeccion() {
     }
 }
 
+document.addEventListener('DOMContentLoaded', function() {
+async function sendReportToTelegram() {
+        sendTelegramButton.disabled = true;
+       try {
+            // Buscamos el primer elemento con la clase .printableArea
+            const element = printableArea;
+            if (!element) {
+                throw new Error(`Elemento con selector '${elementToCaptureSelector}' no encontrado. ¡Verifique la clase!`);
+            }
+
+            // 1. Capturar el elemento con html2canvas
+            const canvas = await html2canvas(element, {
+                allowTaint: true, 
+                useCORS: true,
+                // Mejor calidad para la imagen
+                scale: 2, 
+            });
+
+            // 2. Obtener la imagen como un Blob (archivo binario)
+            const imageBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            
+            // 3. Crear FormData para enviar el archivo al servidor (POST request)
+            const formData = new FormData();
+            formData.append('chart_image', imageBlob, 'reporte_programacion.png');
+            formData.append('caption', `*Reporte de Programación de Viajes*\nGenerado el: ${new Date().toLocaleString('es-VE')}`);
+            
+            // 4. Enviar al endpoint de Laravel (ruta que debe existir: telegram.send.photo)
+            const response = await fetch('{{ route('telegram.send.photo') }}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}' // Protección CSRF de Laravel
+                },
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `Error ${response.status}: Fallo en el servidor al enviar a Telegram.`);
+            }
+
+            // 5. Éxito
+          
+
+        } catch (error) {
+            console.error('Error al enviar a Telegram:', error);
+            // Mostrar mensaje amigable al usuario
+       //     showStatus(`Error al enviar a Telegram: ${error.message}`, 'error');
+
+        } finally {
+            // 6. Reestablecer el botón
+            sendTelegramButton.disabled = false;
+        }
+    }
+
+    // 7. Asignar evento al nuevo botón
+    if (sendTelegramButton) {
+        sendTelegramButton.addEventListener('click', sendReportToTelegram);
+    }
+});
     </script>
 @endpush
