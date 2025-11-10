@@ -209,7 +209,7 @@
                 </div>
             </div>
 
-
+            <div class="h-100 printableArea">
             <div class="d-flex align-items-center mt-5">
                 <i class="fas fa-money-bill-wave text-info me-3" style="font-size: 3rem;"></i>
                 <div>
@@ -227,7 +227,7 @@
                     <h3 class="fw-bold mb-0 me-2">{{ number_format($totalCombustible, 2) }} L</h3>
                     <p class="text-muted mb-0">/ {{ $capacidadTotal }} L</p>
                 </div>
-                <div class="progress" style="height: 10px;">
+                <div class="progress" style="height: 10px; display:none">
                     <div class="progress-bar {{ $isAlert ? 'progress-bar-danger' : 'progress-bar-custom' }}"
                          role="progressbar"
                          style="width: {{ $percentage }}%;"
@@ -242,7 +242,7 @@
                     <h3 class="fw-bold mb-0 me-2">{{ number_format($tanque00->nivel_actual_litros, 2) }} L</h3>
                     <p class="text-muted mb-0">/ {{ $tanque00->capacidad_litros }} L</p>
                 </div>
-                <div class="progress" style="height: 10px;">
+                <div class="progress" style="height: 10px; display:none" >
                     <div class="progress-bar {{ $isAlert ? 'progress-bar-danger' : 'progress-bar-custom' }}"
                          role="progressbar"
                          style="width: {{ $percentage }}%;"
@@ -251,7 +251,13 @@
                          aria-valuemax="100"></div>
                 </div>
             </div>
-
+            <div class="mt-4">
+                <p class="fw-bold mb-2">Resguardo</p>
+                <div class="d-flex align-items-center mb-2">
+                    <h3 class="fw-bold mb-0 me-2">{{ number_format($resguardo, 2) }} L</h3>
+                </div>
+            </div>
+            </div>
             
         </div>
 
@@ -1676,6 +1682,11 @@ async function mostrarSelectorVehiculoParaInspeccion() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+
+const printableArea = document.querySelector('.printableArea');
+const sendTelegramButton = document.querySelector('#sendTelegramReport');
+const elementToCaptureSelector = '.printableArea';
+
 async function sendReportToTelegram() {
         sendTelegramButton.disabled = true;
        try {
@@ -1698,8 +1709,9 @@ async function sendReportToTelegram() {
             
             // 3. Crear FormData para enviar el archivo al servidor (POST request)
             const formData = new FormData();
-            formData.append('chart_image', imageBlob, 'reporte_programacion.png');
-            formData.append('caption', `*Reporte de Programación de Viajes*\nGenerado el: ${new Date().toLocaleString('es-VE')}`);
+            formData.append('chart_image', imageBlob, 'reporte_disponibilidad.png');
+            formData.append('caption', `*Reporte de Inventario de Combustible*\nGenerado el: ${new Date().toLocaleString('es-VE')}`);
+
             
             // 4. Enviar al endpoint de Laravel (ruta que debe existir: telegram.send.photo)
             const response = await fetch('{{ route('telegram.send.photo') }}', {
