@@ -170,6 +170,50 @@ class MovimientoCombustibleController extends Controller
         ));
     }
 
+     public function generateInventoryCaption(): string
+    {
+        // 1. Obtener todos los depósitos/tanques
+        // Asumiendo que el modelo Deposito tiene campos para 'serial', 'nivel' (cm) y 'stock' (litros)
+        $tanques = Deposito::orderBy('serial', 'asc')->get(); 
+
+        $totalVenta = 0;
+        $resguardoLitros = Parametro::where('nombre','resguardo')->first()->valor; // Valor fijo según tu requerimiento, se recomienda moverlo a un Parametro
+        
+        $tanquesDetalles = [];
+        
+        foreach ($tanques as $tanque) {
+            // El 'nivel' puede ser la medida en cm (como en tu ejemplo)
+            $nivel_cm = number_format($tanque->nivel_cm, 1, ',', '.'); 
+            // El 'stock' es el volumen en litros
+            $stock_litros = number_format($tanque->disponible_actual_litros , 2, ',', '.');
+            
+            // Asumo que solo los tanques tipo 'DSL' y '00' son relevantes para el inventario de venta.
+            // Si quieres filtrar, puedes añadir: ->whereIn('tipo', ['DSL', '00']) en la consulta.
+
+            $tanquesDetalles[] = "Tanque {$tanque->serial}\n{$nivel_cm} cm = {$stock_litros} lts.";
+            
+            $totalVenta += $tanque->stock;
+        }
+
+        // Restamos el resguardo (si aplica)
+        $disponiblesParaVenta = $totalVenta - $resguardoLitros;
+        
+        // 2. Construir el mensaje formateado en Markdown para Telegram
+        $date = Carbon::now()->isoFormat('HH:mm a'); // Hora actual
+        $today = Carbon::now()->isoFormat('D [de] MMMM [del] YYYY');
+
+        $caption = "*Reporte de Inventario de Combustible - Impordiesel*\n";
+        $caption .= "Generado el: {$today} a las {$date}\n\n";
+        
+        $caption .= "Inventario área de almacenamiento:\n";
+        $caption .= implode("\n\n", $tanquesDetalles) . "\n\n";
+
+        // Líneas de resumen
+        $caption .= "*En resguardo:* " . number_format($resguardoLitros, 0, ',', '.') . " lts.\n";
+        $caption .= "*Disponibles para la venta:* " . number_format($disponiblesParaVenta, 2, ',', '.') . " lts.";
+
+        return $caption;
+    }
 
     public function storeAprobado(Request $request)
     {

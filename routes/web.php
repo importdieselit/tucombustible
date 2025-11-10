@@ -240,6 +240,7 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
 
         // Ruta para aprobar un pedido
         Route::post('/pedido/{id}/aprobar', [PedidoController::class, 'aprobar'])->name('pedido.aprobar');
+        Route::post('/resumen', [MovimientoCombustibleController::class, 'generateInventoryCaption'])->name('resumen');
 
         // Ruta para crear un despacho
         Route::post('/pedido/{id}/despachar', [PedidoController::class, 'despachar'])->name('pedido.despachar');

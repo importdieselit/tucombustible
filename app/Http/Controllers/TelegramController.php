@@ -23,6 +23,8 @@ class TelegramController extends Controller
      */
     protected $chatId = '-1002935486238'; 
     
+    protected $telegramService;
+    
     protected $botpressUrl = 'https://api.botpress.cloud/v1/bots/bf3ba980-bc5e-40fb-8029-88f9ec975e39/events'; 
     protected $botpressToken = '8278356133:AAFbPIiY77YEdFbRoO8JSpF83UKaSM2X-dM'; 
 

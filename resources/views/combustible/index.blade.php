@@ -348,6 +348,8 @@
             <button class="btn btn-warning btn-lg rounded-pill px-4 py-2 shadow-lg fs-5" id="btn-inspeccion-salida">
                 <i class="fa fa-clipboard-check me-2"></i> Checkout Vehículo
             </button>
+
+
         </div>
 
         <!-- Secciones de Contenido Dinámico -->
@@ -746,6 +748,7 @@
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     {{-- <script src="{{ asset('js/dashboard-operaciones.js') }}"></script> --}}
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
     <script>
         console.log('Dashboard Operaciones cargado');
         console.log('Pedidos:', @json($pedidos));
@@ -1690,6 +1693,14 @@ const elementToCaptureSelector = '.printableArea';
 async function sendReportToTelegram() {
         sendTelegramButton.disabled = true;
        try {
+
+            const caption = await fetch(`/combustible/resumen`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                }
+            });
             // Buscamos el primer elemento con la clase .printableArea
             const element = printableArea;
             if (!element) {
@@ -1710,7 +1721,7 @@ async function sendReportToTelegram() {
             // 3. Crear FormData para enviar el archivo al servidor (POST request)
             const formData = new FormData();
             formData.append('chart_image', imageBlob, 'reporte_disponibilidad.png');
-            formData.append('caption', `*Reporte de Inventario de Combustible*\nGenerado el: ${new Date().toLocaleString('es-VE')}`);
+            formData.append('caption', `*Reporte de Inventario de Combustible*\nGenerado el: ${new Date().toLocaleString('es-VE')}\n`+caption);
 
             
             // 4. Enviar al endpoint de Laravel (ruta que debe existir: telegram.send.photo)

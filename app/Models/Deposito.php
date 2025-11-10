@@ -18,6 +18,7 @@ class Deposito extends Model
     protected $fillable = [
         'capacidad_litros',
         'nivel_actual_litros',
+        'nivel_cm',
         'nivel_alerta_litros',
         'ubicacion', 
         'serial',

@@ -58,6 +58,7 @@ class DepositoController extends BaseController
         $validator = Validator::make($request->all(), [
             'nombre' => 'required|string|max:255',
             'capacidad_litros' => 'required|numeric|min:0',
+            //'nivel_actual_cm' => 'required|numeric|min:0',
             'nivel_actual_litros' => 'required|numeric|min:0|lte:capacidad_litros',
             'ubicacion' => 'nullable|string|max:255',
         ]);
@@ -79,6 +80,7 @@ class DepositoController extends BaseController
     {
         $deposito=Deposito::find($request->id);
         $variacion=$deposito->nivel_actual_litros - $request->nivel_actual_litros;
+        $deposito->nivel_cm = $request->nivel_cm;
         $deposito->nivel_actual_litros= $request->nivel_actual_litros;
         $deposito->save();
 
@@ -127,7 +129,7 @@ class DepositoController extends BaseController
             $variacion=$deposito->nivel_actual_litros - $litrosActual->litros;
             
             $deposito->nivel_actual_litros= $litrosActual->litros;
-    
+            $deposito->nivel_cm= $request->nuevo_nivel;
             $deposito->save();
 
         // 3. Crear el registro del movimiento
