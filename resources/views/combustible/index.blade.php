@@ -224,7 +224,7 @@
             <div class="mt-4">
                 <p class="fw-bold mb-2">Total Disponible / Capacidad total</p>
                 <div class="d-flex align-items-center mb-2">
-                    <h3 class="fw-bold mb-0 me-2">{{ number_format($totalCombustible, 2) }} L</h3>
+                    <h3 class="fw-bold mb-0 me-2" id="tanques-res">{{ number_format($totalCombustible, 2) }} L</h3>
                     <p class="text-muted mb-0">/ {{ $capacidadTotal }} L</p>
                 </div>
                 <div class="progress" style="height: 10px; display:none">
@@ -239,7 +239,7 @@
             <div class="mt-4">
                 <p class="fw-bold mb-2">Total Disponible 00 / Capacidad total 00</p>
                 <div class="d-flex align-items-center mb-2">
-                    <h3 class="fw-bold mb-0 me-2">{{ number_format($tanque00->nivel_actual_litros, 2) }} L</h3>
+                    <h3 class="fw-bold mb-0 me-2" id="tanque00-res">{{ number_format($tanque00->nivel_actual_litros, 2) }} L</h3>
                     <p class="text-muted mb-0">/ {{ $tanque00->capacidad_litros }} L</p>
                 </div>
                 <div class="progress" style="height: 10px; display:none" >
@@ -254,7 +254,7 @@
             <div class="mt-4">
                 <p class="fw-bold mb-2">Resguardo</p>
                 <div class="d-flex align-items-center mb-2">
-                    <h3 class="fw-bold mb-0 me-2">{{ number_format($resguardo, 2) }} L</h3>
+                    <h3 class="fw-bold mb-0 me-2" id="resguardo-res">{{ number_format($resguardo, 2) }} L</h3>
                 </div>
             </div>
             </div>
@@ -1086,6 +1086,8 @@ async function submitAjuste(e) {
             // Actualizar la vista dinámicamente
             const depositoInfo = document.getElementById(`deposito-info-${id_deposito}`);
             const progressParent = depositoInfo.closest('li').querySelector('.progress');
+            const totaldeps = document.getElementById('tanques-res');
+            const total00 = document.getElementById('tanque00-res');
             
             const nuevoPorcentaje = (data.nuevo_nivel / data.capacidad) * 100;
             const progressBar = progressParent.querySelector('.progress-bar');
@@ -1098,6 +1100,8 @@ async function submitAjuste(e) {
             
             progressBar.style.width = `${nuevoPorcentaje}%`;
             progressBar.textContent = `${data.nuevo_nivel}L - ${nuevoPorcentaje.toFixed(2)}%`;
+            totaldeps.textContent = `${data.total} Lts`;
+            total00.textContent = `${data.total00} Lts`;
             progressBar.ariaValueNow = nuevoPorcentaje;
             
             // Cambiar color de la barra según el nivel
@@ -1147,10 +1151,12 @@ async function submitResguardo(e) {
             // Actualizar la vista dinámicamente
             const resguardoInfo = document.getElementById(`resguardo-info`);
             const resguardoSpan = document.getElementById(`resguardo-span`);
+            const resguardoRes = document.getElementById(`resguardo-res`);
             
             // Actualizar los datos del DOM
             resguardoInfo.dataset.nivel = data.nuevo_resguardo;
             resguardoSpan.textContent = data.nuevo_resguardo.toFixed(2);
+            resguardoRes.textContent = data.nuevo_resguardo.toFixed(2);
             const ajustarResguardoModal = bootstrap.Modal.getInstance(document.getElementById('ajustarResguardoModal'));
             ajustarResguardoModal.hide();
             Swal.fire('¡Ajuste Guardado!', data.message, 'success');

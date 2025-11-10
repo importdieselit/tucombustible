@@ -117,6 +117,9 @@ class DepositoController extends BaseController
      public function ajusteDinamic(Request $request)
     {
         $deposito=Deposito::find($request->id);
+        $total=0;
+        $total00=0;
+
 
         $parteEntera = floor($request->nuevo_nivel);
 
@@ -165,6 +168,9 @@ class DepositoController extends BaseController
         try {
             // El servicio TelegramNotificationService debe tener un método como sendNotification
            // $this->telegramService->sendMessage($mensaje);
+           $total= Deposito::whereNotIn('serial',['00'])->sum('nivel_actual_litros');
+           $total00= Deposito::where('serial','00')->pluck('nivel_actual_litros');
+
         } catch (\Exception $e) {
             Log::error("Error enviando notificación a Telegram: " . $e->getMessage());
         }
@@ -174,13 +180,16 @@ class DepositoController extends BaseController
         return response()->json([
             'message' => 'Nivel ajustado con éxito.',
             'nuevo_nivel' => round($deposito->nivel_actual_litros, 2),
-            'capacidad' => $deposito->capacidad_litros
+            'capacidad' => $deposito->capacidad_litros,
+            'total' => $total,
+            'total00' => $total00
         ]);
     }
     return response()->json([
             'message' => 'Nivel no ajustado.',
             'nuevo_nivel' => round($deposito->nivel_actual_litros, 2),
-            'capacidad' => $deposito->capacidad_litros
+            'capacidad' => $deposito->capacidad_litros,
+            
         ]);
        
     }
