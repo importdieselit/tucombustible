@@ -110,7 +110,7 @@ class DepositoController extends BaseController
 
         return response()->json([
             'message' => 'Resguardo ajustado con éxito.',
-            'nuevo_nivel' => round($resguardo->valor, 2)
+            'nuevo_resguardo' => round($resguardo->valor, 2)    
         ]);
     }
 

@@ -1252,6 +1252,7 @@ function mostrarDetallesPedido(id) {
                 button.addEventListener('click', (e) => openAjusteModal(e.target.dataset.id));
             });
              document.getElementById('btn-submit-ajuste').addEventListener('click', submitAjuste);
+             document.getElementById('btn-submit-resgguardo').addEventListener('click', submitResguardo);
             document.getElementById('btn-crear-despacho').addEventListener('click', mostrarSelectorTipoDespacho);
 
             // Lógica para el gráfico de Highcharts con drilldown
