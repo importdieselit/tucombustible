@@ -1687,7 +1687,7 @@ async function mostrarSelectorVehiculoParaInspeccion() {
 document.addEventListener('DOMContentLoaded', function() {
 
 const printableArea = document.querySelector('.printableArea');
-const sendTelegramButton = document.querySelector('#sendTelegramReport');
+const sendTelegramButton = document.querySelector('#sendTelegramButton');
 const elementToCaptureSelector = '.printableArea';
 
 async function sendReportToTelegram() {
