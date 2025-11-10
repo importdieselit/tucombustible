@@ -54,7 +54,7 @@ public function store(Request $request)
             'respuesta_json' => 'required|array', // JSON completo serializado desde JS
         ]);
         
-        $chofer= 'n/a';
+        //$chofer= 'n/a';
         $respuestaJson = $data['respuesta_json'];
         $checklistId = self::CHECKLIST_VEHICULOS_ID;
         $estatusGeneral = 'OK';
@@ -67,7 +67,7 @@ public function store(Request $request)
             ->whereNull('respuesta_in')
             ->first();
 
-        
+        $chofer = $respuestaJson['sections'][2]['items'][0]['value'] ?? null;
         // 1. Determinar el Estatus General
         foreach ($respuestaJson['sections'] as $section) {
            

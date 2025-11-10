@@ -131,7 +131,7 @@ class ChecklistController extends Controller
 
             // Verificar respuestas críticas y kilometraje
             if (is_array($respuestas)) {
-                
+                $chofer = $respuestas['sections'][2]['items'][0]['value'] ?? null;
                 foreach ($respuestas as $seccion) {
                     if (isset($seccion['items'])) {
                         foreach ($seccion['items'] as $item) {
