@@ -1039,7 +1039,7 @@ function openAjusteResguardo() {
     const resguardoDiv = document.getElementById(`resguardo-info`);
     
     // Obtener los datos del HTML usando .dataset
-    const nivelActual = parseFloat(depositoDiv.dataset.nivel);
+    const nivelActual = parseFloat(resguardoDiv.dataset.nivel);
     
     const ajustarResguardoModal = new bootstrap.Modal(document.getElementById('ajustarResguardoModal'));
     
