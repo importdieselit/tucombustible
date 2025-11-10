@@ -1136,7 +1136,6 @@ async function submitResguardo(e) {
                 'X-CSRF-TOKEN': csrfToken,
             },
             body: JSON.stringify({
-                id: 'resguardo-span',
                 nuevo_resguardo: nuevoResguardo ,
                 observacion: observacionresg
             })
@@ -1146,11 +1145,12 @@ async function submitResguardo(e) {
 
         if (response.ok) {
             // Actualizar la vista dinámicamente
-            const depositoInfo = document.getElementById(`${id}`);
+            const resguardoInfo = document.getElementById(`reguardo-info`);
+            const reguardoSpan = document.getElementById(`reguardo-span`);
             
             // Actualizar los datos del DOM
-            depositoInfo.dataset.nivel = data.nuevo_resguardo;
-            depositoInfo.textContent = nuevoResguardo.toFixed(2);
+            resguardoInfo.dataset.nivel = data.nuevo_resguardo;
+            resguardoSpan.textContent = data.nuevo_resguardo.toFixed(2);
             const ajustarResguardoModal = bootstrap.Modal.getInstance(document.getElementById('ajustarResguardoModal'));
             ajustarResguardoModal.hide();
             Swal.fire('¡Ajuste Guardado!', data.message, 'success');
