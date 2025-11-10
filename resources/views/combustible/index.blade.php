@@ -1694,13 +1694,26 @@ async function sendReportToTelegram() {
         sendTelegramButton.disabled = true;
        try {
 
-            const caption = await fetch(`/combustible/resumen`, {
+            const responseC = await fetch(`/combustible/resumen`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken
                 }
+                // Si el backend no necesita un body, puedes omitir 'body: JSON.stringify({})'
             });
+
+            // 2. Verificar si la respuesta HTTP fue exitosa (código 200-299)
+            if (!responseC.ok) {
+                // Si hay un error HTTP, lanzar una excepción para el bloque catch
+                throw new Error(`Error en el servidor: ${responseC.status} ${responseC.statusText}`);
+            }
+
+            // 3. CAPTURAR EL TEXTO DEL CUERPO: Usar await response.text() para leer el string.
+            const caption = await responseC.text();
+            
+            // 4. Mostrar el texto capturado correctamente
+            console.log("Caption capturado correctamente:");
             console.log(caption);
             
             // Buscamos el primer elemento con la clase .printableArea
