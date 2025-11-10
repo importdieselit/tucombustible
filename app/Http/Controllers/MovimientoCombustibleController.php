@@ -210,7 +210,9 @@ class MovimientoCombustibleController extends Controller
         $caption .= implode("\n\n", $tanquesDetalles) . "\n\n";
 
         // Líneas de resumen
-        $caption .= "*En resguardo:* " . number_format($resguardoLitros, 0, ',', '.') . " lts.\n";
+        if($resguardoLitros > 0){
+            $caption .= "*En resguardo:* " . number_format($resguardoLitros, 0, ',', '.') . " lts.\n";
+        }
         $caption .= "*Disponibles para la venta:* " . number_format($disponiblesParaVenta, 2, ',', '.') . " lts.";
 
         return $caption;

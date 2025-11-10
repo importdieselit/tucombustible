@@ -1049,7 +1049,7 @@ function openAjusteResguardo() {
     document.getElementById('observacion_resguardo').value = '';
     
     // Mostrar el modal
-    ajustarNivelModal.show();
+    ajustarResguardoModal.show();
 }
 
 // Asegúrate de que este token CSRF esté en tu <head> de Blade
