@@ -566,7 +566,7 @@
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                             <div id="resguardo-info" data-nivel="{{ $resguardo }}" >
                                 <h6 class="m-0">Resguardo </h6>
-                                <p class="text-black m-0 "><small><span id="reguardo-span">{{ $resguardo }} Litros</span></small>  
+                                <p class="text-black m-0 "><small><span id="resguardo-span">{{ $resguardo }} Litros</span></small>  
                                     <i class="rounded fa fa-pencil ajustar-btn" style="cursor: pointer" data-id="" onclick="openAjusteResguardo()"></i>
                                 </p>    
                             </div>
