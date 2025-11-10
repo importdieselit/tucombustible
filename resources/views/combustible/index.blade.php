@@ -209,7 +209,7 @@
                 </div>
             </div>
 
-            <div class="h-100 printableArea">
+            <div class="printableArea" style="width: fit-content;">
             <div class="d-flex align-items-center mt-5">
                 <i class="fas fa-money-bill-wave text-info me-3" style="font-size: 3rem;"></i>
                 <div>
@@ -1701,6 +1701,8 @@ async function sendReportToTelegram() {
                     'X-CSRF-TOKEN': csrfToken
                 }
             });
+            console.log(caption);
+            
             // Buscamos el primer elemento con la clase .printableArea
             const element = printableArea;
             if (!element) {
