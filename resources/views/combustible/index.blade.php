@@ -1146,7 +1146,7 @@ async function submitResguardo(e) {
         if (response.ok) {
             // Actualizar la vista dinámicamente
             const resguardoInfo = document.getElementById(`resguardo-info`);
-            const reguardoSpan = document.getElementById(`resguardo-span`);
+            const resguardoSpan = document.getElementById(`resguardo-span`);
             
             // Actualizar los datos del DOM
             resguardoInfo.dataset.nivel = data.nuevo_resguardo;
