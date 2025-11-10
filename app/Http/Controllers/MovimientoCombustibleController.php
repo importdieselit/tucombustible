@@ -191,8 +191,9 @@ class MovimientoCombustibleController extends Controller
             // Si quieres filtrar, puedes añadir: ->whereIn('tipo', ['DSL', '00']) en la consulta.
 
             $tanquesDetalles[] = "Tanque {$tanque->serial}\n{$nivel_cm} cm = {$stock_litros} lts.";
-            
-            $totalVenta += $tanque->nivel_actual_litros;
+            if($tanque->serial !=='00'){
+                $totalVenta += $tanque->nivel_actual_litros;
+            }
         }
 
         // Restamos el resguardo (si aplica)
