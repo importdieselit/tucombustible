@@ -185,14 +185,14 @@ class MovimientoCombustibleController extends Controller
             // El 'nivel' puede ser la medida en cm (como en tu ejemplo)
             $nivel_cm = number_format($tanque->nivel_cm, 1, ',', '.'); 
             // El 'stock' es el volumen en litros
-            $stock_litros = number_format($tanque->disponible_actual_litros , 2, ',', '.');
+            $stock_litros = number_format($tanque->nivel_actual_litros , 2, ',', '.');
             
             // Asumo que solo los tanques tipo 'DSL' y '00' son relevantes para el inventario de venta.
             // Si quieres filtrar, puedes añadir: ->whereIn('tipo', ['DSL', '00']) en la consulta.
 
             $tanquesDetalles[] = "Tanque {$tanque->serial}\n{$nivel_cm} cm = {$stock_litros} lts.";
             
-            $totalVenta += $tanque->stock;
+            $totalVenta += $tanque->nivel_actual_litros;
         }
 
         // Restamos el resguardo (si aplica)
