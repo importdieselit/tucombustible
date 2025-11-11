@@ -118,9 +118,10 @@ class ChecklistController extends Controller
 
             // 2. AHORA: Procesar lógica de negocio con respuestas ya decodificadas
             $vehiculo = Vehiculo::find($request->vehiculo_id);
-            $old_inspeccion=Inspeccion::where('vehiculo_id',$request->vehiculo_id)->where('checklist_id',1)
-                         ->whereNull('respuesta_in') // <-- CORRECCIÓN AQUÍ
-                         ->first();
+            $old_inspeccion = Inspeccion::where('vehiculo_id', $request->vehiculo_id)
+                            ->where('checklist_id', $request->checklist_id)
+                            ->orderByDesc('created_at')
+                            ->first();
             $isCriticalFailure = false;
             
             // Nombres de los ítems críticos a verificar
@@ -172,13 +173,18 @@ class ChecklistController extends Controller
             }
 
             // 3. Crear la inspección
-            if(!$old_inspeccion){
+            $payloadJson = json_encode($respuestas);
+
+            $shouldUpdateExisting = $old_inspeccion 
+                && (empty($old_inspeccion->respuesta_in) || empty($old_inspeccion->respuesta_json));
+
+            if(!$shouldUpdateExisting){
                 $inspeccion = Inspeccion::create([
                     'vehiculo_id' => $request->vehiculo_id,
                     'checklist_id' => $request->checklist_id,
                     'usuario_id' => auth()->id(),
                     'estatus_general' => $request->estatus_general ?? 'OK',
-                    'respuesta_json' => json_encode($respuestas)
+                    'respuesta_json' => $payloadJson
                 ]);
 
                 if($request->checklist_id==2){
@@ -190,8 +196,9 @@ class ChecklistController extends Controller
                 }   
 
             }else{
-                $old_inspeccion->respuesta_in=json_encode($respuestas);
-                $old_inspeccion->estatus_general=$request->estatusGeneral??'OK';
+                $old_inspeccion->respuesta_in = $payloadJson;
+                $old_inspeccion->respuesta_json = $payloadJson;
+                $old_inspeccion->estatus_general = $request->estatus_general ?? 'OK';
                 $old_inspeccion->save();
                 $createdAt = $old_inspeccion->created_at; 
                 $updatedAt = now();
@@ -336,6 +343,65 @@ class ChecklistController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error al guardar la inspección: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Obtener la última inspección registrada para un vehículo y checklist específicos
+     */
+    public function getUltimaInspeccion(Request $request)
+    {
+        try {
+            $vehiculoId = $request->query('vehiculo_id');
+            $checklistId = $request->query('checklist_id');
+
+            if (!$vehiculoId || !$checklistId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'vehiculo_id y checklist_id son requeridos'
+                ], 422);
+            }
+
+            $inspeccion = Inspeccion::where('vehiculo_id', $vehiculoId)
+                ->where('checklist_id', $checklistId)
+                ->orderByDesc('created_at')
+                ->first();
+
+            if (!$inspeccion) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'No se encontraron inspecciones previas para este vehículo y checklist',
+                    'data' => null,
+                ]);
+            }
+
+            $respuestas = null;
+            if (!empty($inspeccion->respuesta_in)) {
+                $respuestas = json_decode($inspeccion->respuesta_in, true);
+            } elseif (!empty($inspeccion->respuesta_json)) {
+                $respuestas = json_decode($inspeccion->respuesta_json, true);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Inspección encontrada',
+                'data' => [
+                    'id' => $inspeccion->id,
+                    'vehiculo_id' => $inspeccion->vehiculo_id,
+                    'checklist_id' => $inspeccion->checklist_id,
+                    'estatus_general' => $inspeccion->estatus_general,
+                    'respuesta_json' => $inspeccion->respuesta_json,
+                    'respuesta_in' => $inspeccion->respuesta_in,
+                    'respuestas' => $respuestas,
+                    'created_at' => $inspeccion->created_at,
+                    'updated_at' => $inspeccion->updated_at,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener la inspección: ' . $e->getMessage()
             ], 500);
         }
     }
