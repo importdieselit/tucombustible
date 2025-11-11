@@ -126,6 +126,27 @@
 
         <div class="col-lg-7 col-md-12 mb-4">
             <div class="card shadow-sm">
+                <div class="card mb-3 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="m-0">Resumen de pagos del mes</h5>
+                            <div>
+                                <label for="filtro-mes" class="me-2 mb-0">Mes:</label>
+                                <input 
+                                    type="month" 
+                                    id="filtro-mes"
+                                    class="form-control d-inline-block"
+                                    style="width: 180px;"
+                                    value="{{ now()->format('Y-m') }}">
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info py-2 mb-0" id="resumen-mensual">
+                            Total del mes actual: 
+                            <strong id="total-mensual" class="text-success fs-5">$0.00</strong>
+                        </div>
+                    </div>
+                    
                 <div class="card-header bg-white">
                     <h5 class="card-title m-0">Historial de Viajes</h5>
                 </div>
@@ -151,11 +172,16 @@
                                         }
                                         $pago=$pago->get()->first();
                                     @endphp
-                                    <tr>
+                                    
+                                    <tr class="viaje-row" 
+                                        data-fecha="{{ \Carbon\Carbon::parse($viaje['fecha'] ?? $viaje['created_at'])->format('Y-m-d') }}" 
+                                        data-monto="{{ $pago->monto_ajustado ?? $pago->monto_base }}">
                                         <td>{{ $viaje['ruta'] }}</td>
                                         <td>{{ date('d/m/Y',strtotime($viaje['fecha'])) }}</td>
                                         <td>{{ $viaje['incidencias'] ?? 'No hay incidencias'}}</td>
-                                        <td>{{ $pago->monto_ajustado ?? $pago->monto_base }}</td>
+                                        <td>{{ $pago->monto_ajustado ?? $pago->monto_base }}</td>                                    </tr>
+                                    <tr>
+                                        
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -208,6 +234,30 @@
                     }
                 }
             }
+        });
+        const filtroMes = document.getElementById('filtro-mes');
+        const totalMensual = document.getElementById('total-mensual');
+
+        function calcularTotal(mesSeleccionado) {
+            const filas = document.querySelectorAll('.viaje-row');
+            let total = 0;
+
+            filas.forEach(fila => {
+                const fecha = fila.dataset.fecha || '';
+                const monto = parseFloat(fila.dataset.monto || 0);
+                if (fecha.startsWith(mesSeleccionado)) total += monto;
+            });
+
+            totalMensual.textContent = `$${total.toFixed(2)}`;
+        }
+
+        // Inicializa con el mes actual
+        const mesActual = filtroMes.value;
+        calcularTotal(mesActual);
+
+        // Recalcular cuando cambie el mes
+        filtroMes.addEventListener('change', e => {
+            calcularTotal(e.target.value);
         });
     });
 </script>
