@@ -10,14 +10,25 @@ use App\Models\Vehiculo;
 use App\Models\Alerta;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
-use App\Services\FcmNotificationService; // Asegúrate de tener este servicio implementado
 use App\Models\Orden;
 use App\Models\User;
+use App\Services\FcmNotificationService;
+use App\Services\TelegramNotificationService;  
 
 class InspeccionController extends Controller
 {
     // ID del checklist de vehículos (hardcodeado por tu requerimiento)
     const CHECKLIST_VEHICULOS_ID = 1;
+    protected $fcmService;
+    protected $telegramService;
+
+    public function __construct(
+        FcmNotificationService $fcmService, 
+        TelegramNotificationService $telegramService
+    ) {
+        $this->fcmService = $fcmService;
+        $this->telegramService = $telegramService;
+    }
 
     public function create($vehiculo_id)
     {
@@ -61,6 +72,14 @@ public function store(Request $request)
         $warningFound = false;
         $fail=0;
 
+        $isCriticalFailure = false;
+            
+            // Nombres de los ítems críticos a verificar
+            $criticalItems = [
+                'Vehiculo Operativo?',
+                'Apto para Carga de Combustible?'
+            ];
+
         $vehiculo = Vehiculo::find($data['vehiculo_id']);
         $old_inspeccion = Inspeccion::where('vehiculo_id', $data['vehiculo_id'])
             ->where('checklist_id',1)
@@ -72,7 +91,7 @@ public function store(Request $request)
         foreach ($respuestaJson['sections'] as $section) {
            
             // Función auxiliar para procesar los items, ya sea directamente o dentro de subsecciones
-            $processItems = function ($items) use (&$estatusGeneral, &$warningFound, &$fail,&$vehiculo,&$chofer) {
+            $processItems = function ($items) use (&$estatusGeneral, &$warningFound, &$fail,&$vehiculo,&$chofer,&$isCriticalFailure,&$criticalItems) {
                 foreach ($items as $item) {
                     if($item['label']=='Nombre'){
                         $chofer=$item['value'];
@@ -97,6 +116,15 @@ public function store(Request $request)
                         $fail++;
                         if ($fail >= 5) {
                             $estatusGeneral = 'ALERT';
+                        }
+                    }
+                    if (in_array($item['label'], $criticalItems)) {
+                        $normalizedValue = is_string($value) ? strtolower($value) : $value;
+                        if ($normalizedValue === 'no' || $normalizedValue === false || $normalizedValue === 0) {
+                            $isCriticalFailure = true;
+                            $estatusGeneral = 'ALERT';
+                            $warningFound = true;
+                            break;
                         }
                     }
                     // Si es compuesto, y el estado es falso -> WARNING
@@ -151,21 +179,61 @@ public function store(Request $request)
             $vehiculo->hrs_contador   += $horasDuracion;    
             $vehiculo->estatus = 2;
         }
+
+        if ($isCriticalFailure) {
+                // 🔴 CONDICIÓN CRÍTICA: Prioridad alta, pasa a No Operativo (3)
+            $vehiculo->estatus = 3; 
+        }
         $vehiculo->save();
         // 3. Sistema de Alertas y Notificaciones (Si no está OK)
-        if ($estatusGeneral !== 'OK') {
-            $placa = $vehiculo ? $vehiculo->placa : 'N/A';
-            
-            Alerta::create([
+
+
+
+        $alertaAction = "/inspecciones/{$inspeccion->id}";
+
+            // 2. Determinar el NUEVO estado del vehículo y el mensaje base
+            if ($isCriticalFailure) {
+                // 🔴 CONDICIÓN CRÍTICA: Prioridad alta, pasa a No Operativo (3)
+                $observacionAlerta = "Inspección para vehículo {$vehiculo->placa} con estado **No Operativo**. Requiere revisión.";
+                $notifTitle = "Unidad {$vehiculo->flota} Marcada No Operativa en Inspeccion";
+                $notifBody = "Unidad {$vehiculo->flota} requiere Revisión de Mantenimiento. Fue marcada como no operativa durante la inspección.";
+                $telegramMessage = "🚨 *ALERTA CRÍTICA* - Unidad: **{$vehiculo->placa}** ({$vehiculo->flota}) marcada como **NO OPERATIVA**. Motivo: Fallo Crítico en Inspección. Revisar: {$alertaAction}";
+
+            } elseif ($vehiculo->estatus == 1) {
+                // 🟢 UNIDAD INGRESANDO: Estaba en ruta (2) y pasa a Operativo/Disponible (1)
+               
+                $observacionAlerta = "Ingreso de Unidad {$vehiculo->flota} {$vehiculo->placa} a Patio. Inspección completada.";
+                $notifTitle = "Unidad {$vehiculo->flota} Ingresando a Patio";
+                $notifBody = "Unidad {$vehiculo->flota} ingresando a Patio con {$chofer}.";
+                $telegramMessage = "📥 *INGRESO* - Unidad: **{$vehiculo->placa}** ({$vehiculo->flota}) ingresa a patio. Nuevo Estatus: **Operativo**. Chofer: {$chofer}. Revisar: {$alertaAction}";
+                
+            } else {
+                // 🟡 UNIDAD SALIENDO: No está en ruta (probablemente 1 - Operativo) y pasa a En Ruta (2)
+                $observacionAlerta = "Salida de vehículo {$vehiculo->placa}. Inspección completada.";
+                $notifTitle = "Salida de Unidad {$vehiculo->flota} en Inspeccion";
+                $notifBody = "Unidad {$vehiculo->flota} Saliendo a Ruta con {$chofer}.";
+                $telegramMessage = "📤 *SALIDA* - Unidad: **{$vehiculo->placa}** ({$vehiculo->flota}) saliendo a ruta . Nuevo Estatus: **En Ruta**  Chofer: {$chofer}. Revisar: {$alertaAction}";
+            }
+
+            $alertaData = [
                 'id_usuario' => null, // null para todos los admins
                 'id_rel' => $inspeccion->id,
                 'fecha' => now(),
-                'observacion' => "Inspección de {$request->tipo} para vehículo {$placa} con estado **{$estatusGeneral}**. Requiere revisión.",
+                'observacion' => $observacionAlerta,
                 'estatus' => 0,
-                'accion' => "/inspecciones/{$inspeccion->id}" 
-            ]);
+                'accion' => $alertaAction
+            ];
 
-        }
+            Alerta::create($alertaData);
+            
+            FcmNotificationService::enviarNotification(
+                $notifTitle,
+                $notifBody,
+                $alertaData 
+            );
+
+            $this->telegramService->sendMessage($telegramMessage); 
+
 
         return response()->json([
             'success' => true, 
