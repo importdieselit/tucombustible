@@ -235,29 +235,48 @@
                 }
             }
         });
-        const filtroMes = document.getElementById('filtro-mes');
+        
+         const filtroMes = document.getElementById('filtro-mes');
         const totalMensual = document.getElementById('total-mensual');
 
-        function calcularTotal(mesSeleccionado) {
+        function filtrarYSumar(mesSeleccionado) {
             const filas = document.querySelectorAll('.viaje-row');
             let total = 0;
+            let visibles = 0;
 
             filas.forEach(fila => {
                 const fecha = fila.dataset.fecha || '';
                 const monto = parseFloat(fila.dataset.monto || 0);
-                if (fecha.startsWith(mesSeleccionado)) total += monto;
+
+                if (fecha.startsWith(mesSeleccionado)) {
+                    fila.style.display = ''; // mostrar
+                    total += monto;
+                    visibles++;
+                } else {
+                    fila.style.display = 'none'; // ocultar
+                }
             });
 
             totalMensual.textContent = `$${total.toFixed(2)}`;
+            
+            // Mensaje si no hay viajes en el mes
+            if (visibles === 0) {
+                totalMensual.textContent = 'Sin registros';
+                totalMensual.classList.remove('text-success');
+                totalMensual.classList.add('text-muted');
+            } else {
+                totalMensual.classList.remove('text-muted');
+                totalMensual.classList.add('text-success');
+            }
         }
 
         // Inicializa con el mes actual
         const mesActual = filtroMes.value;
-        calcularTotal(mesActual);
+        filtrarYSumar(mesActual);
 
-        // Recalcular cuando cambie el mes
+        // Recalcular al cambiar el mes
         filtroMes.addEventListener('change', e => {
-            calcularTotal(e.target.value);
+            filtrarYSumar(e.target.value);
         });
     });
 </script>
