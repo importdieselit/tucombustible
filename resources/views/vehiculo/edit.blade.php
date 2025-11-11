@@ -119,11 +119,16 @@
                                      <h5 class="mb-3 text-info"><i class="bi bi-camera-fill me-2"></i> Fotos del Vehículo</h5>
                                     {{-- Campo para subir múltiples fotos --}}
                                 <div class="mb-3">
-                                    <label for="fotos" class="form-label">Subir Nuevas Fotos (Múltiples Archivos)</label>
-                                    <input type="file" class="form-control" id="fotos" name="fotos[]" multiple capture="environment"  accept="image/*">
+                                    <label for="fotos" class="form-label">Capture la foto</label>
+                                    <input type="file" class="form-control" id="fotos-c" name="fotos[]" capture="environment"  accept="image/*">
+                                    @error('fotos-c') <div class="text-danger">{{ $message }}</div> @enderror
+                                </div>
+                                <div class="mb-3">
+                                    <label for="fotos" class="form-label">Subir desde archivo (Múltiples Archivos)</label>
+                                    <input type="file" class="form-control" id="fotos-f" name="fotos[]" multiple accept="image/*">
                                     <small class="form-text text-muted">Seleccione una o más imágenes nuevas. Las fotos existentes se gestionan abajo.</small>
-                                    @error('fotos') <div class="text-danger">{{ $message }}</div> @enderror
-                                    @error('fotos.*') <div class="text-danger">{{ $message }}</div> @enderror
+                                    @error('fotos-f') <div class="text-danger">{{ $message }}</div> @enderror
+                                    @error('fotos-f.*') <div class="text-danger">{{ $message }}</div> @enderror
                                 </div>
                                 
                                 {{-- Galería de fotos existentes en modo edición --}}
