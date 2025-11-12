@@ -903,15 +903,19 @@ public function createPrecarga()
                 
             ]);
            dd($viaje);
-
-            $chofer=Chofer::find($request->chofer_id);
-            $ayudante=Chofer::find($request->ayudante);
+            if(is_null($request->otro_chofer)){
+                $chofer=Chofer::find($request->chofer_id);
+                $ayudante=Chofer::find($request->ayudante);
+            }else{
+                $chofer=$request->otro_chofer;
+                $ayudante=$request->otro_ayudante;
+            }
            // dd($viaje);
 
              DespachoViaje::create([
                     'viaje_id' => $viaje->id,
                     'otro_cliente' => 'PDVSA '.$destino->destino,
-                    'litros' => $request->cantidad_litros
+                    'litros' => $request->litros
                 ]);
 
             // 4. ACTUALIZAR LA SOLICITUD
@@ -1054,24 +1058,30 @@ public function createPrecarga()
      */
     protected function enviarNotificaciones(Viaje $viaje, CompraCombustible $solicitud, Chofer $chofer, ?Chofer $ayudante): void
     {
-        $choferP = Persona::find($chofer->persona_id);
-        $choferU=User::find($chofer->user_id);
-        $ayudanteP = null;
-        $ayudanteU=null;
-        if ($ayudante) {
-            $ayudanteP = Persona::find($ayudante->persona_id);
-            $ayudanteU=User::find($ayudante->user_id);
+        if(isset($chofer->id)){
+            $choferP = Persona::find($chofer->persona_id);
+            $choferU=User::find($chofer->user_id);
+            $ayudanteP = null;
+            $ayudanteU=null;
+            if ($ayudante) {
+                $ayudanteP = Persona::find($ayudante->persona_id);
+                $ayudanteU=User::find($ayudante->user_id);
+            }
+        }else{
+
         }
         $vehiculo=Vehiculo::find($viaje->vehiculo_id);
+        $vehiculo=$vehiculo->flota ?? $viaje->otro_vehiculo;
+        $chofer=$choferP->nombre??$chofer;
+        $ayudante=$ayudanteP->nombre??$ayudante;
 
-        
         $mensaje = "✅ Planificación de Carga de Combustible CREADA:\n"
                  . "Carga: {$solicitud->cantidad_litros} Litros\n"
                  . "Ruta: PDVSA {$viaje->destino_ciudad}\n"
                  . "Fecha: {$viaje->fecha_salida}\n"
-                 . "Unidad Asignada: {$vehiculo->flota}\n"
-                 . "Chofer: {$choferP->nombre }\n"
-                 . ($ayudante ? "Ayudante: {$ayudanteP->nombre }" : "Ayudante: No Asignado")
+                 . "Unidad Asignada: {$vehiculo}\n"
+                 . "Chofer: { $chofer}\n"
+                 . ($ayudante ? "Ayudante: {$ayudante }" : "Ayudante: No Asignado")
                  . "\n\n{$solicitud->observaciones}";
 
         // 1. Notificación a Telegram (Ejemplo de Alerta General)
