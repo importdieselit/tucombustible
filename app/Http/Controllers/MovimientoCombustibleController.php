@@ -902,7 +902,6 @@ public function createPrecarga()
                 'usuario_id' => $userId
                 
             ]);
-           dd($viaje);
             if(is_null($request->otro_chofer)){
                 $chofer=Chofer::find($request->chofer_id);
                 $ayudante=Chofer::find($request->ayudante);
@@ -929,7 +928,7 @@ public function createPrecarga()
 
             // 5. NOTIFICACIÓN DE PLANIFICACIÓN EXITOSA
             $this->enviarNotificaciones($viaje, $solicitud, $chofer,$ayudante);
-
+            dd('finalizado OK');
             return redirect()->route('viajes.list')->with('success', 'Solicitud de combustible creada y viaje de carga planificado y asignado con éxito (ID Viaje: ' . $viaje->id . ').');
             //return redirect()->route('combustible.compras')->with('success', 'Solicitud de combustible creada y viaje de carga planificado y asignado con éxito (ID Viaje: ' . $viaje->id . ').');
 
