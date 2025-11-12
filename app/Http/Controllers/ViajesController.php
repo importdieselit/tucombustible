@@ -479,13 +479,15 @@ class ViajesController extends Controller
             return response()->json(['success' => true, 'message' => 'Actualización exitosa.', 'new_value' => number_format($value, 2)], 200);
 
         } catch (\Exception $e) {
-            \Log::error('Error actualizando tabulador: ' . $e->getMessage());
+            Log::error('Error actualizando tabulador: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => 'Error de servidor al guardar.'], 500);
         }
     }
 
      public function resumenProgramacion($id = null)
     {
+        $user=Auth::user()->with('persona')->get();
+        
         // 1. Inicializa la query builder
         $query = Viaje::with(['chofer.persona', 'ayudante_chofer.persona', 'vehiculo', 'despachos.cliente', 'viaticos']);
 
@@ -509,7 +511,7 @@ class ViajesController extends Controller
             return $viaje->viaticos->pluck('monto');
         })->sum();
         
-        return view('viajes.resumen_programacion', compact('viajes', 'totalViaticosPresupuestados'));
+        return view('viajes.resumen_programacion', compact('viajes', 'totalViaticosPresupuestados','user'));
     }
 
     public function edit($id)
