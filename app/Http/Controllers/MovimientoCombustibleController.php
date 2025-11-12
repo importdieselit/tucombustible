@@ -870,12 +870,14 @@ public function createPrecarga()
                 'flete' => $request->es_flete,
                 'vehiculo_id' => $request->vehiculo_id,
                 'cisterna' => $request->cisterna_id,
-                'observaciones' => $request->observaciones
+                'observaciones' => $request->observaciones,
+                'otro_vehiculo' => $request->otro_vehiculo ?? null,
+                'otro_chofer' => $request->otro_chofer ?? null,
+                'otro_ayudante' => $request->otro_ayudante ?? null,
                 //'usuario_solicitante_id' => Auth::id(),
             ]);
 
-            dd($solicitud);
-
+ 
             // 2. PLANIFICACIÓN Y ASIGNACIÓN DE RECURSOS
             $planta = Planta::find($request->planta_destino_id);
             $destino = TabuladorViatico::find($planta->id_tabulador_viatico);
@@ -900,6 +902,7 @@ public function createPrecarga()
                 'usuario_id' => $userId
                 
             ]);
+           dd($viaje);
 
             $chofer=Chofer::find($request->chofer_id);
             $ayudante=Chofer::find($request->ayudante);
