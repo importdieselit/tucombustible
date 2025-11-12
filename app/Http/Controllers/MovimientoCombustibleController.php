@@ -1058,22 +1058,18 @@ public function createPrecarga()
      */
     protected function enviarNotificaciones(Viaje $viaje, CompraCombustible $solicitud, Chofer $chofer, ?Chofer $ayudante): void
     {
-        if(isset($chofer->id)){
-            $choferP = Persona::find($chofer->persona_id);
-            $choferU=User::find($chofer->user_id);
+            $choferP = Persona::find($chofer->persona_id) ?? null;
+            $choferU=User::find($chofer->user_id) ??null;
             $ayudanteP = null;
             $ayudanteU=null;
             if ($ayudante) {
-                $ayudanteP = Persona::find($ayudante->persona_id);
-                $ayudanteU=User::find($ayudante->user_id);
+                $ayudanteP = Persona::find($ayudante->persona_id)??null;
+                $ayudanteU=User::find($ayudante->user_id)??null;
             }
-        }else{
-
-        }
-        $vehiculo=Vehiculo::find($viaje->vehiculo_id);
+        $vehiculo=Vehiculo::find($viaje->vehiculo_id)??null;
         $vehiculo=$vehiculo->flota ?? $viaje->otro_vehiculo;
-        $chofer=$choferP->nombre??$chofer;
-        $ayudante=$ayudanteP->nombre??$ayudante;
+        $chofer=$choferP->nombre??$viaje->otro_chofer;
+        $ayudante=$ayudanteP->nombre??$viaje->otro_ayudante;
 
         $mensaje = "✅ Planificación de Carga de Combustible CREADA:\n"
                  . "Carga: {$solicitud->cantidad_litros} Litros\n"
