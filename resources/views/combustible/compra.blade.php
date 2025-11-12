@@ -180,6 +180,7 @@
         // Inputs de flete
         const otroVehiculoInput = document.getElementById('otro_vehiculo');
         const otroChoferInput = document.getElementById('otro_chofer');
+        const cisternaSelect = document.getElementById('cisterna_id');
         
         // Función para alternar la visibilidad y el atributo 'required'
         function toggleFleteFields() {
@@ -193,7 +194,11 @@
                 // Desactivar 'required' para selects internos y limpiar
                 vehiculoSelect.removeAttribute('required');
                 choferSelect.removeAttribute('required');
+                cisternaSelect.removeAttribute('required');
+                
+                // Establecer 'required' para inputs de flete
                 vehiculoSelect.value = '';
+                cisternaSelect.value = '';
                 choferSelect.value = '';
                 ayudanteSelect.value = ''; // Opcional, solo se limpia
 
@@ -209,6 +214,7 @@
                 // Establecer 'required' para selects internos
                 vehiculoSelect.setAttribute('required', 'required');
                 choferSelect.setAttribute('required', 'required');
+                cisternaSelect.setAttribute('required', 'required');
                 
                 // Desactivar 'required' para inputs de flete y limpiar
                 otroVehiculoInput.removeAttribute('required');
@@ -227,6 +233,7 @@
         if (!esFleteSwitch.checked) {
             vehiculoSelect.setAttribute('required', 'required');
             choferSelect.setAttribute('required', 'required');
+            cisternaSelect.setAttribute('required', 'required');
         }
         
         // Ejecutar la función para asegurar el estado inicial correcto (manejo de old() data)
