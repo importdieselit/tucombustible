@@ -488,7 +488,7 @@ class ViajesController extends Controller
      public function resumenProgramacion($id = null)
     {
         $user=Auth::user()->with('persona')->get();
-        $persona= Persona::find($user->persona_id);
+        $persona= Persona::find($user->id_persona);
         
         // 1. Inicializa la query builder
         $query = Viaje::with(['chofer.persona', 'ayudante_chofer.persona', 'vehiculo', 'despachos.cliente', 'viaticos']);
