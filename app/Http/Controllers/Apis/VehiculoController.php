@@ -43,7 +43,6 @@ class VehiculoController extends Controller
                     'v.created_at',
                     'v.updated_at'
                 ])
-                ->where('v.estatus', 1) // Solo vehículos activos
                 ->get();
 
             return response()->json([

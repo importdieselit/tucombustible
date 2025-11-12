@@ -20,6 +20,7 @@ use App\Http\Controllers\Apis\UserController;
 use App\Http\Controllers\Apis\AdminController;
 use App\Http\Controllers\Apis\AdminDespachoController;
 use App\Http\Controllers\Apis\ReportesController;
+use App\Http\Controllers\Apis\AdminViajeController;
 use App\Http\Controllers\Api\ChecklistController;
 use App\Http\Controllers\IntegracionIAController;
 use App\Http\Controllers\Apis\ConductorController;
@@ -108,6 +109,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/clientes', [ClienteController::class, 'getClientesAdmin']);
     Route::get('/admin/vehiculos', [VehiculoController::class, 'getVehiculosAdmin']);
     Route::get('/admin/conductores', [AdminController::class, 'getConductores']);
+    Route::post('/admin/viajes/planificar', [AdminViajeController::class, 'planificar']);
     
     // Clientes
     Route::get('/clientes', [ClienteController::class, 'index']);
@@ -226,11 +228,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Checklist e Inspecciones para Mecánico
     Route::prefix('checklist')->group(function () {
         Route::get('/', [ChecklistController::class, 'index']); // Obtener todos los checklists activos
-        Route::get('/{id}', [ChecklistController::class, 'show']); // Obtener checklist específico
         Route::post('/inspeccion', [ChecklistController::class, 'store']); // Guardar inspección
         Route::get('/inspecciones/historial', [ChecklistController::class, 'historial']); // Historial de inspecciones
+        Route::get('/inspecciones/ultima', [ChecklistController::class, 'getUltimaInspeccion']); // Última inspección para vehículo y checklist
         Route::get('/inspecciones/{id}', [ChecklistController::class, 'showInspeccion']); // Ver inspección específica
         Route::get('/vehiculo/{id}', [ChecklistController::class, 'getVehiculoCompleto']); // Obtener datos completos del vehículo
+        Route::get('/{id}', [ChecklistController::class, 'show']); // Obtener checklist específico
     });
     
     

@@ -14,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 
 class PedidoController extends Controller
@@ -151,7 +152,9 @@ class PedidoController extends Controller
         try {
             $user = Auth::user();
             
-            if (!$user || !$user->cliente_id) {
+            $isAdmin = $user && in_array($user->id_perfil, [1, 2]);
+
+            if (!$user || (!$user->cliente_id && !$isAdmin)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Usuario no tiene cliente asociado'
@@ -161,7 +164,11 @@ class PedidoController extends Controller
             $validator = Validator::make($request->all(), [
                 'cantidad_solicitada' => 'required|numeric|min:0.01',
                 'observaciones' => 'nullable|string|max:500',
-                'cliente_id' => 'nullable|integer|exists:clientes,id',
+                'observaciones_admin' => 'nullable|string|max:500',
+                'fecha_requerida' => 'nullable|date',
+                'cliente_id' => $isAdmin
+                    ? 'required|integer|exists:clientes,id'
+                    : 'nullable|integer|exists:clientes,id',
             ]);
 
             if ($validator->fails()) {
@@ -176,7 +183,7 @@ class PedidoController extends Controller
             $clienteId = $request->cliente_id ?? $user->cliente_id;
             
             // Verificar que el usuario tiene permisos para crear pedidos para este cliente
-            if ($clienteId != $user->cliente_id) {
+            if (!$isAdmin && $clienteId != $user->cliente_id) {
                 // Si es diferente, verificar que el cliente seleccionado es una sucursal del usuario
                 $clientePrincipal = Cliente::where('id', $user->cliente_id)->first();
                 if (!$clientePrincipal || $clientePrincipal->parent != 0) {
@@ -218,11 +225,30 @@ class PedidoController extends Controller
             \Log::info('Debug Pedido - Disponible: ' . $disponible);
             \Log::info('Debug Pedido - Cantidad Solicitada: ' . $request->cantidad_solicitada);
 
-            if ($request->cantidad_solicitada > $disponible) {
+            if (!$isAdmin && $request->cantidad_solicitada > $disponible) {
                 return response()->json([
                     'success' => false,
                     'message' => "La cantidad solicitada excede tu disponible. Máximo permitido: {$disponible} litros"
                 ], 422);
+            }
+
+            $observacionesAdmin = $request->observaciones_admin;
+            if ($request->filled('fecha_requerida')) {
+                try {
+                    $fechaFormateada = Carbon::parse($request->fecha_requerida)->format('Y-m-d');
+                    $observacionesAdmin = trim(($observacionesAdmin ? $observacionesAdmin . ' | ' : '') . "Fecha requerida: {$fechaFormateada}");
+                } catch (\Exception $e) {
+                    \Log::warning('Formato de fecha_requerida inválido: ' . $e->getMessage());
+                }
+            }
+
+            $fechaSolicitud = now();
+            if ($request->filled('fecha_requerida') && $isAdmin) {
+                try {
+                    $fechaSolicitud = Carbon::parse($request->fecha_requerida)->startOfDay();
+                } catch (\Exception $e) {
+                    \Log::warning('No se pudo aplicar fecha_requerida como fecha_solicitud: ' . $e->getMessage());
+                }
             }
 
             // Crear el pedido (sin depósito específico)
@@ -231,8 +257,9 @@ class PedidoController extends Controller
                 'deposito_id' => null, // Ya no se asigna un depósito específico
                 'cantidad_solicitada' => $request->cantidad_solicitada,
                 'observaciones' => $request->observaciones,
+                'observaciones_admin' => $observacionesAdmin,
                 'estado' => 'pendiente',
-                'fecha_solicitud' => now(),
+                'fecha_solicitud' => $fechaSolicitud,
             ]);
 
             // Enviar notificación FCM al administrador sobre el nuevo pedido
@@ -245,7 +272,7 @@ class PedidoController extends Controller
             }
 
             // Si el pedido es para una sucursal diferente al usuario actual, notificar al usuario de la sucursal
-            if ($pedido->cliente_id != $user->cliente_id) {
+            if (!$isAdmin && $pedido->cliente_id != $user->cliente_id) {
                 try {
                     // Buscar el usuario asociado a la sucursal
                     $sucursalUser = User::where('cliente_id', $pedido->cliente_id)->first();
