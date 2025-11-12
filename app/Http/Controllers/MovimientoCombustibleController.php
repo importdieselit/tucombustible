@@ -874,6 +874,8 @@ public function createPrecarga()
                 //'usuario_solicitante_id' => Auth::id(),
             ]);
 
+            dd($solicitud);
+
             // 2. PLANIFICACIÓN Y ASIGNACIÓN DE RECURSOS
             $planta = Planta::find($request->planta_destino_id);
             $destino = TabuladorViatico::find($planta->id_tabulador_viatico);
