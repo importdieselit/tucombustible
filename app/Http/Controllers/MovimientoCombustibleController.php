@@ -853,8 +853,8 @@ public function createPrecarga()
             'cantidad_litros' => 'required|integer|min:100',
             'planta_destino_id' => 'required|exists:plantas,id',
             'fecha' => 'required|date|after_or_equal:today',
-            'vehiculo_id' => 'required|exists:vehiculos,id',
-            'chofer_id' => 'required|exists:choferes,id',
+            //'vehiculo_id' => 'required|exists:vehiculos,id',
+            //'chofer_id' => 'required|exists:choferes,id',
             //'ayudante' => 'nullable|exists:chofere,id'
         ]);
         DB::beginTransaction();
@@ -889,6 +889,10 @@ public function createPrecarga()
                 'ayudante' => $request->ayudante ?? null, // Ayudante es opcional
                 'destino_ciudad' => $destino->destino ?? 'N/A', 
                 'fecha_salida' => $fecha,
+                'litros' =>$request->cantidad_litros,
+                'otro_vehiculo' => $request->otro_vehiculo ?? null,
+                'otro_chofer' => $request->otro_chofer ?? null,
+                'otro_ayudante' => $request->otro_ayudante ?? null,
                 'status' => 'Programado',
                 'usuario_id' => $userId
                 
