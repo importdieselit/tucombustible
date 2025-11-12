@@ -118,9 +118,10 @@ class ChecklistController extends Controller
 
             // 2. AHORA: Procesar lógica de negocio con respuestas ya decodificadas
             $vehiculo = Vehiculo::find($request->vehiculo_id);
-            $old_inspeccion=Inspeccion::where('vehiculo_id',$request->vehiculo_id)->where('checklist_id',1)
-                         ->whereNull('respuesta_in') // <-- CORRECCIÓN AQUÍ
-                         ->first();
+            $old_inspeccion = Inspeccion::where('vehiculo_id', $request->vehiculo_id)->where('checklist_id',1)
+                            ->whereNull('respuesta_in')
+                            ->orderByDesc('created_at')
+                            ->first();
             $isCriticalFailure = false;
             
             // Nombres de los ítems críticos a verificar
@@ -172,13 +173,18 @@ class ChecklistController extends Controller
             }
 
             // 3. Crear la inspección
-            if(!$old_inspeccion){
+            $payloadJson = json_encode($respuestas);
+
+            $shouldUpdateExisting = $old_inspeccion 
+                && (empty($old_inspeccion->respuesta_in) || empty($old_inspeccion->respuesta_json));
+
+            if(!$shouldUpdateExisting){
                 $inspeccion = Inspeccion::create([
                     'vehiculo_id' => $request->vehiculo_id,
                     'checklist_id' => $request->checklist_id,
                     'usuario_id' => auth()->id(),
                     'estatus_general' => $request->estatus_general ?? 'OK',
-                    'respuesta_json' => json_encode($respuestas)
+                    'respuesta_json' => $payloadJson
                 ]);
 
                 if($request->checklist_id==2){
@@ -190,8 +196,9 @@ class ChecklistController extends Controller
                 }   
 
             }else{
-                $old_inspeccion->respuesta_in=json_encode($respuestas);
-                $old_inspeccion->estatus_general=$request->estatusGeneral??'OK';
+                $old_inspeccion->respuesta_in = $payloadJson;
+                $old_inspeccion->respuesta_json = $payloadJson;
+                $old_inspeccion->estatus_general = $request->estatus_general ?? 'OK';
                 $old_inspeccion->save();
                 $createdAt = $old_inspeccion->created_at; 
                 $updatedAt = now();
