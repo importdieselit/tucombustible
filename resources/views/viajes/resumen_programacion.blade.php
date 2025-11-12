@@ -100,7 +100,7 @@
         
         <!-- Pie de página simple para el reporte -->
         <div class="mt-3 border-top pt-2 text-end small text-muted">
-            Generado por el Sistema de Viajes.
+            Generado por {{$user->persona->nombre ?? 'el Sistema de Viajes'}}.
         </div>
     </div>
     </div>
