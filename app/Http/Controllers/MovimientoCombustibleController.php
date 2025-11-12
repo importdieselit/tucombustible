@@ -924,7 +924,7 @@ public function createPrecarga()
 
             // 5. NOTIFICACIÓN DE PLANIFICACIÓN EXITOSA
             $this->enviarNotificaciones($viaje, $solicitud, $chofer,$ayudante);
-            dd('finalizado OK');
+           // dd('finalizado OK');
             return redirect()->route('viajes.list')->with('success', 'Solicitud de combustible creada y viaje de carga planificado y asignado con éxito (ID Viaje: ' . $viaje->id . ').');
             //return redirect()->route('combustible.compras')->with('success', 'Solicitud de combustible creada y viaje de carga planificado y asignado con éxito (ID Viaje: ' . $viaje->id . ').');
 
@@ -1053,18 +1053,33 @@ public function createPrecarga()
      */
     protected function enviarNotificaciones(Viaje $viaje, CompraCombustible $solicitud, ?Chofer $chofer, ?Chofer $ayudante): void
     {
-            $choferP = Persona::find($chofer->persona_id) ?? null;
-            $choferU=User::find($chofer->user_id) ??null;
+            $chofer=null;
+            $choferU=null;
+            if(!is_null($chofer)){
+                $choferP = Persona::find($chofer->persona_id) ?? null;
+                $choferU=User::find($chofer->user_id) ??null;
+                $chofer=$choferP->nombre;
+
+            }else{
+                $chofer=$viaje->otro_chofer;
+
+            }
             $ayudanteP = null;
             $ayudanteU=null;
             if ($ayudante) {
                 $ayudanteP = Persona::find($ayudante->persona_id)??null;
                 $ayudanteU=User::find($ayudante->user_id)??null;
+                $ayudante=$ayudanteP->nombre;
+            }else{
+                $ayudante=$viaje->otro_ayudante;
             }
+
         $vehiculo=Vehiculo::find($viaje->vehiculo_id)??null;
-        $vehiculo=$vehiculo->flota ?? $viaje->otro_vehiculo;
-        $chofer=$choferP->nombre??$viaje->otro_chofer;
-        $ayudante=$ayudanteP->nombre??$viaje->otro_ayudante;
+        if($vehiculo){
+            $vehiculo=$vehiculo->flota;
+        }else{
+            $vehiculo=$viaje->otro_vehiculo;
+        }
 
         $mensaje = "✅ Planificación de Carga de Combustible CREADA:\n"
                  . "Carga: {$solicitud->cantidad_litros} Litros\n"
