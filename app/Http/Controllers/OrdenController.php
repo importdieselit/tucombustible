@@ -279,10 +279,10 @@ class OrdenController extends BaseController
 
 
             // 2. Manejar la subida de MÚLTIPLES FOTOS
-            if ($request->hasFile('fotos_orden')) {
-                Log::debug("Controlador Orden: Se detectaron " . count($request->file('fotos_orden')) . " archivos para subir.");
+            if ($request->hasFile('fotos_orden[]')) {
+                Log::debug("Controlador Orden: Se detectaron " . count($request->file('fotos_orden[]')) . " archivos para subir.");
                 
-                foreach ($request->file('fotos_orden') as $file) {
+                foreach ($request->file('fotos_orden[]') as $file) {
                     
                     // Almacenar el archivo y obtener la ruta. 
                     // Se usa el disco 'public' y se guarda en la carpeta 'ordenes_fotos'.

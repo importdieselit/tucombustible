@@ -87,17 +87,18 @@
             <hr class="my-4">
 
 <div class="col-md-6 mb-3">
-                    <label for="foto_vehiculo" class="form-label">
+                    <label for="fotos_orden" class="form-label">
                         Registro Fotografico (Usar Cámara en Móvil)
                         <i class="bi bi-camera-fill text-primary ms-1"></i> 
                     </label>
                     <input 
                         type="file" 
-                        name="fotos_orden" 
+                        name="fotos_orden[]" 
                         id="fotos_orden" 
                         class="form-control" 
                         accept="image/*" 
                         capture="environment" 
+                        multiple
                         required
                     >
                     <small class="form-text text-muted">En dispositivos móviles, esto abrirá la cámara trasera.</small>
