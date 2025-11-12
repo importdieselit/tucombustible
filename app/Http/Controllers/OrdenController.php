@@ -229,7 +229,7 @@ class OrdenController extends BaseController
         // Obtener el ID del usuario autenticado
             $userId = Auth::id();
         // Almacena en la DB
-        $orden=$this->model->create($request->all());
+        $orden=Orden::create($request->all());
         $vehiculo= Vehiculo::find($request->id_vehiculo);
 
          // 4. Procesar y guardar los suministros solicitados
