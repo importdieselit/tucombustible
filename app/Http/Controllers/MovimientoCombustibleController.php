@@ -916,7 +916,7 @@ public function createPrecarga()
             // 5. NOTIFICACIÓN DE PLANIFICACIÓN EXITOSA
             $this->enviarNotificaciones($viaje, $solicitud, $chofer,$ayudante);
 
-            return redirect()->route('viajes.lists')->with('success', 'Solicitud de combustible creada y viaje de carga planificado y asignado con éxito (ID Viaje: ' . $viaje->id . ').');
+            return redirect()->route('viajes.list')->with('success', 'Solicitud de combustible creada y viaje de carga planificado y asignado con éxito (ID Viaje: ' . $viaje->id . ').');
             //return redirect()->route('combustible.compras')->with('success', 'Solicitud de combustible creada y viaje de carga planificado y asignado con éxito (ID Viaje: ' . $viaje->id . ').');
 
         } catch (\Exception $e) {
