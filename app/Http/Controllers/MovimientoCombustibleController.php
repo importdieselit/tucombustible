@@ -902,13 +902,9 @@ public function createPrecarga()
                 'usuario_id' => $userId
                 
             ]);
-            if(is_null($request->otro_chofer)){
                 $chofer=Chofer::find($request->chofer_id);
                 $ayudante=Chofer::find($request->ayudante);
-            }else{
-                $chofer=$request->otro_chofer;
-                $ayudante=$request->otro_ayudante;
-            }
+            
            // dd($viaje);
 
              DespachoViaje::create([
