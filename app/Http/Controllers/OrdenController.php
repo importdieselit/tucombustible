@@ -273,7 +273,6 @@ class OrdenController extends BaseController
         // 3. Procesar Suministros de COMPRA (Generar Solicitud/OC)
         if (!empty($solicitudCompra)) {
             // Crear la cabecera de la Solicitud de Compra (OC)
-            $mensajeTelegramC="Requerimiento de compra para orden {$orden->nro_orden} a {$vehiculo->flota}\n";
             
             $compra = SuministroCompra::create([
                 'orden_id' => $orden->id,
@@ -288,6 +287,7 @@ class OrdenController extends BaseController
             foreach ($solicitudCompra as $solicitudItem) {
                 // El campo 'id' será el ID del Inventario o el temporal 'MANUAL_X'
                 $inventarioId = is_numeric($solicitudItem['id']) ? $solicitudItem['id'] : null;
+                $mensajeTelegramC.="- {$solicitudItem['cantidad']} {$solicitudItem['descripcion']}\n";
 
                 $compra->detalles()->create([
                     'inventario_id' => $inventarioId,
@@ -361,6 +361,9 @@ class OrdenController extends BaseController
                     );
         $telegramMessage="Creada orden de Trabajo {$orden->nro_orden} a {$vehiculo->flota} por {$orden->descripcion_1}. Responsable {$orden->responsable}";
         $this->telegramService->sendMessage($telegramMessage); 
+        if(isset($mensajeTelegramC)){
+            $this->telegramService->sendMessage($mensajeTelegramC);
+        }
         
         // Mensaje de éxito
         Session::flash('success', 'Orden de trabajo creada exitosamente.');
