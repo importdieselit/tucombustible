@@ -850,7 +850,7 @@ public function createPrecarga()
         $userId = Auth::id();
         $request->validate([
             //'proveedor_id' => 'required|exists:proveedores,id',
-            'cantidad_litros' => 'required|integer|min:100',
+            'litros' => 'required|integer|min:100',
             'planta_destino_id' => 'required|exists:plantas,id',
             'fecha' => 'required|date|after_or_equal:today',
             //'vehiculo_id' => 'required|exists:vehiculos,id',
@@ -861,12 +861,13 @@ public function createPrecarga()
         try {
             // 1. CREAR LA SOLICITUD DE COMBUSTIBLE
             $solicitud = CompraCombustible::create([
-                'proveedor_id' => $request->proveedor_id,
-                'cantidad_litros' => $request->cantidad_litros,
+                'proveedor_id' => 1,
+                'cantidad_litros' => $request->litros,
                 'planta_destino_id' => $request->planta_destino_id,
                 'fecha' => $request->fecha,
                 'estatus' => 'PENDIENTE_ASIGNACION',
                 'tipo' => $request->tipo,
+                'flete' => $request->es_flete,
                 'vehiculo_id' => $request->vehiculo_id,
                 'cisterna' => $request->cisterna_id,
                 'observaciones' => $request->observaciones
@@ -889,7 +890,7 @@ public function createPrecarga()
                 'ayudante' => $request->ayudante ?? null, // Ayudante es opcional
                 'destino_ciudad' => $destino->destino ?? 'N/A', 
                 'fecha_salida' => $fecha,
-                'litros' =>$request->cantidad_litros,
+                'litros' =>$request->litros,
                 'otro_vehiculo' => $request->otro_vehiculo ?? null,
                 'otro_chofer' => $request->otro_chofer ?? null,
                 'otro_ayudante' => $request->otro_ayudante ?? null,

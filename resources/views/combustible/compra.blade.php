@@ -35,8 +35,8 @@
 
                     <!-- Fecha Requerida (Día) -->
                     <div class="col-md-6">
-                        <label for="fecha_requerida" class="form-label">Fecha Requerida de Carga</label>
-                        <input type="date" class="form-control" id="fecha_requerida" name="fecha_requerida" min="{{ date('Y-m-d') }}" required>
+                        <label for="fecha" class="form-label">Fecha Requerida de Carga</label>
+                        <input type="date" class="form-control" id="fecha" name="fecha" min="{{ date('Y-m-d') }}" required>
                         <div class="form-text">Día en el que se debe realizar la carga.</div>
                     </div>                 
                     
