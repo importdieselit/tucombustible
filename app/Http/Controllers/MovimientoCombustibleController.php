@@ -1051,7 +1051,7 @@ public function createPrecarga()
      * @param Chofer $chofer
      * @param Ayudante|null $ayudante
      */
-    protected function enviarNotificaciones(Viaje $viaje, CompraCombustible $solicitud, Chofer $chofer, ?Chofer $ayudante): void
+    protected function enviarNotificaciones(Viaje $viaje, CompraCombustible $solicitud, ?Chofer $chofer, ?Chofer $ayudante): void
     {
             $choferP = Persona::find($chofer->persona_id) ?? null;
             $choferU=User::find($chofer->user_id) ??null;
