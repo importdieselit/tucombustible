@@ -24,11 +24,14 @@ use Illuminate\Support\Facades\Log;
 class ChecklistController extends Controller
 {
 
+    protected $fcmService;
     protected $telegramService;
 
-    public function __construct(TelegramNotificationService $telegramService)
-    {
-        // Laravel automáticamente provee la instancia del servicio
+    public function __construct(
+        FcmNotificationService $fcmService, 
+        TelegramNotificationService $telegramService
+    ) {
+        $this->fcmService = $fcmService;
         $this->telegramService = $telegramService;
     }
 
@@ -429,6 +432,7 @@ class ChecklistController extends Controller
 
     /**
      * Obtener datos completos del vehículo con relaciones para checklist
+     * @param int $id
      */
     public function getVehiculoCompleto($id)
     {

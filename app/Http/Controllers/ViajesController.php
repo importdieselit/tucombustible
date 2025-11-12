@@ -13,6 +13,7 @@ use App\Models\Vehiculo;
 use App\Models\Parametro;
 use App\Models\Chofer;
 use App\Models\Cliente;
+use App\Models\Persona;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use App\Models\DespachoViaje;
@@ -487,6 +488,7 @@ class ViajesController extends Controller
      public function resumenProgramacion($id = null)
     {
         $user=Auth::user()->with('persona')->get();
+        $persona= Persona::find($user->persona_id);
         
         // 1. Inicializa la query builder
         $query = Viaje::with(['chofer.persona', 'ayudante_chofer.persona', 'vehiculo', 'despachos.cliente', 'viaticos']);
@@ -511,7 +513,7 @@ class ViajesController extends Controller
             return $viaje->viaticos->pluck('monto');
         })->sum();
         
-        return view('viajes.resumen_programacion', compact('viajes', 'totalViaticosPresupuestados','user'));
+        return view('viajes.resumen_programacion', compact('viajes', 'totalViaticosPresupuestados','user','persona'));
     }
 
     public function edit($id)

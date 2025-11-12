@@ -433,6 +433,7 @@
                 id: manualId,
                 codigo: 'N/A', // No tiene código de inventario
                 descripcion: descripcion,
+                tipo: 'COMPRA',
                 existencia: 0, // 0 existencia fuerza la compra (si aplica tu lógica de negocio)
                 cantidad: cantidad
             };

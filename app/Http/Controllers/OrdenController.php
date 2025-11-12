@@ -22,11 +22,25 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use App\Models\SuministroCompra;
 use App\Models\SuministroCompraDetalle;
+use App\Services\TelegramNotificationService;
 
 class OrdenController extends BaseController
 {
 
+
      use GenerateAlerts;
+
+    protected $fcmService;
+    protected $telegramService;
+
+    public function __construct(
+        FcmNotificationService $fcmService, 
+        TelegramNotificationService $telegramService
+    ) {
+        $this->fcmService = $fcmService;
+        $this->telegramService = $telegramService;
+    }
+
     /**
      * Muestra el dashboard de órdenes de trabajo.
      * @return \Illuminate\View\View
@@ -216,8 +230,10 @@ class OrdenController extends BaseController
             $userId = Auth::id();
         // Almacena en la DB
         $orden=$this->model->create($request->all());
+        $vehiculo= Vehiculo::find($request->id_vehiculo);
+
          // 4. Procesar y guardar los suministros solicitados
-            $suministros = json_decode($request->suministros_data, true) ?? [];
+            $suministros = json_decode($request->supplies_json, true) ?? [];
         
         // Contenedores para agrupar ítems
         $usoInventario = [];
@@ -225,10 +241,10 @@ class OrdenController extends BaseController
         
         foreach ($suministros as $item) {
             // El tipo se definió en el frontend: 'USO' o 'COMPRA'
-            if ($item['tipo'] === 'USO') {
-                $usoInventario[] = $item;
-            } else {
+            if ( str_contains($item['id'],'MANUAL')) {
                 $solicitudCompra[] = $item;
+            } else {
+                $usoInventario[] = $item;
             }
         }
         
@@ -257,11 +273,16 @@ class OrdenController extends BaseController
         // 3. Procesar Suministros de COMPRA (Generar Solicitud/OC)
         if (!empty($solicitudCompra)) {
             // Crear la cabecera de la Solicitud de Compra (OC)
+            $mensajeTelegramC="Requerimiento de compra para orden {$orden->nro_orden} a {$vehiculo->flota}\n";
+            
             $compra = SuministroCompra::create([
                 'orden_id' => $orden->id,
                 'usuario_solicitante_id' => Auth::id(),
                 'estatus' => 1, // 1: Solicitada (Pendiente de Aprobación Admin)
             ]);
+            $compraId=str_pad($compra->id, 7, '0', STR_PAD_LEFT);
+            
+             $mensajeTelegramC="Requerimiento de compra #{$compraId} para orden {$orden->nro_orden} a {$vehiculo->flota}\n";
 
             // Crear los detalles de los ítems solicitados
             foreach ($solicitudCompra as $solicitudItem) {
@@ -338,6 +359,8 @@ class OrdenController extends BaseController
                         "Creada orden de Trabajo {$orden->nro_orden} a {$vehiculo->flota} por {$orden->descripcion_1}. Responsable {$orden->responsable}",
                         $data
                     );
+        $telegramMessage="Creada orden de Trabajo {$orden->nro_orden} a {$vehiculo->flota} por {$orden->descripcion_1}. Responsable {$orden->responsable}";
+        $this->telegramService->sendMessage($telegramMessage); 
         
         // Mensaje de éxito
         Session::flash('success', 'Orden de trabajo creada exitosamente.');
