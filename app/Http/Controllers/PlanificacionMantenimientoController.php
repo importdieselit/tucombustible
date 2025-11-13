@@ -11,9 +11,22 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use App\Models\PlanMantenimiento;
+use App\Services\FcmNotificationService;
+use App\Services\TelegramNotificationService;
 
 class PlanificacionMantenimientoController extends Controller
 {
+
+     protected $fcmService;
+    protected $telegramService;
+
+    public function __construct(
+        FcmNotificationService $fcmService, 
+        TelegramNotificationService $telegramService
+    ) {
+        $this->fcmService = $fcmService;
+        $this->telegramService = $telegramService;
+    }
     /**
      * Muestra la vista del calendario de planificación de mantenimiento.
      */
@@ -128,9 +141,11 @@ class PlanificacionMantenimientoController extends Controller
                 'orden_id' => $orden->id,
                 'estatus' => 2, // OT Generada
             ]);
+            $fecha= date('d/m/Y',strtotime($request->fecha_programada));
 
             DB::commit();
-
+            $telegramMessage="Orden de Trabajo {$orden->nro_orden} planificada para el {$fecha} a Unidad {$vehiculo->flota} por {$plan->descripcion}.";
+            $this->telegramService->sendMessage($telegramMessage); 
             return response()->json([
                 'success' => true,
                 'message' => 'Mantenimiento planificado y Orden de Trabajo generada exitosamente.',
