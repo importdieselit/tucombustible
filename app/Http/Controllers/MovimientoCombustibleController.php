@@ -944,7 +944,7 @@ public function createPrecarga()
         $request->validate([
             //'proveedor_id' => 'required|exists:proveedores,id',
             'cantidad_litros' => 'required|integer|min:100',
-            'planta_destino_id' => 'required|exists:plantas,id',
+            //'planta_destino_id' => 'required|exists:plantas,id',
             'fecha_salida' => 'required|date|after_or_equal:today',
             'vehiculo_id' => 'required|exists:vehiculos,id',
             'chofer_id' => 'required|exists:choferes,id',
