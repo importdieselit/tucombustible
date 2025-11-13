@@ -106,7 +106,7 @@ abstract class BaseController extends Controller
        $user = auth()->user();
        $cliente = Cliente::find($user->cliente_id);
         if(is_null($query)){
-            $query = $this->model;
+            $query = $this->model->query();
             
         }
         
