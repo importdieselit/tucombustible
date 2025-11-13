@@ -35,10 +35,11 @@ class OrdenController extends BaseController
 
     public function __construct(
         FcmNotificationService $fcmService, 
-        TelegramNotificationService $telegramService
+        TelegramNotificationService $telegramService, Orden $orden
     ) {
         $this->fcmService = $fcmService;
         $this->telegramService = $telegramService;
+        $this->model = $orden;
     }
 
     /**
@@ -297,10 +298,11 @@ class OrdenController extends BaseController
                 ]);
             }
         }
-
+        $hasFoto=false;
 
             // 2. Manejar la subida de MÚLTIPLES FOTOS
             if ($request->hasFile('fotos_orden[]')) {
+                $hasFoto=true;
                 Log::debug("Controlador Orden: Se detectaron " . count($request->file('fotos_orden[]')) . " archivos para subir.");
                 
                 foreach ($request->file('fotos_orden[]') as $file) {

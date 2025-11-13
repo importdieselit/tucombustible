@@ -925,7 +925,7 @@ public function createPrecarga()
             // 5. NOTIFICACIÓN DE PLANIFICACIÓN EXITOSA
             $this->enviarNotificaciones($viaje, $solicitud, $chofer,$ayudante);
            // dd('finalizado OK');
-            return redirect()->route('viajes.list')->with('success', 'Solicitud de combustible creada y viaje de carga planificado y asignado con éxito (ID Viaje: ' . $viaje->id . ').');
+            return redirect()->route('viajes.resumenProgramacion',$viaje->id)->with('success', 'Solicitud de combustible creada y viaje de carga planificado y asignado con éxito (ID Viaje: ' . $viaje->id . ').');
             //return redirect()->route('combustible.compras')->with('success', 'Solicitud de combustible creada y viaje de carga planificado y asignado con éxito (ID Viaje: ' . $viaje->id . ').');
 
         } catch (\Exception $e) {
@@ -1080,13 +1080,14 @@ public function createPrecarga()
         }else{
             $vehiculo=$viaje->otro_vehiculo;
         }
+        $fecha=date('d/m/Y',strtotime($viaje->fecha_salida));
 
         $mensaje = "✅ Planificación de Carga de Combustible CREADA:\n"
                  . "Carga: {$solicitud->cantidad_litros} Litros\n"
                  . "Ruta: PDVSA {$viaje->destino_ciudad}\n"
-                 . "Fecha: {$viaje->fecha_salida}\n"
+                 . "Fecha: {$fecha}\n"
                  . "Unidad Asignada: {$vehiculo}\n"
-                 . "Chofer: { $chofer}\n"
+                 . "Chofer: {$chofer}\n"
                  . ($ayudante ? "Ayudante: {$ayudante }" : "Ayudante: No Asignado")
                  . "\n\n{$solicitud->observaciones}";
 
