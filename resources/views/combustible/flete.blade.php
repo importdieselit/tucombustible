@@ -29,7 +29,7 @@
                             <option value="">Seleccione una Planta</option>
                             {{-- Placeholder: Iterar sobre una colección de plantas --}}
                             @foreach($plantas as $planta)
-                                <option value="{{ $planta->id }}">{{ $planta->alias ?? $planta->nombre }}</option>
+                                <option value="{{ $planta['alias'] ?? $planta['nombre'] }}">{{ $planta['alias'] ?? $planta['nombre'] }}</option>
                             @endforeach
                          </select>
                     </div>

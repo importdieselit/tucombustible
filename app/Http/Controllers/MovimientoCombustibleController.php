@@ -824,7 +824,9 @@ public function createPrecarga()
     {
         // Data de prueba o real para los selectores
         $proveedores = Proveedor::all(['id', 'nombre']);
-        $plantas = Planta::all(['id', 'nombre', 'alias']); 
+        $prigen = Planta::all(['id', 'nombre', 'alias'])->toArray(); 
+        $clientes = Cliente::all(['id', 'nombre', 'alias'])->toArray();
+        $plantas = array_merge($prigen, $clientes );
         $choferes = Chofer::whereNotNull('documento_vialidad_numero')   
                                       ->where('cargo', 'CHOFER')
                                       ->with('persona')
@@ -964,8 +966,8 @@ public function createPrecarga()
             // ]);
 
             // 2. PLANIFICACIÓN Y ASIGNACIÓN DE RECURSOS
-            $planta = Planta::find($request->planta_destino_id);
-            $plantaDestino = TabuladorViatico::find($planta->id_tabulador_viatico);
+            //$planta = Planta::find($request->planta_destino_id);
+            //$plantaDestino = TabuladorViatico::find($planta->id_tabulador_viatico);
 
             //dd($destino);
             $vehiculo = Vehiculo::find($request->vehiculo_id);
@@ -982,7 +984,7 @@ public function createPrecarga()
                 'vehiculo_id' => $request->vehiculo_id,
                 'chofer_id' => $request->chofer_id,
                 'ayudante' => $request->ayudante ?? null, // Ayudante es opcional
-                'destino_ciudad' => $plantaDestino->destino.' -> '.$request->destino_ciudad ?? 'N/A', 
+                'destino_ciudad' => $request->planta_destino_id.' -> '.$request->destino_ciudad ?? 'N/A', 
                 'fecha_salida' => $request->fecha_salida,
                 'status' => 'Programado',
                 'usuario_id' => $userId
@@ -1003,7 +1005,7 @@ public function createPrecarga()
             $tabulador = TabuladorViatico::where('destino', $request->destino_ciudad)->first();
 
             if (!$tabulador) {
-                return back()->withInput()->with('error', 'No se encontró una tarifa de viáticos para esa ciudad.');
+             //   return back()->withInput()->with('error', 'No se encontró una tarifa de viáticos para esa ciudad.');
             }
 
             $cantidadDespachos = count($request->despachos);
