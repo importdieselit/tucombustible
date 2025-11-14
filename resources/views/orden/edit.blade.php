@@ -222,7 +222,7 @@ use App\Models\SuministroCompra;
 
                     selectedSupplies[detail.id] = {
                         id: detail.id,
-                        estatus: detail.estatus,
+                        estatus: supply.estatus,
                         descripcion: detail.descripcion,
                         cantidad: detail.cantidad_solicitada,
                         costo_unitario: detail.costo,
@@ -249,7 +249,7 @@ use App\Models\SuministroCompra;
                     let estatusBadgeClass;
                     let costo = supply.costo_unitario * supply.cantidad;
                     totalCosto += costo;
-                    switch (supply.estatus) {
+                    switch (supply.estatus.parseInt) {
                         case 1:
                             estatusText = 'Solicitado';
                             estatusBadgeClass = 'bg-primary';
@@ -307,6 +307,52 @@ use App\Models\SuministroCompra;
             }
             suppliesTableBody.innerHTML = html;
         }
+
+        // 2. Añadir Suministro Manual (del modal manual)
+        addManualSupplyBtn.addEventListener('click', function(e) {
+            const descripcionInput = document.getElementById('manual-descripcion');
+            const cantidadInput = document.getElementById('manual-cantidad');
+            
+            const descripcion = descripcionInput.value.trim();
+            const cantidad = parseInt(cantidadInput.value, 10);
+
+            if (!descripcion || cantidad <= 0 || isNaN(cantidad)) {
+                 Swal.fire('Error', 'Debe ingresar una descripción y una cantidad válida.', 'error');
+                 return;
+            }
+
+            // Generar un ID temporal único
+            manualSupplyCounter++;
+            const manualId = 'MANUAL_' + manualSupplyCounter;
+
+            const itemData = {
+                id: manualId,
+                codigo: 'N/A', // No tiene código de inventario
+                descripcion: descripcion,
+                tipo: 'COMPRA',
+                existencia: 0, // 0 existencia fuerza la compra (si aplica tu lógica de negocio)
+                cantidad: cantidad
+            };
+
+            selectedSupplies[manualId] = itemData;
+            renderSuppliesTable();
+
+            // Limpiar el formulario manual para permitir una nueva adición
+            descripcionInput.value = '';
+            cantidadInput.value = 1;
+
+            // Retroalimentación visual
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: `Agregado Manual: ${itemData.descripcion} (x${cantidad})`,
+                showConfirmButton: false,
+                timer: 2000
+            });
+            
+            // NOTA: El modal manual permanece abierto para seguir agregando si el usuario lo desea.
+        });
 
         // Manejar el evento de búsqueda con un pequeño retraso (debounce)
         let timeout = null;
