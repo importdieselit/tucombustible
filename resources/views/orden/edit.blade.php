@@ -155,6 +155,7 @@
 </div>
 @php 
 use App\Models\InventarioSuministro;
+use App\Models\SuministroCompra;
  $insumos = InventarioSuministro::with('inventario')->where('id_orden', $item->id)->get();
  $requerimientos = SuministroCompra::where('id_orden', $item->id)->with('detalles')->get();
  dd($requerimientos);
