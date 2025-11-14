@@ -94,14 +94,16 @@
             </thead>
             <tbody>
                 @forelse($requerimientos as $requerimiento)
-                    @forelse($detalles as $detalle)
+                    @forelse($requerimiento->detalles as $detalle)
                         <tr>
                             <td>{{ $detalle->inventario->codigo ?? 'N/A' }}</td>
                             <td>{{ $detalle->inventario->descripcion ?? 'N/A' }}</td>
                             <td>{{ $detalle->cantidad_solicitada ?? 'N/A' }}</td>
                             <td>${{ number_format($detalle->inventario->costo * $detalle->cantidad_solicitada, 2, ',', '.') }}</td>
                         </tr>
+                    @empty
                     @endforelse
+                @empty
                 @endforelse 
                 @forelse ($insumos_usados as $insumo)
                     <tr>
