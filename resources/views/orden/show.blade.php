@@ -97,7 +97,7 @@
                     @forelse($requerimiento->detalles as $detalle)
                         @php($cantidad=$detalle->cantidad_aprobada ?? $detalle->cantidad_solicitada )
                         <tr>
-                            <td>{{ $detalle->estatus ==1?'solicitado':($detalle->estatus ==2?'aprobado': 'N/A') }}</td>
+                            <td>{{ $detalle->estatus =='1'?'solicitado':($detalle->estatus =='2'?'aprobado': 'N/A') }}</td>
                             <td>{{ $detalle->descripcion ?? 'N/A' }}</td>
                             <td>{{ $cantidad ?? 'N/A' }}</td>
                             <td>${{$detalle->costo_unitario_aprobado?number_format($detalle->costo_unitario_aprobado * $cantidad, 2, ',', '.'):'N/A' }}</td>
