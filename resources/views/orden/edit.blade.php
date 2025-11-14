@@ -199,6 +199,7 @@ use App\Models\SuministroCompra;
 
 
          let selectedSupplies = {};
+         let manualSupplyCounter = 0;
 
             // Cargar los suministros existentes
             const existingSupplies = @json($insumos);
