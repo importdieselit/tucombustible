@@ -250,7 +250,7 @@ use App\Models\SuministroCompra;
                     let estatusBadgeClass;
                     let costo = supply.costo_unitario * supply.cantidad;
                     totalCosto += costo;
-                    switch (supply.estatus.parseInt) {
+                    switch (supply.estatus) {
                         case 1:
                             estatusText = 'Solicitado';
                             estatusBadgeClass = 'bg-primary';
