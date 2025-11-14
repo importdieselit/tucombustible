@@ -301,11 +301,11 @@ class OrdenController extends BaseController
         $hasFoto=false;
 
             // 2. Manejar la subida de MÚLTIPLES FOTOS
-            if ($request->hasFile('fotos_orden[]')) {
+            if ($request->hasFile('fotos_orden')) {
                 $hasFoto=true;
                 Log::debug("Controlador Orden: Se detectaron " . count($request->file('fotos_orden[]')) . " archivos para subir.");
                 
-                foreach ($request->file('fotos_orden[]') as $file) {
+                foreach ($request->file('fotos_orden') as $file) {
                     
                     // Almacenar el archivo y obtener la ruta. 
                     // Se usa el disco 'public' y se guarda en la carpeta 'ordenes_fotos'.
@@ -365,6 +365,13 @@ class OrdenController extends BaseController
         $this->telegramService->sendMessage($telegramMessage); 
         if(isset($mensajeTelegramC)){
             $this->telegramService->sendMessage($mensajeTelegramC);
+        }
+        if($hasFoto){
+            $i=1;
+           foreach ($request->file('fotos_orden') as $file) {
+                $this->telegramService->sendPhotoOrden($file,'Registro Fotografico Orden #{$orden->nro_orden}  {$i}' );
+                $i++;
+            }
         }
         
         // Mensaje de éxito

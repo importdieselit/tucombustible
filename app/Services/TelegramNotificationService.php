@@ -71,7 +71,7 @@ class TelegramNotificationService
      * Envía una foto a un chat de Telegram.
      * public function sendPhoto(string $filePath, string $caption = null, string $overrideChatId = null): bool { ... }
      */
-      public function sendPhoto(Request $request)
+    public function sendPhoto(Request $request)
     {
         // 1. Validación de la solicitud
         $request->validate([
@@ -134,66 +134,35 @@ class TelegramNotificationService
         }
     }
 
-    public function sendPhotoOrden(Request $request)
+   public function sendPhotoOrden($photoFile, $caption = 'Reporte Automático (Sin descripción)')
     {
-        // 1. Validación de la solicitud
-        $request->validate([
-            'fotos_orden[]' => 'required|image|mimes:png,jpg,jpeg|max:8192', // Máximo 8MB permitido por Telegram
-            'caption' => 'nullable|string|max:1024' // Descripción opcional
-        ]);
-
-        // // Verificación de credenciales (para evitar envíos fallidos si no se han configurado)
-        // if ($this->botToken === '8278356133:AAFbPIiY77YEdFbRoO8JSpF83UKaSM2X-dM' || $this->chatId === '+YONFb8H0Fxg5ODNh') {
-        //      // Es preferible usar un log o lanzar una excepción real en un entorno de producción.
-        //      return response()->json([
-        //         'message' => 'Error: Configuración de Telegram pendiente. Por favor, actualice el token y el chat ID en TelegramController.php.', 
-        //     ], 500);
-        // }
-
         try {
-            // Obtener el archivo y la descripción
-            $photoFile = $request->file('fotos_orden[]');
-            $caption = $request->input('caption', 'Reporte Automático (Sin descripción)');
-            
-            $url = "https://api.telegram.org/bot{$this->botToken}/sendPhoto";
 
-            // 2. Hacer la solicitud multipart a la API de Telegram usando el helper Http
+            $url = "https://api.telegram.org/bot{$this->botToken}/sendPhoto";
+            $safeMessage = $this->escapeMarkdownV2($caption);
+        
+
             $response = Http::timeout(30)->attach(
-                'photo', // El nombre del campo que la API de Telegram espera para el archivo
-                file_get_contents($photoFile->getRealPath()), // Contenido binario del archivo
-                $photoFile->getClientOriginalName() // Nombre original del archivo
+                'photo',
+                file_get_contents($photoFile->getRealPath()),
+                $photoFile->getClientOriginalName()
             )->post($url, [
-                'chat_id' => $this->chatId,
-                'caption' => $caption,
-                'parse_mode' => 'Markdown' // Permite el formato Markdown en la descripción
+                'chat_id'   => $this->chatId,
+                'caption'   => $safeMessage,
+                'parse_mode'=> 'Markdown'
             ]);
 
-            // 3. Verificar si la respuesta de Telegram es exitosa
             if ($response->successful() && $response->json('ok')) {
-                Log::info("Reporte enviado a Telegram con éxito. Chat ID: {$this->chatId}");
-                return response()->json(['message' => 'Reporte enviado a Telegram con éxito.'], 200);
-            } else {
-                // Registrar el error detallado de la API de Telegram para debugging
-                Log::error('Error al enviar reporte a Telegram:', [
-                    'response' => $response->body(),
-                    'status' => $response->status()
-                ]);
-                return response()->json([
-                    'message' => 'Error al enviar el reporte a Telegram.', 
-                    'telegram_error' => $response->json('description', 'Error desconocido del API')
-                ], 500);
+                Log::info("Foto enviada correctamente a Telegram");
+                return true;
             }
 
+            Log::error("Error al enviar foto a Telegram", ['response' => $response->body()]);
+            return false;
+
         } catch (\Exception $e) {
-            // Manejo de excepciones generales (ej. error de I/O, problema de red, etc.)
-            Log::error('Excepción al manejar el envío a Telegram:', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            return response()->json([
-                'message' => 'Error interno del servidor al procesar la solicitud.', 
-                'error' => $e->getMessage()
-            ], 500);
+            Log::error('Excepción al enviar foto a Telegram:', ['error' => $e->getMessage()]);
+            return false;
         }
     }
 
