@@ -336,6 +336,8 @@ use App\Models\SuministroCompra;
             };
 
             selectedSupplies[manualId] = itemData;
+
+            console.log(selectedSupplies);
             renderSuppliesTable();
 
             // Limpiar el formulario manual para permitir una nueva adición
