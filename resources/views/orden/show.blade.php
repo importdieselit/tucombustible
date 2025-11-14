@@ -95,11 +95,12 @@
             <tbody>
                 @forelse($requerimientos as $requerimiento)
                     @forelse($requerimiento->detalles as $detalle)
+                        @php($cantidad=$detalle->cantidad_aprobada ?? $detalle->cantidad_solicitada )
                         <tr>
                             <td>{{ $detalle->inventario->codigo ?? 'N/A' }}</td>
                             <td>{{ $detalle->inventario->descripcion ?? 'N/A' }}</td>
-                            <td>{{ $detalle->cantidad_solicitada ?? 'N/A' }}</td>
-                            <td>${{ number_format($detalle->inventario->costo * $detalle->cantidad_solicitada, 2, ',', '.') }}</td>
+                            <td>{{ $cantidad ?? 'N/A' }}</td>
+                            <td>${{$detalle->costo_unitario_aprobado?number_format($detalle->costo_unitario_aprobado * $cantidad, 2, ',', '.'):'N/A' }}</td>
                         </tr>
                     @empty
                     @endforelse
