@@ -208,7 +208,7 @@ class OrdenController extends BaseController
             // ];
             $insumos_usados = InventarioSuministro::with('inventario')->where('id_orden', $id)->get();
             
-            $requerimientos = SuministroCompra::where('orden_id', $item->id)->with('detalles')->get();
+            $requerimientos = SuministroCompra::where('orden_id', $id)->with('detalles')->get();
             $estatusData = EstatusData::all()->keyBy('id_estatus');
 
             return view('orden.show', compact('orden', 'insumos_usados','requerimientos', 'estatusData'));
