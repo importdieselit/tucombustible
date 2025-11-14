@@ -207,9 +207,11 @@ class OrdenController extends BaseController
             //     (object)['nombre' => 'Pastillas de freno', 'cantidad' => 1, 'unidad' => 'Juego'],
             // ];
             $insumos_usados = InventarioSuministro::with('inventario')->where('id_orden', $id)->get();
+            
+            $requerimientos = SuministroCompra::where('orden_id', $item->id)->with('detalles')->get();
             $estatusData = EstatusData::all()->keyBy('id_estatus');
 
-            return view('orden.show', compact('orden', 'insumos_usados', 'estatusData'));
+            return view('orden.show', compact('orden', 'insumos_usados','requerimientos', 'estatusData'));
         } catch (ModelNotFoundException $e) {
             Session::flash('error', 'La orden de trabajo no fue encontrada.');
             return Redirect::route('orden.list');
