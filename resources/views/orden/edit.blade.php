@@ -158,7 +158,7 @@ use App\Models\InventarioSuministro;
 use App\Models\SuministroCompra;
  $insumos = InventarioSuministro::with('inventario')->where('id_orden', $item->id)->get();
  $requerimientos = SuministroCompra::where('orden_id', $item->id)->with('detalles')->get();
- dd($requerimientos);
+ dd($requerimientos->detalles);
 @endphp
 @push('scripts')
     <!-- Script de jQuery -->
@@ -190,14 +190,18 @@ use App\Models\SuministroCompra;
                const requiredSupplies = @json($requerimientos);
             console.log(requiredSupplies);
             requiredSupplies.forEach(supply => {
-                selectedSupplies[supply.id] = {
-                    id: supply.id,
-                    estatus: supply.estatus,
-                    descripcion: supply.descripcion,
-                    cantidad: supply.cantidad,
-                    costo_unitario: supply.costo,
-                };
+                supply.detalles.forEach(detail => {
+
+                    selectedSupplies[detail.id] = {
+                        id: detail.id,
+                        estatus: detail.estatus,
+                        descripcion: detail.descripcion,
+                        cantidad: detail.cantidad,
+                        costo_unitario: detail.costo,
+                    };
+                });
             });
+            console.log(selectedSupplies);
         
         const searchResultsTable = document.getElementById('searchResultsTable');
         const suppliesTableBody = document.querySelector('#selectedSuppliesTable tbody');
