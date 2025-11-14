@@ -196,7 +196,7 @@ use App\Models\SuministroCompra;
                         id: detail.id,
                         estatus: detail.estatus,
                         descripcion: detail.descripcion,
-                        cantidad: detail.cantidad,
+                        cantidad: detail.cantidad_solicitada,
                         costo_unitario: detail.costo,
                     };
                 });
