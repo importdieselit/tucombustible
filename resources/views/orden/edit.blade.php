@@ -117,6 +117,34 @@
     </div>
     </div>
 
+{{-- Modal para Suministro Manual (Permite múltiples adiciones) --}}
+<div class="modal fade" id="manualSupplyModal" tabindex="-1" aria-labelledby="manualSupplyModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-secondary text-white">
+                <h5 class="modal-title" id="manualSupplyModalLabel"><i class="bi bi-plus-circle me-1"></i> Agregar Suministro Manual</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Utilice esta opción para artículos que no están en inventario o que se comprarán aparte.</p>
+                <div class="mb-3">
+                    <label for="manual-descripcion" class="form-label">Descripción del Artículo:</label>
+                    <input type="text" class="form-control" id="manual-descripcion" required placeholder="Ej: Aceite 20w50 (Comprado en Ferretería)">
+                </div>
+                <div class="mb-3">
+                    <label for="manual-cantidad" class="form-label">Cantidad Requerida:</label>
+                    <input type="number" class="form-control text-end" id="manual-cantidad" value="1" min="1" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Terminar y Cerrar</button>
+                <button type="button" class="btn btn-success" id="addManualSupplyBtn">
+                    <i class="bi bi-check-lg me-1"></i> Agregar a la Orden
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 {{-- Modal para buscar suministros --}}
 <div class="modal fade" id="searchSupplyModal" tabindex="-1" aria-labelledby="searchSupplyModalLabel" aria-hidden="true">
@@ -387,10 +415,7 @@ use App\Models\SuministroCompra;
 
                           // ** FIX: Usar getOrCreateInstance para asegurar que el objeto no es nulo **
                         const modalElement = document.getElementById('searchSupplyModal');
-                        const modalbackdrop = document.querySelector('.modal-backdrop');
-                        if (modalbackdrop) {   
-                            modalbackdrop.remove();
-                        }
+                        
                         const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
                         modal.hide()
                     } else {

@@ -137,11 +137,8 @@ class TelegramNotificationService
    public function sendPhotoOrden($photoFile, $caption = 'Reporte Automático (Sin descripción)')
     {
         try {
-
             $url = "https://api.telegram.org/bot{$this->botToken}/sendPhoto";
             $safeMessage = $this->escapeMarkdownV2($caption);
-        
-
             $response = Http::timeout(30)->attach(
                 'photo',
                 file_get_contents($photoFile->getRealPath()),
