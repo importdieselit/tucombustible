@@ -153,11 +153,7 @@
                         </thead>
                         <tbody id="despachos-table-body">
                             {{-- Las filas se gestionan con JavaScript. Se usa PHP para restaurar en caso de error. --}}
-                            @if(old('despachos'))
-                                @foreach(old('despachos') as $index => $despacho)
-                                    @include('viajes._despacho_row', ['index' => $index, 'clientes' => $clientes, 'despacho' => $despacho])
-                                @endforeach
-                            @endif
+                            
                         </tbody>
                     </table>
                 </div>
