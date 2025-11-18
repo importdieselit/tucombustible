@@ -276,7 +276,7 @@ class OrdenController extends BaseController
         }
         
         // 3. Procesar Suministros de COMPRA (Generar Solicitud/OC)
-        if (!empty($solicitudCompra)) {
+        if (count($solicitudCompra)>0) {
             // Crear la cabecera de la Solicitud de Compra (OC)
             
             $compra = SuministroCompra::create([
