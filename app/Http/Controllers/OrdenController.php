@@ -233,8 +233,10 @@ class OrdenController extends BaseController
             $userId = Auth::id();
         // Almacena en la DB
         $orden=Orden::create($request->all());
-        $vehiculo= Vehiculo::find($request->id_vehiculo);
-
+        $vehiculo= null;
+        if(!is_null($request->id_vehiculo)){
+            $vehiculo= Vehiculo::find($request->id_vehiculo);
+        }
          // 4. Procesar y guardar los suministros solicitados
             $suministros = json_decode($request->supplies_json, true) ?? [];
         
@@ -324,6 +326,7 @@ class OrdenController extends BaseController
                 }
             }
 
+        if(!is_null($request->id_vehiculo)){
             $vehiculo = Vehiculo::find($request->id_vehiculo);
             
              $kmRecorridos = is_numeric($request->kilometraje) ? (int)$request->kilometraje : 0;
@@ -341,7 +344,7 @@ class OrdenController extends BaseController
                 $vehiculo->estatus = 5;
             }
             $vehiculo->save();
-
+        }
         $this->createAlert([
             'id_usuario' => $userId, // ID del usuario responsable de la orden.
             'id_rel' => $orden->id, // ID de la orden.
@@ -357,13 +360,13 @@ class OrdenController extends BaseController
             'accion' => route('ordenes.show', $orden->id), // Ruta para ver la orden.
             'dias' => 0,
         ];
-                
+                $destino= "a ".$vehiculo->flota ?? $orden->responsable;
                  FcmNotificationService::enviarNotification(
-                        "Se abrio orden de Trabajo {$orden->nro_orden} a {$vehiculo->flota}",  
-                        "Creada orden de Trabajo {$orden->nro_orden} a {$vehiculo->flota} por {$orden->descripcion_1}. Responsable {$orden->responsable}",
+                        "Se abrio orden de Trabajo {$orden->nro_orden} {$destino}",  
+                        "Creada orden de Trabajo {$orden->nro_orden} por {$orden->descripcion_1}. Responsable {$orden->responsable}",
                         $data
                     );
-        $telegramMessage="Creada orden de Trabajo {$orden->nro_orden} a {$vehiculo->flota} por {$orden->descripcion_1}. Responsable {$orden->responsable}";
+        $telegramMessage="Creada orden de Trabajo {$orden->nro_orden} a {$destino} por {$orden->descripcion_1}. Responsable {$orden->responsable}";
         $this->telegramService->sendMessage($telegramMessage); 
         if(isset($mensajeTelegramC)){
             $this->telegramService->sendMessage($mensajeTelegramC);
