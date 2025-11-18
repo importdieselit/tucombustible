@@ -170,9 +170,9 @@
         function generateSummaryHtml(viajeCompleto) {
         
         // Extracción segura de datos
-        const choferNombre = viajeCompleto.chofer || 'PENDIENTE';
-        const ayudante = viajeCompleto.ayudante || null; 
-        const flota = viajeCompleto.vehiculo || 'PENDIENTE';
+        const choferNombre = viajeCompleto.chofer || viajeCompleto.otro_chofer || 'PENDIENTE';
+        const ayudante = viajeCompleto.ayudante || viajeCompleto.otro_ayudante || null; 
+        const flota = viajeCompleto.vehiculo || viajeCompleto.otro_vehiculo ||'PENDIENTE';
         const placa = viajeCompleto.placa || 'N/A';
         
         // *** CORRECCIÓN CRÍTICA: Asegurar que despachos es un array, si no, usar [] ***
