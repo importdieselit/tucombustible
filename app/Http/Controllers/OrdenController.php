@@ -276,7 +276,7 @@ class OrdenController extends BaseController
         }
         
         // 3. Procesar Suministros de COMPRA (Generar Solicitud/OC)
-        if (count($solicitudCompra)>0) {
+        if (!empty($solicitudCompra)) {
             // Crear la cabecera de la Solicitud de Compra (OC)
             
             $compra = SuministroCompra::create([
@@ -360,9 +360,11 @@ class OrdenController extends BaseController
             'accion' => route('ordenes.show', $orden->id), // Ruta para ver la orden.
             'dias' => 0,
         ];
-                $destino= "a ".$vehiculo->flota ?? $orden->responsable;
+        
+
+                $destino= $vehiculo->flota ?? $orden->responsable;
                  FcmNotificationService::enviarNotification(
-                        "Se abrio orden de Trabajo {$orden->nro_orden} {$destino}",  
+                        "Se abrio orden de Trabajo a {$orden->nro_orden} {$destino}",  
                         "Creada orden de Trabajo {$orden->nro_orden} por {$orden->descripcion_1}. Responsable {$orden->responsable}",
                         $data
                     );
