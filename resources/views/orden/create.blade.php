@@ -34,7 +34,7 @@
                 <div class="col-md-6 mb-3">
                     <label for="id_vehiculo" class="form-label">Vehículo</label>
                     @if(is_null($vehiculo))
-                    <select class="form-select" id="id_vehiculo" name="id_vehiculo" required>
+                    <select class="form-select" id="id_vehiculo" name="id_vehiculo" >
                         <option value="">Seleccione Vehículo</option>
                        @foreach ($vehiculos as $vehiculo)
                             <option value="{{ $vehiculo->id }}">{{ $vehiculo->flota }} (Placa: {{ $vehiculo->placa }})</option>
