@@ -18,7 +18,7 @@
                 @csrf
                 
                 <!-- 1. Detalle del Viaje (Fijo) -->
-                <h4 class="mt-4 mb-3 text-success border-bottom pb-1">Detalles del Viaje</h4>
+                <h4 class="mt-4 mb-3 text-success border-bottom pb-1">Detalles del Despacho</h4>
                 <div class="row g-3 mb-4">
                     
                     
@@ -43,7 +43,7 @@
                     {{-- FECHA DE SALIDA --}}
                     <div class="col-md-6">
                         <label for="fecha_salida" class="form-label fw-bold">Fecha de Salida</label>
-                        <input type="date" name="fecha_salida" id="fecha_salida" class="form-control @error('fecha_salida') is-invalid @enderror" value="{{ old('fecha_salida', date('Y-m-d')) }}" required>
+                        <input type="datetime" name="fecha_salida" id="fecha_salida" class="form-control @error('fecha_salida') is-invalid @enderror" value="{{ old('fecha_salida', date('Y-m-d h:i a')) }}" required>
                         @error('fecha_salida')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -140,7 +140,7 @@
                 </div>
 
                 <!-- 2. Tabla de Despachos (Se mantiene la funcionalidad actual) -->
-                <h4 class="mt-4 mb-3 text-success border-bottom pb-1">Despachos del Viaje</h4>
+                <h4 class="mt-4 mb-3 text-success border-bottom pb-1">Despachos de la ruta</h4>
                 <div class="table-responsive">
                     <table class="table table-bordered align-middle">
                         <thead class="table-light">

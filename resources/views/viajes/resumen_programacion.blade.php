@@ -60,7 +60,7 @@
                     
 
                       <tr style="border-bottom: 1px solid #01050a; background-color:white"   >
-                        <td colspan="2">Despacho {{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y') }}<br>
+                        <td colspan="2">Despacho {{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y h:i a') }}<br>
                             <strong>[{{ $viaje->destino_ciudad }}]</strong>
                         </td>
                         <td rowspan="{{$viaje->despachos->count()+1}}" style="vertical-align: middle; text-align:center; font-size: 18px;">

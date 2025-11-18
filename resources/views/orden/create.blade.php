@@ -52,6 +52,7 @@
                         <option value="Revision">Revision</option>
                         <option value="Correctivo">Correctivo</option>
                         <option value="Mantenimiento">Mantenimiento</option>
+                        <option value="Otro">Otros</option>
                     </select>
                 </div>
             </div>
