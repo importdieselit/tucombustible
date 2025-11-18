@@ -100,7 +100,7 @@
                         accept="image/*" 
                         capture="environment" 
                         multiple
-                        required
+                        
                     >
                     <small class="form-text text-muted">En dispositivos móviles, esto abrirá la cámara trasera.</small>
                 </div>
