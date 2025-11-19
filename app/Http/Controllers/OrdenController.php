@@ -378,7 +378,8 @@ class OrdenController extends BaseController
         if($hasFoto){
             $i=1;
            foreach ($request->file('fotos_orden') as $file) {
-                $this->telegramService->sendPhotoOrden($file,'Registro Fotografico Orden #{$orden->nro_orden}  {$i}' );
+                $caption =
+                $this->telegramService->sendPhotoOrden($file,"Registro Fotografico Orden #{$orden->nro_orden}  {$i}" );
                 $i++;
             }
         }
