@@ -36,7 +36,7 @@
         <!-- Encabezado del Reporte Simplificado -->
         <div class="text-center mb-3">
             <h5 class="text-primary fw-bold mb-0">REPORTE DE PROGRAMACIÓN DE VIAJES</h5>
-            <p class="text-muted small mb-1">Fecha de Emisión: <span class="text-bold text-black">{{ now()->format('d/m/Y Hora de Salida H:i') }}</span></p>
+            <p class="text-muted small mb-1">Fecha de Emisión: {{ now()->format('d/m/Y H:i') }}</p>
             {{-- <div class="bg-light p-2 rounded d-inline-block border border-danger">
                 <span class="fw-light small me-2">Presupuesto Total Estimado:</span> 
                 <span class="text-danger fw-bold">$ {{ number_format($totalViaticosPresupuestados, 2) }}</span>
@@ -60,7 +60,7 @@
                     
 
                       <tr style="border-bottom: 1px solid #01050a; background-color:white"   >
-                        <td colspan="2">Despacho {{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y h:i a') }}<br>
+                        <td colspan="2" class="text-black text-bold" style="font-weight: bold">Salida: {{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y [Hora de Salida :]hh:ii a') }}<br>
                             <strong>[{{ $viaje->destino_ciudad }}]</strong>
                         </td>
                         <td rowspan="{{$viaje->despachos->count()+1}}" style="vertical-align: middle; text-align:center; font-size: 18px;">
