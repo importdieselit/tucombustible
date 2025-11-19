@@ -285,8 +285,10 @@ class OrdenController extends BaseController
                 'estatus' => 1, // 1: Solicitada (Pendiente de Aprobación Admin)
             ]);
             $compraId=str_pad($compra->id, 7, '0', STR_PAD_LEFT);
+            $flota=!is_null($vehiculo)?$vehiculo->flota:null;
+            $destino= $flota ?? $orden->responsable;
             
-             $mensajeTelegramC="Requerimiento de compra #{$compraId} para orden {$orden->nro_orden} a {$vehiculo->flota}\n";
+             $mensajeTelegramC="Requerimiento de compra #{$compraId} para orden {$orden->nro_orden} a {$destino}\n";
 
             // Crear los detalles de los ítems solicitados
             foreach ($solicitudCompra as $solicitudItem) {
@@ -361,8 +363,8 @@ class OrdenController extends BaseController
             'dias' => 0,
         ];
         
-
-                $destino= $vehiculo->flota ?? $orden->responsable;
+            $flota=!is_null($vehiculo)?$vehiculo->flota:null;
+                $destino= $flota ?? $orden->responsable;
                  FcmNotificationService::enviarNotification(
                         "Se abrio orden de Trabajo a {$orden->nro_orden} {$destino}",  
                         "Creada orden de Trabajo {$orden->nro_orden} por {$orden->descripcion_1}. Responsable {$orden->responsable}",

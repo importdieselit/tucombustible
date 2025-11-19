@@ -859,6 +859,7 @@ public function createPrecarga()
             //'chofer_id' => 'required|exists:choferes,id',
             //'ayudante' => 'nullable|exists:chofere,id'
         ]);
+        $flete=$request->flete ?? false;
         DB::beginTransaction();
         try {
             // 1. CREAR LA SOLICITUD DE COMBUSTIBLE
@@ -869,7 +870,7 @@ public function createPrecarga()
                 'fecha' => $request->fecha,
                 'estatus' => 'PENDIENTE_ASIGNACION',
                 'tipo' => $request->tipo,
-                'flete' => $request->es_flete,
+                'flete' => $flete,
                 'vehiculo_id' => $request->vehiculo_id,
                 'cisterna' => $request->cisterna_id,
                 'observaciones' => $request->observaciones,
