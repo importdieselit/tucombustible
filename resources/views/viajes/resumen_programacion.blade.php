@@ -60,7 +60,7 @@
                     
 
                       <tr style="border-bottom: 1px solid #01050a; background-color:white"   >
-                        <td colspan="2" class="text-black text-bold" style="font-weight: bold">Salida: {{ \Carbon\Carbon::parse($viaje->fecha_salida)->locale('es')->isoFormat('DD/MM/YYYY [ Hora de Salida: ]hh:mm a') }}<br>
+                        <td colspan="2" class="text-black text-bold" style="font-weight: bold; font-size: 20px;">Salida: {{ \Carbon\Carbon::parse($viaje->fecha_salida)->locale('es')->isoFormat('DD/MM/YYYY [ Hora de Salida: ]hh:mm a') }}<br>
                             <strong>[{{ $viaje->destino_ciudad }}]</strong>
                         </td>
                         <td rowspan="{{$viaje->despachos->count()+1}}" style="vertical-align: middle; text-align:center; font-size: 18px;">
