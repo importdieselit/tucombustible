@@ -61,7 +61,7 @@
                     {{-- FECHA DE SALIDA --}}
                     <div class="col-md-6">
                         <label for="fecha_salida" class="form-label fw-bold">Fecha de Salida</label>
-                        <input type="date" name="fecha_salida" id="fecha_salida" class="form-control @error('fecha_salida') is-invalid @enderror" value="{{ old('fecha_salida', date('Y-m-d')) }}" required>
+                        <input type="datetime-local" name="fecha_salida" id="fecha_salida" class="form-control @error('fecha_salida') is-invalid @enderror" value="{{ old('fecha_salida', date('Y-m-d')) }}" required>
                         @error('fecha_salida')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
