@@ -103,7 +103,7 @@ class IncidenciaController extends Controller
             $data = $request->all();
             $data['conductor_id'] = $user->id;
             $User=User::find($user->id);
-            $persona=Persona::find($User->persona_id);
+            $persona=Persona::find($User->id_persona);
             $nombreUser = $persona->nombre;
             $data['estado'] = 'pendiente';
 
