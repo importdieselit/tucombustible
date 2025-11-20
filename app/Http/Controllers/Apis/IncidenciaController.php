@@ -106,7 +106,7 @@ class IncidenciaController extends Controller
             }
 
             $incidencia = Incidencia::create($data);
-            $this->telegramService->sendPhotoOrden($incidencia->foto_url, $incidencia->descripcion);
+            $this->telegramService->sendPhotoOrden($request->file('foto'), $incidencia->descripcion);
             return response()->json([
                 'success' => true,
                 'message' => 'Incidencia reportada exitosamente',
