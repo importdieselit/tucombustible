@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\SuministroCompra;
 use App\Models\SuministroCompraDetalle;
 use App\Services\TelegramNotificationService;
+use Google\Service\Datastore\Sum;
 
 class OrdenController extends BaseController
 {
@@ -111,6 +112,25 @@ class OrdenController extends BaseController
                                  ->get();
         
         return response()->json($suministros);
+    }
+
+    public function purchaseOrder($id_order=null,$id=null)
+    {
+        if(!is_null($id_order)){
+            $orden = Orden::findOrFail($id_order);
+            if(!is_null($id)){
+                $purchaseOrder=SuministroCompra::find($id);
+                $vehiculo=Vehiculo::find($orden->id_vehiculo);
+                $purchaseDetail=SuministroCompraDetalle::where('suministro_compra_id',$id)->get();
+                return view('orden.compra',compact('orden','purchaseOrder','purchaseDetail'));
+            }
+            $data=SuministroCompra::where('orden_id',$id_order)->get();
+            return view('orden.compras',compact('data','orden','orden.vehiculo'));
+        }else{
+            $data = SuministroCompra::all()->with('detalles','orden','orden.vehiculo')->get();
+            return view('orden.compras',compact('data'));
+        }
+
     }
 
     /**
@@ -374,7 +394,7 @@ class OrdenController extends BaseController
         $telegramMessage="Creada orden de Trabajo {$orden->nro_orden} a {$destino} por {$orden->descripcion_1}. Responsable {$orden->responsable}";
         $this->telegramService->sendMessage($telegramMessage); 
         if(isset($mensajeTelegramC)){
-            $this->telegramService->sendMessage($mensajeTelegramC);
+         //   $this->telegramService->sendMessage($mensajeTelegramC);
         }
         if($hasFoto){
             $i=1;
@@ -387,7 +407,9 @@ class OrdenController extends BaseController
         
         // Mensaje de éxito
         Session::flash('success', 'Orden de trabajo creada exitosamente.');
-
+        if (!empty($solicitudCompra)) {
+            return Redirect::route('ordenes.compra');
+        }
         // Redirige al listado
         return Redirect::route('ordenes.list');
     }

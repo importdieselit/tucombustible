@@ -165,6 +165,7 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
     Route::post('/api/permisos/{user}/update', [AccesoController::class, 'updatePermissions'])->name('permisos.update');
 
     Route::get('ordenes/search-supplies', [OrdenController::class, 'searchSupplies'])->name('ordenes.search-supplies');
+    Route::get('ordenes/compras/{id_order?}/{id?}', [OrdenController::class, 'purchaseOrder'])->name('ordenes.compra');
     // Recursos principales
     $resourceControllers = [
         'vehiculos' => VehiculoController::class,
