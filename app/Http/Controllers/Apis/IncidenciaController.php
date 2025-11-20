@@ -63,7 +63,7 @@ class IncidenciaController extends Controller
             ], 200);
         } catch (\Exception $e) {
             Log::error($e);
-                
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener las incidencias',
@@ -130,6 +130,8 @@ class IncidenciaController extends Controller
 
            
             $this->telegramService->sendPhotoOrden($request->file('foto'), $message);
+
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Incidencia reportada exitosamente',
@@ -145,7 +147,8 @@ class IncidenciaController extends Controller
                 ],
             ], 201);
         } catch (\Exception $e) {
-            Lo
+            Log::error($e);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error al crear la incidencia',
