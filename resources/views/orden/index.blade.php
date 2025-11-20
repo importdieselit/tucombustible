@@ -9,6 +9,9 @@
         <div class="col-12 d-flex justify-content-between align-items-center">
             <h3 class="text-themecolor mb-0">Dashboard de Órdenes de Trabajo</h3>
             <a href="{{ route('ordenes.list') }}" class="btn btn-info d-flex align-items-center">
+                <i class="fas fa-list me-2"></i> Orden de Compra
+            </a>
+            <a href="{{ route('ordenes.list') }}" class="btn btn-info d-flex align-items-center">
                 <i class="fas fa-list me-2"></i> Ver Listado
             </a>
         </div>

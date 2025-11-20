@@ -7,9 +7,20 @@ use App\Models\Incidencia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use App\Services\TelegramNotificationService;
+use Illuminate\Support\Facades\Auth;
+
 
 class IncidenciaController extends Controller
 {
+    protected $telegramService;
+
+    public function __construct(
+        TelegramNotificationService $telegramService
+    ) {
+        $this->telegramService = $telegramService;
+    }
+
     /**
      * Listar incidencias del conductor autenticado
      */
@@ -95,7 +106,7 @@ class IncidenciaController extends Controller
             }
 
             $incidencia = Incidencia::create($data);
-
+            $this->telegramService->sendPhotoOrden($incidencia->foto_url, $incidencia->descripcion);
             return response()->json([
                 'success' => true,
                 'message' => 'Incidencia reportada exitosamente',
