@@ -125,9 +125,8 @@ class IncidenciaController extends Controller
                         $incidencia->descripcion . "\n\n" .
                         "*📎 Evidencia:* Foto adjunta.\n";
 
-            $safeMessage = $this->telegramService->escapeMarkdownV2($message);
-
-            $this->telegramService->sendPhotoOrden($request->file('foto'), $safeMessage);
+           
+            $this->telegramService->sendPhotoOrden($request->file('foto'), $message);
             return response()->json([
                 'success' => true,
                 'message' => 'Incidencia reportada exitosamente',
