@@ -63,6 +63,7 @@ class IncidenciaController extends Controller
             ], 200);
         } catch (\Exception $e) {
             Log::error($e);
+                
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener las incidencias',
