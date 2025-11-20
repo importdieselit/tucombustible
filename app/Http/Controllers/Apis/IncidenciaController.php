@@ -99,8 +99,9 @@ class IncidenciaController extends Controller
 
             $data = $request->all();
             $data['conductor_id'] = $user->id;
-            $User=User::find($user->id)->with('persona');
-            $nombreUser = $User->persona->nombre;
+            $User=User::find($user->id);
+            $persona=Persona::find($User->persona_id);
+            $nombreUser = $persona->nombre;
             $data['estado'] = 'pendiente';
 
             // Manejar la subida de la foto
