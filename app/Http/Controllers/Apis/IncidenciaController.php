@@ -99,9 +99,7 @@ class IncidenciaController extends Controller
 
             $data = $request->all();
             $data['conductor_id'] = $user->id;
-            $User=User::find($user->id);
-            $persona=Persona::find($User->persona_id);
-            $nombreUser = $persona->nombre;
+            
             $data['estado'] = 'pendiente';
 
             // Manejar la subida de la foto
@@ -115,7 +113,7 @@ class IncidenciaController extends Controller
             $incidencia = Incidencia::create($data);
             $message = "*📌 REPORTE DE INCIDENCIA*\n\n" .
                         "*Fecha:* {$incidencia->created_at}\n" .
-                        "*Conductor:* {$nombreUser}\n" .
+                      //  "*Conductor:* {$nombreUser}\n" .
                         "*Tipo:* {$incidencia->tipo}\n" .
                         "*Título:* {$incidencia->titulo}\n" .
                         "*Ubicación:* {$incidencia->ubicacion}\n" .
@@ -125,9 +123,9 @@ class IncidenciaController extends Controller
                         $incidencia->descripcion . "\n\n" .
                         "*📎 Evidencia:* Foto adjunta.\n";
 
-            $safeMessage = $this->escapeMarkdownV2($message);
+           // $safeMessage = $this->escapeMarkdownV2($message);
 
-            $this->telegramService->sendPhotoOrden($request->file('foto'), $safeMessage);
+            $this->telegramService->sendPhotoOrden($request->file('foto'), $message);
             return response()->json([
                 'success' => true,
                 'message' => 'Incidencia reportada exitosamente',
