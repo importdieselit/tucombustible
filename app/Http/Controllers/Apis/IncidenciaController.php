@@ -4,6 +4,10 @@ namespace App\Http\Controllers\Apis;
 
 use App\Http\Controllers\Controller;
 use App\Models\Incidencia;
+use App\Models\Persona;
+use App\Models\User;
+use App\Models\Vehiculo;
+use App\Models\Pedido;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -95,7 +99,8 @@ class IncidenciaController extends Controller
 
             $data = $request->all();
             $data['conductor_id'] = $user->id;
-            $nombreUser=$user->persona()->nombre;
+            $User=User::find($user->id)->with('persona');
+            $nombreUser = $User->persona->nombre;
             $data['estado'] = 'pendiente';
 
             // Manejar la subida de la foto
