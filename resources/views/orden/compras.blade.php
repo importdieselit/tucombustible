@@ -62,19 +62,19 @@
                                 $orden=$po->orden()->first();
                             }
                         }
-                        $estatus=switch ($po->estatus) {
+                        switch ($po->estatus) {
                             case 1:
-                                'Solicitada'
+                                $estatus='Solicitada';
                                 break;
                             case 2:
-                                'Aprobada'
+                                $estatus='Aprobada';
                                 break;
                             case 3:
-                                'Rechazada' 
+                                $estatus='Rechazada'; 
                                 break;
                             
                             default:
-                                'Desconocido';
+                                $estatus='Desconocido';
                                 break;
                         }
                     @endphp
@@ -88,7 +88,7 @@
                         </td>
                         <td>{{$po->created_at->diffForHumans(now())}}</td>
                         <td>
-                            {{$po->estatus}}
+                            {{$estatus}}
                         </td>
                     </tr>
                     @endforeach
