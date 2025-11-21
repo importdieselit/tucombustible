@@ -26,7 +26,7 @@ class SuministroCompra extends Model
     /**
      * Relación con la Orden de Trabajo.
      */
-    public function orden(): BelongsTo
+    public function orden()
     {
         return $this->belongsTo(Orden::class, 'orden_id');
     }
@@ -34,7 +34,7 @@ class SuministroCompra extends Model
     /**
      * Relación con los detalles/ítems solicitados.
      */
-    public function detalles(): HasMany
+    public function detalles()
     {
         return $this->hasMany(SuministroCompraDetalle::class);
     }
