@@ -56,7 +56,7 @@
                     @foreach ($data as $po)
                     @php
                         if(!isset($orden)){
-                            $orden=$po->orden();
+                            $orden=$po->orden()->first();
                         }
                         dd($orden);
                     @endphp
