@@ -87,7 +87,7 @@ class OrdenController extends BaseController
         ]);
 
         // Simulación de alertas de kilometraje
-        $alertas_kilometraje2=Vehiculo::where('km_mant','>',4700)->orWhere('hrs_mantt','>',180)->get();
+        $alertas_kilometraje2=Vehiculo::where('km_mantt','>',4700)->orWhere('hrs_mantt','>',180)->get();
         $alertas_kilometraje = [
             (object)['vehiculo' => 'Flota 003', 'placa' => 'ABC-123', 'kilometraje' => 105000, 'proximo_mantenimiento' => 100000],
             (object)['vehiculo' => 'Flota 005', 'placa' => 'DEF-456', 'kilometraje' => 82000, 'proximo_mantenimiento' => 80000],
