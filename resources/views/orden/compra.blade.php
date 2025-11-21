@@ -48,19 +48,22 @@
             <table class="table table-sm" style="font-size: 0.75rem;">  
                 <thead class="bg-primary text-white">
                     <tr style="font-weight: 700">
-                        <th class="py-1"><img src="{{ asset('img/logo1.png') }}" alt="logo empresa" style="width: 250px"></th>
+                        <th class="py-1" colspan="2"><img src="{{ asset('img/logo1.png') }}" alt="logo empresa" style="width: 250px"></th>
                         <th class="py-1" width="30%"></th>
-                        <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;">Orden / Unidad</th>
-                        <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;">Solicitante</th>
+                    </tr>
+                    <tr>
+                        <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;">Item</th>
+                        <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;">Cantidad</th>
+                        <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;">precio</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {{-- @forelse($viajes as $viaje) --}}
+                     @forelse($purchaseDetail as $detail)
                     
 
                       <tr style="border-bottom: 1px solid #01050a; background-color:white"   >
                         <td colspan="2" class="text-black text-bold" style="font-weight: bold; font-size: 20px;">Salida: <br>
-                            <strong>1/strong>
+                            <strong></strong>
                         </td>
                         <td rowspan="" style="vertical-align: middle; text-align:center; font-size: 18px;">
                             <span class="fw-bold"></span><br>
@@ -71,9 +74,9 @@
                             
                         </td>
                       </tr>
-                    {{-- @endforelse --}}
+                    @endforelse 
                     <tr style="font-weight: 700; font-size:19px; border-top: 2px solid #01050a; background-color: #d1ecf1;">
-                        <td class="py-1">TOTAL LITROS</td>
+                        <td class="py-1"></td>
                         <td class="py-1"></td>
                         <td class="py-1"></td>
                         <td class="py-1"></td>
