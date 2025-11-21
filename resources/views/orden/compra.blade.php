@@ -55,52 +55,32 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($viajes as $viaje)
+                    {{-- @forelse($viajes as $viaje) --}}
                     
 
                       <tr style="border-bottom: 1px solid #01050a; background-color:white"   >
-                        <td colspan="2" class="text-black text-bold" style="font-weight: bold; font-size: 20px;">Salida: {{ \Carbon\Carbon::parse($viaje->fecha_salida)->locale('es')->isoFormat('DD/MM/YYYY [ Hora de Salida: ]hh:mm a') }}<br>
-                            <strong>[{{ $viaje->destino_ciudad }}]</strong>
+                        <td colspan="2" class="text-black text-bold" style="font-weight: bold; font-size: 20px;">Salida: <br>
+                            <strong>1/strong>
                         </td>
-                        <td rowspan="{{$viaje->despachos->count()+1}}" style="vertical-align: middle; text-align:center; font-size: 18px;">
-                            <span class="fw-bold">{{ ucwords($viaje->chofer_id==0?$viaje->otro_chofer:$viaje->chofer->persona->nombre ?? 'PENDIENTE') }}</span><br>
-                            @if($viaje->ayudante)
-                                <span class="d-block">{{ ucwords($viaje->ayudante==0?$viaje->otro_ayudante: $viaje->ayudante_chofer->persona->nombre ?? 'N/A') }}</span>
-                            @endif
-                        </td>
-                        <td rowspan="{{$viaje->despachos->count()+1}}" style="vertical-align: middle; text-align:center">
-                            <span class="text-black fw-bold" style="font-size: 30px" >{{ $viaje->vehiculo_id==0?$viaje->otro_vehiculo: $viaje->vehiculo->flota }}</span><br>
-                                {{ $viaje->vehiculo->placa ?? 'PENDIENTE' }}
+                        <td rowspan="" style="vertical-align: middle; text-align:center; font-size: 18px;">
+                            <span class="fw-bold"></span><br>
+                           </td>
+                        <td rowspan="" style="vertical-align: middle; text-align:center">
+                            <span class="text-black fw-bold" style="font-size: 30px" ></span><br>
+                            
                             
                         </td>
                       </tr>
-
-                      @foreach($viaje->despachos as $index => $despacho)
-                      @php($TotalLitros += $despacho->litros ?? 0)
-                        <tr style="font-size: 15px; font-weight: 500;">
-                            <td>{{ $despacho->cliente->nombre ?? $despacho->otro_cliente ?? 'Cliente Null' }}</td>
-                            <td>{{ number_format($despacho->litros, 0)}} Lts</td>
-                        </tr>
-                      @endforeach
-
-                    @empty
-                    <tr>
-                        <td colspan="7" class="text-center text-muted">No hay viajes programados o en curso.</td>
-                    </tr>
-                    @endforelse
+                    {{-- @endforelse --}}
                     <tr style="font-weight: 700; font-size:19px; border-top: 2px solid #01050a; background-color: #d1ecf1;">
                         <td class="py-1">TOTAL LITROS</td>
-                        <td class="py-1">{{ $TotalLitros }}</td>
+                        <td class="py-1"></td>
                         <td class="py-1"></td>
                         <td class="py-1"></td>
                 </tbody>
             </table>
         </div>
         
-        <!-- Pie de página simple para el reporte -->
-        <div class="mt-3 border-top pt-2 text-end small text-muted">
-            Generado por {{$persona->nombre ?? 'el Sistema de Viajes'}}.
-        </div>
     </div>
     </div>
     <!-- Área donde se mostrará el canvas generado (opcional, para debug/visualización) -->
