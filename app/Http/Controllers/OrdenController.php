@@ -125,9 +125,9 @@ class OrdenController extends BaseController
                 return view('orden.compra',compact('orden','purchaseOrder','purchaseDetail'));
             }
             $data=SuministroCompra::where('orden_id',$id_order)->get();
-            return view('orden.compras',compact('data','orden','orden.vehiculo'));
+            return view('orden.compras',compact('data','orden'));
         }else{
-            $data = SuministroCompra::with('detalles','orden','orden.vehiculo')->get();
+            $data = SuministroCompra::with('detalles','orden')->get();
             return view('orden.compras',compact('data'));
         }
 
