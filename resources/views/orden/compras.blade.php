@@ -57,8 +57,11 @@
                     @php
                         if(!isset($orden)){
                             $orden=$po->orden()->first();
+                        }else{
+                            if($orden->id!=$po->orden()->first()->id){
+                                $orden=$po->orden()->first();
+                            }
                         }
-                        dd($po);
                     @endphp
                     <tr class="clickable-row" data-orden="{{ $orden->id }}" data-id="{{ $po->id }}">
                         <td>{{ $orden->id }}</td>
