@@ -55,7 +55,7 @@
                 <tbody>
                     @foreach ($data as $po)
                     @php
-                        if(!$orden){
+                        if(!isset($orden)){
                             $orden=$po->orden();
                         }
                     @endphp
