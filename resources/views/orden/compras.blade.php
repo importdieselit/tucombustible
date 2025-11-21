@@ -62,6 +62,21 @@
                                 $orden=$po->orden()->first();
                             }
                         }
+                        $estatus=switch ($po->estatus) {
+                            case 1:
+                                'Solicitada'
+                                break;
+                            case 2:
+                                'Aprobada'
+                                break;
+                            case 3:
+                                'Rechazada' 
+                                break;
+                            
+                            default:
+                                'Desconocido';
+                                break;
+                        }
                     @endphp
                     <tr class="clickable-row" data-orden="{{ $orden->id }}" data-id="{{ $po->id }}">
                         <td>{{ $orden->id }}</td>
