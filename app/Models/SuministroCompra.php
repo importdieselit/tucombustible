@@ -36,7 +36,7 @@ class SuministroCompra extends Model
      */
     public function detalles()
     {
-        return $this->hasMany(SuministroCompraDetalle::class);
+        return $this->hasMany(SuministroCompraDetalle::class,'suministro_compra_id');
     }
 
     /**
