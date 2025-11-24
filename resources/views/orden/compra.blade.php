@@ -94,7 +94,10 @@
                     </tr>
                 </tbody>
             </table>
-            <div class="mt-4 flex gap-3">
+        </div>
+        
+    </div>
+                <div class="mt-4 flex gap-3">
 
     {{-- ESTATUS: 1 = SOLICITADA --}}
             @if ($purchaseOrder->estatus == 1)
@@ -138,10 +141,10 @@
 
         </div>
 
-        </div>
-        
+
     </div>
-    </div>
+
+
     <!-- Área donde se mostrará el canvas generado (opcional, para debug/visualización) -->
         <div id="outputContainer" class="mt-8 pt-4 border-t border-gray-300">
         </div>
