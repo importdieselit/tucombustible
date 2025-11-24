@@ -66,7 +66,7 @@
                         <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;" width="50%">Descripcion</th>
                         <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;">Cantidad</th>
                         <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;" width="20%">Precio Unitario</th>
-                        <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;"width="20%">Total</th>
+                        <th class="py-1" style="background-color: navajowhite; text-align: left;    vertical-align: middle;"width="20%">Total</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -80,7 +80,7 @@
                         <td>{{$detail->descripcion}}</td>
                         <td>{{$detail->cantidad_solicitada}} <input type="number"  class="form-control cantidad hidden" name="cantidad[]" value="{{$detail->cantidad_solicitada}}" step="0.01"></td>
                         <td>@if($user) <input type="number" class="form-control precio" name="precio_unitario[]" step="0.01"> @else {{$costo}} @endif</td>
-                        <td>{{$sub}}  <input type="text" class="form-control subtotal" name="subtotal[] border-0" readonly></td>
+                        <td>{{$sub}}  <input type="text" class="form-control subtotal" name="subtotal[] border-0" style="border: 0;" readonly></td>
                       </tr>
                     @empty 
                     @endforelse 
@@ -88,9 +88,9 @@
                         <td class="py-1"></td>
                         <td class="py-1"></td>
                         <td class="py-1">TOTAL</td>
-                        <td class="py-1">{{$total}}
+                        <td class="py-1" style="text-align: left">
 
-                             <input type="text" id="total_general" class="form-control" readonly>
+                             <input type="text" id="total_general" class="form-control" value="{{$total}}" readonly>
 
                         </td>
                     </tr>
