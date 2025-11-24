@@ -116,6 +116,8 @@ class OrdenController extends BaseController
 
     public function purchaseOrder($id_order=null,$id=null)
     {
+        $user=Auth::user();
+        dd($user);
         if(!is_null($id_order)){
             $orden = Orden::findOrFail($id_order);
             if(!is_null($id)){
@@ -135,6 +137,8 @@ class OrdenController extends BaseController
         }
 
     }
+
+    
 
     /**
      * Muestra el listado de órdenes de trabajo.
