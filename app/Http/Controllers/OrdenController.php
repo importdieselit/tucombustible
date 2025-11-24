@@ -120,9 +120,12 @@ class OrdenController extends BaseController
             $orden = Orden::findOrFail($id_order);
             if(!is_null($id)){
                 $purchaseOrder=SuministroCompra::find($id);
-                $vehiculo=Vehiculo::find($orden->id_vehiculo);
+                $vehiculo=null;
+                if(!is_null($orden->id_vehiculo)){
+                    $vehiculo=Vehiculo::find($orden->id_vehiculo);
+                }
                 $purchaseDetail=SuministroCompraDetalle::where('suministro_compra_id',$id)->get();
-                return view('orden.compra',compact('orden','purchaseOrder','purchaseDetail'));
+                return view('orden.compra',compact('orden','purchaseOrder','purchaseDetail','vehiculo'));
             }
             $data=SuministroCompra::where('orden_id',$id_order)->get();
             return view('orden.compras',compact('data','orden'));

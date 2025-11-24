@@ -36,7 +36,7 @@
             <div class="col col-6 text-left">
                 <img src="{{ asset('img/logo1.png') }}" alt="logo empresa" style="width: 250px">
             </div>
-            <div class="col col-6 text-right content-right" >
+            <div class="col col-6 text-right content-right" style="text-align: right;">
                 <p class="text-rigth small mb-1">Fecha de Emisión: {{ now()->format('d/m/Y H:i') }}</p>
             </div>
         
@@ -44,6 +44,7 @@
             <div class="col-12 text-center mb-3">
                 <h5 class="text-primary fw-bold mb-0">Requerimiento de Suministros</h5>
             </div>
+            <div class="col-12">OT: OT-{{}}</div>
         </div>
         <!-- Tabla de Detalle Simplificada -->
         <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
