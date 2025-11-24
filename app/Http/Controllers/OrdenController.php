@@ -117,7 +117,8 @@ class OrdenController extends BaseController
     public function purchaseOrder($id_order=null,$id=null)
     {
         $user=Auth::user();
-        dd($user);
+        $admin=array_search($user->id_perfil,[1,2,7,8,18]);
+        dd($admin);
         if(!is_null($id_order)){
             $orden = Orden::findOrFail($id_order);
             if(!is_null($id)){
@@ -127,13 +128,13 @@ class OrdenController extends BaseController
                     $vehiculo=Vehiculo::find($orden->id_vehiculo);
                 }
                 $purchaseDetail=SuministroCompraDetalle::where('suministro_compra_id',$id)->get();
-                return view('orden.compra',compact('orden','purchaseOrder','purchaseDetail','vehiculo'));
+                return view('orden.compra',compact('orden','purchaseOrder','purchaseDetail','vehiculo','user'));
             }
             $data=SuministroCompra::where('orden_id',$id_order)->get();
-            return view('orden.compras',compact('data','orden'));
+            return view('orden.compras',compact('data','orden','user'));
         }else{
             $data = SuministroCompra::with('detalles','orden')->get();
-            return view('orden.compras',compact('data'));
+            return view('orden.compras',compact('data','user'));
         }
 
     }
