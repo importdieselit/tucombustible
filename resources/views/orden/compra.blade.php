@@ -57,7 +57,6 @@
         </div>
         <!-- Tabla de Detalle Simplificada -->
         <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
-            <form id="form-compra" action="{{ route('guardar.compra') }}" method="POST">
                 <meta name="csrf-token" content="{{ csrf_token() }}">
 
             <table class="table table-sm" style="font-size: 0.75rem;">  
@@ -102,7 +101,7 @@
             @if ($orden->estatus == 1)
                 {{-- Solo usuarios administradores pueden aprobar o rechazar --}}
                 @if(in_array(auth()->user()->id_perfil,[1,2,7,8,18]))
-                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded shadow"
+                    <button class="px-4 py-2 bg-green-600 text-white rounded shadow"
                             onclick="actualizarEstatus({{ $orden->id }}, 2)">
                         Aprobar
                     </button>
@@ -140,7 +139,6 @@
 
         </div>
 
-            </form>
         </div>
         
     </div>
