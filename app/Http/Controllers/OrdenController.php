@@ -118,6 +118,7 @@ class OrdenController extends BaseController
     {
         $user=Auth::user();
         $admin=array_search($user->id_perfil,[1,2,7,8,18]);
+        dd($user->id_perfil);
         dd($admin);
         if(!is_null($id_order)){
             $orden = Orden::findOrFail($id_order);
