@@ -67,7 +67,7 @@
                 <tbody>
                      @forelse($purchaseDetail as $detail)
                      @php($costo=$detail->costo_unitario_aprobado??0)
-                      <tr style="border-bottom: 1px solid #01050a; background-color:white"   >
+                      <tr style="border-bottom: 1px solid #01050a; background-color:white; text-align: center;  vertical-align: middle;"   >
                         <td>{{$detail->descripcion}}</td>
                         <td>{{$detail->cantidad_solicitada}}</td>
                         <td>{{$costo}}</td>
