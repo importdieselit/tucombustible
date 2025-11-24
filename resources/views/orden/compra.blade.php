@@ -44,38 +44,31 @@
             <div class="col-12 text-center mb-3">
                 <h5 class="text-primary fw-bold mb-0">Requerimiento de Suministros</h5>
             </div>
-            <div class="col-12">OT: OT-{{}}</div>
+            <div class="col-12">OT: OT-{{ $orden->nro_orden }}</div>
+            @if(!is_null($vehiculo))
+                <div class="col-12">
+                    
+                </div>
+            @endif
         </div>
         <!-- Tabla de Detalle Simplificada -->
         <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
             <table class="table table-sm" style="font-size: 0.75rem;">  
                 <thead class="bg-primary text-white">
-                    <tr style="font-weight: 700">
-                        <th class="py-1" colspan="2"></th>
-                        <th class="py-1" width="30%"></th>
-                    </tr>
                     <tr>
-                        <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;">Item</th>
+                        <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;" width="45%">Descripcion</th>
                         <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;">Cantidad</th>
-                        <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;">precio</th>
+                        <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;" width="20%">Precio Unitario</th>
+                        <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;"width="20%">Total</th>
                     </tr>
                 </thead>
                 <tbody>
                      @forelse($purchaseDetail as $detail)
-                    
-
                       <tr style="border-bottom: 1px solid #01050a; background-color:white"   >
-                        <td colspan="2" class="text-black text-bold" style="font-weight: bold; font-size: 20px;">Salida: <br>
-                            <strong></strong>
-                        </td>
-                        <td rowspan="" style="vertical-align: middle; text-align:center; font-size: 18px;">
-                            <span class="fw-bold"></span><br>
-                           </td>
-                        <td rowspan="" style="vertical-align: middle; text-align:center">
-                            <span class="text-black fw-bold" style="font-size: 30px" ></span><br>
-                            
-                            
-                        </td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
                       </tr>
                     @empty 
                     @endforelse 
@@ -84,6 +77,7 @@
                         <td class="py-1"></td>
                         <td class="py-1"></td>
                         <td class="py-1"></td>
+                    </tr>
                 </tbody>
             </table>
         </div>
