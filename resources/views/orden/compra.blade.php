@@ -74,11 +74,10 @@
                         $sub=$detail->cantidad_solicitada*$costo;
                         $total+=$sub;
                     @endphp
-                    {{dd($orden->estatus)}}
                       <tr style="border-bottom: 1px solid #01050a; background-color:white; text-align: center;  vertical-align: middle;"   >
                         <td>{{$detail->descripcion}}   </td>
                         <td>{{$detail->cantidad_solicitada}} <input type="number"  class="cantidad" style="display:none" name="cantidad[]" value="{{$detail->cantidad_solicitada}}" step="0.01"></td>
-                        <td>@if($admin && $orden->estatus==1)  <input type="number" class="form-control precio" data-id="{{$detail->id}}" name="precio_unitario[]" step="0.01"> @else {{$costo}} @endif</td>
+                        <td>@if($admin && $purchaseOrder->estatus==1)  <input type="number" class="form-control precio" data-id="{{$detail->id}}" name="precio_unitario[]" step="0.01"> @else {{$costo}} @endif</td>
                         <td><input type="text" value="{{$sub}}" class="form-control subtotal" name="subtotal[] border-0" style="border: 0;" readonly></td>
                       </tr>
                     @empty 
@@ -98,16 +97,16 @@
             <div class="mt-4 flex gap-3">
 
     {{-- ESTATUS: 1 = SOLICITADA --}}
-            @if ($orden->estatus == 1)
+            @if ($purchaseOrder->estatus == 1)
                 {{-- Solo usuarios administradores pueden aprobar o rechazar --}}
                 @if($admin)
                     <button class="px-4 py-2 bg-green-600 text-white rounded shadow"
-                            onclick="actualizarEstatus({{ $orden->id }}, 2)">
+                            onclick="actualizarEstatus({{ $purchaseOrder->id }}, 2)">
                         Aprobar
                     </button>
 
                     <button class="px-4 py-2 bg-red-600 text-white rounded shadow"
-                            onclick="actualizarEstatus({{ $orden->id }}, 3)">
+                            onclick="actualizarEstatus({{ $purchaseOrder->id }}, 3)">
                         Rechazar
                     </button>
                 @endif
@@ -115,11 +114,11 @@
 
 
             {{-- ESTATUS: 2 = APROBADA --}}
-            @if ($orden->estatus == 2)
+            @if ($purchaseOrder->estatus == 2)
                 {{-- Mecánico marca como recibido --}}
                 @if($user->id_perfil == 5) 
                     <button class="px-4 py-2 bg-blue-600 text-white rounded shadow"
-                            onclick="actualizarEstatus({{ $orden->id }}, 4)">
+                            onclick="actualizarEstatus({{ $purchaseOrder->id }}, 4)">
                         Marcar como Recibido
                     </button>
                 @endif
@@ -127,13 +126,13 @@
 
 
             {{-- ESTATUS: 3 = RECHAZADA --}}
-            @if ($orden->estatus == 3)
+            @if ($purchaseOrder->estatus == 3)
                 <span class="text-red-600 font-semibold">Orden Rechazada</span>
             @endif
 
 
             {{-- ESTATUS: 4 = RECIBIDO --}}
-            @if ($orden->estatus == 4)
+            @if ($purchaseOrder->estatus == 4)
                 <span class="text-green-700 font-semibold">Orden Finalizada y Recibida</span>
             @endif
 
