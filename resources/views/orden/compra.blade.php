@@ -78,9 +78,9 @@
                     @endphp
                       <tr style="border-bottom: 1px solid #01050a; background-color:white; text-align: center;  vertical-align: middle;"   >
                         <td>{{$detail->descripcion}}</td>
-                        <td>{{$detail->cantidad_solicitada}} <input type="number" class="form-control cantidad" name="cantidad[]" value="{{$detail->cantidad_solicitada}}" step="0.01"></td>
+                        <td>{{$detail->cantidad_solicitada}} <input type="number"  class="form-control cantidad hidden" name="cantidad[]" value="{{$detail->cantidad_solicitada}}" step="0.01"></td>
                         <td>@if($user) <input type="number" class="form-control precio" name="precio_unitario[]" step="0.01"> @else {{$costo}} @endif</td>
-                        <td>{{$sub}}  <input type="text" class="form-control subtotal" name="subtotal[]" readonly></td>
+                        <td>{{$sub}}  <input type="text" class="form-control subtotal" name="subtotal[] border-0" readonly></td>
                       </tr>
                     @empty 
                     @endforelse 
