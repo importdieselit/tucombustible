@@ -76,6 +76,7 @@
                             
                         </td>
                       </tr>
+                    @empty 
                     @endforelse 
                     <tr style="font-weight: 700; font-size:19px; border-top: 2px solid #01050a; background-color: #d1ecf1;">
                         <td class="py-1"></td>
