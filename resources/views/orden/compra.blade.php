@@ -31,7 +31,6 @@
     <!-- Contenedor del Reporte (El área que será capturada, simplificada) -->
     <div style="width: 50%">
         <div id="statusMessage" class="text-center p-3 rounded-lg bg-yellow-100 text-yellow-800 hidden mb-4">
-            Procesando...
         </div>
     <div id="reporte-area" class="card shadow-sm p-3 bg-white border border-primary printableArea" >
         <div class="row">
@@ -100,7 +99,7 @@
     {{-- ESTATUS: 1 = SOLICITADA --}}
             @if ($orden->estatus == 1)
                 {{-- Solo usuarios administradores pueden aprobar o rechazar --}}
-                @if(in_array(auth()->user()->id_perfil,[1,2,7,8,18]))
+                @if($admin)
                     <button class="px-4 py-2 bg-green-600 text-white rounded shadow"
                             onclick="actualizarEstatus({{ $orden->id }}, 2)">
                         Aprobar
@@ -117,7 +116,7 @@
             {{-- ESTATUS: 2 = APROBADA --}}
             @if ($orden->estatus == 2)
                 {{-- Mecánico marca como recibido --}}
-                @if(auth()->user()->id_perfil == 5) 
+                @if($user()->id_perfil == 5) 
                     <button class="px-4 py-2 bg-blue-600 text-white rounded shadow"
                             onclick="actualizarEstatus({{ $orden->id }}, 4)">
                         Marcar como Recibido
@@ -186,7 +185,9 @@
         statusMessage.classList.add('bg-yellow-100', 'text-yellow-800');
         captureButton.disabled = true;
         outputContainer.innerHTML = ''; // Limpiar previsualización anterior
-
+        document.querySelectorAll('input').forEach(input => {
+            input.style='boder:0;';
+        });
         try {
             // 2. Generar el Canvas a partir del elemento DOM (ya corregido a 'printableArea[0]')
             const canvas = await html2canvas(printableArea, {
@@ -242,6 +243,9 @@
     
     async function sendReportToTelegram() {
         sendTelegramButton.disabled = true;
+        document.querySelectorAll('input').forEach(input => {
+            input.style='boder:0;';
+        });
        try {
             // Buscamos el primer elemento con la clase .printableArea
             const element = printableArea;
@@ -290,6 +294,7 @@
         } finally {
             // 6. Reestablecer el botón
             sendTelegramButton.disabled = false;
+            
         }
     }
 
