@@ -331,7 +331,7 @@
         input.addEventListener('change', function () {
             let idDetalle = this.dataset.id;
             let precio    = this.value;
-            console,log('precio:'+precio);
+            console.log('precio:'+precio);
             fetch("{{ route('compras.actualizar_precio') }}", {
                 method: "POST",
                 headers: {
