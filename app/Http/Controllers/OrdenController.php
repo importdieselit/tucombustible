@@ -138,6 +138,34 @@ class OrdenController extends BaseController
 
     }
 
+    public function actualizarPrecio(Request $request)
+    {
+        $detalle = SuministroCompraDetalle::find($request->id);
+
+        if (!$detalle) {
+            return response()->json(['ok' => false, 'msg' => 'Detalle no encontrado']);
+        }
+
+        $detalle->costo_unitario_aprobado = $request->precio;
+        $detalle->save();
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function cambiarEstatus(Request $request)
+    {
+        $compra = SuministroCompra::find($request->id);
+
+        if (!$compra) {
+            return response()->json(['ok' => false, 'msg' => 'Compra no encontrada']);
+        }
+
+        $compra->estatus = $request->estatus;
+        $compra->save();
+
+        return response()->json(['ok' => true, 'msg' => 'Estatus actualizado']);
+    }
+
     
 
     /**

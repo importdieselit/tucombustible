@@ -77,10 +77,10 @@
                         $total+=$sub;
                     @endphp
                       <tr style="border-bottom: 1px solid #01050a; background-color:white; text-align: center;  vertical-align: middle;"   >
-                        <td>{{$detail->descripcion}}</td>
-                        <td>{{$detail->cantidad_solicitada}} <input type="number"  class="form-control cantidad hidden" style="display:none" name="cantidad[]" value="{{$detail->cantidad_solicitada}}" step="0.01"></td>
-                        <td>@if($user) <input type="number" class="form-control precio" name="precio_unitario[]" step="0.01"> @else {{$costo}} @endif</td>
-                        <td>{{$sub}}  <input type="text" class="form-control subtotal" name="subtotal[] border-0" style="border: 0;" readonly></td>
+                        <td>{{$detail->descripcion}}   </td>
+                        <td>{{$detail->cantidad_solicitada}} <input type="number"  class="cantidad" style="display:none" name="cantidad[]" value="{{$detail->cantidad_solicitada}}" step="0.01"></td>
+                        <td>@if($user) <input type="number" class="form-control precio" data-id="{{$detail->id}}" name="precio_unitario[]" step="0.01"> @else {{$costo}} @endif</td>
+                        <td><input type="text" value="{{$sub}}" class="form-control subtotal" name="subtotal[] border-0" style="border: 0;" readonly></td>
                       </tr>
                     @empty 
                     @endforelse 
@@ -90,12 +90,56 @@
                         <td class="py-1">TOTAL</td>
                         <td class="py-1" style="text-align: left">
 
-                             <input type="text" id="total_general" class="form-control" value="{{$total}}" readonly>
+                             <input type="text" id="total_general" class="form-control" style="border: 0" value="{{$total}}" readonly>
 
                         </td>
                     </tr>
                 </tbody>
             </table>
+            <div class="mt-4 flex gap-3">
+
+    {{-- ESTATUS: 1 = SOLICITADA --}}
+            @if ($orden->estatus == 1)
+                {{-- Solo usuarios administradores pueden aprobar o rechazar --}}
+                @if(in_array(auth()->user()->id_perfil,[1,2,7,8,18]))
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded shadow"
+                            onclick="actualizarEstatus({{ $orden->id }}, 2)">
+                        Aprobar
+                    </button>
+
+                    <button class="px-4 py-2 bg-red-600 text-white rounded shadow"
+                            onclick="actualizarEstatus({{ $orden->id }}, 3)">
+                        Rechazar
+                    </button>
+                @endif
+            @endif
+
+
+            {{-- ESTATUS: 2 = APROBADA --}}
+            @if ($orden->estatus == 2)
+                {{-- Mecánico marca como recibido --}}
+                @if(auth()->user()->id_perfil == 5) 
+                    <button class="px-4 py-2 bg-blue-600 text-white rounded shadow"
+                            onclick="actualizarEstatus({{ $orden->id }}, 4)">
+                        Marcar como Recibido
+                    </button>
+                @endif
+            @endif
+
+
+            {{-- ESTATUS: 3 = RECHAZADA --}}
+            @if ($orden->estatus == 3)
+                <span class="text-red-600 font-semibold">Orden Rechazada</span>
+            @endif
+
+
+            {{-- ESTATUS: 4 = RECIBIDO --}}
+            @if ($orden->estatus == 4)
+                <span class="text-green-700 font-semibold">Orden Finalizada y Recibida</span>
+            @endif
+
+        </div>
+
             </form>
         </div>
         
@@ -277,59 +321,39 @@
 
     // Detectar cambios en cantidad y precio
     document.querySelectorAll('.cantidad, .precio').forEach(input => {
-        input.addEventListener('input', function () {
-            const row = this.closest('tr');
-            calcularSubtotal(row);
-            calcularTotal();
-        });
-    });
-
-
-
-    document.getElementById('form-compra').addEventListener('submit', function (e) {
-        e.preventDefault();
-
-        let form = this;
-        let formData = new FormData(form);
-
-        fetch(form.action, {
-            method: 'POST',
-            headers: {
-                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            },
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-
-            if (data.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Compra registrada',
-                    text: 'Los datos fueron guardados correctamente',
-                });
-
-                // Opcional: resetear el formulario
-                // form.reset();
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: data.message ?? 'Ocurrió un error en el servidor',
-                });
-            }
-
-        })
-        .catch(error => {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error inesperado',
-                text: error,
+            input.addEventListener('input', function () {
+                const row = this.closest('tr');
+                calcularSubtotal(row);
+                calcularTotal();
             });
         });
-    });
 
-    
+
+    document.querySelectorAll('.precio-input').forEach(input => {
+        input.addEventListener('change', function () {
+            let idDetalle = this.dataset.id;
+            let precio    = this.value;
+
+            fetch("{{ route('compras.actualizar_precio') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({
+                    id: idDetalle,
+                    precio: precio
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (!data.ok) {
+                    alert("Error al guardar: " + data.msg);
+                }
+            })
+            .catch(err => console.log(err));
+        });
+    });    
 });
 </script>
 @endpush

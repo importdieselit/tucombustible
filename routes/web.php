@@ -166,7 +166,11 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
 
     Route::get('ordenes/search-supplies', [OrdenController::class, 'searchSupplies'])->name('ordenes.search-supplies');
     Route::get('ordenes/compras/{id_order?}/{id?}', [OrdenController::class, 'purchaseOrder'])->name('ordenes.compra');
-    Route::post('ordenes/compras/{id_order?}/{id?}', [OrdenController::class, 'purchaseOrder'])->name('guardar.compra');
+    Route::post('/compras/actualizar-precio', [OrdenController::class,'actualizarPrecio'])
+    ->name('compras.actualizar_precio');
+
+    Route::post('/compras/cambiar-estatus', [OrdenController::class,'cambiarEstatus'])
+        ->name('compras.cambiar_estatus');
     // Recursos principales
     $resourceControllers = [
         'vehiculos' => VehiculoController::class,
