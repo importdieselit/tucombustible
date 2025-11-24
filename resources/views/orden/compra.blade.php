@@ -327,6 +327,34 @@
         document.getElementById('total_general').value = total.toFixed(2);
     }
 
+     function actualizarEstatus(id, estatus) {
+
+        if(!confirm("¿Confirmar esta acción?")) return;
+
+        fetch("{{ route('compras.cambiar_estatus') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+            },
+            body: JSON.stringify({
+                id: id,
+                estatus: estatus
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+
+            if (data.ok) {
+                alert(data.msg);
+                location.reload();
+            } else {
+                alert("Error: " + data.msg);
+            }
+        })
+        .catch(e => alert("Error de conexión: " + e));
+    }
+
     // Detectar cambios en cantidad y precio
     document.querySelectorAll('.cantidad, .precio').forEach(input => {
             input.addEventListener('input', function () {
