@@ -309,7 +309,46 @@
     }
     
 
-    function calcularSubtotal(row) {
+   
+    // Detectar cambios en cantidad y precio
+    document.querySelectorAll('.cantidad, .precio').forEach(input => {
+            input.addEventListener('input', function () {
+                const row = this.closest('tr');
+                calcularSubtotal(row);
+                calcularTotal();
+            });
+        });
+
+
+    document.querySelectorAll('.precio').forEach(input => {
+        input.addEventListener('change', function () {
+            let idDetalle = this.dataset.id;
+            let precio    = this.value;
+            console.log('precio:'+precio);
+            fetch("{{ route('compras.actualizar_precio') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                },
+                body: JSON.stringify({
+                    id: idDetalle,
+                    precio: precio
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                console.log('recibe');
+                if (!data.ok) {
+                    alert("Error al guardar: " + data.msg);
+                }
+            })
+            .catch(err => console.log(err));
+        });
+    });    
+});
+
+ function calcularSubtotal(row) {
         const cantidad = parseFloat(row.querySelector('.cantidad').value) || 0;
         const precio  = parseFloat(row.querySelector('.precio').value) || 0;
         const subtotal = cantidad * precio;
@@ -355,43 +394,6 @@
         .catch(e => alert("Error de conexión: " + e));
     }
 
-    // Detectar cambios en cantidad y precio
-    document.querySelectorAll('.cantidad, .precio').forEach(input => {
-            input.addEventListener('input', function () {
-                const row = this.closest('tr');
-                calcularSubtotal(row);
-                calcularTotal();
-            });
-        });
-
-
-    document.querySelectorAll('.precio').forEach(input => {
-        input.addEventListener('change', function () {
-            let idDetalle = this.dataset.id;
-            let precio    = this.value;
-            console.log('precio:'+precio);
-            fetch("{{ route('compras.actualizar_precio') }}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": "{{ csrf_token() }}"
-                },
-                body: JSON.stringify({
-                    id: idDetalle,
-                    precio: precio
-                })
-            })
-            .then(r => r.json())
-            .then(data => {
-                console.log('recibe');
-                if (!data.ok) {
-                    alert("Error al guardar: " + data.msg);
-                }
-            })
-            .catch(err => console.log(err));
-        });
-    });    
-});
 </script>
 @endpush
 @endsection
