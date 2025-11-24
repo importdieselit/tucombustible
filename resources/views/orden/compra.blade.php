@@ -57,6 +57,9 @@
         </div>
         <!-- Tabla de Detalle Simplificada -->
         <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+            <form id="form-compra" action="{{ route('ruta.guardar.compra') }}" method="POST">
+                <meta name="csrf-token" content="{{ csrf_token() }}">
+
             <table class="table table-sm" style="font-size: 0.75rem;">  
                 <thead class="bg-primary text-white">
                     <tr>
@@ -75,9 +78,9 @@
                     @endphp
                       <tr style="border-bottom: 1px solid #01050a; background-color:white; text-align: center;  vertical-align: middle;"   >
                         <td>{{$detail->descripcion}}</td>
-                        <td>{{$detail->cantidad_solicitada}}</td>
-                        <td>@if($user) <input type="number" value="{{$costo}}" name="costo[]" id="costo{{$detail->id}}"> @else {{$costo}} @endif</td>
-                        <td>{{$sub}}</td>
+                        <td>{{$detail->cantidad_solicitada}} <input type="number" class="form-control cantidad" name="cantidad[]" value="{{$detail->cantidad_solicitada}}" step="0.01"></td>
+                        <td>@if($user) <input type="number" class="form-control precio" name="precio_unitario[]" step="0.01"> @else {{$costo}} @endif</td>
+                        <td>{{$sub}}  <input type="text" class="form-control subtotal" name="subtotal[]" readonly></td>
                       </tr>
                     @empty 
                     @endforelse 
@@ -85,10 +88,15 @@
                         <td class="py-1"></td>
                         <td class="py-1"></td>
                         <td class="py-1">TOTAL</td>
-                        <td class="py-1">{{$total}}</td>
+                        <td class="py-1">{{$total}}
+
+                             <input type="text" id="total_general" class="form-control" readonly>
+
+                        </td>
                     </tr>
                 </tbody>
             </table>
+            </form>
         </div>
         
     </div>
@@ -246,6 +254,50 @@
     if (sendTelegramButton) {
         sendTelegramButton.addEventListener('click', sendReportToTelegram);
     }
+
+    document.getElementById('form-compra').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        let form = this;
+        let formData = new FormData(form);
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Compra registrada',
+                    text: 'Los datos fueron guardados correctamente',
+                });
+
+                // Opcional: resetear el formulario
+                // form.reset();
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message ?? 'Ocurrió un error en el servidor',
+                });
+            }
+
+        })
+        .catch(error => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error inesperado',
+                text: error,
+            });
+        });
+    });
+
     
 });
 </script>
