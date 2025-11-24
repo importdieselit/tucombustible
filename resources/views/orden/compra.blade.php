@@ -247,7 +247,9 @@
     async function sendReportToTelegram() {
         sendTelegramButton.disabled = true;
         document.querySelectorAll('.precio').forEach(input => {
-            input.style='boder:0;';
+           input.style.border = '0';          // Quitar borde
+            input.style.outline = 'none';      // Evitar borde azul de focus
+            input.style.background = 'transparent'; 
         });
        try {
             // Buscamos el primer elemento con la clase .printableArea
