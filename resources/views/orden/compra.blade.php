@@ -5,6 +5,7 @@
 @section('content')
 @php
     $total=0;
+    dd($user);
 @endphp
 <!-- Cargar librerías necesarias para la impresión/captura -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
