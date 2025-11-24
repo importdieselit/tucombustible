@@ -76,7 +76,7 @@
                       <tr style="border-bottom: 1px solid #01050a; background-color:white; text-align: center;  vertical-align: middle;"   >
                         <td>{{$detail->descripcion}}</td>
                         <td>{{$detail->cantidad_solicitada}}</td>
-                        <td>{{$costo}}</td>
+                        <td>@if($user) <input type="number" value="{{$costo}}" name="costo[]" id="costo{{$detail->id}}"> @else {{$costo}} @endif</td>
                         <td>{{$sub}}</td>
                       </tr>
                     @empty 
