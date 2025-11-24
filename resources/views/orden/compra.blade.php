@@ -57,7 +57,7 @@
         </div>
         <!-- Tabla de Detalle Simplificada -->
         <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
-            <form id="form-compra" action="{{ route('ruta.guardar.compra') }}" method="POST">
+            <form id="form-compra" action="{{ route('guardar.compra') }}" method="POST">
                 <meta name="csrf-token" content="{{ csrf_token() }}">
 
             <table class="table table-sm" style="font-size: 0.75rem;">  

@@ -166,6 +166,7 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
 
     Route::get('ordenes/search-supplies', [OrdenController::class, 'searchSupplies'])->name('ordenes.search-supplies');
     Route::get('ordenes/compras/{id_order?}/{id?}', [OrdenController::class, 'purchaseOrder'])->name('ordenes.compra');
+    Route::post('ordenes/compras/{id_order?}/{id?}', [OrdenController::class, 'purchaseOrder'])->name('guardar.compra');
     // Recursos principales
     $resourceControllers = [
         'vehiculos' => VehiculoController::class,
