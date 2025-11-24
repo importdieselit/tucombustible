@@ -109,6 +109,7 @@
     
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+
 <script>
    document.addEventListener('DOMContentLoaded', function() {
     // IMPORTANTE: Se asume que jQuery ($) está cargado antes de este script.
@@ -254,6 +255,36 @@
     if (sendTelegramButton) {
         sendTelegramButton.addEventListener('click', sendReportToTelegram);
     }
+    
+
+    function calcularSubtotal(row) {
+        const cantidad = parseFloat(row.querySelector('.cantidad').value) || 0;
+        const precio  = parseFloat(row.querySelector('.precio').value) || 0;
+        const subtotal = cantidad * precio;
+
+        row.querySelector('.subtotal').value = subtotal.toFixed(2);
+    }
+
+    function calcularTotal() {
+        let total = 0;
+
+        document.querySelectorAll('.subtotal').forEach(sub => {
+            total += parseFloat(sub.value) || 0;
+        });
+
+        document.getElementById('total_general').value = total.toFixed(2);
+    }
+
+    // Detectar cambios en cantidad y precio
+    document.querySelectorAll('.cantidad, .precio').forEach(input => {
+        input.addEventListener('input', function () {
+            const row = this.closest('tr');
+            calcularSubtotal(row);
+            calcularTotal();
+        });
+    });
+
+
 
     document.getElementById('form-compra').addEventListener('submit', function (e) {
         e.preventDefault();
