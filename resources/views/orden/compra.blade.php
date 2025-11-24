@@ -74,6 +74,7 @@
                         $sub=$detail->cantidad_solicitada*$costo;
                         $total+=$sub;
                     @endphp
+                    {{dd($orden->estatus)}}
                       <tr style="border-bottom: 1px solid #01050a; background-color:white; text-align: center;  vertical-align: middle;"   >
                         <td>{{$detail->descripcion}}   </td>
                         <td>{{$detail->cantidad_solicitada}} <input type="number"  class="cantidad" style="display:none" name="cantidad[]" value="{{$detail->cantidad_solicitada}}" step="0.01"></td>
@@ -243,7 +244,7 @@
     
     async function sendReportToTelegram() {
         sendTelegramButton.disabled = true;
-        document.querySelectorAll('input').forEach(input => {
+        document.querySelectorAll('.precio').forEach(input => {
             input.style='boder:0;';
         });
        try {
@@ -266,8 +267,8 @@
             
             // 3. Crear FormData para enviar el archivo al servidor (POST request)
             const formData = new FormData();
-            formData.append('chart_image', imageBlob, 'reporte_programacion.png');
-            formData.append('caption', `*Reporte de Programación de Viajes*\nGenerado el: ${new Date().toLocaleString('es-VE')}`);
+            formData.append('chart_image', imageBlob, 'requerimiento_de_compra.png');
+            formData.append('caption', `*Requerimiento de Compra*\nGenerado el: ${new Date().toLocaleString('es-VE')}`);
             
             // 4. Enviar al endpoint de Laravel (ruta que debe existir: telegram.send.photo)
             const response = await fetch('{{ route('telegram.send.photo') }}', {
