@@ -116,7 +116,7 @@
             {{-- ESTATUS: 2 = APROBADA --}}
             @if ($orden->estatus == 2)
                 {{-- Mecánico marca como recibido --}}
-                @if($user()->id_perfil == 5) 
+                @if($user->id_perfil == 5) 
                     <button class="px-4 py-2 bg-blue-600 text-white rounded shadow"
                             onclick="actualizarEstatus({{ $orden->id }}, 4)">
                         Marcar como Recibido
