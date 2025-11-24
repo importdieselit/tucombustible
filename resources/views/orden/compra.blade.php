@@ -103,12 +103,12 @@
             @if ($purchaseOrder->estatus == 1)
                 {{-- Solo usuarios administradores pueden aprobar o rechazar --}}
                 @if($admin)
-                    <button class="px-4 py-2 bg-green-600 text-white rounded shadow"
+                    <button class="px-4 py-2 btn-info text-white rounded shadow"
                             onclick="actualizarEstatus({{ $purchaseOrder->id }}, 2)">
                         Aprobar
                     </button>
 
-                    <button class="px-4 py-2 bg-red-600 text-white rounded shadow"
+                    <button class="px-4 py-2 btn-success text-white rounded shadow"
                             onclick="actualizarEstatus({{ $purchaseOrder->id }}, 3)">
                         Rechazar
                     </button>
