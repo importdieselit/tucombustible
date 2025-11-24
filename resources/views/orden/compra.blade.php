@@ -45,9 +45,11 @@
                 <h5 class="text-primary fw-bold mb-0">Requerimiento de Suministros</h5>
             </div>
             <div class="col-12">OT: OT-{{ $orden->nro_orden }}</div>
+            <div class="col-12">Requerido por {{ $orden->resposable }}</div>
+
             @if(!is_null($vehiculo))
                 <div class="col-12">
-                    
+                    Para: Unidad {{$vehiculo->flota}} [{{$vehiculo->placa}}]
                 </div>
             @endif
         </div>
@@ -56,7 +58,7 @@
             <table class="table table-sm" style="font-size: 0.75rem;">  
                 <thead class="bg-primary text-white">
                     <tr>
-                        <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;" width="45%">Descripcion</th>
+                        <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;" width="50%">Descripcion</th>
                         <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;">Cantidad</th>
                         <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;" width="20%">Precio Unitario</th>
                         <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;"width="20%">Total</th>
@@ -64,11 +66,12 @@
                 </thead>
                 <tbody>
                      @forelse($purchaseDetail as $detail)
+                     @php($costo=$detail->costo_unitario_aprobado??0)
                       <tr style="border-bottom: 1px solid #01050a; background-color:white"   >
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        <td>{{$detail->descripcion}}</td>
+                        <td>{{$detail->cantidad_solicitada}}</td>
+                        <td>{{$costo}}</td>
+                        <td>{{$detail->cantidad_solicitada*$costo}}</td>
                       </tr>
                     @empty 
                     @endforelse 
