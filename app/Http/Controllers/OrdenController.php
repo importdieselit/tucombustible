@@ -117,8 +117,7 @@ class OrdenController extends BaseController
     public function purchaseOrder($id_order=null,$id=null)
     {
         $user=Auth::user();
-        $admin=array_search($user->id_perfil,[1,2,7,8,18]);
-        dd($user->id_perfil);
+        $admin = in_array($user->id_perfil, [1,2,7,8,18]);
         dd($admin);
         if(!is_null($id_order)){
             $orden = Orden::findOrFail($id_order);
