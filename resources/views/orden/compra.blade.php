@@ -77,7 +77,7 @@
                       <tr style="border-bottom: 1px solid #01050a; background-color:white; text-align: center;  vertical-align: middle;"   >
                         <td>{{$detail->descripcion}}   </td>
                         <td>{{$detail->cantidad_solicitada}} <input type="number"  class="cantidad" style="display:none" name="cantidad[]" value="{{$detail->cantidad_solicitada}}" step="0.01"></td>
-                        <td>@if($admin && $purchaseOrder->estatus==1)  <input type="number" class="form-control precio" data-id="{{$detail->id}}" name="precio_unitario[]" step="0.01"> @else {{$costo}} @endif</td>
+                        <td>@if($admin && $purchaseOrder->estatus==1)  <input type="number" class="form-control precio" data-id="{{$detail->id}}" name="precio_unitario[]" value="{{$costo}}" step="0.01"> @else {{$costo}} @endif</td>
                         <td><input type="text" value="{{$sub}}" class="form-control subtotal" name="subtotal[] border-0" style="border: 0;" readonly></td>
                       </tr>
                     @empty 
