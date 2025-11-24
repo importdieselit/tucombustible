@@ -36,8 +36,8 @@
             <div class="col col-6 text-left">
                 <img src="{{ asset('img/logo1.png') }}" alt="logo empresa" style="width: 250px">
             </div>
-            <div class="col col-6 text-right">
-                <p class="text-muted small mb-1">Fecha de Emisión: {{ now()->format('d/m/Y H:i') }}</p>
+            <div class="col col-6 text-right content-right" >
+                <p class="text-rigth small mb-1">Fecha de Emisión: {{ now()->format('d/m/Y H:i') }}</p>
             </div>
         
         <!-- Encabezado del Reporte Simplificado -->
