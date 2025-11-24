@@ -3,7 +3,9 @@
 @section('title', 'Requerimientos de Suministros')
 
 @section('content')
-
+@php
+    $total=0;
+@endphp
 <!-- Cargar librerías necesarias para la impresión/captura -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <!-- Uso jQuery.print.js para simular PrintArea.js (se abre el diálogo de impresión/PDF) -->
@@ -66,20 +68,24 @@
                 </thead>
                 <tbody>
                      @forelse($purchaseDetail as $detail)
-                     @php($costo=$detail->costo_unitario_aprobado??0)
+                     @php
+                        $costo=$detail->costo_unitario_aprobado??0;
+                        $sub=$detail->cantidad_solicitada*$costo;
+                        $total+=$sub;
+                    @endphp
                       <tr style="border-bottom: 1px solid #01050a; background-color:white; text-align: center;  vertical-align: middle;"   >
                         <td>{{$detail->descripcion}}</td>
                         <td>{{$detail->cantidad_solicitada}}</td>
                         <td>{{$costo}}</td>
-                        <td>{{$detail->cantidad_solicitada*$costo}}</td>
+                        <td>{{$sub}}</td>
                       </tr>
                     @empty 
                     @endforelse 
-                    <tr style="font-weight: 700; font-size:19px; border-top: 2px solid #01050a; background-color: #d1ecf1;">
+                    <tr style="font-weight: 700; text-align: center; font-size:19px; border-top: 2px solid #01050a; background-color: #d1ecf1;">
                         <td class="py-1"></td>
                         <td class="py-1"></td>
-                        <td class="py-1"></td>
-                        <td class="py-1"></td>
+                        <td class="py-1">TOTAL</td>
+                        <td class="py-1">{{$total}}</td>
                     </tr>
                 </tbody>
             </table>
