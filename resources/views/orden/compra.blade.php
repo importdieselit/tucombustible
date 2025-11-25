@@ -13,7 +13,7 @@
 
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="text-primary"><i class="fa fa-cash me-2"></i> Solicitud de compra de suministros</h1>
+        <h1 class="text-primary"><i class="fa fa-cash me-2"></i> Solicitud de suministros</h1>
         
         <!-- Botón para Capturar la Imagen/Imprimir -->
         <button id="print" class="btn btn-primary shadow-sm">

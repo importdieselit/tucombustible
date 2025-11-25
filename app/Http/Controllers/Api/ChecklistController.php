@@ -385,6 +385,66 @@ class ChecklistController extends Controller
         }
     }
 
+
+    /**
+     * Obtener la última inspección registrada para un vehículo y checklist específicos
+     */
+    public function getUltimaInspeccion(Request $request)
+    {
+        try {
+            $vehiculoId = $request->query('vehiculo_id');
+            $checklistId = $request->query('checklist_id');
+
+            if (!$vehiculoId || !$checklistId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'vehiculo_id y checklist_id son requeridos'
+                ], 422);
+            }
+
+            $inspeccion = Inspeccion::where('vehiculo_id', $vehiculoId)
+                ->where('checklist_id', $checklistId)
+                ->orderByDesc('created_at')
+                ->first();
+
+            if (!$inspeccion) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'No se encontraron inspecciones previas para este vehículo y checklist',
+                    'data' => null,
+                ]);
+            }
+
+            $respuestas = null;
+            if (!empty($inspeccion->respuesta_in)) {
+                $respuestas = json_decode($inspeccion->respuesta_in, true);
+            } elseif (!empty($inspeccion->respuesta_json)) {
+                $respuestas = json_decode($inspeccion->respuesta_json, true);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Inspección encontrada',
+                'data' => [
+                    'id' => $inspeccion->id,
+                    'vehiculo_id' => $inspeccion->vehiculo_id,
+                    'checklist_id' => $inspeccion->checklist_id,
+                    'estatus_general' => $inspeccion->estatus_general,
+                    'respuesta_json' => $inspeccion->respuesta_json,
+                    'respuesta_in' => $inspeccion->respuesta_in,
+                    'respuestas' => $respuestas,
+                    'created_at' => $inspeccion->created_at,
+                    'updated_at' => $inspeccion->updated_at,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al obtener la inspección: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     /**
      * Obtener detalles de una inspección específica
      */
