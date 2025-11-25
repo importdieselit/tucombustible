@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\SuministroCompra;
 use App\Models\SuministroCompraDetalle;
 use App\Services\TelegramNotificationService;
+use App\Models\OrdenFoto;
 use Google\Service\Datastore\Sum;
 
 class OrdenController extends BaseController
@@ -266,8 +267,9 @@ class OrdenController extends BaseController
             
             $requerimientos = SuministroCompra::where('orden_id', $id)->with('detalles')->get();
             $estatusData = EstatusData::all()->keyBy('id_estatus');
+            $fotos= OrdenFoto::where('orden_id',$id)->get();
 
-            return view('orden.show', compact('orden', 'insumos_usados','requerimientos', 'estatusData'));
+            return view('orden.show', compact('orden', 'insumos_usados','requerimientos', 'estatusData','fotos'));
         } catch (ModelNotFoundException $e) {
             Session::flash('error', 'La orden de trabajo no fue encontrada.');
             return Redirect::route('orden.list');
@@ -344,7 +346,7 @@ class OrdenController extends BaseController
             $flota=!is_null($vehiculo)?$vehiculo->flota:null;
             $destino= $flota ?? $orden->responsable;
             
-             $mensajeTelegramC="Requerimiento de compra #{$compraId} para orden {$orden->nro_orden} a {$destino}\n";
+             $mensajeTelegramC="Requerimiento de suministros #{$compraId} para orden {$orden->nro_orden} a {$destino}\n";
 
             // Crear los detalles de los ítems solicitados
             foreach ($solicitudCompra as $solicitudItem) {
@@ -443,7 +445,7 @@ class OrdenController extends BaseController
         // Mensaje de éxito
         Session::flash('success', 'Orden de trabajo creada exitosamente.');
         if (!empty($solicitudCompra)) {
-            return Redirect::route('ordenes.compra');
+            return Redirect::route('ordenes.compra',[]);
         }
         // Redirige al listado
         return Redirect::route('ordenes.list');

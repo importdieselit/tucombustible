@@ -121,8 +121,25 @@
                 <tr>
                     <td colspan="3" class="text-end"><strong>Total Costo:</strong></td>
                     <td><strong>${{ number_format($insumos_usados->sum(fn($insumo) => $insumo->inventario->costo * $insumo->cantidad), 2, ',', '.') }}</strong></td>
+                </tr>
             </tbody>
         </table>
+
+    </div>
+    <div>
+        @forelse($fotos as $imagen)
+            <div class="col-md-4 mb-3">
+                <div class="card">
+                    <img src="{{ asset('storage/ordenes_fotos' . $imagen->ruta_archivo) }}" class="card-img-top" alt="Imagen de orden">
+                    <div class="card-body">
+                         <p class="card-text text-center">Subida el {{ $imagen->created_at->format('d/m/Y H:i') }}</p>
+                         <p>{{$imagen->descripcion}}</p>
+                    </div>
+                 </div>
+            </div>
+        @empty
+            <p class="text-center">No hay imágenes disponibles para esta orden.</p>
+        @endforelse
     </div>
 </div>
 
