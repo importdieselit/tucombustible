@@ -334,7 +334,7 @@ class OrdenController extends BaseController
         }
         
         // 3. Procesar Suministros de COMPRA (Generar Solicitud/OC)
-        if (!empty($solicitudCompra)) {
+        if (count($solicitudCompra)>0) {
             // Crear la cabecera de la Solicitud de Compra (OC)
             
             $compra = SuministroCompra::create([
@@ -444,7 +444,7 @@ class OrdenController extends BaseController
         
         // Mensaje de éxito
         Session::flash('success', 'Orden de trabajo creada exitosamente.');
-        if (!empty($solicitudCompra)) {
+        if (count($solicitudCompra)>0) {
             return Redirect::route('ordenes.compra',['order_id'=>$orden->id]);
         }
         // Redirige al listado
