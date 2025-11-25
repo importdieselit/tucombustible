@@ -445,7 +445,7 @@ class OrdenController extends BaseController
         // Mensaje de éxito
         Session::flash('success', 'Orden de trabajo creada exitosamente.');
         if (!empty($solicitudCompra)) {
-            return Redirect::route('ordenes.compra',[]);
+            return Redirect::route('ordenes.compra',['order_id'=>$orden->id]);
         }
         // Redirige al listado
         return Redirect::route('ordenes.list');
