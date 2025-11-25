@@ -130,7 +130,7 @@
         @forelse($fotos as $imagen)
             <div class="col-md-4 mb-3">
                 <div class="card">
-                    <img src="{{ asset('storage/ordenes_fotos' . $imagen->ruta_archivo) }}" class="card-img-top" alt="Imagen de orden">
+                    <img src="{{ asset('storage/' . $imagen->ruta_archivo) }}" class="card-img-top" alt="Imagen de orden">
                     <div class="card-body">
                          <p class="card-text text-center">Subida el {{ $imagen->created_at->format('d/m/Y H:i') }}</p>
                          <p>{{$imagen->descripcion}}</p>
