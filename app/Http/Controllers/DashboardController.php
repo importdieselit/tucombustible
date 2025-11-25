@@ -13,6 +13,7 @@ use App\Models\MovimientoCombustible;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Carbon;
+use App\Models\SuministroCompra;
 class DashboardController extends Controller
 {
     public function index()
@@ -58,6 +59,7 @@ class DashboardController extends Controller
         $unidades_disponibles = Vehiculo::where('es_flota',true)->where('estatus',1)->count();
         $programados=MantenimientoProgramado::whereDate('fecha','>=',now())->count();
         $programadosHoy=MantenimientoProgramado::whereDate('fecha',now())->count();
+        $suministros_compra = SuministroCompra::where('estatus', 1)->count();
 
         // Puedes añadir más información, como las últimas 5 órdenes
         $ultimasOrdenes = Orden::orderBy('id', 'desc')->take(5)->get();
@@ -72,7 +74,9 @@ class DashboardController extends Controller
             'unidades_en_mantenimiento',
             'unidades_disponibles',
             'programados',
-            'programadosHoy'
+            'programadosHoy',
+            'suministros_compra',
+            'user'
         ));
     }
 }

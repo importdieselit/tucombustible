@@ -145,6 +145,27 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
                 </a>
             </div>
         </div>
+        @if(in_array($user->id_perfil,[1,2,18]))
+        <div class="col-md-3">
+            <div class="card shadow-sm border-0">
+                <a href="{{route('ordenes.compras')}}" target="_blank">
+
+                <div class="card-body d-flex align-items-center">
+                    <div class="me-3">
+                        <span class="bg-success text-white rounded-circle p-3">
+                            <i class="bi bi-clipboard-check" style="font-size:2rem;"></i>
+                        </span>
+                    </div>
+                    <div>
+                        <h5 class="card-title mb-0">Requerimientos de Suministros</h5>
+                        <h2 class="fw-bold">{{ $suministros_compra }}</h2>
+                        <small class="text-muted">Activas</small>
+                    </div>
+                </div>
+                </a>
+            </div>
+        </div>
+        @endif
         {{-- <div class="col-md-3">
             <div class="card shadow-sm border-0">
                 <div class="card-body d-flex align-items-center">
