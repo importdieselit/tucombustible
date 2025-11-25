@@ -10,6 +10,9 @@
             <a href="{{ route('ordenes.list') }}" class="btn btn-info me-2">
                 <i class="bi bi-arrow-left"></i> Volver al Listado
             </a>
+            <a href="{{ route('ordenes.compra',[$orden->id]) }}" class="btn btn-info me-2">
+                <i class="bi bi-arrow-left"></i> Ver Requerimiento de Suminsitros
+            </a>
              @if ($orden->estatus ==2)
                 <a href="{{ route('ordenes.edit', $orden->id ?? '') }}" class="btn btn-warning me-2">
                     <i class="bi bi-pencil"></i> Editar
