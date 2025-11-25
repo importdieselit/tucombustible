@@ -148,7 +148,7 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
         @if(in_array($user->id_perfil,[1,2,18]))
         <div class="col-md-3">
             <div class="card shadow-sm border-0">
-                <a href="{{route('ordenes.compras')}}" target="_blank">
+                <a href="{{route('ordenes.compra')}}" target="_blank">
 
                 <div class="card-body d-flex align-items-center">
                     <div class="me-3">
