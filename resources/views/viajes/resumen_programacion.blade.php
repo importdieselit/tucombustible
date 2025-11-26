@@ -27,7 +27,7 @@
     </div>
 
     <!-- Contenedor del Reporte (El área que será capturada, simplificada) -->
-    <div style="width: 50%">
+    <div style="width: 800px">
         <div id="statusMessage" class="text-center p-3 rounded-lg bg-yellow-100 text-yellow-800 hidden mb-4">
             Procesando...
         </div>
@@ -49,7 +49,7 @@
                 <thead class="bg-primary text-white">
                     <tr style="font-weight: 700">
                         <th class="py-1"><img src="{{ asset('img/logo1.png') }}" alt="logo empresa" style="width: 250px"></th>
-                        <th class="py-1" width="30%">Litros</th>
+                        <th class="py-1" width="20%">Litros</th>
                         <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;">CHOFER / AYUDANTE</th>
                         <th class="py-1" style="background-color: navajowhite; text-align: center;    vertical-align: middle;">UNIDAD</th>
                     </tr>

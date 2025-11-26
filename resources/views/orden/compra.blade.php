@@ -29,7 +29,7 @@
     </div>
 
     <!-- Contenedor del Reporte (El área que será capturada, simplificada) -->
-    <div style="width: 50%; justify-self: anchor-center;">
+    <div style="width: 800px; justify-self: anchor-center;">
         <div id="statusMessage" class="text-center p-3 rounded-lg bg-yellow-100 text-yellow-800 hidden mb-4">
         </div>
     <div id="reporte-area" class="card shadow-sm p-3 bg-white border border-primary printableArea" >
