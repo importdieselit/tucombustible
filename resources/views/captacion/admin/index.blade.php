@@ -60,7 +60,7 @@
             
             {{-- Enlaces de paginación --}}
             <div class="d-flex justify-content-center mt-3">
-                {{ $inspecciones->links() }}
+                {{ $list->links() }}
             </div>
         </div>
     </div>
