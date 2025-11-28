@@ -256,7 +256,7 @@ class ViajesController extends Controller
                 if(isset($despachoData['cliente_id'])){
                     $clienteId = $despachoData['cliente_id'];
                     $clienteNombre = Cliente::find($clienteId)->nombre;
-                }
+                
                     $pedido=Pedido::create([
                         'cliente_id' => $clienteId, // Usar el cliente seleccionado
                         'deposito_id' => 6, // Ya no se asigna un depósito específico
@@ -267,7 +267,7 @@ class ViajesController extends Controller
                         'estado' => 'aprobado',
                         'fecha_solicitud' => $request->fecha_salida,
                     ]);
-                    
+                }    
                 
                 $actual= MovimientoCombustible::getSaldoActualByDeposito(6);
                  $movimiento = new MovimientoCombustible();
