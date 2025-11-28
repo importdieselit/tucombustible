@@ -14,6 +14,7 @@
     $MODULO_CHECKLIST = 6;
     $MODULO_REPORTES = 7;
     $MODULO_VIAJES = 8;
+    $MODULO_CLIENTES = 52;
 @endphp
 
 @section('content')
@@ -387,6 +388,19 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
                 'route' => route('combustible.despacho'),
                 'icon' => 'fa-truck-fast',
                 'title' => 'Despachos',
+                'color' => 'bg-primary',
+                'target' => '_blank',
+                'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
+            ])
+        </div>
+        @endif
+
+        @if(Auth::user()->canAccess('create', $MODULO_CLIENTES))
+        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+            @include('partials.access_card', [
+                'route' => route('captacion.admin.index'),
+                'icon' => 'fa-address-book',
+                'title' => 'Clientes',
                 'color' => 'bg-primary',
                 'target' => '_blank',
                 'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
