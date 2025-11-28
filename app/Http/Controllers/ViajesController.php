@@ -253,7 +253,7 @@ class ViajesController extends Controller
                 ]);
                 $clienteId=0;
                 $clienteNombre=$despachoData['otro_cliente'] ?? 'Cliente Desconocido';
-                if(isset($despachoData['cliente_id'])){
+                if(isset($despachoData['cliente_id'])&&!is_null($despachoData['cliente_id'])){
                     $clienteId = $despachoData['cliente_id'];
                     $clienteNombre = Cliente::find($clienteId)->nombre;
                 
