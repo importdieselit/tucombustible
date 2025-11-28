@@ -28,7 +28,8 @@ use Illuminate\Support\Carbon;
 use App\Traits\GenerateAlerts;
 use Illuminate\Support\Facades\Auth;
 use App\Services\FcmNotificationService;
-use App\Services\TelegramNotificationService;   
+use App\Services\TelegramNotificationService; 
+use App\Models\ViaticoViaje;  
 
 /**
  * Controlador para gestionar los movimientos de combustible (recarga y despacho).
@@ -922,6 +923,9 @@ public function createPrecarga()
                 'viaje_id' => $viaje->id,
             ]);
 
+            $tabulador = TabuladorViatico::where('destino', $destino->id)->first();
+
+            $this->generarCuadroViaticos($viaje, $tabulador, 1);
 
             DB::commit();
 
@@ -1020,7 +1024,7 @@ public function createPrecarga()
                 $totalLitros += $despachoData['litros'];
             }
 
-
+            $this->generarCuadroViaticos($viaje, $tabulador, 1);
             DB::commit();
 
             // 5. NOTIFICACIÓN DE PLANIFICACIÓN EXITOSA
@@ -1131,4 +1135,60 @@ public function createPrecarga()
         // Esto se manejaría generalmente con Eventos de Laravel y un listener de Broadcast.
         // Alert::create(['mensaje' => "Nueva Planificación de Combustible: ID {$viaje->id}", 'tipo' => 'info']);
     }
+
+    private function generarCuadroViaticos(Viaje $viaje, TabuladorViatico $tabulador,$cantidadDespachos): void
+    {
+        $fecha_salida = $viaje->fecha_salida;
+        $viatico=false;
+        $totalPersonas = 1  + $viaje->custodia_count;
+        $parametros = Parametro::all()->keyBy('nombre')
+            ->map(function($item) {
+                return $item->valor;
+            });
+            //dd($parametros);
+            // Lista de conceptos a generar (usando el Tabulador)
+        $conceptos = [
+            // Pagos Fijos
+            ['concepto' => 'Pago Chofer', 'monto' => $tabulador->pago_chofer * $cantidadDespachos, 'cantidad' => $cantidadDespachos, 'editable' => false],
+            ['concepto' => 'Pago Ayudantes', 'monto' => $tabulador->pago_ayudante * $cantidadDespachos, 'cantidad' => $cantidadDespachos, 'editable' => false],
+        ];      
+            // Viáticos de Comida (por persona, por día)
+            if($tabulador->viatico_desayuno > 0 ){
+                $viatico=true;
+                $conceptos[] = ['concepto' => 'Viático Desayuno', 'monto' => $tabulador->viatico_desayuno , 'cantidad' => $totalPersonas, 'editable' => true];
+            }
+            if($tabulador->viatico_almuerzo > 0 ){
+                $viatico=true;
+                $conceptos[] = ['concepto' => 'Viático Almuerzo', 'monto' => $tabulador->viatico_almuerzo , 'cantidad' => $totalPersonas, 'editable' => true];
+            }
+            if($tabulador->viatico_cena > 0 ){
+                $viatico=true;
+                $conceptos[] = ['concepto' => 'Viático Cena', 'monto' => $tabulador->viatico_cena, 'cantidad' => $totalPersonas, 'editable' => true];
+            }
+            // Pernocta y Peajes
+            if($tabulador->costo_pernocta > 0 ){
+                $viatico=true;
+                $conceptos[] =['concepto' => 'Costo Pernocta', 'monto' => $tabulador->costo_pernocta, 'cantidad' => $totalPersonas, 'editable' => true];
+            }
+            if($tabulador->peajes > 0 ) {
+                $conceptos[] =['concepto' => 'Peajes (Ida y Vuelta)', 'monto' => $tabulador->peajes * $parametros['peaje'] , 'cantidad' => 1, 'editable' => true];
+            }
+            if($viatico==true){
+                $viaje->has_viatico=true;
+                $viaje->save();
+            };
+        // Guardar cada concepto en la tabla 'viaticos_viaje'
+        foreach ($conceptos as $item) {
+            if ($item['cantidad'] > 0) {
+                ViaticoViaje::create([
+                    'viaje_id' => $viaje->id,
+                    'concepto' => $item['concepto'],
+                    'monto_base' => $item['monto'],
+                    'cantidad' => $item['cantidad'],
+                    'es_editable' => $item['editable'],
+                ]);
+            }
+        }
+    }
+
 }
