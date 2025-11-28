@@ -111,8 +111,9 @@ class CaptacionController extends Controller
     {
         // Generación / copia de planillas (ejemplo: copia desde storage/plantillas)
         $templates = [
+            'declaracion_bajo_fe_de_juramento' => storage_path('app/plantillas/declaracion_bajo_fe_de_juramento.pdf'),
             'solicitud' => storage_path('app/plantillas/solicitud.pdf'),
-            'autorizacion' => storage_path('app/plantillas/autorizacion.pdf'),
+            'requisitos' => storage_path('app/plantillas/requisitos.doc'),
         ];
 
         $saved = [];
@@ -140,6 +141,10 @@ class CaptacionController extends Controller
     // Programar / marcar pendiente inspección
     public function programarInspeccion(CaptacionCliente $captacion)
     {
+        if (!$captacion->requisitosCompletos()) {
+            return back()->with('error', 'Aún faltan documentos obligatorios. No puede avanzar a inspección.');
+        }
+
         $captacion->estatus_captacion = 'pendiente_inspeccion';
         $captacion->save();
         // Podrías disparar notificación al inspector
