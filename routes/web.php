@@ -34,9 +34,8 @@ use App\Http\Controllers\DataDeletionController;
 use App\Http\Controllers\ViajesController;
 use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\PlanificacionMantenimientoController;
+use App\Http\Controllers\CaptacionController;
 
-use App\Models\Deposito;
-use App\Models\MovimientoCombustible;
 
 // Agrega otros controladores según los modelos y tablas
 
@@ -319,7 +318,20 @@ Route::put('/viajes/{id}', [ViajesController::class, 'update'])->name('viaje.upd
     // Rutas para repostaje específico
     //Route::get('/tanques/{tanque}/repostajes', [RepostajeTanqueController::class, 'showByTanque'])->name('tanques.repostajes');
     //Route::get('/vehiculos/{vehiculo}/repostajes', [RepostajeVehiculoController::class, 'showByVehiculo'])->name('vehiculos.repostajes');
+    Route::get('captacion/crear', [CaptacionController::class,'create'])->name('captacion.create');
+    Route::post('captacion/store', [CaptacionController::class,'store'])->name('captacion.store');
+    Route::get('captacion/thanks', [CaptacionController::class,'thanks'])->name('captacion.thanks');
 
+    // Admin (proteger con middleware 'auth' y permisos necesarios)
+    Route::middleware(['auth'])->prefix('admin/captacion')->group(function () {
+        Route::get('/', [CaptacionController::class,'adminIndex'])->name('captacion.admin.index');
+        Route::get('/{captacion}', [CaptacionController::class,'show'])->name('captacion.admin.show');
+        Route::post('/documento/{documento}/validar', [CaptacionController::class,'validarDocumento'])->name('captacion.documento.validar');
+        Route::post('/{captacion}/enviar-planillas', [CaptacionController::class,'enviarPlanillas'])->name('captacion.enviar.planillas');
+        Route::post('/{captacion}/programar-inspeccion', [CaptacionController::class,'programarInspeccion'])->name('captacion.programar.inspeccion');
+        Route::post('/{captacion}/registrar-inspeccion', [CaptacionController::class,'registrarInspeccion'])->name('captacion.registrar.inspeccion');
+        Route::get('/documento/{documento}/download', [CaptacionController::class,'downloadDoc'])->name('captacion.documento.download');
+    });
     Route::get('/routes-list', function () {
         dd(Route::getRoutes());
     });

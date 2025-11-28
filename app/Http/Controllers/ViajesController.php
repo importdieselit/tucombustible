@@ -18,6 +18,8 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use App\Models\DespachoViaje;
 use Illuminate\Support\Facades\DB;
+use App\Models\Pedido;
+use App\Models\MovimientoCombustible;
 
 
 class ViajesController extends Controller
@@ -140,7 +142,7 @@ class ViajesController extends Controller
             // Pagos Fijos
             ['concepto' => 'Pago Chofer', 'monto' => $tabulador->pago_chofer * $cantidadDespachos, 'cantidad' => $cantidadDespachos, 'editable' => false],
             ['concepto' => 'Pago Ayudantes', 'monto' => $tabulador->pago_ayudante * $cantidadDespachos, 'cantidad' => $cantidadDespachos, 'editable' => false],
-        ];    
+        ];      
             // Viáticos de Comida (por persona, por día)
             if($tabulador->viatico_desayuno > 0 ){
                 $viatico=true;
@@ -249,6 +251,39 @@ class ViajesController extends Controller
                     'otro_cliente' => $despachoData['otro_cliente'] ?? null,
                     'litros' => $despachoData['litros'],
                 ]);
+                $clienteId=0;
+                $clienteNombre=$despachoData['otro_cliente'] ?? 'Cliente Desconocido';
+                if(isset($despachoData['cliente_id'])){
+                    $clienteId = $despachoData['cliente_id'];
+                    $clienteNombre = Cliente::find($clienteId)->nombre;
+                }
+                    $pedido=Pedido::create([
+                        'cliente_id' => $clienteId, // Usar el cliente seleccionado
+                        'deposito_id' => 6, // Ya no se asigna un depósito específico
+                        'chofer_id' => $request->chofer_id ?? 0,
+                        'vehiculo_id' => $request->vehiculo_id ?? 0,
+                        'cantidad_solicitada' => $despachoData['litros'],
+                        'observaciones' => 'Pedido generado desde la planificacion: '.$clienteNombre,
+                        'estado' => 'aprobado',
+                        'fecha_solicitud' => $request->fecha_salida,
+                    ]);
+                    
+                
+                $actual= MovimientoCombustible::getSaldoActualByDeposito(6);
+                 $movimiento = new MovimientoCombustible();
+                $movimiento->created_at = $request->fecha_salida;
+                $movimiento->tipo_movimiento = 'salida';
+                $movimiento->deposito_id = 6;
+                $movimiento->cliente_id = $clienteId;
+                $movimiento->vehiculo_id = $request->vehiculo_id;
+                $movimiento->cantidad_litros = $despachoData['litros'];
+                $movimiento->observaciones = 'Despacho a Cliente '.$clienteNombre.' desde la planificacion.';
+                $movimiento->cant_inicial= $actual;
+                $movimiento->cant_final= $actual - $despachoData['litros'];
+                $movimiento->save();
+
+
+
                 $totalLitros += $despachoData['litros'];
             }
             $data=[
@@ -258,7 +293,23 @@ class ViajesController extends Controller
                     'litros' => $despachoData['litros'],
                     'total_litros' => $totalLitros
                 ];
-                
+
+                if ($request->has('chofer_id') && $request->chofer_id !== null) {
+                try {
+                    FcmNotificationService::sendPedidoAsignadoConductorNotification(
+                        $pedido->fresh(['cliente']),
+                        $request->chofer_id
+                    );
+                    Log::info("Notificación FCM enviada al conductor {$request->chofer_id} por asignación de pedido #{$pedido->id}");
+                } catch (\Exception $e) {
+                    Log::error("Error enviando notificación FCM al conductor: " . $e->getMessage());
+                    // No fallar la operación principal por error en notificación
+                }
+            }
+
+                            // Crear el pedido (sin depósito específico)
+            
+
                  FcmNotificationService::enviarNotification(
                         "Nuevo viaje creado a {$viaje->destino_ciudad} con {$cantidadDespachos} despachos. Total Litros: {$totalLitros}",  
                         "Nuevo viaje creado a {$viaje->destino_ciudad} con {$cantidadDespachos} despachos. Total Litros: {$totalLitros}",
