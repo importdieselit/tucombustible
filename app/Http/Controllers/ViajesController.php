@@ -269,18 +269,18 @@ class ViajesController extends Controller
                     ]);
                 }    
                 
-                $actual= MovimientoCombustible::getSaldoActualByDeposito(6);
-                 $movimiento = new MovimientoCombustible();
-                $movimiento->created_at = $request->fecha_salida;
-                $movimiento->tipo_movimiento = 'salida';
-                $movimiento->deposito_id = 6;
-                $movimiento->cliente_id = $clienteId;
-                $movimiento->vehiculo_id = $request->vehiculo_id;
-                $movimiento->cantidad_litros = $despachoData['litros'];
-                $movimiento->observaciones = 'Despacho a Cliente '.$clienteNombre.' desde la planificacion.';
-                $movimiento->cant_inicial= $actual;
-                $movimiento->cant_final= $actual - $despachoData['litros'];
-                $movimiento->save();
+               // $actual= MovimientoCombustible::getSaldoActualByDeposito(6);
+                //  $movimiento = new MovimientoCombustible();
+                // $movimiento->created_at = $request->fecha_salida;
+                // $movimiento->tipo_movimiento = 'salida';
+                // $movimiento->deposito_id = 6;
+                // $movimiento->cliente_id = $clienteId;
+                // $movimiento->vehiculo_id = $request->vehiculo_id;
+                // $movimiento->cantidad_litros = $despachoData['litros'];
+                // $movimiento->observaciones = 'Despacho a Cliente '.$clienteNombre.' desde la planificacion.';
+                // $movimiento->cant_inicial= $actual;
+                // $movimiento->cant_final= $actual - $despachoData['litros'];
+                // $movimiento->save();
 
 
 
