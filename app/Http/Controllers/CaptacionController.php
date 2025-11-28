@@ -66,7 +66,9 @@ class CaptacionController extends Controller
     }
 
     public function thanks() {
-        return view('captacion.admin.index');
+        $query = CaptacionCliente::query();
+ $list = $query->orderBy('created_at','desc')->paginate(25);
+        return view('captacion.admin.index', compact('list'));
     }
 
     // ---------------------------------------------------------------------
