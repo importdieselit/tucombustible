@@ -400,7 +400,7 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
             @include('partials.access_card', [
                 'route' => route('captacion.admin.index'),
                 'icon' => 'fa-address-book',
-                'title' => 'Clientes',
+                'title' => 'Captacion',
                 'color' => 'bg-primary',
                 'target' => '_blank',
                 'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
