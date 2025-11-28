@@ -9,7 +9,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\PlanillasGeneradas;
 use App\Models\Cliente;
-use Auth;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class CaptacionController extends Controller
 {
@@ -30,8 +31,9 @@ class CaptacionController extends Controller
             'direccion' => 'nullable|string',
             'documentos.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120'
         ]);
-
-        $captacion = CaptacionCliente::create([
+        
+        try {
+            $captacion = CaptacionCliente::create([
             'razon_social' => $validated['razon_social'],
             'rif' => $validated['rif'] ?? null,
             'correo' => $validated['correo'],
@@ -51,6 +53,12 @@ class CaptacionController extends Controller
                 ]);
             }
         }
+        } catch (\Throwable $th) {
+            Log::error('Error al guardar captación: '.$th->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Error al procesar la solicitud. Intente nuevamente.');
+        }
+
+        
 
         return redirect()->route('captacion.thanks')->with('success', 'Solicitud recibida. Pronto le contactaremos.');
     }
