@@ -1,6 +1,7 @@
 @extends('layouts.app')
 @section('content')
 <div class="container">
+    <div class="card shadow mb-4">
     <h2>Expediente: {{ $captacion->razon_social }} (ID: {{ $captacion->id }})</h2>
     <p>Estatus: <strong>{{ $captacion->estatus_captacion }}</strong></p>
 
@@ -30,6 +31,24 @@
         <button class="btn btn-primary">Enviar Planillas / Habilitar Descarga</button>
     </form>
 
+    <h4>Estado de Requisitos</h4>
+
+    @if(count($captacion->requisitosPendientes()) == 0)
+        <div class="alert alert-success">
+            Todos los documentos obligatorios han sido cargados.
+        </div>
+    @else
+        <div class="alert alert-danger">
+            <strong>Documentos faltantes:</strong><br>
+            <ul>
+                @foreach($captacion->requisitosPendientes() as $faltante)
+                    <li>{{ $faltante['codigo'] }} — {{ $faltante['descripcion'] }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+
     <form class="mt-3" method="POST" action="{{ route('captacion.programar.inspeccion', $captacion->id) }}">
         @csrf
         <button class="btn btn-warning">Marcar Pendiente de Inspección</button>
@@ -57,7 +76,7 @@
         </div>
         <button class="btn btn-success mt-2">Registrar Inspección</button>
     </form>
-
+    </div>
 </div>
 
 <script>

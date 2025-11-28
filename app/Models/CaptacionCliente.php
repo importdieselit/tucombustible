@@ -45,4 +45,38 @@ class CaptacionCliente extends Model
     {
         return $this->belongsTo(Cliente::class, 'cliente_id');
     }
+
+    public function requisitos()
+    {
+        return RequisitoCaptacion::where('tipo_cliente', $this->tipo_cliente)->get();
+    }
+
+    public function documentosCargadosPorCodigo()
+    {
+        return $this->documentos->pluck('ruta','tipo_anexo')->toArray();
+    }
+
+    public function requisitosPendientes()
+    {
+        $faltantes = [];
+
+        foreach ($this->requisitos() as $req) {
+            $tiene = $this->documentos->where('tipo_anexo', $req->codigo)->count() > 0;
+
+            if (!$tiene && $req->obligatorio) {
+                $faltantes[] = [
+                    'codigo' => $req->codigo,
+                    'descripcion' => $req->descripcion
+                ];
+            }
+        }
+
+        return $faltantes;
+    }
+
+    public function requisitosCompletos()
+    {
+        return count($this->requisitosPendientes()) === 0;
+    }
+
 }

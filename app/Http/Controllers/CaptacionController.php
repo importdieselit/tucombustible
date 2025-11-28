@@ -88,11 +88,19 @@ class CaptacionController extends Controller
         $documento->validado_por = Auth::id();
         $documento->save();
 
+        
+
         // Recalcular estatus general simple:
         $captacion = $documento->captacion;
-        $all = $captacion->documentos;
-        $validCount = $all->where('validado', true)->count();
-        $captacion->estatus_captacion = $validCount == $all->count() ? 'por_verificar' : 'documento_incompleto';
+        $captacion = $documento->captacion;
+
+        // VALIDACIÓN AUTOMÁTICA
+        if ($captacion->requisitosCompletos()) {
+            $captacion->estatus_captacion = 'por_verificar';
+        } else {
+            $captacion->estatus_captacion = 'documento_incompleto';
+        }
+
         $captacion->save();
 
         return response()->json(['ok'=>true]);
