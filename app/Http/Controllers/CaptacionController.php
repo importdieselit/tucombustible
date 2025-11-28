@@ -29,8 +29,10 @@ class CaptacionController extends Controller
             'correo' => 'required|email',
             'telefono' => 'nullable|string',
             'direccion' => 'nullable|string',
-            'documentos.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120'
+            //'documentos.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120'
         ]);
+        
+        Log::info('Guardando nueva captación para: '.$validated['razon_social']);
         
         try {
             $captacion = CaptacionCliente::create([
@@ -64,7 +66,7 @@ class CaptacionController extends Controller
     }
 
     public function thanks() {
-        return view('captacion.thanks');
+        return view('captacion.admin.index');
     }
 
     // ---------------------------------------------------------------------
