@@ -1,8 +1,16 @@
 @extends('layouts.app')
+
+@section('title', 'Captaciones - Listado de Solicitudes')
+
 @section('content')
-<div class="container">
-    <h2>Solicitudes de Captación</h2>
-        <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="container-fluid">
+    <div class="row page-titles mb-4">
+        <div class="col-12">
+            <h3 class="text-themecolor mb-0">Solicitudes de Clientes</h3>
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Inicio</a></li>
+                <li class="breadcrumb-item active">Captacion</li>
+            </ol>
             <div>
                 <a href="{{ route('captacion.create') }}" class="btn btn-danger" >
                     <i class="fa fa-plus me-2"></i> Cargar Nueva Solicitud
@@ -12,6 +20,20 @@
                 </a>
             </div>
         </div>
+    </div>
+
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <div class="table-responsive">
+                <h2>Solicitudes de Captación</h2>
+        
     <table class="table">
         <thead>
             <tr>
@@ -33,6 +55,14 @@
         </tbody>
     </table>
 
-    {{ $list->links() }}
+
+            </div>
+            
+            {{-- Enlaces de paginación --}}
+            <div class="d-flex justify-content-center mt-3">
+                {{ $inspecciones->links() }}
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
