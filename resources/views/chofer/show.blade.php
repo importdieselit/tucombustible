@@ -175,7 +175,7 @@
                                     
                                     <tr class="viaje-row" 
                                         data-fecha="{{ \Carbon\Carbon::parse($viaje['fecha'] ?? $viaje['created_at'])->format('Y-m-d') }}" 
-                                        data-monto="{{ $pago->monto_ajustado ?? $pago->monto_base }}">
+                                        data-monto="{{ $pago->monto_ajustado ?? $pago->monto_base ?? '-' }}">
                                         <td>{{ $viaje['ruta'] }}</td>
                                         <td>{{ date('d/m/Y',strtotime($viaje['fecha'])) }}</td>
                                         <td>{{ $viaje['incidencias'] ?? 'No hay incidencias'}}</td>
