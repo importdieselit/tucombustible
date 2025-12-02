@@ -138,7 +138,7 @@ class CaptacionController extends Controller
             }
         }
 
-        $captacion->planillas_generadas = json_encode($saved);
+        //$captacion->planillas_generadas = json_encode($saved);
         $captacion->estatus_captacion = 'planillas_enviadas';
         $captacion->save();
 
