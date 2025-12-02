@@ -182,9 +182,18 @@ class ChecklistController extends Controller
             $shouldUpdateExisting = $old_inspeccion 
                 && (empty($old_inspeccion->respuesta_in) || empty($old_inspeccion->respuesta_json));
             
-            $tipoCheck=!is_null($old_inspeccion) && is_null($old_inspeccion->respuesta_in) ? 'IN' : 'OUT';
+           if (is_null($old_inspeccion)) {
+                // Nunca ha salido → primera salida
+                $tipoCheck = 'OUT'; // salida
+            } elseif (is_null($old_inspeccion->respuesta_in)) {
+                // Tiene OUT pendiente → ahora está entrando
+                $tipoCheck = 'IN'; // entrada
+            } else {
+                // Tiene OUT e IN → próximo movimiento: salida
+                $tipoCheck = 'OUT'; 
+            }
 
-            if(!$shouldUpdateExisting){
+            if($tipoCheck == 'OUT'){
                 $inspeccion = Inspeccion::create([
                     'vehiculo_id' => $request->vehiculo_id,
                     'checklist_id' => $request->checklist_id,

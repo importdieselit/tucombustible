@@ -158,7 +158,9 @@ public function store(Request $request)
         }
         
         // 2. Guardar la Inspección
-        if(!$old_inspeccion){
+
+        
+        if(is_null($old_inspeccion)){
             $inspeccion = Inspeccion::create([
                 'vehiculo_id' => $data['vehiculo_id'],
                 'checklist_id' => $checklistId,
