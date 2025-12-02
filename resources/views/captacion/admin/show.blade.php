@@ -1,7 +1,8 @@
 @extends('layouts.app')
 @section('content')
 <div class="container">
-    <div class="card shadow mb-4">
+    <div class="card shadow mb-4 p-4">
+        
     <h2>Expediente: {{ $captacion->razon_social }} (ID: {{ $captacion->id }})</h2>
     <p>Estatus: <strong>{{ $captacion->estatus_captacion }}</strong></p>
 

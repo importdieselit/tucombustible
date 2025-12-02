@@ -37,12 +37,64 @@
                 </div>
             </div>
             @else
+
                 <!-- Si la ruta es login, logout, etc., solo se muestra el contenido principal -->
                 <main class="container-fluid py-4 z-1">
                     @yield('content')
                 </main>
             @endif
     </div>
+<!-- TOAST CONTAINER -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+    @if(session('success'))
+        <div class="toast align-items-center text-bg-success border-0 show" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    {{ session('success') }}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                        data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="toast align-items-center text-bg-danger border-0 show" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    {{ session('error') }}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                        data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    @endif
+
+    @if(session('warning'))
+        <div class="toast align-items-center text-bg-warning border-0 show" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    {{ session('warning') }}
+                </div>
+                <button type="button" class="btn-close me-2 m-auto"
+                        data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    @endif
+
+    @if(session('info'))
+        <div class="toast align-items-center text-bg-info border-0 show" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    {{ session('info') }}
+                </div>
+                <button type="button" class="btn-close me-2 m-auto"
+                        data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    @endif
+</div>
+
 
     @include('layouts.footer')
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -59,6 +111,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
     @stack('scripts')
     <script>
+    // Activar automáticamente todos los toasts
+    document.addEventListener('DOMContentLoaded', function () {
+        const toastElList = [].slice.call(document.querySelectorAll('.toast'))
+        toastElList.map(function (toastEl) {
+            new bootstrap.Toast(toastEl, { delay: 4500 }).show()
+        })
+    });
+
         document.addEventListener("DOMContentLoaded", function () {
             $("#print").on("click", function () {
                 var mode = 'iframe'; //popup
