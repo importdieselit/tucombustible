@@ -903,6 +903,7 @@ public function createPrecarga()
                 'otro_chofer' => $request->otro_chofer ?? null,
                 'otro_ayudante' => $request->otro_ayudante ?? null,
                 'status' => 'Programado',
+                'obervaciones' => null,
                 'usuario_id' => $userId
                 
             ]);
