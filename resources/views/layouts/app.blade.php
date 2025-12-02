@@ -111,6 +111,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
     @stack('scripts')
     <script>
+
+        
     // Activar automáticamente todos los toasts
     document.addEventListener('DOMContentLoaded', function () {
         const toastElList = [].slice.call(document.querySelectorAll('.toast'))
