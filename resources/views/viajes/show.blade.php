@@ -85,7 +85,7 @@
                         @foreach($viaje->despachos as $index => $despacho)
                         <tr>
                             <td>{{ $index + 1 }}</td>
-                            <td>{{ $despacho->cliente->nombre ?? $despacho->otro_cliente ?? 'Cliente Eliminado' }}</td>
+                            <td>{{ $despacho->cliente->nombre ?? $despacho->otro_cliente ?? 'Cliente Eliminado' }}  @if(!is_null($despacho->observacion)) - [{{$despacho->observacion}}] @endif</td>
                             <td>{{ number_format($despacho->litros, 2) }} L</td>
                             <td><span class="badge bg-{{ $despacho->cliente_id ? 'primary' : 'success' }}">{{ $despacho->cliente_id ? 'Registrado' : 'Otro Cliente' }}</span></td>
                         </tr>

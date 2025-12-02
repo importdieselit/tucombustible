@@ -250,6 +250,7 @@ class ViajesController extends Controller
                     'cliente_id' => $despachoData['cliente_id'] ?? null,
                     'otro_cliente' => $despachoData['otro_cliente'] ?? null,
                     'litros' => $despachoData['litros'],
+                    'observacion' => $despachoData['observacion'] ?? null,
                 ]);
                 $clienteId=0;
                 $clienteNombre=$despachoData['otro_cliente'] ?? 'Cliente Desconocido';

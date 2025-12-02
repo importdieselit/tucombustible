@@ -79,7 +79,7 @@
                       @foreach($viaje->despachos as $index => $despacho)
                       @php($TotalLitros += $despacho->litros ?? 0)
                         <tr style="font-size: 15px; font-weight: 500;">
-                            <td>{{ $despacho->cliente->nombre ?? $despacho->otro_cliente ?? 'Cliente Null' }}</td>
+                            <td>{{ $despacho->cliente->nombre ?? $despacho->otro_cliente ?? 'Cliente Null' }} @if(!is_null($despacho->observacion)) - [{{$despacho->observacion}}] @endif</td>
                             <td>{{ number_format($despacho->litros, 0)}} Lts</td>
                         </tr>
                       @endforeach

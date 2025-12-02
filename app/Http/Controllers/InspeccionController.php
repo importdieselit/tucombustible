@@ -166,6 +166,7 @@ public function store(Request $request)
                 'estatus_general' => $estatusGeneral,
                 'respuesta_json' => json_encode($respuestaJson), 
             ]);
+            $tipoCheck='OUT';
             $vehiculo->estatus=1;
         }else{
             $old_inspeccion->respuesta_in=json_encode($respuestaJson);
@@ -173,7 +174,7 @@ public function store(Request $request)
             $old_inspeccion->save();
             $createdAt = $old_inspeccion->created_at; 
             $updatedAt = now();
-            
+            $tipoCheck='IN';            
             $horasDuracion = $updatedAt->diffInHours($createdAt);
             $vehiculo->horas_trabajo  += $horasDuracion;
             $vehiculo->hrs_mantt  += $horasDuracion;
@@ -200,7 +201,7 @@ public function store(Request $request)
                 $notifBody = "Unidad {$vehiculo->flota} requiere Revisión de Mantenimiento. Fue marcada como no operativa durante la inspección.";
                 $telegramMessage = "🚨 *ALERTA CRÍTICA* - Unidad: **{$vehiculo->placa}** ({$vehiculo->flota}) marcada como **NO OPERATIVA**. Motivo: Fallo Crítico en Inspección. Revisar: {$alertaAction} ";
 
-            } elseif ($vehiculo->estatus == 1) {
+            } elseif ($tipoCheck == 'IN') {
                 // 🟢 UNIDAD INGRESANDO: Estaba en ruta (2) y pasa a Operativo/Disponible (1)
                
                 $observacionAlerta = "Ingreso de Unidad {$vehiculo->flota} {$vehiculo->placa} a Patio. Inspección completada.";
