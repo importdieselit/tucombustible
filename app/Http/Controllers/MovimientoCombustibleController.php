@@ -925,7 +925,7 @@ public function createPrecarga()
 
             $tabulador = TabuladorViatico::where('destino', $destino->id)->first();
 
-            //$this->generarCuadroViaticos($viaje, $tabulador, 1);
+            if(!is_null($tabulador)){ $this->generarCuadroViaticos($viaje, $tabulador, 1); }
 
             DB::commit();
 
