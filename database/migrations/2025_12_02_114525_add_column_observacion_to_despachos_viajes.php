@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddColumnObservacionToTableDespachoViajes extends Migration
+class AddColumnObservacionToDespachosViajes extends Migration
 {
     /**
      * Run the migrations.
@@ -13,7 +13,7 @@ class AddColumnObservacionToTableDespachoViajes extends Migration
      */
     public function up()
     {
-        Schema::table('despacho_viajes', function (Blueprint $table) {
+        Schema::table('despachos_viajes', function (Blueprint $table) {
             $table->text('observacion')->nullable();
         });
     }
@@ -25,7 +25,7 @@ class AddColumnObservacionToTableDespachoViajes extends Migration
      */
     public function down()
     {
-        Schema::table('despacho_viajes', function (Blueprint $table) {
+        Schema::table('despachos_viajes', function (Blueprint $table) {
             $table->dropColumn('observacion');
         });
     }

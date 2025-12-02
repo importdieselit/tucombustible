@@ -181,6 +181,8 @@ class ChecklistController extends Controller
 
             $shouldUpdateExisting = $old_inspeccion 
                 && (empty($old_inspeccion->respuesta_in) || empty($old_inspeccion->respuesta_json));
+            
+            $tipoCheck=!is_null($old_inspeccion) && is_null($old_inspeccion->respuesta_in) ? 'IN' : 'OUT';
 
             if(!$shouldUpdateExisting){
                 $inspeccion = Inspeccion::create([
@@ -245,7 +247,7 @@ class ChecklistController extends Controller
                 $notifBody = "Unidad {$vehiculo->flota} requiere Revisión de Mantenimiento. Fue marcada como no operativa durante la inspección. OBSERVACIONES: {$observaciones}";
                 $telegramMessage = "🚨 *ALERTA CRÍTICA* - Unidad: **{$vehiculo->placa}** ({$vehiculo->flota}) marcada como **NO OPERATIVA**. Motivo: Fallo Crítico en Inspección. Revisar: {$alertaAction}\n OBSERVACIONES: {$observaciones}";
 
-            } elseif ($vehiculo->estatus == 2) {
+            } elseif ($tipoCheck == 'IN') {
                 // 🟢 UNIDAD INGRESANDO: Estaba en ruta (2) y pasa a Operativo/Disponible (1)
                 $nuevoEstatus = 1;
                 $observacionAlerta = "Ingreso de Unidad {$vehiculo->flota} {$vehiculo->placa} a Patio. Inspección completada.";
