@@ -119,7 +119,7 @@
                             <td>{{ $cliente->created_at->format('d/m/Y') }}</td>
 
                             <td class="text-end">
-                                <a href="{{ route('captacion.show', $cliente) }}" class="btn btn-sm btn-primary">
+                                <a href="{{ route('captacion.admin.show', $cliente) }}" class="btn btn-sm btn-primary">
                                     <i class="ri-eye-line"></i>
                                 </a>
 
