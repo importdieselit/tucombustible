@@ -72,9 +72,9 @@
 
                     <hr>
 
-                    <a href="{{ route('captacion.edit', $cliente->id) }}" class="btn btn-warning">
+                    {{-- <a href="{{ route('captacion.edit', $cliente->id) }}" class="btn btn-warning">
                         <i class="ri-edit-2-line"></i> Editar Datos
-                    </a>
+                    </a> --}}
 
                 </div>
             </div>
