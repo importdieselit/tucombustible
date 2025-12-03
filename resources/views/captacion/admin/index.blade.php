@@ -105,7 +105,7 @@
                     @forelse($clientes as $cliente)
                         <tr>
                             <td>{{ $cliente->id }}</td>
-                            <td>{{ $cliente->nombre }}</td>
+                            <td>{{ $cliente->razon_social }}</td>
                             <td>{{ $cliente->rif }}</td>
                             <td>{{ $cliente->correo }}</td>
                             <td>{{ $cliente->telefono }}</td>

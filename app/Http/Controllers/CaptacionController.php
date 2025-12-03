@@ -76,9 +76,9 @@ class CaptacionController extends Controller
     public function adminIndex(Request $req)
     {
          $estadisticas = [
-            'nuevo' => CaptacionCliente::where('estatus_captacion','nuevo')->count(),
-            'solicitud' => CaptacionCliente::where('estatus_captacion','solicitud')->count(),
-            'migracion' => CaptacionCliente::where('estatus_captacion','migracion')->count(),
+            'registro_inicial' => CaptacionCliente::where('estatus_captacion','registro_inicial')->count(),
+            'solicitud' => CaptacionCliente::where('gestion','CUPO')->count(),
+            'migracion' => CaptacionCliente::where('gestion','MIGRACION')->count(),
             'espera' => CaptacionCliente::where('estatus_captacion','espera')->count(),
             'planillas_enviadas' => CaptacionCliente::where('estatus_captacion','planillas_enviadas')->count(),
             'falta_documentacion' => CaptacionCliente::where('estatus_captacion','falta_documentacion')->count(),
@@ -89,7 +89,7 @@ class CaptacionController extends Controller
         $query = CaptacionCliente::query();
 
         if ($req->search) {
-            $query->where('nombre','like',"%{$req->search}%")
+            $query->where('razon_social','like',"%{$req->search}%")
                   ->orWhere('rif','like',"%{$req->search}%");
         }
 
