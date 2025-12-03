@@ -112,9 +112,10 @@
                             <td>{{ $cliente->razon_social }}</td>
                             <td>{{ $cliente->rif }}</td>
                             <td>{{ $cliente->correo }}</td>
+                            <td>{{ $cliente->telefono }}</td>
                             <td>{{ $cliente->tipo_cliente }}</td>
                             <td>{{ $cliente->solicitados }}</td>
-                            <td>{{ $cliente->telefono }}</td>
+                            
 
                             <td>
                                 <span class="badge bg-{{ $cards[$cliente->estatus_captacion]['color'] ?? 'secondary' }}">
