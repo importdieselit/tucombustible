@@ -68,7 +68,7 @@ class CaptacionController extends Controller
     public function thanks() {
         $query = CaptacionCliente::query();
  $list = $query->orderBy('created_at','desc')->paginate(25);
-        return view('captacion.admin.index', compact('list'));
+        return view('captacion.index', compact('list'));
     }
 
     // ---------------------------------------------------------------------
@@ -99,14 +99,14 @@ class CaptacionController extends Controller
 
         $clientes = $query->orderBy('id','DESC')->paginate(20);
 
-        return view('captacion.admin.index', compact('clientes','estadisticas'));
+        return view('captacion.index', compact('clientes','estadisticas'));
     }
 
     // Mostrar expediente (admin)
     public function show(CaptacionCliente $cliente)
     {
         $cliente->load('documentos','equipos');
-        return view('captacion.admin.show', compact('cliente'));
+        return view('captacion.show', compact('cliente'));
     }
 
     // Validar documento individual (marca como validado o no)
@@ -232,7 +232,7 @@ class CaptacionController extends Controller
             $captacion->save();
         }
 
-        return redirect()->route('captacion.admin.show', $captacion->id)
+        return redirect()->route('captacion.show', $captacion->id)
             ->with('success','Inspección registrada.');
     }
 
