@@ -189,7 +189,7 @@
 
 
                     <!-- SI TIENE DOCUMENTOS FALTANTES -->
-                    @if(count($cliente->faltantes()) > 0)
+                    @if(count($cliente->requisitosPendientes) > 0)
                         <div class="alert alert-warning mt-3">
                             <i class="ri-alert-line"></i>
                             Faltan documentos para continuar.

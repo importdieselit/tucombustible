@@ -273,7 +273,7 @@ class CaptacionController extends Controller
         $cliente->documentos_subidos = $data;
 
         $cliente->estatus_captacion =
-            count($cliente->faltantes()) > 0 ? 'falta_documentacion' : 'esperando_inspeccion';
+            count($cliente->requisitosPendientes) > 0 ? 'falta_documentacion' : 'esperando_inspeccion';
 
         $cliente->save();
 
