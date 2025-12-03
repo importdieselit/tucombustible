@@ -73,7 +73,7 @@ class CaptacionController extends Controller
 
     // ---------------------------------------------------------------------
     // Panel administrativo - listado de solicitudes
-    public function adminIndex(Request $req)
+    public function index(Request $req)
     {
          $estadisticas = [
             'registro_inicial' => CaptacionCliente::where('estatus_captacion','registro_inicial')->count(),
