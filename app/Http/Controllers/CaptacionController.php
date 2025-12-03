@@ -123,17 +123,27 @@ class CaptacionController extends Controller
     {
         // Generación / copia de planillas (ejemplo: copia desde storage/plantillas)
         $templates = [
-            'declaracion_bajo_fe_de_juramento' => storage_path('app/plantillas/declaracion_bajo_fe_de_juramento.pdf'),
-            'solicitud' => storage_path('app/plantillas/solicitud.pdf'),
-            'requisitos' => storage_path('app/plantillas/requisitos.doc'),
+            'declaracion_bajo_fe_de_juramento' => storage_path('app/planillas/declaracion_bajo_fe_de_juramento.pdf'),
+            'solicitud' => storage_path('app/planillas/solicitud.pdf'),
+            'requisitos' => storage_path('app/planillas/requisitos.doc'),
         ];
 
         $saved = [];
+        
+        
         foreach ($templates as $key => $file) {
+
             if (file_exists($file)) {
-                $content = file_get_contents($file);
-                $path = "clientes/{$captacion->id}/planillas/{$key}.pdf";
-                Storage::disk('public')->put($path, $content);
+
+                // Obtener extensión real del archivo original
+                $extension = pathinfo($file, PATHINFO_EXTENSION);
+
+                // Construimos ruta con su extensión real
+                $path = "planillas/{$key}.{$extension}";
+
+                // Guardamos el archivo en storage/app/public
+                Storage::disk('public')->put($path, file_get_contents($file));
+
                 $saved[] = $path;
             }
         }
@@ -141,6 +151,7 @@ class CaptacionController extends Controller
         //$captacion->planillas_generadas = json_encode($saved);
         $captacion->estatus_captacion = 'planillas_enviadas';
         $captacion->save();
+        Log::debug("Saved files:", $saved);
 
         // Enviar correo con adjuntos si correo existe
         if ($captacion->correo) {
