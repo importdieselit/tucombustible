@@ -18,9 +18,9 @@
 
         @php
             $cards = [
-                'nuevo' => ['title' => 'Nuevos', 'color' => 'primary', 'icon' => 'ri-user-star-line'],
-                'solicitud' => ['title' => 'Solicitud Recibida', 'color' => 'info', 'icon' => 'ri-mail-open-line'],
-                'migracion' => ['title' => 'Migración', 'color' => 'warning', 'icon' => 'ri-refresh-line'],
+                'registro_inicial' => ['title' => 'Nuevos', 'color' => 'primary', 'icon' => 'ri-user-star-line'],
+                'CUPO' => ['title' => 'Solicitud Recibida', 'color' => 'info', 'icon' => 'ri-mail-open-line'],
+                'MIGRACION' => ['title' => 'Migración', 'color' => 'warning', 'icon' => 'ri-refresh-line'],
                 'espera' => ['title' => 'En Espera', 'color' => 'secondary', 'icon' => 'ri-time-line'],
                 'planillas_enviadas' => ['title' => 'Planillas Enviadas', 'color' => 'success', 'icon' => 'ri-file-list-3-line'],
                 'falta_documentacion' => ['title' => 'Esperando Documentos', 'color' => 'danger', 'icon' => 'ri-folder-warning-line'],
@@ -96,7 +96,11 @@
                         <th>RIF</th>
                         <th>Correo</th>
                         <th>Teléfono</th>
+                        <th>Tipo</th>
+                        <th>Litros Solicitados</th>
                         <th>Estatus</th>
+                        <th>Gestion</th>
+                        <th>Atendido por</th>
                         <th>Fecha</th>
                         <th class="text-end">Acciones</th>
                     </tr>
@@ -108,6 +112,8 @@
                             <td>{{ $cliente->razon_social }}</td>
                             <td>{{ $cliente->rif }}</td>
                             <td>{{ $cliente->correo }}</td>
+                            <td>{{ $cliente->tipo_cliente }}</td>
+                            <td>{{ $cliente->solicitados }}</td>
                             <td>{{ $cliente->telefono }}</td>
 
                             <td>
@@ -116,6 +122,8 @@
                                 </span>
                             </td>
 
+                            <td>{{ $cliente->gestion }}</td>
+                            <td>{{ $cliente->atendido_por }}</td>
                             <td>{{ $cliente->created_at->format('d/m/Y') }}</td>
 
                             <td class="text-end">
