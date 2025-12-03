@@ -147,7 +147,7 @@
         </table>
 
         <!-- Input oculto -->
-        <input type="file" id="upload-file" class="d-none">
+        <input type="file" id="upload-file" class="">
 
     </div>
 </div>
