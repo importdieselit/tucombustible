@@ -99,7 +99,7 @@ class CaptacionController extends Controller
 
         $clientes = $query->orderBy('id','DESC')->paginate(20);
 
-        return view('captacion.index', compact('clientes','estadisticas'));
+        return view('captacion.admin.index', compact('clientes','estadisticas'));
     }
 
     // Mostrar expediente (admin)
