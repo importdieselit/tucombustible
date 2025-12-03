@@ -129,11 +129,11 @@
 
                             <td class="text-end">
                                 <a href="{{ route('captacion.admin.show', $cliente) }}" class="btn btn-sm btn-primary">
-                                    <i class="ri-eye-line"></i>
+                                    <i class="fa fa-eye-line"></i>
                                 </a>
 
                                 <a href="{{ route('captacion.edit', $cliente) }}" class="btn btn-sm btn-warning">
-                                    <i class="ri-pencil-line"></i>
+                                    <i class="fa fa-pencil-line"></i>
                                 </a>
                             </td>
                         </tr>
