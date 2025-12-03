@@ -48,7 +48,7 @@
                     <td>{{ $c->correo }}</td>
                     <td>{{ $c->estatus_captacion }}</td>
                     <td>
-                        <a href="{{ route('captacion.admin.show', $c->id) }}" class="btn btn-sm btn-primary">Ver</a>
+                        <a href="{{ route('captacion.show', $c->id) }}" class="btn btn-sm btn-primary">Ver</a>
                     </td>
                 </tr>
             @endforeach

@@ -398,7 +398,7 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
         @if(Auth::user()->canAccess('create', $MODULO_CLIENTES))
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
             @include('partials.access_card', [
-                'route' => route('captacion.admin.index'),
+                'route' => route('captacion.index'),
                 'icon' => 'fa-address-book',
                 'title' => 'Clientes',
                 'color' => 'bg-primary',

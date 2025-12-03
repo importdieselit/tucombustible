@@ -324,7 +324,7 @@ Route::put('/viajes/{id}', [ViajesController::class, 'update'])->name('viaje.upd
 
     // Admin (proteger con middleware 'auth' y permisos necesarios)
     Route::prefix('captacion')->middleware(['auth'])->group(function () {
-        Route::get('/', [CaptacionController::class, 'index'])->name('captacion.admin.index');
+        Route::get('/', [CaptacionController::class, 'index'])->name('captacion.index');
         Route::get('/{cliente}/show', [CaptacionController::class, 'show'])->name('captacion.show');
         Route::get('/{cliente}/edit', [CaptacionController::class, 'edit'])->name('captacion.edit');
         Route::put('/{cliente}/update', [CaptacionController::class, 'update'])->name('captacion.update');
