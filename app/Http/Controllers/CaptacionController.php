@@ -75,14 +75,31 @@ class CaptacionController extends Controller
     // Panel administrativo - listado de solicitudes
     public function adminIndex(Request $req)
     {
+         $estadisticas = [
+            'nuevo' => CaptacionCliente::where('estatus_captacion','nuevo')->count(),
+            'solicitud' => CaptacionCliente::where('estatus_captacion','solicitud')->count(),
+            'migracion' => CaptacionCliente::where('estatus_captacion','migracion')->count(),
+            'espera' => CaptacionCliente::where('estatus_captacion','espera')->count(),
+            'planillas_enviadas' => CaptacionCliente::where('estatus_captacion','planillas_enviadas')->count(),
+            'falta_documentacion' => CaptacionCliente::where('estatus_captacion','falta_documentacion')->count(),
+            'esperando_inspeccion' => CaptacionCliente::where('estatus_captacion','esperando_inspeccion')->count(),
+            'aprobado' => CaptacionCliente::where('estatus_captacion','aprobado')->count(),
+        ];
+
         $query = CaptacionCliente::query();
 
-        if ($req->filled('estatus')) {
-            $query->where('estatus_captacion', $req->estatus);
+        if ($req->search) {
+            $query->where('nombre','like',"%{$req->search}%")
+                  ->orWhere('rif','like',"%{$req->search}%");
         }
 
-        $list = $query->orderBy('created_at','desc')->paginate(25);
-        return view('captacion.admin.index', compact('list'));
+        if ($req->estatus_captacion) {
+            $query->where('estatus_captacion',$req->estatus_captacion);
+        }
+
+        $clientes = $query->orderBy('id','DESC')->paginate(20);
+
+        return view('captacion.index', compact('clientes','estadisticas'));
     }
 
     // Mostrar expediente (admin)
@@ -224,5 +241,51 @@ class CaptacionController extends Controller
     {
         if (!Storage::disk('public')->exists($documento->ruta)) abort(404);
         return response()->download(storage_path('app/public/'.$documento->ruta));
+    }
+
+
+    public function edit(CaptacionCliente $cliente)
+    {
+        return view('captacion.edit', compact('cliente'));
+    }
+
+
+    public function update(Request $request, CaptacionCliente $cliente)
+    {
+        $cliente->update($request->all());
+
+        return back()->with('success','Datos actualizados.');
+    }
+
+
+
+
+
+    public function validarDocumentos(Request $request, CaptacionCliente $cliente)
+    {
+        $data = $cliente->documentos_subidos ?? [];
+
+        foreach ($request->file('documentos') ?? [] as $key => $file) {
+            $path = $file->store("clientes/{$cliente->id}/documentos",'public');
+            $data[$key] = $path;
+        }
+
+        $cliente->documentos_subidos = $data;
+
+        $cliente->estatus_captacion =
+            count($cliente->faltantes()) > 0 ? 'falta_documentacion' : 'esperando_inspeccion';
+
+        $cliente->save();
+
+        return back()->with('success','Documentos validados correctamente');
+    }
+
+
+    public function aprobar(CaptacionCliente $cliente)
+    {
+        $cliente->estatus_captacion = 'aprobado';
+        $cliente->save();
+
+        return back()->with('success','Cliente aprobado correctamente.');
     }
 }
