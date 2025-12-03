@@ -49,7 +49,7 @@
     <div class="card shadow-sm mb-4">
         <div class="card-body">
 
-            <form method="GET" action="{{ route('captacion.index') }}" class="row g-3">
+            <form method="GET" action="{{ route('captacion.admin.index') }}" class="row g-3">
                 
                 <div class="col-md-4">
                     <label class="form-label">Buscar por nombre o RIF</label>
