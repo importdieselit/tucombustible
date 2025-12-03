@@ -103,10 +103,10 @@ class CaptacionController extends Controller
     }
 
     // Mostrar expediente (admin)
-    public function show(CaptacionCliente $captacion)
+    public function show(CaptacionCliente $cliente)
     {
-        $captacion->load('documentos','equipos');
-        return view('captacion.admin.show', compact('captacion'));
+        $cliente->load('documentos','equipos');
+        return view('captacion.admin.show', compact('cliente'));
     }
 
     // Validar documento individual (marca como validado o no)
