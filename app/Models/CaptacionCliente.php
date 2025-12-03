@@ -56,7 +56,22 @@ class CaptacionCliente extends Model
         return $this->documentos->pluck('ruta','tipo_anexo')->toArray();
     }
 
-    
+    public function faltantes()
+    {
+        // Si no existen definiciones, evitamos errores
+        $requeridos = $this->documentos_requeridos ?? [];
+        $subidos = $this->documentos_subidos ?? [];
+
+        $faltantes = [];
+
+        foreach ($requeridos as $doc) {
+            if (!array_key_exists($doc, $subidos)) {
+                $faltantes[] = $doc;
+            }
+        }
+
+        return $faltantes;
+    }
 
 
     public function requisitosPendientes()
