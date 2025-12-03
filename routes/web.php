@@ -328,6 +328,7 @@ Route::put('/viajes/{id}', [ViajesController::class, 'update'])->name('viaje.upd
         Route::get('/{captacion}', [CaptacionController::class,'show'])->name('captacion.admin.show');
         Route::get('/edit/{captacion}', [CaptacionController::class,'edit'])->name('captacion.edit');
         Route::post('/documento/{documento}/validar', [CaptacionController::class,'validarDocumento'])->name('captacion.documento.validar');
+        Route::post('/documento/{documento}/validar', [CaptacionController::class,'validarDocumento'])->name('captacion.validar_documentos');
         Route::post('/{captacion}/enviar-planillas', [CaptacionController::class,'enviarPlanillas'])->name('captacion.enviar.planillas');
         Route::post('/{captacion}/programar-inspeccion', [CaptacionController::class,'programarInspeccion'])->name('captacion.programar.inspeccion');
         Route::post('/{captacion}/registrar-inspeccion', [CaptacionController::class,'registrarInspeccion'])->name('captacion.registrar.inspeccion');
