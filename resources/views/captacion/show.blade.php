@@ -79,58 +79,79 @@
                 </div>
             </div>
 
-            <!-- ==================================================
-                 DOCUMENTOS SUBIDOS Y VALIDACIÓN
-            =================================================== -->
-            <div class="card shadow-sm border-0 mt-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="ri-folder-2-line"></i> Documentación</h5>
-                </div>
+          <!-- ==================================================
+     DOCUMENTOS SUBIDOS Y VALIDACIÓN
+=================================================== -->
+<div class="card shadow-sm border-0 mt-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="ri-folder-2-line"></i> Documentación</h5>
+    </div>
 
-                <div class="card-body">
+    <div class="card-body">
 
-                    <h6 class="fw-bold mb-3">Documentos Requeridos</h6>
+        <h6 class="fw-bold mb-3">Documentos Requeridos</h6>
 
-                    <ul class="list-group">
-                        @foreach($cliente->documentos_requeridos ?? [] as $doc)
-                            @php
-                                $subidos = $cliente->documentos_subidos ?? [];
-                                $tiene = array_key_exists($doc, $subidos);
-                            @endphp
+        <table class="table table-bordered align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 60px;">Estado</th>
+                    <th>Documento</th>
+                    <th style="width: 100px;">Vista</th>
+                    <th style="width: 120px;">Acción</th>
+                </tr>
+            </thead>
 
-                            <li class="list-group-item d-flex justify-content-between align-items-center
-                                {{ $tiene ? 'list-group-item-success' : 'list-group-item-danger' }}">
-                                
-                                <span>
-                                    <i class="{{ $tiene ? 'ri-check-line text-success' : 'ri-alert-line text-danger' }}"></i>
-                                    {{ $doc }}
-                                </span>
+            <tbody>
+                @foreach($cliente->documentos_requeridos ?? [] as $doc)
+                    @php
+                        $subidos = $cliente->documentos_subidos ?? [];
+                        $tiene = array_key_exists($doc, $subidos);
+                        $ruta = $tiene ? asset('storage/' . $subidos[$doc]) : null;
+                    @endphp
 
-                                @if($tiene)
-                                    <a href="{{ asset('storage/'.$subidos[$doc]) }}" target="_blank" class="btn btn-sm btn-dark">
-                                        <i class="ri-eye-line"></i> Ver
-                                    </a>
-                                @endif
-                            </li>
-                        @endforeach
-                    </ul>
+                    <tr data-doc="{{ $doc }}">
+                        <td class="icon-cell text-center">
+                            @if($tiene)
+                                <i class="ri-check-line text-success fs-4"></i>
+                            @else
+                                <i class="ri-close-line text-danger fs-4"></i>
+                            @endif
+                        </td>
 
+                        <td>{{ $doc }}</td>
 
-                    <!-- SUBIR NUEVOS DOCUMENTOS -->
-                    <form action="{{ route('captacion.validar_documentos', $cliente->id) }}" method="POST" enctype="multipart/form-data" class="mt-4">
-                        @csrf
+                        <td class="preview-cell text-center">
+                            @if($tiene)
+                                <a href="{{ $ruta }}" target="_blank" class="btn btn-sm btn-dark">
+                                    <i class="ri-eye-line"></i> Ver
+                                </a>
+                            @else
+                                —
+                            @endif
+                        </td>
 
-                        <label class="fw-bold mb-2">Subir Nuevos Documentos</label>
+                        <td class="text-center">
+                            @if(!$tiene)
+                                <button 
+                                    class="btn btn-sm btn-warning upload-btn" 
+                                    data-doc="{{ $doc }}" 
+                                    data-id="{{ $cliente->id }}"
+                                >
+                                    <i class="ri-upload-cloud-2-line"></i> Subir
+                                </button>
+                            @endif
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
 
-                        <input type="file" name="documentos[]" class="form-control mb-3" multiple>
+        <!-- Input oculto -->
+        <input type="file" id="upload-file" class="d-none">
 
-                        <button class="btn btn-primary">
-                            <i class="ri-upload-cloud-line"></i> Guardar Documentos
-                        </button>
-                    </form>
+    </div>
+</div>
 
-                </div>
-            </div>
 
         </div>
 
@@ -214,4 +235,78 @@
 
     </div>
 </div>
+@endsection
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const fileInput = document.getElementById('upload-file');
+
+    let currentDoc = null;
+    let currentId = null;
+
+    document.querySelectorAll('.upload-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            currentDoc = btn.dataset.doc;
+            currentId  = btn.dataset.id;
+            fileInput.click();
+        });
+    });
+
+    fileInput.addEventListener('change', async function () {
+
+        if (!this.files.length) return;
+
+        const formData = new FormData();
+        formData.append('documento', currentDoc);
+        formData.append('archivo', this.files[0]);
+        formData.append('_token', '{{ csrf_token() }}');
+
+        const url = `/captacion/${currentId}/upload-doc`;
+        let row = document.querySelector(`tr[data-doc="${currentDoc}"]`);
+
+        try {
+            let res = await fetch(url, {
+                method: 'POST',
+                body: formData
+            });
+
+            let json = await res.json();
+
+            if (json.ok) {
+
+                row.querySelector('.icon-cell').innerHTML =
+                    `<i class="ri-check-line text-success fs-4"></i>`;
+
+                row.querySelector('.preview-cell').innerHTML =
+                    `<a href="${json.ruta}" target="_blank" class="btn btn-sm btn-dark">
+                        <i class="ri-eye-line"></i> Ver
+                    </a>`;
+
+                row.querySelector('.text-center .upload-btn')?.remove();
+
+                Toastify({
+                    text: "Documento cargado correctamente",
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#28a745"
+                }).showToast();
+            }
+
+        } catch (err) {
+            Toastify({
+                text: "Error al subir el documento",
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: "#dc3545"
+            }).showToast();
+        }
+
+        this.value = "";
+    });
+
+});
+</script>
 @endsection

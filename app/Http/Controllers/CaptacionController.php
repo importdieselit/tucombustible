@@ -273,12 +273,37 @@ class CaptacionController extends Controller
         $cliente->documentos_subidos = $data;
 
         $cliente->estatus_captacion =
-            count($cliente->requisitosPendientes) > 0 ? 'falta_documentacion' : 'esperando_inspeccion';
+            count($cliente->faltantes()) > 0 ? 'falta_documentacion' : 'esperando_inspeccion';
 
         $cliente->save();
 
         return back()->with('success','Documentos validados correctamente');
     }
+
+    public function uploadDocument(Request $request, $id)
+{
+    $request->validate([
+        'documento' => 'required|string',
+        'archivo'   => 'required|file|max:10240',
+    ]);
+
+    $captacion = CaptacionCliente::findOrFail($id);
+
+    $docName = $request->documento;
+    $path = $request->file('archivo')->store("captacion/{$captacion->id}/docs", 'public');
+
+    $docs = $captacion->documentos_subidos ?? [];
+    $docs[$docName] = $path;
+
+    $captacion->documentos_subidos = $docs;
+    $captacion->save();
+
+    return response()->json([
+        'ok'   => true,
+        'ruta' => asset('storage/' . $path)
+    ]);
+}
+
 
 
     public function aprobar(CaptacionCliente $cliente)
