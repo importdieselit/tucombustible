@@ -129,18 +129,18 @@
 
                             <td class="text-end">
                                 <a href="{{ route('captacion.admin.show', $cliente) }}" class="btn btn-sm btn-primary">
-                                    <i class="fa fa-eye-line"></i>
+                                    <i class="fa fa-eye"></i>
                                 </a>
 
                                 <a href="{{ route('captacion.edit', $cliente) }}" class="btn btn-sm btn-warning">
-                                    <i class="fa fa-pencil-line"></i>
+                                    <i class="fa fa-pencil"></i>
                                 </a>
                             </td>
                         </tr>
                     @empty
                         <tr>
                             <td colspan="8" class="text-center py-4 text-muted">
-                                <i class="ri-file-search-line" style="font-size: 40px;"></i>
+                                <i class="fa fa-file-search" style="font-size: 40px;"></i>
                                 <p class="mt-2">No se encontraron registros</p>
                             </td>
                         </tr>
