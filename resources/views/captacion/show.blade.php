@@ -265,6 +265,8 @@ document.addEventListener('DOMContentLoaded', function () {
      if (!input) {
         console.error('No se encontró input#upload-file');
         return;
+    }else{
+        console.log('input#upload-file encontrado correctamente');
     }
 
 
@@ -360,7 +362,7 @@ document.addEventListener('DOMContentLoaded', function () {
         currentReq = btn.dataset.req ?? btn.getAttribute('data-req');
         currentCliente = btn.dataset.id ?? btn.getAttribute('data-id');
         currentCod = btn.dataset.cod ?? btn.getAttribute('data-cod');
-
+        console.log('Subir documento para requisito:', currentReq, 'cliente:', currentCliente);
         if (!currentReq || !currentCliente) {
             console.error('Faltan atributos data-req o data-id en el botón', btn);
             toastr?.error('Botón mal configurado (falta data-req o data-id).');
