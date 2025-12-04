@@ -1,7 +1,10 @@
 @extends('layouts.app')
 
 @section('title', 'Detalle Cliente en Captación')
-
+@push('styles')
+{{-- CSS para Toastr --}}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+@endpush
 @section('content')
 <div class="container-fluid py-4">
 
@@ -255,6 +258,7 @@
     </div>
 </div>
 @push('scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
 
 document.addEventListener('DOMContentLoaded', function () {
