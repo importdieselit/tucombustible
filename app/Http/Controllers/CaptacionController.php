@@ -107,8 +107,8 @@ class CaptacionController extends Controller
     public function show(CaptacionCliente $cliente)
     {
         
-        $cliente->load('documentos','equipos','requisitosPendientes'); //,'requisitosCompletos');
-        dd($cliente);
+        $cliente->load('documentos','equipos'); //,'requisitosPendientes','requisitosCompletos');
+        
         $requisitos = RequisitoCaptacion::all();
         return view('captacion.show', compact('cliente','requisitos'));
     }
