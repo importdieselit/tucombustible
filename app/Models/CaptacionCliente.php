@@ -24,7 +24,10 @@ class CaptacionCliente extends Model
         'direccion',
         'datos_adicionales',
         'estatus_captacion',
-        'observaciones'
+        'observaciones',
+        'atendido_por',
+        'gestion',
+        'solicitados'
     ];
 
     protected $casts = [

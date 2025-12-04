@@ -100,9 +100,9 @@
                     <th style="width: 120px;">Acción</th>
                 </tr>
             </thead>
-
+            {{dd($cliente->requisitos)}}
             <tbody>
-                @foreach($cliente->documentos_requeridos ?? [] as $doc)
+                @foreach($cliente->requisitos ?? [] as $doc)
                     @php
                         $subidos = $cliente->documentos_subidos ?? [];
                         $tiene = array_key_exists($doc, $subidos);
@@ -147,7 +147,7 @@
         </table>
 
         <!-- Input oculto -->
-        <input type="file" id="upload-file" class="">
+        <input type="file" id="upload-file" class="d-none">
 
     </div>
 </div>
