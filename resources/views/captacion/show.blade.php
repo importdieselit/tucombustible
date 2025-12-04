@@ -292,6 +292,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.querySelectorAll('.upload-btn').forEach(btn => {
         btn.addEventListener('click', () => {
+            console.log('Upload button clicked:', btn);
             currentReq = btn.dataset.req;
             currentCliente = btn.dataset.id;
             currentCod = btn.dataset.cod;
