@@ -272,6 +272,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // función única y reutilizable para procesar la subida
     async function handleFileChange() {
+        console.log('Archivo seleccionado para subir:', input.files);
         if (!input.files || !input.files.length) return;
 
         const file = input.files[0];
@@ -288,7 +289,9 @@ document.addEventListener('DOMContentLoaded', function () {
         form.append('requisito_id', currentReq);
         if (currentCod) form.append('codigo', currentCod);
         form.append('_token', '{{ csrf_token() }}');
+        console.log('Iniciando subida para cliente:', currentCliente, 'requisito:', currentReq);
 
+         // Realiza la petición
         try {
             // muestra feedback básico
             toastr?.info('Subiendo documento...');
@@ -303,7 +306,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (resp.ok && json.status === 'ok') {
                 toastr?.success('Documento cargado correctamente.');
-
+                console.log('Upload exitoso:', json);
                 // Actualizar fila sin recargar
                 const row = document.getElementById('row-' + currentReq);
                 if (row) {
@@ -316,7 +319,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             <i class="ri-eye-line"></i> Ver
                         </button>`;
                     }
-
+                    
                     // reemplaza el botón subir por el badge/validar si quieres:
                     const actionCell = row.querySelector('td:last-child');
                     if (actionCell) {
