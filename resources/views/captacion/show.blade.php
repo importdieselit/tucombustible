@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="container-fluid py-4">
-{{dd($cliente->requisitosPendientes() );}}
+
     {{-- MENSAJES TIPO TOAST --}}
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
