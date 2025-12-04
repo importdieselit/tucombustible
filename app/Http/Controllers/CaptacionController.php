@@ -294,14 +294,27 @@ class CaptacionController extends Controller
     $captacion = CaptacionCliente::findOrFail($id);
 
     $docName = $request->documento;
-    $path = $request->file('archivo')->store("captacion/{$captacion->id}/docs", 'public');
+    $path = $request->file('archivo')->store("clientes/{$captacion->id}/documentos", 'public');
 
-    $docs = $captacion->documentos_subidos ?? [];
-    $docs[$docName] = $path;
-
-    $captacion->documentos_subidos = $docs;
-    $captacion->save();
-
+    $documentoExistente = CaptacionDocumento::where('captacion_id', $captacion->id)
+        ->where('requisito_id', $request->requisito_id)
+        ->first();
+        if ($documentoExistente) {
+            // Actualizar ruta del documento existente
+            $documentoExistente->ruta = $path;
+            $documentoExistente->nombre_documento = $request->file('archivo')->getClientOriginalName();
+            $documentoExistente->save();
+        } else {
+            // Crear nuevo registro de documento
+            CaptacionDocumento::create([
+                'captacion_id' => $captacion->id,
+                'requisito_id' => $request->requisito_id,
+                'tipo_anexo' => $request->codigo,
+                'nombre_documento' => $request->file('archivo')->getClientOriginalName(),
+                'ruta' => $path,
+            ]);
+        }
+    
     return response()->json([
         'ok'   => true,
         'ruta' => asset('storage/' . $path)

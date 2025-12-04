@@ -134,7 +134,8 @@
                     <td class="text-center">
                         <button class="btn btn-sm btn-warning upload-btn"
                                 data-id="{{ $cliente->id }}"
-                                data-req="{{ $req->id }}">
+                                data-req="{{ $req->id }}"
+                                data-cod="{{ $req->codigo }}">
                             <i class="ri-upload-cloud-2-line"></i> Subir
                         </button>
                     </td>
@@ -266,6 +267,7 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.addEventListener('click', () => {
             currentReq = btn.dataset.req;
             currentCliente = btn.dataset.id;
+            currentCod = btn.dataset.cod;
             input.click();
         });
     });
@@ -276,6 +278,7 @@ document.addEventListener('DOMContentLoaded', function () {
         let formData = new FormData();
         formData.append('documento', this.files[0]);
         formData.append('requisito_id', currentReq);
+        formData.append('codigo', currentCod);
         formData.append('_token', '{{ csrf_token() }}');
 
         fetch(`/captacion/${currentCliente}/subir-documento`, {
