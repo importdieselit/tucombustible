@@ -149,7 +149,7 @@
     </table>
 
     <!-- Input oculto -->
-    <input type="file" id="upload-file" class="d-none" accept="image/*,application/pdf">
+    <input type="file" id="upload-file" class="d-none" name="archivo" accept="image/*,application/pdf">
 
 </div>
 
@@ -289,7 +289,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         const form = new FormData();
-        form.append('documento', file);
+        form.append('archivo', file);
         form.append('requisito_id', currentReq);
         if (currentCod) form.append('codigo', currentCod);
         form.append('_token', '{{ csrf_token() }}');
