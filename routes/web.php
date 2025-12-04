@@ -323,7 +323,7 @@ Route::put('/viajes/{id}', [ViajesController::class, 'update'])->name('viaje.upd
     Route::get('captacion/thanks', [CaptacionController::class,'thanks'])->name('captacion.thanks');
 
     // Admin (proteger con middleware 'auth' y permisos necesarios)
-    Route::post('captacion/{id}/subir-documento', [CaptacionController::class,'subirDocumento'])
+    Route::post('captacion/{id}/subir-documento', [CaptacionController::class,'uploadDocument'])
     ->name('captacion.subir_documento');
 
     Route::prefix('captacion')->middleware(['auth'])->group(function () {
