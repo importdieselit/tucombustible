@@ -293,7 +293,7 @@ class CaptacionController extends Controller
 
     $captacion = CaptacionCliente::findOrFail($id);
 
-    $docName = $request->documento;
+    $docName = $request->archivo;
     $path = $request->file('archivo')->store("clientes/{$captacion->id}/documentos", 'public');
 
     $documentoExistente = CaptacionDocumento::where('captacion_id', $captacion->id)

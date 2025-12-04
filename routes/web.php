@@ -323,15 +323,15 @@ Route::put('/viajes/{id}', [ViajesController::class, 'update'])->name('viaje.upd
     Route::get('captacion/thanks', [CaptacionController::class,'thanks'])->name('captacion.thanks');
 
     // Admin (proteger con middleware 'auth' y permisos necesarios)
-    Route::post('captacion/{id}/subir-documento', [CaptacionController::class,'uploadDocument'])
-    ->name('captacion.subir_documento');
+    
 
     Route::prefix('captacion')->middleware(['auth'])->group(function () {
         Route::get('/', [CaptacionController::class, 'index'])->name('captacion.index');
         Route::get('/{cliente}/show', [CaptacionController::class, 'show'])->name('captacion.show');
         Route::get('/{cliente}/edit', [CaptacionController::class, 'edit'])->name('captacion.edit');
         Route::put('/{cliente}/update', [CaptacionController::class, 'update'])->name('captacion.update');
-
+        Route::post('{id}/subir-documento', [CaptacionController::class,'uploadDocument'])
+    ->name('captacion.subir_documento');
         Route::post('/{cliente}/enviar-planillas', [CaptacionController::class, 'enviarPlanillas'])
             ->name('captacion.enviar_planillas');
 
