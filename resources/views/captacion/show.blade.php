@@ -112,9 +112,9 @@
                 <tr id="row-{{ $req->id }}">
                     <td class="text-center icon-cell">
                         @if($archivo)
-                            <i class="ri-check-line text-success fs-4"></i>
+                            <i class="fa fa-check text-success fs-4"></i>
                         @else 
-                            <i class="ri-close-line text-danger fs-4"></i> 
+                            <i class="fa fa-close text-danger fs-4"></i> 
                         @endif
                     </td>
                     <td>{{ $req->codigo }} </td>
