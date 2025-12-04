@@ -132,7 +132,7 @@
                     </td>
 
                     <td class="text-center">
-                        <button class="btn btn-sm btn-warning upload-btn"
+                        <button type="button" class="btn btn-sm btn-warning upload-btn"
                                 data-id="{{ $cliente->id }}"
                                 data-req="{{ $req->id }}"
                                 data-cod="{{ $req->codigo }}">
@@ -267,7 +267,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
 
-    
+
     let currentReq = null;
     let currentCliente = null;
     let currentCod = null;
