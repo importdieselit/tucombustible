@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\CaptacionDocumento;
 use App\Models\EquipoCliente;
+use App\Models\RequisitoCaptacion;
 use App\Models\Cliente;
 
 
@@ -49,55 +50,40 @@ class CaptacionCliente extends Model
         return $this->belongsTo(Cliente::class, 'cliente_id');
     }
 
-    public function requisitos()
-    {
-        return RequisitoCaptacion::where('tipo_cliente', $this->tipo_cliente)->get();
-    }
-
     public function documentosCargadosPorCodigo()
     {
-        return $this->documentos->pluck('ruta','tipo_anexo')->toArray();
+        return $this->documentos
+            ->pluck('ruta','tipo_anexo')
+            ->filter()
+            ->toArray();
     }
 
     public function faltantes()
     {
-        // Si no existen definiciones, evitamos errores
-        $requeridos = $this->documentos_requeridos ?? [];
-        $subidos = $this->documentos_subidos ?? [];
+        $requisitos = RequisitoCaptacion::pluck('id')->toArray();
 
-        $faltantes = [];
+        $cargados = $this->documentos
+                        ->pluck('requisito_id')
+                        ->filter()
+                        ->unique()
+                        ->toArray();
 
-        foreach ($requeridos as $doc) {
-            if (!array_key_exists($doc, $subidos)) {
-                $faltantes[] = $doc;
-            }
-        }
-
-        return $faltantes;
+        return array_diff($requisitos, $cargados);
     }
-
 
     public function requisitosPendientes()
     {
-        $faltantes = [];
-
-        foreach ($this->requisitos() as $req) {
-            $tiene = $this->documentos->where('tipo_anexo', $req->codigo)->count() > 0;
-
-            if (!$tiene && $req->obligatorio) {
-                $faltantes[] = [
-                    'codigo' => $req->codigo,
-                    'descripcion' => $req->descripcion
-                ];
-            }
-        }
-
-        return $faltantes;
+        return RequisitoCaptacion::whereIn('id', $this->faltantes())->get();
     }
 
     public function requisitosCompletos()
     {
-        return count($this->requisitosPendientes()) === 0;
+        $faltantes = $this->faltantes();
+
+        return RequisitoCaptacion::when(
+            count($faltantes) > 0,
+            fn ($q) => $q->whereNotIn('id', $faltantes)
+        )->get();
     }
 
 }

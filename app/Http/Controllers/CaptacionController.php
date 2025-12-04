@@ -11,6 +11,7 @@ use App\Mail\PlanillasGeneradas;
 use App\Models\Cliente;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use App\Models\RequisitoCaptacion;
 
 class CaptacionController extends Controller
 {
@@ -105,8 +106,9 @@ class CaptacionController extends Controller
     // Mostrar expediente (admin)
     public function show(CaptacionCliente $cliente)
     {
-        $cliente->load('documentos','equipos','requisitos');
-        return view('captacion.show', compact('cliente'));
+        $cliente->load('documentos','equipos','requisitosPendientes','requisitosCompletos');
+        $requisitos = RequisitoCaptacion::all();
+        return view('captacion.show', compact('cliente','requisitos'));
     }
 
     // Validar documento individual (marca como validado o no)

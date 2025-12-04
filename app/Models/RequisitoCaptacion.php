@@ -14,4 +14,10 @@ class RequisitoCaptacion extends Model
         'descripcion',
         'obligatorio'
     ];
+
+    public function documentos()
+    {
+        return $this->hasMany(CaptacionDocumento::class, 'requisito_id');
+    }
 }
+

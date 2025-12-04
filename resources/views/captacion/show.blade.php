@@ -86,70 +86,69 @@
     <div class="card-header bg-primary text-white">
         <h5 class="mb-0"><i class="ri-folder-2-line"></i> Documentación</h5>
     </div>
+<div class="card-body">
 
-    <div class="card-body">
+    <h6 class="fw-bold mb-3">Documentos Requeridos</h6>
 
-        <h6 class="fw-bold mb-3">Documentos Requeridos</h6>
+    <table class="table table-bordered align-middle">
+        <thead class="table-light">
+            <tr>
+                <th style="width: 60px;">Estado</th>
+                <th>Anexo</th>
+                <th>Documento</th>
+                <th style="width: 100px;">Vista</th>
+                <th style="width: 120px;">Acción</th>
+            </tr>
+        </thead>
+        <tbody>
 
-        <table class="table table-bordered align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th style="width: 60px;">Estado</th>
-                    <th>Documento</th>
-                    <th style="width: 100px;">Vista</th>
-                    <th style="width: 120px;">Acción</th>
+            @foreach($requisitos as $req)
+                @php
+                    $archivo = $cliente->requisitosCompletos()
+                        ->where('requisito_id', $req->id)
+                        ->first();
+                @endphp
+
+                <tr id="row-{{ $req->id }}">
+                    <td class="text-center icon-cell">
+                        @if($archivo)
+                            <i class="ri-check-line text-success fs-4"></i>
+                        @else 
+                            <i class="ri-close-line text-danger fs-4"></i> 
+                        @endif
+                    </td>
+                    <td>{{ $req->codigo }} </td>
+                    <td>{{ $req->descripcion }}</td>
+
+                    <td class="text-center preview-cell">
+                        @if($archivo)
+                            <button class="btn btn-sm btn-dark preview-btn"
+                                    data-file="{{ asset('storage/'.$archivo->ruta) }}">
+                                <i class="ri-eye-line"></i> Ver
+                            </button>
+                        @else
+                            —
+                        @endif
+                    </td>
+
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-warning upload-btn"
+                                data-id="{{ $cliente->id }}"
+                                data-req="{{ $req->id }}">
+                            <i class="ri-upload-cloud-2-line"></i> Subir
+                        </button>
+                    </td>
                 </tr>
-            </thead>
-            {{dd($cliente->requisitos)}}
-            <tbody>
-                @foreach($cliente->requisitos ?? [] as $doc)
-                    @php
-                        $subidos = $cliente->documentos_subidos ?? [];
-                        $tiene = array_key_exists($doc, $subidos);
-                        $ruta = $tiene ? asset('storage/' . $subidos[$doc]) : null;
-                    @endphp
+            @endforeach
 
-                    <tr data-doc="{{ $doc }}">
-                        <td class="icon-cell text-center">
-                            @if($tiene)
-                                <i class="ri-check-line text-success fs-4"></i>
-                            @else
-                                <i class="ri-close-line text-danger fs-4"></i>
-                            @endif
-                        </td>
+        </tbody>
+    </table>
 
-                        <td>{{ $doc }}</td>
+    <!-- Input oculto -->
+    <input type="file" id="upload-file" class="d-none" accept="image/*,application/pdf">
 
-                        <td class="preview-cell text-center">
-                            @if($tiene)
-                                <a href="{{ $ruta }}" target="_blank" class="btn btn-sm btn-dark">
-                                    <i class="ri-eye-line"></i> Ver
-                                </a>
-                            @else
-                                —
-                            @endif
-                        </td>
+</div>
 
-                        <td class="text-center">
-                            @if(!$tiene)
-                                <button 
-                                    class="btn btn-sm btn-warning upload-btn" 
-                                    data-doc="{{ $doc }}" 
-                                    data-id="{{ $cliente->id }}"
-                                >
-                                    <i class="ri-upload-cloud-2-line"></i> Subir
-                                </button>
-                            @endif
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-
-        <!-- Input oculto -->
-        <input type="file" id="upload-file" class="d-none">
-
-    </div>
 </div>
 
 
@@ -235,78 +234,118 @@
 
     </div>
 </div>
+
+<!-- MODAL PREVIEW -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title"><i class="ri-eye-line"></i> Vista Previa del Documento</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body text-center" id="previewContent" 
+                 style="min-height: 75vh; display:flex; align-items:center; justify-content:center;">
+                <!-- Aquí se carga la vista previa -->
+            </div>
+
+        </div>
+    </div>
+</div>
+
 @endsection
 @section('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-
-    const fileInput = document.getElementById('upload-file');
-
-    let currentDoc = null;
-    let currentId = null;
+document.addEventListener('DOMContentLoaded', function () {
+    const input = document.getElementById('upload-file');
+    let currentReq = null;
+    let currentCliente = null;
 
     document.querySelectorAll('.upload-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            currentDoc = btn.dataset.doc;
-            currentId  = btn.dataset.id;
-            fileInput.click();
+            currentReq = btn.dataset.req;
+            currentCliente = btn.dataset.id;
+            input.click();
         });
     });
 
-    fileInput.addEventListener('change', async function () {
-
+    input.addEventListener('change', function () {
         if (!this.files.length) return;
 
-        const formData = new FormData();
-        formData.append('documento', currentDoc);
-        formData.append('archivo', this.files[0]);
+        let formData = new FormData();
+        formData.append('documento', this.files[0]);
+        formData.append('requisito_id', currentReq);
         formData.append('_token', '{{ csrf_token() }}');
 
-        const url = `/captacion/${currentId}/upload-doc`;
-        let row = document.querySelector(`tr[data-doc="${currentDoc}"]`);
+        fetch(`/captacion/${currentCliente}/subir-documento`, {
+            method: "POST",
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
 
-        try {
-            let res = await fetch(url, {
-                method: 'POST',
-                body: formData
-            });
+            if (data.status === 'ok') {
+                const row = document.getElementById('row-'+currentReq);
 
-            let json = await res.json();
-
-            if (json.ok) {
-
+                // Actualizar icono a CHECK
                 row.querySelector('.icon-cell').innerHTML =
                     `<i class="ri-check-line text-success fs-4"></i>`;
 
+                // Actualizar botón de vista previa
                 row.querySelector('.preview-cell').innerHTML =
-                    `<a href="${json.ruta}" target="_blank" class="btn btn-sm btn-dark">
+                    `<a href="/storage/${data.ruta}" target="_blank" class="btn btn-sm btn-dark">
                         <i class="ri-eye-line"></i> Ver
                     </a>`;
 
-                row.querySelector('.text-center .upload-btn')?.remove();
-
-                Toastify({
-                    text: "Documento cargado correctamente",
-                    duration: 3000,
-                    gravity: "top",
-                    position: "right",
-                    backgroundColor: "#28a745"
-                }).showToast();
+                // Notificación
+                toastr.success("Documento cargado correctamente.");
             }
-
-        } catch (err) {
-            Toastify({
-                text: "Error al subir el documento",
-                duration: 3000,
-                gravity: "top",
-                position: "right",
-                backgroundColor: "#dc3545"
-            }).showToast();
-        }
-
-        this.value = "";
+        })
+        .catch(() => toastr.error("Error al subir el documento."));
     });
 
+     document.querySelectorAll('.preview-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const url = btn.dataset.file;
+            const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+            const container = document.getElementById('previewContent');
+
+            container.innerHTML = `<div>Cargando vista previa...</div>`;
+
+            const ext = url.split('.').pop().toLowerCase();
+
+            // PDFs → iframe
+            if (ext === "pdf") {
+                container.innerHTML = `
+                    <iframe src="${url}" 
+                        style="width:100%; height:75vh; border:none;"></iframe>
+                `;
+            }
+
+            // Imagenes → <img>
+            else if (["jpg", "jpeg", "png", "webp"].includes(ext)) {
+                container.innerHTML = `
+                    <img src="${url}" 
+                        style="max-width:100%; max-height:75vh; border-radius:6px;">
+                `;
+            }
+
+            // Otros formatos → descargar o abrir en pestaña nueva
+            else {
+                container.innerHTML = `
+                    <div class="p-4 text-center">
+                        <p class="fs-5">No es posible mostrar este formato en vista previa.</p>
+                        <a href="${url}" target="_blank" class="btn btn-primary">
+                            <i class="ri-external-link-line"></i> Abrir/Descargar
+                        </a>
+                    </div>
+                `;
+            }
+
+            modal.show();
+        });
+    });
 });
 </script>
 @endsection
