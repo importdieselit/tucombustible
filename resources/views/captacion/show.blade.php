@@ -259,47 +259,18 @@
 @section('scripts')
 <script>
 
-
-    document.body.addEventListener('click', function (e) {
-        const btn = e.target.closest('.upload-btn');
-        if (!btn) return;
-
-        // lee atributos data-*
-        currentReq = btn.dataset.req ?? btn.getAttribute('data-req');
-        currentCliente = btn.dataset.id ?? btn.getAttribute('data-id');
-        currentCod = btn.dataset.cod ?? btn.getAttribute('data-cod');
-
-        if (!currentReq || !currentCliente) {
-            console.error('Faltan atributos data-req o data-id en el botón', btn);
-            toastr?.error('Botón mal configurado (falta data-req o data-id).');
-            return;
-        }
-
-        // asigna handler *una sola vez* (evita múltiples attach)
-        if (!input._listenerAttached) {
-            input.addEventListener('change', handleFileChange);
-            input._listenerAttached = true;
-        }
-
-        // dispara selector de archivos
-        input.click();
-    });
 document.addEventListener('DOMContentLoaded', function () {
     const input = document.getElementById('upload-file');
+
+     if (!input) {
+        console.error('No se encontró input#upload-file');
+        return;
+    }
+
+    
     let currentReq = null;
     let currentCliente = null;
     let currentCod = null;
-
-    document.querySelectorAll('.upload-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            console.log('Upload button clicked:', btn);
-            currentReq = btn.dataset.req;
-            currentCliente = btn.dataset.id;
-            currentCod = btn.dataset.cod;
-            
-            input.click();
-        });
-    });
 
     input.addEventListener('change', function () {
         if (!this.files.length) return;
@@ -379,5 +350,31 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
+
+
+    document.body.addEventListener('click', function (e) {
+        const btn = e.target.closest('.upload-btn');
+        if (!btn) return;
+
+        // lee atributos data-*
+        currentReq = btn.dataset.req ?? btn.getAttribute('data-req');
+        currentCliente = btn.dataset.id ?? btn.getAttribute('data-id');
+        currentCod = btn.dataset.cod ?? btn.getAttribute('data-cod');
+
+        if (!currentReq || !currentCliente) {
+            console.error('Faltan atributos data-req o data-id en el botón', btn);
+            toastr?.error('Botón mal configurado (falta data-req o data-id).');
+            return;
+        }
+
+        // asigna handler *una sola vez* (evita múltiples attach)
+        if (!input._listenerAttached) {
+            input.addEventListener('change', handleFileChange);
+            input._listenerAttached = true;
+        }
+
+        // dispara selector de archivos
+        input.click();
+    });
 </script>
 @endsection
