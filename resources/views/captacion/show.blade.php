@@ -254,11 +254,9 @@
         </div>
     </div>
 </div>
-
-@endsection
-@section('scripts')
+@push('scripts')
 <script>
-    
+
 document.addEventListener('DOMContentLoaded', function () {
     const input = document.getElementById('upload-file');
     if (!input) {
@@ -400,4 +398,5 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 </script>
+@endpush
 @endsection
