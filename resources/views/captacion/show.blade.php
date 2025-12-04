@@ -258,125 +258,146 @@
 @endsection
 @section('scripts')
 <script>
-
+    
 document.addEventListener('DOMContentLoaded', function () {
     const input = document.getElementById('upload-file');
-
-     if (!input) {
+    if (!input) {
         console.error('No se encontró input#upload-file');
         return;
-    }else{
-        console.log('input#upload-file encontrado correctamente');
     }
+    console.log('input#upload-file encontrado correctamente');
 
-
+    // contexto compartido
     let currentReq = null;
     let currentCliente = null;
     let currentCod = null;
 
-    input.addEventListener('change', function () {
-        if (!this.files.length) return;
+    // función única y reutilizable para procesar la subida
+    async function handleFileChange() {
+        if (!input.files || !input.files.length) return;
 
-        let formData = new FormData();
-        formData.append('documento', this.files[0]);
-        formData.append('requisito_id', currentReq);
-        formData.append('codigo', currentCod);
-        formData.append('_token', '{{ csrf_token() }}');
+        const file = input.files[0];
+        if (!file) return;
 
-        fetch(`/captacion/${currentCliente}/subir-documento`, {
-            method: "POST",
-            body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
+        if (!currentReq || !currentCliente) {
+            toastr?.error('Contexto inválido: falta requisito o cliente.');
+            input.value = '';
+            return;
+        }
 
-            if (data.status === 'ok') {
-                const row = document.getElementById('row-'+currentReq);
+        const form = new FormData();
+        form.append('documento', file);
+        form.append('requisito_id', currentReq);
+        if (currentCod) form.append('codigo', currentCod);
+        form.append('_token', '{{ csrf_token() }}');
 
-                // Actualizar icono a CHECK
-                row.querySelector('.icon-cell').innerHTML =
-                    `<i class="ri-check-line text-success fs-4"></i>`;
+        try {
+            // muestra feedback básico
+            toastr?.info('Subiendo documento...');
 
-                // Actualizar botón de vista previa
-                row.querySelector('.preview-cell').innerHTML =
-                    `<a href="/storage/${data.ruta}" target="_blank" class="btn btn-sm btn-dark">
-                        <i class="ri-eye-line"></i> Ver
-                    </a>`;
+            const resp = await fetch(`/captacion/${currentCliente}/subir-documento`, {
+                method: 'POST',
+                body: form,
+                credentials: 'same-origin'
+            });
 
-                // Notificación
-                toastr.success("Documento cargado correctamente.");
+            const json = await resp.json();
+
+            if (resp.ok && json.status === 'ok') {
+                toastr?.success('Documento cargado correctamente.');
+
+                // Actualizar fila sin recargar
+                const row = document.getElementById('row-' + currentReq);
+                if (row) {
+                    const iconCell = row.querySelector('.icon-cell');
+                    if (iconCell) iconCell.innerHTML = '<i class="ri-check-line text-success fs-4"></i>';
+
+                    const previewCell = row.querySelector('.preview-cell');
+                    if (previewCell) {
+                        previewCell.innerHTML = `<button class="btn btn-sm btn-dark preview-btn" data-file="/storage/${json.ruta}">
+                            <i class="ri-eye-line"></i> Ver
+                        </button>`;
+                    }
+
+                    // reemplaza el botón subir por el badge/validar si quieres:
+                    const actionCell = row.querySelector('td:last-child');
+                    if (actionCell) {
+                        actionCell.innerHTML = json.validado ? '<span class="badge bg-success">Validado</span>'
+                            : `<form action="/captacion/validar-documento/${json.documento_id}" method="POST">
+                                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                                <button class="btn btn-sm btn-success">Validar</button>
+                               </form>`;
+                    }
+                }
+            } else {
+                const msg = json.message || 'Error al subir documento';
+                toastr?.error(msg);
+                console.error('Upload error', json);
             }
-        })
-        .catch(() => toastr.error("Error al subir el documento."));
-    });
+        } catch (err) {
+            console.error('Error de red al subir documento', err);
+            toastr?.error('Error de red al subir documento');
+        } finally {
+            // limpiar estado para próxima operación
+            input.value = '';
+            currentReq = null;
+            currentCliente = null;
+            currentCod = null;
+        }
+    }
 
-     document.querySelectorAll('.preview-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const url = btn.dataset.file;
-            const modal = new bootstrap.Modal(document.getElementById('previewModal'));
-            const container = document.getElementById('previewContent');
+    // attach once
+    input.addEventListener('change', handleFileChange);
 
-            container.innerHTML = `<div>Cargando vista previa...</div>`;
-
-            const ext = url.split('.').pop().toLowerCase();
-
-            // PDFs → iframe
-            if (ext === "pdf") {
-                container.innerHTML = `
-                    <iframe src="${url}" 
-                        style="width:100%; height:75vh; border:none;"></iframe>
-                `;
-            }
-
-            // Imagenes → <img>
-            else if (["jpg", "jpeg", "png", "webp"].includes(ext)) {
-                container.innerHTML = `
-                    <img src="${url}" 
-                        style="max-width:100%; max-height:75vh; border-radius:6px;">
-                `;
-            }
-
-            // Otros formatos → descargar o abrir en pestaña nueva
-            else {
-                container.innerHTML = `
-                    <div class="p-4 text-center">
-                        <p class="fs-5">No es posible mostrar este formato en vista previa.</p>
-                        <a href="${url}" target="_blank" class="btn btn-primary">
-                            <i class="ri-external-link-line"></i> Abrir/Descargar
-                        </a>
-                    </div>
-                `;
-            }
-
-            modal.show();
-        });
-    });
-});
-
-
+    // Delegación: escucha clicks en todo el body para botones .upload-btn
     document.body.addEventListener('click', function (e) {
         const btn = e.target.closest('.upload-btn');
         if (!btn) return;
 
-        // lee atributos data-*
         currentReq = btn.dataset.req ?? btn.getAttribute('data-req');
         currentCliente = btn.dataset.id ?? btn.getAttribute('data-id');
         currentCod = btn.dataset.cod ?? btn.getAttribute('data-cod');
-        console.log('Subir documento para requisito:', currentReq, 'cliente:', currentCliente);
+
+        console.log('Iniciando upload -> req:', currentReq, 'cliente:', currentCliente, 'cod:', currentCod);
+
         if (!currentReq || !currentCliente) {
-            console.error('Faltan atributos data-req o data-id en el botón', btn);
             toastr?.error('Botón mal configurado (falta data-req o data-id).');
             return;
         }
 
-        // asigna handler *una sola vez* (evita múltiples attach)
-        if (!input._listenerAttached) {
-            input.addEventListener('change', handleFileChange);
-            input._listenerAttached = true;
-        }
-
-        // dispara selector de archivos
+        // dispara selector
         input.click();
     });
+
+    // Delegación para preview (soporta elementos dinámicos)
+    document.body.addEventListener('click', function (e) {
+        const btn = e.target.closest('.preview-btn');
+        if (!btn) return;
+
+        const url = btn.dataset.file;
+        if (!url) return;
+
+        const ext = url.split('.').pop().toLowerCase();
+        const modalEl = document.getElementById('previewModal');
+        const modal = new bootstrap.Modal(modalEl);
+        const container = document.getElementById('previewContent');
+
+        container.innerHTML = '<div>Cargando vista previa...</div>';
+
+        if (ext === 'pdf') {
+            container.innerHTML = `<iframe src="${url}" style="width:100%;height:75vh;border:none;"></iframe>`;
+        } else if (['jpg','jpeg','png','webp'].includes(ext)) {
+            container.innerHTML = `<img src="${url}" style="max-width:100%;max-height:75vh;border-radius:6px;">`;
+        } else {
+            container.innerHTML = `<div class="p-4 text-center">
+                <p class="mb-3">No es posible mostrar este formato en el visor.</p>
+                <a href="${url}" target="_blank" class="btn btn-primary">Abrir / Descargar</a>
+            </div>`;
+        }
+        modal.show();
+    });
+
+});
+
 </script>
 @endsection
