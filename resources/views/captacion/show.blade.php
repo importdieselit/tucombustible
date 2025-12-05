@@ -107,7 +107,7 @@
 
             @foreach($requisitos as $req)
                 @php
-                    $archivo = $cliente->requisitosCompletos()
+                    $archivo = $cliente->documentos
                         ->where('requisito_id', $req->id)
                         ->first();
                         dd($archivo);

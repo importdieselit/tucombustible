@@ -105,12 +105,9 @@ class CaptacionController extends Controller
 
     // Mostrar expediente (admin)
     public function show(CaptacionCliente $cliente)
-    {
-        
+    {        
         $cliente->load('documentos','equipos'); //,'requisitosPendientes','requisitosCompletos');
-
-                dd($cliente);
-
+        
         $requisitos = RequisitoCaptacion::all();
         return view('captacion.show', compact('cliente','requisitos'));
     }
