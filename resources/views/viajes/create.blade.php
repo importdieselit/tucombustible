@@ -51,9 +51,12 @@
 
                     {{-- DURACIÓN ESTIMADA (DÍAS) --}}
                     <div class="col-md-6">
-                        <label for="duracion_dias" class="form-label fw-bold">Duración Estimada (Días)</label>
-                        <input type="number" name="duracion_dias" id="duracion_dias" class="form-control @error('duracion_dias') is-invalid @enderror" value="{{ old('duracion_dias', 1) }}" min="1" required>
-                        @error('duracion_dias')
+                        <label for="tipo" class="form-label fw-bold">Producto</label>
+                        <select name="tipo" id="tipo" class="form-select">
+                            <option value="1" {{ old('tipo') == 1 ? 'selected' : '' }}>M.G.O.</option>
+                            <option value="2" {{ old('tipo') == 2 ? 'selected' : '' }}>Diesel</option>
+                        </select>
+                        @error('tipo')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>

@@ -18,6 +18,7 @@ use App\Models\CompraCombustible;
 use App\Models\Viaje;
 use App\Models\User;
 use App\Models\Persona;
+use App\Models\Producto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
@@ -886,7 +887,7 @@ public function createPrecarga()
             $planta = Planta::find($request->planta_destino_id);
             $destino = TabuladorViatico::find($planta->id_tabulador_viatico);
             //dd($destino);
-            $cantidad = $request->cantidad_litros;
+            $cantidad = $request->litros;
             $fecha = $solicitud->fecha;
 
 
@@ -911,6 +912,19 @@ public function createPrecarga()
                 $ayudante=Chofer::find($request->ayudante);
             
            // dd($viaje);
+           switch ($request->tipo) {
+                case 'INDUSTRIAL':
+                    $tipoProducto = 2;
+                    break;
+                case 'M.G.O.':
+                    $tipoProducto = 1;
+                    break;
+                default:
+                    $tipoProducto = 2; // Valor por defecto
+            }
+            $producto=Producto::find($tipoProducto);
+            $producto->stock+=$request->litros;
+            $producto->save();
 
              DespachoViaje::create([
                     'viaje_id' => $viaje->id,

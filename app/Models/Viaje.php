@@ -8,6 +8,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Chofer;
 use App\Models\ViaticoViaje;
+use App\Models\Vehiculo;
+use App\Models\Cliente;
+use App\Models\DespachoViaje;
+use App\Models\User;
+use App\Models\Producto;
 
 
 class Viaje extends Model
@@ -31,7 +36,8 @@ class Viaje extends Model
         'usuario_id',
         'otro_vehiculo',
         'otro_chofer',
-        'otro_ayudante'
+        'otro_ayudante',
+        'tipo'
     ];
 
     /**

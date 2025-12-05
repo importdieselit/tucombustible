@@ -340,7 +340,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const actionCell = row.querySelector('td:last-child');
                     if (actionCell) {
                         actionCell.innerHTML = json.validado ? '<span class="badge bg-success">Validado</span>'
-                            : `<form action="/captacion/validar-documento/${json.documento_id}" method="POST">
+                            : `<form action="/captacion/validar-documento/${json.id}" method="POST">
                                 <input type="hidden" name="_token" value="{{ csrf_token() }}">
                                 <button class="btn btn-sm btn-success">Validar</button>
                                </form>`;

@@ -306,7 +306,7 @@ class CaptacionController extends Controller
                 $documentoExistente->save();
             } else {
                 // Crear nuevo registro de documento
-                CaptacionDocumento::create([
+                $documentoExistente= CaptacionDocumento::create([
                     'captacion_id' => $captacion->id,
                     'requisito_id' => $request->requisito_id,
                     'tipo_anexo' => $request->codigo,
@@ -317,6 +317,7 @@ class CaptacionController extends Controller
         
         return response()->json([
             'ok'   => true,
+            'id'   => $documentoExistente->id,
             'ruta' => asset('storage/' . $path)
         ]);    // Intentar almacenar el archivo
     } catch (\Exception $e) {
