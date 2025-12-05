@@ -135,6 +135,17 @@
                     </td>
 
                     <td class="text-center">
+                            @if($archivo)
+                                @if($archivo->validado)
+                                    <span class="badge bg-success">Validado</span>
+                                @else
+                                    <form action="{{ route('captacion.validar-documento', $archivo->id) }}" method="POST">
+                                        @csrf
+                                        <button class="btn btn-sm btn-success">
+                                            <i class="ri-check-line"></i> Validar
+                                        </button>
+                                    </form>
+                                @endif
                         <button type="button" class="btn btn-sm btn-warning upload-btn"
                                 data-id="{{ $cliente->id }}"
                                 data-req="{{ $req->id }}"
