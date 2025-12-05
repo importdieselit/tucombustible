@@ -110,8 +110,7 @@
                     $archivo = $cliente->documentos
                         ->where('requisito_id', $req->id)
                         ->first();
-                        dd($archivo);
-                @endphp
+                        @endphp
 
                 <tr id="row-{{ $req->id }}">
                     <td class="text-center icon-cell">
