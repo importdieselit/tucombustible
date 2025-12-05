@@ -320,6 +320,7 @@ class CaptacionController extends Controller
             'ruta' => asset('storage/' . $path)
         ]);    // Intentar almacenar el archivo
     } catch (\Exception $e) {
+        Log::error('Error al subir archivo: ' . $e->getMessage());
         return response()->json([
             'ok'    => false,
             'error' => 'Error al subir el archivo: ' . $e->getMessage()
