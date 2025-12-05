@@ -29,7 +29,8 @@ class CaptacionController extends Controller
             'rif' => 'nullable|string',
             'correo' => 'required|email',
             'telefono' => 'nullable|string',
-            'direccion' => 'nullable|string',
+            'direccion' => 'nullable|string'
+            //'observacion' => 'nullable|string',
             //'documentos.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120'
         ]);
         
@@ -40,6 +41,7 @@ class CaptacionController extends Controller
             'razon_social' => $validated['razon_social'],
             'rif' => $validated['rif'] ?? null,
             'correo' => $validated['correo'],
+            //'gestion' => 'MIGRACION',
             'telefono' => $validated['telefono'] ?? null,
             'direccion' => $validated['direccion'] ?? null,
             'estatus_captacion' => 'registro_inicial'
@@ -63,7 +65,7 @@ class CaptacionController extends Controller
 
         
 
-        return redirect()->route('captacion.thanks')->with('success', 'Solicitud recibida. Pronto le contactaremos.');
+        return redirect()->route('captacion.index')->with('success', 'Solicitud recibida');
     }
 
     public function thanks() {
