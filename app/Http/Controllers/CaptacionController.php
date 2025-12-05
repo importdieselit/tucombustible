@@ -285,7 +285,7 @@ class CaptacionController extends Controller
     }
 
     public function uploadDocument(Request $request, $id)
-{
+   {
     $request->validate([
         'documento' => 'required|string',
         'archivo'   => 'required|file|max:10240',
@@ -295,30 +295,37 @@ class CaptacionController extends Controller
 
     $docName = $request->archivo;
     $path = $request->file('archivo')->store("clientes/{$captacion->id}/documentos", 'public');
-
-    $documentoExistente = CaptacionDocumento::where('captacion_id', $captacion->id)
-        ->where('requisito_id', $request->requisito_id)
-        ->first();
-        if ($documentoExistente) {
-            // Actualizar ruta del documento existente
-            $documentoExistente->ruta = $path;
-            $documentoExistente->nombre_documento = $request->file('archivo')->getClientOriginalName();
-            $documentoExistente->save();
-        } else {
-            // Crear nuevo registro de documento
-            CaptacionDocumento::create([
-                'captacion_id' => $captacion->id,
-                'requisito_id' => $request->requisito_id,
-                'tipo_anexo' => $request->codigo,
-                'nombre_documento' => $request->file('archivo')->getClientOriginalName(),
-                'ruta' => $path,
-            ]);
-        }
+    try {
+        $documentoExistente = CaptacionDocumento::where('captacion_id', $captacion->id)
+            ->where('requisito_id', $request->requisito_id)
+            ->first();
+            if ($documentoExistente) {
+                // Actualizar ruta del documento existente
+                $documentoExistente->ruta = $path;
+                $documentoExistente->nombre_documento = $request->file('archivo')->getClientOriginalName();
+                $documentoExistente->save();
+            } else {
+                // Crear nuevo registro de documento
+                CaptacionDocumento::create([
+                    'captacion_id' => $captacion->id,
+                    'requisito_id' => $request->requisito_id,
+                    'tipo_anexo' => $request->codigo,
+                    'nombre_documento' => $request->file('archivo')->getClientOriginalName(),
+                    'ruta' => $path,
+                ]);
+            }
+        
+        return response()->json([
+            'ok'   => true,
+            'ruta' => asset('storage/' . $path)
+        ]);    // Intentar almacenar el archivo
+    } catch (\Exception $e) {
+        return response()->json([
+            'ok'    => false,
+            'error' => 'Error al subir el archivo: ' . $e->getMessage()
+        ], 500);
+    }
     
-    return response()->json([
-        'ok'   => true,
-        'ruta' => asset('storage/' . $path)
-    ]);
 }
 
 
