@@ -146,6 +146,7 @@
                                         </button>
                                     </form>
                                 @endif
+                            @endif
                         <button type="button" class="btn btn-sm btn-warning upload-btn"
                                 data-id="{{ $cliente->id }}"
                                 data-req="{{ $req->id }}"
