@@ -139,7 +139,7 @@
                                 @if($archivo->validado)
                                     <span class="badge bg-success">Validado</span>
                                 @else
-                                    <form action="{{ route('captacion.validar-documento', $archivo->id) }}" method="POST">
+                                    <form action="{{ route('captacion.validar_documento', $archivo->id) }}" method="POST">
                                         @csrf
                                         <button class="btn btn-sm btn-success">
                                             <i class="ri-check-line"></i> Validar
