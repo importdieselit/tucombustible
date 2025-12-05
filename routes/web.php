@@ -59,7 +59,7 @@ Route::post('/solicitud-eliminacion-datos', [DataDeletionController::class, 'sub
 Route::post('/telegram/webhook', [TelegramController::class, 'handleWebhook']);
 
 
-Route::post('captacion/{id}/subir-documento', [CaptacionController::class,'uploadDocument'])
+Route::post('/subir-documento/captacion/{id}', [CaptacionController::class,'uploadDocument'])
     ->name('captacion.subir_documento');
 
 Route::middleware(['auth'])->group(function () {
