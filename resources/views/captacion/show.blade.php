@@ -110,6 +110,7 @@
                     $archivo = $cliente->requisitosCompletos()
                         ->where('requisito_id', $req->id)
                         ->first();
+                        dd($archivo);
                 @endphp
 
                 <tr id="row-{{ $req->id }}">
