@@ -308,7 +308,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const json = await resp.json();
 
-            if (resp.ok && json.status === 'ok') {
+            if (resp.ok && json.ok === true) {
                 toastr?.success('Documento cargado correctamente.');
                 console.log('Upload exitoso:', json);
                 // Actualizar fila sin recargar
