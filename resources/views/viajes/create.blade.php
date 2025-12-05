@@ -58,7 +58,7 @@
                         </select>
                         @error('tipo')
                             <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        @enderror   
                     </div>
 {{-- Campo de FLETE --}}
                     <div class="col-md-3 d-flex align-items-center">

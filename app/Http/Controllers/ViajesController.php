@@ -20,6 +20,7 @@ use App\Models\DespachoViaje;
 use Illuminate\Support\Facades\DB;
 use App\Models\Pedido;
 use App\Models\MovimientoCombustible;
+use App\Models\Producto;
 
 
 class ViajesController extends Controller
@@ -238,7 +239,8 @@ class ViajesController extends Controller
                 'ayudante' => $request->ayudante ?? 0,
                 'otro_chofer' => $request->otro_chofer_id ?? null,
                 'otro_vehiculo' => $request->otro_vehiculo_id ?? null,
-                'otro_ayudante' => $request->otro_ayudante_id ?? null
+                'otro_ayudante' => $request->otro_ayudante_id ?? null,
+                'tipo' => $request->tipo, // Tipo 1 para viajes con múltiples despachos
             ]);
 
             // 4. Crear los registros de DespachoViaje
@@ -268,7 +270,8 @@ class ViajesController extends Controller
                         'estado' => 'aprobado',
                         'fecha_solicitud' => $request->fecha_salida,
                     ]);
-                }    
+                }
+
                 
                // $actual= MovimientoCombustible::getSaldoActualByDeposito(6);
                 //  $movimiento = new MovimientoCombustible();
@@ -294,6 +297,10 @@ class ViajesController extends Controller
                     'litros' => $despachoData['litros'],
                     'total_litros' => $totalLitros
                 ];
+
+                $producto=Producto::find($request->tipo);
+                $producto->stock-=$totalLitros;
+                $producto->save();
 
                 if ($request->has('chofer_id') && $request->chofer_id !== null) {
                 try {

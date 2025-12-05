@@ -14,7 +14,7 @@ class AddColumnTipoToViajes extends Migration
     public function up()
     {
         Schema::table('viajes', function (Blueprint $table) {
-            $table->integer('tipo')->nullable()->after('otro_ayudante');
+            $table->integer('tipo')->nullable();
         });
     }
 
