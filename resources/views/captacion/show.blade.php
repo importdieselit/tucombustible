@@ -300,7 +300,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // muestra feedback básico
             toastr?.info('Subiendo documento...');
 
-            const resp = await fetch(`/captacion/${currentCliente}/subir-documento`, {
+            const resp = await fetch(`/subir-documento/captacion/${currentCliente}`, {
                 method: 'POST',
                 body: form,
                 credentials: 'same-origin'
