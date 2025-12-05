@@ -287,7 +287,6 @@ class CaptacionController extends Controller
     public function uploadDocument(Request $request, $id)
    {
     $request->validate([
-        'documento' => 'required|string',
         'archivo'   => 'required|file|max:10240',
     ]);
 

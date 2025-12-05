@@ -58,10 +58,6 @@ Route::post('/solicitud-eliminacion-datos', [DataDeletionController::class, 'sub
 
 Route::post('/telegram/webhook', [TelegramController::class, 'handleWebhook']);
 
-
-Route::post('/subir-documento/captacion/{id}', [CaptacionController::class,'uploadDocument'])
-    ->name('captacion.subir_documento');
-
 Route::middleware(['auth'])->group(function () {
     // Dashboard principal
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -334,7 +330,8 @@ Route::put('/viajes/{id}', [ViajesController::class, 'update'])->name('viaje.upd
         Route::get('/{cliente}/show', [CaptacionController::class, 'show'])->name('captacion.show');
         Route::get('/{cliente}/edit', [CaptacionController::class, 'edit'])->name('captacion.edit');
         Route::put('/{cliente}/update', [CaptacionController::class, 'update'])->name('captacion.update');
-        
+        Route::post('/{id}/subir-documento', [CaptacionController::class,'uploadDocument'])
+    ->name('captacion.subir_documento');
         Route::post('/{cliente}/enviar-planillas', [CaptacionController::class, 'enviarPlanillas'])
             ->name('captacion.enviar_planillas');
 
