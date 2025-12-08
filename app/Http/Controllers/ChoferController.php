@@ -127,7 +127,7 @@ class ChoferController extends BaseController
              if ($request->hasFile('documentos')) {
             foreach ($request->file('documentos') as $doc) {
 
-                $ruta = $doc->store("choferes/documentos/{$chofer->id}", 'public');
+                $ruta = $doc->store("choferes/documentos", 'public');
 
                 $documentosGuardados[] = [
                     'nombre' => $doc->getClientOriginalName(),

@@ -8,6 +8,12 @@ $unidades_en_mantenimiento = App\Models\Vehiculo::countVehiculosEnMantenimiento(
 $unidades_disponibles = App\Models\Vehiculo::Disponibles()->count();
 $unidades_en_servicio = App\Models\Vehiculo::EnServicio()->count();
 $historicoEficiencia = App\Models\ResumenDiario::where('fecha', '>=', now()->subDays(15))->orderBy('fecha')->get()->toArray();
+  $mantenimientos = App\Models\MantenimientoProgramado::with('vehiculo')
+        ->whereIn('estatus', ['pendiente', 'programado'])
+        ->orderBy('fecha', 'asc') // o por km si lo deseas
+        ->limit(5)
+        ->get();
+
 $eficienciaActual = $total_flota > 0 
     ? ($unidades_disponibles / $total_flota) * 100 
     : 0; 
@@ -157,9 +163,9 @@ $chartDataCierre = array_column($historicoEficiencia, 'disponibilidad');
                     <i class="fa fa-list"></i> Planificar Mantenimiento
                 </a>
                  
-                <a href="#" class="btn btn-outline-info w-100">
+                {{-- <a href="#" class="btn btn-outline-info w-100">
                     <i class="fa fa-file-excel"></i> Exportar Excel
-                </a>
+                </a> --}}
             </div>
         </div>
     </div>
@@ -190,7 +196,7 @@ $chartDataCierre = array_column($historicoEficiencia, 'disponibilidad');
             </div>
         </div>
     </div> <!-- Relación Kilometraje vs Consumo -->
-    <div class="col-lg-6">
+    <div class="col-lg-6" style="display: none">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-0">
                 <h5 class="mb-0">Relación Kilometraje / Consumo  (Demo)</h5>
@@ -202,7 +208,7 @@ $chartDataCierre = array_column($historicoEficiencia, 'disponibilidad');
         </div>
     </div>
     <!-- Relación Kilometraje vs Consumo (Top 10 camiones con mayor consumo) -->
-    <div class="col-lg-6">
+    <div class="col-lg-6" style="display:none">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-0">
                 <h5 class="mb-0">Top 10 Camiones con Mayor Consumo  (Demo)</h5>
@@ -215,7 +221,7 @@ $chartDataCierre = array_column($historicoEficiencia, 'disponibilidad');
     </div>
 </div>
 
-<div class="row g-4 mb-4">
+<div class="row g-4 mb-4" style="display: none">
     <!-- Nivel de combustible estimado -->
     <div class="col-md-4">
         <div class="card shadow-sm border-0">
@@ -235,23 +241,50 @@ $chartDataCierre = array_column($historicoEficiencia, 'disponibilidad');
     <div class="col-md-4">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-0">
-                <h5 class="mb-0">Próximos Mantenimientos (Demo)</h5>
+                <h5 class="mb-0">Próximos Mantenimientos</h5>
             </div>
             <div class="card-body">
+                 @if($mantenimientos->count() === 0)
+                <p class="text-muted">No hay mantenimientos programados.</p>
+            @else
                 <ul class="list-group list-group-flush">
-                    <li class="list-group-item d-flex align-items-center">
-                        <i class="fa fa-wrench text-warning me-2"></i>
-                        Vehículo ABC-123 - 1,200 km restantes
-                    </li>
-                    <li class="list-group-item d-flex align-items-center">
-                        <i class="fa fa-wrench text-warning me-2"></i>
-                        Vehículo XYZ-789 - 2,000 km restantes
-                    </li>
-                    <li class="list-group-item d-flex align-items-center">
-                        <i class="fa fa-wrench text-warning me-2"></i>
-                        Vehículo DEF-456 - 3,500 km restantes
-                    </li>
+                    @foreach($mantenimientos as $item)
+                        <li class="list-group-item d-flex flex-column">
+
+                            <div class="d-flex align-items-center mb-1">
+                                <i class="fa fa-wrench text-warning me-2"></i>
+
+                                <strong>{{ $item->vehiculo->placa ?? 'Sin placa' }}</strong>
+                            </div>
+
+                            <small class="text-muted">
+                                <i class="fa fa-calendar"></i>
+                                {{ $item->fecha->format('d/m/Y') }}
+                            </small>
+
+                            @if($item->km)
+                                <small class="text-muted">
+                                    <i class="fa fa-tachometer"></i>
+                                    Programado a: {{ number_format($item->km) }} km
+                                </small>
+                            @endif
+
+                            <small>
+                                {{ $item->descripcion }}
+                            </small>
+
+                            @if($item->estatus === '1')
+                                <span class="badge bg-warning text-dark mt-1">Pendiente</span>
+                            @elseif($item->estatus === '2')
+                                <span class="badge bg-primary mt-1">Programado</span>
+                            @elseif($item->estatus === '3')
+                                <span class="badge bg-success mt-1">Realizado</span>
+                            @endif
+
+                        </li>
+                    @endforeach
                 </ul>
+            @endif
             </div>
         </div>
     </div>
