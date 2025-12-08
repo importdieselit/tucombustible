@@ -58,7 +58,7 @@ $eficienciaActual = round($eficienciaActual, 2);
     }
 
 
- $viajesActivos = Viaje::with(['vehiculo', 'cliente'])
+ $viajesActivos = App\Models\Viaje::with(['vehiculo', 'cliente'])
         ->whereDate('fecha_salida', now()->format('Y-m-d')) // según tus estados reales
         ->orderBy('fecha_salida', 'desc')
         ->get()
