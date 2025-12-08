@@ -393,8 +393,24 @@ $viajes = App\Models\Viaje::with(['chofer.persona', 'ayudante_chofer.persona'])
 
 {{-- Scripts para Highcharts --}}
 <script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://cdn.datatables.net/2.0.7/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.html5.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+
+
+        $('.datatable').DataTable({
+                "language": {
+                    "url": "https://cdn.datatables.net/plug-ins/2.0.8/i18n/es-ES.json"
+                },
+                layout: {
+                    topStart: {
+                        buttons: ['csv', 'excel', 'pdf', 'print']
+                    }
+                }
+            });
+
         // Datos de PHP pasados a JavaScript
         const historialMensual = @json($historialMensual);
 
