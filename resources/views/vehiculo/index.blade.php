@@ -35,9 +35,9 @@ $eficienciaActual = round($eficienciaActual, 2);
             $desde = now()->subMonths(11)->startOfMonth();
     $hasta = now()->endOfMonth();
 
-    $fallas = Orden::select(
-            DB::raw("DATE_FORMAT(created_at, '%Y-%m') AS mes"),
-            DB::raw("COUNT(*) AS total")
+    $fallas = App\Models\Orden::select(
+            Illuminate\Support\Facades\DB::raw("DATE_FORMAT(created_at, '%Y-%m') AS mes"),
+            Illuminate\Support\Facades\DB::raw("COUNT(*) AS total")
         )
        // ->where('tipo', 'falla')  // ajusta si tus fallas se identifican de otra forma
         ->whereBetween('created_at', [$desde, $hasta])
