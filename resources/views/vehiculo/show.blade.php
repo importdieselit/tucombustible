@@ -80,7 +80,7 @@ $viajes = App\Models\DespachoViaje::query()
     ])
     ->where('viajes.vehiculo_id', $item->id)
     ->orderBy('viajes.fecha_salida', 'desc')
-    ->select('despacho_viajes.*') 
+    ->select('despachos_viajes.*') 
     ->get()
     ->map(function ($v) {
         
