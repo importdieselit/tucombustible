@@ -72,7 +72,7 @@ $insumos_usados=false;
 
     
 $viajes = App\Models\DespachoViaje::query()
-    ->join('viajes', 'despacho_viajes.viaje_id', '=', 'viajes.id')
+    ->join('viajes', 'despachos_viajes.viaje_id', '=', 'viajes.id')
     ->with([
         'viaje.chofer.persona', 
         'viaje.ayudante_chofer.persona',
