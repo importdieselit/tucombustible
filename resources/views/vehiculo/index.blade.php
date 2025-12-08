@@ -238,7 +238,7 @@ $chartDataCierre = array_column($historicoEficiencia, 'disponibilidad');
         </div>
     </div>
     <!-- Próximos mantenimientos -->
-    <div class="col-md-4">
+    <div class="col-md-12">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-0">
                 <h5 class="mb-0">Próximos Mantenimientos</h5>
