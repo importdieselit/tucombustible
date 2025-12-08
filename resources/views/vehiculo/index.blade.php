@@ -403,15 +403,29 @@ $chartDataCierre = array_column($historicoEficiencia, 'disponibilidad');
                     </thead>
                     <tbody>
                         
+                       @forelse($viajesActivos as $v)
                         <tr>
-                            <td>LMN-654</td>
-                            <td>Cargo</td>
-                            <td>Ford</td>
-                            <td>Puerto Ordaz - Maturín</td>
-                            <td>110,500</td>
-                            <td>30</td>
-                            <td><span class="badge bg-warning text-dark">En servicio</span></td>
+                            <td>{{ $v['placa'] }}</td>
+                            <td>{{ $v['modelo'] }}</td>
+                            <td>{{ $v['marca'] }}</td>
+                            <td>{{ $v['ruta'] }}</td>
+                            <td>{{ $v['km'] }} km</td>
+                            <td>{{ $v['consumo'] }} L/100km</td>
+                            <td>
+                                @if($v['estatus'] === 'En ruta')
+                                    <span class="badge bg-warning text-dark">En ruta</span>
+                                @else
+                                    <span class="badge bg-info text-dark">Pendiente</span>
+                                @endif
+                            </td>
                         </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-3">
+                                No hay vehículos en ruta actualmente.
+                            </td>
+                        </tr>
+                    @endforelse
                     </tbody>
                 </table>
             </div>
