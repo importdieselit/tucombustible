@@ -70,20 +70,20 @@ $insumos_usados=false;
             $costoPorKm = $kmTotales > 0 ? $gastoCombustible / $kmTotales : 0;
     $foto= App\Models\VehiculoFoto::where('vehiculo_id',$item->id)->where('es_principal',true)->get()->first();
 
-$viajes = App\Models\Viaje::with(['chofer.persona', 'ayudante_chofer.persona'])
-        ->where('vehiculo_id', $item->id)
-        ->orderBy('fecha_salida', 'desc')
+$viajes = App\Models\DespachoViaje::with(['viaje.chofer.persona', 'viaje.ayudante_chofer.persona','viaje'])
+        ->where('viaje.vehiculo_id', $item->id)
+        ->orderBy('viaje.fecha_salida', 'desc')
         ->get()
         ->map(function ($v) {
 
             return [
                 'id'        => $v->id,
-                'fecha'     => $v->fecha_salida ? $v->fecha_salida->format('d/m/Y H:i') : 'N/D',
-                'destino'   => $v->destino_ciudad ?? 'Sin datos',
-                'chofer'    => $v->chofer->persona->nombre ?? 'N/D',
-                'ayudante'  => $v->ayudante_chofer->persona->nombre ?? 'N/D',
+                'fecha'     => $v->viaje->fecha_salida ? $v->viaje->fecha_salida->format('d/m/Y H:i') : 'N/D',
+                'destino'   => $v->viaje->destino_ciudad ?? 'Sin datos',
+                'chofer'    => $v->viaje->chofer->persona->nombre ?? 'N/D',
+                'ayudante'  => $v->viaje->ayudante_chofer->persona->nombre ?? 'N/D',
                 'cliente'   => $v->cliente()->first()->nombre ?? $v->otro_cliente ?? 'N/D',
-                'status'    => $v->status
+                'litros'    => $v->litros
             ];
         });
       //  dd($viajes);
@@ -305,7 +305,7 @@ $viajes = App\Models\Viaje::with(['chofer.persona', 'ayudante_chofer.persona'])
             <div class="card shadow-sm h-100">
                 <div class="card-header">Últimas Rutas y Movimientos <span class="text-danger">(MODO DEMO)</span></div>
                 <div class="card-body">
-                    <table class="table table-striped table-hover datatable">
+                    <table id="historicoViajes" class="table table-striped table-hover datatable">
                         <thead>
                             <tr>
                                 <th>Fecha</th>
@@ -400,7 +400,7 @@ $viajes = App\Models\Viaje::with(['chofer.persona', 'ayudante_chofer.persona'])
     document.addEventListener('DOMContentLoaded', function () {
 
 
-        $('.datatable').DataTable({
+        $('#historicoViajes').DataTable({
                 "language": {
                     "url": "https://cdn.datatables.net/plug-ins/2.0.8/i18n/es-ES.json"
                 },
