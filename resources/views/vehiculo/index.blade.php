@@ -221,9 +221,9 @@ $chartDataCierre = array_column($historicoEficiencia, 'disponibilidad');
     </div>
 </div>
 
-<div class="row g-4 mb-4" style="display: none">
+<div class="row g-4 mb-4" >
     <!-- Nivel de combustible estimado -->
-    <div class="col-md-4">
+    <div class="col-md-4" style="display: none">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-0">
                 <h5 class="mb-0">Nivel Combustible Estimado  (Demo)</h5>
@@ -289,7 +289,7 @@ $chartDataCierre = array_column($historicoEficiencia, 'disponibilidad');
         </div>
     </div>
     <!-- Gasto estimado mensual -->
-    <div class="col-md-4">
+    <div class="col-md-4" style="display: none">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-0">
                 <h5 class="mb-0">Gasto Estimado Mensual  (Demo)</h5>
