@@ -249,6 +249,9 @@ $chartDataCierre = array_column($historicoEficiencia, 'disponibilidad');
             @else
                 <ul class="list-group list-group-flush">
                     @foreach($mantenimientos as $item)
+                        @php
+                            $hecho = date('Y-m-d',$fecha)< date('Y-m-d')?0:1;
+                        @endphp
                         <li class="list-group-item d-flex flex-column">
 
                             <div class="d-flex align-items-center mb-1">
@@ -272,15 +275,17 @@ $chartDataCierre = array_column($historicoEficiencia, 'disponibilidad');
                             <small>
                                 {{ $item->descripcion }}
                             </small>
-
-                            @if($item->estatus === '1')
-                                <span class="badge bg-warning text-dark mt-1">Pendiente</span>
-                            @elseif($item->estatus === '2')
-                                <span class="badge bg-primary mt-1">Programado</span>
-                            @elseif($item->estatus === '3')
-                                <span class="badge bg-success mt-1">Realizado</span>
+                            @if($hecho==0)
+                                <span class="badge bg-danger mt-1">Atrasado</span>
+                            @else
+                                @if($item->estatus === '1')
+                                    <span class="badge bg-warning text-dark mt-1">Pendiente</span>
+                                @elseif($item->estatus === '2')
+                                    <span class="badge bg-primary mt-1">Programado</span>
+                                @elseif($item->estatus === '3')
+                                    <span class="badge bg-success mt-1">Realizado</span>
+                                @endif
                             @endif
-
                         </li>
                     @endforeach
                 </ul>
