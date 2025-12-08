@@ -95,7 +95,7 @@ $viajes = App\Models\DespachoViaje::query()
         ];
     });
 
-dd($viajes);@endphp
+@endphp
 
 @if($item->estatus==3 || $item->estatus ==5)
         @php
@@ -320,6 +320,7 @@ dd($viajes);@endphp
                                 <th>Ruta</th>
                                 <th>Chofer</th>
                                 <th>Cliente</th>
+                                <th>Litros</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -329,6 +330,7 @@ dd($viajes);@endphp
                                     <td>{{ $ruta['destino'] }}</td>
                                     <td>{{ $ruta['chofer'] }} </td>
                                     <td>{{ $ruta['cliente'] }}</td>
+                                    <td>{{ $ruta['litros'] }}</td>
                                 </tr>
                             @empty
                                 <tr>
