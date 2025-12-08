@@ -19,6 +19,46 @@ $eficienciaActual = $total_flota > 0
     : 0; 
 $eficienciaActual = round($eficienciaActual, 2); 
 
+ $fechaLimite = now()->subDays(45); // últimos 45 días
+
+    $vehiculos = App\Models\Vehiculo::select('vehiculos.id', 'vehiculos.placa', 'vehiculos.modelo')
+        ->withCount(['ordenes as fallas_count' => function ($q) use ($fechaLimite) {
+            $q->where('created_at', '>=', $fechaLimite);
+            // Si quieres incluir solo órdenes marcadas como "falla":
+            // $q->where('tipo', 'falla');
+        }])
+        ->orderByDesc('fallas_count')
+        ->take(10)
+        ->get();
+
+
+            $desde = now()->subMonths(11)->startOfMonth();
+    $hasta = now()->endOfMonth();
+
+    $fallas = Orden::select(
+            DB::raw("DATE_FORMAT(created_at, '%Y-%m') AS mes"),
+            DB::raw("COUNT(*) AS total")
+        )
+       // ->where('tipo', 'falla')  // ajusta si tus fallas se identifican de otra forma
+        ->whereBetween('created_at', [$desde, $hasta])
+        ->groupBy('mes')
+        ->orderBy('mes')
+        ->get();
+
+    // arrays finales
+    $fallas_labels = [];
+    $fallas_values = [];
+
+    $cursor = $desde->copy();
+    while ($cursor <= $hasta) {
+        $key = $cursor->format('Y-m');
+        $fallas_labels[] = $cursor->isoFormat('MMM');  // Ene, Feb, Mar...
+        $fallas_values[] = $fallas->firstWhere('mes', $key)->total ?? 0;
+        $cursor->addMonth();
+    }
+
+
+
 
 // Preparar datos para Chart.js
 $chartLabels = array_map(function($date) {
@@ -238,7 +278,7 @@ $chartDataCierre = array_column($historicoEficiencia, 'disponibilidad');
         </div>
     </div>
     <!-- Próximos mantenimientos -->
-    <div class="col-md-12">
+    <div class="col-md-6">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-0">
                 <h5 class="mb-0">Próximos Mantenimientos</h5>
@@ -577,14 +617,17 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Índice de reportes de falla mensuales
+
+     const falla_labels = @json($fallas_labels);
+    const falla_values = @json($fallas_values);
     var ctx3 = document.getElementById('fallasChart').getContext('2d');
     new Chart(ctx3, {
         type: 'bar',
         data: {
-            labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago'],
+            labels: falla_labels,
             datasets: [{
                 label: 'Reportes de Falla',
-                data: [3, 5, 2, 4, 6, 3, 2, 5],
+                data: falla_values,
                 backgroundColor: '#dc3545',
             }]
         },
