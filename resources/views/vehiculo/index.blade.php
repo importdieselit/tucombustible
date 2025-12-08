@@ -9,7 +9,7 @@ $unidades_disponibles = App\Models\Vehiculo::Disponibles()->count();
 $unidades_en_servicio = App\Models\Vehiculo::EnServicio()->count();
 $historicoEficiencia = App\Models\ResumenDiario::where('fecha', '>=', now()->subDays(15))->orderBy('fecha')->get()->toArray();
   $mantenimientos = App\Models\MantenimientoProgramado::with('vehiculo')
-        ->whereIn('estatus', ['pendiente', 'programado'])
+        ->whereIn('estatus', [1, 2])
         ->orderBy('fecha', 'asc') // o por km si lo deseas
         ->limit(5)
         ->get();
