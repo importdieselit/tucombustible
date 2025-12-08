@@ -79,13 +79,14 @@ $viajes = App\Models\Viaje::with(['chofer.persona', 'ayudante_chofer.persona', '
             return [
                 'id'        => $v->id,
                 'fecha'     => $v->fecha_salida ? $v->fecha_salida->format('d/m/Y H:i') : 'N/D',
-                'destino'   => $v->cliente->nombre ?? $v->destino_ciudad ?? 'Sin datos',
+                'destino'   => $v->destino_ciudad ?? 'Sin datos',
                 'chofer'    => $v->chofer->persona->nombre ?? 'N/D',
                 'ayudante'  => $v->ayudante_chofer->persona->nombre ?? 'N/D',
+                'cliente'   => $v->cliente->nombre ?? $v->otro_cliente ?? 'N/D',
                 'status'    => $v->status
             ];
         });
-        dd($viajes);
+      //  dd($viajes);
 @endphp
 
 @if($item->estatus==3 || $item->estatus ==5)
@@ -309,17 +310,17 @@ $viajes = App\Models\Viaje::with(['chofer.persona', 'ayudante_chofer.persona', '
                             <tr>
                                 <th>Fecha</th>
                                 <th>Ruta</th>
-                                <th>KM Recorridos</th>
-                                <th>Conductor</th>
+                                <th>Chofer</th>
+                                <th>Cliente</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse ($rutas as $ruta)
+                            @forelse ($viajes as $ruta)
                                 <tr>
-                                    <td>{{ \Carbon\Carbon::parse($ruta['fecha'])->format('d/m/Y') }}</td>
-                                    <td>{{ $ruta['origen'] }} -> {{ $ruta['destino'] }}</td>
-                                    <td>{{ number_format($ruta['km'], 0, ',', '.') }} km</td>
-                                    <td>{{ $ruta['conductor'] }}</td>
+                                    <td>{{ $ruta['fecha'] }}</td>
+                                    <td>{{ $ruta['destino'] }}</td>
+                                    <td>{{ $ruta['chofer'] }} </td>
+                                    <td>{{ $ruta['cliente'] }}</td>
                                 </tr>
                             @empty
                                 <tr>
