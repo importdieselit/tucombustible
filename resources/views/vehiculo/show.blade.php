@@ -70,24 +70,32 @@ $insumos_usados=false;
             $costoPorKm = $kmTotales > 0 ? $gastoCombustible / $kmTotales : 0;
     $foto= App\Models\VehiculoFoto::where('vehiculo_id',$item->id)->where('es_principal',true)->get()->first();
 
-$viajes = App\Models\DespachoViaje::with(['viaje.chofer.persona', 'viaje.ayudante_chofer.persona','viaje'])
-        ->where('viaje.vehiculo_id', $item->id)
-        ->orderBy('viaje.fecha_salida', 'desc')
-        ->get()
-        ->map(function ($v) {
+    
+$viajes = App\Models\DespachoViaje::query()
+    ->join('viajes', 'despacho_viajes.viaje_id', '=', 'viajes.id')
+    ->with([
+        'viaje.chofer.persona', 
+        'viaje.ayudante_chofer.persona',
+        'cliente' // ¡NUEVO! Precargamos el cliente para no consultarlo en el map
+    ])
+    ->where('viajes.vehiculo_id', $item->id)
+    ->orderBy('viajes.fecha_salida', 'desc')
+    ->select('despacho_viajes.*') 
+    ->get()
+    ->map(function ($v) {
+        
+        return [
+            'id'        => $v->id, // ID de DespachoViaje
+            'fecha'     => $v->viaje->fecha_salida ? $v->viaje->fecha_salida->format('d/m/Y H:i') : 'N/D',
+            'destino'   => $v->viaje->destino_ciudad ?? 'Sin datos',
+            'chofer'    => $v->viaje->chofer->persona->nombre ?? 'N/D',
+            'ayudante'  => $v->viaje->ayudante_chofer->persona->nombre ?? 'N/D',        
+            'cliente'   => $v->cliente->nombre ?? $v->otro_cliente ?? 'N/D',
+            'litros'    => $v->litros
+        ];
+    });
 
-            return [
-                'id'        => $v->id,
-                'fecha'     => $v->viaje->fecha_salida ? $v->viaje->fecha_salida->format('d/m/Y H:i') : 'N/D',
-                'destino'   => $v->viaje->destino_ciudad ?? 'Sin datos',
-                'chofer'    => $v->viaje->chofer->persona->nombre ?? 'N/D',
-                'ayudante'  => $v->viaje->ayudante_chofer->persona->nombre ?? 'N/D',
-                'cliente'   => $v->cliente()->first()->nombre ?? $v->otro_cliente ?? 'N/D',
-                'litros'    => $v->litros
-            ];
-        });
-        dd($viajes);
-@endphp
+dd($viajes);@endphp
 
 @if($item->estatus==3 || $item->estatus ==5)
         @php
