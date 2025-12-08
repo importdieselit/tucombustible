@@ -40,6 +40,10 @@ class Viaje extends Model
         'tipo'
     ];
 
+    protected $casts = [
+        'fecha_salida' => 'datetime',
+    ];
+
     /**
      * Relación con el Chofer asignado (un usuario).
      */
