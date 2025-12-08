@@ -410,13 +410,10 @@ $chartDataCierre = array_column($historicoEficiencia, 'disponibilidad');
                             <td>{{ $v['marca'] }}</td>
                             <td>{{ $v['ruta'] }}</td>
                             <td>{{ $v['km'] }} km</td>
-                            <td>{{ $v['consumo'] }} L/100km</td>
+                            <td>{{ $v['consumo'] }}</td>
                             <td>
-                                @if($v['estatus'] === 'En ruta')
                                     <span class="badge bg-warning text-dark">En ruta</span>
-                                @else
-                                    <span class="badge bg-info text-dark">Pendiente</span>
-                                @endif
+                                
                             </td>
                         </tr>
                     @empty
