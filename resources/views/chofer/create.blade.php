@@ -6,7 +6,7 @@
 <div class="container-fluid mt-4">
     <div class="row page-titles">
         <div class="col-md-6 align-self-center">
-            <h3 class="text-themecolor">{{ isset($chofer) ? 'Editar Chofer' : 'Registrar Chofer' }}</h3>
+            <h3 class="text-themecolor">{{ isset($chofer) ? 'Editar Chofer/ayudante' : 'Registrar Chofer/ayudante' }}</h3>
         </div>
         <div class="col-md-6 align-self-center">
             <div class="d-flex justify-content-end">
@@ -21,7 +21,7 @@
 
     <div class="card shadow-sm">
         <div class="card-header bg-white">
-            <h5 class="card-title m-0">{{ isset($chofer) ? 'Actualizar Información del Chofer' : 'Registrar Nuevo Chofer' }}</h5>
+            <h5 class="card-title m-0">{{ isset($chofer) ? 'Actualizar Información del Chofer/ayudante' : 'Registrar Nuevo Chofer/ayudante' }}</h5>
         </div>
         <div class="card-body">
             @if(Session::has('error'))
@@ -31,7 +31,7 @@
                 </div>
             @endif
 
-            <form action="{{ isset($chofer) ? route('choferes.update', $chofer->id) : route('choferes.store') }}" method="POST">
+            <form action="{{ isset($chofer) ? route('choferes.update', $chofer->id) : route('choferes.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @if(isset($chofer))
                     @method('PUT')
@@ -53,7 +53,7 @@
                         @enderror
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label for="dni_exp" class="form-label">Cédula Fecha de Expedición <span class="text-danger">*</span></label>
+                        <label for="dni_exp" class="form-label">Cédula Fecha de Vencimiento <span class="text-danger">*</span></label>
                         <input type="date" class="form-control @error('dni_exp') is-invalid @enderror" id="dni_exp" name="dni_exp" value="{{ old('dni_exp', $chofer->persona->dni_exp ?? '') }}" >
                         @error('dni_exp')
                             <div class="invalid-feedback">{{ $message }}</div>
@@ -66,6 +66,12 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="celular" class="form-label">Cargo</label>
+                        <select name="cargo" id="cargo" class="form-control">
+                            <option value="CHOFER" {{ old('cargo', $chofer->cargo ?? '') == 'Chofer' ? 'selected' : '' }}>Chofer</option>
+                            <option value="AYUDANTE" {{ old('cargo', $chofer->cargo ?? '') == 'Ayudante' ? 'selected' : '' }}>Ayudante</option>
+                        </select>
                 </div>
 
                 <hr>
@@ -117,10 +123,24 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
+                    <div class="col-md-12 mb-3">
+                        <label for="foto" class="form-label">Foto </label>
+                        <input type="file" class="form-control @error('foto') is-invalid @enderror" id="foto" name="foto" value="">
+                        @error('foto')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        <label for="documentos" class="form-label">Documentos </label>
+                        <input type="file" class="form-control @error('documentos') is-invalid @enderror" id="documentos" name="documentos" value="" multiple>
+                        @error('documentos')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
 
                 <hr>
-                <h6 class="mb-3">Asignación de Vehículo</h6>
+                {{-- <h6 class="mb-3">Asignación de Vehículo</h6>
 
                 <div class="row">
                     <div class="col-md-12 mb-3">
@@ -137,7 +157,7 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
-                </div>
+                </div> --}}
 
                 <div class="col-12 d-flex justify-content-end mt-4">
                     <button type="submit" class="btn btn-primary me-2">

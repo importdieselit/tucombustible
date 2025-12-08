@@ -117,8 +117,27 @@ class ChoferController extends BaseController
             $persona->save();
 
             // Crear el registro en la tabla 'choferes'
-            Chofer::create(array_merge($request->only('licencia_numero', 'certificado_medico', 'certificado_medico_vencimiento', 'tipo_licencia', 'cargo', 'licencia_vencimiento', 'documento_vialidad_numero', 'documento_vialidad_vencimiento', 'vehiculo_id'), ['persona_id' => $persona->id]));
+            $chofer=Chofer::create(array_merge($request->only('licencia_numero', 'certificado_medico', 'certificado_medico_vencimiento', 'tipo_licencia', 'cargo', 'licencia_vencimiento', 'documento_vialidad_numero', 'documento_vialidad_vencimiento'), ['persona_id' => $persona->id]));
 
+            if ($request->hasFile('foto')) {
+                $fotoPath = $request->file('foto')->store("choferes/fotos", 'public');
+                $chofer->foto = $request->file('foto')->getClientOriginalName();
+            }
+
+             if ($request->hasFile('documentos')) {
+            foreach ($request->file('documentos') as $doc) {
+
+                $ruta = $doc->store("choferes/documentos/{$chofer->id}", 'public');
+
+                $documentosGuardados[] = [
+                    'nombre' => $doc->getClientOriginalName(),
+                    'ruta'   => $ruta,
+                    'tipo'   => $doc->getMimeType()
+                ];
+                $chofer->documentos = $doc->getClientOriginalName();
+            }
+            }
+            $chofer->save();
             DB::commit();
             Session::flash('success', 'Chofer registrado exitosamente.');
             return Redirect::route('choferes.list');
