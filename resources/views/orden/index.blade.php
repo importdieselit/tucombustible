@@ -47,7 +47,7 @@
                     <h5 class="card-title">Alertas de Kilometraje</h5>
                     <ul class="list-unstyled mb-0">
                         @foreach ($alertas_kilometraje as $alerta)
-                        <li><strong>{{ $alerta->vehiculo }} ({{ $alerta->placa }}):</strong> Excedió {{ $alerta->kilometraje - $alerta->proximo_mantenimiento }} km</li>
+                        <li><strong>{{ $alerta->vehiculo }} ({{ $alerta->placa }}):</strong> @if($alerta->kilometraje>5000) Excedió {{ $alerta->kilometraje - 5000 }} @else faltan {{5000- $alerta_kilometraje }} @endif  km</li>
                         @endforeach
                     </ul>
                 </div>
