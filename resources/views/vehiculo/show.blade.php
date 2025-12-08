@@ -71,7 +71,7 @@ $insumos_usados=false;
     $foto= App\Models\VehiculoFoto::where('vehiculo_id',$item->id)->where('es_principal',true)->get()->first();
 
 $viajes = App\Models\Viaje::with(['chofer.persona', 'ayudante_chofer.persona', 'cliente'])
-        ->where('vehiculo_id', $vehiculo_id)
+        ->where('vehiculo_id', $item->id)
         ->orderBy('fecha_salida', 'desc')
         ->get()
         ->map(function ($v) {
