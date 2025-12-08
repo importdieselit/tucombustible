@@ -250,8 +250,9 @@ $chartDataCierre = array_column($historicoEficiencia, 'disponibilidad');
                 <ul class="list-group list-group-flush">
                     @foreach($mantenimientos as $item)
                         @php
-                            $hecho = date('Y-m-d',$item->fecha)< date('Y-m-d')?0:1;
+                            $hecho = $item->fecha->isPast() ? 0 : 1;
                         @endphp
+
                         <li class="list-group-item d-flex flex-column">
 
                             <div class="d-flex align-items-center mb-1">
