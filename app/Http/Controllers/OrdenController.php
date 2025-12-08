@@ -68,7 +68,7 @@ class OrdenController extends BaseController
 
         // Simulación de tiempo promedio de la orden
         // En un entorno real, esto se calcularía en base a las fechas de apertura y cierre.
-        $tiempo_promedio_orden = 3.5; // Días
+        $tiempo_promedio_orden = 1.5; // Días
 
         // Simulación de gasto mensual en insumos
         $gasto_mensual = collect([
@@ -88,11 +88,11 @@ class OrdenController extends BaseController
         ]);
 
         // Simulación de alertas de kilometraje
-        $alertas_kilometraje2=Vehiculo::where('km_mantt','>',4700)->orWhere('hrs_mantt','>',180)->get();
-        $alertas_kilometraje = [
-            (object)['vehiculo' => 'Flota 003', 'placa' => 'ABC-123', 'kilometraje' => 105000, 'proximo_mantenimiento' => 100000],
-            (object)['vehiculo' => 'Flota 005', 'placa' => 'DEF-456', 'kilometraje' => 82000, 'proximo_mantenimiento' => 80000],
-        ];
+        $alertas_kilometraje=Vehiculo::where('km_mantt','>',4700)->orWhere('hrs_mantt','>',180)->select('flota as vehiculo','placa','km_mantt as kilometraje','km_mantt as proximo_mantenimiento' )->get();
+        // $alertas_kilometraje = [
+        //     (object)['vehiculo' => 'Flota 003', 'placa' => 'ABC-123', 'kilometraje' => 105000, 'proximo_mantenimiento' => 100000],
+        //     (object)['vehiculo' => 'Flota 005', 'placa' => 'DEF-456', 'kilometraje' => 82000, 'proximo_mantenimiento' => 80000],
+        // ];
 
         return view('orden.index', compact(
             'reportes_falla',
