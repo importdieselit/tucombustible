@@ -69,6 +69,23 @@ $insumos_usados=false;
             $kmTotales = $historialMensual->sum('km');
             $costoPorKm = $kmTotales > 0 ? $gastoCombustible / $kmTotales : 0;
     $foto= App\Models\VehiculoFoto::where('vehiculo_id',$item->id)->where('es_principal',true)->get()->first();
+
+$viajes = App\Models\Viaje::with(['chofer.persona', 'ayudante_chofer.persona', 'cliente'])
+        ->where('vehiculo_id', $vehiculo_id)
+        ->orderBy('fecha_salida', 'desc')
+        ->get()
+        ->map(function ($v) {
+
+            return [
+                'id'        => $v->id,
+                'fecha'     => $v->fecha_salida ? $v->fecha_salida->format('d/m/Y H:i') : 'N/D',
+                'destino'   => $v->cliente->nombre ?? $v->destino_ciudad ?? 'Sin datos',
+                'chofer'    => $v->chofer->persona->nombre ?? 'N/D',
+                'ayudante'  => $v->ayudante_chofer->persona->nombre ?? 'N/D',
+                'status'    => $v->status
+            ];
+        });
+        dd($viajes);
 @endphp
 
 @if($item->estatus==3 || $item->estatus ==5)

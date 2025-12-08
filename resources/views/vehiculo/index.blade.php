@@ -412,8 +412,7 @@ $chartDataCierre = array_column($historicoEficiencia, 'disponibilidad');
                             <td>{{ $v['km'] }} km</td>
                             <td>{{ $v['consumo'] }}</td>
                             <td>
-                                    <span class="badge bg-warning text-dark">En ruta</span>
-                                
+                                <span class="badge bg-warning text-dark">En ruta</span>
                             </td>
                         </tr>
                     @empty
