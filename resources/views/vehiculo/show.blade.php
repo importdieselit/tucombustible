@@ -86,7 +86,7 @@ $viajes = App\Models\DespachoViaje::with(['viaje.chofer.persona', 'viaje.ayudant
                 'litros'    => $v->litros
             ];
         });
-      //  dd($viajes);
+        dd($viajes);
 @endphp
 
 @if($item->estatus==3 || $item->estatus ==5)
