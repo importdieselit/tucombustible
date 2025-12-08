@@ -70,7 +70,7 @@ $insumos_usados=false;
             $costoPorKm = $kmTotales > 0 ? $gastoCombustible / $kmTotales : 0;
     $foto= App\Models\VehiculoFoto::where('vehiculo_id',$item->id)->where('es_principal',true)->get()->first();
 
-$viajes = App\Models\Viaje::with(['chofer.persona', 'ayudante_chofer.persona', 'cliente'])
+$viajes = App\Models\Viaje::with(['chofer.persona', 'ayudante_chofer.persona'])
         ->where('vehiculo_id', $item->id)
         ->orderBy('fecha_salida', 'desc')
         ->get()
@@ -82,7 +82,7 @@ $viajes = App\Models\Viaje::with(['chofer.persona', 'ayudante_chofer.persona', '
                 'destino'   => $v->destino_ciudad ?? 'Sin datos',
                 'chofer'    => $v->chofer->persona->nombre ?? 'N/D',
                 'ayudante'  => $v->ayudante_chofer->persona->nombre ?? 'N/D',
-                'cliente'   => $v->cliente->nombre ?? $v->otro_cliente ?? 'N/D',
+                'cliente'   => $v->cliente()->first()->nombre ?? $v->otro_cliente ?? 'N/D',
                 'status'    => $v->status
             ];
         });
@@ -305,7 +305,7 @@ $viajes = App\Models\Viaje::with(['chofer.persona', 'ayudante_chofer.persona', '
             <div class="card shadow-sm h-100">
                 <div class="card-header">Últimas Rutas y Movimientos <span class="text-danger">(MODO DEMO)</span></div>
                 <div class="card-body">
-                    <table class="table table-striped table-hover">
+                    <table class="table table-striped table-hover datatable">
                         <thead>
                             <tr>
                                 <th>Fecha</th>
