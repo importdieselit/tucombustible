@@ -45,7 +45,7 @@ $depositosOperativos = Deposito::count();
 $usuariosActivos = User::where('status', 1)->count();
 
 // KPI: Alertas críticas
-$alertasCriticas = 2; //Alerta::where('prioridad', 'critica')->count();
+$alertasCriticas = Alerta::where('prioridad', 'critica')->count();
 
 // KPI: Mantenimientos pendientes
 $mantenimientosPendientes = 4; //Mantenimiento::where('estatus', 'pendiente')->count();

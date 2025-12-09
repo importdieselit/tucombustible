@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Chofer;
 use App\Models\Vehiculo;
 use App\Models\Persona;
+use App\Models\User;
 use App\Models\ViaticoViaje;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
@@ -118,6 +119,16 @@ class ChoferController extends BaseController
 
             // Crear el registro en la tabla 'choferes'
             $chofer=Chofer::create(array_merge($request->only('licencia_numero', 'certificado_medico_vencimiento', 'tipo_licencia', 'cargo', 'licencia_vencimiento', 'documento_vialidad_vencimiento'), ['persona_id' => $persona->id]));
+            $partes = explode(' ', trim($persona->nombre));
+            $apellido = array_pop($partes); 
+            $inicial = strtoupper(substr($partes[0] ?? $apellido ?? '', 0, 1));
+            $user = User::create([
+                'name' => $inicial.'.'.$apellido,
+                'email' => $persona->dni . '@tucombustible.com', // Generar un email ficticio
+                'password' => bcrypt('123456789'), // Contraseña por defecto, cambiar según sea necesario
+                'persona_id' => $persona->id,
+                'id_perfil' => 4 // Asignar el perfil de chofer
+            ]);
 
             if ($request->hasFile('foto')) {
                 $fotoPath = $request->file('foto')->store("choferes/fotos", 'public');

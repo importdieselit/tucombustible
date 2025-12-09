@@ -7,6 +7,7 @@ use App\Models\Deposito;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Producto;
 
 class DepositoController extends Controller
 {

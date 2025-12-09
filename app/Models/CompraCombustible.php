@@ -22,6 +22,7 @@ class CompraCombustible extends Model
         'planta_destino_id',
         'fecha',
         'tipo',
+        'sap',
         'vehiculo_id',
         'cisterna',
         'observaciones',

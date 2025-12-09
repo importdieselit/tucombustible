@@ -20,7 +20,7 @@
     @include('layouts.header')
 
     <div class="container-fluid">
-           @if (!Request::routeIs(['login', 'logout', 'register', 'password.*']))
+           {{-- @if (!Request::routeIs(['login', 'logout', 'register', 'password.*']))
             <div class="container-fluid">
                 <div class="row">
                     @php($user = Auth::user())
@@ -36,13 +36,13 @@
                     </main>
                 </div>
             </div>
-            @else
+            @else --}}
 
                 <!-- Si la ruta es login, logout, etc., solo se muestra el contenido principal -->
                 <main class="container-fluid py-4 z-1">
                     @yield('content')
                 </main>
-            @endif
+            {{-- @endif --}}
     </div>
 <!-- TOAST CONTAINER -->
 <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">

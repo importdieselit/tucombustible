@@ -140,6 +140,7 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
 
     Route::get('/usuarios/importar', [UserController::class, 'import'])->name('usuarios.importar');
     Route::post('/usuarios/importarP', [UserController::class, 'handleImport'])->name('usuarios.importarprocess');
+    Route::put('/depositos', [DepositoController::class, 'index'])->name('depositos');
     Route::put('/depositos/ajustedinamic', [DepositoController::class, 'ajusteDinamic'])->name('deposito.ajusteD');
     Route::put('/depositos/ajusteresguardo', [DepositoController::class, 'ajusteResguardo'])->name('deposito.ajusteR');
    
@@ -207,9 +208,7 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
             'edit' => str_replace('-', '', $prefix) . '.edit',
             'update' => str_replace('-', '', $prefix) . '.update',
             'destroy' => str_replace('-', '', $prefix) . '.destroy',
-        ]);
-        
-       
+        ]);    
     }
     // Ejemplo de rutas adicionales para importación/exportación, reportes, etc.
     

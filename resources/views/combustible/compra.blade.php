@@ -33,6 +33,11 @@
                          </select>
                     </div>
 
+                    <div class="col-md-6">
+                        <label for="sap" class="form-label">Codigo SAP</label>
+                        <input type="string" class="form-control" id="sap" name="sap"  required>
+                    </div>
+                    
                     <!-- Fecha Requerida (Día) -->
                     <div class="col-md-6">
                         <label for="fecha" class="form-label">Fecha Requerida de Carga</label>
