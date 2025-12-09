@@ -85,7 +85,8 @@ class PlanificacionMantenimientoController extends Controller
                     'tipo' => $plan->tipo,
                     'descripcion' => $plan->descripcion,
                     'estatus' => $plan->estatus,
-                    'orden_id' => $plan->orden->nro_orden ?? null,
+                    'orden_id' => $plan->orden->id ?? null,
+                    'nro_orden' => $plan->orden->nro_orden ?? null,
                 ]
             ];
         });
