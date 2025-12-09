@@ -45,7 +45,7 @@ $depositosOperativos = Deposito::count();
 $usuariosActivos = User::where('status', 1)->count();
 
 // KPI: Alertas críticas
-$alertasCriticas = Alerta::where('prioridad', 'critica')->count();
+//$alertasCriticas = Alerta::where('prioridad', 'critica')->count();
 
 // KPI: Mantenimientos pendientes
 $mantenimientosPendientes = 4; //Mantenimiento::where('estatus', 'pendiente')->count();
@@ -199,7 +199,7 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
                 </div>
             </div>
         </div> --}}
-        <div class="col-md-3">
+        {{-- <div class="col-md-3">
                 <a href="{{route('alertas.index')}}" target="_blank">
 
             <div class="card shadow-sm border-0">
@@ -217,7 +217,7 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
                 </div>
             </div>
                 </a>
-        </div>
+        </div> --}}
         {{-- <div class="col-md-3">
             <div class="card shadow-sm border-0">
                 <div class="card-body d-flex align-items-center">
@@ -299,7 +299,7 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
                 'title' => 'Vehículos',
                 'color' => 'bg-info',
                 'target' => '_blank',
-                'bg_opacity' => 'rgba(23, 162, 184, 0.15)'
+                'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
             ])
         </div>
         @endif
@@ -326,7 +326,7 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
                 'title' => 'Mantenimiento',
                 'color' => 'bg-warning',
                 'target' => '_blank',
-                'bg_opacity' => 'rgba(255, 193, 7, 0.15)'
+                'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
             ])
         </div>
         @endif
@@ -342,7 +342,7 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
                 'title' => 'Inventario',
                 'color' => 'bg-success',
                 'target' => '_blank',
-                'bg_opacity' => 'rgba(40, 167, 69, 0.15)'
+                'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
             ])
         </div>
         @endif
@@ -358,7 +358,7 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
                 'title' => 'Combustible',
                 'target' => '_blank',
                 'color' => 'bg-secondary',
-                'bg_opacity' => 'rgba(108, 117, 125, 0.15)'
+                'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
             ])
         </div>
         @endif
@@ -449,7 +449,7 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
                 'title' => 'Usuarios',
                 'color' => 'bg-danger',
                 'target' => '_blank',
-                'bg_opacity' => 'rgba(220, 53, 69, 0.15)'
+                'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
             ])
         </div>
         @endif
