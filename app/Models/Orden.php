@@ -128,12 +128,12 @@ class Orden extends Model
     
     public function scopeOrdenesAbiertas()
     {
-        return self::where('status',2);
+        return self::where('estatus',2);
     }
 
     public function scopeOrdenesProgramadas()
     {
-        return self::where('status',3);
+        return self::where('estatus',3);
     }
 
     public function scopeOrdenesMantenimiento()

@@ -36,7 +36,7 @@ use Illuminate\Support\Carbon;
 $totalVehiculos = Vehiculo::where('es_flota',true)->count();
 
 // KPI: Órdenes activas (ejemplo: estatus 1 = activo/en proceso, 2 = pendiente)
-$ordenesActivas = Orden::whereIn('estatus', [1, 2])->count();
+$ordenesActivas = Orden::whereIn('estatus', [2])->count();
 
 // KPI: Depósitos operativos (ejemplo: estatus 1 = operativo)
 $depositosOperativos = Deposito::count();
