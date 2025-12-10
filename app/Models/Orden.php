@@ -2,6 +2,13 @@
 
 namespace App\Models; // O App\Models
 use App\Models\TipoOrden;
+use App\Models\EstatusData;
+use App\Models\PlanMantenimiento;
+use App\Models\User;
+use App\Models\Vehiculo;
+use App\Models\Inspeccion;
+use Illuminate\Support\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -113,6 +120,36 @@ class Orden extends Model
     // Asegúrate de que tu modelo OrdenFoto esté importado
     return $this->hasMany(OrdenFoto::class, 'orden_id'); 
 }   
+
+    public function inspeccion()
+    {
+        return $this->belongsTo(Inspeccion::class, 'id_inspeccion', 'id');
+    }
+    
+    public function ordenesAbiertas()
+    {
+        return self::where('status',2);
+    }
+
+    public function ordenesProgramadas()
+    {
+        return self::where('status',3);
+    }
+
+    public function ordenesMantenimiento()
+    {
+        return self::where('tipo','Mantenimiento');
+    }
+
+    public function ordenesFueraTiempo(): Builder
+    {
+        $fecha_limite = Carbon::now()->subDays(3);
+
+        return self::where('estatus', 2) 
+                    ->where('created_at', '<', $fecha_limite);            
+    }
+
+
 
     // // En el modelo App\Models\Orden
     // public function solicitudesSuministros()

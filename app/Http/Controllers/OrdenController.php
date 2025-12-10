@@ -25,6 +25,7 @@ use App\Models\SuministroCompraDetalle;
 use App\Services\TelegramNotificationService;
 use App\Models\OrdenFoto;
 use Google\Service\Datastore\Sum;
+use Illuminate\Database\Eloquent\Builder;
 
 class OrdenController extends BaseController
 {
@@ -165,6 +166,35 @@ class OrdenController extends BaseController
         $compra->save();
 
         return response()->json(['ok' => true, 'msg' => 'Estatus actualizado']);
+    }
+
+     protected function applyBusinessFilters(Builder $query): Builder
+    {
+        $filterKey = request()->get('filter'); // Usamos el helper global 'request()'
+        
+        if ($filterKey) {
+            switch ($filterKey) {
+                
+                case 'abiertas':
+                    $query->ordendesAbiertas();
+                    break;
+
+                case 'tiempo_alerta':
+                    $query->ordenesFueraTiempo();
+                    break;
+                
+                case 'mantenimiento':
+                    // Filtro genérico que solo aplica si Vehiculo tiene columna 'estatus'
+                    $query->ordenesMantenimiento();
+                    break;
+                case 'programadas':
+                    $query->ordenesProgramadas();
+                    break;
+                
+            }
+        }
+
+        return $query; // Devolvemos el Query Builder modificado
     }
 
     

@@ -129,7 +129,7 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
         </div>
         <div class="col-md-3">
             <div class="card shadow-sm border-0">
-                <a href="{{route('ordenes.list')}}" target="_blank">
+                <a href="{{route('ordenes.list' ['filter' => 'ordenesAbiertas'])}}" target="_blank">
 
                 <div class="card-body d-flex align-items-center">
                     <div class="me-3">
