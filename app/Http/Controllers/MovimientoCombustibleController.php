@@ -151,7 +151,17 @@ class MovimientoCombustibleController extends Controller
             }
         }
         $viajesHoy = Viaje::whereDate('fecha_salida', now())->count();
+        // 1. Filtrar los Viajes por el mes actual
+        $viajesDelMes = Viaje::whereMonth('fecha_salida', now()->month);
 
+        // 2. Sumar la columna 'litros' de la relación 'despachos' (HasMany)
+        //    y asignarle un alias (ej: 'total_litros_despachados')
+        $ventasMes = $viajesDelMes->withSum('despachos', 'litros')
+                                // Luego seleccionamos todas las sumas generadas y las sumamos globalmente
+                                ->get()
+                                ->sum('despachos_sum_litros');
+
+        $comprasMes = CompraCombustible::whereMonth('fecha', now()->month)->sum('cantidad_litros');
         // Pasamos todos los datos a la vista.
         return view('combustible.index', compact(
             'clientes', 
@@ -170,7 +180,9 @@ class MovimientoCombustibleController extends Controller
             'totales',
             'tanque00',
             'resguardo',
-            'viajesHoy'
+            'viajesHoy',
+            'ventasMes',
+            'comprasMes'
         ));
     }
 
