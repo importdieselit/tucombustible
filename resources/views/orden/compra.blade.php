@@ -92,6 +92,14 @@
 
                         </td>
                     </tr>
+                    @if(!is_null($purchaseOrder->observacion)||!is_null($purchaseOrder->observacion_admin))
+                    <tr style="font-weight: 700; text-align: center; font-size:19px; border-top: 2px solid #01050a; background-color: #d1ecf1;">
+                        <td class="py-1" colspan="4">Observaciones: 
+                            @if(!is_null($purchaseOrder->observacion))<br> - {{ $purchaseOrder->observacion }} @endif
+                            @if(!is_null($purchaseOrder->observacion_admin))<br> - {{ $purchaseOrder->observacion_admin }} @endif
+                        </td>
+                    </tr>
+                    @endif
                 </tbody>
             </table>
         </div>
