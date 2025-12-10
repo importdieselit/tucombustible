@@ -7,6 +7,7 @@ use App\Models\PlanMantenimiento;
 use App\Models\User;
 use App\Models\Vehiculo;
 use App\Models\Inspeccion;
+use Google\Service\ApigeeRegistry\Build;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -126,22 +127,22 @@ class Orden extends Model
         return $this->belongsTo(Inspeccion::class, 'id_inspeccion', 'id');
     }
     
-    public function scopeOrdenesAbiertas()
+    public function scopeOrdenesAbiertas(Builder $query): Builder
     {
         return self::where('estatus',2);
     }
 
-    public function scopeOrdenesProgramadas()
+    public function scopeOrdenesProgramadas(Builder $query): Builder
     {
         return self::where('estatus',3);
     }
 
-    public function scopeOrdenesMantenimiento()
+    public function scopeOrdenesMantenimiento( Builder $query): Builder
     {
         return self::where('tipo','Mantenimiento');
     }
 
-    public function scopeOrdenesFueraTiempo(): Builder
+    public function scopeOrdenesFueraTiempo(Builder $query): Builder
     {
         $fecha_limite = Carbon::now()->subDays(3);
 
