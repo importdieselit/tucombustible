@@ -274,28 +274,43 @@ use App\Models\SuministroCompra;
                     }
                      const isEditable = supply.estatus !== 2 && supply.estatus !== 3;
 
+                    let actionHtml = '';
+                    if (supply.estatus === 2) {
+                        // SI ESTÁ APROBADO, mostrar botón de RECIBIDO
+                        actionHtml = `
+                            <button type="button" class="btn btn-sm btn-success receive-supply" data-db-id="${supply.id}" title="Marcar como Recibido/Despachado">
+                                <i class="bi bi-check-lg"></i> Recibido
+                            </button>
+                        `;
+                    } else if (isEditable && supply.estatus !== 3 && supply.estatus !== 2) {
+                         // Si es editable y no está en proceso, mostramos Eliminar
+                         actionHtml = `
+                            <button type="button" class="btn btn-sm btn-danger delete-supply" data-db-id="${supply.id}">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </button>
+                        `;
+                    }
+
+                    // El campo de cantidad solo se muestra como input si es editable
+                    const quantityInputHtml = isEditable ?
+                                    `<input type="number" class="form-control form-control-sm supply-quantity" value="${supply.cantidad}" min="1" max="${supply.existencia}" data-db-id="${supply.id}">` :
+                                    supply.cantidad;
+                    
                     html += `
                         <tr data-supply-id="${supply.id}">
-                            <td>${supply.codigo}</td>
+                            <td>${supply.codigo || 'N/A'}</td>
                             <td>${supply.descripcion}</td>
                             <td>
-                                ${isEditable ? 
-                                    `<input type="number" class="form-control form-control-sm supply-quantity" value="${supply.cantidad}" min="1" max="${supply.existencia}" data-db-id="${supply.id}">` : 
-                                    supply.cantidad
-                                }
+                                ${quantityInputHtml}
                             </td>
-                            <td>$ ${costo} </td>
+                            <td>$ ${costo.toFixed(2)} </td>
                             <td><span class="badge ${estatusBadgeClass}">${estatusText}</span></td>
                             <td>
-                                ${isEditable ? 
-                                    `<button type="button" class="btn btn-sm btn-danger delete-supply" data-db-id="${supply.id}">
-                                        <i class="bi bi-trash"></i> Eliminar
-                                    </button>` : 
-                                    ''
-                                }
+                                ${actionHtml}
                             </td>
                         </tr>
                     `;
+                
                 });
                 html += `
                     <tr>
@@ -508,7 +523,54 @@ use App\Models\SuministroCompra;
                         alert('Error de conexión. Intente de nuevo.');
                     }
                 }
+            } else if (e.target.closest('.receive-supply')) {
+                const button = e.target.closest('.receive-supply');
+                const dbId = button.dataset.dbId;
+
+                button.disabled = true; // Deshabilitar el botón
+                button.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Procesando...';
+                
+                try {
+                    // Endpoint: /ordenes/supplies/receive/{dbId} (Esta ruta debe ser creada)
+                    const response = await fetch(`/ordenes/supplies/receive/${dbId}`, { 
+                        method: 'POST', // Usar POST/PUT para la acción
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // 1. Actualizar el estado en el objeto JS (3 = Despachado/Recibido)
+                        selectedSupplies[dbId].estatus = 3; 
+                        
+                        // 2. Re-renderizar la tabla SIN recargar la página
+                        renderSuppliesTable(); 
+                        
+                        // 3. Notificación de éxito
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: 'Suministro marcado como Recibido',
+                            showConfirmButton: false,
+                            timer: 2000
+                        });
+                        
+                    } else {
+                         Swal.fire('Error', 'Error al marcar como recibido: ' + result.message, 'error');
+                         button.disabled = false;
+                         button.innerHTML = '<i class="bi bi-check-lg"></i> Recibido';
+                    }
+                } catch (error) {
+                    console.error('Error de Conexión:', error);
+                    Swal.fire('Error de conexión', 'No se pudo contactar al servidor.', 'error');
+                    button.disabled = false;
+                    button.innerHTML = '<i class="bi bi-check-lg"></i> Recibido';
+                }
             }
+        
         });
 
         // Manejar el evento de cambio de cantidad en tiempo real

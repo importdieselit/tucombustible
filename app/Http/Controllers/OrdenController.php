@@ -140,6 +140,19 @@ class OrdenController extends BaseController
 
     }
 
+    public function markAsReceived(SuministroCompra $supply)
+    {
+        try {
+            // Actualizar el estatus del suministro a 3 (Despachado/Recibido)
+            $supply->estatus = 3; 
+            $supply->save();
+
+            return response()->json(['success' => true, 'message' => 'Suministro marcado como recibido.']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
     public function actualizarPrecio(Request $request)
     {
         $detalle = SuministroCompraDetalle::find($request->id);
