@@ -176,11 +176,11 @@ class Vehiculo extends Model
         return $this->belongsTo(Marca::class, 'marca', 'id')->first() ; // Ajusta 'App\Marca::class' al nombre de tu modelo de Marca
     }
 
-    public function ordenes()
-    {
-        // Ajusta 'id_vehiculo' si el nombre de la llave foránea en la tabla 'ordenes' es diferente
-        return $this->hasMany(Orden::class, 'id_vehiculo'); 
-    }
+        public function ordenes()
+        {
+            // Ajusta 'id_vehiculo' si el nombre de la llave foránea en la tabla 'ordenes' es diferente
+            return $this->hasMany(Orden::class, 'id_vehiculo'); 
+        }
     public function viajes()
     {
         return $this->hasMany(Viaje::class, 'id_vehiculo');

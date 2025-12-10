@@ -116,11 +116,12 @@ class Orden extends Model
     {
         return $this->belongsTo(PlanMantenimiento::class, 'id_plan', 'id_plan');
     }
+
     public function fotos()
-{
-    // Asegúrate de que tu modelo OrdenFoto esté importado
-    return $this->hasMany(OrdenFoto::class, 'orden_id'); 
-}   
+    {
+        // Asegúrate de que tu modelo OrdenFoto esté importado
+        return $this->hasMany(OrdenFoto::class, 'orden_id'); 
+    }   
 
     public function inspeccion()
     {
@@ -129,24 +130,24 @@ class Orden extends Model
     
     public function scopeOrdenesAbiertas(Builder $query): Builder
     {
-        return self::where('estatus',2);
+        return $query->where('estatus',2);
     }
 
     public function scopeOrdenesProgramadas(Builder $query): Builder
     {
-        return self::where('estatus',3);
+        return $query->where('estatus',3);
     }
 
     public function scopeOrdenesMantenimiento( Builder $query): Builder
     {
-        return self::where('tipo','Mantenimiento');
+        return $query->where('tipo','Mantenimiento');
     }
 
     public function scopeOrdenesFueraTiempo(Builder $query): Builder
     {
         $fecha_limite = Carbon::now()->subDays(3);
 
-        return self::where('estatus', 2) 
+        return $query->where('estatus', 2) 
                     ->where('created_at', '<', $fecha_limite);            
     }
 
