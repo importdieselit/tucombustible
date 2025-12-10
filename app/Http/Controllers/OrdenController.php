@@ -186,19 +186,19 @@ class OrdenController extends BaseController
             switch ($filterKey) {
                 
                 case 'abiertas':
-                    $query->ordenesAbiertas();
+                    $query->OrdenesAbiertas();
                     break;
 
                 case 'tiempo_alerta':
-                    $query->ordenesFueraTiempo();
+                    $query->OrdenesFueraTiempo();
                     break;
                 
                 case 'mantenimiento':
                     // Filtro genérico que solo aplica si Vehiculo tiene columna 'estatus'
-                    $query->ordenesMantenimiento();
+                    $query->OrdenesMantenimiento();
                     break;
                 case 'programadas':
-                    $query->ordenesProgramadas();
+                    $query->OrdenesProgramadas();
                     break;
                 
             }

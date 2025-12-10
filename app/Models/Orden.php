@@ -126,22 +126,22 @@ class Orden extends Model
         return $this->belongsTo(Inspeccion::class, 'id_inspeccion', 'id');
     }
     
-    public function ordenesAbiertas()
+    public function scopeOrdenesAbiertas()
     {
         return self::where('status',2);
     }
 
-    public function ordenesProgramadas()
+    public function scopeOrdenesProgramadas()
     {
         return self::where('status',3);
     }
 
-    public function ordenesMantenimiento()
+    public function scopeOrdenesMantenimiento()
     {
         return self::where('tipo','Mantenimiento');
     }
 
-    public function ordenesFueraTiempo(): Builder
+    public function scopeOrdenesFueraTiempo(): Builder
     {
         $fecha_limite = Carbon::now()->subDays(3);
 
