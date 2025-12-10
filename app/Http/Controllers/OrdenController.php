@@ -186,7 +186,7 @@ class OrdenController extends BaseController
             switch ($filterKey) {
                 
                 case 'abiertas':
-                    $query->ordendesAbiertas();
+                    $query->ordenesAbiertas();
                     break;
 
                 case 'tiempo_alerta':
