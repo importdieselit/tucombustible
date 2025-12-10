@@ -305,15 +305,22 @@
                 </a>
             </div>
             <div class="col-12 col-md-6 col-lg-3">
-                <a href="#" class="card-link" onclick="showDetails('solicitudes-details', event)">
+                {{-- <a href="#" class="card-link" onclick="showDetails('solicitudes-details', event)">
                     <div class="card h-100 p-4 d-flex flex-column justify-content-center text-center">
                         <i class="fas fa-clipboard-list stat-card-icon mb-2 text-primary"></i>
                         <h5 class="fw-bold mb-1">Solicitudes</h5>
                         <p class="text-muted mb-0">{{ count(array_filter($solicitudes, fn($s) => $s['estado'] == 'Pendiente')) }} pendientes</p>
                    </div>
+                </a> --}}
+                <a href="{{route('viajes.calendario')}}" class="card-link"  target="_blank">
+                    <div class="card h-100 p-4 d-flex flex-column justify-content-center text-center">
+                        <i class="fas fa-calendar stat-card-icon mb-2 text-primary"></i>
+                        <h5 class="fw-bold mb-1">Planificacion</h5>
+                        <p class="text-muted mb-0">Hoy {{$viajesHoy}}</p>
+                   </div>
                 </a>
             </div>
-            <div class="col-12 col-md-6 col-lg-3">
+            <div class="col-12 col-md-6 col-lg-3" style="display: none">
                 <a href="#" class="card-link" onclick="showDetails('notificaciones-details', event)">
                     <div class="card h-100 p-4 d-flex flex-column justify-content-center text-center">
                         <i class="fas fa-bell stat-card-icon mb-2 text-danger"></i>

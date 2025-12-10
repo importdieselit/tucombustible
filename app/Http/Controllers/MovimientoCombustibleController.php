@@ -150,6 +150,7 @@ class MovimientoCombustibleController extends Controller
                 $totales['salidas'] = (float) $movimiento->total_litros;
             }
         }
+        $viajesHoy = Viaje::whereDate('fecha_salida', now())->count();
 
         // Pasamos todos los datos a la vista.
         return view('combustible.index', compact(
@@ -168,7 +169,8 @@ class MovimientoCombustibleController extends Controller
             'vehiculos',
             'totales',
             'tanque00',
-            'resguardo'
+            'resguardo',
+            'viajesHoy'
         ));
     }
 
