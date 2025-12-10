@@ -97,6 +97,12 @@
             </thead>
             <tbody>
                 @forelse($requerimientos as $requerimiento)
+                    <tr>
+                        <td colspan="4" style="font-weight: bold; background-color: #f8f9fa;">
+                            Requerimiento #{{ $requerimiento->id ?? 'N/A' }} - 
+                            Estado: {{ $requerimiento->estatus == '1' ? 'Solicitado' : ($requerimiento->estatus == '2' ? 'Aprobado' : 'N/A') }}
+                        </td>
+                    </tr>
                     @forelse($requerimiento->detalles as $detalle)
                         @php($cantidad=$detalle->cantidad_aprobada ?? $detalle->cantidad_solicitada )
                         <tr>
