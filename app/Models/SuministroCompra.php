@@ -21,6 +21,9 @@ class SuministroCompra extends Model
         'costo_total',
         'foto_factura',
         'estatus',
+        'observacion',
+        'observacion_admin'
+
     ];
 
     /**

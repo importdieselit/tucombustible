@@ -153,6 +153,8 @@
     
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
 
 <script>
    document.addEventListener('DOMContentLoaded', function() {
@@ -367,33 +369,86 @@
     }
 
      function actualizarEstatus(id, estatus) {
+    
+        let titulo = '';
+        let placeholder = '';
+        let icono = '';
 
-        if(!confirm("¿Confirmar esta acción?")) return;
+        if (estatus === 2) {
+            titulo = '¿Aprobar Requerimiento?';
+            placeholder = 'Comentarios de Aprobación (Opcional, e.g., Presupuesto asignado)';
+            icono = 'info';
+        } else if (estatus === 3) {
+            titulo = '¿Rechazar Requerimiento?';
+            placeholder = 'Motivo del Rechazo (Obligatorio, e.g., Falta de presupuesto, cambio de repuesto)';
+            icono = 'warning';
+        } else if (estatus === 4) {
+            titulo = '¿Marcar como Recibido?';
+            placeholder = 'Comentarios de Recepción (Opcional, e.g., Recepción completa/parcial)';
+            icono = 'question';
+        } else {
+            // En caso de un estatus no manejado
+            if (!confirm("¿Confirmar esta acción?")) return;
+            // No hay comentario para estatus no manejado, se sigue con la lógica anterior si aplica
+            enviarActualizacion(id, estatus, ''); 
+            return;
+        }
 
-        fetch("{{ route('compras.cambiar_estatus') }}", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": "{{ csrf_token() }}"
-            },
-            body: JSON.stringify({
-                id: id,
-                estatus: estatus
-            })
-        })
-        .then(r => r.json())
-        .then(data => {
-
-            if (data.ok) {
-                alert(data.msg);
-                location.reload();
-            } else {
-                alert("Error: " + data.msg);
+        Swal.fire({
+        title: titulo,
+        input: 'textarea',
+        inputLabel: 'Comentario',
+        inputPlaceholder: placeholder,
+        inputValue: '', // Valor inicial vacío
+        showCancelButton: true,
+        confirmButtonText: 'Confirmar Acción',
+        cancelButtonText: 'Cancelar',
+        icon: icono,
+        
+        // El input es obligatorio si se está rechazando
+        inputValidator: (valor) => {
+            if (estatus === 3 && !valor.trim()) {
+                return '¡El motivo del rechazo es obligatorio!';
             }
-        })
-        .catch(e => alert("Error de conexión: " + e));
-    }
+        }
+    }).then((result) => {
+        // 2. Si el usuario confirma (y la validación pasó)
+        if (result.isConfirmed) {
+            const comentario = result.value || ''; // Si es opcional y no escribió nada, será cadena vacía
 
+            // 3. Ejecutar el envío al servidor con el comentario
+            enviarActualizacion(id, estatus, comentario);
+        }
+    });
+}
+function enviarActualizacion(id, estatus, comentario) {
+    fetch("{{ route('compras.cambiar_estatus') }}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRF-TOKEN": "{{ csrf_token() }}"
+        },
+        body: JSON.stringify({
+            id: id,
+            estatus: estatus,
+            observacion_admin: comentario // ¡ENVIAMOS EL COMENTARIO!
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            Swal.fire('Éxito', data.msg, 'success').then(() => {
+                location.reload();
+            });
+        } else {
+            Swal.fire('Error', "Error: " + data.msg, 'error');
+        }
+    })
+    .catch(e => {
+        console.error(e);
+        Swal.fire('Error de Conexión', 'No se pudo contactar al servidor.', 'error');
+    });
+}
 </script>
 @endpush
 @endsection

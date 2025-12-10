@@ -156,16 +156,48 @@ class OrdenController extends BaseController
 
     public function cambiarEstatus(Request $request)
     {
-        $compra = SuministroCompra::find($request->id);
+        $request->validate([
+            'id' => 'required|exists:purchase_orders,id', // O el nombre de tu tabla
+            'estatus' => 'required|integer|in:2,3,4',
+            'comentario' => 'nullable|string|max:500', // Capturar el nuevo campo
+        ]);
 
-        if (!$compra) {
-            return response()->json(['ok' => false, 'msg' => 'Compra no encontrada']);
+        try {
+            $orden = SuministroCompra::findOrFail($request->id);
+            
+            // 1. Actualizar estatus y guardar comentario
+            $orden->estatus = $request->estatus;
+            
+            // Guardar el comentario en una columna de comentarios/auditoría
+            // Asumiendo que tienes una columna 'comentario_estatus'
+            if ($request->filled('comentario')) {
+                $orden->comentario_estatus = $request->comentario;
+            }
+
+            $orden->save();
+            
+            $msg = '';
+
+            switch ($request->estatus) {
+                case 2:
+                    $msg = 'Orden Aprobada con éxito.';
+                    break;
+                case 3:
+                    $msg = 'Orden Rechazada.';
+                    break;
+                case 4:
+                    $msg = 'Orden Marcada como Recibida.';
+                    break;
+                default:
+                    $msg = 'Estatus actualizado.';
+                    break;
+            }
+
+            return response()->json(['ok' => true, 'msg' => $msg]);
+
+        } catch (\Exception $e) {
+            return response()->json(['ok' => false, 'msg' => 'Fallo al procesar la orden: ' . $e->getMessage()], 500);
         }
-
-        $compra->estatus = $request->estatus;
-        $compra->save();
-
-        return response()->json(['ok' => true, 'msg' => 'Estatus actualizado']);
     }
 
     public function filter(Request $request)
@@ -379,6 +411,7 @@ class OrdenController extends BaseController
             
             $compra = SuministroCompra::create([
                 'orden_id' => $orden->id,
+                'observacion' => $request->supplies_observations,
                 'usuario_solicitante_id' => Auth::id(),
                 'estatus' => 1, // 1: Solicitada (Pendiente de Aprobación Admin)
             ]);
