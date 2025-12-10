@@ -186,6 +186,7 @@ class OrdenController extends BaseController
             switch ($filterKey) {
                 
                 case 'abiertas':
+                    dd('filtrando abiertas');
                     $query->OrdenesAbiertas();
                     break;
 
