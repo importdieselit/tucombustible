@@ -100,7 +100,12 @@
                     <tr>
                         <td colspan="4" style="font-weight: bold; background-color: #f8f9fa;">
                             Requerimiento #{{ $requerimiento->id ?? 'N/A' }} - 
-                            Estado: {{ $requerimiento->estatus == '1' ? 'Solicitado' : ($requerimiento->estatus == '2' ? 'Aprobado' : 'N/A') }}
+                            Estado: {{ $requerimiento->estatus == '1' ? 'Solicitado' : ($requerimiento->estatus == '2' ? 'Aprobado' : $requerimiento->estatus == '3' ? 'Recibido' : 'N/A') }}
+                            @if ($requerimiento->estatus == 2)
+                                <button type="button" class="btn btn-sm btn-success receive-requirement-btn" data-req-id="{{ $requerimiento->id }}" title="Marcar como Recibido">
+                                    <i class="bi bi-check-lg"></i> Marcar Recibido
+                                </button>
+                            @endif
                         </td>
                     </tr>
                     @forelse($requerimiento->detalles as $detalle)
@@ -156,6 +161,81 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+
+
+document.body.addEventListener('click', function(e) {
+            const receiveBtn = e.target.closest('.receive-requirement-btn');
+            if (receiveBtn) {
+                const reqId = receiveBtn.dataset.reqId;
+
+                Swal.fire({
+                    title: 'Confirmar Recepción',
+                    text: "¿Estás seguro de que deseas marcar este requerimiento como Recibido? Esta acción es irreversible.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Sí, Marcar Recibido',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Deshabilitar botón visualmente
+                        receiveBtn.disabled = true;
+                        receiveBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Procesando...';
+
+                        // Ejecutar la petición AJAX
+                        fetch(`/ordenes/supplies/receive/${reqId}`, { 
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire(
+                                    '¡Recibido!',
+                                    'El requerimiento ha sido marcado como Recibido exitosamente.',
+                                    'success'
+                                );
+                                
+                                // Actualizar la interfaz del estatus dinámicamente
+                                const statusBadge = document.querySelector(`.estatus-req-${reqId}`);
+                                if (statusBadge) {
+                                    statusBadge.textContent = 'Recibido';
+                                    statusBadge.classList.remove('bg-success'); // Quitar Aprobado
+                                    statusBadge.classList.add('bg-info');      // Poner Recibido
+                                }
+                                // Ocultar el botón una vez completada la acción
+                                receiveBtn.remove();
+                                
+                            } else {
+                                Swal.fire(
+                                    'Error',
+                                    data.message,
+                                    'error'
+                                );
+                                // Revertir el estado del botón en caso de error
+                                receiveBtn.disabled = false;
+                                receiveBtn.innerHTML = '<i class="bi bi-check-lg"></i> Marcar Recibido';
+                            }
+                        })
+                        .catch(error => {
+                            Swal.fire(
+                                'Error',
+                                'No se pudo conectar con el servidor.',
+                                'error'
+                            );
+                            // Revertir el estado del botón en caso de error de conexión
+                            receiveBtn.disabled = false;
+                            receiveBtn.innerHTML = '<i class="bi bi-check-lg"></i> Marcar Recibido';
+                        });
+                    }
+                });
+            }
+        });
+
         const orderId = '{{ $orden->id ?? '' }}';
     @if ($orden->estatus ==2)
         // Botón para cerrar la orden
