@@ -168,6 +168,16 @@ class OrdenController extends BaseController
         return response()->json(['ok' => true, 'msg' => 'Estatus actualizado']);
     }
 
+    public function filter(Request $request)
+        {
+        // 1. Inicializar el Query Builder del modelo correcto
+        $query = Orden::query(); 
+        
+        // 2. Llamar al list() del padre, que ejecutará el applyBusinessFilters(si existe)
+        // y luego el filtro de seguridad de cliente.
+        return $this->list($query); 
+    }
+
      protected function applyBusinessFilters(Builder $query): Builder
     {
         $filterKey = request()->get('filter'); // Usamos el helper global 'request()'
