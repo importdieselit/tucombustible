@@ -111,7 +111,6 @@ abstract class BaseController extends Controller
         }
         
         if (method_exists($this, 'applyBusinessFilters')) {
-            dd('tiene Filtros de negocio');
             $query = $this->applyBusinessFilters($query); 
         }
         
