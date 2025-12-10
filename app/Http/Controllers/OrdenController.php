@@ -157,9 +157,9 @@ class OrdenController extends BaseController
     public function cambiarEstatus(Request $request)
     {
         $request->validate([
-            'id' => 'required|exists:purchase_orders,id', // O el nombre de tu tabla
+            'id' => 'required|exists:suministros_compras,id', // O el nombre de tu tabla
             'estatus' => 'required|integer|in:2,3,4',
-            'comentario' => 'nullable|string|max:500', // Capturar el nuevo campo
+            'observacion_admin' => 'nullable|string|max:500', // Capturar el nuevo campo
         ]);
 
         try {
@@ -170,8 +170,8 @@ class OrdenController extends BaseController
             
             // Guardar el comentario en una columna de comentarios/auditoría
             // Asumiendo que tienes una columna 'comentario_estatus'
-            if ($request->filled('comentario')) {
-                $orden->comentario_estatus = $request->comentario;
+            if ($request->filled('observacion_admin')) {
+                $orden->observacion_admin = $request->observacion_admin;
             }
 
             $orden->save();
