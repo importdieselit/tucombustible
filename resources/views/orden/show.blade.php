@@ -100,7 +100,7 @@
                     <tr>
                         <td colspan="4" style="font-weight: bold; background-color: #f8f9fa;">
                             Requerimiento #{{ $requerimiento->id ?? 'N/A' }} - 
-                            Estado: {{ $requerimiento->estatus == '1' ? 'Solicitado' : ($requerimiento->estatus == '2' ? 'Aprobado' : $requerimiento->estatus == '3' ? 'Recibido' : 'N/A') }}
+                            Estado: {{ $requerimiento->estatus == '1' ? 'Solicitado' : ($requerimiento->estatus == '2' ? 'Aprobado' : ($requerimiento->estatus == '3' ? 'Recibido' : 'N/A')) }}
                             @if ($requerimiento->estatus == 2)
                                 <button type="button" class="btn btn-sm btn-success receive-requirement-btn" data-req-id="{{ $requerimiento->id }}" title="Marcar como Recibido">
                                     <i class="bi bi-check-lg"></i> Marcar Recibido
