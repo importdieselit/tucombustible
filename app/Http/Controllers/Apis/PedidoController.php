@@ -848,6 +848,7 @@ class PedidoController extends Controller
             $pedido->update([
                 'estado' => 'rechazado',
                 'observaciones_admin' => $request->motivo,
+                'observaciones' => $pedido->observaciones.' '.$request->motivo,
                 'fecha_aprobacion' => now(),
             ]);
 

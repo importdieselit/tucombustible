@@ -74,7 +74,7 @@ class ViajesController extends Controller
         // Asumiendo que Chofer::with('persona') es la forma correcta de cargar los choferes disponibles
         $choferes = Chofer::with('persona')->get(); 
         $vehiculos = Vehiculo::where('es_flota',true)->where('estatus', 1)->get(['id', 'placa', 'flota']);
-        $clientes = Cliente::where('status',1)->get(['id','nombre']);
+        $clientes = Cliente::where('status',1)->orderBy('nombre', 'asc')->get(['id','nombre']);
 
         //  if($viaje->chofer_id != null){
         //     return redirect()->route('viajes.list')->with('info', 'El viaje ya tiene chofer asignado.');

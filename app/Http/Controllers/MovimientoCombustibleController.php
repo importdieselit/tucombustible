@@ -805,7 +805,9 @@ public function createPrecarga()
     {
         // Data de prueba o real para los selectores
         $proveedores = Proveedor::all(['id', 'nombre']);
-        $plantas = Planta::all(['id', 'nombre', 'alias']); 
+        $plantas = Planta::orderBy('nombre', 'asc') // O 'desc'
+            ->get(['id', 'nombre', 'alias'])
+            ->toArray();  
         $choferes = Chofer::whereNotNull('documento_vialidad_numero')   
                                       ->where('cargo', 'CHOFER')
                                       ->with('persona')
@@ -826,14 +828,19 @@ public function createPrecarga()
     {
         // Data de prueba o real para los selectores
         $proveedores = Proveedor::all(['id', 'nombre']);
-        $prigen = Planta::all(['id', 'nombre', 'alias'])->toArray(); 
-        $clientes = Cliente::all(['id', 'nombre', 'alias'])->toArray();
+        $prigen = Planta::orderBy('nombre', 'asc') // O 'desc'
+            ->get(['id', 'nombre', 'alias'])
+            ->toArray(); 
+
+        $clientes = Cliente::orderBy('nombre', 'asc') // O 'alias', lo que prefieras
+            ->get(['id', 'nombre', 'alias'])
+            ->toArray();
         $plantas = array_merge($prigen, $clientes );
         $choferes = Chofer::whereNotNull('documento_vialidad_numero')   
                                       ->where('cargo', 'CHOFER')
                                       ->with('persona')
                                       ->get();
-        $destino = TabuladorViatico::where('id','>',5)->pluck('destino')->unique();
+        $destino = TabuladorViatico::where('id','>',5)->orderBy('ciudad_destino','asc')->pluck('destino')->unique();
 
         $ayudantes = Chofer::whereNull('documento_vialidad_numero')   
                                       ->with('persona')

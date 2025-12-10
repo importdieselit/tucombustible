@@ -110,7 +110,7 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
     <div class="row g-4 mb-4">
         <div class="col-md-3">
             <div class="card shadow-sm border-0">
-                <a href="{{route('vehiculos.list')}}" target="_blank">
+                <a href="{{route('vehiculos.list', ['filter' => 'disponibles'])}}" target="_blank">
                     
                     <div class="card-body d-flex align-items-center">
                         <div class="me-3">
