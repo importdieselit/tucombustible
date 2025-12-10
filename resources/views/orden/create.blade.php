@@ -143,7 +143,17 @@
 
             {{-- Input Oculto para enviar los datos serializados al controlador --}}
             <input type="hidden" name="supplies_json" id="supplies_json">
-            
+            <div id="observations-container" style="display: none;">
+                <hr class="my-4">
+                <h5 class="card-title m-0 mb-3 text-primary">Observaciones de Suministros</h5>
+                <div class="mb-3">
+                    <label for="supplies_observations" class="form-label">Comentarios Adicionales sobre Repuestos Requeridos:</label>
+                    <textarea class="form-control" id="supplies_observations" name="supplies_observations" rows="2" 
+                              placeholder="Ej: Priorizar la compra del aceite 20W50 ya que no hay existencia."></textarea>
+                    <small class="form-text text-muted">Este campo solo se enviará si se han agregado suministros a la orden.</small>
+                </div>
+                <hr class="my-4">
+            </div>
             <hr class="my-4">
 
             <div class="d-grid gap-2">
@@ -326,10 +336,18 @@
         function renderSuppliesTable() {
             let html = '';
             const suppliesArray = Object.values(selectedSupplies);
+            const observationsContainer = document.getElementById('observations-container'); // Referencia al nuevo contenedor
 
             if (suppliesArray.length === 0) {
                 html = '<tr><td colspan="5" class="text-center text-muted">Aún no se han agregado insumos.</td></tr>';
+                // OCULTAR campo si no hay insumos
+                if (observationsContainer) {
+                    observationsContainer.style.display = 'none';
+                }
             } else {
+                if (observationsContainer) {
+                    observationsContainer.style.display = 'block';
+                }
                 suppliesArray.forEach(item => {
                     // Clase de estilo si el item es de inventario y la cantidad excede la existencia
                     let rowClass = '';
@@ -338,6 +356,7 @@
                          // Item de inventario y requerimiento > existencia
                         rowClass = 'table-warning';
                     }
+                    
                     if (item.id.startsWith('MANUAL_')) {
                         // Item Manual
                         existenceText = 'N/A (Manual)';

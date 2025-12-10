@@ -151,16 +151,4 @@ class Orden extends Model
                     ->where('created_at', '<', $fecha_limite);            
     }
 
-
-
-    // // En el modelo App\Models\Orden
-    // public function solicitudesSuministros()
-    // {
-    //     return $this->hasMany(SolicitudMaterial::class, 'orden_trabajo_id');
-    // }
-    // En el modelo App\Models\SolicitudMaterial
-    // public function ordenCompra()
-    // {
-    //     return $this->belongsTo(OrdenCompra::class, 'orden_compra_id'); // Puede ser null
-    // }
 }
