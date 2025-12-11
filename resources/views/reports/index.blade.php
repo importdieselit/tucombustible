@@ -356,7 +356,6 @@
                                     <th>Vehículo</th>
                                     <th>Cliente</th>
                                     <th>Litros Despachados</th>
-                                    <th>Costo Estimado</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -370,7 +369,7 @@
                 viaje.despachos.forEach((despacho, index) => {
                     const clienteNombre = despacho.cliente ? despacho.cliente.nombre : (despacho.otro_cliente || 'N/A');
                     const litros = parseFloat(despacho.litros).toFixed(2);
-                    const costo = (despacho.litros * 0.95).toFixed(2); // Ejemplo de costo/litro
+                   // const costo = (despacho.litros * 0.95).toFixed(2); // Ejemplo de costo/litro
                     
                     html += `
                         <tr>
@@ -379,7 +378,6 @@
                             <td>${viaje.vehiculo ? viaje.vehiculo.flota + ' (' + viaje.vehiculo.placa + ')' : 'N/A'}</td>
                             <td>${clienteNombre}</td>
                             <td>${litros} Lts</td>
-                            <td>$ ${costo}</td>
                         </tr>
                     `;
                 });
@@ -475,8 +473,6 @@
                                         <th>Fecha Salida</th>
                                         <th>Vehículo</th>
                                         <th>Litros Cargados</th>
-                                        <th>Proveedor</th>
-                                        <th>Monto Compra</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -492,7 +488,7 @@
                         // Aquí asumimos que CompraCombustible tiene campos como 'proveedor_nombre' y 'monto'
                         const proveedor = compra.proveedor_nombre || 'N/A'; 
                         const litros = parseFloat(compra.litros).toFixed(2);
-                        const monto = parseFloat(compra.monto).toFixed(2);
+                        //const monto = parseFloat(compra.monto).toFixed(2);
                         
                         html += `
                             <tr>
@@ -500,8 +496,7 @@
                                 <td>${new Date(viaje.fecha_salida).toLocaleDateString()}</td>
                                 <td>${viaje.vehiculo ? viaje.vehiculo.flota + ' (' + viaje.vehiculo.placa + ')' : 'N/A'}</td>
                                 <td>${litros} Lts</td>
-                                <td>${proveedor}</td>
-                                <td>$ ${monto}</td>
+
                             </tr>
                         `;
                     }
@@ -547,7 +542,7 @@
         } else {
             requerimientos.forEach(req => {
                 req.detalles.forEach(detalle => {
-                    const totalGasto = (detalle.costo_unitario_aprobado * detalle.cantidad_aprobada).toFixed(2);
+                    const totalGasto = (detalle.costo_unitario_aprobado * detalle.cantidad_solicitada).toFixed(2);
                     
                     html += `
                         <tr>
@@ -555,7 +550,7 @@
                             <td>${new Date(req.created_at).toLocaleDateString()}</td>
                             <td><span class="badge bg-${req.estatus === 2 ? 'success' : 'info'}">${req.estatus === 2 ? 'Aprobado' : 'Recibido'}</span></td>
                             <td>${detalle.descripcion}</td>
-                            <td>${detalle.cantidad_aprobada}</td>
+                            <td>${detalle.cantidad_solicitada}</td>
                             <td>$ ${parseFloat(detalle.costo_unitario_aprobado).toFixed(2)}</td>
                             <td>$ ${totalGasto}</td>
                         </tr>
@@ -639,6 +634,7 @@
                                         <th>Fecha Apertura</th>
                                         <th>Unidad/Instalación</th>
                                         <th>Descripción de Falla</th>
+                                        <th>Observaciones</th>
                                         <th>Estatus</th>
                                     </tr>
                                 </thead>
@@ -663,7 +659,8 @@
                             <td>${orden.tipo}</td>
                             <td>${new Date(orden.created_at).toLocaleDateString()}</td>
                             <td>${unidadNombre}</td>
-                            <td>${orden.falla_reportada ? orden.falla_reportada.substring(0, 50) + '...' : 'N/A'}</td>
+                            <td>${orden.descripcion ? orden.descripcion_1.substring(0, 50) + '...' : 'N/A'}</td>
+                            <td>${orden.observacion ? orden.observacion.substring(0, 50) + '...' : 'N/A'}</td>
                             <td><span class="badge bg-${estatusClass}">${estatusText}</span></td>
                         </tr>
                     `;
