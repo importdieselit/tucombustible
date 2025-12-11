@@ -267,23 +267,23 @@
 
 
             <div class="col-12 col-md-6 col-lg-3">
-                <a href="{{route('combustible.list')}}" class="card-link" >
+                {{-- <a href="{{route('combustible.list')}}" class="card-link" > --}}
                     <div class="card h-100 p-4 d-flex flex-column justify-content-center text-center">
                         <i class="fas fa-truck-ramp-box stat-card-icon mb-2 text-warning"></i>
                         <h4 class="fw-bold mb-1">Compras Mes</h4>
                         <h3>{{ $comprasMes }} Ltrs</h3>
                     </div>
-                </a>
+                {{-- </a> --}}
             </div>
             <div class="col-12 col-md-6 col-lg-3">
-                <a href="{{route('combustible.list')}}" class="card-link" >
+                {{-- <a href="{{route('combustible.list')}}" class="card-link" > --}}
                     <div class="card h-100 p-4 d-flex flex-column justify-content-center text-center">
                         <i class="fas fa-truck-ramp-box stat-card-icon mb-2 text-warning"></i>
                         <h4 class="fw-bold mb-1">Ventas Mes</h4>
                         <h3>{{ $ventasMes }} Ltrs</h3>
                         {{-- <h5>desde {{date('d/m/Y',strtotime($totales['periodo_inicio']))}}</h5> --}}
                     </div>
-                </a>
+                {{-- </a> --}}
             </div>
             <div class="col-12 col-md-6 col-lg-3">
                 <a href="{{route('combustible.list')}}" class="card-link" >

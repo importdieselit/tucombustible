@@ -152,7 +152,8 @@ class MovimientoCombustibleController extends Controller
         }
         $viajesHoy = Viaje::whereDate('fecha_salida', now())->count();
         // 1. Filtrar los Viajes por el mes actual
-        $viajesDelMes = Viaje::whereMonth('fecha_salida', now()->month);
+        $viajesDelMes = Viaje::whereMonth('fecha_salida', now()->month)->whereYear('fecha_salida', now()->year)
+        ->where('destino_ciudad', 'NOT LIKE', 'FLETE%'); // Excluir los viajes de tipo FLETE
 
         // 2. Sumar la columna 'litros' de la relación 'despachos' (HasMany)
         //    y asignarle un alias (ej: 'total_litros_despachados')
@@ -161,7 +162,7 @@ class MovimientoCombustibleController extends Controller
                                 ->get()
                                 ->sum('despachos_sum_litros');
 
-        $comprasMes = CompraCombustible::whereMonth('fecha', now()->month)->sum('cantidad_litros');
+        $comprasMes = CompraCombustible::whereMonth('fecha', now()->month)->whereYear('fecha', now()->year)->sum('cantidad_litros');
         // Pasamos todos los datos a la vista.
         return view('combustible.index', compact(
             'clientes', 
@@ -1024,7 +1025,7 @@ public function createPrecarga()
                 'vehiculo_id' => $request->vehiculo_id,
                 'chofer_id' => $request->chofer_id,
                 'ayudante' => $request->ayudante ?? null, // Ayudante es opcional
-                'destino_ciudad' => $request->planta_destino_id.' -> '.$request->destino_ciudad ?? 'N/A', 
+                'destino_ciudad' => 'FLETE -> '. $request->planta_destino_id.' -> '.$request->destino_ciudad ?? 'FLETE N/A', 
                 'fecha_salida' => $request->fecha_salida,
                 'status' => 'Programado',
                 'usuario_id' => $userId
