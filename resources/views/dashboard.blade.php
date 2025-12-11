@@ -467,7 +467,7 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
 
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
             @include('partials.access_card', [
-                'route' => route('choferes.index'),
+                'route' => route('choferes.list'),
                 'icon' => 'fa-user',
                 'title' => 'Choferes',
                 'color' => 'bg-warning',
