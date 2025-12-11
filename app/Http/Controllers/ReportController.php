@@ -8,16 +8,30 @@ use App\Models\Viaje; // Para ventas/litros
 use App\Models\Orden; // Para órdenes abiertas y fallas
 use App\Models\Cliente; // Para nuevos clientes
 use App\Models\SuministroCompra; // Para gasto de suministros
-use App\Models\SuministroCompraDetalle;
-use App\Models\CompraCombustible;
+use App\Models\SuministroCompraDetalle; // Para detalles de suministros
+use App\Models\CompraCombustible; // Para gasto de combustible
+
+use Illuminate\View\View; // Para tipado de retorno
 
 class ReportController extends Controller
 {
+    /**
+     * Muestra la vista principal del Resumen Gerencial y Reportes.
+     */
+    public function index(): View
+    {
+        // En este caso, solo necesitamos devolver la vista.
+        // Toda la lógica de carga de datos es asíncrona (AJAX) 
+        // y se maneja en getSummary().
+        return view('reports.index');
+    }
+
     /**
      * Define las fechas de inicio y fin basadas en el rango y las fechas personalizadas.
      */
     protected function getDateRange(string $range, ?string $start = null, ?string $end = null): array
     {
+        // ... (resto del método getDateRange) ...
         $startDate = null;
         $endDate = now();
 
@@ -43,16 +57,17 @@ class ReportController extends Controller
     }
     
     /**
-     * Genera el resumen gerencial basado en los filtros.
+     * Genera el resumen gerencial basado en los filtros (método AJAX).
      */
     public function getSummary(Request $request)
     {
+        // ... (resto del método getSummary) ...
         $request->validate([
             'range' => 'required|string|in:day,week,month,custom',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'indicators' => 'required|array',
-            'indicators.*' => 'string', // Los IDs de los indicadores
+            'indicators.*' => 'string', 
         ]);
 
         [$startDate, $endDate] = $this->getDateRange(
@@ -61,7 +76,6 @@ class ReportController extends Controller
             $request->end_date
         );
 
-        // Si no hay rango válido (ej. rango personalizado sin fechas), devolver error.
         if (!$startDate || !$endDate) {
              return response()->json(['message' => 'Rango de fechas no válido.'], 400);
         }
@@ -69,21 +83,21 @@ class ReportController extends Controller
         $results = [];
         $indicators = $request->indicators;
 
+        // Lógica de cálculo de indicadores (igual a la provista anteriormente)
+        
         // 1. Gasto Total en Suministros (Gasto total por requerimientos aprobados/recibidos)
         if (in_array('gasto_suministros', $indicators)) {
-            // Asumo que el gasto se basa en la fecha de creación del requerimiento
             $totalGasto = SuministroCompra::whereBetween('created_at', [$startDate, $endDate])
-                ->whereIn('estatus', [2, 3]) // Aprobado o Recibido
-                ->withSum('detalles', 'costo_unitario_aprobado') // Suma en los detalles
+                ->whereIn('estatus', [2, 3]) 
+                ->withSum('detalles', 'costo_unitario_aprobado') 
                 ->get()
-                ->sum('detalles_sum_costo_unitario_aprobado'); // Suma total de los detalles
+                ->sum('detalles_sum_costo_unitario_aprobado'); 
                 
             $results['gasto_suministros'] = $totalGasto;
         }
 
         // 2. Total Litros Despachados (Ventas)
         if (in_array('ventas_litros', $indicators)) {
-            // Usamos la lógica de withSum() que definimos previamente, filtrando los viajes
             $litrosVendidos = Viaje::whereBetween('fecha_salida', [$startDate, $endDate])
                 ->withSum('despachos', 'litros')
                 ->get()
@@ -94,7 +108,6 @@ class ReportController extends Controller
         
         // 3. Órdenes Abiertas (Conteo)
         if (in_array('ordenes_abiertas', $indicators)) {
-            // Contamos las órdenes abiertas (estatus 2) creadas en el rango
             $ordenesAbiertas = Orden::where('estatus', 2)
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->count();
@@ -112,9 +125,9 @@ class ReportController extends Controller
         
         // 5. Reportes de Falla/Mantenimiento
          if (in_array('reportes_falla', $indicators)) {
-            // Asumo que las fallas son Órdenes de tipo 'Mantenimiento' o 'Falla'
             $reportesFalla = Orden::whereBetween('created_at', [$startDate, $endDate])
                 ->count();
+                //whereIn('tipo', ['Mantenimiento', 'Falla'])
                 
             $results['reportes_falla'] = $reportesFalla;
         }
