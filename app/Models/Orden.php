@@ -96,7 +96,7 @@ class Orden extends Model
     public function vehiculoBelong(): BelongsTo
 {
     // Asegúrate de que el método devuelva la relación BelongsTo
-    return $this->belongsTo(Vehiculo::class, 'vehiculo_id');
+    return $this->belongsTo(Vehiculo::class, 'id_vehiculo');
 }
 
     public function tipo()
