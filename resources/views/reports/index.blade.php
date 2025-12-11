@@ -203,12 +203,16 @@
 
         // Función para dibujar el reporte (Ejemplo: Usando tarjetas)
         function renderReport(data) {
-            let html = '<div class="row">';
+            const reportContent = document.getElementById('report-content');
+            let cardsHtml = '<div class="row">';
             
-            // Iterar sobre los resultados y crear tarjetas dinámicamente
-            for (const indicator in data) {
+            const totals = data.totals || {}; // Aseguramos que data.totals existe
+            const indicators = data.indicators || []; // Aseguramos que data.indicators existe
+
+            // 1. GENERAR CARDS DE TOTALES (Iteramos sobre data.totals)
+            for (const indicator in totals) { 
                 let title = '';
-                let value = data[indicator];
+                let value = totals[indicator]; // <-- ¡CORREGIDO! Usamos el valor dentro de totals
                 let icon = '';
                 let color = '';
 
@@ -247,7 +251,7 @@
                         continue; // Ignorar si no se reconoce
                 }
 
-                html += `
+                cardsHtml += `
                     <div class="col-md-4 col-lg-3 mb-4">
                         <div class="card ${color} text-white h-100">
                             <div class="card-body">
@@ -264,45 +268,52 @@
                 `;
             }
             
-            html += '</div>';
+            cardsHtml += '</div>';
             
-            // Si también quieres listar los viajes/despachos (item 3), aquí se renderizaría una tabla.
-            
-            reportContent.innerHTML = html;
+            // Inyectar las tarjetas en el contenedor principal
+            reportContent.innerHTML = cardsHtml;
+
+
             // -----------------------------------------------------
-        // SECCIÓN DE DETALLES
-        // -----------------------------------------------------
-        
-        // Asegurarse de que el encabezado de detalles esté visible si hay cards
-        document.getElementById('details-header').style.display = 'block';
+            // SECCIÓN DE DETALLES (Se llama después de inyectar las cards)
+            // -----------------------------------------------------
+            
+            // Asegurarse de que el encabezado de detalles esté visible si hay cards
+            const detailsHeader = document.getElementById('details-header');
+            if (Object.keys(totals).length > 0 && detailsHeader) {
+                 detailsHeader.style.display = 'block';
+            } else if(detailsHeader) {
+                 detailsHeader.style.display = 'none';
+            }
 
-        if (data.details && data.indicators.includes('ventas_litros')) {
-            renderVentasDespachos(data.details.ventas_litros_data);
-            renderDespachosChart(data.details.despachos_by_client_data);
-        } else {
-             document.getElementById('ventas_litros_details').innerHTML = '';
-             document.getElementById('despachos_chart_container').innerHTML = '';
-        }
 
-        if (data.details && data.indicators.includes('gasto_suministros')) {
-            renderGastoSuministros(data.details.gasto_suministros_data);
-        } else {
-             document.getElementById('gasto_suministros_details').innerHTML = '';
-        }
-        
-        if (data.details && data.indicators.includes('reportes_falla')) {
-            renderReportesFalla(data.details.reportes_falla_data, data.details.reportes_falla_grouped);
-        } else {
-             document.getElementById('reportes_falla_details').innerHTML = '';
-        }
-        
-        if (data.details && data.indicators.includes('nuevos_clientes')) {
-            renderNuevosClientes(data.details.nuevos_clientes_data);
-        } else {
-             document.getElementById('nuevos_clientes_details').innerHTML = '';
-        }
-        
-    } // Fin de renderReport
+            if (data.details && indicators.includes('ventas_litros')) {
+                renderVentasDespachos(data.details.ventas_litros_data);
+                renderDespachosChart(data.details.despachos_by_client_data);
+            } else {
+                 document.getElementById('ventas_litros_details').innerHTML = '';
+                 document.getElementById('despachos_chart_container').innerHTML = '';
+            }
+
+            if (data.details && indicators.includes('gasto_suministros')) {
+                renderGastoSuministros(data.details.gasto_suministros_data);
+            } else {
+                 document.getElementById('gasto_suministros_details').innerHTML = '';
+            }
+            
+            if (data.details && indicators.includes('reportes_falla')) {
+                // Notar que la función necesita la lista y la data agrupada
+                renderReportesFalla(data.details.reportes_falla_data, data.details.reportes_falla_grouped);
+            } else {
+                 document.getElementById('reportes_falla_details').innerHTML = '';
+            }
+            
+            if (data.details && indicators.includes('nuevos_clientes')) {
+                renderNuevosClientes(data.details.nuevos_clientes_data);
+            } else {
+                 document.getElementById('nuevos_clientes_details').innerHTML = '';
+            }
+        } // Fin de renderReport
 
     // --- FUNCIONES ESPECÍFICAS DE RENDERIZADO DE TABLAS ---
     
