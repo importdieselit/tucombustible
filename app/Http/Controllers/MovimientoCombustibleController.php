@@ -820,8 +820,7 @@ public function createPrecarga()
         // Data de prueba o real para los selectores
         $proveedores = Proveedor::all(['id', 'nombre']);
         $plantas = Planta::orderBy('nombre', 'asc') // O 'desc'
-            ->get(['id', 'nombre', 'alias'])
-            ->toArray();  
+            ->get(['id', 'nombre', 'alias']);  
         $choferes = Chofer::whereNotNull('documento_vialidad_numero')   
                                       ->where('cargo', 'CHOFER')
                                       ->with('persona')
