@@ -48,11 +48,11 @@
                 <div class="row">
                     <!-- Campo Depósito -->
                     <div class="col-md-6 mb-3">
-                        <label for="deposito_id" class="form-label">Depósito <span class="text-danger">*</span></label>
+                        <label for="deposito_id" class="form-label">Tanque <span class="text-danger">*</span></label>
                         <select class="form-select @error('deposito_id') is-invalid @enderror" id="deposito_id" name="deposito_id" required>
                             <option value="">Seleccione un depósito</option>
                             @foreach ($depositos as $deposito)
-                                <option value="{{ $deposito->id }}" {{ old('deposito_id') == $deposito->id ? 'selected' : '' }}>
+                                <option value="{{ $deposito->id }}" {{ $deposito->id == 3 ? 'selected' : '' }}>
                                     {{ $deposito->serial }} (Nivel: {{ $deposito->nivel_actual_litros }} L / {{ $deposito->capacidad_litros }} L)
                                 </option>
                             @endforeach
