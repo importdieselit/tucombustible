@@ -45,7 +45,7 @@
                     case 'ordenes_abiertas': $title = 'Órdenes Abiertas'; $unit = ''; $color = 'bg-warning'; break;
                     case 'reportes_falla': $title = 'Reportes de Falla'; $unit = ''; $color = 'bg-danger'; break;
                     // Agrega aquí el resto de tus indicadores
-                    default: continue;
+                    default: continue 2;
                 }
             @endphp
             <div class="col-4">
