@@ -291,7 +291,7 @@
         }
         
         if (data.details && data.indicators.includes('reportes_falla')) {
-            renderReportesFalla(data.details.reportes_falla_data);
+            renderReportesFalla(data.details.reportes_falla_data, data.details.reportes_falla_grouped);
         } else {
              document.getElementById('reportes_falla_details').innerHTML = '';
         }
@@ -482,58 +482,113 @@
         document.getElementById('gasto_suministros_details').innerHTML = html;
     }
     
-    // Función 4: Reportes de Falla
-    function renderReportesFalla(ordenes) {
-        let html = `
-            <div class="card shadow-sm">
-                <div class="card-header bg-secondary text-white">
-                    <h5 class="m-0">Listado de Órdenes de Mantenimiento y Falla (${ordenes.length} Registros)</h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                        <table class="table table-sm table-striped table-hover align-middle">
-                            <thead class="sticky-top bg-white">
-                                <tr>
-                                    <th># Orden</th>
-                                    <th>Tipo</th>
-                                    <th>Fecha Apertura</th>
-                                    <th>Vehículo (Placa)</th>
-                                    <th>Descripción de Falla</th>
-                                    <th>Estatus</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-        `;
-        
-        if (ordenes.length === 0) {
-            html += `<tr><td colspan="6" class="text-center text-muted">No hay órdenes de falla/mantenimiento en este período.</td></tr>`;
-        } else {
-            ordenes.forEach(orden => {
-                const estatusText = orden.estatus === 2 ? 'Abierta' : (orden.estatus === 1 ? 'Pendiente' : 'Cerrada');
-                const estatusClass = orden.estatus === 2 ? 'warning' : (orden.estatus === 1 ? 'primary' : 'success');
-                
-                html += `
-                    <tr>
-                        <td><a href="/ordenes/show/${orden.id}" target="_blank">${orden.nro_orden}</a></td>
-                        <td>${orden.tipo}</td>
-                        <td>${new Date(orden.created_at).toLocaleDateString()}</td>
-                        <td>${orden.vehiculo.flota} (${orden.vehiculo.placa})</td>
-                        <td>${orden.falla_reportada.substring(0, 50)}...</td>
-                        <td><span class="badge bg-${estatusClass}">${estatusText}</span></td>
-                    </tr>
+   // Función 4: Reportes de Falla (Actualizada)
+        function renderReportesFalla(ordenes, ordenesAgrupadas) {
+            const container = document.getElementById('reportes_falla_details');
+            let html = '';
+
+            // -----------------------------------------------------
+            // 1. Agrupamiento Visual (Gráfico o Lista)
+            // -----------------------------------------------------
+            let groupedHtml = `
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="m-0">Resumen de Fallas Agrupadas por Unidad</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
                 `;
-            });
-        }
-        
-        html += `
-                            </tbody>
-                        </table>
+                
+            if (Object.keys(ordenesAgrupadas).length === 0) {
+                groupedHtml += '<div class="col-12"><p class="text-center text-muted">No hay reportes de falla en este período.</p></div>';
+            } else {
+                // Iterar sobre los grupos (Unidad/N/A)
+                for (const unidad in ordenesAgrupadas) {
+                    const data = ordenesAgrupadas[unidad];
+                    groupedHtml += `
+                        <div class="col-lg-4 col-md-6 mb-3">
+                            <div class="p-3 border rounded h-100">
+                                <h6 class="text-truncate" title="${unidad}">${unidad}</h6>
+                                <h4 class="fw-bold text-danger">${data.count} <small>Fallas</small></h4>
+                                <small class="text-muted">Órdenes: 
+                                    ${Object.keys(data.ordenes).map(id => 
+                                        `<a href="/ordenes/show/${id}" target="_blank" class="badge bg-light text-dark text-decoration-none me-1">${data.ordenes[id]}</a>`
+                                    ).join('')}
+                                </small>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+                
+            groupedHtml += `
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
-        document.getElementById('reportes_falla_details').innerHTML = html;
-    }
+                `;
+            html += groupedHtml;
+
+
+            // -----------------------------------------------------
+            // 2. Listado Detallado (Tabla)
+            // -----------------------------------------------------
+            let listHtml = `
+                <div class="card shadow-sm">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="m-0">Listado Detallado de Órdenes de Mantenimiento y Falla (${ordenes.length} Registros)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                            <table class="table table-sm table-striped table-hover align-middle">
+                                <thead class="sticky-top bg-white">
+                                    <tr>
+                                        <th># Orden</th>
+                                        <th>Tipo</th>
+                                        <th>Fecha Apertura</th>
+                                        <th>Unidad/Instalación</th>
+                                        <th>Descripción de Falla</th>
+                                        <th>Estatus</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            `;
+            
+            if (ordenes.length === 0) {
+                listHtml += `<tr><td colspan="6" class="text-center text-muted">No hay órdenes de falla/mantenimiento en este período.</td></tr>`;
+            } else {
+                ordenes.forEach(orden => {
+                    const estatusText = orden.estatus === 2 ? 'Abierta' : (orden.estatus === 1 ? 'Pendiente' : 'Cerrada');
+                    const estatusClass = orden.estatus === 2 ? 'warning' : (orden.estatus === 1 ? 'primary' : 'success');
+                    
+                    // Determinar nombre de la unidad o N/A
+                    const unidadNombre = orden.vehiculo 
+                        ? `${orden.vehiculo.flota} (${orden.vehiculo.placa})` 
+                        : 'N/A (Sin Unidad)';
+
+                    listHtml += `
+                        <tr>
+                            <td><a href="/ordenes/show/${orden.id}" target="_blank">${orden.nro_orden}</a></td>
+                            <td>${orden.tipo}</td>
+                            <td>${new Date(orden.created_at).toLocaleDateString()}</td>
+                            <td>${unidadNombre}</td>
+                            <td>${orden.falla_reportada ? orden.falla_reportada.substring(0, 50) + '...' : 'N/A'}</td>
+                            <td><span class="badge bg-${estatusClass}">${estatusText}</span></td>
+                        </tr>
+                    `;
+                });
+            }
+            
+            listHtml += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+            html += listHtml;
+            
+            container.innerHTML = html;
+        }
 
     // Función 5: Nuevos Clientes
     function renderNuevosClientes(clientes) {
