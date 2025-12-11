@@ -118,7 +118,7 @@ class ReportController extends Controller
         
         // 1. CÁLCULO DEL TOTAL (Sumamos directamente los litros de la tabla de compras)
         $viajeIdsCompra = (clone $comprasLitrosQuery)->pluck('id');
-        $litrosComprados = CompraCombustible::whereIn('viaje_id', $viajeIdsCompra)->sum('litros');
+        $litrosComprados = CompraCombustible::whereIn('viaje_id', $viajeIdsCompra)->sum('cantidad_litros');
             
         $results['totals']['compras_litros'] = $litrosComprados;
 
