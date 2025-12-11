@@ -78,7 +78,7 @@
 
                       @foreach($viaje->despachos as $index => $despacho)
                       @php($TotalLitros += $despacho->litros ?? 0)
-                        <tr style="font-size: 15px; font-weight: 500;">
+                        <tr style="font-size: 17px; font-weight: 600;">
                             <td>{{ $despacho->cliente->nombre ?? $despacho->otro_cliente ?? 'Cliente Null' }} @if(!is_null($despacho->observacion)) <br> [{{$despacho->observacion}}] @endif</td>
                             <td>{{ number_format($despacho->litros, 0)}} Lts</td>
                         </tr>
@@ -90,7 +90,7 @@
                     </tr>
                     @endforelse
                     <tr style="font-weight: 700; font-size:19px; border-top: 2px solid #01050a; background-color: #d1ecf1;">
-                        <td class="py-1">TOTAL LITROS</td>
+                        <td class="py-1">Total Litros</td>
                         <td class="py-1">{{ $TotalLitros }}</td>
                         <td class="py-1"></td>
                         <td class="py-1"></td>
