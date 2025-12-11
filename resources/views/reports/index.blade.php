@@ -459,6 +459,7 @@
 
     // --- NUEVA FUNCIÓN ESPECÍFICA DE RENDERIZADO DE COMPRAS ---
         function renderComprasLitros(viajes) {
+            console.log('Datos de viajes para compras:', viajes); // Depuración
             let html = `
                 <div class="card shadow-sm">
                     <div class="card-header bg-success text-white">
