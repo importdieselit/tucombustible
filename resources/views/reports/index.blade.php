@@ -225,12 +225,23 @@
             console.log('Fechas del reporte:', data.report_dates); // Depuración
 
             const reportContent = document.getElementById('report-content');
+            const reportPrintableArea = document.getElementById('report-printable-area');
             let cardsHtml = '<div class="row">';
+            const reportRange = document.getElementById('date_range').value; // 'day', 'week', 'month', 'custom'
             const reportStartDate = data.report_dates.start_date;
             const reportEndDate = data.report_dates.end_date;
             const totals = data.totals || {}; // Aseguramos que data.totals existe
             const indicators = data.indicators || []; // Aseguramos que data.indicators existe
 
+            let tipoReporte = '';
+            switch (reportRange) {
+                case 'day': tipoReporte = 'Diario'; break;
+                case 'week': tipoReporte = 'Semanal'; break;
+                case 'month': tipoReporte = 'Mensual'; break;
+                case 'custom': tipoReporte = 'Personalizado'; break;
+                default: tipoReporte = 'General';
+            }
+            
             if (Object.keys(data.totals).length > 0) {
                 exportPdfBtn.setAttribute('data-start-date', reportStartDate);
                 exportPdfBtn.setAttribute('data-end-date', reportEndDate);
@@ -238,6 +249,20 @@
             } else {
                 exportPdfBtn.style.display = 'none';
             }
+
+            let headerHtml = `
+                <div class="row mb-4 border-bottom pb-3 print-header">
+                    <div class="col-6">
+                        <img src="{{ asset('img/logo-empresa.png') }}" alt="Logo de la Empresa" style="max-height: 50px;">
+                    </div>
+                    <div class="col-6 text-end">
+                        <h4 class="text-primary mb-1">REPORTE GERENCIAL</h4>
+                        <p class="mb-0 small text-muted">Tipo: <strong>${tipoReporte}</strong></p>
+                        <p class="mb-0 small text-muted">Fecha: <strong>${formatDate(reportStartDate)} al ${formatDate(reportEndDate)}</strong></p>
+                        <p class="mb-0 small text-muted">Generado: <strong>${formatDate(new Date())}</strong></p>
+                    </div>
+                </div>
+            `;
 
             // 1. GENERAR CARDS DE TOTALES (Iteramos sobre data.totals)
             for (const indicator in totals) { 
@@ -307,7 +332,8 @@
             cardsHtml += '</div>';
             
             // Inyectar las tarjetas en el contenedor principal
-            reportContent.innerHTML = cardsHtml;
+            reportContent.innerHTML = headerHtml + cardsHtml;
+
 
 
             // -----------------------------------------------------

@@ -1,6 +1,9 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container-fluid">
-        <a class="navbar-brand" href="{{ route('dashboard') }}">TuCombustible</a>
+        
+        <a class="navbar-brand" href="{{ route('dashboard') }}">
+            <img src="{{ asset('img/logomini.png') }}" alt="Logo de la empresa" class="img-fluid rounded-circle mb-3 border border-3 border-secondary" style="max-width: 100px;background: white; padding: 10px;">
+          TuCombustible</a>
         
         <!-- INICIO: Buscador Universal -->
         <form class="d-flex me-3" action="{{ route('search.global') }}" method="GET" style="width: 50%; margin-left:50%">
