@@ -159,6 +159,24 @@
             return new Date(dateString + 'T00:00:00').toLocaleDateString('es-ES'); 
         };
 
+        const formatDateTime = (dateObject) => {
+            if (!dateObject) return 'N/A';
+            
+            // Opciones de formato: Día, Mes, Año + Hora, Minuto
+            const options = {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true // o false, según tu preferencia (AM/PM)
+            };
+            
+            // Obtener la fecha y hora actual en el formato deseado (ej: 11/12/2025 03:41 PM)
+            return dateObject.toLocaleDateString('es-ES', options);
+        };
+
         // Evento principal para aplicar los filtros y obtener datos
         applyFiltersBtn.addEventListener('click', async function() {
             const range = dateRangeSelect.value;
@@ -238,6 +256,7 @@
             const reportEndDate = data.report_dates.end_date;
             const totals = data.totals || {}; // Aseguramos que data.totals existe
             const indicators = data.indicators || []; // Aseguramos que data.indicators existe
+            const generatedDateTime = formatDateTime(new Date());
 
             let tipoReporte = '';
             switch (reportRange) {
@@ -263,9 +282,9 @@
                     </div>
                     <div class="col-6 text-end">
                         <h4 class="text-primary mb-1">REPORTE GERENCIAL</h4>
-                        <p class="mb-0 small text-muted">Tipo: <strong>${tipoReporte}</strong></p>
-                        <p class="mb-0 small text-muted">Fecha: <strong>${formatDate(reportStartDate)} al ${formatDate(reportEndDate)}</strong></p>
-                        <p class="mb-0 small text-muted">Generado: <strong>${formatDate(new Date())}</strong></p>
+                        <p class="mb-0  text-muted">Tipo: <strong>${tipoReporte}</strong></p>
+                        <p class="mb-0 text-muted">Fecha: <strong>${formatDate(reportStartDate)} al ${formatDate(reportEndDate)}</strong></p>
+                        <p class="mb-0 text-muted">Generado: <strong>${generatedDateTime}</strong></p>
                     </div>
                 </div>
             `;
