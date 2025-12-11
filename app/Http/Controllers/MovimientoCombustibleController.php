@@ -853,7 +853,7 @@ public function createPrecarga()
                                       ->where('cargo', 'CHOFER')
                                       ->with('persona')
                                       ->get();
-        $destino = TabuladorViatico::where('id','>',5)->orderBy('ciudad_destino','asc')->pluck('destino')->unique();
+        $destino = TabuladorViatico::where('id','>',5)->orderBy('destino','asc')->pluck('destino')->unique();
 
         $ayudantes = Chofer::whereNull('documento_vialidad_numero')   
                                       ->with('persona')
