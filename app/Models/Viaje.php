@@ -13,6 +13,7 @@ use App\Models\Cliente;
 use App\Models\DespachoViaje;
 use App\Models\User;
 use App\Models\Producto;
+use App\Models\CompraCombustible;
 
 
 class Viaje extends Model
@@ -80,7 +81,8 @@ class Viaje extends Model
     public function despachos(): HasMany
     {
         return $this->hasMany(DespachoViaje::class, 'viaje_id');
-    }   
+    } 
+  
     public function usuario(): BelongsTo
     {
         return $this->belongsTo(User::class, 'usuario_id');
@@ -88,5 +90,9 @@ class Viaje extends Model
     public function producto(): BelongsTo
     {
         return $this->belongsTo(Producto::class, 'tipo', 'id');
+    }
+    public function compraCombustible(): HasMany
+    {
+        return $this->hasMany(CompraCombustible::class, 'viaje_id');
     }
 }
