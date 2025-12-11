@@ -253,7 +253,7 @@
             let headerHtml = `
                 <div class="row mb-4 border-bottom pb-3 print-header">
                     <div class="col-6">
-                        <img src="{{ asset('img/logo-empresa.png') }}" alt="Logo de la Empresa" style="max-height: 50px;">
+                        <img src="{{ asset('img/logo1.png') }}" alt="Logo de la Empresa" style="max-height: 50px;">
                     </div>
                     <div class="col-6 text-end">
                         <h4 class="text-primary mb-1">REPORTE GERENCIAL</h4>
