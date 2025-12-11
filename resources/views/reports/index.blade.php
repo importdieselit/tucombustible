@@ -62,7 +62,7 @@
                         <label class="form-check-label" for="ordenes_abiertas">Órdenes Abiertas (Conteo)</label>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                      <div class="form-check">
                         <input class="form-check-input report-item" type="checkbox" value="gasto_suministros" id="gasto_suministros" checked>
                         <label class="form-check-label" for="gasto_suministros">Gasto Total en Suministros</label>
@@ -91,10 +91,34 @@
     </div>
 </div>
 
+<div class="row">
+    <div class="col-12" id="details-header">
+        <h3 class="mt-4 mb-3 text-primary" style="border-bottom: 2px solid #007bff;">Detalles del Reporte</h3>
+    </div>
+</div>
+
+<div class="row" id="details-tables-container">
+    {{-- Contenedor Ventas/Despachos --}}
+    <div class="col-12 mb-4" id="ventas_litros_details"></div>
+    
+    {{-- Contenedor Gráfico (Torta Clientes) --}}
+    <div class="col-lg-6 mb-4" id="despachos_chart_container"></div>
+    
+    {{-- Contenedor Gasto Suministros --}}
+    <div class="col-12 mb-4" id="gasto_suministros_details"></div>
+    
+    {{-- Contenedor Reportes de Falla --}}
+    <div class="col-12 mb-4" id="reportes_falla_details"></div>
+
+    {{-- Contenedor Nuevos Clientes --}}
+    <div class="col-12 mb-4" id="nuevos_clientes_details"></div>
+</div>
+
 @endsection
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
 <script>
     const API_URL = '{{ route("reports.summary") }}'; // Se define la ruta de la API
 
@@ -245,7 +269,317 @@
             // Si también quieres listar los viajes/despachos (item 3), aquí se renderizaría una tabla.
             
             reportContent.innerHTML = html;
+            // -----------------------------------------------------
+        // SECCIÓN DE DETALLES
+        // -----------------------------------------------------
+        
+        // Asegurarse de que el encabezado de detalles esté visible si hay cards
+        document.getElementById('details-header').style.display = 'block';
+
+        if (data.details && data.indicators.includes('ventas_litros')) {
+            renderVentasDespachos(data.details.ventas_litros_data);
+            renderDespachosChart(data.details.despachos_by_client_data);
+        } else {
+             document.getElementById('ventas_litros_details').innerHTML = '';
+             document.getElementById('despachos_chart_container').innerHTML = '';
         }
+
+        if (data.details && data.indicators.includes('gasto_suministros')) {
+            renderGastoSuministros(data.details.gasto_suministros_data);
+        } else {
+             document.getElementById('gasto_suministros_details').innerHTML = '';
+        }
+        
+        if (data.details && data.indicators.includes('reportes_falla')) {
+            renderReportesFalla(data.details.reportes_falla_data);
+        } else {
+             document.getElementById('reportes_falla_details').innerHTML = '';
+        }
+        
+        if (data.details && data.indicators.includes('nuevos_clientes')) {
+            renderNuevosClientes(data.details.nuevos_clientes_data);
+        } else {
+             document.getElementById('nuevos_clientes_details').innerHTML = '';
+        }
+        
+    } // Fin de renderReport
+
+    // --- FUNCIONES ESPECÍFICAS DE RENDERIZADO DE TABLAS ---
+    
+    // Función 1: Ventas / Despachos
+    function renderVentasDespachos(viajes) {
+        let html = `
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="m-0">Listado de Viajes y Despachos (${viajes.length} Registros)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-sm table-striped table-hover align-middle">
+                            <thead class="sticky-top bg-white">
+                                <tr>
+                                    <th># Viaje</th>
+                                    <th>Fecha Salida</th>
+                                    <th>Vehículo</th>
+                                    <th>Cliente</th>
+                                    <th>Litros Despachados</th>
+                                    <th>Costo Estimado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+        `;
+        
+        if (viajes.length === 0) {
+            html += `<tr><td colspan="6" class="text-center text-muted">No hay viajes/despachos en este período.</td></tr>`;
+        } else {
+            viajes.forEach(viaje => {
+                // Iterar sobre los despachos de cada viaje
+                viaje.despachos.forEach((despacho, index) => {
+                    const clienteNombre = despacho.cliente ? despacho.cliente.nombre : (despacho.otro_cliente || 'N/A');
+                    const litros = parseFloat(despacho.litros).toFixed(2);
+                    const costo = (despacho.litros * 0.95).toFixed(2); // Ejemplo de costo/litro
+                    
+                    html += `
+                        <tr>
+                            <td>${viaje.id}</td>
+                            <td>${new Date(viaje.fecha_salida).toLocaleDateString()}</td>
+                            <td>${viaje.vehiculo ? viaje.vehiculo.flota + ' (' + viaje.vehiculo.placa + ')' : 'N/A'}</td>
+                            <td>${clienteNombre}</td>
+                            <td>${litros} Lts</td>
+                            <td>$ ${costo}</td>
+                        </tr>
+                    `;
+                });
+            });
+        }
+        
+        html += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.getElementById('ventas_litros_details').innerHTML = html;
+    }
+
+    // Función 2: Gráfico de Despachos por Cliente (Torta)
+    let despachosChartInstance = null;
+    function renderDespachosChart(data) {
+        const container = document.getElementById('despachos_chart_container');
+        container.innerHTML = `
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="m-0">Despachos Agrupados por Cliente (Litros)</h5>
+                </div>
+                <div class="card-body d-flex justify-content-center align-items-center">
+                    <canvas id="despachosChart"></canvas>
+                </div>
+            </div>
+        `;
+
+        if (despachosChartInstance) {
+            despachosChartInstance.destroy(); // Destruir la instancia anterior si existe
+        }
+        
+        if (Object.keys(data).length === 0) {
+             document.getElementById('despachosChart').parentElement.innerHTML = '<p class="text-center text-muted">No hay datos de despachos para graficar.</p>';
+             return;
+        }
+
+        const labels = Object.keys(data);
+        const values = Object.values(data);
+        const backgroundColors = labels.map((_, i) => `hsl(${(i * 30)}, 70%, 50%)`); // Generar colores dinámicos
+
+        const ctx = document.getElementById('despachosChart').getContext('2d');
+        despachosChartInstance = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Litros Despachados',
+                    data: values,
+                    backgroundColor: backgroundColors,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += context.formattedValue + ' Lts';
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Función 3: Gasto en Suministros
+    function renderGastoSuministros(requerimientos) {
+        let html = `
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="m-0">Detalle de Gasto en Suministros por Requerimiento</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-sm table-striped table-hover align-middle">
+                            <thead class="sticky-top bg-white">
+                                <tr>
+                                    <th># Req.</th>
+                                    <th>Fecha</th>
+                                    <th>Estatus</th>
+                                    <th>Suministro</th>
+                                    <th>Cant. Aprobada</th>
+                                    <th>Costo Unitario</th>
+                                    <th>Total Gasto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+        `;
+        
+        if (requerimientos.length === 0) {
+            html += `<tr><td colspan="7" class="text-center text-muted">No hay requerimientos aprobados/recibidos en este período.</td></tr>`;
+        } else {
+            requerimientos.forEach(req => {
+                req.detalles.forEach(detalle => {
+                    const totalGasto = (detalle.costo_unitario_aprobado * detalle.cantidad_aprobada).toFixed(2);
+                    
+                    html += `
+                        <tr>
+                            <td>${req.id}</td>
+                            <td>${new Date(req.created_at).toLocaleDateString()}</td>
+                            <td><span class="badge bg-${req.estatus === 2 ? 'success' : 'info'}">${req.estatus === 2 ? 'Aprobado' : 'Recibido'}</span></td>
+                            <td>${detalle.descripcion}</td>
+                            <td>${detalle.cantidad_aprobada}</td>
+                            <td>$ ${parseFloat(detalle.costo_unitario_aprobado).toFixed(2)}</td>
+                            <td>$ ${totalGasto}</td>
+                        </tr>
+                    `;
+                });
+            });
+        }
+        
+        html += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.getElementById('gasto_suministros_details').innerHTML = html;
+    }
+    
+    // Función 4: Reportes de Falla
+    function renderReportesFalla(ordenes) {
+        let html = `
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="m-0">Listado de Órdenes de Mantenimiento y Falla (${ordenes.length} Registros)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-sm table-striped table-hover align-middle">
+                            <thead class="sticky-top bg-white">
+                                <tr>
+                                    <th># Orden</th>
+                                    <th>Tipo</th>
+                                    <th>Fecha Apertura</th>
+                                    <th>Vehículo (Placa)</th>
+                                    <th>Descripción de Falla</th>
+                                    <th>Estatus</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+        `;
+        
+        if (ordenes.length === 0) {
+            html += `<tr><td colspan="6" class="text-center text-muted">No hay órdenes de falla/mantenimiento en este período.</td></tr>`;
+        } else {
+            ordenes.forEach(orden => {
+                const estatusText = orden.estatus === 2 ? 'Abierta' : (orden.estatus === 1 ? 'Pendiente' : 'Cerrada');
+                const estatusClass = orden.estatus === 2 ? 'warning' : (orden.estatus === 1 ? 'primary' : 'success');
+                
+                html += `
+                    <tr>
+                        <td><a href="/ordenes/show/${orden.id}" target="_blank">${orden.nro_orden}</a></td>
+                        <td>${orden.tipo}</td>
+                        <td>${new Date(orden.created_at).toLocaleDateString()}</td>
+                        <td>${orden.vehiculo.flota} (${orden.vehiculo.placa})</td>
+                        <td>${orden.falla_reportada.substring(0, 50)}...</td>
+                        <td><span class="badge bg-${estatusClass}">${estatusText}</span></td>
+                    </tr>
+                `;
+            });
+        }
+        
+        html += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.getElementById('reportes_falla_details').innerHTML = html;
+    }
+
+    // Función 5: Nuevos Clientes
+    function renderNuevosClientes(clientes) {
+        let html = `
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="m-0">Listado de Nuevos Clientes Registrados (${clientes.length} Registros)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-sm table-striped table-hover align-middle">
+                            <thead class="sticky-top bg-white">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre/Razón Social</th>
+                                    <th>Fecha Registro</th>
+                                    <th>Ubicación</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+        `;
+        
+        if (clientes.length === 0) {
+            html += `<tr><td colspan="4" class="text-center text-muted">No hay nuevos clientes en este período.</td></tr>`;
+        } else {
+            clientes.forEach(cliente => {
+                html += `
+                    <tr>
+                        <td>${cliente.id}</td>
+                        <td>${cliente.nombre}</td>
+                        <td>${new Date(cliente.created_at).toLocaleDateString()}</td>
+                        <td>${cliente.direccion.substring(0, 50)}...</td>
+                    </tr>
+                `;
+            });
+        }
+        
+        html += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.getElementById('nuevos_clientes_details').innerHTML = html;
+    }
 
     });
 </script>

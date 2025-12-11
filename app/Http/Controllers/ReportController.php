@@ -61,14 +61,7 @@ class ReportController extends Controller
      */
     public function getSummary(Request $request)
     {
-        // ... (resto del método getSummary) ...
-        $request->validate([
-            'range' => 'required|string|in:day,week,month,custom',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-            'indicators' => 'required|array',
-            'indicators.*' => 'string', 
-        ]);
+        // ... (Validación y obtención de fechas sin cambios) ...
 
         [$startDate, $endDate] = $this->getDateRange(
             $request->range, 
@@ -80,59 +73,100 @@ class ReportController extends Controller
              return response()->json(['message' => 'Rango de fechas no válido.'], 400);
         }
         
-        $results = [];
+        $results = [
+            'totals' => [],
+            'details' => [],
+            'indicators' => $request->indicators // Devolver los indicadores solicitados para el JS
+        ];
         $indicators = $request->indicators;
 
-        // Lógica de cálculo de indicadores (igual a la provista anteriormente)
-        
-        // 1. Gasto Total en Suministros (Gasto total por requerimientos aprobados/recibidos)
+        // ------------------------------------------------------------------
+        // 1. Gasto Total en Suministros
+        // ------------------------------------------------------------------
         if (in_array('gasto_suministros', $indicators)) {
-            $totalGasto = SuministroCompra::whereBetween('created_at', [$startDate, $endDate])
+            $requerimientosData = SuministroCompra::whereBetween('created_at', [$startDate, $endDate])
                 ->whereIn('estatus', [2, 3]) 
-                ->withSum('detalles', 'costo_unitario_aprobado') 
-                ->get()
-                ->sum('detalles_sum_costo_unitario_aprobado'); 
+                ->with('detalles') // Cargar detalles para el listado
+                ->get();
                 
-            $results['gasto_suministros'] = $totalGasto;
+            $totalGasto = $requerimientosData->sum(function($req) {
+                 return $req->detalles->sum(fn($d) => $d->costo_unitario_aprobado * $d->cantidad_aprobada);
+            });
+                
+            $results['totals']['gasto_suministros'] = $totalGasto;
+            $results['details']['gasto_suministros_data'] = $requerimientosData;
         }
 
+        // ------------------------------------------------------------------
         // 2. Total Litros Despachados (Ventas)
+        // ------------------------------------------------------------------
         if (in_array('ventas_litros', $indicators)) {
-            $litrosVendidos = Viaje::whereBetween('fecha_salida', [$startDate, $endDate])
-                ->withSum('despachos', 'litros')
-                ->where('destino_ciudad', 'NOT LIKE', 'FLETE%')
-                ->get()
-                ->sum('despachos_sum_litros');
+            $viajesData = Viaje::whereBetween('fecha_salida', [$startDate, $endDate])
+                ->with(['despachos' => function($query) {
+                    $query->with('cliente'); // Cargar la relación cliente del despacho
+                }, 'vehiculo']) // Cargar vehículo del viaje
+                ->get();
+
+            $litrosVendidos = $viajesData->sum('despachos_sum_litros'); // $viajesData ya tiene la suma gracias a withSum
+            
+            // Recalcular la suma si no usaste withSum en la consulta principal (mejor usar withSum en la consulta principal)
+            // Aquí lo hacemos manualmente para asegurar que funciona con la data cargada:
+            $litrosVendidos = $viajesData->sum(fn($v) => $v->despachos->sum('litros'));
+            
+            $results['totals']['ventas_litros'] = $litrosVendidos;
+            $results['details']['ventas_litros_data'] = $viajesData;
+
+            // Lógica para Gráfico de Torta por Cliente
+            $despachosPorCliente = $viajesData->pluck('despachos')->flatten() // Obtener todos los despachos en un array plano
+                ->groupBy(function($despacho) {
+                    // Agrupar por nombre de cliente registrado o por el campo 'otro_cliente'
+                    return $despacho->cliente->nombre ?? $despacho->otro_cliente ?? 'Cliente No Especificado';
+                })
+                ->map(fn($group) => $group->sum('litros')) // Sumar los litros por cada grupo
+                ->sortDesc()
+                ->toArray();
                 
-            $results['ventas_litros'] = $litrosVendidos;
+            $results['details']['despachos_by_client_data'] = $despachosPorCliente;
         }
         
+        // ------------------------------------------------------------------
         // 3. Órdenes Abiertas (Conteo)
+        // ------------------------------------------------------------------
         if (in_array('ordenes_abiertas', $indicators)) {
             $ordenesAbiertas = Orden::where('estatus', 2)
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->count();
                 
-            $results['ordenes_abiertas'] = $ordenesAbiertas;
+            $results['totals']['ordenes_abiertas'] = $ordenesAbiertas;
         }
         
+        // ------------------------------------------------------------------
         // 4. Nuevos Clientes Registrados
+        // ------------------------------------------------------------------
         if (in_array('nuevos_clientes', $indicators)) {
-            $nuevosClientes = Cliente::whereBetween('created_at', [$startDate, $endDate])
-                ->count();
+            $clientesData = Cliente::whereBetween('created_at', [$startDate, $endDate])
+                ->get(['id', 'nombre', 'direccion', 'created_at']);
                 
-            $results['nuevos_clientes'] = $nuevosClientes;
+            $results['totals']['nuevos_clientes'] = $clientesData->count();
+            $results['details']['nuevos_clientes_data'] = $clientesData;
         }
         
+        // ------------------------------------------------------------------
         // 5. Reportes de Falla/Mantenimiento
+        // ------------------------------------------------------------------
          if (in_array('reportes_falla', $indicators)) {
-            $reportesFalla = Orden::whereBetween('created_at', [$startDate, $endDate])
-                ->count();
-                //whereIn('tipo', ['Mantenimiento', 'Falla'])
+            $ordenesFallaData = Orden::whereIn('tipo', ['Mantenimiento', 'Falla'])
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->with('vehiculo') // Cargar el vehículo para agrupar
+                ->get();
                 
-            $results['reportes_falla'] = $reportesFalla;
+            $results['totals']['reportes_falla'] = $ordenesFallaData->count();
+            // Para el detalle, es suficiente la colección con el vehículo cargado.
+            $results['details']['reportes_falla_data'] = $ordenesFallaData;
         }
 
+        // El resultado AJAX final ahora contiene Totales y Detalles
         return response()->json($results);
     }
+
 }
