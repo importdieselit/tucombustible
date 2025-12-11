@@ -158,4 +158,9 @@ class Orden extends Model
                     ->where('created_at', '<', $fecha_limite);            
     }
 
+    public function scopeByVehiculo(Builder $query, int $vehiculoId): void
+    {
+        $query->where('id_vehiculo', $vehiculoId);
+    }
+
 }

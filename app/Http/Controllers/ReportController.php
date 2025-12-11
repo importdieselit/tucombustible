@@ -81,6 +81,10 @@ class ReportController extends Controller
         ];
         $indicators = $request->indicators;
 
+        $results['report_dates'] = [ // <-- NUEVO: Exponemos las fechas
+            'start_date' => $startDate->toDateString(), 
+            'end_date' => $endDate->toDateString(),
+        ];
         // ------------------------------------------------------------------
         // 1. Gasto Total en Suministros
         // ------------------------------------------------------------------
@@ -211,8 +215,10 @@ class ReportController extends Controller
                 return 'N/A (Sin Unidad)';
             })
             ->map(function($group) {
+                $vehiculoId = $group->first()->vehiculoBelong->id ?? 0; // 0 si no tiene unidad
                 return [
                     'count' => $group->count(),
+                    'vehiculo_id' => $vehiculoId,
                     'ordenes' => $group->pluck('nro_orden', 'id')->toArray() // Devolvemos IDs y Nro. de Orden
                 ];
             })

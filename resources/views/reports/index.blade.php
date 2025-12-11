@@ -215,7 +215,8 @@
         function renderReport(data) {
             const reportContent = document.getElementById('report-content');
             let cardsHtml = '<div class="row">';
-            
+            const reportStartDate = data.report_dates.start_date;
+            const reportEndDate = data.report_dates.end_date;
             const totals = data.totals || {}; // Aseguramos que data.totals existe
             const indicators = data.indicators || []; // Aseguramos que data.indicators existe
 
@@ -593,11 +594,19 @@
                 // Iterar sobre los grupos (Unidad/N/A)
                 for (const unidad in ordenesAgrupadas) {
                     const data = ordenesAgrupadas[unidad];
+                    const isVehicle = data.vehiculo_id > 0;
+    
+                    const link = isVehicle 
+                        ? `{{ route('ordenes.list') }}?vehiculo_id=${data.vehiculo_id}&start_date=${reportStartDate}&end_date=${reportEndDate}` 
+                        : '#';
+                    let textoOrden = data.count === 1 ? 'Orden' : 'Órdenes';
                     groupedHtml += `
                         <div class="col-lg-4 col-md-6 mb-3">
                             <div class="p-3 border rounded h-100">
+                                <a href="${link}" target="_blank" class="text-decoration-none">
                                 <h6 class="text-truncate" title="${unidad}">${unidad}</h6>
-                                <h4 class="fw-bold text-danger">${data.count} <small>Ordenes</small></h4>
+                                <h4 class="fw-bold text-danger">${data.count} <small>${textoOrden}</small></h4>
+                                </a>
                                 <small class="text-muted">Órdenes: 
                                     ${Object.keys(data.ordenes).map(id => 
                                         `<a href="/ordenes/show/${id}" target="_blank" class="badge bg-light text-dark text-decoration-none me-1">${data.ordenes[id]}</a>`

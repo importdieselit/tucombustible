@@ -226,6 +226,27 @@ class OrdenController extends BaseController
      protected function applyBusinessFilters(Builder $query): Builder
     {
         $filterKey = request()->get('filter'); // Usamos el helper global 'request()'
+        $vehiculoId = request()->get('vehiculo_id'); 
+        $startDate = request()->get('start_date'); // <-- Capturamos la fecha de inicio
+        $endDate = request()->get('end_date');  
+
+        if ($vehiculoId && is_numeric($vehiculoId)) {
+            
+            $query->ByVehiculo((int)$vehiculoId);
+            
+            // APLICAMOS EL FILTRO DE FECHA RECIBIDO DEL REPORTE
+            if ($startDate && $endDate) {
+                // Se asume que la columna de fecha de creación es 'created_at'
+                // y que las fechas vienen en formato YYYY-MM-DD
+                $query->whereBetween('created_at', [
+                    Carbon::parse($startDate)->startOfDay(), 
+                    Carbon::parse($endDate)->endOfDay()
+                ]);
+            }
+
+            // Salimos para no aplicar otros filtros concurrentemente
+            return $query; 
+        }
         
         if ($filterKey) {
             switch ($filterKey) {
