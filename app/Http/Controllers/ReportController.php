@@ -155,8 +155,7 @@ class ReportController extends Controller
         // 5. Reportes de Falla/Mantenimiento
         // ------------------------------------------------------------------
          if (in_array('reportes_falla', $indicators)) {
-            $ordenesFallaData = Orden::whereIn('tipo', ['Mantenimiento', 'Falla'])
-                ->whereBetween('created_at', [$startDate, $endDate])
+            $ordenesFallaData = Orden::whereBetween('created_at', [$startDate, $endDate])
                 ->with('vehiculo') // La relación es opcional, Laravel maneja el LEFT JOIN automáticamente
                 ->get();
                 
