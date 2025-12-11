@@ -459,7 +459,7 @@
 
     // --- NUEVA FUNCIÓN ESPECÍFICA DE RENDERIZADO DE COMPRAS ---
         function renderComprasLitros(viajes) {
-            console.log('Datos de viajes para compras:', viajes); // Depuración
+            //console.log('Datos de viajes para compras:', viajes); // Depuración
             let html = `
                 <div class="card shadow-sm">
                     <div class="card-header bg-success text-white">
@@ -581,7 +581,7 @@
             let groupedHtml = `
                 <div class="card shadow-sm mb-4">
                     <div class="card-header bg-secondary text-white">
-                        <h5 class="m-0">Resumen de Fallas Agrupadas por Unidad</h5>
+                        <h5 class="m-0">Resumen de Ordenes Agrupadas por Unidad</h5>
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -597,7 +597,7 @@
                         <div class="col-lg-4 col-md-6 mb-3">
                             <div class="p-3 border rounded h-100">
                                 <h6 class="text-truncate" title="${unidad}">${unidad}</h6>
-                                <h4 class="fw-bold text-danger">${data.count} <small>Fallas</small></h4>
+                                <h4 class="fw-bold text-danger">${data.count} <small>Ordenes</small></h4>
                                 <small class="text-muted">Órdenes: 
                                     ${Object.keys(data.ordenes).map(id => 
                                         `<a href="/ordenes/show/${id}" target="_blank" class="badge bg-light text-dark text-decoration-none me-1">${data.ordenes[id]}</a>`
@@ -645,6 +645,7 @@
             if (ordenes.length === 0) {
                 listHtml += `<tr><td colspan="6" class="text-center text-muted">No hay órdenes de falla/mantenimiento en este período.</td></tr>`;
             } else {
+                console.log('Datos de órdenes de falla:', ordenes); // Depuración
                 ordenes.forEach(orden => {
                     const estatusText = orden.estatus === 2 ? 'Abierta' : (orden.estatus === 1 ? 'Pendiente' : 'Cerrada');
                     const estatusClass = orden.estatus === 2 ? 'warning' : (orden.estatus === 1 ? 'primary' : 'success');
@@ -660,7 +661,7 @@
                             <td>${orden.tipo}</td>
                             <td>${new Date(orden.created_at).toLocaleDateString()}</td>
                             <td>${unidadNombre}</td>
-                            <td>${orden.descripcion ? orden.descripcion_1.substring(0, 50) + '...' : 'N/A'}</td>
+                            <td>${orden.descripcion_1 ? orden.descripcion_1.substring(0, 50) + '...' : 'N/A'}</td>
                             <td>${orden.observacion ? orden.observacion.substring(0, 50) + '...' : 'N/A'}</td>
                             <td><span class="badge bg-${estatusClass}">${estatusText}</span></td>
                         </tr>
