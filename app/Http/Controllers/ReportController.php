@@ -167,8 +167,8 @@ class ReportController extends Controller
                 // PHP 8: return $orden->vehiculo?->placa ?? 'N/A (Sin Unidad)';
                 
                 // PHP 7.4 y anteriores (más seguro en entornos variados):
-                if ($orden->vehiculo) {
-                    return "{$orden->vehiculo->flota} ({$orden->vehiculo->placa})";
+                if ($orden->vehiculoBelong) {
+                    return "{$orden->vehiculoBelong->flota} ({$orden->vehiculoBelong->placa})";
                 }
                 return 'N/A (Sin Unidad)';
             })
