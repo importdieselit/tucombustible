@@ -217,7 +217,7 @@
             console.log('Indicadores seleccionados:', data.indicators); // Depuración
             console.log('Totales recibidos:', data.totals); // Depuración
             console.log('Fechas del reporte:', data.report_dates); // Depuración
-            
+
             const reportContent = document.getElementById('report-content');
             let cardsHtml = '<div class="row">';
             const reportStartDate = data.report_dates.start_date;
@@ -331,7 +331,7 @@
             
             if (data.details && indicators.includes('reportes_falla')) {
                 // Notar que la función necesita la lista y la data agrupada
-                renderReportesFalla(data.details.reportes_falla_data, data.details.reportes_falla_grouped);
+                renderReportesFalla(data.details.reportes_falla_data, data.details.reportes_falla_grouped,reportStartDate,reportEndDate);
             } else {
                  document.getElementById('reportes_falla_details').innerHTML = '';
             }
@@ -577,7 +577,7 @@
     }
     
    // Función 4: Reportes de Falla (Actualizada)
-        function renderReportesFalla(ordenes, ordenesAgrupadas) {
+        function renderReportesFalla(ordenes, ordenesAgrupadas,reportStartDate,reportEndDate) {
             const container = document.getElementById('reportes_falla_details');
             let html = '';
 
