@@ -35,7 +35,7 @@ use App\Http\Controllers\ViajesController;
 use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\PlanificacionMantenimientoController;
 use App\Http\Controllers\CaptacionController;
-
+use App\Http\Controllers\ReportController;
 
 // Agrega otros controladores según los modelos y tablas
 
@@ -323,7 +323,9 @@ Route::put('/viajes/{id}', [ViajesController::class, 'update'])->name('viaje.upd
     Route::get('captacion/thanks', [CaptacionController::class,'thanks'])->name('captacion.thanks');
 
     // Admin (proteger con middleware 'auth' y permisos necesarios)
-    
+
+    Route::get('/reportes', [ReportController::class, 'index'])->name('reports.index');
+    Route::post('/api/reports/summary', [ReportController::class, 'getSummary'])->name('reports.summary');    
 
     Route::prefix('captacion')->middleware(['auth'])->group(function () {
         Route::get('/', [CaptacionController::class, 'index'])->name('captacion.index');
