@@ -485,7 +485,6 @@
                 viajes.forEach(viaje => {
                     // Asumimos que compraCombustible es la relación cargada (Laravel usa snake_case)
                     const compra = viaje.compra_combustible; 
-                    const vehiculoInfo = viaje.vehiculo ? viaje.vehiculo.flota + ' (' + viaje.vehiculo.placa + ')' : viaje.otro_vehiculo+' (flete)';
                     if (compra) {
                         // Aquí asumimos que CompraCombustible tiene campos como 'proveedor_nombre' y 'monto'
                         const proveedor = compra.proveedor_nombre || 'N/A'; 
@@ -496,7 +495,7 @@
                             <tr>
                                 <td>${viaje.id}</td>
                                 <td>${new Date(viaje.fecha_salida).toLocaleDateString()}</td>
-                                <td>${viaje.vehiculo ? viaje.vehiculo.flota + ' (' + viaje.vehiculo.placa + ')' : 'N/A'}</td>
+                                <td>${viaje.vehiculo ? viaje.vehiculo.flota + ' (' + viaje.vehiculo.placa + ')' :  viaje.otro_vehiculo+' (flete)'}</td>
                                 <td>${litros} Lts</td>
 
                             </tr>
