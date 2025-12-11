@@ -645,10 +645,10 @@
             if (ordenes.length === 0) {
                 listHtml += `<tr><td colspan="6" class="text-center text-muted">No hay órdenes de falla/mantenimiento en este período.</td></tr>`;
             } else {
-                console.log('Datos de órdenes de falla:', ordenes); // Depuración
                 ordenes.forEach(orden => {
                     const estatusText = orden.estatus === 2 ? 'Abierta' : (orden.estatus === 1 ? 'Pendiente' : 'Cerrada');
                     const estatusClass = orden.estatus === 2 ? 'warning' : (orden.estatus === 1 ? 'primary' : 'success');
+                    console.log('Datos de órden de falla:', orden); // Depuración
                     
                     // Determinar nombre de la unidad o N/A
                     const unidadNombre = orden.vehiculoBelong 
