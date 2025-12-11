@@ -150,7 +150,7 @@ class ReportController extends Controller
         // ------------------------------------------------------------------
         if (in_array('nuevos_clientes', $indicators)) {
             $clientesData = CaptacionCliente::whereBetween('created_at', [$startDate, $endDate])
-                ->get(['id', 'nombre', 'direccion', 'created_at']);
+                ->get(['id', 'razon_social as nombre', 'direccion', 'created_at']);
                 
             $results['totals']['nuevos_clientes'] = $clientesData->count();
             $results['details']['nuevos_clientes_data'] = $clientesData;
