@@ -10,6 +10,7 @@ use App\Models\Inspeccion;
 use Google\Service\ApigeeRegistry\Build;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -91,6 +92,12 @@ class Orden extends Model
     {
         return $this->belongsTo(Vehiculo::class, 'id_vehiculo', 'id')->first();
     }
+
+    public function vehiculoBelong(): BelongsTo
+{
+    // Asegúrate de que el método devuelva la relación BelongsTo
+    return $this->belongsTo(Vehiculo::class, 'vehiculo_id');
+}
 
     public function tipo()
     {

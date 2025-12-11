@@ -156,7 +156,7 @@ class ReportController extends Controller
         // ------------------------------------------------------------------
          if (in_array('reportes_falla', $indicators)) {
             $ordenesFallaData = Orden::whereBetween('created_at', [$startDate, $endDate])
-                ->with('vehiculo') // La relación es opcional, Laravel maneja el LEFT JOIN automáticamente
+                ->with('vehiculoBelong') // La relación es opcional, Laravel maneja el LEFT JOIN automáticamente
                 ->get();
                 
             $results['totals']['reportes_falla'] = $ordenesFallaData->count();
