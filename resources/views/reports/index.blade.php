@@ -213,6 +213,11 @@
 
         // Función para dibujar el reporte (Ejemplo: Usando tarjetas)
         function renderReport(data) {
+            console.log('Datos recibidos para el reporte:', data); // Depuración
+            console.log('Indicadores seleccionados:', data.indicators); // Depuración
+            console.log('Totales recibidos:', data.totals); // Depuración
+            console.log('Fechas del reporte:', data.report_dates); // Depuración
+            
             const reportContent = document.getElementById('report-content');
             let cardsHtml = '<div class="row">';
             const reportStartDate = data.report_dates.start_date;
