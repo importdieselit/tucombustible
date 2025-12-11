@@ -58,6 +58,10 @@
                         <label class="form-check-label" for="ventas_litros">Ventas (Litros Despachados)</label>
                     </div>
                     <div class="form-check">
+                        <input class="form-check-input report-item" type="checkbox" value="compras_litros" id="compras_litros" checked> 
+                        <label class="form-check-label" for="compras_litros">Compras (Litros Cargados)</label> 
+                    </div>
+                    <div class="form-check">
                         <input class="form-check-input report-item" type="checkbox" value="ordenes_abiertas" id="ordenes_abiertas" checked>
                         <label class="form-check-label" for="ordenes_abiertas">Órdenes Abiertas (Conteo)</label>
                     </div>
@@ -102,6 +106,12 @@
     <div class="col-12 mb-4" id="ventas_litros_details"></div>
     
     {{-- Contenedor Gráfico (Torta Clientes) --}}
+    <div class="col-lg-6 mb-4" id="despachos_chart_container"></div>
+    
+    {{-- Contenedor Compras/Cargas (Compras) --}}
+    <div class="col-12 mb-4" id="compras_litros_details"></div> 
+    
+    {{-- Contenedor Gráfico (Torta Clientes - VENTAS) --}}
     <div class="col-lg-6 mb-4" id="despachos_chart_container"></div>
     
     {{-- Contenedor Gasto Suministros --}}
@@ -223,6 +233,12 @@
                         icon = 'bi-fuel-pump';
                         color = 'bg-primary';
                         break;
+                    case 'compras_litros': // NUEVO INDICADOR
+                        title = 'Total Litros Comprados';
+                        value = parseFloat(value).toLocaleString('es-VE', { minimumFractionDigits: 2 }) + ' Lts';
+                        icon = 'bi-truck';
+                        color = 'bg-success';
+                        break;
                     case 'ordenes_abiertas':
                         title = 'Órdenes Abiertas';
                         value = parseInt(value).toLocaleString('es-VE');
@@ -293,6 +309,12 @@
             } else {
                  document.getElementById('ventas_litros_details').innerHTML = '';
                  document.getElementById('despachos_chart_container').innerHTML = '';
+            }
+
+            if (data.details && indicators.includes('compras_litros')) {
+                renderComprasLitros(data.details.compras_litros_data); 
+            } else {
+                 document.getElementById('compras_litros_details').innerHTML = '';
             }
 
             if (data.details && indicators.includes('gasto_suministros')) {
@@ -436,6 +458,65 @@
             }
         });
     }
+
+    // --- NUEVA FUNCIÓN ESPECÍFICA DE RENDERIZADO DE COMPRAS ---
+        function renderComprasLitros(viajes) {
+            let html = `
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="m-0">Listado de Viajes y Cargas (Compras) (${viajes.length} Registros)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                            <table class="table table-sm table-striped table-hover align-middle">
+                                <thead class="sticky-top bg-white">
+                                    <tr>
+                                        <th># Viaje</th>
+                                        <th>Fecha Salida</th>
+                                        <th>Vehículo</th>
+                                        <th>Litros Cargados</th>
+                                        <th>Proveedor</th>
+                                        <th>Monto Compra</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            `;
+            
+            if (viajes.length === 0) {
+                html += `<tr><td colspan="6" class="text-center text-muted">No hay compras/cargas en este período.</td></tr>`;
+            } else {
+                viajes.forEach(viaje => {
+                    // Asumimos que compraCombustible es la relación cargada (Laravel usa snake_case)
+                    const compra = viaje.compra_combustible; 
+                    if (compra) {
+                        // Aquí asumimos que CompraCombustible tiene campos como 'proveedor_nombre' y 'monto'
+                        const proveedor = compra.proveedor_nombre || 'N/A'; 
+                        const litros = parseFloat(compra.litros).toFixed(2);
+                        const monto = parseFloat(compra.monto).toFixed(2);
+                        
+                        html += `
+                            <tr>
+                                <td>${viaje.id}</td>
+                                <td>${new Date(viaje.fecha_salida).toLocaleDateString()}</td>
+                                <td>${viaje.vehiculo ? viaje.vehiculo.flota + ' (' + viaje.vehiculo.placa + ')' : 'N/A'}</td>
+                                <td>${litros} Lts</td>
+                                <td>${proveedor}</td>
+                                <td>$ ${monto}</td>
+                            </tr>
+                        `;
+                    }
+                });
+            }
+            
+            html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('compras_litros_details').innerHTML = html;
+        }
     
     // Función 3: Gasto en Suministros
     function renderGastoSuministros(requerimientos) {

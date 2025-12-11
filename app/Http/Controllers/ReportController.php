@@ -101,38 +101,71 @@ class ReportController extends Controller
         // ------------------------------------------------------------------
         // 2. Total Litros Despachados (Ventas)
         // ------------------------------------------------------------------
-        if (in_array('ventas_litros', $indicators)) {
-            // 1. CÁLCULO DEL TOTAL (OPTIMIZADO a nivel de DB)
-            $litrosVendidos = Viaje::whereBetween('fecha_salida', [$startDate, $endDate])
-                ->where('destino_ciudad', 'NOT LIKE', 'FLETE%')
-                ->withSum('despachos', 'litros')
-                ->get()
-                ->sum('despachos_sum_litros');
-                
-            $results['totals']['ventas_litros'] = $litrosVendidos;
+       // ------------------------------------------------------------------
+    // Base Query para Combustible (Excluye Fletes de Compra y Venta)
+    // ------------------------------------------------------------------
+    $baseQuery = Viaje::whereBetween('fecha_salida', [$startDate, $endDate])
+        // Excluir Fletes de la ciudad destino
+        ->where('destino_ciudad', 'NOT LIKE', 'FLETE%'); 
 
-            // 2. CARGA DE DETALLES PARA LA TABLA Y EL GRÁFICO (Eager Loading)
-            $viajesData = Viaje::whereBetween('fecha_salida', [$startDate, $endDate])
-            ->where('destino_ciudad', 'NOT LIKE', 'FLETE%')
-                ->with(['despachos' => function($query) {
-                    $query->with('cliente'); // Cargar la relación cliente del despacho
-                }, 'vehiculo']) // Cargar vehículo del viaje
-                ->get();
+
+    // ------------------------------------------------------------------
+    // 2A. Total Litros Comprados (Purchases)
+    // ------------------------------------------------------------------
+    if (in_array('compras_litros', $indicators)) {
+        // Viajes que SÍ tienen un registro en CompraCombustible
+        $comprasLitrosQuery = (clone $baseQuery)->has('compraCombustible');
+        
+        // 1. CÁLCULO DEL TOTAL (Sumamos directamente los litros de la tabla de compras)
+        $viajeIdsCompra = (clone $comprasLitrosQuery)->pluck('id');
+        $litrosComprados = CompraCombustible::whereIn('viaje_id', $viajeIdsCompra)->sum('litros');
             
-            $results['details']['ventas_litros_data'] = $viajesData;
+        $results['totals']['compras_litros'] = $litrosComprados;
 
-            // Lógica para Gráfico de Torta por Cliente
-            $despachosPorCliente = $viajesData->pluck('despachos')->flatten() // Obtener todos los despachos
-                ->groupBy(function($despacho) {
-                    // Agrupar por nombre de cliente registrado o por el campo 'otro_cliente'
-                    return $despacho->cliente->nombre ?? $despacho->otro_cliente ?? 'Cliente No Especificado';
-                })
-                ->map(fn($group) => $group->sum('litros')) // Sumar los litros por cada grupo
-                ->sortDesc()
-                ->toArray();
-                
-            $results['details']['despachos_by_client_data'] = $despachosPorCliente;
-        }
+        // 2. CARGA DE DETALLES
+        $comprasData = (clone $comprasLitrosQuery)
+            ->with(['compraCombustible', 'vehiculo'])
+            ->get();
+        
+        $results['details']['compras_litros_data'] = $comprasData;
+    }
+
+
+    // ------------------------------------------------------------------
+    // 2B. Total Litros Vendidos (Sales)
+    // ------------------------------------------------------------------
+    if (in_array('ventas_litros', $indicators)) {
+        // Viajes que NO tienen un registro en CompraCombustible
+        $ventasLitrosQuery = (clone $baseQuery)->doesntHave('compraCombustible');
+        
+        // 1. CÁLCULO DEL TOTAL (OPTIMIZADO a nivel de DB: Suma los despachos de viajes de Venta)
+        $litrosVendidos = (clone $ventasLitrosQuery)
+            ->withSum('despachos', 'litros')
+            ->get()
+            ->sum('despachos_sum_litros');
+            
+        $results['totals']['ventas_litros'] = $litrosVendidos;
+
+        // 2. CARGA DE DETALLES PARA LA TABLA Y EL GRÁFICO
+        $ventasData = (clone $ventasLitrosQuery)
+            ->with(['despachos' => function($query) {
+                $query->with('cliente'); // Cargar la relación cliente del despacho
+            }, 'vehiculo'])
+            ->get();
+        
+        $results['details']['ventas_litros_data'] = $ventasData;
+
+        // Lógica para Gráfico de Torta por Cliente (SOLO VENTAS)
+        $despachosPorCliente = $ventasData->pluck('despachos')->flatten() 
+            ->groupBy(function($despacho) {
+                return $despacho->cliente->nombre ?? $despacho->otro_cliente ?? 'Cliente No Especificado';
+            })
+            ->map(fn($group) => $group->sum('litros'))
+            ->sortDesc()
+            ->toArray();
+            
+        $results['details']['despachos_by_client_data'] = $despachosPorCliente;
+    }
         
         // ------------------------------------------------------------------
         // 3. Órdenes Abiertas (Conteo)
