@@ -91,7 +91,7 @@
         </form>
     </div>
 </div>
-
+<div id="report-printable-area">
 {{-- Contenedor para el Contenido Dinámico del Reporte --}}
 <div id="report-content" class="mb-5">
     <div class="text-center p-5">
@@ -125,12 +125,14 @@
     {{-- Contenedor Nuevos Clientes --}}
     <div class="col-12 mb-4" id="nuevos_clientes_details"></div>
 </div>
-
+</div>
 @endsection
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
+<script src="{{ asset('js/jquery.PrintArea.js') }}" defer></script>
 <script>
     const API_URL = '{{ route("reports.summary") }}'; // Se define la ruta de la API
 
@@ -770,20 +772,19 @@
         }
 
     exportPdfBtn.addEventListener('click', function() {
-            const filters = getCurrentFilters();
-            const params = new URLSearchParams();
             
-            params.append('range', filters.range); // <-- Asegurar que el rango se envía
-            params.append('start_date', filters.start_date);
-            params.append('end_date', filters.end_date);
+            const printArea = $('#report-printable-area').html(); 
             
-            filters.indicators.forEach(ind => {
-                params.append('indicators[]', ind); 
-            });
-            const exportUrl = '{{ route('reports.export_pdf') }}?' + params.toString();
-            window.open(exportUrl, '_blank');
+            const options = {
+                mode: 'iframe', // Utiliza un iframe para simular la página
+                popTitle: 'Reporte Gerencial',
+                extraCss: '{{ asset('css/app.css') }}', // Asumiendo que tienes un archivo CSS principal
+            };
+            
+            $('#report-printable-area').printArea(options);
+            
+            
         });
-
     });
 </script>
 @endpush
