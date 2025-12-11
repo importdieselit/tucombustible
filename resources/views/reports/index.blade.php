@@ -648,11 +648,11 @@
                 ordenes.forEach(orden => {
                     const estatusText = orden.estatus === 2 ? 'Abierta' : (orden.estatus === 1 ? 'Pendiente' : 'Cerrada');
                     const estatusClass = orden.estatus === 2 ? 'warning' : (orden.estatus === 1 ? 'primary' : 'success');
-                    console.log('Datos de órden de falla:', orden); // Depuración
+                   // console.log('Datos de órden de falla:', orden); // Depuración
                     
                     // Determinar nombre de la unidad o N/A
-                    const unidadNombre = orden.vehiculoBelong 
-                        ? `${orden.vehiculoBelong.flota} (${orden.vehiculoBelong.placa})` 
+                    const unidadNombre = orden.vehiculo_belong 
+                        ? `${orden.vehiculo_belong.flota} (${orden.vehiculo_belong.placa})` 
                         : 'N/A (Sin Unidad)';
 
                     listHtml += `
