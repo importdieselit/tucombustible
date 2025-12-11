@@ -102,17 +102,14 @@
 </div>
 
 <div class="row" id="details-tables-container">
-    {{-- Contenedor Ventas/Despachos --}}
-    <div class="col-12 mb-4" id="ventas_litros_details"></div>
-    
     {{-- Contenedor Gráfico (Torta Clientes) --}}
     <div class="col-lg-6 mb-4" id="despachos_chart_container"></div>
     
+    {{-- Contenedor Ventas/Despachos --}}
+    <div class="col-12 mb-4" id="ventas_litros_details"></div>
+    
     {{-- Contenedor Compras/Cargas (Compras) --}}
     <div class="col-12 mb-4" id="compras_litros_details"></div> 
-    
-    {{-- Contenedor Gráfico (Torta Clientes - VENTAS) --}}
-    <div class="col-lg-6 mb-4" id="despachos_chart_container"></div>
     
     {{-- Contenedor Gasto Suministros --}}
     <div class="col-12 mb-4" id="gasto_suministros_details"></div>
