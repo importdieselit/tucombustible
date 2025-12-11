@@ -11,7 +11,7 @@ use App\Models\SuministroCompra; // Para gasto de suministros
 use App\Models\SuministroCompraDetalle; // Para detalles de suministros
 use App\Models\CompraCombustible; // Para gasto de combustible
 use App\Models\CaptacionCliente; // Para nuevos clientes
-
+use PDF; // Para generación de PDF
 use Illuminate\View\View; // Para tipado de retorno
 
 class ReportController extends Controller
@@ -232,5 +232,52 @@ class ReportController extends Controller
         // El resultado AJAX final ahora contiene Totales y Detalles
         return response()->json($results);
     }
+
+    
+public function exportPdf(Request $request)
+{
+    // Reutilizar la validación
+    $request->validate([
+        'range' => 'required|string|in:day,week,month,custom',
+        'start_date' => 'nullable|date',
+        'end_date' => 'nullable|date|after_or_equal:start_date',
+        // Aquí NO validamos indicators, solo necesitamos la data que venga
+        'indicators' => 'nullable|array', 
+        'indicators.*' => 'string',
+    ]);
+
+    // Reutilizar el método getSummary, pero necesitamos la lógica que genera $results.
+    // Lo más eficiente es llamar a la lógica de getSummary aquí para generar $results.
+    // Si la lógica de getSummary está en un método privado auxiliar, la reutilizas directamente.
+    
+    // --- Lógica de getSummary replicada/llamada ---
+    [$startDate, $endDate] = $this->getDateRange(
+        $request->range, 
+        $request->start_date, 
+        $request->end_date
+    );
+
+    // *Aquí llamas o replicamos la lógica completa de tu getSummary()*
+    // Por ejemplo:
+    $results = $this->generateReportData($request, $startDate, $endDate); // Asumiendo que moves la lógica a este helper
+
+    // Si no puedes mover la lógica a un helper, pon toda la lógica de getSummary (sin el return json) aquí.
+
+    // Añadir fechas para el título y metadatos
+    $results['report_dates'] = [
+        'start_date' => $startDate->toDateString(), 
+        'end_date' => $endDate->toDateString(),
+    ];
+    
+    // -----------------------------------------------------
+
+    $pdf = PDF::loadView('reports.pdf_template', $results);
+
+    $filename = 'Reporte_Gerencial_' . $startDate->format('Ymd') . '_' . $endDate->format('Ymd') . '.pdf';
+    
+    return $pdf->download($filename);
+}
+
+
 
 }

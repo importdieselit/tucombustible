@@ -325,6 +325,7 @@ Route::put('/viajes/{id}', [ViajesController::class, 'update'])->name('viaje.upd
     // Admin (proteger con middleware 'auth' y permisos necesarios)
 
     Route::get('/reportes', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/export-pdf', [ReportController::class, 'exportPdf'])->name('reports.export_pdf');
     Route::post('/api/reports/summary', [ReportController::class, 'getSummary'])->name('reports.summary');    
 
     Route::prefix('captacion')->middleware(['auth'])->group(function () {

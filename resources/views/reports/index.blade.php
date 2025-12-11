@@ -42,7 +42,12 @@
                 {{-- Botón de Aplicar --}}
                 <div class="col-md-3 mb-3">
                     <button type="button" id="apply-filters" class="btn btn-primary w-100">
-                        <i class="bi bi-search"></i> Aplicar Filtros
+                        <i class="bi bi-search"></i> Generar Reporte
+                    </button>
+                </div>
+                <div class="col-md-2 mb-3 d-flex align-items-end">
+                    <button type="button" class="btn btn-danger w-100" id="export-pdf-btn" style="display: none;">
+                        <i class="bi bi-file-earmark-pdf-fill me-2"></i> Exportar PDF
                     </button>
                 </div>
             </div>
@@ -134,6 +139,8 @@
         const customRangeFields = document.querySelectorAll('.custom-range-fields');
         const applyFiltersBtn = document.getElementById('apply-filters');
         const reportContent = document.getElementById('report-content');
+        const exportPdfBtn = document.getElementById('export-pdf-btn');
+        const form = document.getElementById('report-filter-form');
 
         // Función para mostrar/ocultar los campos de fecha personalizada
         dateRangeSelect.addEventListener('change', function() {
@@ -221,6 +228,12 @@
             const reportEndDate = data.report_dates.end_date;
             const totals = data.totals || {}; // Aseguramos que data.totals existe
             const indicators = data.indicators || []; // Aseguramos que data.indicators existe
+
+            if (Object.keys(data.totals).length > 0) {
+                exportPdfBtn.style.display = 'block';
+            } else {
+                exportPdfBtn.style.display = 'none';
+            }
 
             // 1. GENERAR CARDS DE TOTALES (Iteramos sobre data.totals)
             for (const indicator in totals) { 
@@ -737,6 +750,39 @@
         `;
         document.getElementById('nuevos_clientes_details').innerHTML = html;
     }
+
+    function getCurrentFilters() {
+            const formData = new FormData(form);
+            const filters = {};
+            // Recoger rango, start_date, end_date
+            filters.range = document.getElementById('date_range').value;
+            filters.start_date = document.getElementById('start_date').value;
+            filters.end_date = document.getElementById('end_date').value;
+
+            // Recoger los indicadores seleccionados
+            filters.indicators = [];
+            document.querySelectorAll('.report-item:checked').forEach(checkbox => {
+                filters.indicators.push(checkbox.value);
+            });
+            return filters;
+        }
+
+    exportPdfBtn.addEventListener('click', function() {
+            const filters = getCurrentFilters();
+            
+            // Construir la URL con los parámetros de filtro
+            const params = new URLSearchParams(filters);
+            filters.indicators.forEach(ind => {
+                // Hay que agregar los indicadores individualmente
+                params.append('indicators[]', ind); 
+            });
+
+            // Generar la URL de exportación
+            const exportUrl = '{{ route('reports.export_pdf') }}?' + params.toString();
+            
+            // Redirigir para iniciar la descarga del PDF
+            window.open(exportUrl, '_blank');
+        });
 
     });
 </script>
