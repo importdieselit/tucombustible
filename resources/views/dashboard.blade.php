@@ -321,7 +321,7 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
         @if(Auth::user()->canAccess('read', $MODULO_ORDENES))
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
             @include('partials.access_card', [
-                'route' => route('ordenes.index'),
+                'route' => route('ordenes.list'),
                 'icon' => 'fa-screwdriver-wrench',
                 'title' => 'Mantenimiento',
                 'color' => 'bg-warning',
