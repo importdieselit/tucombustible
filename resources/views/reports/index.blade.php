@@ -823,7 +823,7 @@
         }
 
     exportPdfBtn.addEventListener('click', function() {
-            
+            $('#despachos_chart_container').hide(); // Asegura que el gráfico esté visible antes de imprimir
             const printArea = $('#report-printable-area').html(); 
             
             const options = {
@@ -833,7 +833,7 @@
             };
             
             $('#report-printable-area').printArea(options);
-            
+            $('#despachos_chart_container').show();
             
         });
     });
