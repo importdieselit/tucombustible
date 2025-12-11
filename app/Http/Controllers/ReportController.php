@@ -100,6 +100,7 @@ class ReportController extends Controller
         if (in_array('ventas_litros', $indicators)) {
             $litrosVendidos = Viaje::whereBetween('fecha_salida', [$startDate, $endDate])
                 ->withSum('despachos', 'litros')
+                ->where('destino_ciudad', 'NOT LIKE', 'FLETE%')
                 ->get()
                 ->sum('despachos_sum_litros');
                 
