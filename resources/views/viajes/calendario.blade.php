@@ -188,7 +188,7 @@
                 const litros = parseFloat(despacho.litros) || 0; 
                 totalLitros += litros; 
                 despachosHtml += `
-                    <tr style="font-size: 15px; font-weight: 500;">
+                    <tr style="font-size: 157x; font-weight: 600;">
                         <td class="px-2" style="border-right: 1px solid #dee2e6; color:#495057;">${clienteNombre}</td>
                         <td class="px-2 fw-bold text-end">${new Intl.NumberFormat('es-ES').format(litros)} Lts</td>
                     </tr>
@@ -249,7 +249,7 @@
                     </tbody>
                     <tfoot style="border-top: 2px solid #01050a; background-color: #FFF; font-weight: 700; font-size:16px;">
                         <tr>
-                            <td class="py-1 px-2" style="border-right: 1px solid #01050a;">TOTAL LITROS</td>
+                            <td class="py-1 px-2" style="border-right: 1px solid #01050a;">Total Litros</td>
                             <td class="py-1 px-2 text-end">${new Intl.NumberFormat('es-ES').format(totalLitros)} Lts</td>
                             <td class="py-1 px-2"></td>
                         </tr>
