@@ -441,7 +441,7 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
         {{-- =============================================== --}}
         {{-- TARJETA DE ADMINISTRACIÓN DE USUARIOS (ID 51) --}}
         {{-- =============================================== --}}
-        @if(Auth::user()->canAccess('read', $MODULO_USUARIOS))
+        {{-- @if(Auth::user()->canAccess('read', $MODULO_USUARIOS))
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
             @include('partials.access_card', [
                 'route' => route('usuarios.index'),
@@ -452,7 +452,7 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
                 'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
             ])
         </div>
-        @endif
+        @endif --}}
 
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
             @include('partials.access_card', [
