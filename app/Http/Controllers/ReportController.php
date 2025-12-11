@@ -10,6 +10,7 @@ use App\Models\Cliente; // Para nuevos clientes
 use App\Models\SuministroCompra; // Para gasto de suministros
 use App\Models\SuministroCompraDetalle; // Para detalles de suministros
 use App\Models\CompraCombustible; // Para gasto de combustible
+use App\Models\CaptacionCliente; // Para nuevos clientes
 
 use Illuminate\View\View; // Para tipado de retorno
 
@@ -90,7 +91,7 @@ class ReportController extends Controller
                 ->get();
                 
             $totalGasto = $requerimientosData->sum(function($req) {
-                 return $req->detalles->sum(fn($d) => $d->costo_unitario_aprobado * $d->cantidad_aprobada);
+                 return $req->detalles->sum(fn($d) => $d->costo_unitario_aprobado * $d->cantidad_solicitada);
             });
                 
             $results['totals']['gasto_suministros'] = $totalGasto;
@@ -101,23 +102,27 @@ class ReportController extends Controller
         // 2. Total Litros Despachados (Ventas)
         // ------------------------------------------------------------------
         if (in_array('ventas_litros', $indicators)) {
+            // 1. CÁLCULO DEL TOTAL (OPTIMIZADO a nivel de DB)
+            $litrosVendidos = Viaje::whereBetween('fecha_salida', [$startDate, $endDate])
+                ->where('destino_ciudad', 'NOT LIKE', 'FLETE%')
+                ->withSum('despachos', 'litros')
+                ->get()
+                ->sum('despachos_sum_litros');
+                
+            $results['totals']['ventas_litros'] = $litrosVendidos;
+
+            // 2. CARGA DE DETALLES PARA LA TABLA Y EL GRÁFICO (Eager Loading)
             $viajesData = Viaje::whereBetween('fecha_salida', [$startDate, $endDate])
+            ->where('destino_ciudad', 'NOT LIKE', 'FLETE%')
                 ->with(['despachos' => function($query) {
                     $query->with('cliente'); // Cargar la relación cliente del despacho
                 }, 'vehiculo']) // Cargar vehículo del viaje
                 ->get();
-
-            $litrosVendidos = $viajesData->sum('despachos_sum_litros'); // $viajesData ya tiene la suma gracias a withSum
             
-            // Recalcular la suma si no usaste withSum en la consulta principal (mejor usar withSum en la consulta principal)
-            // Aquí lo hacemos manualmente para asegurar que funciona con la data cargada:
-            $litrosVendidos = $viajesData->sum(fn($v) => $v->despachos->sum('litros'));
-            
-            $results['totals']['ventas_litros'] = $litrosVendidos;
             $results['details']['ventas_litros_data'] = $viajesData;
 
             // Lógica para Gráfico de Torta por Cliente
-            $despachosPorCliente = $viajesData->pluck('despachos')->flatten() // Obtener todos los despachos en un array plano
+            $despachosPorCliente = $viajesData->pluck('despachos')->flatten() // Obtener todos los despachos
                 ->groupBy(function($despacho) {
                     // Agrupar por nombre de cliente registrado o por el campo 'otro_cliente'
                     return $despacho->cliente->nombre ?? $despacho->otro_cliente ?? 'Cliente No Especificado';
@@ -144,7 +149,7 @@ class ReportController extends Controller
         // 4. Nuevos Clientes Registrados
         // ------------------------------------------------------------------
         if (in_array('nuevos_clientes', $indicators)) {
-            $clientesData = Cliente::whereBetween('created_at', [$startDate, $endDate])
+            $clientesData = CaptacionCliente::whereBetween('created_at', [$startDate, $endDate])
                 ->get(['id', 'nombre', 'direccion', 'created_at']);
                 
             $results['totals']['nuevos_clientes'] = $clientesData->count();
