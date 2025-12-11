@@ -230,6 +230,8 @@
             const indicators = data.indicators || []; // Aseguramos que data.indicators existe
 
             if (Object.keys(data.totals).length > 0) {
+                exportPdfBtn.setAttribute('data-start-date', reportStartDate);
+                exportPdfBtn.setAttribute('data-end-date', reportEndDate);
                 exportPdfBtn.style.display = 'block';
             } else {
                 exportPdfBtn.style.display = 'none';
@@ -752,14 +754,14 @@
     }
 
     function getCurrentFilters() {
-            const formData = new FormData(form);
+            const exportPdfBtn = document.getElementById('export-pdf-btn');
             const filters = {};
-            // Recoger rango, start_date, end_date
-            filters.range = document.getElementById('date_range').value;
-            filters.start_date = document.getElementById('start_date').value;
-            filters.end_date = document.getElementById('end_date').value;
-
-            // Recoger los indicadores seleccionados
+            
+            filters.range = document.getElementById('date_range').value; 
+            
+            filters.start_date = exportPdfBtn.getAttribute('data-start-date');
+            filters.end_date = exportPdfBtn.getAttribute('data-end-date');
+            
             filters.indicators = [];
             document.querySelectorAll('.report-item:checked').forEach(checkbox => {
                 filters.indicators.push(checkbox.value);
@@ -769,18 +771,16 @@
 
     exportPdfBtn.addEventListener('click', function() {
             const filters = getCurrentFilters();
+            const params = new URLSearchParams();
             
-            // Construir la URL con los parámetros de filtro
-            const params = new URLSearchParams(filters);
+            params.append('range', filters.range); // <-- Asegurar que el rango se envía
+            params.append('start_date', filters.start_date);
+            params.append('end_date', filters.end_date);
+            
             filters.indicators.forEach(ind => {
-                // Hay que agregar los indicadores individualmente
                 params.append('indicators[]', ind); 
             });
-
-            // Generar la URL de exportación
             const exportUrl = '{{ route('reports.export_pdf') }}?' + params.toString();
-            
-            // Redirigir para iniciar la descarga del PDF
             window.open(exportUrl, '_blank');
         });
 
