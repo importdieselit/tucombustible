@@ -157,12 +157,33 @@ class ReportController extends Controller
          if (in_array('reportes_falla', $indicators)) {
             $ordenesFallaData = Orden::whereIn('tipo', ['Mantenimiento', 'Falla'])
                 ->whereBetween('created_at', [$startDate, $endDate])
-                ->with('vehiculo') // Cargar el vehículo para agrupar
+                ->with('vehiculo') // La relación es opcional, Laravel maneja el LEFT JOIN automáticamente
                 ->get();
                 
             $results['totals']['reportes_falla'] = $ordenesFallaData->count();
-            // Para el detalle, es suficiente la colección con el vehículo cargado.
-            $results['details']['reportes_falla_data'] = $ordenesFallaData;
+            
+            // Agrupar las órdenes por Placa/Flota o 'N/A' si no tienen vehículo
+            $reportesAgrupados = $ordenesFallaData->groupBy(function($orden) {
+                // Usamos null-safe operator (PHP 8) o chequeo manual (PHP 7.4)
+                // PHP 8: return $orden->vehiculo?->placa ?? 'N/A (Sin Unidad)';
+                
+                // PHP 7.4 y anteriores (más seguro en entornos variados):
+                if ($orden->vehiculo) {
+                    return "{$orden->vehiculo->flota} ({$orden->vehiculo->placa})";
+                }
+                return 'N/A (Sin Unidad)';
+            })
+            ->map(function($group) {
+                return [
+                    'count' => $group->count(),
+                    'ordenes' => $group->pluck('nro_orden', 'id')->toArray() // Devolvemos IDs y Nro. de Orden
+                ];
+            })
+            ->sortDesc()
+            ->toArray();
+            
+            $results['details']['reportes_falla_data'] = $ordenesFallaData; // Se usa para la tabla de listado
+            $results['details']['reportes_falla_grouped'] = $reportesAgrupados; // Se usa para el nuevo agrupamiento visual
         }
 
         // El resultado AJAX final ahora contiene Totales y Detalles
