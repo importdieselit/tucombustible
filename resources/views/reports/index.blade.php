@@ -561,8 +561,8 @@
                     const estatusClass = orden.estatus === 2 ? 'warning' : (orden.estatus === 1 ? 'primary' : 'success');
                     
                     // Determinar nombre de la unidad o N/A
-                    const unidadNombre = orden.vehiculo 
-                        ? `${orden.vehiculo.flota} (${orden.vehiculo.placa})` 
+                    const unidadNombre = orden.vehiculoBelong 
+                        ? `${orden.vehiculoBelong.flota} (${orden.vehiculoBelong.placa})` 
                         : 'N/A (Sin Unidad)';
 
                     listHtml += `
