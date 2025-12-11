@@ -487,7 +487,7 @@
                     if (compra) {
                         // Aquí asumimos que CompraCombustible tiene campos como 'proveedor_nombre' y 'monto'
                         const proveedor = compra.proveedor_nombre || 'N/A'; 
-                        const litros = parseFloat(compra.litros).toFixed(2);
+                        const litros = parseFloat(compra.cantidad_litros).toFixed(2);
                         //const monto = parseFloat(compra.monto).toFixed(2);
                         
                         html += `
