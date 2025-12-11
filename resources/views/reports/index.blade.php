@@ -153,6 +153,12 @@
             }
         });
 
+        const formatDate = (dateString) => {
+            if (!dateString) return 'N/A';
+            // Usar la zona horaria UTC para evitar problemas de desfase
+            return new Date(dateString + 'T00:00:00').toLocaleDateString('es-ES'); 
+        };
+
         // Evento principal para aplicar los filtros y obtener datos
         applyFiltersBtn.addEventListener('click', async function() {
             const range = dateRangeSelect.value;
