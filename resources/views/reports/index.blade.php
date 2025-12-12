@@ -479,7 +479,7 @@
                     <h5 class="m-0">Despachos Agrupados por Cliente (Litros)</h5>
                 </div>
                 <div class="card-body d-flex justify-content-center align-items-center">
-                    <div id="despachosChart" style="min-width: 310px; height: 500px; margin: 0 auto"></div>
+                    <div id="despachosChart" style="width: 100%; height: 500px; margin: 0 auto"></div>
                 </div>
             </div>
         `;
