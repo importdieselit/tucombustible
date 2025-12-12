@@ -131,6 +131,8 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> 
 <script src="{{ asset('js/jquery.PrintArea.js') }}" defer></script>
 <script>
@@ -278,7 +280,7 @@
             let headerHtml = `
                 <div class="row mb-4 border-bottom pb-3 print-header">
                     <div class="col-6">
-                        <img src="{{ asset('img/logo1.png') }}" alt="Logo de la Empresa" style="max-height: 50px;">
+                        <img src="{{ asset('img/logo1.png') }}" alt="Logo de la Empresa" style="max-height: 100px;">
                     </div>
                     <div class="col-6 text-end">
                         <h4 class="text-primary mb-1">REPORTE GERENCIAL</h4>
@@ -469,62 +471,78 @@
     let despachosChartInstance = null;
     function renderDespachosChart(data) {
         const container = document.getElementById('despachos_chart_container');
+        
+        // 1. Renderizar el contenedor (Usamos un DIV para Highcharts)
         container.innerHTML = `
             <div class="card shadow-sm h-100">
                 <div class="card-header bg-dark text-white">
                     <h5 class="m-0">Despachos Agrupados por Cliente (Litros)</h5>
                 </div>
                 <div class="card-body d-flex justify-content-center align-items-center">
-                    <canvas id="despachosChart"></canvas>
+                    <div id="despachosChart" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
                 </div>
             </div>
         `;
 
-        if (despachosChartInstance) {
-            despachosChartInstance.destroy(); // Destruir la instancia anterior si existe
-        }
         
         if (Object.keys(data).length === 0) {
-             document.getElementById('despachosChart').parentElement.innerHTML = '<p class="text-center text-muted">No hay datos de despachos para graficar.</p>';
-             return;
+            document.getElementById('despachosChart').innerHTML = '<p class="text-center text-muted mt-5">No hay datos de despachos para graficar.</p>';
+            return;
         }
 
         const labels = Object.keys(data);
         const values = Object.values(data);
-        const backgroundColors = labels.map((_, i) => `hsl(${(i * 30)}, 70%, 50%)`); // Generar colores dinámicos
+        
+        // 2. Transformar los datos a la estructura que Highcharts espera para Pie Charts:
+        // [{ name: 'Cliente A', y: 1500 }, { name: 'Cliente B', y: 800 }, ...]
+        const highchartsData = labels.map((label, index) => ({
+            name: label,
+            y: values[index]
+        }));
 
-        const ctx = document.getElementById('despachosChart').getContext('2d');
-        despachosChartInstance = new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Litros Despachados',
-                    data: values,
-                    backgroundColor: backgroundColors,
-                    hoverOffset: 4
-                }]
+        // 3. Inicializar el gráfico Highcharts
+        despachosChartInstance = Highcharts.chart('despachosChart', { // 'despachosChart' es el ID del DIV
+            chart: {
+                type: 'pie',
+                backgroundColor: 'transparent' 
             },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                label += context.formattedValue + ' Lts';
-                                return label;
-                            }
-                        }
+            title: {
+                text: null // Usamos el título del card-header
+            },
+            // Opciones de exportación (requiere el módulo 'exporting.js')
+            exporting: {
+                enabled: true,
+                buttons: {
+                    contextButton: {
+                        menuItems: ['printChart', 'separator', 'downloadPNG', 'downloadJPEG', 'downloadPDF', 'downloadSVG']
                     }
                 }
-            }
+            },
+            tooltip: {
+                // Formato de tooltip: Muestra nombre, porcentaje y valor en Litros (Lts)
+                pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b> ({point.y:,.2f} Lts)',
+                valueDecimals: 2 // Asegura que los valores numéricos muestren 2 decimales
+            },
+            plotOptions: {
+                pie: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    // Formato de etiquetas de datos en el gráfico
+                    dataLabels: {
+                        enabled: true,
+                        format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                        style: {
+                            color: 'black'
+                        }
+                    },
+                    showInLegend: true
+                }
+            },
+            series: [{
+                name: 'Litros Despachados',
+                colorByPoint: true, // Asigna colores automáticos a cada porción
+                data: highchartsData
+            }]
         });
     }
 
