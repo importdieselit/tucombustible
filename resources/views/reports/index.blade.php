@@ -108,7 +108,7 @@
 
 <div class="row" id="details-tables-container">
     {{-- Contenedor Gráfico (Torta Clientes) --}}
-    <div class="col-lg-6 mb-4" id="despachos_chart_container"></div>
+    <div class="col-12 mb-4" id="despachos_chart_container"></div>
     
     {{-- Contenedor Ventas/Despachos --}}
     <div class="col-12 mb-4" id="ventas_litros_details"></div>
@@ -479,7 +479,7 @@
                     <h5 class="m-0">Despachos Agrupados por Cliente (Litros)</h5>
                 </div>
                 <div class="card-body d-flex justify-content-center align-items-center">
-                    <div id="despachosChart" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+                    <div id="despachosChart" style="min-width: 310px; height: 500px; margin: 0 auto"></div>
                 </div>
             </div>
         `;
