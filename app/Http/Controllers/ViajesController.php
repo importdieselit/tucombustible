@@ -419,7 +419,7 @@ class ViajesController extends Controller
             //$guia->fecha_emision = now();
             $guia->ruta = $viaje->destino_ciudad;
             $guia->direccion = $viaje->despachos->first()->cliente ? $viaje->despachos->first()->cliente->direccion : 'N/A';
-            $guia->buque = $viaje->vehiculo ? $viaje->vehiculo->placa : 'N/A';
+            //$guia->buque = $viaje->vehiculo ? $viaje->vehiculo->placa : 'N/A';
             $guia->unidad = $viaje->vehiculo ? $viaje->vehiculo->flota : 'N/A';
             $guia->cisterna = $viaje->cisterna ?? 'N/A';
             $guia->conductor = $viaje->chofer ? $viaje->chofer->persona->nombre : 'N/A';
@@ -433,7 +433,7 @@ class ViajesController extends Controller
             abort(404, 'El viaje no tiene despachos asociados.');
         }
 
-        return view('despachos.guia_distribucion', compact('viaje', 'guia'));
+        return view('combustible.guia', compact('viaje', 'guia'));
     }
 
     /**
