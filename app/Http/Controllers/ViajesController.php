@@ -416,7 +416,7 @@ class ViajesController extends Controller
             $guia->viaje_id = $viajeId;
             $guia->cliente = $viaje->despachos->first()->cliente ? $viaje->despachos->first()->cliente->nombre : $viaje->despachos->first()->otro_cliente;
             $guia->rif = $viaje->despachos->first()->cliente ? $viaje->despachos->first()->cliente->rif : 'N/A';
-            $guia->fecha_emision = now();
+            //$guia->fecha_emision = now();
             $guia->ruta = $viaje->destino_ciudad;
             $guia->direccion = $viaje->despachos->first()->cliente ? $viaje->despachos->first()->cliente->direccion : 'N/A';
             $guia->buque = $viaje->vehiculo ? $viaje->vehiculo->placa : 'N/A';
