@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Crear Solicitud de Compra de Combustible')
+@section('title', 'Guía de Distribución')
 @push('styles')
 <style>
         body {
@@ -126,10 +126,34 @@
                 </select>
             </div>
         </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="chuto_select" class="form-label">Chuto/Vehículo (Placa/Flota)</label>
+                <select id="chuto_select" class="form-control" style="width: 100%;" data-current-id="{{ $viaje->vehiculo_id ?? '' }}">
+                    @if ($viaje->vehiculo)
+                        <option value="{{ $viaje->vehiculo->id }}" selected>
+                            {{ $viaje->vehiculo->flota ?? 'N/A' }} ({{ $viaje->vehiculo->placa ?? 'N/A' }})
+                        </option>
+                    @endif
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="cisterna_select" class="form-label">Cisterna (Placa)</label>
+                <select id="cisterna_select" class="form-control" style="width: 100%;" data-current-id="{{ $viaje->cisterna_id ?? '' }}">
+                    @if ($viaje->cisterna)
+                        <option value="{{ $viaje->cisterna->id }}" selected>
+                            {{ $viaje->cisterna->placa ?? 'N/A' }}
+                        </option>
+                    @endif
+                </select>
+            </div>
+        </div>
+
 
         <div class="row mb-3">
              <div class="col-md-6">
-                <label for="destino_text" class="form-label">Destino/Muelle</label>
+                <label for="destino_text" class="form-label">Destino/Muelle (Registro al Vuelo)</label>
                 <input type="text" id="destino_text" class="form-control" value="{{ $viaje->destino ?? 'Muelle de SIDOR' }}">
             </div>
              <div class="col-md-6">
@@ -139,7 +163,7 @@
         </div>
         
         <button type="button" id="update-guia-btn" class="btn btn-primary mt-2">
-            <i class="bi bi-save"></i> Guardar Cambios e Imprimir
+            <i class="bi bi-save"></i> Guardar Cambios y Recargar Guía
         </button>
         <button type="button" onclick="window.print()" class="btn btn-success mt-2">
             <i class="bi bi-printer"></i> Vista Previa de Impresión
@@ -172,7 +196,7 @@
                 <strong>Condiciones de Pago:</strong></p>
             </div>
             <div style="flex-basis: 25%; text-align: right;">
-                 <p style="margin-top: 10px;"><strong>Nro. Precintos:</strong></p>
+                 <p style="margin-top: 10px;"><strong>Nro. Precintos:</strong> {{ $viaje->precintos ?? 'N/A' }}</p>
             </div>
         </div>
         
@@ -233,7 +257,7 @@
                 </tr>
                 <tr>
                     <td></td>
-                    <td>Nro precintos:</td>
+                    <td><span class="small-title">Nro precintos: {{ $viaje->precintos ?? 'N/A' }}</span></td>
                     <td></td>
                     <td></td>
                 </tr>
@@ -262,7 +286,7 @@
                     <td></td>
                 </tr>
                 <tr>
-                    <td colspan="3" style="text-align: right; font-weight: bold;">TOTAL A PAGAR [cite: 34]</td>
+                    <td colspan="3" style="text-align: right; font-weight: bold;">TOTAL A PAGAR</td>
                     <td class="total" style="font-weight: bold;">$ {{ number_format($viaje->despachos->sum('total'), 2, ',', '.') }}</td>
                     
                 </tr>
@@ -296,14 +320,14 @@
 @endsection
 
 @push('scripts')
-// ... al final de guia_distribucion.blade.php
-
 <script>
     $(document).ready(function() {
         
         const viajeId = {{ $viaje->id }};
         const clienteSelect = $('#cliente_select');
         const buqueSelect = $('#buque_select');
+        const chutoSelect = $('#chuto_select'); 
+        const cisternaSelect = $('#cisterna_select'); 
 
         // =========================================================
         // 1. SELECT2: CLIENTES (Búsqueda y Creación al Vuelo)
@@ -311,9 +335,9 @@
         clienteSelect.select2({
             placeholder: 'Buscar o ingresar nuevo cliente',
             allowClear: true,
-            tags: true, // Permite crear una opción que no existe
+            tags: true, 
             ajax: {
-                // Ruta para buscar clientes (debes definirla en Laravel)
+                // RUTA: Debes definir `route('api.clientes.search')` en routes/api.php
                 url: '{{ route('api.clientes.search') }}', 
                 dataType: 'json',
                 delay: 250,
@@ -327,39 +351,93 @@
                 },
                 cache: true
             },
-            // Plantilla para la opción de creación al vuelo
             createTag: function (params) {
-                if (params.term.trim() === '') {
-                    return null;
-                }
-                return {
-                    id: params.term,
-                    text: params.term + ' (Nuevo Cliente)',
-                    newTag: true // Flag para identificar que es nuevo
-                };
+                if (params.term.trim() === '') { return null; }
+                return { id: params.term, text: params.term + ' (Nuevo Cliente)', newTag: true };
             }
         });
 
         // =========================================================
-        // 2. SELECT2: BUQUES (Registro al Vuelo, No asociado a una tabla por simplicidad)
+        // 2. SELECT2: VEHÍCULOS (Búsqueda y Creación al Vuelo)
+        // =========================================================
+        chutoSelect.select2({
+            placeholder: 'Buscar o ingresar nuevo chuto (Flota o Placa)',
+            allowClear: true,
+            tags: true, // Permite escribir si no existe
+            ajax: {
+                // RUTA: Debes definir `route('api.vehiculos.search')`
+                url: '{{ route('api.vehiculos.search') }}', 
+                dataType: 'json',
+                delay: 250,
+                processResults: function (data) {
+                    return {
+                        results: data.map(vehiculo => ({
+                            id: vehiculo.id,
+                            text: `${vehiculo.flota} (${vehiculo.placa})`
+                        }))
+                    };
+                },
+                cache: true
+            },
+            // Prefijo para distinguir la entrada manual de un ID
+            createTag: function (params) {
+                if (params.term.trim() === '') { return null; }
+                return { id: 'NEW_CHUTO:' + params.term, text: params.term + ' (Nuevo/Manual)', newTag: true };
+            }
+        });
+
+        cisternaSelect.select2({
+            placeholder: 'Buscar o ingresar nueva cisterna (Placa)',
+            allowClear: true,
+            tags: true, // Permite escribir si no existe
+            ajax: {
+                // RUTA: Debes definir `route('api.cisternas.search')`
+                url: '{{ route('api.cisternas.search') }}', 
+                dataType: 'json',
+                delay: 250,
+                processResults: function (data) {
+                    return {
+                        results: data.map(cisterna => ({
+                            id: cisterna.id,
+                            text: cisterna.placa
+                        }))
+                    };
+                },
+                cache: true
+            },
+            // Prefijo para distinguir la entrada manual de un ID
+            createTag: function (params) {
+                if (params.term.trim() === '') { return null; }
+                return { id: 'NEW_CISTERNA:' + params.term, text: params.term + ' (Nueva/Manual)', newTag: true };
+            }
+        });
+
+
+        // =========================================================
+        // 3. SELECT2: BUQUES (Registro al Vuelo Simplificado)
         // =========================================================
         buqueSelect.select2({
             placeholder: 'Buscar o ingresar nuevo buque',
-            tags: true, // Esto permite al usuario escribir un nuevo buque
+            tags: true, 
             createTag: function (params) {
                 return { id: params.term, text: params.term };
             }
         });
         
         // =========================================================
-        // 3. ACTUALIZAR GUÍA / IMPRIMIR
+        // 4. ACTUALIZAR GUÍA / IMPRIMIR (handleUpdate modificado)
         // =========================================================
         $('#update-guia-btn').on('click', function() {
             const btn = $(this);
             btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Guardando...');
 
+            // Recolección de datos
             const selectedClienteId = clienteSelect.val();
             const selectedClienteText = clienteSelect.find(':selected').text();
+            
+            const selectedChuto = chutoSelect.val(); 
+            const selectedCisterna = cisternaSelect.val(); 
+            
             const selectedBuque = buqueSelect.val();
             const destino = $('#destino_text').val();
             const precintos = $('#precintos_text').val();
@@ -368,55 +446,64 @@
             let isNewCliente = clienteSelect.find(':selected').data('select2-tag') === true;
 
 
-            // Función para manejar el registro del cliente o la actualización de la guía
             const handleUpdate = (finalClienteId) => {
-                // 1. Actualizar datos del Viaje con el Cliente ID (y otros campos)
+                
+                // Procesar Chuto/Cisterna: Si el valor comienza con NEW_*, se envía solo el texto.
+                let chutoData = selectedChuto;
+                let cisternaData = selectedCisterna;
+
+                if (String(selectedChuto).startsWith('NEW_CHUTO:')) {
+                    chutoData = selectedChuto.replace('NEW_CHUTO:', '');
+                }
+                if (String(selectedCisterna).startsWith('NEW_CISTERNA:')) {
+                    cisternaData = selectedCisterna.replace('NEW_CISTERNA:', '');
+                }
+
+                // 1. Actualizar datos del Viaje con todos los campos
                 $.ajax({
+                    // RUTA: Debes definir un método PUT/POST para `api/viajes/{viajeId}/update-guia-data`
                     url: `{{ url('api/viajes') }}/${viajeId}/update-guia-data`,
-                    method: 'PUT', // o POST
+                    method: 'PUT',
                     data: {
                         _token: '{{ csrf_token() }}',
                         cliente_id: finalClienteId,
+                        vehiculo_data: chutoData,
+                        cisterna_data: cisternaData,
                         buque: selectedBuque,
                         destino: destino,
                         precintos: precintos,
-                        // Se pueden añadir más campos de la guía si son editables
                     },
                     success: function(response) {
-                        alert('Guía actualizada con éxito.');
-                        // Opcional: Recargar la vista previa de la guía con los datos actualizados
+                        alert('Guía actualizada con éxito. Recargando vista previa...');
                         window.location.reload(); 
                     },
-                    error: function() {
-                        alert('Error al actualizar los datos del viaje.');
+                    error: function(xhr) {
+                        alert('Error al actualizar los datos del viaje: ' + (xhr.responseJSON.message || 'Error desconocido'));
                     },
                     complete: function() {
-                        btn.prop('disabled', false).html('<i class="bi bi-save"></i> Guardar Cambios e Imprimir');
+                        btn.prop('disabled', false).html('<i class="bi bi-save"></i> Guardar Cambios y Recargar Guía');
                     }
                 });
             };
 
-            // 2. Si es un nuevo cliente, registrarlo primero
+            // 2. Lógica para registrar cliente al vuelo
             if (isNewCliente) {
                 $.ajax({
-                    url: '{{ route('api.clientes.store-al-vuelo') }}', // Ruta para crear cliente
+                    url: '{{ route('api.clientes.store-al-vuelo') }}', 
                     method: 'POST',
                     data: {
                         _token: '{{ csrf_token() }}',
                         nombre: selectedClienteText,
-                        // Aquí puedes añadir más campos necesarios para la creación
                     },
                     success: function(response) {
-                        alert(`Nuevo Cliente "${response.cliente.nombre}" registrado exitosamente.`);
-                        handleUpdate(response.cliente.id); // Continuar con la actualización de la guía
+                        handleUpdate(response.cliente.id); 
                     },
                     error: function(xhr) {
                         alert('Error al registrar el nuevo cliente: ' + (xhr.responseJSON.message || 'Error desconocido'));
-                        btn.prop('disabled', false).html('<i class="bi bi-save"></i> Guardar Cambios e Imprimir');
+                        btn.prop('disabled', false).html('<i class="bi bi-save"></i> Guardar Cambios y Recargar Guía');
                     }
                 });
             } else {
-                // Si el cliente ya existe, simplemente actualiza la guía
                 handleUpdate(clienteToUseId);
             }
 
