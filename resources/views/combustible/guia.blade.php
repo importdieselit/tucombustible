@@ -190,7 +190,7 @@
                 @foreach ($viaje->despachos as $despacho)
                     <tr>
                         <td class="cantidad">{{ number_format($despacho->litros, 2, ',', '.') }}</td>
-                        <td>{{ $despacho->concepto ?? 'MARINE GASOIL (MGO)' }} [cite: 14]</td>
+                        <td>{{ $despacho->concepto ?? 'MARINE GASOIL (MGO)' }} </td>
                         <td class="precio">{{ number_format($despacho->precio_unitario ?? 0, 2, ',', '.') }}</td>
                         <td class="total">{{ number_format($despacho->total ?? ($despacho->litros * ($despacho->precio_unitario ?? 0)), 2, ',', '.') }}</td>
                         
@@ -198,14 +198,14 @@
                 @endforeach
                 <tr>
                         <td></td>
-                        <td><span class="small-title">Placa Chuto:</span> {{ $viaje->vehiculo->placa ?? 'N/A' }}</td>
+                        <td><span class="small-title">Placa Chuto:{{ $viaje->vehiculo->placa ?? 'N/A' }} </span></td>
                         <td ></td>
                         <td ></td>
                         
                 </tr>
                 <tr>
                         <td></td>
-                        <td><span class="small-title">Placa Cisterna:</span> {{ $viaje->cisterna->placa ?? 'N/A' }}</td>
+                        <td><span class="small-title">Placa Cisterna: {{ $viaje->cisterna->placa ?? 'N/A' }}</span></td>
                         <td ></td>
                         <td ></td>
                         
@@ -213,21 +213,21 @@
 
                 <tr>
                         <td></td>
-                        <td><span class="small-title">Ruta:</span> {{ $viaje->ruta ?? 'Boleíta Norte Caracas Puerto Ordaz Edo. Bolivar' }}</td>
+                        <td><span class="small-title">Ruta: {{ $viaje->ruta ?? 'Boleíta Norte Caracas Puerto Ordaz Edo. Bolivar' }}</span></td>
                         <td ></td>
                         <td ></td>
                         
                 </tr>
                 <tr>
                         <td></td>
-                        <td><span class="small-title">Destino:</span> {{ $viaje->destino ?? 'Muelle de SIDOR' }}</td>
+                        <td><span class="small-title">Destino: {{ $viaje->destino ?? 'Muelle de SIDOR' }}</span></td>
                         <td ></td>
                         <td ></td>
                         
                 </tr>
                 <tr>
                     <td></td>
-                    <td><span class="small-title">BUQUE/EMBARCACIÓN:</span> {{ $viaje->buque ?? 'N/A' }}</td>
+                    <td><span class="small-title">BUQUE/EMBARCACIÓN: {{ $viaje->buque ?? 'N/A' }}</span></td>
                     <td ></td>
                     <td ></td>
                 </tr>
@@ -239,13 +239,13 @@
                 </tr>
                 <tr>
                         <td></td>
-                        <td><span class="small-title">CONDUCTOR:</span> {{ $viaje->chofer->persona->nombre ?? 'N/A' }}</td>
+                        <td><span class="small-title">CONDUCTOR: {{ $viaje->chofer->persona->nombre ?? 'N/A' }}</span></td>
                         <td ></td>
                         <td ></td>
                 </tr>
                 <tr>
                         <td></td>
-                        <td><span class="small-title">CEDULA:</span> {{ $viaje->chofer->persona->cedula ?? 'N/A' }}</td>
+                        <td><span class="small-title">CEDULA: {{ $viaje->chofer->persona->cedula ?? 'N/A' }}</span></td>
                         <td ></td>
                         <td ></td>
                 </tr>
