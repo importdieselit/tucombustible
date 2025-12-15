@@ -195,42 +195,72 @@
                         <td class="total">{{ number_format($despacho->total ?? ($despacho->litros * ($despacho->precio_unitario ?? 0)), 2, ',', '.') }}</td>
                     </tr>
                 @endforeach
-                
+                <tr>
+                        <td></td>
+                        <td><span class="small-title">Placa Chuto:</span> {{ $viaje->vehiculo->placa ?? 'N/A' }}</td>
+                        <td ></td>
+                        <td ></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td><span class="small-title">Placa Cisterna:</span> {{ $viaje->cisterna->placa ?? 'N/A' }}</td>
+                        <td ></td>
+                        <td ></td>
+                </tr>
+
+                <tr>
+                        <td></td>
+                        <td><span class="small-title">Ruta:</span> {{ $viaje->ruta ?? 'Boleíta Norte Caracas Puerto Ordaz Edo. Bolivar' }}</td>
+                        <td ></td>
+                        <td ></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td><span class="small-title">Destino:</span> {{ $viaje->destino ?? 'Muelle de SIDOR' }}</td>
+                        <td ></td>
+                        <td ></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td><span class="small-title">BUQUE/EMBARCACIÓN:</span> {{ $viaje->buque ?? 'N/A' }}</td>
+                    <td ></td>
+                    <td ></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td><span class="small-title">CONDUCTOR:</span> {{ $viaje->chofer->persona->nombre ?? 'N/A' }}</td>
+                        <td ></td>
+                        <td ></td>
+                </tr>
+                <tr>
+                        <td></td>
+                        <td><span class="small-title">CEDULA:</span> {{ $viaje->chofer->persona->cedula ?? 'N/A' }}</td>
+                        <td ></td>
+                        <td ></td>
+                </tr>
                 <tr>
                     <td colspan="3" style="text-align: right; font-weight: bold;">TOTAL A PAGAR [cite: 34]</td>
                     <td class="total" style="font-weight: bold;">$ {{ number_format($viaje->despachos->sum('total'), 2, ',', '.') }}</td>
                 </tr>
+                <tr>
+                    <td>Recibido por:</td>
+                    <td colspan="3" style="border-bottom: 1px solid #000;">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td>Cédula:</td>
+                    <td colspan="3" style="border-bottom: 1px solid #000;">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td>Fecha:</td>
+                    <td colspan="3" style="border-bottom: 1px solid #000;">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td>Firma y Sello:</td>
+                    <td colspan="3" style="border-bottom: 1px solid #000;">&nbsp;</td>  
+                </tr>
             </tbody>
         </table>
 
-        <div class="logistica-section" style="margin-top: 20px; border: none; padding-bottom: 0;">
-            <div style="flex-basis: 49%; border: 1px solid #ccc; padding: 5px;">
-                <p><span class="small-title">Placa Chuto:</span> {{ $viaje->vehiculo->placa ?? 'N/A' }} [cite: 24]</p>
-                <p><span class="small-title">Placa Cisterna:</span> {{ $viaje->cisterna->placa ?? 'N/A' }} [cite: 25]</p>
-                <p><span class="small-title">Ruta:</span> {{ $viaje->ruta ?? 'Boleíta Norte Caracas Puerto Ordaz Edo. Bolivar' }} [cite: 26]</p>
-                <p><span class="small-title">Destino:</span> {{ $viaje->destino ?? 'Muelle de SIDOR' }} [cite: 27]</p>
-            </div>
-            <div style="flex-basis: 49%; border: 1px solid #ccc; padding: 5px;">
-                <p><span class="small-title">CONDUCTOR:</span> {{ $viaje->conductor->nombre ?? 'N/A' }} [cite: 30]</p>
-                <p><span class="small-title">CEDULA:</span> {{ $viaje->conductor->cedula ?? 'N/A' }} [cite: 31]</p>
-                <p><span class="small-title">Buque:</span> {{ $viaje->buque ?? 'N/A' }} [cite: 28]</p>
-            </div>
-        </div>
-
-        <div class="footer-section">
-            <div class="footer-field">
-                Recibido por: [cite: 20]
-            </div>
-            <div class="footer-field">
-                Cédula: [cite: 21]
-            </div>
-            <div class="footer-field">
-                Fecha: [cite: 22]
-            </div>
-            <div class="footer-field" style="border-bottom: none;">
-                Firma y Sello: [cite: 19, 23]
-            </div>
-        </div>
         
     </div>
     
