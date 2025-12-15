@@ -10,7 +10,7 @@
         }
         .guia-container {
             width: 100%;
-            max-width: 800px;
+            max-width: 1080px;
             margin: 0 auto;
             border: 1px solid #000;
             padding: 10px;
@@ -180,10 +180,11 @@
         <table class="table-detalle">
             <thead>
                 <tr>
-                    <th class="cantidad">CANTIDAD [cite: 11]</th>
-                    <th>CONCEPTO/DESCRIPCIÓN [cite: 13]</th>
-                    <th class="precio">PRECIO UNIT. [cite: 17]</th>
-                    <th class="total">TOTAL [cite: 18]</th>
+                    <th class="cantidad">CANTIDAD </th>
+                    <th>CONCEPTO/DESCRIPCIÓN</th>
+                    <th class="precio">PRECIO UNIT.</th>
+                    <th class="total">TOTAL</th>
+                    <th rowspan="12" class="sello">SELLO</th>
                 </tr>
             </thead>
             <tbody>
@@ -227,6 +228,12 @@
                     <td ></td>
                 </tr>
                 <tr>
+                    <td></td>
+                    <td>Nro precintos:</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
                         <td></td>
                         <td><span class="small-title">CONDUCTOR:</span> {{ $viaje->chofer->persona->nombre ?? 'N/A' }}</td>
                         <td ></td>
@@ -237,6 +244,18 @@
                         <td><span class="small-title">CEDULA:</span> {{ $viaje->chofer->persona->cedula ?? 'N/A' }}</td>
                         <td ></td>
                         <td ></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
                 </tr>
                 <tr>
                     <td colspan="3" style="text-align: right; font-weight: bold;">TOTAL A PAGAR [cite: 34]</td>
