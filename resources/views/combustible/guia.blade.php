@@ -184,7 +184,7 @@
                     <th>CONCEPTO/DESCRIPCIÓN</th>
                     <th class="precio">PRECIO UNIT.</th>
                     <th class="total">TOTAL</th>
-                    <th rowspan="12" class="sello">SELLO</th>
+                    <th rowspan="12" width="20%" class="sello">SELLO</th>
                 </tr>
             </thead>
             <tbody>
