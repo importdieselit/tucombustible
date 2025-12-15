@@ -167,10 +167,9 @@
 
         <div class="receptor-section">
             <div style="flex-basis: 70%;">
-                <p><strong>Nombre/Razón Social:</strong> {{ $viaje->despachos->first()->cliente->nombre ?? $viaje->despachos->first()->otro_cliente ?? 'N/A' }} </p>
-                <p><strong>C.I./R.I.F.:</strong> {{ $viaje->despachos->first()->cliente->rif ?? 'N/A' }}</p>
-                <p><strong>Domicilio Fiscal:</strong> {{ $viaje->despachos->first()->cliente->direccion ?? 'N/A' }}</p>
-                <p><strong>Condiciones de Pago:</strong></p>
+                <p><strong>Nombre/Razón Social:</strong> {{ $viaje->despachos->first()->cliente->nombre ?? $viaje->despachos->first()->otro_cliente ?? 'N/A' }} <strong>C.I./R.I.F.:</strong> {{ $viaje->despachos->first()->cliente->rif ?? 'N/A' }}</p>
+                <p><strong>Domicilio Fiscal:</strong> {{ $viaje->despachos->first()->cliente->direccion ?? 'N/A' }}
+                <strong>Condiciones de Pago:</strong></p>
             </div>
             <div style="flex-basis: 25%; text-align: right;">
                  <p style="margin-top: 10px;"><strong>Nro. Precintos:</strong></p>
@@ -265,7 +264,7 @@
                 <tr>
                     <td colspan="3" style="text-align: right; font-weight: bold;">TOTAL A PAGAR [cite: 34]</td>
                     <td class="total" style="font-weight: bold;">$ {{ number_format($viaje->despachos->sum('total'), 2, ',', '.') }}</td>
-                    <td></td>
+                    
                 </tr>
                 <tr>
                     <td>Recibido por:</td>
