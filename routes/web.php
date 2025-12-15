@@ -313,7 +313,8 @@ Route::put('/viajes/{id}', [ViajesController::class, 'update'])->name('viaje.upd
          ->name('mantenimiento.planificacion.store');
 
     // Rutas para historial de mantenimiento
-    //Route::get('/vehiculos/{vehiculo}/historial', [HistorialMantenimientoController::class, 'showByVehiculo'])->name('vehiculos.historial');
+    
+
 
     // Rutas para repostaje específico
     //Route::get('/tanques/{tanque}/repostajes', [RepostajeTanqueController::class, 'showByTanque'])->name('tanques.repostajes');
@@ -322,6 +323,8 @@ Route::put('/viajes/{id}', [ViajesController::class, 'update'])->name('viaje.upd
     Route::post('captacion/store', [CaptacionController::class,'store'])->name('captacion.store');
     Route::get('captacion/thanks', [CaptacionController::class,'thanks'])->name('captacion.thanks');
 
+    Route::get('/despachos/guia-distribucion/{viajeId}', [ViajesController::class, 'printGuiaDistribucion'])
+     ->name('despachos.guia_distribucion');
     // Admin (proteger con middleware 'auth' y permisos necesarios)
 
     Route::get('/reportes', [ReportController::class, 'index'])->name('reports.index');

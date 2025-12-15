@@ -12,6 +12,7 @@ use App\Models\Cliente;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\RequisitoCaptacion;
+use App\Models\User;
 
 class CaptacionController extends Controller
 {
@@ -38,14 +39,32 @@ class CaptacionController extends Controller
         
         try {
             $captacion = CaptacionCliente::create([
-            'razon_social' => $validated['razon_social'],
-            'rif' => $validated['rif'] ?? null,
-            'correo' => $validated['correo'],
-            //'gestion' => 'MIGRACION',
-            'telefono' => $validated['telefono'] ?? null,
-            'direccion' => $validated['direccion'] ?? null,
-            'estatus_captacion' => 'registro_inicial'
-        ]);
+                'razon_social' => $validated['razon_social'],
+                'rif' => $validated['rif'] ?? null,
+                'correo' => $validated['correo'],
+                //'gestion' => 'MIGRACION',
+                'telefono' => $validated['telefono'] ?? null,
+                'direccion' => $validated['direccion'] ?? null,
+                'estatus_captacion' => 'registro_inicial'
+            ]);
+
+            $cliente= Cliente::create([
+                'nombre' => $validated['razon_social'],
+                'rif' => $validated['rif'] ?? null,
+                'correo' => $validated['correo'],
+                'telefono' => $validated['telefono'] ?? null,
+                'direccion' => $validated['direccion'] ?? null,
+                'cupo' => 5000,
+                'disponible' => 5000
+            ]);
+            $user = User::create([
+                'name' => $validated['rif'] ?? trim($validated['razon_social']),
+                'email' => $validated['correo'],
+                'password' => bcrypt('123456789'), // Cambiar a una contraseña segura o generar aleatoriamente
+                'cliente_id' => $cliente->id,
+                'id_perfil' => 3, // Asignar perfil de cliente
+                'id_master' => 0 // Asignar master por defecto
+            ]);
 
         if ($request->hasFile('documentos')) {
             foreach ($request->file('documentos') as $file) {

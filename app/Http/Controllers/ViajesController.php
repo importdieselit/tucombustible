@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Pedido;
 use App\Models\MovimientoCombustible;
 use App\Models\Producto;
+use App\Models\Guia;
 
 
 class ViajesController extends Controller
@@ -403,6 +404,20 @@ class ViajesController extends Controller
         return view('viajes.reports_index', compact('choferes', 'ciudades'));
     }
 
+    public function printGuiaDistribucion($viajeId)
+    {
+        // Asegurarse de cargar las relaciones necesarias (despachos, cliente, vehículo, conductor)
+        $viaje = Viaje::with(['despachos.cliente', 'vehiculo', 'cisterna', 'conductor'])
+            ->findOrFail($viajeId);
+
+        // Si no hay despachos, o si la data es insuficiente, puedes redirigir o mostrar un error
+        if ($viaje->despachos->isEmpty()) {
+            abort(404, 'El viaje no tiene despachos asociados.');
+        }
+
+        return view('despachos.guia_distribucion', compact('viaje'));
+    }
+
     /**
      * Procesa la solicitud de reporte y devuelve los datos filtrados.
      */
@@ -572,7 +587,7 @@ class ViajesController extends Controller
             return $viaje->viaticos->pluck('monto');
         })->sum();
         
-        return view('viajes.resumen_programacion', compact('viajes', 'totalViaticosPresupuestados','user','persona'));
+        return view('viajes.resumen_programacion', compact('viajes','id', 'totalViaticosPresupuestados','user','persona'));
     }
 
     public function edit($id)
@@ -907,6 +922,36 @@ public function destroy($id)
         return redirect()->route('viajes.list')
                          ->with('error', "❌ Error crítico al intentar eliminar el viaje #{$id}. Consulte los logs.");
     }
+    
 }
+
+        public function updateGuiaData(Request $request, $viajeId)
+        {
+            $viaje = Viaje::findOrFail($viajeId);
+            
+            // Validación de datos
+            $request->validate([
+                'cliente_id' => 'required|exists:clientes,id',
+                'buque' => 'nullable|string|max:100',
+                'destino' => 'nullable|string|max:255',
+                'precintos' => 'nullable|string|max:255',
+            ]);
+
+            // Actualizar el viaje
+            $viaje->update([
+                'cliente_id' => $request->cliente_id,
+                'buque' => $request->buque,
+                'destino' => $request->destino,
+                'precintos' => $request->precintos,
+                // ... otros campos
+            ]);
+            
+            // Si el cliente del despacho debe actualizarse (caso de un solo despacho por viaje)
+            if ($viaje->despachos->isNotEmpty()) {
+                $viaje->despachos()->update(['cliente_id' => $request->cliente_id]);
+            }
+
+            return response()->json(['success' => true, 'viaje' => $viaje]);
+        }
 
 }

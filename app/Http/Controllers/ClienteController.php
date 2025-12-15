@@ -371,4 +371,22 @@ class ClienteController extends BaseController
 
         return Redirect::back();
     }
+
+    public function storeAlVuelo(Request $request)
+    {
+        $request->validate(['nombre' => 'required|string|max:255']);
+
+        $cliente = Cliente::create([
+            'nombre' => $request->nombre,
+            'rif' => 'PENDIENTE', // Marcadores para datos faltantes
+            'direccion' => 'PENDIENTE',
+            'disponible' => 0,
+            'cupo' => 0,
+            'ciiu' => 0,
+            'parent' => 0,
+            'periodo' => 'M'
+        ]);
+
+        return response()->json(['message' => 'Cliente registrado', 'cliente' => $cliente], 201);
+    }
 }

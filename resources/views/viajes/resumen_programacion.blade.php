@@ -14,6 +14,9 @@
         <h1 class="text-primary"><i class="bi bi-calendar-check me-2"></i> Programación de Viajes Pendientes</h1>
         
         <!-- Botón para Capturar la Imagen/Imprimir -->
+        <a href="{{ route('despachos.guia_distribucion', $id) }}" target="_blank" class="btn btn-sm btn-success shadow-sm" style="font-size: 14px; white-space: nowrap;">
+            <i class="fa fa-file"></i> Generar/Editar Guía
+        </a>
         <button id="print" class="btn btn-primary shadow-sm">
             <i class="fa fa-camera me-2"></i> Capturar y Descargar Reporte
         </button>

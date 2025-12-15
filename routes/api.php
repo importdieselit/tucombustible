@@ -28,6 +28,7 @@ use App\Http\Controllers\Apis\IncidenciaController;
 use App\Http\Controllers\ViajesController;
 
 
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -291,6 +292,15 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Viajes - Calendario (Solo Super Admin)
     Route::get('/viajes/calendario', [ViajesController::class, 'getCalendarioApi']);
+
+    //Route::get('/vehiculos/{vehiculo}/historial', [HistorialMantenimientoController::class, 'showByVehiculo'])->name('vehiculos.historial');
+    Route::get('clientes/search', [ClienteController::class, 'search'])->name('api.clientes.search');
+
+    // Creación de cliente al vuelo
+    Route::post('clientes/store-al-vuelo', [ClienteController::class, 'storeAlVuelo'])->name('api.clientes.store-al-vuelo');
+
+    // Actualización de datos de guía en el viaje
+    Route::put('viajes/{viajeId}/update-guia-data', [ViajesController::class, 'updateGuiaData']);
     
 }); 
 
