@@ -30,6 +30,7 @@ class Viaje extends Model
         'fecha_salida',
         'status',
         'vehiculo_id',
+        'cisterna',
         'litros',
         'has_viatico',
         'cliente_id',

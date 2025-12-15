@@ -407,15 +407,33 @@ class ViajesController extends Controller
     public function printGuiaDistribucion($viajeId)
     {
         // Asegurarse de cargar las relaciones necesarias (despachos, cliente, vehículo, conductor)
-        $viaje = Viaje::with(['despachos.cliente', 'vehiculo', 'cisterna', 'conductor'])
+        $viaje = Viaje::with(['despachos.cliente', 'vehiculo', 'chofer.persona'])
             ->findOrFail($viajeId);
-
+        $guia = Guia::where('viaje_id', $viajeId)->first();
+        if(!$guia){ 
+            $guia = new Guia();
+            $guia->numero_guia = Guia::max('numero_guia') + 1;
+            $guia->viaje_id = $viajeId;
+            $guia->cliente = $viaje->despachos->first()->cliente ? $viaje->despachos->first()->cliente->nombre : $viaje->despachos->first()->otro_cliente;
+            $guia->rif = $viaje->despachos->first()->cliente ? $viaje->despachos->first()->cliente->rif : 'N/A';
+            $guia->fecha_emision = now();
+            $guia->ruta = $viaje->destino_ciudad;
+            $guia->direccion = $viaje->despachos->first()->cliente ? $viaje->despachos->first()->cliente->direccion : 'N/A';
+            $guia->buque = $viaje->vehiculo ? $viaje->vehiculo->placa : 'N/A';
+            $guia->unidad = $viaje->vehiculo ? $viaje->vehiculo->flota : 'N/A';
+            $guia->cisterna = $viaje->cisterna ?? 'N/A';
+            $guia->conductor = $viaje->chofer ? $viaje->chofer->persona->nombre : 'N/A';
+            $guia->cedula = $viaje->chofer ? $viaje->chofer->persona->dni : 'N/A';
+            $guia->cantidad = $viaje->despachos->sum('litros');
+            $guia->producto = 'MARINE GASOIL M.G.O'; // Ajustar según el producto real
+            $guia->save();
+        }
         // Si no hay despachos, o si la data es insuficiente, puedes redirigir o mostrar un error
         if ($viaje->despachos->isEmpty()) {
             abort(404, 'El viaje no tiene despachos asociados.');
         }
 
-        return view('despachos.guia_distribucion', compact('viaje'));
+        return view('despachos.guia_distribucion', compact('viaje', 'guia'));
     }
 
     /**
