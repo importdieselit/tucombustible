@@ -148,18 +148,18 @@
 </div>
 <div class="guia-container">
         
-        <div class="header-section">
-            <div class="header-info">
+        <div class="header-section row">
+            <div class="header-info col-4">
                 <img src="{{ asset('img/logo1.png') }}" alt="logo empresa" style="width: 250px">
                 <p>Av. Principal de Boleíta entre Av. Francisco de Miranda <br>y la 1ra transversal, Qta Adela Nro S/N Urb Boleita, Caracas</p>
                 <p>Petare Miranda, Zona Postal 1079 Telf: {{ '0414-3779488' }}</p>
             </div>
-            <div class="header-rif">
+            <div class="header-rif col-4">
                 GUÍA DE DISTRIBUCIÓN
             </div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; font-size: 9pt; border-bottom: 1px dashed #ccc; padding-bottom: 5px; margin-bottom: 5px;">
+        <div class="col-4" style="display: flex; justify-content: space-between; font-size: 9pt; border-bottom: 1px dashed #ccc; padding-bottom: 5px; margin-bottom: 5px;">
             <p><strong>Lugar de Emisión:</strong> Caracas </p>
             <p><strong>Fecha de Emisión:</strong> {{ \Carbon\Carbon::now()->format('d/m/Y') }}</p>
             <p><strong>Guía Nro:</strong> {{ $viaje->id }}</p>
