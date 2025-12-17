@@ -188,7 +188,7 @@
             </div>
              <div class="col-md-6">
                 <label for="precintos_input" class="form-label">Nro. de Precintos</label>
-                <input type="text" id="precintos_input" class="form-control autocomplete-field" 
+                <input type="text" id="precintos_input" class="form-control autocomplete-field hybrid-autocomplete" 
                     data-db-field="precintos" data-live-id="#live-precintos" value="{{ $guia->precintos ?? 'N/A' }}">
             </div>
         </div>

@@ -983,7 +983,7 @@ public function updateGuiaData(Request $request, $viajeId)
             ['rif' => $value['rif'], 'direccion' => $value['direccion']]);
        // $viaje->despachos()->update(['cliente_id' => $cliente->id]);
     }else {
-        $guia->update($field, $value);
+        $guia->update([$field => $value]);
     }
     
 
