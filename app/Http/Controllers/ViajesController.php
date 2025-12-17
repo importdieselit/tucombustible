@@ -949,7 +949,8 @@ public function updateGuiaData(Request $request, $viajeId)
 {
     $viaje = Viaje::findOrFail($viajeId);
     $guia = Guia::where('viaje_id', $viajeId)->first();
-    
+    $field = $request->input('field');
+    $value = $request->input('value');
     // Validamos solo lo que viene en el request (edición parcial)
     $data = $request->validate([
         'cliente_id'    => 'nullable|exists:clientes,id',
@@ -971,13 +972,20 @@ public function updateGuiaData(Request $request, $viajeId)
     ]);
 
     // Actualizamos el viaje
-    $viaje->update(array_filter($data));
-
-
-    // Si se cambió el cliente, actualizamos los despachos relacionados
-    if ($request->has('cliente_id')) {
-        $viaje->despachos()->update(['cliente_id' => $request->cliente_id]);
+   
+    if ($field === 'cliente_full_update') {
+        // Buscamos por nombre, si no existe lo creamos con los datos que vinieron
+        $cliente = Cliente::firstOrCreate(
+            ['nombre' => $value['nombre']],
+            ['rif' => $value['rif'], 'direccion' => $value['direccion']]
+        );
+        $guia->update(['nombre' => $value['nombre']],
+            ['rif' => $value['rif'], 'direccion' => $value['direccion']]);
+       // $viaje->despachos()->update(['cliente_id' => $cliente->id]);
+    }else {
+        $guia->update($field, $value);
     }
+    
 
     return response()->json([
         'success' => true,

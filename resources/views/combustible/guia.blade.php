@@ -129,7 +129,7 @@
             <div class="col-md-6">
                 <label>Cliente / Razón Social</label>
                 <input type="text" id="cliente_input" class="form-control hybrid-autocomplete" 
-                    data-db-field="cliente_nombre" data-live-id="#live-cliente-nombre" 
+                    data-db-field="cliente" data-live-id="#live-cliente-nombre" 
                     value="{{ $viaje->despachos->first()->cliente->nombre ?? '' }}" placeholder="Escriba para buscar o crear...">
             </div>
             <div class="col-md-6">
@@ -357,7 +357,7 @@
             select: function(event, ui) {
                 $input.val(ui.item.value);
                 $(liveId).text(ui.item.value); 
-                if (dbField === 'cliente_nombre') {
+                if (dbField === 'cliente') {
                     $('#cliente_rif_input').val(ui.item.rif);
                     $('#cliente_direccion_input').val(ui.item.direccion);
                     

@@ -17,7 +17,7 @@ class SearchController extends Controller
         $term = $request->get('term');   // Lo que el usuario escribe
 
         switch ($field) {
-            case 'cliente_nombre':
+            case 'cliente':
                 return Cliente::where('nombre', 'LIKE', "%$term%")
                     ->limit(5)
                     ->get(['id', 'nombre as value', 'alias', 'rif', 'direccion' ]);
