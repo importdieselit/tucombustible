@@ -948,6 +948,7 @@ public function destroy($id)
 public function updateGuiaData(Request $request, $viajeId)
 {
     $viaje = Viaje::findOrFail($viajeId);
+    $guia = Guia::where('viaje_id', $viajeId)->first();
     
     // Validamos solo lo que viene en el request (edición parcial)
     $data = $request->validate([
@@ -958,10 +959,20 @@ public function updateGuiaData(Request $request, $viajeId)
         'destino'       => 'nullable|string|max:255',
         'precintos'     => 'nullable|string|max:255',
         'ruta'          => 'nullable|string|max:255',
+        'cliente'       => 'nullable|string|max:255',
+        'rif'           => 'nullable|string|max:255',
+        'chuto'        => 'nullable|string|max:255',
+        'cisterna'      => 'nullable|string|max:255',
+        'conductor'     => 'nullable|string|max:255',
+        'cedula'        => 'nullable|string|max:255',
+        'cantidad'      => 'nullable|numeric|min:0',
+        'producto'      => 'nullable|string|max:255',
+        
     ]);
 
     // Actualizamos el viaje
     $viaje->update(array_filter($data));
+
 
     // Si se cambió el cliente, actualizamos los despachos relacionados
     if ($request->has('cliente_id')) {

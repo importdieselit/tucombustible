@@ -60,6 +60,9 @@ Route::post('/test-fcm-notification', [TestFcmController::class, 'sendFcmNotific
 
 Route::get('search/autocomplete', [SearchController::class, 'handle'])->name('api.search.generic');
 
+    // Actualización de datos de guía en el viaje
+    Route::put('viajes/{viajeId}/update-guia-data', [ViajesController::class, 'updateGuiaData']);
+
 // Rutas protegidas por autenticación
 Route::middleware('auth:sanctum')->group(function () {
     // Auth
@@ -303,8 +306,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Creación de cliente al vuelo
     Route::post('clientes/store-al-vuelo', [ClienteController::class, 'storeAlVuelo'])->name('api.clientes.store-al-vuelo');
 
-    // Actualización de datos de guía en el viaje
-    Route::put('viajes/{viajeId}/update-guia-data', [ViajesController::class, 'updateGuiaData']);
     
 }); 
 

@@ -133,6 +133,19 @@
                     value="{{ $viaje->despachos->first()->cliente->nombre ?? '' }}" placeholder="Escriba para buscar o crear...">
             </div>
             <div class="col-md-6">
+                <label>Cliente / RIF</label>
+                <input type="text" id="rif_input" class="form-control hybrid-autocomplete" 
+                    data-db-field="cliente_rif" data-live-id="#live-cliente-rif" 
+                    value="{{ $viaje->despachos->first()->cliente->rif ?? '' }}" placeholder="Escriba para buscar o crear...">
+            </div>
+            <div class="col-md-6">
+                <label>Cliente / direccion</label>
+                <input type="text" id="direccion_input" class="form-control hybrid-autocomplete" 
+                    data-db-field="cliente_direccion" data-live-id="#live-cliente-direccion" 
+                    value="{{ $viaje->despachos->first()->cliente->direccion ?? '' }}" placeholder="Escriba para buscar o crear...">
+            </div>
+
+            <div class="col-md-6">
                 <label>Buque Embarcacion</label>
                 <input type="text" id="buque_input" class="form-control autocomplete-field hybrid-autocomplete" 
                     data-db-field="buque" data-live-id="#live-buque" 
@@ -343,8 +356,25 @@
             },
             select: function(event, ui) {
                 $input.val(ui.item.value);
-                $(liveId).text(ui.item.value); // Actualiza vista previa
-                saveToDatabase(dbField, ui.item.value); // Guarda porque fue una selección oficial
+                $(liveId).text(ui.item.value); 
+                if (dbField === 'cliente_nombre') {
+                    $('#cliente_rif_input').val(ui.item.rif);
+                    $('#cliente_dir_input').val(ui.item.direccion);
+                    
+                    // Actualizar también la vista previa de esos campos
+                    $('#live-cliente-rif').text(ui.item.rif);
+                    $('#live-cliente-dir').text(ui.item.direccion);
+                    
+                    // Guardar todo el bloque del cliente
+                    saveToDatabase('cliente_full_update', {
+                        nombre: ui.item.value,
+                        rif: ui.item.rif,
+                        direccion: ui.item.direccion
+                    });
+                } else {
+                    // Si es buque, precintos o chuto, solo guardamos ese campo
+                    saveToDatabase(dbField, ui.item.value);
+                }
                 return false;
             }
         });
@@ -352,7 +382,8 @@
         // REACTIVIDAD EN TIEMPO REAL (Sin guardar en BD aún)
         $input.on('input', function() {
             const currentVal = $(this).val();
-            $(liveId).text(currentVal); // Esto es lo que querías: ver el cambio abajo YA
+            $(liveId).text(currentVal); 
+
         });
 
         // GUARDADO AL PERDER EL FOCO (Blur)
