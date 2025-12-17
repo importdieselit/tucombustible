@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Apis;
 
+use App\Models\Buques;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use App\Models\Cliente;
@@ -23,7 +24,7 @@ class SearchController extends Controller
 
             case 'buque':
                 // Buscamos buques usados en viajes anteriores para sugerir
-                return Viaje::where('buque', 'LIKE', "%$term%")
+                return Buques::where('buque', 'LIKE', "%$term%")
                     ->distinct()
                     ->limit(5)
                     ->get(['buque as value']);

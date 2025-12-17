@@ -94,6 +94,25 @@
                 border: none;
             }
         }
+
+        .ui-autocomplete {
+    z-index: 9999 !important; /* Asegura que esté por encima de todo */
+    background: white;
+    border: 1px solid #ccc;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 200px;
+    overflow-y: auto;
+}
+.ui-menu-item {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+.ui-state-active {
+    background-color: #007bff !important;
+    color: white !important;
+}
     </style>
 @endpush
 @section('content')
@@ -141,7 +160,7 @@
             </div>
              <div class="col-md-6">
                 <label for="precintos_input" class="form-label">Nro. de Precintos</label>
-                <input type="text" id="precintos_input" class="form-control autocomplete-field hybrid-autocomplete" 
+                <input type="text" id="precintos_input" class="form-control autocomplete-field" 
                     data-db-field="precintos" data-live-id="#live-precintos" value="{{ $viaje->precintos ?? 'N/A' }}">
             </div>
         </div>
@@ -308,51 +327,53 @@
 <script>
    $(document).ready(function() {
     const viajeId = {{ $viaje->id }};
-    const genericSearchUrl = "{{ route('api.search.generic') }}";
     let typingTimer;
 
     $('.hybrid-autocomplete').each(function() {
         const $input = $(this);
-        const dbField = $input.data('db-field'); // Ej: 'cliente_nombre'
+        const dbField = $input.data('db-field');
         const liveId = $input.data('live-id');
 
         $input.autocomplete({
             source: function(request, response) {
-                $.getJSON(genericSearchUrl, { 
-                    term: request.term, 
-                    field: dbField // Enviamos el identificador del campo
+                $.getJSON("{{ route('api.search.generic') }}", {
+                    term: request.term,
+                    field: dbField
                 }, response);
             },
             select: function(event, ui) {
-                const selectedValue = ui.item.value;
-                $input.val(selectedValue);
-                $(liveId).text(selectedValue);
-                saveData(dbField, selectedValue);
+                $input.val(ui.item.value);
+                $(liveId).text(ui.item.value); // Actualiza vista previa
+                saveToDatabase(dbField, ui.item.value); // Guarda porque fue una selección oficial
                 return false;
             }
         });
 
-        // Reactividad y Autoguardado
+        // REACTIVIDAD EN TIEMPO REAL (Sin guardar en BD aún)
         $input.on('input', function() {
             const currentVal = $(this).val();
-            $(liveId).text(currentVal); // Actualización visual inmediata
+            $(liveId).text(currentVal); // Esto es lo que querías: ver el cambio abajo YA
+        });
 
-            clearTimeout(typingTimer);
-            typingTimer = setTimeout(function() {
-                saveData(dbField, currentVal);
-            }, 700);
+        // GUARDADO AL PERDER EL FOCO (Blur)
+        // Solo guarda si el usuario terminó de escribir algo nuevo
+        $input.on('blur', function() {
+            const finalVal = $(this).val();
+            if(finalVal.trim() !== "") {
+                saveToDatabase(dbField, finalVal);
+            }
         });
     });
 
-    function saveData(field, value) {
+    function saveToDatabase(field, value) {
         $.ajax({
             url: `/api/viajes/${viajeId}/update-guia-data`,
             method: 'PUT',
-            data: {
-                _token: '{{ csrf_token() }}',
-                field: field,
-                value: value
-            }
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') // Evita error 401/419
+            },
+            data: { field: field, value: value },
+            success: function() { console.log("Sincronizado con BD"); }
         });
     }
 });
