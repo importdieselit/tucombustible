@@ -304,44 +304,45 @@
 
 @push('scripts')
 <script>
-    $(document).ready(function() {
+   $(document).ready(function() {
     const viajeId = {{ $viaje->id }};
+    const genericSearchUrl = "{{ route('api.search.generic') }}";
     let typingTimer;
-    const doneTypingInterval = 600; // Tiempo de espera para guardar (ms)
 
-    // Configurar Autocompletado para el campo Cliente
-    $("#cliente_input").autocomplete({
-        source: function(request, response) {
-            $.getJSON("{{ route('api.clientes.search') }}", { term: request.term }, response);
-        },
-        select: function(event, ui) {
-            // Cuando seleccionan uno existente
-            $(this).val(ui.item.nombre);
-            updateAndSave('cliente_nombre', ui.item.nombre, "#live-cliente-nombre");
-            return false;
-        }
-    }).data("ui-autocomplete")._renderItem = function(ul, item) {
-        return $("<li>").append("<div>" + item.nombre + "</div>").appendTo(ul);
-    };
+    $('.hybrid-autocomplete').each(function() {
+        const $input = $(this);
+        const dbField = $input.data('db-field'); // Ej: 'cliente_nombre'
+        const liveId = $input.data('live-id');
 
-    // Evento para detectar escritura en cualquier input
-    $('.autocomplete-field').on('input', function() {
-        const input = $(this);
-        const val = input.val();
-        const field = input.data('db-field');
-        const liveTarget = input.data('live-id');
+        $input.autocomplete({
+            source: function(request, response) {
+                $.getJSON(genericSearchUrl, { 
+                    term: request.term, 
+                    field: dbField // Enviamos el identificador del campo
+                }, response);
+            },
+            select: function(event, ui) {
+                const selectedValue = ui.item.value;
+                $input.val(selectedValue);
+                $(liveId).text(selectedValue);
+                saveData(dbField, selectedValue);
+                return false;
+            }
+        });
 
-        // 1. Actualización visual instantánea abajo
-        $(liveTarget).text(val);
+        // Reactividad y Autoguardado
+        $input.on('input', function() {
+            const currentVal = $(this).val();
+            $(liveId).text(currentVal); // Actualización visual inmediata
 
-        // 2. Temporizador para auto-guardado en BD
-        clearTimeout(typingTimer);
-        typingTimer = setTimeout(function() {
-            updateAndSave(field, val);
-        }, doneTypingInterval);
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(function() {
+                saveData(dbField, currentVal);
+            }, 700);
+        });
     });
 
-    function updateAndSave(field, value) {
+    function saveData(field, value) {
         $.ajax({
             url: `/api/viajes/${viajeId}/update-guia-data`,
             method: 'PUT',
@@ -349,10 +350,6 @@
                 _token: '{{ csrf_token() }}',
                 field: field,
                 value: value
-            },
-            success: function() {
-                console.log(field + " guardado.");
-                // Opcional: podrías poner el borde del input en verde un segundo
             }
         });
     }
