@@ -20,7 +20,7 @@ class SearchController extends Controller
             case 'cliente':
                 return Cliente::where('nombre', 'LIKE', "%$term%")
                     ->limit(5)
-                    ->get(['id', 'nombre as value', 'alias', 'rif', 'direccion' ]);
+                    ->get(['id', 'CONCAT(nombre, " [", alias, "]") as value', 'alias', 'rif', 'direccion' ]);
 
             case 'buque':
                 // Buscamos buques usados en viajes anteriores para sugerir
