@@ -2,6 +2,7 @@
 
 @section('title', 'Guía de Distribución')
 @push('styles')
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
 <style>
         body {
             font-family: Arial, sans-serif;
@@ -303,6 +304,7 @@
 @endsection
 
 @push('scripts')
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 <script>
    $(document).ready(function() {
     const viajeId = {{ $viaje->id }};
