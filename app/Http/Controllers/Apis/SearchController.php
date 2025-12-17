@@ -19,8 +19,10 @@ class SearchController extends Controller
         switch ($field) {
             case 'cliente':
                 return Cliente::where('nombre', 'LIKE', "%$term%")
-                    ->limit(5)
-                    ->get(['id', 'CONCAT(nombre, " [", alias, "]") as value', 'alias', 'rif', 'direccion' ]);
+                ->orWhere('alias', 'LIKE', "%$term%")
+                ->selectRaw('id, rif, direccion, nombre, alias, CONCAT(nombre, " [", COALESCE(alias, ""), "]") as value')
+                ->limit(5)
+                ->get();
 
             case 'buque':
                 // Buscamos buques usados en viajes anteriores para sugerir
