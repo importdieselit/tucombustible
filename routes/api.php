@@ -26,6 +26,7 @@ use App\Http\Controllers\IntegracionIAController;
 use App\Http\Controllers\Apis\ConductorController;
 use App\Http\Controllers\Apis\IncidenciaController;
 use App\Http\Controllers\ViajesController;
+use App\Http\Controllers\Apis\SearchController;
 
 
 
@@ -154,6 +155,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/movimientos-combustible', [MovimientoCombustibleController::class, 'store']);
     Route::put('/movimientos-combustible/{id}', [MovimientoCombustibleController::class, 'update']);
     Route::delete('/movimientos-combustible/{id}', [MovimientoCombustibleController::class, 'destroy']);
+    // Un solo endpoint para todas las búsquedas de autocompletado
+    Route::get('search/autocomplete', [SearchController::class, 'handle'])->name('api.search.generic');
     
     // Tanques
     Route::get('/tanques', [TanqueController::class, 'index']);

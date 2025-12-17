@@ -6,12 +6,52 @@ use Illuminate\Http\Request;
 use App\Models\Vehiculo;
 use App\Models\Chofer; // O App\Models\User si los choferes son usuarios
 use App\Models\Cliente; // Si manejas un modelo de Clientes
+use App\Models\Viaje;
+use App\Models\Persona;
+use App\Models\Buques;
 
 class SearchController extends Controller
 {
     /**
      * Realiza la búsqueda en múltiples modelos y muestra los resultados.
      */
+
+
+    public function handle(Request $request)
+    {
+        $field = $request->get('field'); // Qué estamos buscando (cliente, buque, chuto...)
+        $term = $request->get('term');   // Lo que el usuario escribe
+
+        switch ($field) {
+            case 'cliente_nombre':
+                return Cliente::where('nombre', 'LIKE', "%$term%")
+                    ->limit(5)
+                    ->get(['id', 'nombre as value']);
+
+            case 'buque':
+                // Buscamos buques usados en viajes anteriores para sugerir
+                return Buques::where('buque', 'LIKE', "%$term%")
+                    ->distinct()
+                    ->limit(5)
+                    ->get(['buque as value']);
+
+            case 'chuto_placa':
+                return Vehiculo::where('tipo', 2)
+                    ->where('placa', 'LIKE', "%$term%")
+                    ->limit(5)
+                    ->get(['id', 'placa as value', 'flota']);
+
+            case 'cisterna_placa':
+                return Vehiculo::where('tipo', 3)
+                    ->where('placa', 'LIKE', "%$term%")
+                    ->limit(5)
+                    ->get(['id', 'placa as value']);
+
+            default:
+                return response()->json([]);
+        }
+    }
+
     public function globalSearch(Request $request)
     {
         $query = $request->input('query');

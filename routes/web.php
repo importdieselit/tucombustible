@@ -327,6 +327,14 @@ Route::put('/viajes/{id}', [ViajesController::class, 'update'])->name('viaje.upd
      ->name('despachos.guia_distribucion');
     // Admin (proteger con middleware 'auth' y permisos necesarios)
 
+    // 2. Boleta de Combustible Marino (Segundo formato)
+    Route::get('/despachos/boleta/{viajeId}', [ViajesController::class, 'showBoleta'])
+        ->name('despachos.boleta');
+
+    // 3. Autorización/Nominación (Tercer formato)
+    Route::get('/despachos/nominacion/{viajeId}', [ViajesController::class, 'showNominacion'])
+        ->name('despachos.nominacion');
+
     Route::get('/reportes', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/export-pdf', [ReportController::class, 'exportPdf'])->name('reports.export_pdf');
     Route::post('/api/reports/summary', [ReportController::class, 'getSummary'])->name('reports.summary');    
@@ -347,6 +355,8 @@ Route::put('/viajes/{id}', [ViajesController::class, 'update'])->name('viaje.upd
         Route::post('/{cliente}/aprobar', [CaptacionController::class, 'aprobar'])
             ->name('captacion.aprobar');
     });
+
+
     Route::get('/routes-list', function () {
         dd(Route::getRoutes());
     });

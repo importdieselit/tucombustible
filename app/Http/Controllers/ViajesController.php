@@ -943,33 +943,34 @@ public function destroy($id)
     
 }
 
-        public function updateGuiaData(Request $request, $viajeId)
-        {
-            $viaje = Viaje::findOrFail($viajeId);
-            
-            // Validación de datos
-            $request->validate([
-                'cliente_id' => 'required|exists:clientes,id',
-                'buque' => 'nullable|string|max:100',
-                'destino' => 'nullable|string|max:255',
-                'precintos' => 'nullable|string|max:255',
-            ]);
+       // En App\Http\Controllers\ViajeController.php
 
-            // Actualizar el viaje
-            $viaje->update([
-                'cliente_id' => $request->cliente_id,
-                'buque' => $request->buque,
-                'destino' => $request->destino,
-                'precintos' => $request->precintos,
-                // ... otros campos
-            ]);
-            
-            // Si el cliente del despacho debe actualizarse (caso de un solo despacho por viaje)
-            if ($viaje->despachos->isNotEmpty()) {
-                $viaje->despachos()->update(['cliente_id' => $request->cliente_id]);
-            }
+public function updateGuiaData(Request $request, $viajeId)
+{
+    $viaje = Viaje::findOrFail($viajeId);
+    
+    // Validamos solo lo que viene en el request (edición parcial)
+    $data = $request->validate([
+        'cliente_id'    => 'nullable|exists:clientes,id',
+        'vehiculo_id'   => 'nullable|exists:vehiculos,id',
+        'cisterna_id'   => 'nullable|exists:vehiculos,id',
+        'buque'         => 'nullable|string|max:100',
+        'destino'       => 'nullable|string|max:255',
+        'precintos'     => 'nullable|string|max:255',
+        'ruta'          => 'nullable|string|max:255',
+    ]);
 
-            return response()->json(['success' => true, 'viaje' => $viaje]);
-        }
+    // Actualizamos el viaje
+    $viaje->update(array_filter($data));
 
+    // Si se cambió el cliente, actualizamos los despachos relacionados
+    if ($request->has('cliente_id')) {
+        $viaje->despachos()->update(['cliente_id' => $request->cliente_id]);
+    }
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Dato actualizado automáticamente'
+    ]);
+}
 }
