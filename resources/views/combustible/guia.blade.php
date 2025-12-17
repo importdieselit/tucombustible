@@ -196,13 +196,12 @@
         <button type="button" id="update-guia-btn" class="btn btn-primary mt-2">
             <i class="bi bi-save"></i> Guardar Cambios y Recargar Guía
         </button>
-        <button type="button" onclick="window.print()" class="btn btn-success mt-2">
+        <button type="button" class="btn btn-success mt-2" id="print">
             <i class="bi bi-printer"></i> Vista Previa de Impresión
         </button>
     </form>
 </div>
-<div class="guia-container">
-        
+<div class="guia-container printableArea">       
         <div class="header-section row">
             <div class="header-info col-4">
                 <img src="{{ asset('img/logo1.png') }}" alt="logo empresa" style="width: 250px">
@@ -227,8 +226,10 @@
                 <strong>Condiciones de Pago:</strong></p>
             </div>
             <div style="flex-basis: 25%; text-align: right;">
-                 <p style="margin-top: 10px;"><strong>Nro. Precintos:</strong> <span id="live-precintos">{{ $viaje->precintos ?? 'N/A' }}</span></p>
+                <p><strong>Teléfono:</strong> {{ $viaje->despachos->first()->cliente->telefono ?? 'N/A' }}</p>
+                <p><strong>Email:</strong> {{ $viaje->despachos->first()->cliente->email ?? 'N/A' }}</p>
             </div>
+
         </div>
         
         <table class="table-detalle">
@@ -344,14 +345,16 @@
     </div>
     
     <div class="print-only">
-        <button onclick="window.print()" style="padding: 10px 20px; font-size: 14pt; cursor: pointer;">
+        <button id="print" style="padding: 10px 20px; font-size: 14pt; cursor: pointer;">
             Imprimir Guía / Guardar como PDF
         </button>
     </div>
 @endsection
 
 @push('scripts')
+
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+<script src="{{asset('js/jquery.PrintArea.js')}}" defer></script>
 <script>
    $(document).ready(function() {
     const viajeId = {{ $viaje->id }};
