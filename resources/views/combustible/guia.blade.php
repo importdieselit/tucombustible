@@ -130,38 +130,53 @@
                 <label>Cliente / Razón Social</label>
                 <input type="text" id="cliente_input" class="form-control hybrid-autocomplete" 
                     data-db-field="cliente" data-live-id="#live-cliente-nombre" 
-                    value="{{ $viaje->despachos->first()->cliente->nombre ?? '' }}" placeholder="Escriba para buscar o crear...">
+                    value="{{ $guia->cliente ?? 'N/A' }}" placeholder="Escriba para buscar o crear...">
             </div>
             <div class="col-md-6">
                 <label>Cliente / RIF</label>
                 <input type="text" id="cliente_rif_input" class="form-control hybrid-autocomplete" 
                     data-db-field="cliente_rif" data-live-id="#live-cliente-rif" 
-                    value="{{ $viaje->despachos->first()->cliente->rif ?? '' }}" placeholder="Escriba para buscar o crear...">
+                    value="{{ $guia->rif ?? '' }}" placeholder="Escriba para buscar o crear...">
             </div>
             <div class="col-md-6">
                 <label>Cliente / direccion</label>
                 <input type="text" id="cliente_direccion_input" class="form-control hybrid-autocomplete" 
                     data-db-field="cliente_direccion" data-live-id="#live-cliente-direccion" 
-                    value="{{ $viaje->despachos->first()->cliente->direccion ?? '' }}" placeholder="Escriba para buscar o crear...">
+                    value="{{ $guia->direccion ?? '' }}" placeholder="Escriba para buscar o crear...">
             </div>
 
             <div class="col-md-6">
                 <label>Buque Embarcacion</label>
                 <input type="text" id="buque_input" class="form-control autocomplete-field hybrid-autocomplete" 
                     data-db-field="buque" data-live-id="#live-buque" 
-                    value="" placeholder="Escriba para buscar o crear...">
+                    value="{{ $guia->buque ?? 'N/A'}}" placeholder="Escriba para buscar o crear...">
             </div>
             <div class="col-md-6">
                 <label>Chuto</label>
                 <input type="text" id="chuto_input" class="form-control autocomplete-field hybrid-autocomplete" 
                     data-db-field="chuto" data-live-id="#live-chuto" 
-                    value="{{ $viaje->vehiculo->flota ?? 'N/A' }} ({{ $viaje->vehiculo->placa ?? 'N/A' }})" placeholder="Escriba para buscar o crear...">
+                    value="{{ $guia->unidad ?? 'N/A' }}" placeholder="Escriba para buscar o crear...">
             </div>
             <div class="col-md-6">
                 <label>Cisterna</label>
                 <input type="text" id="cisterna_input" class="form-control autocomplete-field hybrid-autocomplete" 
                     data-db-field="cisterna" data-live-id="#live-cisterna" 
-                    value="{{ $viaje->cisterna->placa ?? 'N/A' }}" placeholder="Escriba para buscar o crear...">
+                    value="{{ $guia->cisterna ?? 'N/A' }}" placeholder="Escriba para buscar o crear...">
+            </div>
+            <div class="col-md-6">
+                <label for="ruta_input" class="form-label">Ruta</label>
+                <input type="text" id="ruta_input" class="form-control autocomplete-field hybrid-autocomplete" 
+                    data-db-field="ruta" data-live-id="#live-ruta" value="{{ $guia->ruta ?? 'Boleíta Norte Caracas Puerto Ordaz Edo. Bolivar' }}">
+            </div>
+            <div class="col-md-6">
+                <label for="conductor_input" class="form-label">Conductor</label>
+                <input type="text" id="conductor_input" class="form-control autocomplete-field hybrid-autocomplete" 
+                    data-db-field="conductor" data-live-id="#live-conductor" value="{{ $guia->conductor ?? 'N/A' }}">
+            </div>
+            <div class="col-md-6">
+                <label for="cedula_input" class="form-label">Cédula</label>
+                <input type="text" id="cedula_input" class="form-control autocomplete-field hybrid-autocomplete" 
+                    data-db-field="cedula" data-live-id="#live-cedula" value="{{ $guia->cedula ?? 'N/A' }}">
             </div>
         </div>
 
@@ -169,12 +184,12 @@
              <div class="col-md-6">
                 <label for="muelle_input" class="form-label">Destino/Muelle (Registro al Vuelo)</label>
                 <input type="text" id="muelle_input" class="form-control autocomplete-field hybrid-autocomplete" 
-                    data-db-field="muelle" data-live-id="#live-muelle" value="{{ $viaje->destino ?? 'Muelle de SIDOR' }}">
+                    data-db-field="muelle" data-live-id="#live-muelle" value="{{ $guia->muelle ?? 'Muelle de SIDOR' }}">
             </div>
              <div class="col-md-6">
                 <label for="precintos_input" class="form-label">Nro. de Precintos</label>
                 <input type="text" id="precintos_input" class="form-control autocomplete-field" 
-                    data-db-field="precintos" data-live-id="#live-precintos" value="{{ $viaje->precintos ?? 'N/A' }}">
+                    data-db-field="precintos" data-live-id="#live-precintos" value="{{ $guia->precintos ?? 'N/A' }}">
             </div>
         </div>
         
@@ -260,7 +275,7 @@
                 </tr>
                 <tr>
                         <td></td>
-                        <td><span class="small-title">Destino:</span> <span id="live-destino">{{ $viaje->destino ?? 'Muelle de SIDOR' }}</span></td>
+                        <td><span class="small-title">Destino:</span> <span id="live-muelle">{{ $viaje->destino ?? 'Muelle de SIDOR' }}</span></td>
                         <td ></td>
                         <td ></td>
                         
