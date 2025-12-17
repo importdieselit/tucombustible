@@ -135,13 +135,13 @@
             <div class="col-md-6">
                 <label>Cliente / RIF</label>
                 <input type="text" id="cliente_rif_input" class="form-control hybrid-autocomplete" 
-                    data-db-field="cliente_rif" data-live-id="#live-cliente-rif" 
+                    data-db-field="rif" data-live-id="#live-cliente-rif" 
                     value="{{ $guia->rif ?? '' }}" placeholder="Escriba para buscar o crear...">
             </div>
             <div class="col-md-6">
                 <label>Cliente / direccion</label>
                 <input type="text" id="cliente_direccion_input" class="form-control hybrid-autocomplete" 
-                    data-db-field="cliente_direccion" data-live-id="#live-cliente-direccion" 
+                    data-db-field="direccion" data-live-id="#live-cliente-direccion" 
                     value="{{ $guia->direccion ?? '' }}" placeholder="Escriba para buscar o crear...">
             </div>
 
@@ -373,6 +373,9 @@
                 $input.val(ui.item.value);
                 $(liveId).text(ui.item.value); 
                 if (dbField === 'cliente') {
+                    $input.val(ui.item.value+'['+ui.item.alias+']');
+                    $(liveId).text(ui.item.value+'['+ui.item.alias+']'); 
+                
                     $('#cliente_rif_input').val(ui.item.rif);
                     $('#cliente_direccion_input').val(ui.item.direccion);
                     
