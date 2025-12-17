@@ -19,8 +19,21 @@ class SearchController extends Controller
         switch ($field) {
             case 'cliente':
                 return Cliente::where('nombre', 'LIKE', "%$term%")
-                    ->limit(5)
-                    ->get(['id', 'nombre as value', 'alias', 'rif', 'direccion' ]);
+                ->orWhere('alias', 'LIKE', "%$term%")
+                ->limit(5)
+                ->get(['id', 'nombre', 'alias', 'rif', 'direccion']) // Traemos las columnas limpias
+                ->map(function($cliente) {
+                    return [
+                        'id'        => $cliente->id,
+                        // Si hay alias, lo concatena; si no, solo pone el nombre
+                        'label'     => $cliente->alias 
+                                    ? "{$cliente->nombre} [{$cliente->alias}]" 
+                                    : $cliente->nombre,
+                        'value'     => $cliente->nombre, // Lo que se escribe en el input
+                        'rif'       => $cliente->rif,
+                        'direccion' => $cliente->direccion,
+                    ];
+                });
 
             case 'buque':
                 // Buscamos buques usados en viajes anteriores para sugerir

@@ -373,8 +373,8 @@
                 $input.val(ui.item.value);
                 $(liveId).text(ui.item.value); 
                 if (dbField === 'cliente') {
-                    $input.val(ui.item.value+'['+ui.item.alias+']');
-                    $(liveId).text(ui.item.value+'['+ui.item.alias+']'); 
+                    $input.val(ui.item.value);
+                    $(liveId).text(ui.item.value); 
                 
                     $('#cliente_rif_input').val(ui.item.rif);
                     $('#cliente_direccion_input').val(ui.item.direccion);
