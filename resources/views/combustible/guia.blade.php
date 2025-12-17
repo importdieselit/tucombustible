@@ -199,6 +199,12 @@
         <button type="button" class="btn btn-success mt-2" id="print">
             <i class="bi bi-printer"></i> Vista Previa de Impresión
         </button>
+         <a href="{{ route('despachos.boleta', $id) }}" target="_blank" class="btn btn-sm btn-success shadow-sm" style="font-size: 14px; white-space: nowrap;">
+            <i class="fa fa-file"></i> Ver Boleta
+        </a>
+         <a href="{{ route('despachos.nominacion', $id) }}" target="_blank" class="btn btn-sm btn-success shadow-sm" style="font-size: 14px; white-space: nowrap;">
+            <i class="fa fa-file"></i> Ver Nominacion
+        </a>
     </form>
 </div>
 <div class="guia-container printableArea">       
