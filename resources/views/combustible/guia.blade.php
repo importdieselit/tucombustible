@@ -108,25 +108,25 @@
         <div class="row mb-3">
             <div class="col-md-6">
                 <label>Cliente / Razón Social</label>
-                <input type="text" id="cliente_input" class="form-control autocomplete-field" 
+                <input type="text" id="cliente_input" class="form-control hybrid-autocomplete" 
                     data-db-field="cliente_nombre" data-live-id="#live-cliente-nombre" 
                     value="{{ $viaje->despachos->first()->cliente->nombre ?? '' }}" placeholder="Escriba para buscar o crear...">
             </div>
             <div class="col-md-6">
                 <label>Buque Embarcacion</label>
-                <input type="text" id="buque_input" class="form-control autocomplete-field" 
+                <input type="text" id="buque_input" class="form-control autocomplete-field hybrid-autocomplete" 
                     data-db-field="buque" data-live-id="#live-buque" 
                     value="" placeholder="Escriba para buscar o crear...">
             </div>
             <div class="col-md-6">
                 <label>Chuto</label>
-                <input type="text" id="chuto_input" class="form-control autocomplete-field" 
+                <input type="text" id="chuto_input" class="form-control autocomplete-field hybrid-autocomplete" 
                     data-db-field="chuto" data-live-id="#live-chuto" 
                     value="{{ $viaje->vehiculo->flota ?? 'N/A' }} ({{ $viaje->vehiculo->placa ?? 'N/A' }})" placeholder="Escriba para buscar o crear...">
             </div>
             <div class="col-md-6">
                 <label>Cisterna</label>
-                <input type="text" id="cisterna_input" class="form-control autocomplete-field" 
+                <input type="text" id="cisterna_input" class="form-control autocomplete-field hybrid-autocomplete" 
                     data-db-field="cisterna" data-live-id="#live-cisterna" 
                     value="{{ $viaje->cisterna->placa ?? 'N/A' }}" placeholder="Escriba para buscar o crear...">
             </div>
@@ -135,12 +135,12 @@
         <div class="row mb-3">
              <div class="col-md-6">
                 <label for="muelle_input" class="form-label">Destino/Muelle (Registro al Vuelo)</label>
-                <input type="text" id="muelle_input" class="form-control autocomplete-field" 
+                <input type="text" id="muelle_input" class="form-control autocomplete-field hybrid-autocomplete" 
                     data-db-field="muelle" data-live-id="#live-muelle" value="{{ $viaje->destino ?? 'Muelle de SIDOR' }}">
             </div>
              <div class="col-md-6">
                 <label for="precintos_input" class="form-label">Nro. de Precintos</label>
-                <input type="text" id="precintos_input" class="form-control autocomplete-field" 
+                <input type="text" id="precintos_input" class="form-control autocomplete-field hybrid-autocomplete" 
                     data-db-field="precintos" data-live-id="#live-precintos" value="{{ $viaje->precintos ?? 'N/A' }}">
             </div>
         </div>
