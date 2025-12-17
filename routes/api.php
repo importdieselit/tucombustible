@@ -58,6 +58,8 @@ Route::get('/auth/debug-user', [AuthController::class, 'debugUser']);
 
 Route::post('/test-fcm-notification', [TestFcmController::class, 'sendFcmNotification']);
 
+Route::get('search/autocomplete', [SearchController::class, 'handle'])->name('api.search.generic');
+
 // Rutas protegidas por autenticación
 Route::middleware('auth:sanctum')->group(function () {
     // Auth
@@ -156,7 +158,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/movimientos-combustible/{id}', [MovimientoCombustibleController::class, 'update']);
     Route::delete('/movimientos-combustible/{id}', [MovimientoCombustibleController::class, 'destroy']);
     // Un solo endpoint para todas las búsquedas de autocompletado
-    Route::get('search/autocomplete', [SearchController::class, 'handle'])->name('api.search.generic');
     
     // Tanques
     Route::get('/tanques', [TanqueController::class, 'index']);
