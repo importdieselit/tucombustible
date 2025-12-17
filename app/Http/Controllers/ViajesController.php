@@ -943,6 +943,19 @@ public function destroy($id)
     
 }
 
+public function showBoleta($id)
+{
+    $guia= Guia::findOrFail($id);
+    return view('combustible.boleta', compact('guia'));
+}
+
+public function showNomincion($id)
+{
+    $guia= Guia::findOrFail($id);
+    return view('combustible.nominacion', compact('guia'));
+}
+    
+
        // En App\Http\Controllers\ViajeController.php
 
 public function updateGuiaData(Request $request, $viajeId)
