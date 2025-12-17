@@ -33,33 +33,20 @@
         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="cliente_select" class="form-label">Cliente</label>
-                <select id="cliente_select" class="form-control" style="width: 100%;">
-                    @if ($viaje->despachos->first()->cliente)
-                        <option value="{{ $viaje->despachos->first()->cliente->id }}" selected>{{ $viaje->despachos->first()->cliente->nombre }}</option>
-                    @endif
-                </select>
+                
             </div>
             <div class="col-md-6">
                 <label for="buque_select" class="form-label">Buque (Registro al Vuelo)</label>
-                <select id="buque_select" class="form-control" style="width: 100%;">
-                    @if ($viaje->buque)
-                        <option value="{{ $viaje->buque }}" selected>{{ $viaje->buque }}</option>
-                    @endif
-                </select>
             </div>
         </div>
         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="destino_text" class="form-label">Puerto/Muelle (Registro al Vuelo)</label>
-                <input type="text" id="destino_text" class="form-control" value="{{ $viaje->destino ?? 'MUELLE BAUXILUM' }}">
+                <input type="text" id="destino_text" class="form-control" value="{{ $guia->destino ?? 'MUELLE BAUXILUM' }}">
             </div>
             <div class="col-md-6">
                 <label for="delivery_method" class="form-label">Método de Entrega</label>
-                <select id="delivery_method" class="form-control" style="width: 100%;">
-                    <option value="CAMION" {{ ($viaje->metodo_entrega ?? 'CAMION') == 'CAMION' ? 'selected' : '' }}>Camión (Tank Truck)</option>
-                    <option value="GABARRA" {{ ($viaje->metodo_entrega ?? '') == 'GABARRA' ? 'selected' : '' }}>Gabarra (Barge)</option>
-                    <option value="TUBERIA" {{ ($viaje->metodo_entrega ?? '') == 'TUBERIA' ? 'selected' : '' }}>Tubería (Pipeline)</option>
-                </select>
+                
             </div>
         </div>
         
@@ -81,29 +68,29 @@
 
     <div class="info-grid">
         <div>
-            <strong>CLIENTE (client):</strong> {{ $viaje->despachos->first()->cliente->nombre ?? 'Tepuy Marina' }}
+            <strong>CLIENTE (client):</strong> {{ $guia->cliente ?? 'Tepuy Marina' }}
         </div>
         <div>
-            <strong>NOMINACIÓN:</strong> 9100518423
+            <strong>NOMINACIÓN:</strong> #########
         </div>
         <div>
-            <strong>BUQUE (vessel):</strong> {{ $viaje->buque ?? 'GAMBOA' }}
+            <strong>BUQUE (vessel):</strong> {{ $guia->buque ?? 'GAMBOA' }}
         </div>
         <div>
-            <strong>FECHA (date):</strong> {{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d.m.Y') }}
+            <strong>FECHA (date):</strong> {{ \Carbon\Carbon::parse($guia->created_at)->format('d.m.Y') }}
         </div>
         <div>
-            <strong>IMO:</strong> 9003380
+            <strong>IMO:</strong> ####
         </div>
         <div>
-            <strong>BANDERA (flag):</strong> PANAMA
+            <strong>BANDERA (flag):</strong> #########
         </div>
         <div>
-            <strong>PUERTO (port):</strong> {{ $viaje->destino ?? 'MUELLE BAUXILUM' }}
+            <strong>PUERTO (port):</strong> {{ $guia->muelle ?? 'MUELLE BAUXILUM' }}
         </div>
         <div>
             <strong>MÉTODO DE ENTREGA (delivery method):</strong> 
-            {{ $viaje->metodo_entrega ?? 'CAMION (tank truck)' }}
+            {{ $guia->metodo_entrega ?? 'CAMION (tank truck)' }}
         </div>
     </div>
     
@@ -118,33 +105,33 @@
         <tbody>
             <tr>
                 <td>GRAVEDAD API 60 °F (A. PI gravity at 60 °F)</td>
-                <td>{{ $viaje->api_gravity ?? '36,3' }}</td>
+                <td>{{ '36,3' }}</td>
                 <td>GRAVEDAD ESPECIFICA A 60 °F (specific gravity at 60 °F)</td>
-                <td>{{ $viaje->specific_gravity ?? '0,8433' }}</td>
+                <td>{{ '0,8433' }}</td>
             </tr>
             <tr>
                 <td>PUNTO DE INFLAMACIÓN (°C) (flash point)</td>
-                <td>{{ $viaje->flash_point ?? '66' }}</td>
+                <td>{{ '66' }}</td>
                 <td>PUNTO DE FLUIDEZ (°C) (pour point)</td>
-                <td>{{ $viaje->pour_point ?? '-6' }}</td>
+                <td>{{ '-6' }}</td>
             </tr>
             <tr>
                 <td>VISCOSIDAD A 50° C (cSt.) (viscosity)</td>
-                <td>{{ $viaje->viscosity ?? '38,5' }}</td>
+                <td>{{  '38,5' }}</td>
                 <td>AZUFRE (%PESO) (sulphur, wt%)</td>
-                <td>{{ $viaje->sulphur_wt ?? '0,438' }}</td>
+                <td>{{ '0,438' }}</td>
             </tr>
             <tr>
                 <td>AGUA Y SEDIMENTO (% VOL) (B.S & water)</td>
-                <td>{{ $viaje->bs_water ?? '0,005' }}</td>
+                <td>{{  '0,005' }}</td>
                 <td>DENSIDAD (density)</td>
-                <td>{{ $viaje->density ?? '0,8428' }}</td>
+                <td>{{ '0,8428' }}</td>
             </tr>
             <tr>
                 <td>PRODUCTO (product)</td>
                 <td>M.G.O</td>
                 <td>TEMP °C</td>
-                <td>{{ $viaje->temperatura ?? '28' }}</td>
+                <td>{{ '28' }}</td>
             </tr>
         </tbody>
     </table>
@@ -154,15 +141,15 @@
     <table class="quality-table">
         <tr>
             <th width="30%">LITROS BRUTOS (gross litres)</th>
-            <td width="20%">{{ number_format($viaje->despachos->sum('litros') + ($viaje->litros_brutos_extra ?? 0), 2, ',', '.') }}</td>
+            <td width="20%">{{ number_format(($guia->cantidad ?? 0), 2, ',', '.') }}</td>
             <th width="30%">TONELADAS METRICAS</th>
-            <td width="20%">{{ $viaje->toneladas_metricas ?? '32,59' }}</td>
+            <td width="20%">{{ number_format(($guia->cantidad* 0.8428), 2, ',', '.') }}</td>
         </tr>
         <tr>
             <th>LITROS NETOS (net litres)</th>
-            <td>{{ number_format($viaje->despachos->sum('litros'), 2, ',', '.') }}</td>
+            <td>{{ number_format($guia->cantidad, 2, ',', '.') }}</td>
             <th>FACTOR CORRECC (corr. Factor)</th>
-            <td>{{ $viaje->factor_correccion ?? '0,998' }}</td>
+            <td>{{  '0,998' }}</td>
         </tr>
     </table>
 
@@ -180,7 +167,7 @@
         <div>
             <p>POR DISTRIBUIDORA IMPORDIESEL</p>
             <div class="signature-line">FIRMA (signature)</div>
-            <div class="signature-line">NOMBRE (name): {{ $viaje->supervisor_nombre ?? 'YULIMAR CASTELLANOS' }}</div>
+            <div class="signature-line">NOMBRE (name): {{ $guia->supervisor_nombre ?? 'YULIMAR CASTELLANOS' }}</div>
             <div class="signature-line">CARGO (ej. Supervisor)</div>
         </div>
     </div>
@@ -196,7 +183,7 @@
 <script>
     $(document).ready(function() {
         
-        const viajeId = {{ $viaje->id }};
+        const viajeId = {{ $guia->id }};
         const clienteSelect = $('#cliente_select');
         const buqueSelect = $('#buque_select');
         const deliveryMethod = $('#delivery_method');
