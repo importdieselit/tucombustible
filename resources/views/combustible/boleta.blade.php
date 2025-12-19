@@ -128,7 +128,7 @@
             </td>
         </tr>
         <tr style="text-align: center">
-            <td rowspan="3" ><strong>PRODUCTO (product)</strong> <br>M.G.O.</td>
+            <td rowspan="3" colspan="2"> ><strong>PRODUCTO (product)</strong> <br>M.G.O.</td>
             <td colspan="3"><strong>INICIO (start)</strong></td>
             <td colspan="3"><strong>FINAL (finish)</strong></td>
         </tr>
