@@ -181,7 +181,7 @@
         <tr style="text-align: center">
             <td colspan="4">
                 <strong>TONELADAS METRICAS</strong>
-                {{ number_format(($guia->cantidad* 0.8428), 2, ',', '.') }}
+                {{ number_format(($guia->cantidad* 0.8428/1000), 2, ',', '.') }}
             </td>
             <td colspan="3">
                 <strong>LITROS BRUTOS (gross litres)</strong>
