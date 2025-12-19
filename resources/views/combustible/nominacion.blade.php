@@ -41,7 +41,7 @@
 </div>
 
 <div class="auth-container printableArea row" style="width: 8.5in; heigth:11in;">
-    <table class="table table-bordered" style="font-size: 10pt; width: 100%; border:solid 1px black; ">
+    <table class="table table-bordered" style="font-size: 10pt; width: 95%; margin: 1cm;border:solid 1px black; ">
         <tr>
             <td colspan="4" style="text-align: center; font-size: 14pt; font-weight: bold;">
                 <img src="{{ asset('img/logo1.png') }}" alt="logo empresa" style="width: 250px; float: left; margin-right: 10px;">
