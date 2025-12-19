@@ -91,7 +91,7 @@
         </tr>
         <tr>
             <td colspan="3" style="text-align:left; font-size: 10pt;">
-                Facturar a: {{ $guia->->cliente ?? 'Distribuidora Impordiesel C.A.' }} <br>
+                Facturar a: {{ $guia->cliente ?? 'Distribuidora Impordiesel C.A.' }} <br>
                 Direccion: {{ $guia->direccion ?? 'CR UD 524 LOCAL PARCELA 524-01-02...' }} <br>
                 Contacto: {{ $guia->contacto ?? 'Antonio Bertolo' }} <br>
                 Correo: electronico: {{ $guia->email ?? 'Navuera@tepuymarina.com' }} <br>
@@ -148,94 +148,7 @@
         </tr>
 
     </table>
-    <div class="header-bunker mb-3 col-12" style="display: block; height: 100px; ;">
-        <p class="mb-0" style="float: rigth; text-align: right; vertical-align:middle"><strong>AUTORIZACION / NOMINACION DE COMBUSTIBLES Y LUBRICANTES</strong></p>
-        
-    </div>
 
-    <div class="auth-info">
-        <div class="row">
-            <div class="col-6"><strong>Cliente (Facturar a):</strong> {{ $guia->despachos->first()->cliente->nombre ?? 'Distribuidora Impordiesel C.A.' }}</div>
-            <div class="col-6"><strong>Contacto del Cliente:</strong> {{ $guia->despachos->first()->cliente->contacto ?? 'Antonio Bertolo' }}</div>
-        </div>
-        <div><strong>Dirección:</strong> {{ $guia->despachos->first()->cliente->direccion ?? 'CR UD 524 LOCAL PARCELA 524-01-02...' }}</div>
-        <div class="row">
-            <div class="col-6"><strong>Teléfono:</strong> {{ $guia->despachos->first()->cliente->telefono ?? '0286-9231278' }}</div>
-            <div class="col-6"><strong>Correo Electrónico:</strong> {{ $guia->despachos->first()->cliente->email ?? 'Navuera@tepuymarina.com' }}</div>
-        </div>
-    </div>
-    
-    <h5 style="margin-bottom: 10px; border-bottom: 1px solid #000; padding-bottom: 5px;">INFORMACIÓN / ETIQUETA</h5>
-
-    <div class="auth-info">
-        <div class="row">
-            <div class="col-4"><strong>No. de Pedido:</strong> {{ $guia->id }} Guía de s</div>
-            <div class="col-4"><strong>Fecha Doc:</strong> {{ \Carbon\Carbon::parse($guia->fecha_salida)->format('d/m/Y') }}</div>
-            <div class="col-4"><strong>Moneda:</strong> VESM Miles de Bolívares</div>
-        </div>
-        <div class="row">
-            <div class="col-4"><strong>Orden de Compra:</strong> {{ $guia->orden_compra ?? 'Distribuidora Impordiesel C.A.' }}</div>
-            <div class="col-4"><strong>Fecha O.C.:</strong> {{ \Carbon\Carbon::parse($guia->fecha_salida)->format('d/m/Y') }}</div>
-            <div class="col-4"><strong>Términos de Pago:</strong> {{ $guia->terminos_pago ?? 'PREPAGADO' }}</div>
-        </div>
-        <div class="row">
-            <div class="col-4"><strong>Vendedor:</strong> DISTRIBUIDORA DE COMBUSTIBLE IMPORDIESEL</div>
-            <div class="col-4"><strong>Centro:</strong> Planta de Dist. Boleíta</div>
-            <div class="col-4"><strong>Buque:</strong> {{ $guia->buque ?? 'GAMBOA' }}</div>
-        </div>
-        <div class="row">
-            <div class="col-4"><strong>Pto. Entrega:</strong> {{ $guia->destino ?? 'MUELLE BAUXILUM' }}</div>
-            <div class="col-4"><strong>Fecha de Entrega:</strong> {{ \Carbon\Carbon::parse($guia->fecha_salida)->format('d/m/Y') }}</div>
-            <div class="col-4"><strong>Método de Entrega:</strong> {{ $guia->metodo_entrega ?? 'Truck' }}</div>
-        </div>
-    </div>
-
-    <h5 style="margin-bottom: 10px; border-bottom: 1px solid #000; padding-bottom: 5px;">MATERIALES</h5>
-
-    <table class="auth-table">
-        <thead>
-            <tr>
-                <th>Item</th>
-                <th>Código</th>
-                <th>Material</th>
-                <th>Cantidad</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach ($guia->despachos as $index => $despacho)
-            <tr>
-                <td>{{ $index + 1 }}</td>
-                <td>401</td>
-                <td>{{ $despacho->concepto ?? 'MARINE GAS OIL (MGO)' }}</td>
-                <td>{{ number_format($despacho->litros, 0) }} LTS</td>
-            </tr>
-            @endforeach
-            @for ($i = $guia->despachos->count(); $i < 3; $i++)
-                <tr>
-                    <td>{{ $i + 1 }}</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                </tr>
-            @endfor
-        </tbody>
-    </table>
-
-    <div class="row">
-        <div class="col-6">
-            <h5 style="margin-top: 15px; margin-bottom: 5px;">COMENTARIOS</h5>
-            <div class="comentarios-box">
-                {{ $guia->comentarios_nominacion ?? 'PRODUCTO PARA SER DEPOSITADO EN LOS TANQUES DE SERVICIOS DE LA EMBARCACIÓN PARA CONSUMO PROPIO.' }}
-            </div>
-        </div>
-        <div class="col-6">
-            <h5 style="margin-top: 15px; margin-bottom: 5px;">TM</h5>
-            <div class="comentarios-box" style="text-align: right; font-weight: bold; font-size: 14pt;">
-                {{ $guia->toneladas_metricas ?? '32,59' }}
-            </div>
-        </div>
-    </div>
-    
 </div>
 
 <div class="print-only">
