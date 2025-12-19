@@ -31,16 +31,16 @@
             <div class="col-md-6">
                 <label for="cliente_select" class="form-label">Cliente (Facturar a)</label>
                 <select id="cliente_select" class="form-control" style="width: 100%;">
-                    @if ($viaje->despachos->first()->cliente)
-                        <option value="{{ $viaje->despachos->first()->cliente->id }}" selected>{{ $viaje->despachos->first()->cliente->nombre }}</option>
+                    @if ($guia->despachos->first()->cliente)
+                        <option value="{{ $guia->despachos->first()->cliente->id }}" selected>{{ $guia->despachos->first()->cliente->nombre }}</option>
                     @endif
                 </select>
             </div>
             <div class="col-md-6">
                 <label for="buque_select" class="form-label">Buque (Registro al Vuelo)</label>
                 <select id="buque_select" class="form-control" style="width: 100%;">
-                    @if ($viaje->buque)
-                        <option value="{{ $viaje->buque }}" selected>{{ $viaje->buque }}</option>
+                    @if ($guia->buque)
+                        <option value="{{ $guia->buque }}" selected>{{ $guia->buque }}</option>
                     @endif
                 </select>
             </div>
@@ -48,14 +48,14 @@
         <div class="row mb-3">
             <div class="col-md-6">
                 <label for="destino_text" class="form-label">Puerto/Muelle (Registro al Vuelo)</label>
-                <input type="text" id="destino_text" class="form-control" value="{{ $viaje->destino ?? 'MUELLE BAUXILUM' }}">
+                <input type="text" id="destino_text" class="form-control" value="{{ $guia->destino ?? 'MUELLE BAUXILUM' }}">
             </div>
             <div class="col-md-6">
                 <label for="delivery_method" class="form-label">Método de Entrega</label>
                 <select id="delivery_method" class="form-control" style="width: 100%;">
-                    <option value="Truck" {{ ($viaje->metodo_entrega ?? 'Truck') == 'Truck' ? 'selected' : '' }}>Truck</option>
-                    <option value="Barge" {{ ($viaje->metodo_entrega ?? '') == 'Barge' ? 'selected' : '' }}>Barge</option>
-                    <option value="Pipeline" {{ ($viaje->metodo_entrega ?? '') == 'Pipeline' ? 'selected' : '' }}>Pipeline</option>
+                    <option value="Truck" {{ ($guia->metodo_entrega ?? 'Truck') == 'Truck' ? 'selected' : '' }}>Truck</option>
+                    <option value="Barge" {{ ($guia->metodo_entrega ?? '') == 'Barge' ? 'selected' : '' }}>Barge</option>
+                    <option value="Pipeline" {{ ($guia->metodo_entrega ?? '') == 'Pipeline' ? 'selected' : '' }}>Pipeline</option>
                 </select>
             </div>
         </div>
@@ -69,22 +69,99 @@
     </form>
 </div>
 
-<div class="auth-container">
-    <div class="auth-header">
-        <h3 class="mb-0">{{ 'IMPORDIESEL' }}</h3>
-        <p class="mb-0">DISTRIBUIDORA DE COMBUSTIBLES RIF: J-50230748-8</p>
-        <h4 class="mt-2">AUTORIZACIÓN / NOMINACIÓN DE COMBUSTIBLES Y LUBRICANTES</h4>
+<div class="auth-container printableArea row" style="width: 8.5in; heigth:11in;">
+    <table class="table table-bordered" style="font-size: 10pt; width: 100%;">
+        <tr>
+            <td colspan="4" style="text-align: center; font-size: 14pt; font-weight: bold;">
+                <img src="{{ asset('img/logo1.png') }}" alt="logo empresa" style="width: 250px; float: left; margin-right: 10px;">
+                AUTORIZACIÓN / NOMINACIÓN DE COMBUSTIBLES Y LUBRICANTES
+            </td>
+        </tr>
+        <tr style="margin-top: none; padding: none; line-height: none; height: none;">
+            <td width="20%" style="margin: none"></td>
+            <td width="20%" style="margin: none"></td>
+            <td width="30%" style="margin: none"></td>
+            <td width="30%" style="margin: none"></td>
+        </tr>
+        <tr>
+            <td colspan="3" style="text-align:left; font-size: 12pt; font-weight: bold;">
+                CLIENTE
+            </td>
+            <td style="text-align: right; font-size: 10pt;">INFORMACION</td>
+        </tr>
+        <tr>
+            <td colspan="3" style="text-align:left; font-size: 10pt;">
+                Facturar a: {{ $guia->->cliente ?? 'Distribuidora Impordiesel C.A.' }} <br>
+                Direccion: {{ $guia->direccion ?? 'CR UD 524 LOCAL PARCELA 524-01-02...' }} <br>
+                Contacto: {{ $guia->contacto ?? 'Antonio Bertolo' }} <br>
+                Correo: electronico: {{ $guia->email ?? 'Navuera@tepuymarina.com' }} <br>
+                Telefono: {{ $guia->telefono ?? '0286-9231278' }}
+            </td>
+            <td style="text-align: right; font-size: 10pt;">
+                Etiqueta  <br>
+                N° Pedido: {{ $guia->id }} <br>
+                Fecha Doc: {{ \Carbon\Carbon::parse($guia->fecha_salida)->format('d/m/Y') }} <br>
+                Moneda: VESM Miles de Bolívares <br>
+                Orden de Compra: {{ $guia->cliente ?? 'Distribuidora Impordiesel C.A.' }} <br>
+                Fecha O.C.: {{ \Carbon\Carbon::parse($guia->updated_at)->format('d/m/Y') }} <br>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4"><br><br></td>
+        </tr>
+        <tr>
+            <td colspan="3" style="text-align:left; font-size: 12pt; font-weight: bold;">
+                Cuenta: DISTRIBUIDORA DE COMBUSTIBLE IMPORDIESEL <br>
+                Vendedor: DISTRIBUIDORA DE COMBUSTIBLE IMPORDIESEL <br>
+                Agente: <br>
+                Corredor: <br>
+                Centro: Planta de Dist. Boleíta <br>
+                Terminos de Pago: {{  'PREPAGADO' }}
+
+            </td>
+            <td style="text-align: right; font-size: 10pt;">
+                BUQUE : {{ $guia->buque ?? 'GAMBOA' }} <br>
+                Pto. Entrega: {{ $guia->destino ?? 'MUELLE BAUXILUM' }} <br>
+                Fecha de Entrega: {{ \Carbon\Carbon::parse($guia->updated_at)->format('d/m/Y') }} <br>
+                Método de Entrega: {{  'Truck' }}
+            </td>
+        </tr>
+        <tr style="text-align: center">
+            <td style="border: none">Item</td>
+            <td style="border: none">Codigo</td>
+            <td style="border: none">Material</td>
+            <td style="border: none">Cantidad</td>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>401</td>
+            <td>MARINE GAS OIL (MGO)</td>
+            <td>{{ number_format($guia->cantidad, 0) }} LTS</td>
+        </tr>
+        <tr>
+            <td colspan="4" style="text-align: center">
+            <h5 style="margin-top: 15px; margin-bottom: 5px;">COMENTARIOS</h5>
+            <div class="comentarios-box">
+                {{  'PRODUCTO PARA SER DEPOSITADO EN LOS TANQUES DE SERVICIOS DE LA EMBARCACIÓN PARA CONSUMO PROPIO.' }}
+            </div>
+            </td>
+        </tr>
+
+    </table>
+    <div class="header-bunker mb-3 col-12" style="display: block; height: 100px; ;">
+        <p class="mb-0" style="float: rigth; text-align: right; vertical-align:middle"><strong>AUTORIZACION / NOMINACION DE COMBUSTIBLES Y LUBRICANTES</strong></p>
+        
     </div>
 
     <div class="auth-info">
         <div class="row">
-            <div class="col-6"><strong>Cliente (Facturar a):</strong> {{ $viaje->despachos->first()->cliente->nombre ?? 'Tepuy Marina C.A' }}</div>
-            <div class="col-6"><strong>Contacto del Cliente:</strong> {{ $viaje->despachos->first()->cliente->contacto ?? 'Antonio Bertolo' }}</div>
+            <div class="col-6"><strong>Cliente (Facturar a):</strong> {{ $guia->despachos->first()->cliente->nombre ?? 'Distribuidora Impordiesel C.A.' }}</div>
+            <div class="col-6"><strong>Contacto del Cliente:</strong> {{ $guia->despachos->first()->cliente->contacto ?? 'Antonio Bertolo' }}</div>
         </div>
-        <div><strong>Dirección:</strong> {{ $viaje->despachos->first()->cliente->direccion ?? 'CR UD 524 LOCAL PARCELA 524-01-02...' }}</div>
+        <div><strong>Dirección:</strong> {{ $guia->despachos->first()->cliente->direccion ?? 'CR UD 524 LOCAL PARCELA 524-01-02...' }}</div>
         <div class="row">
-            <div class="col-6"><strong>Teléfono:</strong> {{ $viaje->despachos->first()->cliente->telefono ?? '0286-9231278' }}</div>
-            <div class="col-6"><strong>Correo Electrónico:</strong> {{ $viaje->despachos->first()->cliente->email ?? 'Navuera@tepuymarina.com' }}</div>
+            <div class="col-6"><strong>Teléfono:</strong> {{ $guia->despachos->first()->cliente->telefono ?? '0286-9231278' }}</div>
+            <div class="col-6"><strong>Correo Electrónico:</strong> {{ $guia->despachos->first()->cliente->email ?? 'Navuera@tepuymarina.com' }}</div>
         </div>
     </div>
     
@@ -92,24 +169,24 @@
 
     <div class="auth-info">
         <div class="row">
-            <div class="col-4"><strong>No. de Pedido:</strong> {{ $viaje->id }} Guía de s</div>
-            <div class="col-4"><strong>Fecha Doc:</strong> {{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y') }}</div>
+            <div class="col-4"><strong>No. de Pedido:</strong> {{ $guia->id }} Guía de s</div>
+            <div class="col-4"><strong>Fecha Doc:</strong> {{ \Carbon\Carbon::parse($guia->fecha_salida)->format('d/m/Y') }}</div>
             <div class="col-4"><strong>Moneda:</strong> VESM Miles de Bolívares</div>
         </div>
         <div class="row">
-            <div class="col-4"><strong>Orden de Compra:</strong> {{ $viaje->orden_compra ?? 'Tepuy Marina C.A' }}</div>
-            <div class="col-4"><strong>Fecha O.C.:</strong> {{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y') }}</div>
-            <div class="col-4"><strong>Términos de Pago:</strong> {{ $viaje->terminos_pago ?? 'PREPAGADO' }}</div>
+            <div class="col-4"><strong>Orden de Compra:</strong> {{ $guia->orden_compra ?? 'Distribuidora Impordiesel C.A.' }}</div>
+            <div class="col-4"><strong>Fecha O.C.:</strong> {{ \Carbon\Carbon::parse($guia->fecha_salida)->format('d/m/Y') }}</div>
+            <div class="col-4"><strong>Términos de Pago:</strong> {{ $guia->terminos_pago ?? 'PREPAGADO' }}</div>
         </div>
         <div class="row">
             <div class="col-4"><strong>Vendedor:</strong> DISTRIBUIDORA DE COMBUSTIBLE IMPORDIESEL</div>
             <div class="col-4"><strong>Centro:</strong> Planta de Dist. Boleíta</div>
-            <div class="col-4"><strong>Buque:</strong> {{ $viaje->buque ?? 'GAMBOA' }}</div>
+            <div class="col-4"><strong>Buque:</strong> {{ $guia->buque ?? 'GAMBOA' }}</div>
         </div>
         <div class="row">
-            <div class="col-4"><strong>Pto. Entrega:</strong> {{ $viaje->destino ?? 'MUELLE BAUXILUM' }}</div>
-            <div class="col-4"><strong>Fecha de Entrega:</strong> {{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y') }}</div>
-            <div class="col-4"><strong>Método de Entrega:</strong> {{ $viaje->metodo_entrega ?? 'Truck' }}</div>
+            <div class="col-4"><strong>Pto. Entrega:</strong> {{ $guia->destino ?? 'MUELLE BAUXILUM' }}</div>
+            <div class="col-4"><strong>Fecha de Entrega:</strong> {{ \Carbon\Carbon::parse($guia->fecha_salida)->format('d/m/Y') }}</div>
+            <div class="col-4"><strong>Método de Entrega:</strong> {{ $guia->metodo_entrega ?? 'Truck' }}</div>
         </div>
     </div>
 
@@ -125,7 +202,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach ($viaje->despachos as $index => $despacho)
+            @foreach ($guia->despachos as $index => $despacho)
             <tr>
                 <td>{{ $index + 1 }}</td>
                 <td>401</td>
@@ -133,7 +210,7 @@
                 <td>{{ number_format($despacho->litros, 0) }} LTS</td>
             </tr>
             @endforeach
-            @for ($i = $viaje->despachos->count(); $i < 3; $i++)
+            @for ($i = $guia->despachos->count(); $i < 3; $i++)
                 <tr>
                     <td>{{ $i + 1 }}</td>
                     <td>&nbsp;</td>
@@ -148,13 +225,13 @@
         <div class="col-6">
             <h5 style="margin-top: 15px; margin-bottom: 5px;">COMENTARIOS</h5>
             <div class="comentarios-box">
-                {{ $viaje->comentarios_nominacion ?? 'PRODUCTO PARA SER DEPOSITADO EN LOS TANQUES DE SERVICIOS DE LA EMBARCACIÓN PARA CONSUMO PROPIO.' }}
+                {{ $guia->comentarios_nominacion ?? 'PRODUCTO PARA SER DEPOSITADO EN LOS TANQUES DE SERVICIOS DE LA EMBARCACIÓN PARA CONSUMO PROPIO.' }}
             </div>
         </div>
         <div class="col-6">
             <h5 style="margin-top: 15px; margin-bottom: 5px;">TM</h5>
             <div class="comentarios-box" style="text-align: right; font-weight: bold; font-size: 14pt;">
-                {{ $viaje->toneladas_metricas ?? '32,59' }}
+                {{ $guia->toneladas_metricas ?? '32,59' }}
             </div>
         </div>
     </div>
@@ -171,9 +248,9 @@
 <script>
     $(document).ready(function() {
         // La lógica de Select2 y Actualización es idéntica a la Boleta/Guía anterior
-        // Se asume que las rutas API (api.clientes.search, api.clientes.store-al-vuelo, api/viajes/{id}/update-guia-data) están definidas.
+        // Se asume que las rutas API (api.clientes.search, api.clientes.store-al-vuelo, api/guias/{id}/update-guia-data) están definidas.
         
-        const viajeId = {{ $viaje->id }};
+        const guiaId = {{ $guia->id }};
         const clienteSelect = $('#cliente_select');
         const buqueSelect = $('#buque_select');
         const deliveryMethod = $('#delivery_method');
@@ -211,7 +288,7 @@
 
             const handleUpdate = (finalClienteId) => {
                 $.ajax({
-                    url: `{{ url('api/viajes') }}/${viajeId}/update-guia-data`, 
+                    url: `{{ url('api/guias') }}/${guiaId}/update-guia-data`, 
                     method: 'PUT',
                     data: {
                         _token: '{{ csrf_token() }}',
@@ -225,7 +302,7 @@
                         window.location.reload(); 
                     },
                     error: function(xhr) {
-                        alert('Error al actualizar los datos del viaje: ' + (xhr.responseJSON.message || 'Error desconocido'));
+                        alert('Error al actualizar los datos del guia: ' + (xhr.responseJSON.message || 'Error desconocido'));
                     },
                     complete: function() {
                         btn.prop('disabled', false).html('<i class="bi bi-save"></i> Guardar Cambios y Recargar Guía');

@@ -29,7 +29,11 @@ class Guia extends Model
         'cedula',
         'cantidad',
         'producto',
-        'observaciones'
+        'observaciones',
+        'telefono',
+        'email',
+        'cliente_id',
+        'contacto',
     ];
 
 
