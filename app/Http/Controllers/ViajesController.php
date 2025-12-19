@@ -949,7 +949,7 @@ public function showBoleta($id)
     return view('combustible.boleta', compact('guia'));
 }
 
-public function showNomincion($id)
+public function showNominacion($id)
 {
     $guia= Guia::findOrFail($id);
     return view('combustible.nominacion', compact('guia'));
