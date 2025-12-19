@@ -77,6 +77,7 @@
             </td>
             <td>
                 <strong>FECHA (date)</strong>
+                {{ \Carbon\Carbon::parse($guia->created_at)->format('d.m.Y') }}
             </td>
         </tr>
         <tr>
@@ -86,12 +87,15 @@
             </td>
             <td colspan="2">
                 <strong>IMO</strong>
+                {{ $guia->buque->imo ?? '####' }}
             </td>
             <td colspan="2">
                 <strong>BANDERA (flag)</strong>
+                {{ $guia->buque-bandera ?? '#########'}}
             </td>
             <td colspan="2">
                 <strong>PUERTO (port)</strong>
+                {{ $guia->muelle ?? 'MUELLE BAUXILUM' }}
             </td>
         </tr>
         <tr>
@@ -116,34 +120,37 @@
             <td width="10%" style="border: none"></td>
             <td width="10%" style="border: none"></td>
         </tr>
+        <tr>
+            <td colspan="8" ></td>
+            <td rowspan="2"><strong>TEMP °C</strong></td>
+            <td rowspan="2">
+                <strong>FACTOR CORREC (corr. Factor)</strong>
+            </td>
+        </tr>
+        <tr>
+            <td rowspan="3" ><strong>PRODUCTO (product)</strong> <br>M.G.O.</td>
+            <td colspan="3"><strong>INICIO (start)</strong></td>
+            <td colspan="3"><strong>FINAL (finish)</strong></td>
+        </tr>
+        <tr>
+            <td><strong>FECHA (date)</strong></td>
+            <td><strong>HORA (time)</strong></td>
+            <td><strong>LITROS (litres)</strong></td>
+            <td><strong>FECHA (date)</strong></td>
+            <td><strong>HORA (time)</strong></td>
+            <td><strong>LITROS (litres)</strong></td>
+            <td rowspan="2">80 F <br> 28</td>
+            <td rowspan="2"><br>0,998</td>
+        </tr>
+        <tr>
+            <td>{{ \Carbon\Carbon::parse($guia->created_at)->format('d.m.Y') }}</td>
+            <td></td>
+            <td></td>
+            <td>{{ \Carbon\Carbon::parse($guia->created_at)->format('d.m.Y') }}</td>
+            <td></td>
+            <td></td>
+        </tr>
     </table>
-    <div class="info-grid">
-        <div>
-            <strong>CLIENTE (client):</strong> {{ $guia->cliente ?? 'Tepuy Marina' }}
-        </div>
-        <div>
-            <strong>NOMINACIÓN:</strong> #########
-        </div>
-        <div>
-            <strong>BUQUE (vessel):</strong> {{ $guia->buque ?? 'GAMBOA' }}
-        </div>
-        <div>
-            <strong>FECHA (date):</strong> {{ \Carbon\Carbon::parse($guia->created_at)->format('d.m.Y') }}
-        </div>
-        <div>
-            <strong>IMO:</strong> ####
-        </div>
-        <div>
-            <strong>BANDERA (flag):</strong> #########
-        </div>
-        <div>
-            <strong>PUERTO (port):</strong> {{ $guia->muelle ?? 'MUELLE BAUXILUM' }}
-        </div>
-        <div>
-            <strong>MÉTODO DE ENTREGA (delivery method):</strong> 
-            {{ $guia->metodo_entrega ?? 'CAMION (tank truck)' }}
-        </div>
-    </div>
     
     <h5 style="margin-bottom: 10px; border-bottom: 1px solid #000; padding-bottom: 5px;">DETALLE DE CALIDAD (QUALITY)</h5>
 
