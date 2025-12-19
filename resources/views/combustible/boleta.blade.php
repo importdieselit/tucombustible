@@ -196,8 +196,8 @@
         <tr>
             <td colspan="10" style="text-align: center; font-weight:bolder"><p style="margin-top: 15px; font-style: italic; font-size: 8pt; border-bottom: 1px solid #000; padding-bottom: 10px;">
         Remarks: The fuel supplied in this delivery in conformity with regulation 14(1) or (4)A and regulation 18(1) of annex VI Marpol 73/78
-    </p>
-</td>   
+         </p>
+        </td>   
         </tr>
         <tr>
             <td colspan="10" style="text-align: center; font-weight:bolder">
@@ -226,7 +226,7 @@
             <td colspan="3" rowspan="2">
                 NOMBRE (name) <br>
                 PRIMER INGENIERO (chief master)</td>
-            <td>NOMBRE (name) YULIMAR CASTELLANOS</td>
+            <td colspan="4">NOMBRE (name) YULIMAR CASTELLANOS</td>
         </tr>
 
     </table>
