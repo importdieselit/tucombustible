@@ -8,11 +8,11 @@
     .bunker-container { width: 100%; max-width: 900px; margin: 0 auto; border: 1px solid #000; padding: 15px; }
     .header-bunker {border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 10px; }
     .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-    .table td { border-bottom: 1px dashed #ccc; padding-bottom: 3px; }
+    .table td { border-bottom: 1px;padding-bottom: 3px; }
     .table strong { font-size: 8pt; display: block; }
     .quality-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 9pt; }
     .quality-table th, .quality-table td { border: 1px solid #000; padding: 4px 8px; text-align: left; }
-    .quality-table th { background-color: #f0f0f0; font-weight: bold; }
+    .quality-table th { font-weight: bold; }
     .signature-area { display: flex; justify-content: space-between; margin-top: 40px; font-size: 9pt; }
     .signature-area div { width: 45%; text-align: center; }
     .signature-line { border-top: 1px solid #000; margin-top: 50px; padding-top: 5px; }
@@ -29,7 +29,8 @@
         }
         /* Puedes añadir estilos adicionales para tablas o contenido */
         table {
-            width: 100%;
+            width: 95%;
+            margin: 1cm;
             /* Otras propiedades */
         }
     }
