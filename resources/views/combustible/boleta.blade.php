@@ -102,9 +102,9 @@
             <td colspan="3">METODO DE ENTREGA (delivery method)</td>
             <td colspan="7">
                 <div class="row">
-                    <div class="col-4" ><i class="fa fa-solid fa-square"></i> CAMION (tank truck)</div>
-                    <div class="col-4"><i class="fa fa-regular fa-square"></i> GABARRA (barge)</div>
-                    <div class="col-4"><i class="fa fa-regular fa-square"></i> TUBERIA (pipeline)</div>
+                    <div class="col-4" ><i class="fa fa-solid fa-square" style="height:8pt"></i> CAMION (tank truck)</div>
+                    <div class="col-4"><i class="fa fa-regular fa-square" style="height:8pt"></i> GABARRA (barge)</div>
+                    <div class="col-4"><i class="fa fa-regular fa-square" style="height:8pt"></i> TUBERIA (pipeline)</div>
                 </div>
             </td>
         </tr>
