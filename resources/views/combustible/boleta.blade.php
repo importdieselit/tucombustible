@@ -67,23 +67,37 @@
     </div>
     <table class="table table-bordered">
         <tr>
-            <td colspan="6">CLIENTE (client)</td>
-            <td colspan="3">NOMINACION</td>
-            <td>FECHA(date)</td>
+            <td colspan="6">
+                <label for="">CLIENTE (client)</label>
+                {{ $guia->cliente ?? 'Tepuy Marina' }}
+            </td>
+            <td colspan="3">
+                <label for="">NOMINACION</label>
+            </td>
+            <td><label for="">FECHA(date)</label></td>
         </tr>
         <tr>
-            <td colspan="4">BUQUE (vessel)</td>
-            <td>IMO</td>
-            <td colspan="2">BANDERA (flag)</td>
-            <td colspan="3">PUERTO (port)</td>
+            <td colspan="4">
+                <label for="">BUQUE (vessel)</label>
+                {{ $guia->buque ?? 'GAMBOA' }}
+            </td>
+            <td>
+                <label for="">IMO</label>
+            </td>
+            <td>
+                <label for="">BANDERA (flag)</label>
+            </td>
+            <td colspan="3">
+                <label for="">PUERTO (port)</label>
+            </td>
         </tr>
         <tr>
-            <td colspan="3">METODO DE ENTREGA (delivery method)</td>
+            <td colspan="3"><label for="">METODO DE ENTREGA (delivery method)</label></td>
             <td colspan="7">
                 <div class="row">
-                    <div class="col-4"><i class="fa-sharp fa-solid fa-square"></i> CAMION (tank truck)</div>
-                    <div class="col-4"><i class="fa-sharp fa-regular fa-square"></i> GABARRA (barge)</div>
-                    <div class="col-4"><i class="fa-sharp fa-regular fa-square"></i> TUBERIA (pipeline)</div>
+                    <div class="col-4"><i class="fa fa-solid fa-square"></i> CAMION (tank truck)</div>
+                    <div class="col-4"><i class="fa fa-square"></i> GABARRA (barge)</div>
+                    <div class="col-4"><i class="fa fa-square"></i> TUBERIA (pipeline)</div>
                 </div>
             </td>
         </tr>
