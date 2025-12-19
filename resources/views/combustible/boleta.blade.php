@@ -65,7 +65,7 @@
         <p class="mb-0" style="float: rigth; text-align: right; vertical-align:middle"><strong>Boleta de combustible marino entregado</strong> <br>(marine bunker delivery receipt)</p>
         
     </div>
-    <table class="table table-bordered border-dark mb-3">
+    <table class="table table-bordered border-dark mb-3" style="font-size: 10pt">
         <tr>
             <td colspan="6">
                 <label for="">CLIENTE (client)</label>
@@ -102,16 +102,16 @@
             </td>
         </tr>
         <tr>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
+            <td width="10%"></td>
+            <td width="10%"></td>
+            <td width="10%"></td>
+            <td width="10%"></td>
+            <td width="10%"></td>
+            <td width="10%"></td>
+            <td width="10%"></td>
+            <td width="10%"></td>
+            <td width="10%"></td>
+            <td width="10%"></td>
         </tr>
     </table>
     <div class="info-grid">
