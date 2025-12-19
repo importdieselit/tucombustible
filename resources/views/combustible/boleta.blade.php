@@ -98,11 +98,11 @@
                 {{ $guia->muelle ?? 'MUELLE BAUXILUM' }}
             </td>
         </tr>
-        <tr>
-            <td colspan="3" style="font-size: 8pt">METODO DE ENTREGA (delivery method)</td>
+        <tr  style="font-size: 8pt">
+            <td colspan="3">METODO DE ENTREGA (delivery method)</td>
             <td colspan="7">
                 <div class="row">
-                    <div class="col-4"><i class="fa fa-solid fa-square"></i> CAMION (tank truck)</div>
+                    <div class="col-4" ><i class="fa fa-solid fa-square"></i> CAMION (tank truck)</div>
                     <div class="col-4"><i class="fa fa-regular fa-square"></i> GABARRA (barge)</div>
                     <div class="col-4"><i class="fa fa-regular fa-square"></i> TUBERIA (pipeline)</div>
                 </div>
