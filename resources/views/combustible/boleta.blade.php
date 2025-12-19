@@ -208,22 +208,22 @@
         </tr>
         <tr>
             <td colspan="6"><strong>POR EL BUQUE (by vessel)</strong></td>
-            <td colspan="4" rowspan="4">POR DISTRIBUIDORA IMPORDIESEL
+            <td colspan="4" rowspan="2">POR DISTRIBUIDORA IMPORDIESEL
                 <img src="{{ asset('img/logo1.png') }}" alt="logo empresa" style="width: 250px; float: left; margin-right: 10px;">
                 FIRMA (signature) 
             </td>
         </tr>
         <tr>
-            <td colspan="3" rowspan="2">FIRMA (signature)</td>
-            <td colspan="3" rowspan="2">FIRMA (signature)</td>
+            <td colspan="3" >FIRMA (signature)</td>
+            <td colspan="3" >FIRMA (signature)</td>
         </tr>
         <tr>
-            <td colspan="3" rowspan="2">
+            <td colspan="3" >
                 NOMBRE (name)
                 <br>
                 CAPITAN (master)
             </td>
-            <td colspan="3" rowspan="2">
+            <td colspan="3" >
                 NOMBRE (name) <br>
                 PRIMER INGENIERO (chief master)</td>
             <td colspan="4">NOMBRE (name) YULIMAR CASTELLANOS</td>
