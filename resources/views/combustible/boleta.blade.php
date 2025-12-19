@@ -95,7 +95,7 @@
             </td>
         </tr>
         <tr>
-            <td colspan="3">METODO DE ENTREGA (delivery method)</td>
+            <td colspan="3" style="font-size: 8pt">METODO DE ENTREGA (delivery method)</td>
             <td colspan="7">
                 <div class="row">
                     <div class="col-4"><i class="fa fa-solid fa-square"></i> CAMION (tank truck)</div>
