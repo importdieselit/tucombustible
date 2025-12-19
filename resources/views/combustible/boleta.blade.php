@@ -8,8 +8,8 @@
     .bunker-container { width: 100%; max-width: 900px; margin: 0 auto; border: 1px solid #000; padding: 15px; }
     .header-bunker {border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 10px; }
     .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-    .info-grid div { border-bottom: 1px dashed #ccc; padding-bottom: 3px; }
-    .info-grid strong { font-size: 9pt; display: block; }
+    .table td { border-bottom: 1px dashed #ccc; padding-bottom: 3px; }
+    .table strong { font-size: 9pt; display: block; }
     .quality-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 9pt; }
     .quality-table th, .quality-table td { border: 1px solid #000; padding: 4px 8px; text-align: left; }
     .quality-table th { background-color: #f0f0f0; font-weight: bold; }
@@ -68,13 +68,16 @@
     <table class="table table-bordered border-dark mb-3" style="font-size: 10pt">
         <tr>
             <td colspan="6">
-                <label for="">CLIENTE (client)</label>
+                <strong>CLIENTE (client)</strong>
                 {{ $guia->cliente ?? 'Tepuy Marina' }}
             </td>
             <td colspan="3">
-                <label for="">NOMINACION</label>
+                <strong>NOMINACION</strong>
+                #########
             </td>
-            <td><label for="">FECHA(date)</label></td>
+            <td>
+                <strong>FECHA (date)</strong>
+            </td>
         </tr>
         <tr>
             <td colspan="4">
@@ -101,7 +104,7 @@
                 </div>
             </td>
         </tr>
-        <tr style="height:1px;">
+        <tr style="height:1px; border: none">
             <td width="10%" style="border: none"></td>
             <td width="10%" style="border: none"></td>
             <td width="10%" style="border: none"></td>
