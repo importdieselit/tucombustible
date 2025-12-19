@@ -6,7 +6,7 @@
     /* Estilos generales (reusados de guia.blade.php) */
     body { font-family: Arial, sans-serif; font-size: 10pt; margin: 20px; }
     .bunker-container { width: 100%; max-width: 900px; margin: 0 auto; border: 1px solid #000; padding: 15px; }
-    .header-bunker { text-align: center; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 10px; }
+    .header-bunker {border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 10px; }
     .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
     .info-grid div { border-bottom: 1px dashed #ccc; padding-bottom: 3px; }
     .info-grid strong { font-size: 9pt; display: block; }
@@ -60,12 +60,12 @@
 </div>
 
 <div class="bunker-container">
-    <div class="header-bunker">
+    <div class="header-bunker mb-3" style="display: block">
         <img src="{{ asset('img/logo1.png') }}" alt="logo empresa" style="width: 250px; float: left; margin-right: 10px;">
         <p class="mb-0" style="float: rigth; ">Boleta de combustible marino entregado (marine bunker delivery receipt)</p>
         
     </div>
-    <table>
+    <table class="table table-bordered">
         <tr>
             <td colspan="4">CLIENTE (client)</td>
             <td colspan="2">NOMINACION</td>
