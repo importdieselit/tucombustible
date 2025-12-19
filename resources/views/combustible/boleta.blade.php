@@ -91,7 +91,7 @@
             </td>
             <td colspan="2">
                 <strong>BANDERA (flag)</strong>
-                {{ $guia->buque-bandera ?? '#########'}}
+                {{ $guia->buque->bandera ?? '#########'}}
             </td>
             <td colspan="2">
                 <strong>PUERTO (port)</strong>
