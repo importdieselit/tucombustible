@@ -8,7 +8,7 @@
     .bunker-container { width: 100%; max-width: 900px; margin: 0 auto; border: 1px solid #000; padding: 15px; }
     .header-bunker {border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 10px; }
     .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-    .table td { border-bottom: 1px;padding-bottom: 3px; }
+    .table td { border-bottom: 1px; background-color: #FFFFFF; padding-bottom: 3px; }
     .table strong { font-size: 8pt; display: block; }
     .quality-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 9pt; }
     .quality-table th, .quality-table td { border: 1px solid #000; padding: 4px 8px; text-align: left; }
