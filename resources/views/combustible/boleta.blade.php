@@ -63,9 +63,31 @@
     <div class="header-bunker">
         <img src="{{ asset('img/logo1.png') }}" alt="logo empresa" style="width: 250px; float: left; margin-right: 10px;">
         <p class="mb-0" style="float: rigth; ">Boleta de combustible marino entregado (marine bunker delivery receipt)</p>
-        <p class="mb-0" style="font-size: 8pt;">DISTRIBUIDORA DE COMBUSTIBLES RIF: J-50230748-8</p>
+        
     </div>
-
+    <table>
+        <tr>
+            <td colspan="4">CLIENTE (client)</td>
+            <td colspan="2">NOMINACION</td>
+            <td>FECHA(date)</td>
+        </tr>
+        <tr>
+            <td colspan="3">BUQUE (vessel)</td>
+            <td>IMO</td>
+            <td>BANDERA (flag)</td>
+            <td colspan="2">PUERTO (port)</td>
+        </tr>
+        <tr>
+            <td colspan="2">METODO DE ENTREGA (delivery method)</td>
+            <td colspan="5">
+                <div class="row">
+                    <div class="col-4"><i class="fa-sharp fa-solid fa-square"></i> CAMION (tank truck)</div>
+                    <div class="col-4"><i class="fa-sharp fa-regular fa-square"></i> GABARRA (barge)</div>
+                    <div class="col-4"><i class="fa-sharp fa-regular fa-square"></i> TUBERIA (pipeline)</div>
+                </div>
+            </td>
+        </tr>
+    </table>
     <div class="info-grid">
         <div>
             <strong>CLIENTE (client):</strong> {{ $guia->cliente ?? 'Tepuy Marina' }}
