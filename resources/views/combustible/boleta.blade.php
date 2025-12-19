@@ -96,8 +96,8 @@
             <td colspan="7">
                 <div class="row">
                     <div class="col-4"><i class="fa fa-solid fa-square"></i> CAMION (tank truck)</div>
-                    <div class="col-4"><i class="fa fa-square"></i> GABARRA (barge)</div>
-                    <div class="col-4"><i class="fa fa-square"></i> TUBERIA (pipeline)</div>
+                    <div class="col-4"><i class="fa fa-regular fa-square"></i> GABARRA (barge)</div>
+                    <div class="col-4"><i class="fa fa-regular fa-square"></i> TUBERIA (pipeline)</div>
                 </div>
             </td>
         </tr>
