@@ -92,14 +92,26 @@
             </td>
         </tr>
         <tr>
-            <td colspan="3"><label for="">METODO DE ENTREGA (delivery method)</label></td>
-            <td colspan="7">
+            <td colspan="2"><label for="">METODO DE ENTREGA (delivery method)</label></td>
+            <td colspan="8">
                 <div class="row">
                     <div class="col-4"><i class="fa fa-solid fa-square"></i> CAMION (tank truck)</div>
                     <div class="col-4"><i class="fa fa-regular fa-square"></i> GABARRA (barge)</div>
                     <div class="col-4"><i class="fa fa-regular fa-square"></i> TUBERIA (pipeline)</div>
                 </div>
             </td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
         </tr>
     </table>
     <div class="info-grid">
