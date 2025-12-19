@@ -81,20 +81,20 @@
             <td colspan="4"><br><br></td>
         </tr>
         <tr style="border:solid 1px black;">
-            <td colspan="3" style="text-align:left; font-size: 12pt; font-weight: bold;">
-                Cuenta: DISTRIBUIDORA DE COMBUSTIBLE IMPORDIESEL <br>
-                Vendedor: DISTRIBUIDORA DE COMBUSTIBLE IMPORDIESEL <br>
-                Agente: <br>
-                Corredor: <br>
-                Centro: Planta de Dist. Boleíta <br>
-                Terminos de Pago: {{  'PREPAGADO' }}
+            <td colspan="3" style="text-align:left; font-size: 12pt; ">
+                <span style="font-weight: bold;">Cuenta:</span> DISTRIBUIDORA DE COMBUSTIBLE IMPORDIESEL <br>
+                <span style="font-weight: bold;">Vendedor:</span> DISTRIBUIDORA DE COMBUSTIBLE IMPORDIESEL <br>
+                <span style="font-weight: bold;">Agente:</span> <br>
+                <span style="font-weight: bold;">Corredor:</span> <br>
+                <span style="font-weight: bold;">Centro:</span> Planta de Dist. Boleíta <br>
+                <span style="font-weight: bold;">Terminos de Pago:</span> {{  'PREPAGADO' }}
 
             </td>
-            <td style="text-align: right; font-size: 10pt; border:solid 1px black;">
-                BUQUE : {{ $guia->buque ?? 'GAMBOA' }} <br>
-                Pto. Entrega: {{ $guia->destino ?? 'MUELLE BAUXILUM' }} <br>
-                Fecha de Entrega: {{ \Carbon\Carbon::parse($guia->updated_at)->format('d/m/Y') }} <br>
-                Método de Entrega: {{  'Truck' }}
+            <td style="text-align: left; font-size: 10pt; border:solid 1px black;">
+                <span style="font-weight: bold;">BUQUE :</span> {{ $guia->buque ?? 'GAMBOA' }} <br>
+                <span style="font-weight: bold;">Pto. Entrega:</span> {{ $guia->destino ?? 'MUELLE BAUXILUM' }} <br>
+                <span style="font-weight: bold;">Fecha de Entrega:</span> {{ \Carbon\Carbon::parse($guia->updated_at)->format('d/m/Y') }} <br>
+                <span style="font-weight: bold;">Método de Entrega:</span> {{  'Truck' }}
             </td>
         </tr>
         <tr style="text-align: center ; font-weight: bold; border:solid 1px black;">
