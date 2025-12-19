@@ -208,9 +208,9 @@
         </tr>
         <tr>
             <td colspan="6"><strong>POR EL BUQUE (by vessel)</strong></td>
-            <td colspan="4" rowspan="3">POR DISTRIBUIDORA IMPORDIESEL
+            <td colspan="4" rowspan="3" style="border-bottom: 1px">POR DISTRIBUIDORA IMPORDIESEL
                 <img src="{{ asset('img/logo1.png') }}" alt="logo empresa" style="width: 250px; float: left; margin-right: 10px;">
-                FIRMA (signature) 
+                <br>FIRMA (signature) 
             </td>
         </tr>
         <tr>
