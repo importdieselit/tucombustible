@@ -77,23 +77,23 @@
             <td><label for="">FECHA(date)</label></td>
         </tr>
         <tr>
-            <td colspan="5">
+            <td colspan="4">
                 <label for="">BUQUE (vessel)</label>
                 {{ $guia->buque ?? 'GAMBOA' }}
             </td>
             <td>
-                <label for="">IMO</label>
+                <label for="2">IMO</label>
             </td>
             <td>
-                <label for="">BANDERA (flag)</label>
+                <label for="2">BANDERA (flag)</label>
             </td>
-            <td colspan="3">
+            <td colspan="2">
                 <label for="">PUERTO (port)</label>
             </td>
         </tr>
         <tr>
-            <td colspan="2"><label for="">METODO DE ENTREGA (delivery method)</label></td>
-            <td colspan="8">
+            <td colspan="3"><label for="">METODO DE ENTREGA (delivery method)</label></td>
+            <td colspan="7">
                 <div class="row">
                     <div class="col-4"><i class="fa fa-solid fa-square"></i> CAMION (tank truck)</div>
                     <div class="col-4"><i class="fa fa-regular fa-square"></i> GABARRA (barge)</div>
