@@ -41,11 +41,11 @@
         </div>
         <div class="row mb-3">
             <div class="col-md-6">
-                <label for="destino_text" class="form-label">Puerto/Muelle (Registro al Vuelo)</label>
-                <input type="text" id="destino_text" class="form-control" value="{{ $guia->destino ?? 'MUELLE BAUXILUM' }}">
+                <label for="bandera" class="form-label">Puerto/Muelle (Registro al Vuelo)</label>
+                <input type="text" id="bandera" class="form-control" value="{{ $guia->destino ?? 'MUELLE BAUXILUM' }}">
             </div>
             <div class="col-md-6">
-                <label for="delivery_method" class="form-label">Método de Entrega</label>
+                <label for="delivery_method" class="form-label"></label>
                 
             </div>
         </div>
@@ -61,8 +61,8 @@
 
 <div class="bunker-container">
     <div class="header-bunker">
-        <h3 class="mb-0">{{ 'IMPORDIESEL' }}</h3>
-        <p class="mb-0">Boleta de combustible marino entregado (marine bunker delivery receipt)</p>
+        <img src="{{ asset('img/logo1.png') }}" alt="logo empresa" style="width: 250px; float: left; margin-right: 10px;">
+        <p class="mb-0" style="float: rigth; ">Boleta de combustible marino entregado (marine bunker delivery receipt)</p>
         <p class="mb-0" style="font-size: 8pt;">DISTRIBUIDORA DE COMBUSTIBLES RIF: J-50230748-8</p>
     </div>
 
