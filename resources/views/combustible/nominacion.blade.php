@@ -112,8 +112,10 @@
         <tr style="border:solid 1px black;">
             <td colspan="4" style="text-align: center">
             <h5 style="margin-top: 15px; margin-bottom: 5px;">COMENTARIOS</h5>
-            <div class="comentarios-box">
-                {{  'PRODUCTO PARA SER DEPOSITADO EN LOS TANQUES DE SERVICIOS DE LA EMBARCACIÓN PARA CONSUMO PROPIO.' }}
+            <div class="comentarios-box"> <br><br>
+                <h1>{{  'PRODUCTO PARA SER DEPOSITADO EN LOS TANQUES DE SERVICIOS DE LA EMBARCACIÓN PARA CONSUMO PROPIO.' }}</h1>
+                <br>
+                <br>
             </div>
             </td>
         </tr>
