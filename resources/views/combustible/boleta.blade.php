@@ -164,13 +164,13 @@
             <td colspan="2">-6</td>
         </tr>
         <tr style="text-align: center">
-            <td colspan="3"> <strong>VISCOSIDAD A 50° C (cSt.) (viscosity)</strong>td>
+            <td colspan="3"> <strong>VISCOSIDAD A 50° C (cSt.) (viscosity)</strong></td>
             <td colspan="2"> 38,5</td>
-            <td colspan="3"> <strong>AZUFRE (%PESO) (sulphur, wt%)</strong>td>
+            <td colspan="3"> <strong>AZUFRE (%PESO) (sulphur, wt%)</strong></td>
             <td colspan="2"> 0,438</td>
         </tr>
         <tr style="text-align: center">
-            <td colspan="3"> <strong>AGUA Y SEDIMENTO (% VOL) (B.S & water)</strong>td>
+            <td colspan="3"> <strong>AGUA Y SEDIMENTO (% VOL) (B.S & water)</strong></td>
             <td colspan="2"> 0,005</td>
             <td colspan="3"> <strong>DENSIDAD (density)</strong></td>
             <td colspan="2"> 0,8428</td>
@@ -184,11 +184,12 @@
                 {{ number_format(($guia->cantidad* 0.85/1000), 2, ',', '.') }}
             </td>
             <td colspan="3">
-                <strong>LITROS BRUTOS (gross litres)</strong>
+                <strong>LITROS BRUTOS</strong><br>
+                <strong>(gross litres)</strong>
                 {{ number_format(($guia->cantidad ?? 0), 2, ',', '.') }}
             </td>
             <td colspan="3">
-                <strong>litros NETOS (net litres)</strong>
+                <strong>litros NETOS</strong><br><strong>(net litres)</strong>
                 {{ number_format(($guia->cantidad ?? 0)*0.998, 2, ',', '.') }}
 
             </td>
