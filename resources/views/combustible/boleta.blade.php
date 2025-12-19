@@ -67,19 +67,19 @@
     </div>
     <table class="table table-bordered">
         <tr>
-            <td colspan="4">CLIENTE (client)</td>
-            <td colspan="2">NOMINACION</td>
+            <td colspan="6">CLIENTE (client)</td>
+            <td colspan="3">NOMINACION</td>
             <td>FECHA(date)</td>
         </tr>
         <tr>
-            <td colspan="3">BUQUE (vessel)</td>
+            <td colspan="4">BUQUE (vessel)</td>
             <td>IMO</td>
-            <td>BANDERA (flag)</td>
-            <td colspan="2">PUERTO (port)</td>
+            <td colspan="2">BANDERA (flag)</td>
+            <td colspan="3">PUERTO (port)</td>
         </tr>
         <tr>
-            <td colspan="2">METODO DE ENTREGA (delivery method)</td>
-            <td colspan="5">
+            <td colspan="3">METODO DE ENTREGA (delivery method)</td>
+            <td colspan="7">
                 <div class="row">
                     <div class="col-4"><i class="fa-sharp fa-solid fa-square"></i> CAMION (tank truck)</div>
                     <div class="col-4"><i class="fa-sharp fa-regular fa-square"></i> GABARRA (barge)</div>
