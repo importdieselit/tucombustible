@@ -28,42 +28,13 @@
     <h4>📝 Edición Nominación (Fuera de Impresión)</h4>
     <form id="nominacion-editor-form">
         <div class="row mb-3">
-            <div class="col-md-6">
-                <label for="cliente_select" class="form-label">Cliente (Facturar a)</label>
-                <select id="cliente_select" class="form-control" style="width: 100%;">
-                    @if ($guia->despachos->first()->cliente)
-                        <option value="{{ $guia->despachos->first()->cliente->id }}" selected>{{ $guia->despachos->first()->cliente->nombre }}</option>
-                    @endif
-                </select>
-            </div>
-            <div class="col-md-6">
-                <label for="buque_select" class="form-label">Buque (Registro al Vuelo)</label>
-                <select id="buque_select" class="form-control" style="width: 100%;">
-                    @if ($guia->buque)
-                        <option value="{{ $guia->buque }}" selected>{{ $guia->buque }}</option>
-                    @endif
-                </select>
-            </div>
-        </div>
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label for="destino_text" class="form-label">Puerto/Muelle (Registro al Vuelo)</label>
-                <input type="text" id="destino_text" class="form-control" value="{{ $guia->destino ?? 'MUELLE BAUXILUM' }}">
-            </div>
-            <div class="col-md-6">
-                <label for="delivery_method" class="form-label">Método de Entrega</label>
-                <select id="delivery_method" class="form-control" style="width: 100%;">
-                    <option value="Truck" {{ ($guia->metodo_entrega ?? 'Truck') == 'Truck' ? 'selected' : '' }}>Truck</option>
-                    <option value="Barge" {{ ($guia->metodo_entrega ?? '') == 'Barge' ? 'selected' : '' }}>Barge</option>
-                    <option value="Pipeline" {{ ($guia->metodo_entrega ?? '') == 'Pipeline' ? 'selected' : '' }}>Pipeline</option>
-                </select>
-            </div>
+            
         </div>
         
         <button type="button" id="update-guia-btn" class="btn btn-primary mt-2">
             <i class="bi bi-save"></i> Guardar Cambios y Recargar Guía
         </button>
-        <button type="button" onclick="window.print()" class="btn btn-success mt-2">
+        <button type="button" id="print" class="btn btn-success mt-2">
             <i class="bi bi-printer"></i> Vista Previa de Impresión
         </button>
     </form>
@@ -158,90 +129,7 @@
 </div>
 
 @push('scripts')
-<script>
-    $(document).ready(function() {
-        // La lógica de Select2 y Actualización es idéntica a la Boleta/Guía anterior
-        // Se asume que las rutas API (api.clientes.search, api.clientes.store-al-vuelo, api/guias/{id}/update-guia-data) están definidas.
-        
-        const guiaId = {{ $guia->id }};
-        const clienteSelect = $('#cliente_select');
-        const buqueSelect = $('#buque_select');
-        const deliveryMethod = $('#delivery_method');
-        
-        // =========================================================
-        // 1. SELECT2: CLIENTES, BUQUES (Configuración de Búsqueda y Creación al Vuelo)
-        // =========================================================
-        clienteSelect.select2({
-            placeholder: 'Buscar o ingresar nuevo cliente',
-            allowClear: true, tags: true, 
-            ajax: { url: '{{ route('api.clientes.search') }}', dataType: 'json', delay: 250, 
-                processResults: data => ({ results: data.map(c => ({ id: c.id, text: c.nombre })) }), cache: true },
-            createTag: params => (params.term.trim() === '') ? null : { id: params.term, text: params.term + ' (Nuevo Cliente)', newTag: true }
-        });
-
-        buqueSelect.select2({
-            placeholder: 'Buscar o ingresar nuevo buque', tags: true, 
-            createTag: params => ({ id: params.term, text: params.term })
-        });
-        
-        // =========================================================
-        // 2. ACTUALIZAR GUÍA / IMPRIMIR
-        // =========================================================
-        $('#update-guia-btn').on('click', function() {
-            const btn = $(this);
-            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Guardando...');
-
-            const selectedClienteId = clienteSelect.val();
-            const selectedClienteText = clienteSelect.find(':selected').text();
-            const selectedBuque = buqueSelect.val();
-            const destino = $('#destino_text').val();
-            const metodo_entrega = deliveryMethod.val();
-            
-            let isNewCliente = clienteSelect.find(':selected').data('select2-tag') === true;
-
-            const handleUpdate = (finalClienteId) => {
-                $.ajax({
-                    url: `{{ url('api/guias') }}/${guiaId}/update-guia-data`, 
-                    method: 'PUT',
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        cliente_id: finalClienteId,
-                        buque: selectedBuque,
-                        destino: destino,
-                        metodo_entrega: metodo_entrega,
-                    },
-                    success: function(response) {
-                        alert('Nominación actualizada con éxito. Recargando vista previa...');
-                        window.location.reload(); 
-                    },
-                    error: function(xhr) {
-                        alert('Error al actualizar los datos del guia: ' + (xhr.responseJSON.message || 'Error desconocido'));
-                    },
-                    complete: function() {
-                        btn.prop('disabled', false).html('<i class="bi bi-save"></i> Guardar Cambios y Recargar Guía');
-                    }
-                });
-            };
-
-            // Lógica para registrar cliente al vuelo
-            if (isNewCliente) {
-                $.ajax({
-                    url: '{{ route('api.clientes.store-al-vuelo') }}', 
-                    method: 'POST',
-                    data: { _token: '{{ csrf_token() }}', nombre: selectedClienteText },
-                    success: function(response) {
-                        handleUpdate(response.cliente.id); 
-                    },
-                    error: function(xhr) {
-                        alert('Error al registrar el nuevo cliente.');
-                        btn.prop('disabled', false).html('<i class="bi bi-save"></i> Guardar Cambios y Recargar Guía');
-                    }
-                });
-            } else {
-                handleUpdate(selectedClienteId);
-            }
-        });
-    });
-</script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+<script src="{{asset('js/jquery.PrintArea.js')}}" defer></script>
 @endpush
 @endsection
