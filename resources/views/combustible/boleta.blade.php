@@ -128,7 +128,7 @@
             </td>
         </tr>
         <tr style="text-align: center">
-            <td rowspan="3" colspan="2"> ><strong>PRODUCTO (product)</strong> <br>M.G.O.</td>
+            <td rowspan="3" colspan="2"><strong>PRODUCTO (product)</strong> <br>M.G.O.</td>
             <td colspan="3"><strong>INICIO (start)</strong></td>
             <td colspan="3"><strong>FINAL (finish)</strong></td>
         </tr>
@@ -150,70 +150,58 @@
             <td></td>
             <td></td>
         </tr>
-    </table>
-    
-    <h5 style="margin-bottom: 10px; border-bottom: 1px solid #000; padding-bottom: 5px;">DETALLE DE CALIDAD (QUALITY)</h5>
-
-    <table class="quality-table">
-        <thead>
-            <tr>
-                <th>PROPIEDAD</th><th>VALOR</th><th>PROPIEDAD</th><th>VALOR</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>GRAVEDAD API 60 °F (A. PI gravity at 60 °F)</td>
-                <td>{{ '36,3' }}</td>
-                <td>GRAVEDAD ESPECIFICA A 60 °F (specific gravity at 60 °F)</td>
-                <td>{{ '0,8433' }}</td>
-            </tr>
-            <tr>
-                <td>PUNTO DE INFLAMACIÓN (°C) (flash point)</td>
-                <td>{{ '66' }}</td>
-                <td>PUNTO DE FLUIDEZ (°C) (pour point)</td>
-                <td>{{ '-6' }}</td>
-            </tr>
-            <tr>
-                <td>VISCOSIDAD A 50° C (cSt.) (viscosity)</td>
-                <td>{{  '38,5' }}</td>
-                <td>AZUFRE (%PESO) (sulphur, wt%)</td>
-                <td>{{ '0,438' }}</td>
-            </tr>
-            <tr>
-                <td>AGUA Y SEDIMENTO (% VOL) (B.S & water)</td>
-                <td>{{  '0,005' }}</td>
-                <td>DENSIDAD (density)</td>
-                <td>{{ '0,8428' }}</td>
-            </tr>
-            <tr>
-                <td>PRODUCTO (product)</td>
-                <td>M.G.O</td>
-                <td>TEMP °C</td>
-                <td>{{ '28' }}</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <h5 style="margin-top: 15px; margin-bottom: 10px; border-bottom: 1px solid #000; padding-bottom: 5px;">CANTIDAD (QUANTITY)</h5>
-    
-    <table class="quality-table">
-        <tr>
-            <th width="30%">LITROS BRUTOS (gross litres)</th>
-            <td width="20%">{{ number_format(($guia->cantidad ?? 0), 2, ',', '.') }}</td>
-            <th width="30%">TONELADAS METRICAS</th>
-            <td width="20%">{{ number_format(($guia->cantidad* 0.8428), 2, ',', '.') }}</td>
+        <tr><td colspan="10" style="text-align: center; font-weight:bolder">CALIDAD (QUALITY)</td></tr>
+        <tr style="text-align: center">
+            <td colspan="3"> <strong>GRAVEDAD API 60 °F (15.6 °C) (A. PI gravity at 60 °F)</strong></td>
+            <td colspan="2">36,3</td>
+            <td colspan="3"><strong>GRAVEDAD ESPECIFICA A 60 °F (specific gravity at 60 °F)</strong></td>
+            <td colspan="2">0,8433</td>
+        </tr>
+        <tr style="text-align: center">
+            <td colspan="3"><strong>PUNTO DE INFLAMACIÓN (°C) (flash point)</strong></td>
+            <td colspan="2">66</td>
+            <td colspan="3"><strong>PUNTO DE FLUIDEZ (°C) (pour point)</strong></td>
+            <td colspan="2">-6</td>
+        </tr>
+        <tr style="text-align: center">
+            <td colspan="3"> <strong>VISCOSIDAD A 50° C (cSt.) (viscosity)</strong>td>
+            <td colspan="2"> 38,5</td>
+            <td colspan="3"> <strong>AZUFRE (%PESO) (sulphur, wt%)</strong>td>
+            <td colspan="2"> 0,438</td>
+        </tr>
+        <tr style="text-align: center">
+            <td colspan="3"> <strong>AGUA Y SEDIMENTO (% VOL) (B.S & water)</strong>td>
+            <td colspan="2"> 0,005</td>
+            <td colspan="3"> <strong>DENSIDAD (density)</strong></td>
+            <td colspan="2"> 0,8428</td>
         </tr>
         <tr>
-            <th>LITROS NETOS (net litres)</th>
-            <td>{{ number_format($guia->cantidad, 2, ',', '.') }}</td>
-            <th>FACTOR CORRECC (corr. Factor)</th>
-            <td>{{  '0,998' }}</td>
+            <td colspan="10" style="text-align: center; font-weight:bolder" > CANTIDAD (QUANTITY)</td>
         </tr>
-    </table>
+        <tr style="text-align: center">
+            <td colspan="4">
+                <strong>TONELADAS METRICAS</strong>
+                {{ number_format(($guia->cantidad* 0.8428), 2, ',', '.') }}
+            </td>
+            <td colspan="3">
+                <strong>LITROS BRUTOS (gross litres)</strong>
+                {{ number_format(($guia->cantidad ?? 0), 2, ',', '.') }}
+            </td>
+            <td colspan="3">
+                <strong>litros NETOS (net litres)</strong>
+                {{ number_format(($guia->cantidad ?? 0)*0.998, 2, ',', '.') }}
 
-    <p style="margin-top: 15px; font-style: italic; font-size: 8pt; border-bottom: 1px solid #000; padding-bottom: 10px;">
+            </td>
+        </tr>
+        <tr>
+            <td colspan="10" style="text-align: center; font-weight:bolder"><p style="margin-top: 15px; font-style: italic; font-size: 8pt; border-bottom: 1px solid #000; padding-bottom: 10px;">
         Remarks: The fuel supplied in this delivery in conformity with regulation 14(1) or (4)A and regulation 18(1) of annex VI Marpol 73/78
     </p>
+</td>
+        </tr>
+    </table>
+
+    
 
     <div class="signature-area">
         <div>
