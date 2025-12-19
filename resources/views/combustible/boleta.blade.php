@@ -101,7 +101,7 @@
                 </div>
             </td>
         </tr>
-        <tr>
+        <tr style="height:0px;">
             <td width="10%"></td>
             <td width="10%"></td>
             <td width="10%"></td>
