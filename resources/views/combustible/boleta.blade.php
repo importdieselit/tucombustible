@@ -74,7 +74,7 @@
     </form>
 </div>
 
-<div class="bunker-container printableArea">
+<div class="bunker-container printableArea" style="width: 8.5in; heigth:11in;">
     <div class="header-bunker mb-3" style="display: block; height: 100px; ;">
         <img src="{{ asset('img/logo1.png') }}" alt="logo empresa" style="width: 250px; float: left; margin-right: 10px;">
         <p class="mb-0" style="float: rigth; text-align: right; vertical-align:middle"><strong>Boleta de combustible marino entregado</strong> <br>(marine bunker delivery receipt)</p>
