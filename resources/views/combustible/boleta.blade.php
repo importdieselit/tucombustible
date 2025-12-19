@@ -62,10 +62,10 @@
 <div class="bunker-container">
     <div class="header-bunker mb-3" style="display: block; height: 100px; ;">
         <img src="{{ asset('img/logo1.png') }}" alt="logo empresa" style="width: 250px; float: left; margin-right: 10px;">
-        <p class="mb-0" style="float: rigth; ">Boleta de combustible marino entregado (marine bunker delivery receipt)</p>
+        <p class="mb-0" style="float: rigth; text-align: right; vertical-align:middle"><strong>Boleta de combustible marino entregado</strong> <br>(marine bunker delivery receipt)</p>
         
     </div>
-    <table class="table table-bordered">
+    <table class="table table-bordered border-dark mb-3">
         <tr>
             <td colspan="6">
                 <label for="">CLIENTE (client)</label>
@@ -85,7 +85,7 @@
                 <label for="">IMO</label>
             </td>
             <td>
-                <label for="">BANDERA (flag)</label>
+                <label for="2">BANDERA (flag)</label>
             </td>
             <td colspan="3">
                 <label for="">PUERTO (port)</label>
