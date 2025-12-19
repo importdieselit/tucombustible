@@ -77,7 +77,7 @@
             <td><label for="">FECHA(date)</label></td>
         </tr>
         <tr>
-            <td colspan="4">
+            <td colspan="5">
                 <label for="">BUQUE (vessel)</label>
                 {{ $guia->buque ?? 'GAMBOA' }}
             </td>
@@ -85,7 +85,7 @@
                 <label for="">IMO</label>
             </td>
             <td>
-                <label for="2">BANDERA (flag)</label>
+                <label for="">BANDERA (flag)</label>
             </td>
             <td colspan="3">
                 <label for="">PUERTO (port)</label>
