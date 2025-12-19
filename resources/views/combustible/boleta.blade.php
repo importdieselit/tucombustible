@@ -202,27 +202,34 @@
         <tr>
             <td colspan="10" style="text-align: center; font-weight:bolder">
                 <br>
-                <p style="margin-top: 15px; font-size: 12pt; font-weight: bold;  padding-bottom: 10px;">InTERNACIONAL</p>
+                <p style="margin-top: 15px; font-size: 12pt; font-weight: bold;  padding-bottom: 10px;">INTERNACIONAL</p>
                 <br>
             </td>
+        </tr>
+        <tr>
+            <td colspan="6"><strong>POR EL BUQUE (by vessel)</strong></td>
+            <td colspan="4" rowspan="4">POR DISTRIBUIDORA IMPORDIESEL
+                <img src="{{ asset('img/logo1.png') }}" alt="logo empresa" style="width: 250px; float: left; margin-right: 10px;">
+                FIRMA (signature) 
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3" rowspan="2">FIRMA (signature)</td>
+            <td colspan="3" rowspan="2">FIRMA (signature)</td>
+        </tr>
+        <tr>
+            <td colspan="3" rowspan="2">
+                NOMBRE (name)
+                <br>
+                CAPITAN (master)
+            </td>
+            <td colspan="3" rowspan="2">
+                NOMBRE (name) <br>
+                PRIMER INGENIERO (chief master)</td>
+            <td>NOMBRE (name) YULIMAR CASTELLANOS</td>
+        </tr>
+
     </table>
-
-    
-
-    <div class="signature-area">
-        <div>
-            <p>POR EL BUQUE (by vessel)</p>
-            <div class="signature-line">FIRMA (signature)</div>
-            <div class="signature-line">NOMBRE (name)</div>
-            <div class="signature-line">CAPITAN (master)</div>
-        </div>
-        <div>
-            <p>POR DISTRIBUIDORA IMPORDIESEL</p>
-            <div class="signature-line">FIRMA (signature)</div>
-            <div class="signature-line">NOMBRE (name): {{ $guia->supervisor_nombre ?? 'YULIMAR CASTELLANOS' }}</div>
-            <div class="signature-line">CARGO (ej. Supervisor)</div>
-        </div>
-    </div>
 </div>
 
 <div class="print-only">
