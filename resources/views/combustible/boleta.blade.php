@@ -181,7 +181,7 @@
         <tr style="text-align: center">
             <td colspan="4">
                 <strong>TONELADAS METRICAS</strong>
-                {{ number_format(($guia->cantidad* 0.86/1000), 2, ',', '.') }}
+                {{ number_format(($guia->cantidad* 0.85/1000), 2, ',', '.') }}
             </td>
             <td colspan="3">
                 <strong>LITROS BRUTOS (gross litres)</strong>
@@ -197,8 +197,14 @@
             <td colspan="10" style="text-align: center; font-weight:bolder"><p style="margin-top: 15px; font-style: italic; font-size: 8pt; border-bottom: 1px solid #000; padding-bottom: 10px;">
         Remarks: The fuel supplied in this delivery in conformity with regulation 14(1) or (4)A and regulation 18(1) of annex VI Marpol 73/78
     </p>
-</td>
+</td>   
         </tr>
+        <tr>
+            <td colspan="10" style="text-align: center; font-weight:bolder">
+                <br>
+                <p style="margin-top: 15px; font-size: 12pt; font-weight: bold;  padding-bottom: 10px;">InTERNACIONAL</p>
+                <br>
+            </td>
     </table>
 
     
