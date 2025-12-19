@@ -41,11 +41,11 @@
 </div>
 
 <div class="auth-container printableArea row" style="width: 8.5in; heigth:11in;">
-    <table class="table table-bordered" style="font-size: 10pt; width: 100%;">
+    <table class="table table-bordered" style="font-size: 10pt; width: 100%; border:solid 1px black; ">
         <tr>
             <td colspan="4" style="text-align: center; font-size: 14pt; font-weight: bold;">
                 <img src="{{ asset('img/logo1.png') }}" alt="logo empresa" style="width: 250px; float: left; margin-right: 10px;">
-                AUTORIZACIÓN / NOMINACIÓN DE COMBUSTIBLES Y LUBRICANTES
+                <div style="float: rigth; text-align: right; vertical-align:middle">AUTORIZACIÓN / NOMINACIÓN DE COMBUSTIBLES Y LUBRICANTES</div>
             </td>
         </tr>
         <tr style="margin-top: none; padding: none; line-height: none; height: none;">
@@ -54,13 +54,13 @@
             <td width="30%" style="margin: none"></td>
             <td width="30%" style="margin: none"></td>
         </tr>
-        <tr>
+        <tr style="border:solid 1px black;">
             <td colspan="3" style="text-align:left; font-size: 12pt; font-weight: bold;">
                 CLIENTE
             </td>
             <td style="text-align: right; font-size: 10pt;">INFORMACION</td>
         </tr>
-        <tr>
+        <tr style="border:solid 1px black;">
             <td colspan="3" style="text-align:left; font-size: 10pt;">
                 Facturar a: {{ $guia->cliente ?? 'Distribuidora Impordiesel C.A.' }} <br>
                 Direccion: {{ $guia->direccion ?? 'CR UD 524 LOCAL PARCELA 524-01-02...' }} <br>
@@ -68,7 +68,7 @@
                 Correo: electronico: {{ $guia->email ?? 'Navuera@tepuymarina.com' }} <br>
                 Telefono: {{ $guia->telefono ?? '0286-9231278' }}
             </td>
-            <td style="text-align: right; font-size: 10pt;">
+            <td style="text-align: right; font-size: 10pt; border:solid 1px black;">
                 Etiqueta  <br>
                 N° Pedido: {{ $guia->id }} <br>
                 Fecha Doc: {{ \Carbon\Carbon::parse($guia->fecha_salida)->format('d/m/Y') }} <br>
@@ -77,10 +77,10 @@
                 Fecha O.C.: {{ \Carbon\Carbon::parse($guia->updated_at)->format('d/m/Y') }} <br>
             </td>
         </tr>
-        <tr>
+        <tr style="border:solid 1px black;">
             <td colspan="4"><br><br></td>
         </tr>
-        <tr>
+        <tr style="border:solid 1px black;">
             <td colspan="3" style="text-align:left; font-size: 12pt; font-weight: bold;">
                 Cuenta: DISTRIBUIDORA DE COMBUSTIBLE IMPORDIESEL <br>
                 Vendedor: DISTRIBUIDORA DE COMBUSTIBLE IMPORDIESEL <br>
@@ -90,26 +90,26 @@
                 Terminos de Pago: {{  'PREPAGADO' }}
 
             </td>
-            <td style="text-align: right; font-size: 10pt;">
+            <td style="text-align: right; font-size: 10pt; border:solid 1px black;">
                 BUQUE : {{ $guia->buque ?? 'GAMBOA' }} <br>
                 Pto. Entrega: {{ $guia->destino ?? 'MUELLE BAUXILUM' }} <br>
                 Fecha de Entrega: {{ \Carbon\Carbon::parse($guia->updated_at)->format('d/m/Y') }} <br>
                 Método de Entrega: {{  'Truck' }}
             </td>
         </tr>
-        <tr style="text-align: center">
+        <tr style="text-align: center ; font-weight: bold; border:solid 1px black;">
             <td style="border: none">Item</td>
             <td style="border: none">Codigo</td>
             <td style="border: none">Material</td>
             <td style="border: none">Cantidad</td>
         </tr>
-        <tr>
+        <tr style="text-align: center; border:solid 1px black;">
             <td>1</td>
             <td>401</td>
             <td>MARINE GAS OIL (MGO)</td>
             <td>{{ number_format($guia->cantidad, 0) }} LTS</td>
         </tr>
-        <tr>
+        <tr style="border:solid 1px black;">
             <td colspan="4" style="text-align: center">
             <h5 style="margin-top: 15px; margin-bottom: 5px;">COMENTARIOS</h5>
             <div class="comentarios-box">
