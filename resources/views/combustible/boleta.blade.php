@@ -217,19 +217,19 @@
             <td colspan="3" >FIRMA (signature)</td>
             <td colspan="3" >FIRMA (signature)</td>
         </tr>
-        <tr>
-            <td colspan="3" >
+        <tr style="border-bottom: none">
+            <td colspan="3" style="border-bottom: none" >
                 NOMBRE (name)
             </td>
-            <td colspan="3" >
+            <td colspan="3" style="border-bottom: none">
                 NOMBRE (name) <br>
             </td>
-        <tr>
-            <td colspan="3" >
+        <tr style="border-top: none">
+            <td colspan="3" style="border-top: none">
                 <br>
                 CAPITAN (master)
             </td>
-            <td colspan="3" >
+            <td colspan="3" style="border-top: none">
                 <br>
                 PRIMER INGENIERO (chief master)</td>
             <td colspan="4">NOMBRE (name) YULIMAR CASTELLANOS</td>
