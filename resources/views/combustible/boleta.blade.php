@@ -53,13 +53,13 @@
         <button type="button" id="update-guia-btn" class="btn btn-primary mt-2">
             <i class="bi bi-save"></i> Guardar Cambios y Recargar Guía
         </button>
-        <button type="button" onclick="window.print()" class="btn btn-success mt-2">
+        <button type="button" class="btn btn-success mt-2" id="print">
             <i class="bi bi-printer"></i> Vista Previa de Impresión
         </button>
     </form>
 </div>
 
-<div class="bunker-container">
+<div class="bunker-container printableArea">
     <div class="header-bunker mb-3" style="display: block; height: 100px; ;">
         <img src="{{ asset('img/logo1.png') }}" alt="logo empresa" style="width: 250px; float: left; margin-right: 10px;">
         <p class="mb-0" style="float: rigth; text-align: right; vertical-align:middle"><strong>Boleta de combustible marino entregado</strong> <br>(marine bunker delivery receipt)</p>
@@ -209,7 +209,7 @@
         <tr>
             <td colspan="6"><strong>POR EL BUQUE (by vessel)</strong></td>
             <td colspan="4" rowspan="3" style="border-bottom: 1px">POR DISTRIBUIDORA IMPORDIESEL
-                <img src="{{ asset('img/logo1.png') }}" alt="logo empresa" style="width: 250px; float: left; margin-right: 10px;">
+                <img src="{{ asset('img/logo1.png') }}" alt="logo empresa" style="width: 90% ; margin-right: 10px;">
                 <br>FIRMA (signature) 
             </td>
         </tr>
@@ -239,95 +239,15 @@
 </div>
 
 <div class="print-only">
-    <button onclick="window.print()" style="padding: 10px 20px; font-size: 14pt; cursor: pointer;">
+    <button type="button" id="print" style="padding: 10px 20px; font-size: 14pt; cursor: pointer;">
         Imprimir Boleta / Guardar como PDF
     </button>
 </div>
 
 @push('scripts')
-<script>
-    $(document).ready(function() {
-        
-        const viajeId = {{ $guia->id }};
-        const clienteSelect = $('#cliente_select');
-        const buqueSelect = $('#buque_select');
-        const deliveryMethod = $('#delivery_method');
-        
-        // =========================================================
-        // 1. SELECT2: CLIENTES, BUQUES (Configuración de Búsqueda y Creación al Vuelo)
-        // =========================================================
-        clienteSelect.select2({
-            placeholder: 'Buscar o ingresar nuevo cliente',
-            allowClear: true, tags: true, 
-            ajax: { url: '{{ route('api.clientes.search') }}', dataType: 'json', delay: 250, 
-                processResults: data => ({ results: data.map(c => ({ id: c.id, text: c.nombre })) }), cache: true },
-            createTag: params => (params.term.trim() === '') ? null : { id: params.term, text: params.term + ' (Nuevo Cliente)', newTag: true }
-        });
 
-        buqueSelect.select2({
-            placeholder: 'Buscar o ingresar nuevo buque', tags: true, 
-            createTag: params => ({ id: params.term, text: params.term })
-        });
-        
-        // =========================================================
-        // 2. ACTUALIZAR GUÍA / IMPRIMIR
-        // =========================================================
-        $('#update-guia-btn').on('click', function() {
-            const btn = $(this);
-            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Guardando...');
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+<script src="{{asset('js/jquery.PrintArea.js')}}" defer></script>
 
-            const selectedClienteId = clienteSelect.val();
-            const selectedClienteText = clienteSelect.find(':selected').text();
-            const selectedBuque = buqueSelect.val();
-            const destino = $('#destino_text').val();
-            const metodo_entrega = deliveryMethod.val();
-            
-            let isNewCliente = clienteSelect.find(':selected').data('select2-tag') === true;
-
-            const handleUpdate = (finalClienteId) => {
-                $.ajax({
-                    url: `{{ url('api/viajes') }}/${viajeId}/update-guia-data`, // Asegúrate de que esta ruta maneje todos los campos
-                    method: 'PUT',
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        cliente_id: finalClienteId,
-                        buque: selectedBuque,
-                        destino: destino,
-                        metodo_entrega: metodo_entrega,
-                        // Aquí se podrían añadir los campos de calidad si son editables (api_gravity, flash_point, etc.)
-                    },
-                    success: function(response) {
-                        alert('Boleta actualizada con éxito. Recargando vista previa...');
-                        window.location.reload(); 
-                    },
-                    error: function(xhr) {
-                        alert('Error al actualizar los datos del viaje: ' + (xhr.responseJSON.message || 'Error desconocido'));
-                    },
-                    complete: function() {
-                        btn.prop('disabled', false).html('<i class="bi bi-save"></i> Guardar Cambios y Recargar Guía');
-                    }
-                });
-            };
-
-            // Lógica para registrar cliente al vuelo
-            if (isNewCliente) {
-                $.ajax({
-                    url: '{{ route('api.clientes.store-al-vuelo') }}', 
-                    method: 'POST',
-                    data: { _token: '{{ csrf_token() }}', nombre: selectedClienteText },
-                    success: function(response) {
-                        handleUpdate(response.cliente.id); 
-                    },
-                    error: function(xhr) {
-                        alert('Error al registrar el nuevo cliente.');
-                        btn.prop('disabled', false).html('<i class="bi bi-save"></i> Guardar Cambios y Recargar Guía');
-                    }
-                });
-            } else {
-                handleUpdate(selectedClienteId);
-            }
-        });
-    });
-</script>
 @endpush
 @endsection
