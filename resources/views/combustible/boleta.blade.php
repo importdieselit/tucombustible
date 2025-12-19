@@ -101,17 +101,17 @@
                 </div>
             </td>
         </tr>
-        <tr style="height:0px;">
-            <td width="10%"></td>
-            <td width="10%"></td>
-            <td width="10%"></td>
-            <td width="10%"></td>
-            <td width="10%"></td>
-            <td width="10%"></td>
-            <td width="10%"></td>
-            <td width="10%"></td>
-            <td width="10%"></td>
-            <td width="10%"></td>
+        <tr style="height:1px;">
+            <td width="10%" style="border: none"></td>
+            <td width="10%" style="border: none"></td>
+            <td width="10%" style="border: none"></td>
+            <td width="10%" style="border: none"></td>
+            <td width="10%" style="border: none"></td>
+            <td width="10%" style="border: none"></td>
+            <td width="10%" style="border: none"></td>
+            <td width="10%" style="border: none"></td>
+            <td width="10%" style="border: none"></td>
+            <td width="10%" style="border: none"></td>
         </tr>
     </table>
     <div class="info-grid">
