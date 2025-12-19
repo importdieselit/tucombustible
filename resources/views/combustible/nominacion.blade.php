@@ -68,7 +68,7 @@
                 Correo: electronico: {{ $guia->email ?? 'Navuera@tepuymarina.com' }} <br>
                 Telefono: {{ $guia->telefono ?? '0286-9231278' }}
             </td>
-            <td style="text-align: right; font-size: 10pt; border:solid 1px black;">
+            <td style="text-align: left; font-size: 10pt; border:solid 1px black;">
                 Etiqueta  <br>
                 N° Pedido: {{ $guia->id }} <br>
                 Fecha Doc: {{ \Carbon\Carbon::parse($guia->fecha_salida)->format('d/m/Y') }} <br>
