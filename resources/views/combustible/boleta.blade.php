@@ -17,7 +17,22 @@
     .signature-area div { width: 45%; text-align: center; }
     .signature-line { border-top: 1px solid #000; margin-top: 50px; padding-top: 5px; }
     .print-only { text-align: center; margin-top: 20px; }
-    @media print { .print-only, .control-panel { display: none; } .bunker-container { box-shadow: none; border: none; } }
+    @media print {
+        @page {
+            size: 8.5in 11in; /* O usa size: letter; */
+            margin: 0.5in; /* Ajusta los márgenes según necesites */
+        }
+        body {
+            width: 8.5in; /* O el ancho del contenido principal */
+            height: 11in; /* Altura total del contenido */
+            margin: 0; /* Controla los márgenes desde @page */
+        }
+        /* Puedes añadir estilos adicionales para tablas o contenido */
+        table {
+            width: 100%;
+            /* Otras propiedades */
+        }
+    }
 </style>
 @endpush
 @section('content')
