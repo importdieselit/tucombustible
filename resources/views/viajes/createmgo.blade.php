@@ -146,7 +146,7 @@
                                         <input type="text" id="b_bandera" class="form-control form-control-sm">
                                     </div>
                                     <div class="col-md-1 d-flex align-items-end">
-                                        <button type="button" id="btn-add-despacho" class="btn btn-primary btn-sm w-100"><i class="bi bi-plus"></i></button>
+                                        <button type="button" id="btn-add-despacho" class="btn btn-primary btn-sm w-100"><i class="fa fa-plus"></i> Agregar</button>
                                     </div>
                                 </div>
                             </div>
@@ -257,7 +257,7 @@ $(document).ready(function() {
     function cargarBuques(clienteId) {
         const $select = $('#select_buque');
         $select.prop('disabled', false).html('<option>Cargando...</option>');
-        $.getJSON(`/api/clientes/${clienteId}/buques`, function(data) {
+        $.getJSON(`/api/cliente/${clienteId}/buques`, function(data) {
             let html = '<option value="">Seleccione Buque...</option>';
             data.forEach(b => { html += `<option value="${b.id}" data-imo="${b.imo}" data-nombre="${b.nombre}">${b.nombre} (IMO: ${b.imo})</option>`; });
             $select.html(html);
