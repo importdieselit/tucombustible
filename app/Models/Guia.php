@@ -60,7 +60,7 @@ class Guia extends Model
     }
     public function buque()
     {
-        return $this->belongsTo(Buques::class, 'buque_id');
+        return $this->belongsTo(Buques::class, 'buque_id','id');
     }
 
 }

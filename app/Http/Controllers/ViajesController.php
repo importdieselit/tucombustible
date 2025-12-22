@@ -412,6 +412,7 @@ class ViajesController extends Controller
         $viaje = Viaje::with(['despachos.cliente', 'vehiculo', 'chofer.persona'])
             ->findOrFail($viajeId);
         $guia = Guia::where('viaje_id', $viajeId)->with('cliente','buque')->first();
+        dd($guia);
         if(!$guia){ 
             $guia = new Guia();
             $guia->numero_guia = Guia::max('numero_guia') + 1;
