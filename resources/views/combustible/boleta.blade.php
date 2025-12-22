@@ -89,7 +89,7 @@
             </td>
             <td colspan="3">
                 <strong>NOMINACION</strong>
-                
+                {{ $guia->numero_guia ?? 'N/A'}}
             </td>
             <td>
                 <strong>FECHA (date)</strong>

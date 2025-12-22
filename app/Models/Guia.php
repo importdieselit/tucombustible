@@ -58,7 +58,7 @@ class Guia extends Model
     {
         return $this->hasOne(Nominacion::class);
     }
-    public function buque()
+    public function buqueDet()
     {
         return $this->belongsTo(Buques::class, 'buque_id','id');
     }

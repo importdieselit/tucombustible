@@ -150,17 +150,17 @@
                     <input type="text" class="form-control editable-fild col-4 hybrid-autocomplete" 
                         data-db-field="buque" 
                         data-live-id="#live-buque" 
-                        id="buque_input" value="{{ $guia->buque->nombre ?? '' }}">
+                        id="buque_input" value="{{ $guia->buqueDet->nombre ?? '' }}">
                 </div>
                 <div class="col-4">
                     <strong>IMO:</strong>
                     <input type="text" class="form-control editable-field col-4" id="imo_input" 
-                        data-db-field="imo" value="{{ $guia->buque->imo ?? '' }}">
+                        data-db-field="imo" value="{{ $guia->buqueDet->imo ?? '' }}">
                 </div>
                 <div class="col-4">
                     <strong>BANDERA (flag):</strong>
                     <input type="text" class="form-control editable-field col-4" id="bandera_input" 
-                        data-db-field="bandera" value="{{ $guia->buque->bandera ?? '' }}">
+                        data-db-field="bandera" value="{{ $guia->buqueDet->bandera ?? '' }}">
                 </div>
             </div>
         </div>
@@ -205,6 +205,11 @@
                 <label for="precintos_input" class="form-label">Nro. de Precintos</label>
                 <input type="text" id="precintos_input" class="form-control autocomplete-field hybrid-autocomplete" 
                     data-db-field="precintos" data-live-id="#live-precintos" value="{{ $guia->precintos ?? 'N/A' }}">
+            </div>
+            <div class="col-md-6">
+                <label for="numero_guia_input" class="form-label">Nominacion</label>
+                <input type="text" id="numero_guia_input" class="form-control autocomplete-field hybrid-autocomplete" 
+                    data-db-field="numero_guia" data-live-id="#live-numero_guia" value="{{ $guia->numero_guia ?? 'N/A' }}">
             </div>
         </div>
         
@@ -290,21 +295,21 @@
 
                 <tr>
                         <td></td>
-                        <td><span class="small-title">Ruta:</span> <span id="live-ruta">{{ $viaje->ruta ?? 'Boleíta Norte Caracas Puerto Ordaz Edo. Bolivar' }}</span></td>
+                        <td><span class="small-title">Ruta:</span> <span id="live-ruta">{{ $guia->ruta ?? 'Boleíta Norte Caracas Puerto Ordaz Edo. Bolivar' }}</span></td>
                         <td ></td>
                         <td ></td>
                         
                 </tr>
                 <tr>
                         <td></td>
-                        <td><span class="small-title">Destino:</span> <span id="live-muelle">{{ $viaje->destino ?? 'Muelle de SIDOR' }}</span></td>
+                        <td><span class="small-title">Destino:</span> <span id="live-muelle">{{ $guia->ruta ?? 'Muelle de SIDOR' }}</span></td>
                         <td ></td>
                         <td ></td>
                         
                 </tr>
                 <tr>
                     <td></td>
-                    <td><span class="small-title">BUQUE/EMBARCACIÓN: </span> <span id="live-buque">{{ $viaje->buque ?? 'N/A' }}</span></td>
+                    <td><span class="small-title">BUQUE/EMBARCACIÓN: </span> <span id="live-buque">{{ $guia->buque ?? 'N/A' }}</span></td>
                     <td ></td>
                     <td ></td>
                 </tr>

@@ -411,8 +411,7 @@ class ViajesController extends Controller
         // Asegurarse de cargar las relaciones necesarias (despachos, cliente, vehículo, conductor)
         $viaje = Viaje::with(['despachos.cliente', 'vehiculo', 'chofer.persona'])
             ->findOrFail($viajeId);
-        $guia = Guia::where('viaje_id', $viajeId)->with('cliente','buque')->first();
-        dd($guia);
+        $guia = Guia::where('viaje_id', $viajeId)->with('cliente','buqueDet')->first();
         if(!$guia){ 
             $guia = new Guia();
             $guia->numero_guia = Guia::max('numero_guia') + 1;
@@ -429,6 +428,7 @@ class ViajesController extends Controller
             $guia->cedula = $viaje->chofer ? $viaje->chofer->persona->dni : 'N/A';
             $guia->cantidad = $viaje->despachos->sum('litros');
             $guia->producto = 'MARINE GASOIL M.G.O'; // Ajustar según el producto real
+            $guia->cliente_id = $viaje->despachos->first()->cliente_id ?? null;
             $guia->save();
         }
         // Si no hay despachos, o si la data es insuficiente, puedes redirigir o mostrar un error

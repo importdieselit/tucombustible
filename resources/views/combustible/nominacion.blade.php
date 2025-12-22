@@ -70,7 +70,7 @@
             </td>
             <td style="text-align: left; font-size: 10pt; border:solid 1px black;">
                 Etiqueta  <br>
-                N° Pedido: {{ $guia->id }} <br>
+                N° Pedido: {{ $guia->numero_guia ?? 'N/A' }} <br>
                 Fecha Doc: {{ \Carbon\Carbon::parse($guia->fecha_salida)->format('d/m/Y') }} <br>
                 Moneda: VESM Miles de Bolívares <br>
                 Orden de Compra: {{ $guia->cliente ?? 'Distribuidora Impordiesel C.A.' }} <br>
