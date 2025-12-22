@@ -1102,7 +1102,7 @@ public function updateGuiaData(Request $request, $viajeId)
     
         try {
             DB::beginTransaction();
-        $destino = TabuladorViatico::findOrFail($request->destino_id);
+        $destino = TabuladorViatico::findOr($request->destino_ciudad);
         $muelle = Muelles::findOrFail($request->muelle_id);
 
         // 1. Cliente: Si no viene ID, crear o actualizar por RIF
