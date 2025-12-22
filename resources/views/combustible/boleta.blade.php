@@ -89,7 +89,7 @@
             </td>
             <td colspan="3">
                 <strong>NOMINACION</strong>
-                #########
+                
             </td>
             <td>
                 <strong>FECHA (date)</strong>
@@ -103,11 +103,11 @@
             </td>
             <td colspan="2">
                 <strong>IMO</strong>
-                {{ $guia->buque->imo ?? '####' }}
+                {{ $guia->imo ?? '####' }}
             </td>
             <td colspan="2">
                 <strong>BANDERA (flag)</strong>
-                {{ $guia->buque->bandera ?? '#########'}}
+                {{ $guia->bandera ?? '#########'}}
             </td>
             <td colspan="2">
                 <strong>PUERTO (port)</strong>

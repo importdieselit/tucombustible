@@ -948,12 +948,28 @@ public function destroy($id)
 public function showBoleta($id)
 {
     $guia= Guia::findOrFail($id);
+    $buque = Buques::where('nombre', $guia->buque)->first();
+    if ($buque) {
+        $guia->imo = $buque->imo;
+        $guia->bandera = $buque->bandera;
+    } else {
+        $guia->imo = 'N/A';
+        $guia->bandera = 'N/A';
+    }   
     return view('combustible.boleta', compact('guia'));
 }
 
 public function showNominacion($id)
 {
     $guia= Guia::findOrFail($id);
+    $buque = Buques::where('nombre', $guia->buque)->first();
+    if ($buque) {
+        $guia->imo = $buque->imo;
+        $guia->bandera = $buque->bandera;
+    } else {
+        $guia->imo = 'N/A';
+        $guia->bandera = 'N/A';
+    }
     return view('combustible.nominacion', compact('guia'));
 }
     
@@ -1161,6 +1177,9 @@ public function updateGuiaData(Request $request, $viajeId)
                             if(!$cliente){
                                 $cliente= CaptacionCliente::where('rif', $despachoData['cliente_rif'])->first();
                                 $cliente->id=null;
+                                $cliente->contacto= $cliente->representante;
+                                $cliente->email = $cliente->correo;
+                                $cliente->nombre= $cliente->razon_social;
                             }
                         }
                         
@@ -1175,7 +1194,9 @@ public function updateGuiaData(Request $request, $viajeId)
                                     'bandera' => $despachoData['buque_bandera']
                                 ]
                             );
-                        }
+                        }else{
+                            $buque= Buques::find($despachoData['buque_id']);
+                        }   
                         
 
 
@@ -1196,17 +1217,22 @@ public function updateGuiaData(Request $request, $viajeId)
                 $guia->rif = $cliente->rif;
                 //$guia->fecha_emision = now();
                 $guia->ruta = $destino->destino;
+                $guia->contacto = $cliente->contacto ?? 'N/A';
+                $guia->telefono = $cliente->telefono ?? 'N/A';
+                $guia->email = $cliente->email ?? 'N/A';
                 $guia->direccion = $cliente->direccion ?? 'N/A';
                 //$guia->buque = $viaje->vehiculo ? $viaje->vehiculo->placa : 'N/A';
                 $guia->unidad = $viaje->vehiculo ? $viaje->vehiculo->flota : 'N/A';
                 $guia->cisterna = $viaje->cisterna ?? 'N/A';
                 $guia->muelle = $muelle->nombre;
                 $guia->muelle_id = $muelle->id;
-                $guia->buque = $viaje->buque ? $viaje->buque->nombre : 'N/A';
+                $guia->buque = $buque->nombre;
+                $guia->buque_id = $buque->id;
                 $guia->conductor = $viaje->chofer ? $viaje->chofer->persona->nombre : 'N/A';
                 $guia->cedula = $viaje->chofer ? $viaje->chofer->persona->dni : 'N/A';
                 $guia->cantidad = $despachoData['litros'] ?? 0;
                 $guia->producto = 'MARINE GASOIL M.G.O'; // Ajustar según el producto real
+                $guia->observaciones = $despachoData['observacion'] ?? null;
                 $guia->save();
 
                 $totalLitros += $despachoData['litros'];
