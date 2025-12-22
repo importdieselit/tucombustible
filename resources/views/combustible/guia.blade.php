@@ -146,23 +146,24 @@
             </div>
             <div class="vessel-info-group col-12 row">
                 <div class="col-4">
-                <strong>BUQUE (vessel):</strong>
-                <input type="text" class="form-control editable-fild col-4 hybrid-autocomplete" 
-                    data-db-field="buque" 
-                    data-live-id="#live-buque" 
-                    id="buque_input" value="{{ $guia->buque->nombre ?? '' }}">
+                    <strong>BUQUE (vessel):</strong>
+                    <input type="text" class="form-control editable-fild col-4 hybrid-autocomplete" 
+                        data-db-field="buque" 
+                        data-live-id="#live-buque" 
+                        id="buque_input" value="{{ $guia->buque->nombre ?? '' }}">
                 </div>
                 <div class="col-4">
-                <strong>IMO:</strong>
-                <input type="text" class="form-control editable-field col-4" id="imo_input" 
-                    data-db-field="imo" value="{{ $guia->buque->imo ?? '' }}">
+                    <strong>IMO:</strong>
+                    <input type="text" class="form-control editable-field col-4" id="imo_input" 
+                        data-db-field="imo" value="{{ $guia->buque->imo ?? '' }}">
                 </div>
                 <div class="col-4">
-                <strong>BANDERA (flag):</strong>
-                <input type="text" class="form-control editable-field col-4" id="bandera_input" 
-                    data-db-field="bandera" value="{{ $guia->buque->bandera ?? '' }}">
+                    <strong>BANDERA (flag):</strong>
+                    <input type="text" class="form-control editable-field col-4" id="bandera_input" 
+                        data-db-field="bandera" value="{{ $guia->buque->bandera ?? '' }}">
+                </div>
             </div>
-            </div>
+        </div>
         
         <div class="row mb-3">
             <div class="col-md-6">
