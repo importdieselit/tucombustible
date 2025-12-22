@@ -1028,7 +1028,7 @@ public function updateGuiaData(Request $request, $viajeId)
 
     public function createMGO()
     {
-        $clientesC = CaptacionCliente::where('tipo_cliente', 'like', '%MGO%')->select('id', 'razon_social as nombre', 'rif','direccion','correo','telefono','representante')->get();
+        $clientesC = CaptacionCliente::where('tipo_cliente', 'like', '%MGO%')->whereNull('cliente_id')->select('id', 'razon_social as nombre', 'rif','direccion','correo','telefono','representante')->get();
         $clientes = Cliente::where('tipo', 'like', '%MGO%')->get(['id','nombre','rif','direccion','email as correo','telefono','contacto as representante', 'alias']);
         //$clientes= $clientesC->merge($clientesD);
         $destinos = TabuladorViatico::where('tipo_viaje', 'like', '%MGO%')->with('muelles')->get();
