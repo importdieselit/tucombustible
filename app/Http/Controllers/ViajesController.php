@@ -1071,7 +1071,7 @@ public function updateGuiaData(Request $request, $viajeId)
             return response()->json(['error' => 'Error al cargar buques'], 500);
         }
     }
-    public function getCliente($id)
+    public function getClientes($id)
     {
         try {
             // Buscamos los muelles donde la ubicación coincida con el ID del destino
