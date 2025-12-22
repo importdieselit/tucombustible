@@ -1111,7 +1111,7 @@ public function updateGuiaData(Request $request, $viajeId)
             //
             // 3. Crear el Viaje ÚNICO
             $viaje = Viaje::create([
-                'destino_ciudad' => $request->destino_ciudad,
+                'destino_ciudad' => $destino->destino,
                 'fecha_salida' => $request->fecha_salida,
                 'status' => $status,
                 'chofer_id' => $request->chofer_id ?? 0,
