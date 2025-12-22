@@ -145,20 +145,26 @@
                     value="{{ $guia->direccion ?? '' }}" placeholder="Escriba para buscar o crear...">
             </div>
             <div class="vessel-info-group col-12 row">
+                <div class="col-4">
                 <strong>BUQUE (vessel):</strong>
-                <input type="text" class="editable-fild col-4 hybrid-autocomplete" 
+                <input type="text" class="form-control editable-fild col-4 hybrid-autocomplete" 
                     data-db-field="buque" 
                     data-live-id="#live-buque" 
-                    id="buque_input" value="{{ $viaje->buque->nombre ?? '' }}">
-
+                    id="buque_input" value="{{ $guia->buque->nombre ?? '' }}">
+                </div>
+                <div class="col-4">
                 <strong>IMO:</strong>
-                <input type="text" class="editable-field col-4" id="imo_input" 
-                    data-db-field="imo" value="{{ $viaje->buque->imo ?? '' }}">
-
+                <input type="text" class="form-control editable-field col-4" id="imo_input" 
+                    data-db-field="imo" value="{{ $guia->buque->imo ?? '' }}">
+                </div>
+                <div class="col-4">
                 <strong>BANDERA (flag):</strong>
-                <input type="text" class="editable-field col-4" id="bandera_input" 
-                    data-db-field="bandera" value="{{ $viaje->buque->bandera ?? '' }}">
+                <input type="text" class="form-control editable-field col-4" id="bandera_input" 
+                    data-db-field="bandera" value="{{ $guia->buque->bandera ?? '' }}">
             </div>
+            </div>
+        
+        <div class="row mb-3">
             <div class="col-md-6">
                 <label>Chuto</label>
                 <input type="text" id="chuto_input" class="form-control autocomplete-field hybrid-autocomplete" 

@@ -411,7 +411,7 @@ class ViajesController extends Controller
         // Asegurarse de cargar las relaciones necesarias (despachos, cliente, vehículo, conductor)
         $viaje = Viaje::with(['despachos.cliente', 'vehiculo', 'chofer.persona'])
             ->findOrFail($viajeId);
-        $guia = Guia::where('viaje_id', $viajeId)->first();
+        $guia = Guia::where('viaje_id', $viajeId)->with('cliente','buque')->first();
         if(!$guia){ 
             $guia = new Guia();
             $guia->numero_guia = Guia::max('numero_guia') + 1;
