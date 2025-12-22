@@ -83,30 +83,62 @@
                 </div>
 
                 <div class="card bg-light mb-4 border-primary">
-                    <div class="card-header bg-primary text-white py-1">Agregar Cliente y Buque al Despacho</div>
+                    <div class="card-header bg-primary text-white py-1">Datos del Cliente y Embarcación</div>
                     <div class="card-body">
                         <div class="row g-2">
                             <div class="col-md-4">
-                                <label class="small fw-bold">Buscar Cliente (Nombre o RIF)</label>
-                                <input type="text" id="search_cliente" class="form-control form-control-sm" placeholder="Escriba para buscar...">
-                                <input type="hidden" id="tmp_c_id">
+                                <label class="small fw-bold">Buscar Cliente</label>
+                                <input type="text" id="search_cliente" class="form-control form-control-sm" placeholder="RIF o Nombre...">
+                                <input type="hidden" id="c_id">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="small fw-bold">Razón Social</label>
+                                <input type="text" id="c_nombre" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="small fw-bold">RIF</label>
+                                <input type="text" id="c_rif" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="small fw-bold">Teléfono</label>
+                                <input type="text" id="c_tel" class="form-control form-control-sm">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small fw-bold">Dirección Legal</label>
+                                <input type="text" id="c_dir" class="form-control form-control-sm">
                             </div>
                             <div class="col-md-3">
-                                <label class="small fw-bold">Seleccionar Buque</label>
-                                <select id="select_buque" class="form-select form-select-sm" disabled>
-                                    <option value="">Primero seleccione cliente</option>
-                                </select>
+                                <label class="small fw-bold">Contacto</label>
+                                <input type="text" id="c_contacto" class="form-control form-control-sm">
                             </div>
-                            <div class="col-md-2">
-                                <label class="small fw-bold">Litros</label>
-                                <input type="number" id="tmp_litros" class="form-control form-control-sm">
+                            <div class="col-md-3">
+                                <label class="small fw-bold">Email</label>
+                                <input type="email" id="c_email" class="form-control form-control-sm">
                             </div>
-                            <div class="col-md-2">
-                                <label class="small fw-bold">Observación</label>
-                                <input type="text" id="tmp_obs" class="form-control form-control-sm">
-                            </div>
-                            <div class="col-md-1 d-flex align-items-end">
-                                <button type="button" id="btn-add-row" class="btn btn-primary btn-sm w-100"><i class="bi bi-plus-lg"></i></button>
+
+                            <div class="col-md-12 border-top mt-2 pt-2">
+                                <div class="row g-2">
+                                    <div class="col-md-4">
+                                        <label class="small fw-bold">Seleccionar Buque</label>
+                                        <input type="text" id="search_buque" class="form-control form-control-sm" placeholder="Escriba nombre..." disabled>
+                                        <input type="hidden" id="b_id">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="small fw-bold">Nombre Buque</label>
+                                        <input type="text" id="b_nombre" class="form-control form-control-sm">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="small fw-bold">IMO</label>
+                                        <input type="text" id="b_imo" class="form-control form-control-sm">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="small fw-bold">Bandera</label>
+                                        <input type="text" id="b_bandera" class="form-control form-control-sm">
+                                    </div>
+                                    <div class="col-md-1 d-flex align-items-end">
+                                        <button type="button" id="btn-add-despacho" class="btn btn-primary btn-sm w-100"><i class="bi bi-plus"></i></button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -124,8 +156,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {{-- Aquí se agregan las filas dinámicamente --}}
-                        </tbody>
+                            </tbody>
                     </table>
                 </div>
 
@@ -207,32 +238,80 @@ $(document).ready(function() {
         });
     }
 
-    // Agregar fila a la tabla
-    $('#btn-add-row').click(function() {
-        const c_id = $('#tmp_c_id').val();
-        const c_nom = $('#search_cliente').val();
-        const b_opt = $('#select_buque option:selected');
-        const litros = $('#tmp_litros').val();
+    // 2. Autocomplete Cliente
+    $('#search_cliente').autocomplete({
+        source: "{{ route('api.search.generic', ['field' => 'cliente']) }}",
+        select: function(e, ui) {
+            $('#c_id').val(ui.item.id);
+            $('#c_nombre').val(ui.item.nombre);
+            $('#c_rif').val(ui.item.rif);
+            $('#c_tel').val(ui.item.telefono);
+            $('#c_dir').val(ui.item.direccion);
+            $('#c_contacto').val(ui.item.representante);
+            $('#c_email').val(ui.item.correo);
+            $('#search_buque').prop('disabled', false).focus();
+            return false;
+        }
+    });
 
-        if(!c_id || !b_opt.val() || !litros) return alert('Complete Cliente, Buque y Litros');
+    // 3. Autocomplete Buque (Filtrado por cliente)
+    $('#search_buque').autocomplete({
+        source: function(req, res) {
+            $.getJSON("{{ route('api.search.generic', ['field' => 'buque']) }}", {
+                term: req.term,
+                parent_id: $('#c_id').val()
+            }, res);
+        },
+        select: function(e, ui) {
+            $('#b_id').val(ui.item.id);
+            $('#b_nombre').val(ui.item.nombre);
+            $('#b_imo').val(ui.item.imo);
+            $('#b_bandera').val(ui.item.bandera);
+            return false;
+        }
+    });
+
+    // 4. Agregar a la Tabla
+    $('#btn-add-despacho').click(function() {
+        const c_nom = $('#c_nombre').val();
+        const b_nom = $('#b_nombre').val();
+        
+        if(!c_nom || !b_nom) return alert('Debe completar datos de Cliente y Buque');
 
         const row = `
             <tr>
-                <td>${c_nom} <input type="hidden" name="despachos[${rowIndex}][cliente_id]" value="${c_id}"></td>
-                <td>${b_opt.data('nombre')} (IMO: ${b_opt.data('imo')}) <input type="hidden" name="despachos[${rowIndex}][buque_id]" value="${b_opt.val()}"></td>
-                <td><input type="number" name="despachos[${rowIndex}][litros]" class="form-control form-control-sm" value="${litros}" required></td>
-                <td><input type="text" name="despachos[${rowIndex}][observacion]" class="form-control form-control-sm" value="${$('#tmp_obs').val()}"></td>
-                <td class="text-center"><button type="button" class="btn btn-danger btn-sm remove-row"><i class="bi bi-trash"></i></button></td>
+                <td>
+                    <strong>${c_nom}</strong><br><small>${$('#c_rif').val()}</small>
+                    <input type="hidden" name="despachos[${despachoIdx}][cliente_id]" value="${$('#c_id').val()}">
+                    <input type="hidden" name="despachos[${despachoIdx}][cliente_nombre]" value="${c_nom}">
+                    <input type="hidden" name="despachos[${despachoIdx}][cliente_rif]" value="${$('#c_rif').val()}">
+                    <input type="hidden" name="despachos[${despachoIdx}][cliente_dir]" value="${$('#c_dir').val()}">
+                    <input type="hidden" name="despachos[${despachoIdx}][cliente_tel]" value="${$('#c_tel').val()}">
+                    <input type="hidden" name="despachos[${despachoIdx}][cliente_email]" value="${$('#c_email').val()}">
+                    <input type="hidden" name="despachos[${despachoIdx}][cliente_contacto]" value="${$('#c_contacto').val()}">
+                </td>
+                <td>
+                    <strong>${b_nom}</strong><br><small>IMO: ${$('#b_imo').val()}</small>
+                    <input type="hidden" name="despachos[${despachoIdx}][buque_id]" value="${$('#b_id').val()}">
+                    <input type="hidden" name="despachos[${despachoIdx}][buque_nombre]" value="${b_nom}">
+                    <input type="hidden" name="despachos[${despachoIdx}][buque_imo]" value="${$('#b_imo').val()}">
+                    <input type="hidden" name="despachos[${despachoIdx}][buque_bandera]" value="${$('#b_bandera').val()}">
+                </td>
+                <td><input type="number" name="despachos[${despachoIdx}][litros]" class="form-control" required placeholder="Litros"></td>
+                <td><input type="text" name="despachos[${despachoIdx}][observacion]" class="form-control" placeholder="..."></td>
+                <td><button type="button" class="btn btn-danger btn-sm remove-row"><i class="bi bi-trash"></i></button></td>
             </tr>
         `;
+        
         $('#tabla-despachos tbody').append(row);
-        rowIndex++;
-        // Limpiar
-        $('#search_cliente, #tmp_c_id, #tmp_litros, #tmp_obs').val('');
-        $('#select_buque').html('<option>Primero seleccione cliente</option>').prop('disabled', true);
+        despachoIdx++;
+        // Limpiar campos de entrada
+        $('#search_cliente, #c_id, #c_nombre, #c_rif, #c_tel, #c_dir, #c_contacto, #c_email').val('');
+        $('#search_buque, #b_id, #b_nombre, #b_imo, #b_bandera').val('').prop('disabled', true);
     });
 
     $(document).on('click', '.remove-row', function() { $(this).closest('tr').remove(); });
+
 });
 </script>
 @endpush
