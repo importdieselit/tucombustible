@@ -71,9 +71,8 @@
         <div class="col">
             <div class="card h-100 shadow border-start border-4 border-secondary">
                 <div class="card-body">
-                    <h5 class="card-title text-secondary"><i class="bi bi-graph-up me-2"></i> Reportes y Costos</h5>
-                    <p class="card-text">Genera reportes de costos de viáticos, rendimiento por ruta y eficiencia de vehículos y choferes.</p>
-                    <a href="{{ route('reportes.viajes') }}" class="btn btn-secondary w-100 disabled" aria-disabled="true">Generar Reporte (WIP)</a>
+                    <h5 class="card-title text-secondary"><i class="bi bi-graph-up me-2"></i> Planificacion MGO</h5>
+                    <a href="{{ route('viajes.mgo') }}" class="btn btn-secondary w-100 disabled" aria-disabled="true">Crear Planificación MGO</a>
                 </div>
             </div>
         </div>
