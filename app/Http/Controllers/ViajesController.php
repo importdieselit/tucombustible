@@ -1057,7 +1057,7 @@ public function updateGuiaData(Request $request, $viajeId)
         }
     }
 
-    public function getBuques($id)
+    public function getBuquesPorCliente($id)
     {
         try {
             // Buscamos los muelles donde la ubicación coincida con el ID del destino
