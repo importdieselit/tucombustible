@@ -181,7 +181,7 @@
 <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 <script>
 $(document).ready(function() {
-    let rowIndex = 0;
+    let despachoIdx = 0;
 
     // 1. Filtrar Muelles por Destino (ID = Ubicacion)
     $('#destino_ciudad').on('change', function() {
