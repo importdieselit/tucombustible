@@ -61,6 +61,8 @@ Route::post('/test-fcm-notification', [TestFcmController::class, 'sendFcmNotific
 Route::get('search/autocomplete', [SearchController::class, 'handle'])->name('api.search.generic');
 // Ruta para obtener muelles filtrados por el ID del destino (ubicacion)
     Route::get('/destinos/{id}/muelles', [ViajesController::class, 'getMuellesPorDestino']);
+    Route::get('/clientes/{id}/buques', [ViajesController::class, 'getBuquesPorDestino']);
+
     // Actualización de datos de guía en el viaje
     Route::put('viajes/{viajeId}/update-guia-data', [ViajesController::class, 'updateGuiaData']);
 

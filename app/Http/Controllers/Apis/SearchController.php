@@ -44,7 +44,7 @@ class SearchController extends Controller
                     ->map(function($b) {
                         return [
                             'label'   => "{$b->nombre} [IMO: {$b->imo}]",
-                            'value'   => $b->nombre,
+                            'nombre'   => $b->nombre,
                             'imo'     => $b->imo,
                             'bandera' => $b->bandera,
                             'id'      => $b->id

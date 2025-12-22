@@ -88,7 +88,12 @@
                         <div class="row g-2">
                             <div class="col-md-4">
                                 <label class="small fw-bold">Buscar Cliente</label>
-                                <input type="text" id="search_cliente" class="form-control form-control-sm" placeholder="RIF o Nombre...">
+                                <select name="search_cliente" id="search_cliente" class="form-select" required>
+                                    <option value="">Seleccione...</option>
+                                    @foreach($clientes as $cliente)
+                                        <option value="{{ $cliente->id }}">{{ $cliente->nombre }} ({{ $cliente->alias ? $cliente->alias : ''}})</option>
+                                    @endforeach
+                                </select>
                                 <input type="hidden" id="c_id">
                             </div>
                             <div class="col-md-4">
@@ -120,7 +125,9 @@
                                 <div class="row g-2">
                                     <div class="col-md-4">
                                         <label class="small fw-bold">Seleccionar Buque</label>
-                                        <input type="text" id="search_buque" class="form-control form-control-sm" placeholder="Escriba nombre..." disabled>
+                                        <select name="search_buque" id="search_buque" class="form-select" required>
+                                            <option value="">Seleccione...</option>
+                                        </select>
                                         <input type="hidden" id="b_id">
                                     </div>
                                     <div class="col-md-3">
@@ -215,16 +222,41 @@ $(document).ready(function() {
         }
     });
 
-    // Búsqueda de Cliente por Autocomplete
-    $('#search_cliente').autocomplete({
-        source: function(request, response) {
-            $.getJSON("{{ route('api.search.generic', ['field' => 'cliente']) }}", { term: request.term }, response);
-        },
-        select: function(event, ui) {
-            $('#tmp_c_id').val(ui.item.id);
-            $(this).val(ui.item.nombre);
-            cargarBuques(ui.item.id);
-            return false;
+    $('#search_cliente').on('change', function() {
+        const id = $(this).val(); // ID del destino (TabuladorViatico)
+        const $m = $('#search_buque'); // El selector de muelles
+        
+        // Bloqueamos y limpiamos mientras carga
+        $m.prop('disabled', true).html('<option value="">Cargando buques...</option>');
+        
+        if(id) {
+            $.getJSON(`/api/destinos/${id}/clientes`)
+                .done(function(data) {
+                    $('#c_id').val(data.id);
+                    $('#c_nombre').val(data.nombre);
+                    $('#c_rif').val(data.rif);
+                    $('#c_tel').val(data.telefono);
+                    $('#c_dir').val(data.direccion);
+                    $('#c_contacto').val(data.representante);
+                    $('#c_email').val(data.correo);
+                    $('#search_buque').prop('disabled', false).focus();
+
+                    let html = '<option value="">Seleccione Buque...</option>';
+                    if(data.length > 0) {
+                        data.forEach(item => { 
+                            html += `<option value="${item.id}">${item.nombre}</option>`; 
+                        });
+                        $m.prop('disabled', false); // Solo habilitamos si hay data
+                    } else {
+                        html = '<option value="">No hay buques en este cliente</option>';
+                    }
+                    $m.html(html);
+                })
+                .fail(function() {
+                    $m.html('<option value="">Error al cargar datos</option>');
+                });
+        } else {
+            $m.html('<option value="">Seleccione destino primero</option>');
         }
     });
 
@@ -238,36 +270,27 @@ $(document).ready(function() {
         });
     }
 
-    // 2. Autocomplete Cliente
-    $('#search_cliente').autocomplete({
-        source: "{{ route('api.search.generic', ['field' => 'cliente']) }}",
-        select: function(e, ui) {
-            $('#c_id').val(ui.item.id);
-            $('#c_nombre').val(ui.item.nombre);
-            $('#c_rif').val(ui.item.rif);
-            $('#c_tel').val(ui.item.telefono);
-            $('#c_dir').val(ui.item.direccion);
-            $('#c_contacto').val(ui.item.representante);
-            $('#c_email').val(ui.item.correo);
-            $('#search_buque').prop('disabled', false).focus();
-            return false;
-        }
-    });
 
     // 3. Autocomplete Buque (Filtrado por cliente)
-    $('#search_buque').autocomplete({
-        source: function(req, res) {
+    $('#search_buque').on('change', function() {
+
+        const selectedOption = $(this).find('option:selected');
+        const id = $(this).val(); // ID del buque
+        if(id) {
+
             $.getJSON("{{ route('api.search.generic', ['field' => 'buque']) }}", {
-                term: req.term,
-                parent_id: $('#c_id').val()
-            }, res);
-        },
-        select: function(e, ui) {
-            $('#b_id').val(ui.item.id);
-            $('#b_nombre').val(ui.item.nombre);
-            $('#b_imo').val(ui.item.imo);
-            $('#b_bandera').val(ui.item.bandera);
-            return false;
+                term: id
+            }, ).done(function(data) {
+                    $('#b_id').val(data.id);
+                    $('#b_nombre').val(data.nombre);
+                    $('#b_imo').val(data.imo);
+                    $('#b_bandera').val(data.bandera);
+                })
+                .fail(function() {
+                    console.error('Error al cargar datos del buque');
+                });
+        } else {
+            $('#b_id, #b_nombre, #b_imo, #b_bandera').val('');
         }
     });
 
