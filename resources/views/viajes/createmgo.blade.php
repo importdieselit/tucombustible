@@ -270,7 +270,7 @@ $(document).ready(function() {
         $select.prop('disabled', false).html('<option>Cargando...</option>');
         $.getJSON(`/api/cliente/${clienteId}/buques`, function(data) {
             let html = '<option value="">Seleccione Buque...</option>';
-            data.forEach(b => { html += `<option value="${b.id}" data-imo="${b.imo}" data-nombre="${b.nombre}">${b.nombre} (IMO: ${b.imo})</option>`; });
+            data.forEach(b => { html += `<option value="${b.id}" data-imo="${b.imo}" data-bandera="${b.bandera}" data-nombre="${b.nombre}">${b.nombre} (IMO: ${b.imo})</option>`; });
             $select.html(html);
         });
     }
