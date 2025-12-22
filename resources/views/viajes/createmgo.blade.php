@@ -326,7 +326,7 @@ $(document).ready(function() {
         despachoIdx++;
         // Limpiar campos de entrada
         $('#search_cliente, #c_id, #c_nombre, #c_rif, #c_tel, #c_dir, #c_contacto, #c_email').val('');
-        $('#search_buque, #b_id, #b_nombre, #b_imo, #b_bandera').val('').prop('disabled', true);
+       // $('#search_buque, #b_id, #b_nombre, #b_imo, #b_bandera').val('').prop('disabled', true);
     });
 
     $(document).on('click', '.remove-row', function() { $(this).closest('tr').remove(); });
