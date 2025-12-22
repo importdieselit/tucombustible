@@ -1102,64 +1102,12 @@ public function updateGuiaData(Request $request, $viajeId)
     
         try {
             DB::beginTransaction();
-$destino = TabuladorViatico::findOrFail($request->destino_id);
+        $destino = TabuladorViatico::findOrFail($request->destino_id);
         $muelle = Muelles::findOrFail($request->muelle_id);
 
         // 1. Cliente: Si no viene ID, crear o actualizar por RIF
-        if(is_null($request->cliente_id)){
-            $request->validate([
-                'cliente_rif' => 'required|string|max:20',
-                'cliente_nombre' => 'required|string|max:255',
-                'cliente_direccion' => 'nullable|string|max:500',
-                'contacto_nombre' => 'nullable|string|max:255',
-                'contacto_telefono' => 'nullable|string|max:20',
-                'contacto_email' => 'nullable|email|max:255',
-            ]);
-            $cliente = Cliente::updateOrCreate(
-                ['rif' => $request->cliente_rif],
-                [
-                    'nombre' => $request->cliente_nombre,
-                    'direccion' => $request->cliente_direccion,
-                    'contacto' => $request->contacto_nombre,
-                    'telefono' => $request->contacto_telefono,
-                    'email' => $request->contacto_email,
-                    'tipo_cliente' => 'MGO'
-                ]
-            );
-            $clientecap= CaptacionCliente::create(
-                ['cliente_id' => $cliente->id],
-                [
-                    'rif' => $request->cliente_rif,
-                    'razon_social' => $request->cliente_nombre,
-                    'direccion' => $request->cliente_direccion,
-                    'representante' => $request->contacto_nombre,
-                    'telefono' => $request->contacto_telefono,
-                    'correo' => $request->contacto_email,
-                    'tipo_cliente' => 'MGO',
-                    'solicitados' => $request->solicitados ?? 0,
-                    'estatus' => 'registro_inicial'
-                ]
-            );
-        }
-        
-
-        // 2. Buque: Si no viene ID, crear para este cliente
-        if(is_null($request->buque_id)){
-            $request->validate([
-                'buque_nombre' => 'required|string|max:255',
-                'buque_imo' => 'nullable|string|max:20',
-                'buque_bandera' => 'nullable|string|max:100',
-            ]);
-        
-            $buque = Buques::create(
-                ['nombre' => $request->buque_nombre, 'cliente_id' => $cliente->id],
-                [
-                    'imo' => $request->buque_imo,
-                    'bandera' => $request->buque_bandera
-                ]
-            );
-        }
-                $status = 'PROGRAMADO';
+    
+        $status = 'PROGRAMADO';
             //
             // 3. Crear el Viaje ÚNICO
             $viaje = Viaje::create([
@@ -1179,46 +1127,86 @@ $destino = TabuladorViatico::findOrFail($request->destino_id);
             $cantidadDespachos = count($request->despachos);
             $totalLitros = 0;
             foreach ($request->despachos as $despachoData) {
+
+
+
+                    if(is_null($despachoData['cliente_id'])){
+                            $cliente = Cliente::updateOrCreate(
+                                ['rif' => $despachoData['cliente_rif']],
+                                [
+                                    'nombre' => $despachoData['cliente_nombre'],
+                                    'direccion' => $despachoData['cliente_direccion'],
+                                    'contacto' => $despachoData['contacto_nombre'],
+                                    'telefono' => $despachoData['contacto_telefono'],
+                                    'email' => $despachoData['contacto_email'],
+                                    'tipo_cliente' => 'MGO'
+                                ]
+                            );
+                            $clientecap= CaptacionCliente::create(
+                                ['cliente_id' => $cliente->id],
+                                [
+                                    'rif' => $cliente->rif,
+                                    'razon_social' => $cliente->nombre,
+                                    'direccion' => $cliente->direccion,
+                                    'representante' => $cliente->contacto,
+                                    'telefono' => $cliente->telefono,
+                                    'correo' => $cliente->email,
+                                    'tipo_cliente' => 'MGO',
+                                    'solicitados' => $despachoData['litros'] ?? 0,
+                                    'estatus' => 'registro_inicial'
+                                ]
+                            );
+                        }else{
+                            $cliente= Cliente::where('rif', $despachoData['cliente_rif'])->first();
+                            if(!$cliente){
+                                $cliente= CaptacionCliente::where('rif', $despachoData['cliente_rif'])->first();
+                                $cliente->id=null;
+                            }
+                        }
+                        
+
+                        // 2. Buque: Si no viene ID, crear para este cliente
+                        if(is_null($despachoData['buque_id'])){
+                            $buque = Buques::create(
+                                [
+                                    'nombre' => $despachoData['buque_nombre'],
+                                    'cliente_id' => $cliente->id,
+                                    'imo' => $despachoData['buque_imo'],
+                                    'bandera' => $despachoData['buque_bandera']
+                                ]
+                            );
+                        }
+                        
+
+
+
                 DespachoViaje::create([
                     'viaje_id' => $viaje->id,
                     'cliente_id' => $despachoData['cliente_id'] ?? null,
-                    'otro_cliente' => $despachoData['otro_cliente'] ?? null,
+                    'otro_cliente' => is_null($cliente->id) ? $despachoData['cliente_nombre'] : null,
                     'litros' => $despachoData['litros'],
                     'observacion' => $despachoData['observacion'] ?? null,
                 ]);
-                $clienteId=0;
-                $clienteNombre=$despachoData['otro_cliente'] ?? 'Cliente Desconocido';
-                // if(isset($despachoData['cliente_id'])&&!is_null($despachoData['cliente_id'])){
-                //     $clienteId = $despachoData['cliente_id'];
-                //     $clienteNombre = Cliente::find($clienteId)->nombre;
                 
-                //     $pedido=Pedido::create([
-                //         'cliente_id' => $clienteId, // Usar el cliente seleccionado
-                //         'deposito_id' => 6, // Ya no se asigna un depósito específico
-                //         'chofer_id' => $request->chofer_id ?? 0,
-                //         'vehiculo_id' => $request->vehiculo_id ?? 0,
-                //         'cantidad_solicitada' => $despachoData['litros'],
-                //         'observaciones' => 'Pedido generado desde la planificacion: '.$clienteNombre,
-                //         'estado' => 'aprobado',
-                //         'fecha_solicitud' => $request->fecha_salida,
-                //     ]);
-                // }
-
                 
-               // $actual= MovimientoCombustible::getSaldoActualByDeposito(6);
-                //  $movimiento = new MovimientoCombustible();
-                // $movimiento->created_at = $request->fecha_salida;
-                // $movimiento->tipo_movimiento = 'salida';
-                // $movimiento->deposito_id = 6;
-                // $movimiento->cliente_id = $clienteId;
-                // $movimiento->vehiculo_id = $request->vehiculo_id;
-                // $movimiento->cantidad_litros = $despachoData['litros'];
-                // $movimiento->observaciones = 'Despacho a Cliente '.$clienteNombre.' desde la planificacion.';
-                // $movimiento->cant_inicial= $actual;
-                // $movimiento->cant_final= $actual - $despachoData['litros'];
-                // $movimiento->save();
-
-
+                $guia = new Guia();
+                $guia->numero_guia = Guia::max('numero_guia') + 1;
+                $guia->viaje_id = $viaje->id;
+                $guia->cliente = $cliente->nombre;
+                $guia->rif = $cliente->rif;
+                //$guia->fecha_emision = now();
+                $guia->ruta = $destino->destino;
+                $guia->direccion = $cliente->direccion ?? 'N/A';
+                //$guia->buque = $viaje->vehiculo ? $viaje->vehiculo->placa : 'N/A';
+                $guia->unidad = $viaje->vehiculo ? $viaje->vehiculo->flota : 'N/A';
+                $guia->cisterna = $viaje->cisterna ?? 'N/A';
+                $guia->muelle = $muelle->nombre;
+                $guia->buque = $viaje->buque ? $viaje->buque->nombre : 'N/A';
+                $guia->conductor = $viaje->chofer ? $viaje->chofer->persona->nombre : 'N/A';
+                $guia->cedula = $viaje->chofer ? $viaje->chofer->persona->dni : 'N/A';
+                $guia->cantidad = $despachoData['litros'] ?? 0;
+                $guia->producto = 'MARINE GASOIL M.G.O'; // Ajustar según el producto real
+                $guia->save();
 
                 $totalLitros += $despachoData['litros'];
             }
@@ -1258,6 +1246,8 @@ $destino = TabuladorViatico::findOrFail($request->destino_id);
             // 5. Generar el Cuadro de Viáticos automáticamente (con correcciones y desglose)
            
             $this->generarCuadroViaticos($viaje, $destino, $cantidadDespachos);
+
+
          
             DB::commit();
             return redirect()->route('viajes.index')->with('success', 'Planificación guardada exitosamente.');

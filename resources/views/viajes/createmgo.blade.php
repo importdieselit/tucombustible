@@ -9,7 +9,7 @@
             <h4 class="mb-0"><i class="bi bi-ship"></i> Nueva Planificación Marine Gas Oil (MGO)</h4>
         </div>
         <div class="card-body">
-            <form action="{{ route('viajes.store') }}" method="POST" id="mgo-form">
+            <form action="{{ route('mgo.store') }}" method="POST" id="mgo-form">
                 @csrf
                 <input type="hidden" name="tipo" value="1"> {{-- 1 para MGO --}}
 
@@ -47,7 +47,7 @@
 
                 {{-- Selección de Vehículo, Chofer y Ayudante (Mantenida de tu código) --}}
                 <div class="row g-3 mb-4">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label fw-bold">Vehículo (Flota)</label>
                         <select name="vehiculo_id" id="vehiculo_id" class="form-select">
                             <option value="">Seleccione...</option>
@@ -57,7 +57,18 @@
                         </select>
                         <input type="text" name="otro_vehiculo" id="otro_vehiculo" class="form-control mt-2" style="display:none" placeholder="Nombre vehículo externo">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
+                            <label for="chofer">Cisterna</label>
+                            <select name="cisterna_id" id="cisterna_id" class="form-select" required>
+                                <option value="">Seleccione una cisterna</option>
+                                @foreach($vehiculos as $cisterna)
+                                    @if($cisterna->tipo==2)
+                                        <option value="{{ $cisterna->id }}">{{ $cisterna->flota }} {{ $cisterna->placa }}</option>
+                                    @endif
+                                @endforeach 
+                            </select>
+                        </div>
+                    <div class="col-md-3">
                         <label class="form-label fw-bold">Chofer</label>
                         <select name="chofer_id" id="chofer_id" class="form-select">
                             <option value="">Seleccione...</option>
@@ -69,7 +80,7 @@
                         </select>
                         <input type="text" name="otro_chofer" id="otro_chofer" class="form-control mt-2" style="display:none" placeholder="Nombre chofer externo">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label fw-bold">Ayudante</label>
                         <select name="ayudante" id="ayudante" class="form-select">
                             <option value="">Seleccione...</option>

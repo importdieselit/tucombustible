@@ -271,6 +271,7 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
 
     
     Route::resource('viajes', ViajesController::class)->only(['create','store', 'index', 'show']);
+
     Route::get('viajes/dashboard', [ViajesController::class, 'dashboard'])->name('viajes.dashboard');
     Route::get('viaje/list', [ViajesController::class, 'list'])->name('viajes.list');
     Route::get('/viajes/{id}/assign', [ViajesController::class, 'assign'])->name('viajes.assign');
@@ -280,7 +281,7 @@ Route::put('/viajes/{id}/assign', [ViajesController::class, 'processAssignment']
     Route::delete('/viajes/{id}', [ViajesController::class, 'destroy'])->name('viajes.destroy');
     // Muestra el formulario de edición
 Route::get('/viajes/{id}/edit', [ViajesController::class, 'edit'])->name('viaje.edit');
-
+route::post('/viajes/mgo-store', [ViajesController::class, 'storeMGO'])->name('mgo.store');
 // Ruta AJAX para actualizar un campo del Viaje
 Route::put('/viajes/{id}/update-field', [ViajesController::class, 'updateField'])->name('viaje.update.field');
 
