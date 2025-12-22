@@ -1034,7 +1034,12 @@ public function updateGuiaData(Request $request, $viajeId)
         $destinos = TabuladorViatico::where('tipo_viaje', 'like', '%MGO%')->with('muelles')->get();
         $buques = Buques::all();
         $muelles = Muelles::all();
-        return view('viajes.createmgo', compact('clientes', 'destinos', 'buques', 'muelles'));
+        $vehiculos = Vehiculo::all();
+        $choferes = Chofer::with('persona')->get();
+        
+         // Obtener los vehículos tipo cisterna (asumiendo que tipo = 2)
+        $cisternas = Vehiculo::where('tipo', 2)->get();
+        return view('viajes.createmgo', compact('clientes', 'destinos', 'buques', 'muelles', 'vehiculos', 'cisternas', 'choferes'));
     }
 
     public function getMuellesPorDestino($destinoId) {
