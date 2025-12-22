@@ -88,7 +88,7 @@
                         <div class="row g-2">
                             <div class="col-md-4">
                                 <label class="small fw-bold">Buscar Cliente</label>
-                                <select name="search_cliente" id="search_cliente" class="form-select" required>
+                                <select name="search_cliente" id="search_cliente" class="form-select" >
                                     <option value="">Seleccione...</option>
                                     @foreach($clientes as $cliente)
                                         <option value="{{ $cliente->id }}" data-tipo="1">{{ $cliente->nombre }} ({{ $cliente->alias ? $cliente->alias : ''}})</option>
@@ -128,7 +128,7 @@
                                 <div class="row g-2">
                                     <div class="col-md-4">
                                         <label class="small fw-bold">Seleccionar Buque</label>
-                                        <select name="search_buque" id="search_buque" class="form-select" required>
+                                        <select name="search_buque" id="search_buque" class="form-select" >
                                             <option value="">Seleccione...</option>
                                         </select>
                                         <input type="hidden" id="b_id">
