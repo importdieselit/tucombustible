@@ -1029,8 +1029,8 @@ public function updateGuiaData(Request $request, $viajeId)
     public function createMGO()
     {
         $clientesC = CaptacionCliente::where('tipo_cliente', 'like', '%MGO%')->select('id', 'razon_social as nombre', 'rif','direccion','correo','telefono','representante')->get();
-        $clientesD = Cliente::where('tipo', 'like', '%MGO%')->get(['id','nombre','rif','direccion','email as correo','telefono','contacto as representante', 'alias']);
-        $clientes= $clientesC->merge($clientesD);
+        $clientes = Cliente::where('tipo', 'like', '%MGO%')->get(['id','nombre','rif','direccion','email as correo','telefono','contacto as representante', 'alias']);
+        //$clientes= $clientesC->merge($clientesD);
         $destinos = TabuladorViatico::where('tipo_viaje', 'like', '%MGO%')->with('muelles')->get();
         $buques = Buques::all();
         $muelles = Muelles::all();
@@ -1039,7 +1039,7 @@ public function updateGuiaData(Request $request, $viajeId)
         
          // Obtener los vehículos tipo cisterna (asumiendo que tipo = 2)
         $cisternas = Vehiculo::where('tipo', 2)->get();
-        return view('viajes.createmgo', compact('clientes', 'destinos', 'buques', 'muelles', 'vehiculos', 'cisternas', 'choferes'));
+        return view('viajes.createmgo', compact('clientes', 'clientesC','destinos', 'buques', 'muelles', 'vehiculos', 'cisternas', 'choferes'));
     }
 
     public function getMuellesPorDestino($id)
@@ -1071,14 +1071,14 @@ public function updateGuiaData(Request $request, $viajeId)
             return response()->json(['error' => 'Error al cargar buques'], 500);
         }
     }
-    public function getClientes($id)
+    public function getClientes($id, $tipo)
     {
         try {
-            // Buscamos los muelles donde la ubicación coincida con el ID del destino
+            if($tipo==1){
             $cliente = Cliente::where('id', $id)
                         ->select('id', 'nombre', 'rif', 'direccion', 'contacto', 'telefono', 'email')
                         ->first();
-            if(!$cliente){
+            }else{
                 $cliente= CaptacionCliente::where('id', $id)
                         ->select('id', 'razon_social as nombre', 'rif', 'direccion', 'representante as contacto', 'telefono', 'correo as email')
                         ->first();

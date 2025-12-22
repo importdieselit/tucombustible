@@ -91,7 +91,10 @@
                                 <select name="search_cliente" id="search_cliente" class="form-select" required>
                                     <option value="">Seleccione...</option>
                                     @foreach($clientes as $cliente)
-                                        <option value="{{ $cliente->id }}">{{ $cliente->nombre }} ({{ $cliente->alias ? $cliente->alias : ''}})</option>
+                                        <option value="{{ $cliente->id }}" data-tipo="1">{{ $cliente->nombre }} ({{ $cliente->alias ? $cliente->alias : ''}})</option>
+                                    @endforeach
+                                    @foreach($clientesC as $cliente)
+                                        <option value="{{ $cliente->id }}" data-tipo="0">{{ $cliente->nombre }} (en Captacion)</option>
                                     @endforeach
                                 </select>
                                 <input type="hidden" id="c_id">
@@ -225,12 +228,12 @@ $(document).ready(function() {
     $('#search_cliente').on('change', function() {
         const id = $(this).val(); // ID del destino (TabuladorViatico)
         const $m = $('#search_buque'); // El selector de muelles
-        
+        const tipo_cliente = $(this).find('option:selected').data('tipo');
         // Bloqueamos y limpiamos mientras carga
         $m.prop('disabled', true).html('<option value="">Cargando buques...</option>');
         
         if(id) {
-            $.getJSON(`/api/destinos/${id}/clientes`)
+            $.getJSON(`/api/destinos/${id}/clientes/${tipo_cliente}`)
                 .done(function(data) {
                     $('#c_id').val(data.id);
                     $('#c_nombre').val(data.nombre);
