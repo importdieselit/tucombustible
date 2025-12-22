@@ -71,8 +71,8 @@
         <div class="col">
             <div class="card h-100 shadow border-start border-4 border-secondary">
                 <div class="card-body">
-                    <h5 class="card-title text-secondary"><i class="bi bi-graph-up me-2"></i> Planificacion MGO</h5>
-                    <a href="{{ route('viajes.mgo') }}" class="btn btn-secondary w-100 disabled" aria-disabled="true">Crear Planificación MGO</a>
+                    <h5 class="card-title text-primary"><i class="bi bi-graph-up me-2"></i> Planificacion MGO</h5>
+                    <a href="{{ route('viajes.mgo') }}" class="btn btn-primary w-100 " >Crear Planificación MGO</a>
                 </div>
             </div>
         </div>
