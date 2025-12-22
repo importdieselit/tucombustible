@@ -145,7 +145,7 @@ $(document).ready(function() {
     // 1. Filtrar Muelles por Destino (ID = Ubicacion)
     $('#destino_ciudad').on('change', function() {
         const id = $(this).val(); // ID del destino (TabuladorViatico)
-        const $m = $('#muelle_select'); // El selector de muelles
+        const $m = $('#muelle_id'); // El selector de muelles
         
         // Bloqueamos y limpiamos mientras carga
         $m.prop('disabled', true).html('<option value="">Cargando muelles...</option>');
