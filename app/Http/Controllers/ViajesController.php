@@ -1201,6 +1201,7 @@ public function updateGuiaData(Request $request, $viajeId)
                 $guia->unidad = $viaje->vehiculo ? $viaje->vehiculo->flota : 'N/A';
                 $guia->cisterna = $viaje->cisterna ?? 'N/A';
                 $guia->muelle = $muelle->nombre;
+                $guia->muelle_id = $muelle->id;
                 $guia->buque = $viaje->buque ? $viaje->buque->nombre : 'N/A';
                 $guia->conductor = $viaje->chofer ? $viaje->chofer->persona->nombre : 'N/A';
                 $guia->cedula = $viaje->chofer ? $viaje->chofer->persona->dni : 'N/A';

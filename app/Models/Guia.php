@@ -36,6 +36,7 @@ class Guia extends Model
         'cliente_id',
         'contacto',
         'buque_id',
+        'muelle_id',
     ];
 
 
