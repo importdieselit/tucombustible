@@ -266,7 +266,7 @@ $(document).ready(function() {
     });
 
     function cargarBuques(clienteId) {
-        const $select = $('#select_buque');
+        const $select = $('#search_buque');
         $select.prop('disabled', false).html('<option>Cargando...</option>');
         $.getJSON(`/api/cliente/${clienteId}/buques`, function(data) {
             let html = '<option value="">Seleccione Buque...</option>';
