@@ -239,18 +239,9 @@ $(document).ready(function() {
                     $('#c_dir').val(data.direccion);
                     $('#c_contacto').val(data.representante);
                     $('#c_email').val(data.correo);
-                    $('#search_buque').prop('disabled', false).focus();
 
-                    let html = '<option value="">Seleccione Buque...</option>';
-                    if(data.length > 0) {
-                        data.forEach(item => { 
-                            html += `<option value="${item.id}">${item.nombre}</option>`; 
-                        });
-                        $m.prop('disabled', false); // Solo habilitamos si hay data
-                    } else {
-                        html = '<option value="">No hay buques en este cliente</option>';
-                    }
-                    $m.html(html);
+                    $('#search_buque').prop('disabled', false).focus();
+                    cargarBuques(data.id);
                 })
                 .fail(function() {
                     $m.html('<option value="">Error al cargar datos</option>');
@@ -273,22 +264,13 @@ $(document).ready(function() {
 
     // 3. Autocomplete Buque (Filtrado por cliente)
     $('#search_buque').on('change', function() {
-
         const selectedOption = $(this).find('option:selected');
         const id = $(this).val(); // ID del buque
         if(id) {
-
-            $.getJSON("{{ route('api.search.generic', ['field' => 'buque']) }}", {
-                term: id
-            }, ).done(function(data) {
-                    $('#b_id').val(data.id);
-                    $('#b_nombre').val(data.nombre);
-                    $('#b_imo').val(data.imo);
-                    $('#b_bandera').val(data.bandera);
-                })
-                .fail(function() {
-                    console.error('Error al cargar datos del buque');
-                });
+            $('#b_id').val(id);
+            $('#b_nombre').val(selectedOption.data('nombre'));
+            $('#b_imo').val(selectedOption.data('imo'));
+            $('#b_bandera').val(selectedOption.data('bandera'));
         } else {
             $('#b_id, #b_nombre, #b_imo, #b_bandera').val('');
         }

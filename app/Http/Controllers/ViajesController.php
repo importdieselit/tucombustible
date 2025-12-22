@@ -1057,7 +1057,7 @@ public function updateGuiaData(Request $request, $viajeId)
         }
     }
 
-    public function getBuquesPorDestino($id)
+    public function getBuques($id)
     {
         try {
             // Buscamos los muelles donde la ubicación coincida con el ID del destino
@@ -1069,6 +1069,23 @@ public function updateGuiaData(Request $request, $viajeId)
             return response()->json($buques);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Error al cargar buques'], 500);
+        }
+    }
+    public function getCliente($id)
+    {
+        try {
+            // Buscamos los muelles donde la ubicación coincida con el ID del destino
+            $cliente = Cliente::where('id', $id)
+                        ->select('id', 'nombre', 'rif', 'direccion', 'contacto', 'telefono', 'email')
+                        ->first();
+            if(!$cliente){
+                $cliente= CaptacionCliente::where('id', $id)
+                        ->select('id', 'razon_social as nombre', 'rif', 'direccion', 'representante as contacto', 'telefono', 'correo as email')
+                        ->first();
+            }   
+            return response()->json($cliente);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al cargar cliente'], 500);
         }
     }
 
