@@ -1148,21 +1148,21 @@ $destino = TabuladorViatico::findOrFail($request->destino_id);
                 ]);
                 $clienteId=0;
                 $clienteNombre=$despachoData['otro_cliente'] ?? 'Cliente Desconocido';
-                if(isset($despachoData['cliente_id'])&&!is_null($despachoData['cliente_id'])){
-                    $clienteId = $despachoData['cliente_id'];
-                    $clienteNombre = Cliente::find($clienteId)->nombre;
+                // if(isset($despachoData['cliente_id'])&&!is_null($despachoData['cliente_id'])){
+                //     $clienteId = $despachoData['cliente_id'];
+                //     $clienteNombre = Cliente::find($clienteId)->nombre;
                 
-                    $pedido=Pedido::create([
-                        'cliente_id' => $clienteId, // Usar el cliente seleccionado
-                        'deposito_id' => 6, // Ya no se asigna un depósito específico
-                        'chofer_id' => $request->chofer_id ?? 0,
-                        'vehiculo_id' => $request->vehiculo_id ?? 0,
-                        'cantidad_solicitada' => $despachoData['litros'],
-                        'observaciones' => 'Pedido generado desde la planificacion: '.$clienteNombre,
-                        'estado' => 'aprobado',
-                        'fecha_solicitud' => $request->fecha_salida,
-                    ]);
-                }
+                //     $pedido=Pedido::create([
+                //         'cliente_id' => $clienteId, // Usar el cliente seleccionado
+                //         'deposito_id' => 6, // Ya no se asigna un depósito específico
+                //         'chofer_id' => $request->chofer_id ?? 0,
+                //         'vehiculo_id' => $request->vehiculo_id ?? 0,
+                //         'cantidad_solicitada' => $despachoData['litros'],
+                //         'observaciones' => 'Pedido generado desde la planificacion: '.$clienteNombre,
+                //         'estado' => 'aprobado',
+                //         'fecha_solicitud' => $request->fecha_salida,
+                //     ]);
+                // }
 
                 
                // $actual= MovimientoCombustible::getSaldoActualByDeposito(6);
@@ -1182,40 +1182,41 @@ $destino = TabuladorViatico::findOrFail($request->destino_id);
 
                 $totalLitros += $despachoData['litros'];
             }
-            $data=[
-                    'viaje_id' => $viaje->id,
-                    'cliente_id' => $despachoData['cliente_id'] ?? null,
-                    'otro_cliente' => $despachoData['otro_cliente'] ?? null,
-                    'litros' => $despachoData['litros'],
-                    'total_litros' => $totalLitros
-                ];
+            // $data=[
+            //         'viaje_id' => $viaje->id,
+            //         'cliente_id' => $despachoData['cliente_id'] ?? null,
+            //         'otro_cliente' => $despachoData['otro_cliente'] ?? null,
+            //         'litros' => $despachoData['litros'],
+            //         'total_litros' => $totalLitros
+            //     ];
 
-                $producto=Producto::find($request->tipo);
-                $producto->stock-=$totalLitros;
-                $producto->save();
+            //     $producto=Producto::find($request->tipo);
+            //     $producto->stock-=$totalLitros;
+            //     $producto->save();
 
-                if ($request->has('chofer_id') && $request->chofer_id !== null) {
-                try {
-                    FcmNotificationService::sendPedidoAsignadoConductorNotification(
-                        $pedido->fresh(['cliente']),
-                        $request->chofer_id
-                    );
-                    Log::info("Notificación FCM enviada al conductor {$request->chofer_id} por asignación de pedido #{$pedido->id}");
-                } catch (\Exception $e) {
-                    Log::error("Error enviando notificación FCM al conductor: " . $e->getMessage());
-                    // No fallar la operación principal por error en notificación
-                }
-            }
+            //     if ($request->has('chofer_id') && $request->chofer_id !== null) {
+            //     try {
+            //         FcmNotificationService::sendPedidoAsignadoConductorNotification(
+            //             $pedido->fresh(['cliente']),
+            //             $request->chofer_id
+            //         );
+            //         Log::info("Notificación FCM enviada al conductor {$request->chofer_id} por asignación de pedido #{$pedido->id}");
+            //     } catch (\Exception $e) {
+            //         Log::error("Error enviando notificación FCM al conductor: " . $e->getMessage());
+            //         // No fallar la operación principal por error en notificación
+            //     }
+            //}
 
                             // Crear el pedido (sin depósito específico)
             
 
-                 FcmNotificationService::enviarNotification(
-                        "Nuevo viaje creado a {$viaje->destino_ciudad} con {$cantidadDespachos} despachos. Total Litros: {$totalLitros}",  
-                        "Nuevo viaje creado a {$viaje->destino_ciudad} con {$cantidadDespachos} despachos. Total Litros: {$totalLitros}",
-                        $data
-                    );
+                //  FcmNotificationService::enviarNotification(
+                //         "Nuevo viaje creado a {$viaje->destino_ciudad} con {$cantidadDespachos} despachos. Total Litros: {$totalLitros}",  
+                //         "Nuevo viaje creado a {$viaje->destino_ciudad} con {$cantidadDespachos} despachos. Total Litros: {$totalLitros}",
+                //         $data
+                //     );
             // 5. Generar el Cuadro de Viáticos automáticamente (con correcciones y desglose)
+           
             $this->generarCuadroViaticos($viaje, $destino, $cantidadDespachos);
          
             DB::commit();
