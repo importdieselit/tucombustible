@@ -20,8 +20,8 @@
                         <label class="form-label fw-bold">Ciudad de Destino</label>
                         <select name="destino_ciudad" id="destino_ciudad" class="form-select" required>
                             <option value="">Seleccione...</option>
-                            @foreach($destino as $ciudad)
-                                <option value="{{ $ciudad }}">{{ $ciudad }}</option>
+                            @foreach($destinos as $ciudad)
+                                <option value="{{ $ciudad->id }}">{{ $ciudad->destino }}</option>
                             @endforeach
                         </select>
                     </div>
