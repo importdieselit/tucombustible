@@ -1029,7 +1029,7 @@ public function updateGuiaData(Request $request, $viajeId)
     public function createMGO()
     {
         $clientesC = CaptacionCliente::where('tipo_cliente', 'like', '%MGO%')->select('id', 'razon_social as nombre', 'rif','direccion','correo','telefono','representante')->get();
-        $clientesD = Cliente::where('tipo_cliente', 'like', '%MGO%')->get(['id','nombre','rif','direccion','email as correo','telefono','contacto as representante']);
+        $clientesD = Cliente::where('tipo', 'like', '%MGO%')->get(['id','nombre','rif','direccion','email as correo','telefono','contacto as representante']);
         $clientes= $clientesC->merge($clientesD);
         $destinos = TabuladorViatico::where('tipo_viaje', 'like', '%MGO%')->with('muelles')->get();
         $buques = Buques::all();
