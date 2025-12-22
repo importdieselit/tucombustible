@@ -39,7 +39,7 @@ class SearchController extends Controller
             case 'buque':
                 return Buques::where('nombre', 'LIKE', "%$term%")
                     ->where('cliente_id', $request->cliente_id) // Opcional: filtrar por cliente actual
-                    ->limit(5)
+                    
                     ->get()
                     ->map(function($b) {
                         return [

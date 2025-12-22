@@ -1057,6 +1057,21 @@ public function updateGuiaData(Request $request, $viajeId)
         }
     }
 
+    public function getBuquesPorDestino($id)
+    {
+        try {
+            // Buscamos los muelles donde la ubicación coincida con el ID del destino
+            $buques = Buques::where('cliente_id', $id)
+                        ->select('id', 'nombre', 'imo', 'bandera')
+                        ->orderBy('nombre', 'asc')
+                        ->get();
+
+            return response()->json($buques);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al cargar buques'], 500);
+        }
+    }
+
 
     public function storeMGO(Request $request) {
     

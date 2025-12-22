@@ -30,10 +30,10 @@ class SearchController extends Controller
 
             case 'buque':
                 // Buscamos buques usados en viajes anteriores para sugerir
-                return Buques::where('buque', 'LIKE', "%$term%")
+                return Buques::where('buque', 'LIKE', "%$term%")->orWhere('cliente_id', $request->cliente_id) // Opcional: filtrar por cliente actual
                     ->distinct()
                     ->limit(5)
-                    ->get(['buque as value']);
+                    ->get(['buque as value','id', 'imo', 'bandera']);
 
             case 'chuto_placa':
                 return Vehiculo::where('tipo', 2)
