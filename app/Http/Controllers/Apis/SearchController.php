@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use App\Models\Cliente;
 use App\Models\Vehiculo;
 use App\Models\Viaje;
+use App\Models\Guia;
 
 class SearchController extends Controller
 {
@@ -36,11 +37,19 @@ class SearchController extends Controller
                 });
 
             case 'buque':
-                // Buscamos buques usados en viajes anteriores para sugerir
-                return Buques::where('buque', 'LIKE', "%$term%")
-                    ->distinct()
+                return Buques::where('nombre', 'LIKE', "%$term%")
+                    ->where('cliente_id', $request->cliente_id) // Opcional: filtrar por cliente actual
                     ->limit(5)
-                    ->get(['buque as value']);
+                    ->get()
+                    ->map(function($b) {
+                        return [
+                            'label'   => "{$b->nombre} [IMO: {$b->imo}]",
+                            'value'   => $b->nombre,
+                            'imo'     => $b->imo,
+                            'bandera' => $b->bandera,
+                            'id'      => $b->id
+                        ];
+                    });
 
             case 'chuto_placa':
                 return Vehiculo::where('tipo', 'TRACTOR')

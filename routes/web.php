@@ -264,6 +264,7 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
     });
 
     Route::get('/viajes/calendario', [ViajesController::class, 'calendar'])->name('viajes.calendario');
+    Route::get('/viajes/mgo', [ViajesController::class, 'createMGO'])->name('viajes.mgo');
   
     Route::get('/alertas', [AlertaController::class, 'index'])->name('alertas.index');
     Route::get('/alertas/read/{id}', [AlertaController::class, 'markAsRead'])->name('alertas.read');

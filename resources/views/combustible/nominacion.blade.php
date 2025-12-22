@@ -58,7 +58,7 @@
             <td colspan="3" style="text-align:left; font-size: 12pt; font-weight: bold;">
                 CLIENTE
             </td>
-            <td style="text-align: right; font-size: 10pt;">INFORMACION</td>
+            <td style="text-align: left; font-size: 10pt;">INFORMACION</td>
         </tr>
         <tr style="border:solid 1px black;">
             <td colspan="3" style="text-align:left; font-size: 10pt;">

@@ -22,7 +22,9 @@ use App\Models\Pedido;
 use App\Models\MovimientoCombustible;
 use App\Models\Producto;
 use App\Models\Guia;
-
+use App\Models\Buques;
+use App\Models\Muelles;
+use App\Models\CaptacionCliente;
 
 class ViajesController extends Controller
 {
@@ -995,6 +997,24 @@ public function updateGuiaData(Request $request, $viajeId)
         $guia->update(['nombre' => $value['nombre']],
             ['rif' => $value['rif'], 'direccion' => $value['direccion']]);
        // $viaje->despachos()->update(['cliente_id' => $cliente->id]);
+    }else if ($field === 'vessel_full_update') {
+        // 1. Buscamos o creamos el buque para ese cliente
+    
+        $buque = Buques::updateOrCreate(
+            [
+                'nombre' => $value['nombre'],
+                'cliente_id' => $value['cliente_id']
+            ],
+            [
+                'imo' => $value['imo'],
+                'bandera' => $value['bandera']
+            ]
+        );
+
+        // 2. Asociamos el buque al viaje actual
+        $viaje->update(['buque_id' => $buque->id]);
+        
+        return response()->json(['success' => true]);
     }else {
         $guia->update([$field => $value]);
     }
@@ -1005,4 +1025,191 @@ public function updateGuiaData(Request $request, $viajeId)
         'message' => 'Dato actualizado automáticamente'
     ]);
 }
+
+    public function createMGO()
+    {
+        $clientesC = CaptacionCliente::where('tipo_cliente', 'like', '%MGO%')->select('id', 'razon_social as nombre', 'rif','direccion','correo','telefono','representante')->get();
+        $clientesD = Cliente::where('tipo_cliente', 'like', '%MGO%')->get(['id','nombre','rif','direccion','email as correo','telefono','contacto as representante']);
+        $clientes= $clientesC->merge($clientesD);
+        $destinos = TabuladorViatico::where('tipo_viaje', 'like', '%MGO%')->with('muelles')->get();
+        $buques = Buques::all();
+        $muelles = Muelles::all();
+        return view('viajes.createmgo', compact('clientes', 'destinos', 'buques', 'muelles'));
+    }
+
+    public function getMuellesPorDestino($destinoId) {
+        // Según tu lógica: destino.id = muelle.ubicacion
+        return Muelles::where('ubicacion', $destinoId)->get(['id', 'nombre']);
+    }
+
+
+    public function storeMGO(Request $request) {
+    
+        try {
+            DB::beginTransaction();
+$destino = TabuladorViatico::findOrFail($request->destino_id);
+        $muelle = Muelles::findOrFail($request->muelle_id);
+
+        // 1. Cliente: Si no viene ID, crear o actualizar por RIF
+        if(is_null($request->cliente_id)){
+            $request->validate([
+                'cliente_rif' => 'required|string|max:20',
+                'cliente_nombre' => 'required|string|max:255',
+                'cliente_direccion' => 'nullable|string|max:500',
+                'contacto_nombre' => 'nullable|string|max:255',
+                'contacto_telefono' => 'nullable|string|max:20',
+                'contacto_email' => 'nullable|email|max:255',
+            ]);
+            $cliente = Cliente::updateOrCreate(
+                ['rif' => $request->cliente_rif],
+                [
+                    'nombre' => $request->cliente_nombre,
+                    'direccion' => $request->cliente_direccion,
+                    'contacto' => $request->contacto_nombre,
+                    'telefono' => $request->contacto_telefono,
+                    'email' => $request->contacto_email,
+                    'tipo_cliente' => 'MGO'
+                ]
+            );
+            $clientecap= CaptacionCliente::create(
+                ['cliente_id' => $cliente->id],
+                [
+                    'rif' => $request->cliente_rif,
+                    'razon_social' => $request->cliente_nombre,
+                    'direccion' => $request->cliente_direccion,
+                    'representante' => $request->contacto_nombre,
+                    'telefono' => $request->contacto_telefono,
+                    'correo' => $request->contacto_email,
+                    'tipo_cliente' => 'MGO',
+                    'solicitados' => $request->solicitados ?? 0,
+                    'estatus' => 'registro_inicial'
+                ]
+            );
+        }
+        
+
+        // 2. Buque: Si no viene ID, crear para este cliente
+        if(is_null($request->buque_id)){
+            $request->validate([
+                'buque_nombre' => 'required|string|max:255',
+                'buque_imo' => 'nullable|string|max:20',
+                'buque_bandera' => 'nullable|string|max:100',
+            ]);
+        
+            $buque = Buques::create(
+                ['nombre' => $request->buque_nombre, 'cliente_id' => $cliente->id],
+                [
+                    'imo' => $request->buque_imo,
+                    'bandera' => $request->buque_bandera
+                ]
+            );
+        }
+                $status = 'PROGRAMADO';
+            //
+            // 3. Crear el Viaje ÚNICO
+            $viaje = Viaje::create([
+                'destino_ciudad' => $request->destino_ciudad,
+                'fecha_salida' => $request->fecha_salida,
+                'status' => $status,
+                'chofer_id' => $request->chofer_id ?? 0,
+                'vehiculo_id' => $request->vehiculo_id ?? 0,
+                'ayudante' => $request->ayudante ?? 0,
+                'otro_chofer' => $request->otro_chofer_id ?? null,
+                'otro_vehiculo' => $request->otro_vehiculo_id ?? null,
+                'otro_ayudante' => $request->otro_ayudante_id ?? null,
+                'tipo' => 1, // Tipo 1 para viajes con múltiples despachos
+            ]);
+
+            // 4. Crear los registros de DespachoViaje
+            $cantidadDespachos = count($request->despachos);
+            $totalLitros = 0;
+            foreach ($request->despachos as $despachoData) {
+                DespachoViaje::create([
+                    'viaje_id' => $viaje->id,
+                    'cliente_id' => $despachoData['cliente_id'] ?? null,
+                    'otro_cliente' => $despachoData['otro_cliente'] ?? null,
+                    'litros' => $despachoData['litros'],
+                    'observacion' => $despachoData['observacion'] ?? null,
+                ]);
+                $clienteId=0;
+                $clienteNombre=$despachoData['otro_cliente'] ?? 'Cliente Desconocido';
+                if(isset($despachoData['cliente_id'])&&!is_null($despachoData['cliente_id'])){
+                    $clienteId = $despachoData['cliente_id'];
+                    $clienteNombre = Cliente::find($clienteId)->nombre;
+                
+                    $pedido=Pedido::create([
+                        'cliente_id' => $clienteId, // Usar el cliente seleccionado
+                        'deposito_id' => 6, // Ya no se asigna un depósito específico
+                        'chofer_id' => $request->chofer_id ?? 0,
+                        'vehiculo_id' => $request->vehiculo_id ?? 0,
+                        'cantidad_solicitada' => $despachoData['litros'],
+                        'observaciones' => 'Pedido generado desde la planificacion: '.$clienteNombre,
+                        'estado' => 'aprobado',
+                        'fecha_solicitud' => $request->fecha_salida,
+                    ]);
+                }
+
+                
+               // $actual= MovimientoCombustible::getSaldoActualByDeposito(6);
+                //  $movimiento = new MovimientoCombustible();
+                // $movimiento->created_at = $request->fecha_salida;
+                // $movimiento->tipo_movimiento = 'salida';
+                // $movimiento->deposito_id = 6;
+                // $movimiento->cliente_id = $clienteId;
+                // $movimiento->vehiculo_id = $request->vehiculo_id;
+                // $movimiento->cantidad_litros = $despachoData['litros'];
+                // $movimiento->observaciones = 'Despacho a Cliente '.$clienteNombre.' desde la planificacion.';
+                // $movimiento->cant_inicial= $actual;
+                // $movimiento->cant_final= $actual - $despachoData['litros'];
+                // $movimiento->save();
+
+
+
+                $totalLitros += $despachoData['litros'];
+            }
+            $data=[
+                    'viaje_id' => $viaje->id,
+                    'cliente_id' => $despachoData['cliente_id'] ?? null,
+                    'otro_cliente' => $despachoData['otro_cliente'] ?? null,
+                    'litros' => $despachoData['litros'],
+                    'total_litros' => $totalLitros
+                ];
+
+                $producto=Producto::find($request->tipo);
+                $producto->stock-=$totalLitros;
+                $producto->save();
+
+                if ($request->has('chofer_id') && $request->chofer_id !== null) {
+                try {
+                    FcmNotificationService::sendPedidoAsignadoConductorNotification(
+                        $pedido->fresh(['cliente']),
+                        $request->chofer_id
+                    );
+                    Log::info("Notificación FCM enviada al conductor {$request->chofer_id} por asignación de pedido #{$pedido->id}");
+                } catch (\Exception $e) {
+                    Log::error("Error enviando notificación FCM al conductor: " . $e->getMessage());
+                    // No fallar la operación principal por error en notificación
+                }
+            }
+
+                            // Crear el pedido (sin depósito específico)
+            
+
+                 FcmNotificationService::enviarNotification(
+                        "Nuevo viaje creado a {$viaje->destino_ciudad} con {$cantidadDespachos} despachos. Total Litros: {$totalLitros}",  
+                        "Nuevo viaje creado a {$viaje->destino_ciudad} con {$cantidadDespachos} despachos. Total Litros: {$totalLitros}",
+                        $data
+                    );
+            // 5. Generar el Cuadro de Viáticos automáticamente (con correcciones y desglose)
+            $this->generarCuadroViaticos($viaje, $destino, $cantidadDespachos);
+         
+            DB::commit();
+            return redirect()->route('viajes.index')->with('success', 'Planificación guardada exitosamente.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al crear planificación MGO: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Error al guardar la planificación: ' . $e->getMessage());
+        }
+        
+    }
 }

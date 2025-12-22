@@ -144,12 +144,20 @@
                     data-db-field="direccion" data-live-id="#live-cliente-direccion" 
                     value="{{ $guia->direccion ?? '' }}" placeholder="Escriba para buscar o crear...">
             </div>
+            <div class="vessel-info-group col-12 row">
+                <strong>BUQUE (vessel):</strong>
+                <input type="text" class="editable-fild col-4 hybrid-autocomplete" 
+                    data-db-field="buque" 
+                    data-live-id="#live-buque" 
+                    id="buque_input" value="{{ $viaje->buque->nombre ?? '' }}">
 
-            <div class="col-md-6">
-                <label>Buque Embarcacion</label>
-                <input type="text" id="buque_input" class="form-control autocomplete-field hybrid-autocomplete" 
-                    data-db-field="buque" data-live-id="#live-buque" 
-                    value="{{ $guia->buque ?? 'N/A'}}" placeholder="Escriba para buscar o crear...">
+                <strong>IMO:</strong>
+                <input type="text" class="editable-field col-4" id="imo_input" 
+                    data-db-field="imo" value="{{ $viaje->buque->imo ?? '' }}">
+
+                <strong>BANDERA (flag):</strong>
+                <input type="text" class="editable-field col-4" id="bandera_input" 
+                    data-db-field="bandera" value="{{ $viaje->buque->bandera ?? '' }}">
             </div>
             <div class="col-md-6">
                 <label>Chuto</label>
@@ -398,6 +406,15 @@
                         rif: ui.item.rif,
                         direccion: ui.item.direccion
                     });
+                } else if (dbField === 'buque') {
+                    // Autocompletar datos del buque encontrado
+                    $('#imo').val(ui.item.imo);
+                    $('#bandera').val(ui.item.bandera);
+                     saveToDatabase('vessel_full_update', {
+                        nombre: ui.item.value,
+                        imo: ui.item.imo,
+                        bandera: ui.item.bandera
+                    });    
                 } else {
                     // Si es buque, precintos o chuto, solo guardamos ese campo
                     saveToDatabase(dbField, ui.item.value);
@@ -411,6 +428,16 @@
             const currentVal = $(this).val();
             $(liveId).text(currentVal); 
 
+        });
+
+        $('#imo, #bandera').on('blur', function() {
+            const nombre = $('#buque_input').val();
+            const imo = $('#imo_input').val();
+            const bandera = $('#bandera_input').val();
+
+            if (nombre && imo && bandera) {
+                saveVesselFull(nombre, imo, bandera);
+            }
         });
 
         // GUARDADO AL PERDER EL FOCO (Blur)
@@ -434,6 +461,23 @@
             success: function() { console.log("Sincronizado con BD"); }
         });
     }
+
+    function saveVesselFull(nombre, imo, bandera) {
+    $.ajax({
+        url: `/api/viajes/${viajeId}/update-guia-data`,
+        method: 'PUT',
+        data: {
+            _token: '{{ csrf_token() }}',
+            field: 'vessel_full_update',
+            value: {
+                nombre: nombre,
+                imo: imo,
+                bandera: bandera,
+                cliente_id: $('#cliente_id_hidden').val()
+            }
+        }
+    });
+}
 });
 </script>
 @endpush

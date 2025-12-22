@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Cliente;
 use App\Models\Viaje;
+use App\Models\Buques;
 
 
 class Guia extends Model
@@ -34,6 +35,7 @@ class Guia extends Model
         'email',
         'cliente_id',
         'contacto',
+        'buque_id',
     ];
 
 
@@ -54,6 +56,10 @@ class Guia extends Model
     public function nominaciones()
     {
         return $this->hasOne(Nominacion::class);
+    }
+    public function buque()
+    {
+        return $this->belongsTo(Buques::class, 'buque_id');
     }
 
 }

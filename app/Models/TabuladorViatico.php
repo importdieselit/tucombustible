@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Muelles;
 
 class TabuladorViatico extends Model
 {
@@ -24,4 +25,9 @@ class TabuladorViatico extends Model
         'costo_pernocta',
         
     ];
+
+    public function muelles()
+    {
+        return $this->hasMany(Muelles::class, 'ubicacion', 'id');
+    }
 }
