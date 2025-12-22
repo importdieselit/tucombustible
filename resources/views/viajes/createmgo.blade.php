@@ -142,6 +142,36 @@
 $(document).ready(function() {
     let rowIndex = 0;
 
+    // 1. Filtrar Muelles por Destino (ID = Ubicacion)
+    $('#destino_ciudad').on('change', function() {
+        const id = $(this).val(); // ID del destino (TabuladorViatico)
+        const $m = $('#muelle_select'); // El selector de muelles
+        
+        // Bloqueamos y limpiamos mientras carga
+        $m.prop('disabled', true).html('<option value="">Cargando muelles...</option>');
+        
+        if(id) {
+            $.getJSON(`/api/destinos/${id}/muelles`)
+                .done(function(data) {
+                    let html = '<option value="">Seleccione Muelle...</option>';
+                    if(data.length > 0) {
+                        data.forEach(item => { 
+                            html += `<option value="${item.id}">${item.nombre}</option>`; 
+                        });
+                        $m.prop('disabled', false); // Solo habilitamos si hay data
+                    } else {
+                        html = '<option value="">No hay muelles en este destino</option>';
+                    }
+                    $m.html(html);
+                })
+                .fail(function() {
+                    $m.html('<option value="">Error al cargar datos</option>');
+                });
+        } else {
+            $m.html('<option value="">Seleccione destino primero</option>');
+        }
+    });
+
     // Lógica para unidades externas (Flete)
     $('#es_flete').on('change', function() {
         const isChecked = $(this).is(':checked');

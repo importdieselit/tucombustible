@@ -1042,9 +1042,19 @@ public function updateGuiaData(Request $request, $viajeId)
         return view('viajes.createmgo', compact('clientes', 'destinos', 'buques', 'muelles', 'vehiculos', 'cisternas', 'choferes'));
     }
 
-    public function getMuellesPorDestino($destinoId) {
-        // Según tu lógica: destino.id = muelle.ubicacion
-        return Muelles::where('ubicacion', $destinoId)->get(['id', 'nombre']);
+    public function getMuellesPorDestino($id)
+    {
+        try {
+            // Buscamos los muelles donde la ubicación coincida con el ID del destino
+            $muelles = Muelles::where('ubicacion', $id)
+                        ->select('id', 'nombre')
+                        ->orderBy('nombre', 'asc')
+                        ->get();
+
+            return response()->json($muelles);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al cargar muelles'], 500);
+        }
     }
 
 
