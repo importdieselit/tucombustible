@@ -211,6 +211,16 @@
                 <input type="text" id="numero_guia_input" class="form-control autocomplete-field hybrid-autocomplete" 
                     data-db-field="numero_guia" data-live-id="#live-numero_guia" value="{{ $guia->numero_guia ?? 'N/A' }}">
             </div>
+            <div class="col-md-6">
+                <label for="cantidad_input" class="form-label hybrid-autocomplete">Cantidad Litros</label>
+                <input type="text" id="cantidad_input" class="form-control autocomplete-field hybrid-autocomplete" 
+                    data-db-field="cantidad" data-live-id="#live-cantidad" value="{{ $guia->cantidad ?? 'N/A' }}">
+            </div>
+            <div class="col-md-6">
+                <label for="cantidad_tm_input" class="form-label hybrid-autocomplete">Cantidad TM</label>
+                <input type="text" id="cantidad_tm_input" class="form-control autocomplete-field hybrid-autocomplete" 
+                    data-db-field="cantidad_tm" data-live-id="#live-cantidad_tm" value="{{ number_format(($guia->cantidad* 0.85/1000), 2, ',', '.') }}">
+            </div>
         </div>
         
         <button type="button" id="update-guia-btn" class="btn btn-primary mt-2">
@@ -271,7 +281,7 @@
             <tbody>
                 @foreach ($viaje->despachos as $despacho)
                     <tr>
-                        <td class="cantidad">{{ number_format($despacho->litros, 2, ',', '.') }}</td>
+                        <td class="cantidad" id="live-cantidad">{{ number_format($guia->cantidad, 2, ',', '.') }}</td>
                         <td>{{ $despacho->concepto ?? 'MARINE GASOIL (MGO)' }} </td>
                         <td class="precio">{{ number_format($despacho->precio_unitario ?? 0, 2, ',', '.') }}</td>
                         <td class="total">{{ number_format($despacho->total ?? ($despacho->litros * ($despacho->precio_unitario ?? 0)), 2, ',', '.') }}</td>
@@ -390,7 +400,6 @@
         const $input = $(this);
         const dbField = $input.data('db-field');
         const liveId = $input.data('live-id');
-
         $input.autocomplete({
             source: function(request, response) {
                 $.getJSON("{{ route('api.search.generic') }}", {
@@ -439,6 +448,28 @@
         $input.on('input', function() {
             const currentVal = $(this).val();
             $(liveId).text(currentVal); 
+            if (dbField === 'cantidad_tm') {
+                // Convertir Litros a TM: (Lts * 0.85) / 1000
+                const tm = parseFloat(currentVal.replace(/\./g, '').replace(',', '.'));
+
+                if (!isNaN(tm)) {
+                        const litrosCalculados = (tm * 1000) / 0.85;
+
+                        const formateador = new Intl.NumberFormat('es-VE', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+                        console.log(formateador.format(litrosCalculados));
+
+                console.log(formateador.format(litrosCalculados));
+                    $('#cantidad_input').val(formateador.format(litrosCalculados));
+                    currentVal = formateador.format(litrosCalculados);
+                    $('#live-cantidad').text(currentVal); 
+
+                }
+            }
+            
+            console.log(`Actualizado en vivo: ${dbField} = ${currentVal}`);
 
         });
 
@@ -456,6 +487,36 @@
         // Solo guarda si el usuario terminó de escribir algo nuevo
         $input.on('blur', function() {
             const finalVal = $(this).val();
+            if (dbField === 'cantidad') {
+                    // Convertir Litros a TM: (Lts * 0.85) / 1000
+                    const litros = parseFloat(finalVal.replace(/\./g, '').replace(',', '.')); // Limpieza más robusta
+                    const tmCalculado = (litros * 0.85) / 1000;
+
+                    const formateador = new Intl.NumberFormat('es-VE', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                    console.log(formateador.format(tmCalculado));
+                    $('#cantidad_tm_input').val(formateador.format(tmCalculado));
+                } 
+                else if (dbField === 'cantidad_tm') {
+                    // Convertir TM a Litros: (TM * 1000) / 0.85
+                    const tm = parseFloat(finalVal.replace(/\./g, '').replace(',', '.'));
+
+                    if (!isNaN(tm)) {
+                        const litrosCalculados = (tm * 1000) / 0.85;
+
+                        const formateador = new Intl.NumberFormat('es-VE', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+                        console.log(formateador.format(litrosCalculados));
+
+                        $('#cantidad_input').val(formateador.format(litrosCalculados));
+                        dbField = 'cantidad'; // A seguramos que guardamos en el campo correcto
+                        finalVal = formateador.format(litrosCalculados);
+                    }
+                }
             if(finalVal.trim() !== "") {
                 saveToDatabase(dbField, finalVal);
             }
