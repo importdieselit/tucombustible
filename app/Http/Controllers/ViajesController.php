@@ -586,7 +586,7 @@ class ViajesController extends Controller
         $persona= Persona::find($user->id_persona);
         
         // 1. Inicializa la query builder
-        $query = Viaje::with(['chofer.persona', 'ayudante_chofer.persona', 'vehiculo', 'despachos.cliente', 'viaticos']);
+        $query = Viaje::with(['chofer.persona', 'ayudante_chofer.persona', 'vehiculo', 'despachos.cliente']);
 
         // Excluir cancelados
         $query->where('status', '!=', 'CANCELADO');
