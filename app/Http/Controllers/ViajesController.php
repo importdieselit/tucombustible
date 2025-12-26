@@ -586,7 +586,7 @@ class ViajesController extends Controller
         $persona= Persona::find($user->id_persona);
         
         // 1. Inicializa la query builder
-        $query = Viaje::with(['chofer.persona', 'ayudante_chofer.persona', 'vehiculo', 'despachos.cliente']);
+        $query = Viaje::with(['chofer.persona', 'ayudante_chofer.persona', 'vehiculo', 'despachos.cliente', 'viaticos']);
 
         // Excluir cancelados
         $query->where('status', '!=', 'CANCELADO');
@@ -602,7 +602,7 @@ class ViajesController extends Controller
         
         // 3. Ejecuta la consulta
         $viajes = $query->get();
-       dd($viajes);
+       
         // Calcular el total de viáticos presupuestados/pendientes
         $totalViaticosPresupuestados = $viajes->flatMap(function($viaje) {
             return $viaje->viaticos->pluck('monto');
