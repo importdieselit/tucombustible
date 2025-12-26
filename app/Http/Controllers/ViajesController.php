@@ -602,7 +602,7 @@ class ViajesController extends Controller
         
         // 3. Ejecuta la consulta
         $viajes = $query->get();
-       
+       dd($viajes);
         // Calcular el total de viáticos presupuestados/pendientes
         $totalViaticosPresupuestados = $viajes->flatMap(function($viaje) {
             return $viaje->viaticos->pluck('monto');
@@ -1120,7 +1120,7 @@ public function updateGuiaData(Request $request, $viajeId)
         try {
             DB::beginTransaction();
         $destino = TabuladorViatico::find($request->destino_ciudad);
-        $muelle = Muelles::findOrFail($request->muelle_id);
+        $muelle = Muelles::find($request->muelle_id);
 
         // 1. Cliente: Si no viene ID, crear o actualizar por RIF
     
@@ -1226,7 +1226,7 @@ public function updateGuiaData(Request $request, $viajeId)
                 $guia->unidad = $viaje->vehiculo ? $viaje->vehiculo->flota : 'N/A';
                 $guia->cisterna = $viaje->cisterna ?? 'N/A';
                 $guia->muelle = $muelle->nombre;
-                $guia->muelle_id = $muelle->id;
+                $guia->muelle_id = $muelle->id ?? null;
                 $guia->buque = $buque->nombre;
                 $guia->buque_id = $buque->id;
                 $guia->conductor = $viaje->chofer ? $viaje->chofer->persona->nombre : 'N/A';

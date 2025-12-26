@@ -67,6 +67,8 @@
                                     @endif
                                 @endforeach 
                             </select>
+                        <input type="text" name="otro_cisterna" id="otro_cisterna" class="form-control mt-2" style="display:none" placeholder="Nombre cisterna externa">
+
                         </div>
                     <div class="col-md-3">
                         <label class="form-label fw-bold">Chofer</label>
@@ -90,6 +92,7 @@
                                 @endif
                             @endforeach
                         </select>
+                        <input type="text" name="otro_ayudante" id="otro_ayudante" class="form-control mt-2" style="display:none" placeholder="Nombre ayudante externo">
                     </div>
                 </div>
 
@@ -228,11 +231,11 @@ $(document).ready(function() {
     $('#es_flete').on('change', function() {
         const isChecked = $(this).is(':checked');
         if(isChecked) {
-            $('#vehiculo_id, #chofer_id').hide().val('');
-            $('#otro_vehiculo, #otro_chofer').show();
+            $('#vehiculo_id, #chofer_id','#ayudante', '#cisterna_id').hide().val('');
+            $('#otro_vehiculo, #otro_chofer, #otro_cisterna, #otro_ayudante').show();
         } else {
-            $('#vehiculo_id, #chofer_id').show();
-            $('#otro_vehiculo, #otro_chofer').hide().val('');
+            $('#vehiculo_id, #chofer_id','#ayudante', '#cisterna_id').show();
+            $('#otro_vehiculo, #otro_chofer, #otro_cisterna, #otro_ayudante').hide().val('');
         }
     });
 

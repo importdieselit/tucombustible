@@ -143,7 +143,7 @@
 
                         <!-- Otro Ayudante - TEXT INPUT -->
                         <div class="col-md-6">
-                            <label for="otro_ayudante" class="form-label">Ayudante (Esterno)</label>
+                            <label for="otro_ayudante" class="form-label">Ayudante (Externo)</label>
                             <input type="text" class="form-control" id="otro_ayudante" name="otro_ayudante" value="{{ old('otro_ayudante') }}" placeholder="Nombre del Ayudante">
                         </div>
 
