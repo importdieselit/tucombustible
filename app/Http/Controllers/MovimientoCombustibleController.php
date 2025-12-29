@@ -858,7 +858,7 @@ public function createPrecarga()
 
         $ayudantes = Chofer:://whereNull('documento_vialidad_numero')-> 
                             where('cargo', 'like','%AYUDANTE%')->with('persona')->get();
-        dd( $ayudantes);
+        
         $vehiculos = Vehiculo::where('es_flota', 1)->whereIn('tipo', [3,2])->get();
         
 

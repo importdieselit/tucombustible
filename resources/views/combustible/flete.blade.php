@@ -106,10 +106,8 @@
                             <option value="">Seleccione el Ayudante</option>
                             <!-- Este loop debe cargar los usuarios con rol 'chofer' -->
                           
-                            @foreach($choferes as $chofer)
-                                @if($chofer->cargo == 'AYUDANTE' || $chofer->cargo == 'AYUDANTE DE CHOFER')
+                            @foreach($ayudantes as $chofer)
                                     <option value="{{ $chofer->id }}" {{ old('ayudante') == $chofer->id ? 'selected' : '' }}>{{ $chofer->persona->nombre }}</option>
-                                @endif
                             @endforeach
                         </select>
                         @error('ayudante')
