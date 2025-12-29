@@ -581,6 +581,7 @@ class TelegramController extends Controller
         try {
             $update = $request->all();
             $logisticaToken = '8267350827:AAGWkn8hFmqIyQmW1ojlKk-eTfXke5um1Po';
+            $botUser = "ImpordieselLogBot";
         if (isset($update['message'])) {
             // El chat_id es donde responderemos (puede ser el grupo o el privado)
             $chatId = $update['message']['chat']['id']; 
