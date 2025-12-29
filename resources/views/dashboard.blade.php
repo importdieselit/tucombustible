@@ -493,7 +493,7 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
     </div>
 
     <div class="row g-4">
-        <div class="col-lg-6">
+        <div class="col-lg-6" style="display:none">
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-header bg-white border-0">
                     <h5 class="mb-0">Órdenes por Estatus</h5>

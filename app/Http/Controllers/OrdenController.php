@@ -24,8 +24,10 @@ use App\Models\SuministroCompra;
 use App\Models\SuministroCompraDetalle;
 use App\Services\TelegramNotificationService;
 use App\Models\OrdenFoto;
+use App\Models\User;
 use Google\Service\Datastore\Sum;
 use Illuminate\Database\Eloquent\Builder;
+
 
 class OrdenController extends BaseController
 {
@@ -163,6 +165,7 @@ class OrdenController extends BaseController
 
         $detalle->costo_unitario_aprobado = $request->precio;
         $detalle->save();
+
 
         return response()->json(['ok' => true]);
     }
@@ -390,6 +393,10 @@ class OrdenController extends BaseController
      */
     public function store(Request $request)
     {
+
+        $userVentas=User::where('name','ventas')->first();
+        $mensajeTelegramC=null;
+        $telegramMessage=null;
         // Lógica de validación aquí
 
         // Lógica para crear la orden, asignar insumos, etc.
@@ -537,8 +544,12 @@ class OrdenController extends BaseController
                     );
         $telegramMessage="Creada orden de Trabajo {$orden->nro_orden} a {$destino} por {$orden->descripcion_1}. Responsable {$orden->responsable}";
         $this->telegramService->sendMessage($telegramMessage); 
-        if(isset($mensajeTelegramC)){
-         //   $this->telegramService->sendMessage($mensajeTelegramC);
+
+        if(isset($mensajeTelegramC)&&!is_null($mensajeTelegramC)){
+            $this->telegramService->sendMessage($mensajeTelegramC);
+            if(!is_null($userVentas) && !is_null($userVentas->telegram_id)){
+                $this->telegramService->sendMessage($mensajeTelegramC, $userVentas->telegram_id);
+            }
         }
         if($hasFoto){
             $i=1;
