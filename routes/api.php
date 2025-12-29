@@ -27,6 +27,7 @@ use App\Http\Controllers\Apis\ConductorController;
 use App\Http\Controllers\Apis\IncidenciaController;
 use App\Http\Controllers\ViajesController;
 use App\Http\Controllers\Apis\SearchController;
+use App\Http\Controllers\TelegramController;
 
 
 
@@ -47,6 +48,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 Route::post('/ia/webhook', [IntegracionIAController::class, 'handleWebhook']);
+Route::post('/telegram/webhook/logistica', [TelegramController::class, 'handleLogisticaWebhook']);
 
 // Rutas de autenticación (públicas)
 Route::post('/auth/register', [AuthController::class, 'register']);

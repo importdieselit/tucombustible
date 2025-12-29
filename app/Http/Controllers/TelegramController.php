@@ -571,4 +571,58 @@ class TelegramController extends Controller
 
     return $data;
 }
+
+    /**
+     * Webhook para el Bot de Logística (8267350827:AAGWkn8hFmqIyQmW1ojlKk-eTfXke5um1Po)
+     */
+    public function handleLogisticaWebhook(Request $request)
+    {
+        $update = $request->all();
+        
+        // Token específico para este flujo
+        $logisticaToken = '8267350827:AAGWkn8hFmqIyQmW1ojlKk-eTfXke5um1Po';
+
+        if (isset($update['message'])) {
+            $chatId = $update['message']['chat']['id'];
+            $from = $update['message']['from'];
+            $userId = $from['id']; // El ID del miembro que quieres capturar
+            $userName = ($from['first_name'] ?? '') . ' ' . ($from['last_name'] ?? '');
+            $text = $update['message']['text'] ?? '';
+
+            // LOG: Aquí verás los IDs de los miembros en storage/logs/laravel.log
+            Log::info("Bot Logística - Interacción de miembro:", [
+                'miembro_id' => $userId,
+                'nombre' => $userName,
+                'mensaje' => $text,
+                'chat_grupo' => $chatId
+            ]);
+
+            // Lógica de Registro Automático (Opcional)
+            if (str_contains(strtolower($text), '/vincular')) {
+                // Ejemplo: /vincular 10
+                $idInterno = filter_var($text, FILTER_SANITIZE_NUMBER_INT);
+                if($idInterno) {
+                    $user = \App\Models\User::where('name', $idInterno)->first();
+                    if($user) {
+                        $user->update(['telegram_id' => $userId]);
+                        $this->sendSimpleMessage($chatId, "✅ Vinculado: {$userName} ahora recibirá alertas.", $logisticaToken);
+                    }
+                }
+            }
+        }
+
+        return response('OK', 200);
+    }
+
+    /**
+     * Método auxiliar para enviar mensajes usando un token específico
+     */
+    private function sendSimpleMessage($chatId, $text, $token)
+    {
+        Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+            'chat_id' => $chatId,
+            'text' => $text,
+            'parse_mode' => 'Markdown'
+        ]);
+    }
 }
