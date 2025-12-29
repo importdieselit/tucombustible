@@ -609,7 +609,7 @@ class TelegramController extends Controller
                 
                 if ($user) {
                     try {
-                        $user->update(['telegram_id' => $userId]);
+                        $user->update(['telegram_id' => $userId, 'telegram_username' => $userName]);
                         
                         $msg = "✅ *Vinculación Exitosa*\n\n"
                              . "👤 *Usuario:* {$user->name}\n"
