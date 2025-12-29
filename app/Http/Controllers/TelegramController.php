@@ -575,43 +575,67 @@ class TelegramController extends Controller
     /**
      * Webhook para el Bot de Logística (8267350827:AAGWkn8hFmqIyQmW1ojlKk-eTfXke5um1Po)
      */
-    public function handleLogisticaWebhook(Request $request)
+ public function handleLogisticaWebhook(Request $request)
     {
-        $update = $request->all();
-        
-        // Token específico para este flujo
-        $logisticaToken = '8267350827:AAGWkn8hFmqIyQmW1ojlKk-eTfXke5um1Po';
-
+        try {
+            $update = $request->all();
+            $logisticaToken = '8267350827:AAGWkn8hFmqIyQmW1ojlKk-eTfXke5um1Po';
         if (isset($update['message'])) {
-            $chatId = $update['message']['chat']['id'];
+            // El chat_id es donde responderemos (puede ser el grupo o el privado)
+            $chatId = $update['message']['chat']['id']; 
             $from = $update['message']['from'];
-            $userId = $from['id']; // El ID del miembro que quieres capturar
+            $userId = $from['id']; 
             $userName = ($from['first_name'] ?? '') . ' ' . ($from['last_name'] ?? '');
             $text = $update['message']['text'] ?? '';
 
-            // LOG: Aquí verás los IDs de los miembros en storage/logs/laravel.log
-            Log::info("Bot Logística - Interacción de miembro:", [
-                'miembro_id' => $userId,
-                'nombre' => $userName,
-                'mensaje' => $text,
-                'chat_grupo' => $chatId
+            Log::info("Bot Logística - Procesando mensaje", [
+                'origen_chat_id' => $chatId,
+                'remitente_user_id' => $userId,
+                'texto' => $text
             ]);
 
-            // Lógica de Registro Automático (Opcional)
+            // Lógica de Vinculación
             if (str_contains(strtolower($text), '/vincular')) {
-                // Ejemplo: /vincular 10
-                $idInterno = filter_var($text, FILTER_SANITIZE_NUMBER_INT);
-                if($idInterno) {
-                    $user = \App\Models\User::where('name', $idInterno)->first();
-                    if($user) {
+                $identificador = trim(str_ireplace('/vincular', '', $text));
+                
+                if (empty($identificador)) {
+                    $this->sendSimpleMessage($chatId, "⚠️ *Error de formato*\nUsa: `/vincular nombre_usuario`", $logisticaToken);
+                    return response('OK', 200);
+                }
+
+                // Búsqueda en DB
+                $user = \App\Models\User::where('name', 'LIKE', "%{$identificador}%")->first();
+                
+                if ($user) {
+                    try {
                         $user->update(['telegram_id' => $userId]);
-                        $this->sendSimpleMessage($chatId, "✅ Vinculado: {$userName} ahora recibirá alertas.", $logisticaToken);
+                        
+                        $msg = "✅ *Vinculación Exitosa*\n\n"
+                             . "👤 *Usuario:* {$user->name}\n"
+                             . "🆔 *Telegram ID:* `{$userId}`\n"
+                             . "💬 *Origen:* " . ($chatId < 0 ? "Grupo" : "Privado");
+                        
+                        $this->sendSimpleMessage($chatId, $msg, $logisticaToken);
+                        
+                    } catch (\Exception $dbEx) {
+                        Log::error("Error al actualizar telegram_id: " . $dbEx->getMessage());
+                        $this->sendSimpleMessage($chatId, "❌ *Error interno*: No se pudo guardar la vinculación en la base de datos.", $logisticaToken);
                     }
+                } else {
+                    $this->sendSimpleMessage($chatId, "🔍 *No encontrado*\nNo existe un usuario con el nombre: *{$identificador}*", $logisticaToken);
                 }
             }
         }
 
         return response('OK', 200);
+
+        } catch (\Exception $e) {
+            Log::error("Error Crítico en Webhook Logística:", [
+                'msg' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response('OK', 200); 
+        }
     }
 
     /**
