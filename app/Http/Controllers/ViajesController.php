@@ -1045,7 +1045,7 @@ public function updateGuiaData(Request $request, $viajeId)
 
     public function createMGO()
     {
-       $clientes = Cliente::where('tipo', 'like', '%MGO%')
+       $clientes = Cliente::where('tipo', 'like', '%MGO%')->orderBy('nombre', 'asc')
             ->get(['id', 'nombre', 'rif', 'direccion', 'email as correo', 'telefono', 'contacto as representante', 'alias']);
 
         // 2. Extraer los RIFs de la colección en memoria (Sin ir a la base de datos de nuevo)
@@ -1054,7 +1054,7 @@ public function updateGuiaData(Request $request, $viajeId)
         // 3. Obtener Clientes de Captación filtrando por los RIFs que NO están en el array
         $clientesC = CaptacionCliente::where('tipo_cliente', 'like', '%MGO%')
             ->whereNotIn('rif', $rifsExistentes)
-            ->select('id', 'razon_social as nombre', 'rif', 'direccion', 'correo', 'telefono', 'representante')
+            ->select('id', 'razon_social as nombre', 'rif', 'direccion', 'correo', 'telefono', 'representante')->orderBy('nombre', 'asc')
             ->get(); //$clientes= $clientesC->merge($clientesD);
         $destinos = TabuladorViatico::where('tipo_viaje', 'like', '%MGO%')->with('muelles')->get();
         $buques = Buques::all();

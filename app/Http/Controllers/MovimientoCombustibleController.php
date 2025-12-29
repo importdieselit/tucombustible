@@ -850,14 +850,14 @@ public function createPrecarga()
             ->get(['id', 'nombre', 'alias'])
             ->toArray();
         $plantas = array_merge($prigen, $clientes );
-        $choferes = Chofer::whereNotNull('documento_vialidad_numero')   
-                                      ->where('cargo', 'CHOFER')
+        $choferes = Chofer:://whereNotNull('documento_vialidad_numero')->   
+                                      where('cargo', 'CHOFER')
                                       ->with('persona')
                                       ->get();
         $destino = TabuladorViatico::where('id','>',5)->orderBy('destino','asc')->pluck('destino')->unique();
 
-        $ayudantes = Chofer::whereNull('documento_vialidad_numero')   
-                                      ->with('persona')
+        $ayudantes = Chofer:://whereNull('documento_vialidad_numero')->   
+                                      with('persona')
                                       ->get();
 
         $vehiculos = Vehiculo::where('es_flota', 1)->whereIn('tipo', [3,2])->get();
