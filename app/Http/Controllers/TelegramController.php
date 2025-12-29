@@ -618,7 +618,18 @@ class TelegramController extends Controller
                              . "💬 *Origen:* " . ($chatId < 0 ? "Grupo" : "Privado");
                         
                         $this->sendSimpleMessage($chatId, $msg, $logisticaToken);
-                        $this->sendSimpleMessage($userId    , $msg, $logisticaToken);
+                        $privadoExitoso = $this->sendSimpleMessage($userId, "*Confirmación Privada:*\n" . $msg, $logisticaToken);
+
+                        // 2. Enviar al grupo (o chat de origen)
+                        if (!$privadoExitoso) {
+                            // Si falló el privado y estamos en un grupo, añadimos el botón para que nos inicie
+                            $botones = [
+                                'inline_keyboard' => [[
+                                    ['text' => '📩 Recibir notificaciones aquí', 'url' => "https://t.me/{$botUser}"]
+                                ]]
+                            ];
+                            $this->sendSimpleMessage($chatId, $msg . "\n\n⚠️ _Haz clic abajo para habilitar tus notificaciones privadas:_", $logisticaToken, $botones);
+                        }
                         
                     } catch (\Exception $dbEx) {
                         Log::error("Error al actualizar telegram_id: " . $dbEx->getMessage());
