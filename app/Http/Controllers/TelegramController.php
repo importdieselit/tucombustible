@@ -587,6 +587,7 @@ class TelegramController extends Controller
             $from = $update['message']['from'];
             $userId = $from['id']; 
             $userName = ($from['first_name'] ?? '') . ' ' . ($from['last_name'] ?? '');
+            $userTg = $from['username'] ;
             $text = $update['message']['text'] ?? '';
 
             Log::info("Bot Logística - Procesando mensaje", [
@@ -609,15 +610,15 @@ class TelegramController extends Controller
                 
                 if ($user) {
                     try {
-                        $user->update(['telegram_id' => $userId, 'telegram_username' => $userName]);
+                        $user->update(['telegram_id' => $userId, 'telegram_username' => $userTg]);
                         
-                        $msg = "✅ *Vinculación Exitosa @{$userName}*\n\n"
+                        $msg = "✅ *Vinculación Exitosa @{$userTg}*\n\n"
                              . "👤 *Usuario:* {$user->name}\n"
                              . "🆔 *Telegram ID:* `{$userId}`\n"
                              . "💬 *Origen:* " . ($chatId < 0 ? "Grupo" : "Privado");
                         
                         $this->sendSimpleMessage($chatId, $msg, $logisticaToken);
-                        $this->sendSimpleMessage($userId, $msg, $logisticaToken);
+                        $this->sendSimpleMessage($userId    , $msg, $logisticaToken);
                         
                     } catch (\Exception $dbEx) {
                         Log::error("Error al actualizar telegram_id: " . $dbEx->getMessage());
