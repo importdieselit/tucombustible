@@ -577,6 +577,7 @@ class TelegramController extends Controller
      */
  public function handleLogisticaWebhook(Request $request)
     {
+        Log::info('Webhook de Logística recibido:', $request->all());
         try {
             $update = $request->all();
             $logisticaToken = '8267350827:AAGWkn8hFmqIyQmW1ojlKk-eTfXke5um1Po';
