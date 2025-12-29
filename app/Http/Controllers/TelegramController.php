@@ -588,7 +588,7 @@ class TelegramController extends Controller
             $from = $update['message']['from'];
             $userId = $from['id']; 
             $userName = ($from['first_name'] ?? '') . ' ' . ($from['last_name'] ?? '');
-            $userTg = $from['username'] ;
+            $userTg = $from['username'] ?? $userName;
             $text = $update['message']['text'] ?? '';
 
             Log::info("Bot Logística - Procesando mensaje", [
