@@ -613,31 +613,35 @@ class TelegramController extends Controller
                     try {
                         $user->update(['telegram_id' => $userId, 'telegram_username' => $userTg]);
                         
-                        $msg = "✅ *Vinculación Exitosa @{$userTg}*\n\n"
-                             . "👤 *Usuario:* {$user->name}\n"
-                             . "🆔 *Telegram ID:* `{$userId}`\n"
-                             . "💬 *Origen:* " . ($chatId < 0 ? "Grupo" : "Privado");
+                        $msg = "✅ <b>Vinculación Exitosa @{$userTg}</b>\n\n"
+                             . "👤 <b>Usuario:</b> {$user->name}\n"
+                             . "🆔 <b>Telegram ID:</b> `{$userId}`\n"
+                             . "💬 <b>Origen:</b> " . ($chatId < 0 ? "Grupo" : "Privado");
                         
                         $this->sendSimpleMessage($chatId, $msg, $logisticaToken);
-                        $privadoExitoso = $this->sendSimpleMessage($userId, "*Confirmación Privada:*\n" . $msg, $logisticaToken);
+                        $privadoExitoso = $this->sendSimpleMessage($userId, "<b>Confirmación Privada:</b>\n" . $msg, $logisticaToken);
 
                         // 2. Enviar al grupo (o chat de origen)
-                        if (!$privadoExitoso) {
-                            // Si falló el privado y estamos en un grupo, añadimos el botón para que nos inicie
+                        if (!$privadoExitoso && $chatId < 0) {
                             $botones = [
-                                'inline_keyboard' => [[
-                                    ['text' => '📩 Recibir notificaciones aquí', 'url' => "https://t.me/{$botUser}"]
-                                ]]
+                                'inline_keyboard' => [
+                                    [
+                                        ['text' => '📩 Iniciar Chat Privado', 'url' => "https://t.me/{$botUser}"]
+                                    ]
+                                ]
                             ];
-                            $this->sendSimpleMessage($chatId, $msg . "\n\n⚠️ _Haz clic abajo para habilitar tus notificaciones privadas:_", $logisticaToken, $botones);
+                            
+                            $mensajeConAviso = $msg . "\n\n⚠️ <i>No pude enviarte el recibo por privado. Haz clic abajo para activarlo:</i>";
+                            
+                            $this->sendSimpleMessage($chatId, $mensajeConAviso, $logisticaToken, $botones);
                         }
                         
                     } catch (\Exception $dbEx) {
                         Log::error("Error al actualizar telegram_id: " . $dbEx->getMessage());
-                        $this->sendSimpleMessage($chatId, "❌ *Error interno*: No se pudo guardar la vinculación en la base de datos.", $logisticaToken);
+                        $this->sendSimpleMessage($chatId, "❌ <b>Error interno</b>: No se pudo guardar la vinculación en la base de datos.", $logisticaToken);
                     }
                 } else {
-                    $this->sendSimpleMessage($chatId, "🔍 *No encontrado*\nNo existe un usuario con el nombre: *{$identificador}*", $logisticaToken);
+                    $this->sendSimpleMessage($chatId, "🔍 <b>No encontrado</b>\nNo existe un usuario con el nombre: <b>{$identificador}</b>", $logisticaToken);
                 }
             }
         }
@@ -656,12 +660,38 @@ class TelegramController extends Controller
     /**
      * Método auxiliar para enviar mensajes usando un token específico
      */
-    private function sendSimpleMessage($chatId, $text, $token)
+    private function sendSimpleMessage($chatId, $text, $token, $replyMarkup = null)
     {
-        Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
-            'chat_id' => $chatId,
-            'text' => $text,
-            'parse_mode' => 'Markdown'
-        ]);
+        try {
+            $payload = [
+                'chat_id'                  => $chatId,
+                'text'                     => $text,
+                'parse_mode'               => 'HTML',
+                'disable_web_page_preview' => true,
+            ];
+
+            // Si hay botones, los convertimos a JSON string
+            if ($replyMarkup) {
+                $payload['reply_markup'] = json_encode($replyMarkup);
+            }
+
+            $response = Http::post("https://api.telegram.org/bot{$token}/sendMessage", $payload);
+
+            if ($response->successful()) {
+                return true;
+            }
+
+            // Si no sale el botón, este log te dirá POR QUÉ (ej: error en la estructura del botón)
+            Log::error("Fallo al enviar mensaje a Telegram", [
+                'status'   => $response->status(),
+                'response' => $response->json()
+            ]);
+
+            return false;
+
+        } catch (\Exception $e) {
+            Log::error("Excepción en sendSimpleMessage: " . $e->getMessage());
+            return false;
+        }
     }
 }
