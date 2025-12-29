@@ -1070,7 +1070,7 @@ public function createPrecarga()
                  . "Fecha: {$viaje->fecha_salida}\n"
                  . "Unidad Asignada: {$vehiculo->flota}\n"
                  . "Chofer: {$chofer->persona()->first()->nombre }\n"
-                 . ($ayudante ? "Ayudante: {$ayudante->persona()->firts()->nombre }" : "Ayudante: No Asignado");
+                 . ($ayudante ? "Ayudante: {$ayudante->persona()->first()->nombre }" : "Ayudante: No Asignado");
 
         // 1. Notificación a Telegram (Ejemplo de Alerta General)
             // El servicio TelegramNotificationService debe tener un método como sendNotification
