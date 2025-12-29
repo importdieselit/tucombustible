@@ -611,12 +611,13 @@ class TelegramController extends Controller
                     try {
                         $user->update(['telegram_id' => $userId, 'telegram_username' => $userName]);
                         
-                        $msg = "✅ *Vinculación Exitosa*\n\n"
+                        $msg = "✅ *Vinculación Exitosa @{$userName}*\n\n"
                              . "👤 *Usuario:* {$user->name}\n"
                              . "🆔 *Telegram ID:* `{$userId}`\n"
                              . "💬 *Origen:* " . ($chatId < 0 ? "Grupo" : "Privado");
                         
                         $this->sendSimpleMessage($chatId, $msg, $logisticaToken);
+                        $this->sendSimpleMessage($userId, $msg, $logisticaToken);
                         
                     } catch (\Exception $dbEx) {
                         Log::error("Error al actualizar telegram_id: " . $dbEx->getMessage());
