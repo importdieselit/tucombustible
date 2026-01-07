@@ -147,6 +147,11 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
     Route::put('/depositos/ajusteresguardo', [DepositoController::class, 'ajusteResguardo'])->name('deposito.ajusteR');
    
   Route::get('/permisos', [AccesoController::class, 'index'])->name('permisos.index');
+  Route::get('/clientes/{id}/vehiculos', function($id) {
+    return App\Models\Vehiculo::where('id_cliente', $id)
+        ->select('id', 'placa', 'alias')
+        ->get();
+});
 
 
     // Rutas para la gestión de permisos específicos (Usuario Individual)
@@ -228,10 +233,17 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
         Route::get('/recarga', [MovimientoCombustibleController::class, 'createRecarga'])->name('recarga');
         Route::post('/recargaStore', [MovimientoCombustibleController::class, 'storeRecarga'])->name('storeRecarga');
 
+
         Route::get('/index', [MovimientoCombustibleController::class, 'index'])->name('index');
         Route::get('/list', [MovimientoCombustibleController::class, 'list'])->name('list');
         Route::get('/despacholist', [MovimientoCombustibleController::class, 'despachoList'])->name('despachos.list');
-        
+        Route::post('/despacho-industrial/store', [MovimientoCombustibleController::class, 'storeDespachoIndustrial'])
+    ->name('storeDespachoIndustrial');
+        Route::get('/despacho-industrial/create', [MovimientoCombustibleController::class, 'createDespachoIndustrial'])
+    ->name('createDespachoIndustrial');
+
+    Route::get('/despacho-industrial/historial', [MovimientoCombustibleController::class, 'historialDespachosIndustrial'])
+    ->name('historialIndustrial');
         Route::get('/pedidos', [MovimientoCombustibleController::class, 'pedidos'])->name('pedidos');
         
         Route::post('/pedidos/{id}/aprobar', [MovimientoCombustibleController::class, 'aprobar'])->name('aprobar');

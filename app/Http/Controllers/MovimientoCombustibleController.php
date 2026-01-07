@@ -386,12 +386,20 @@ public function createPrecarga()
      */
     public function createRecarga()
     {
-        // Se obtienen todos los depósitos y proveedores para los dropdowns del formulario.
+        // Se obtienen todos los depósitos y clientes para los dropdowns del formulario.
         $depositos = Deposito::all();
-        $proveedores = Proveedor::all();
+        $clientes = Cliente::where();
         $hoy = now()->format('Y-m-d\TH:i'); // Obtiene la fecha actual en formato YYYY-MM-DD
         
-        return view('combustible.recarga', compact('depositos', 'proveedores', 'hoy'));
+        return view('combustible.despacho', compact('depositos', 'clientes', 'hoy'));
+    }
+
+    public function createDespachoIndustrial()
+    {
+        $clientes = Cliente::orderBy('nombre', 'asc')->get();
+        $tanque00 = Deposito::find(3); 
+        $hoy = Carbon::now()->format('Y-m-d\TH:i');
+        return view('combustible.despacho_industrial', compact('clientes', 'tanque00', 'hoy'));
     }
 
     /**
@@ -576,6 +584,122 @@ public function createPrecarga()
                                             ->get();
 
         return view('combustible.list', ['movimientos' => $movimientos]);
+    }
+
+
+
+    // En MovimientoCombustibleController.php
+
+public function storeDespachoIndustrial(Request $request) 
+{
+    // Validamos que si no selecciona vehículo, debe proveer los datos para el nuevo
+    $request->validate([
+        'cliente_id' => 'required|exists:clientes,id',
+        'cantidad_litros' => 'required|numeric|min:1',
+        'vehiculo_id' => 'required_without_all:nueva_placa,nuevo_modelo',
+        'fecha' => 'required|date'
+    ]);
+
+    return DB::transaction(function () use ($request) {
+        $user = Auth::user(); 
+        $tanque00 = Deposito::findOrFail(3); // ID 3 según tu instrucción
+        $cantidad = $request->cantidad_litros;
+        $token = "8267350827:AAGWkn8hFmqIyQmW1ojlKk-eTfXke5um1Po"; // Tu token de logística
+
+        if ($tanque00->nivel_actual_litros < $cantidad) {
+            throw new \Exception("Stock insuficiente en Tanque 00. Disponible: {$tanque00->nivel_actual_litros} L");
+        }
+        $cliente = Cliente::findOrFail($request->cliente_id);
+
+        // 1. Gestión del Vehículo (Existente o Nuevo)
+        if ($request->filled('nueva_placa')) {
+            $vehiculo = Vehiculo::create([
+                'placa' => $request->nueva_placa,
+                'flota' => $request->nuevo_modelo,
+                'id_cliente' => $request->cliente_id,
+                'estatus' => 1
+            ]);
+        } else {
+            $vehiculo = Vehiculo::findOrFail($request->vehiculo_id);
+        }
+
+        // 2. Registrar Movimiento de Combustible (Salida)
+        $mov = MovimientoCombustible::create([
+            'tipo_movimiento' => 'salida',
+            'deposito_id' => $tanque00->id,
+            'cliente_id' => $request->cliente_id,
+            'vehiculo_id' => $vehiculo->id,
+            'cantidad_litros' => $cantidad,
+            'cant_inicial' => $tanque00->nivel_actual_litros,
+            'cant_final' => $tanque00->nivel_actual_litros - $cantidad,
+            'observaciones' => "Despacho Industrial: " . ($request->observaciones ?? 'Sin notas'),
+            'created_at' => $request->fecha
+        ]);
+
+        // 3. Registrar en repostaje_vehiculos (Tabla operativa)
+        DB::table('repostaje_vehiculos')->insert([
+            'id_vehiculo' => $vehiculo->id,
+            'id_tanque' => $tanque00->id,
+            'id_us' => $user->id,
+            'qty' => $cantidad,
+            'qtya' => $tanque00->nivel_actual_litros,
+            'rest' => $tanque00->nivel_actual_litros - $cantidad,
+            'fecha' => $request->fecha,
+            'obs' => "Despacho a vehiculo: " . ($request->observaciones ?? 'Sin notas'),
+            // => $mov->id,
+            'created_at' => now()
+        ]);
+
+        // 4. Actualizar Tanque
+        $tanque00->decrement('nivel_actual_litros', $cantidad);
+
+        $fechaFormateada = Carbon::parse($request->fecha)->format('d/m/Y h:i A');
+        $ticket = "<b>🎫 TICKET DE DESPACHO INDUSTRIAL</b>\n"
+                . "------------------------------------------\n"
+                . "<b>📍 Origen:</b> Tanque 00 (Diesel)\n"
+                . "<b>🏢 Cliente:</b> {$cliente->nombre}\n"
+                . "<b>🚚 Vehículo:</b> {$vehiculo->placa} (" . ($vehiculo->alias ?? 'N/A') . ")\n"
+                . "<b>💧 Cantidad:</b> " . number_format($cantidad, 2) . " Lts\n"
+                . "<b>🗓️ Fecha:</b> {$fechaFormateada}\n"
+                . "------------------------------------------\n"
+                . "<b>✅ Despacho Autorizado</b>";
+
+        // 3. Envío de Notificaciones
+        $grupoId = "-1002935486238"; 
+        
+        // Enviar al grupo principal
+        $this->telegramService->sendSimpleMessage($grupoId, $ticket, $token);
+
+        // Enviar a la persona designada (si el cliente tiene un telegram_id vinculado)
+        // $usuarioCliente = User::where('id_cliente', $request->cliente_id)->whereNotNull('telegram_id')->first();
+        // if ($usuarioCliente) {
+        //     $this->telegramService->sendSimpleMessage($usuarioCliente->telegram_id, "🔔 <b>Notificación de Consumo:</b>\n\n" . $ticket, $token);
+        // }
+
+        // 4. Alerta de Stock Crítico (Si baja del 10% de su capacidad total)
+        $capacidadTotal = $tanque00->capacidad_total_litros ?? 10000; // Asumiendo capacidad
+        $porcentajeActual = ($tanque00->nivel_actual_litros / $capacidadTotal) * 100;
+
+        if ($porcentajeActual < 10) {
+            $alerta = "⚠️ <b>ALERTA DE INVENTARIO CRÍTICO</b>\n"
+                    . "El <b>Tanque 00</b> ha bajado del 10%.\n"
+                    . "<b>Nivel Actual:</b> " . number_format($tanque00->nivel_actual_litros, 2) . " Lts.";
+            $this->telegramService->sendSimpleMessage($grupoId, $alerta, $token);
+        }
+        return redirect()->back()->with('success', 'Ticket enviado y despacho registrado.');
+        });
+}
+
+    public function historialDespachosIndustrial()
+    {
+        // Obtenemos los despachos de forma descendente (los más recientes primero)
+        $historial = MovimientoCombustible::with(['cliente', 'vehiculo', 'deposito'])
+            ->where('deposito_id', 3) // Tanque 00
+            ->where('tipo_movimiento', 'salida')
+            ->orderBy('created_at', 'desc')
+            ->paginate(15); // Paginación para no sobrecargar la vista
+
+        return view('combustible.historial_industrial', compact('historial'));
     }
 
      /**

@@ -187,4 +187,39 @@ class TelegramNotificationService
 
         return $safeText;
     }
+
+    public function sendSimpleMessage($chatId, $text, $token, $replyMarkup = null)
+    {
+        try {
+            $payload = [
+                'chat_id'                  => $chatId,
+                'text'                     => $text,
+                'parse_mode'               => 'HTML',
+                'disable_web_page_preview' => true,
+            ];
+
+            // Si hay botones, los convertimos a JSON string
+            if ($replyMarkup) {
+                $payload['reply_markup'] = json_encode($replyMarkup);
+            }
+
+            $response = Http::post("https://api.telegram.org/bot{$token}/sendMessage", $payload);
+
+            if ($response->successful()) {
+                return true;
+            }
+
+            // Si no sale el botón, este log te dirá POR QUÉ (ej: error en la estructura del botón)
+            Log::error("Fallo al enviar mensaje a Telegram", [
+                'status'   => $response->status(),
+                'response' => $response->json()
+            ]);
+
+            return false;
+
+        } catch (\Exception $e) {
+            Log::error("Excepción en sendSimpleMessage: " . $e->getMessage());
+            return false;
+        }
+    }
 }
