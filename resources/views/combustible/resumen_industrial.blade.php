@@ -70,5 +70,67 @@
             </div>
         </div>
     </div>
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div id="container-chart" style="width:100%; height:400px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
+
+@push('scripts')
+    
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const dataCategorias = @json($chartData['categorias']);
+    const dataSeries = @json($chartData['series']);
+
+    Highcharts.chart('container-chart', {
+        chart: {
+            type: 'column', // Barras verticales
+            backgroundColor: 'transparent'
+        },
+        title: {
+            text: 'Consumo por Cliente (' + '{{ ucfirst($periodo) }}' + ')'
+        },
+        xAxis: {
+            categories: dataCategorias,
+            crosshair: true
+        },
+        yAxis: {
+            min: 0,
+            title: {
+                text: 'Litros (L)'
+            }
+        },
+        tooltip: {
+            headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+            pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+                '<td style="padding:0"><b>{point.y:.2f} L</b></td></tr>',
+            footerFormat: '</table>',
+            shared: true,
+            useHTML: true
+        },
+        plotOptions: {
+            column: {
+                pointPadding: 0.2,
+                borderWidth: 0,
+                colorByPoint: true // Colores distintos para cada cliente
+            }
+        },
+        series: [{
+            name: 'Diesel Industrial',
+            data: dataSeries
+        }],
+        credits: { enabled: false }
+    });
+});
+</script>
+@endpush

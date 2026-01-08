@@ -734,7 +734,12 @@ public function storeDespachoIndustrial(Request $request)
             ->groupBy('cliente_id')
             ->get();
 
-        return view('combustible.resumen_industrial', compact('resumen', 'periodo'));
+            $chartData = [
+                'categorias' => $resumen->map(fn($item) => $item->cliente->nombre ?? 'N/A')->toArray(),
+                'series' => $resumen->map(fn($item) => (float)$item->total_litros)->toArray()
+            ];
+
+        return view('combustible.resumen_industrial', compact('resumen', 'periodo', 'chartData'));
     }
 
      /**
