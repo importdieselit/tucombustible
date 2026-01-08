@@ -238,12 +238,14 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
         Route::get('/list', [MovimientoCombustibleController::class, 'list'])->name('list');
         Route::get('/despacholist', [MovimientoCombustibleController::class, 'despachoList'])->name('despachos.list');
         Route::post('/despacho-industrial/store', [MovimientoCombustibleController::class, 'storeDespachoIndustrial'])
-    ->name('storeDespachoIndustrial');
+        ->name('storeDespachoIndustrial');
         Route::get('/despacho-industrial/create', [MovimientoCombustibleController::class, 'createDespachoIndustrial'])
-    ->name('createDespachoIndustrial');
+        ->name('createDespachoIndustrial');
+        Route::get('/despacho-industrial/resumen', [MovimientoCombustibleController::class, 'resumenDespachos'])
+        ->name('resumenDesp');
 
-    Route::get('/despacho-industrial/historial', [MovimientoCombustibleController::class, 'historialDespachosIndustrial'])
-    ->name('historialIndustrial');
+        Route::get('/despacho-industrial/historial', [MovimientoCombustibleController::class, 'historialDespachosIndustrial'])
+        ->name('historialIndustrial');
         Route::get('/pedidos', [MovimientoCombustibleController::class, 'pedidos'])->name('pedidos');
         
         Route::post('/pedidos/{id}/aprobar', [MovimientoCombustibleController::class, 'aprobar'])->name('aprobar');

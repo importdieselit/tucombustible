@@ -702,6 +702,41 @@ public function storeDespachoIndustrial(Request $request)
         return view('combustible.historial_industrial', compact('historial'));
     }
 
+    public function resumenDespachos(Request $request)
+    {
+        $periodo = $request->get('periodo', 'diario'); // Valor por defecto
+        $query = MovimientoCombustible::query()
+            ->where('deposito_id', 3)
+            ->where('tipo_movimiento', 'salida');
+
+        // Filtro dinámico de tiempo
+        switch ($periodo) {
+            case 'semanal':
+                $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+                break;
+            case 'mensual':
+                $query->whereMonth('created_at', now()->month)
+                    ->whereYear('created_at', now()->year);
+                break;
+            default: // diario
+                $query->whereDate('created_at', now()->today());
+                break;
+        }
+
+        // Agrupación por cliente con conteo y suma
+        $resumen = $query->select(
+                'cliente_id',
+                DB::raw('SUM(cantidad_litros) as total_litros'),
+                DB::raw('COUNT(*) as total_despachos'),
+                DB::raw('MAX(created_at) as ultimo_despacho')
+            )
+            ->with('cliente:id,nombre')
+            ->groupBy('cliente_id')
+            ->get();
+
+        return view('combustible.resumen_industrial', compact('resumen', 'periodo'));
+    }
+
      /**
      * Muestra el panel de pedidos pendientes para aprobación y rechazo.
      *
@@ -801,6 +836,55 @@ public function storeDespachoIndustrial(Request $request)
         $depositos = Deposito::all();
 
         return view('combustible.aprobados', compact('pedidos', 'vehiculos', 'depositos'));
+    }
+
+
+    public function enviarResumenTelegram(Request $request) 
+    {
+         $logisticaToken = '8267350827:AAGWkn8hFmqIyQmW1ojlKk-eTfXke5um1Po';
+        $periodo = $request->periodo;
+        $query = MovimientoCombustible::query()
+            ->where('deposito_id', 3)
+            ->where('tipo_movimiento', 'salida');
+
+        // Filtro dinámico de tiempo
+        switch ($periodo) {
+            case 'semanal':
+                $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+                break;
+            case 'mensual':
+                $query->whereMonth('created_at', now()->month)
+                    ->whereYear('created_at', now()->year);
+                break;
+            default: // diario
+                $query->whereDate('created_at', now()->today());
+                break;
+        }
+
+        // Agrupación por cliente con conteo y suma
+        $resumen = $query->select(
+                'cliente_id',
+                DB::raw('SUM(cantidad_litros) as total_litros'),
+                DB::raw('COUNT(*) as total_despachos'),
+                DB::raw('MAX(created_at) as ultimo_despacho')
+            )
+            ->with('cliente:id,nombre')
+            ->groupBy('cliente_id')
+            ->get();
+
+        $mensaje = "📋 <b>RESUMEN DE CONSUMO (" . strtoupper($periodo) . ")</b>\n";
+        $mensaje .= "------------------------------------------\n";
+        
+        foreach($resumen as $item) {
+            $mensaje .= "• <b>{$item->cliente->nombre}:</b> " . number_format($item->total_litros, 2) . " L\n";
+        }
+        
+        $mensaje .= "------------------------------------------\n";
+        $mensaje .= "<b>TOTAL:</b> " . number_format($resumen->sum('total_litros'), 2) . " Litros";
+
+        $this->telegramService->sendSimpleMessage("-1002935486238", $mensaje, $logisticaToken);
+
+        return back()->with('success', 'Reporte enviado a Telegram correctamente.');
     }
 
     /**
