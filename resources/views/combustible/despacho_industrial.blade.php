@@ -54,7 +54,7 @@
             <select name="cliente_id" id="cliente_selector" class="form-select select2" required>
                 <option value="">Seleccione Cliente</option>
                 @foreach($clientes as $c)
-                    <option value="{{ $c->id }}">{{ $c->nombre }}</option>
+                    <option value="{{ $c->id }}">{{ $c->nombre }} {{ $c->alias }}</option>
                 @endforeach
             </select>
         </div>
