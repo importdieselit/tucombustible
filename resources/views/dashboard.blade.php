@@ -385,7 +385,7 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
         @if(Auth::user()->canAccess('create', $MODULO_DESPACHOS))
         <div class="col-6 col-sm-4 col-md-3 col-lg-2">
             @include('partials.access_card', [
-                'route' => route('combustible.despacho'),
+                'route' => route('combustible.createDespachoIndustrial'),
                 'icon' => 'fa-truck-fast',
                 'title' => 'Surtir Combustible',
                 'color' => 'bg-primary',
