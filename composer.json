@@ -62,6 +62,9 @@
         "preferred-install": "dist",
         "sort-packages": true
     },
+    "files": [
+        "app/Helpers/helpers.php"
+    ],
     "minimum-stability": "dev",
     "prefer-stable": true
 }

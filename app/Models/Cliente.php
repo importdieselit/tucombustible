@@ -29,6 +29,7 @@ class Cliente extends Model
         'sector',
         'periodo',
         'status',
+        'prepagado',
         'alias'
 
     ];

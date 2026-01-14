@@ -223,8 +223,10 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
     
     //Route::get('/ordenes/report/pdf', [OrdenController::class, 'reportPdf'])->name('ordenes.report.pdf');
     Route::get('/vehiculos/report/pdf', [VehiculoController::class, 'reportPdf'])->name('vehiculos.report.pdf');
+    Route::get('/documentacion/vehiculos/', [VehiculoController::class, 'controlDocumentacion'])
+    ->name('vehiculos.documentacion');
 
-    // Rutas para gestión de perfiles y permisos
+    // Rutas para gestión de perfiles y permisos 
     Route::post('/perfiles/{perfil}/permisos', [PerfilController::class, 'updatePermisos'])->name('perfiles.updatePermisos'); 
     Route::post('/pedidos', [PedidoController::class, 'crearPedido'])->name('pedidos.store');
     // Rutas de Combustible (Pedidos y Despachos)
@@ -276,6 +278,8 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
         Route::get('/precarga', [MovimientoCombustibleController::class, 'createPrecarga'])->name('precarga');
         Route::post('/precarga', [MovimientoCombustibleController::class, 'storePrecarga'])->name('storePrecarga');
         Route::post('/aprobado', [MovimientoCombustibleController::class, 'storeAprobado'])->name('storeAprobado');
+        Route::get('/prepago', [MovimientoCombustibleController::class, 'createPrepago'])->name('createPrepago');
+Route::post('/prepago/store', [MovimientoCombustibleController::class, 'storePrepago'])->name('storePrepago');
 
     });
 

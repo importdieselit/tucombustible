@@ -616,8 +616,8 @@ class ViajesController extends Controller
     $viaje = Viaje::findOrFail($id);
          $choferes = Chofer::with('persona')->get();
         $vehiculos = Vehiculo::where('estatus', 1)->where('es_flota',true)->get(['id', 'placa', 'flota']);
-        $destino = TabuladorViatico::pluck('destino')->unique();
-        $clientes = Cliente::where('status',1)->get(['id','nombre','alias']);
+        $destino = TabuladorViatico::orderBy('destino')->pluck('destino')->unique();
+        $clientes = Cliente::where('status',1)->orderBy('nombre', 'asc')->get(['id','nombre','alias']);
         
         
     return view('viajes.edit', compact('viaje','choferes','vehiculos','destino','clientes'));
@@ -1056,7 +1056,7 @@ public function updateGuiaData(Request $request, $viajeId)
             ->whereNotIn('rif', $rifsExistentes)
             ->select('id', 'razon_social as nombre', 'rif', 'direccion', 'correo', 'telefono', 'representante')->orderBy('nombre', 'asc')
             ->get(); //$clientes= $clientesC->merge($clientesD);
-        $destinos = TabuladorViatico::where('tipo_viaje', 'like', '%MGO%')->with('muelles')->get();
+        $destinos = TabuladorViatico::where('tipo_viaje', 'like', '%MGO%')->with('muelles')->orderBy('destino')->get();
         $buques = Buques::all();
         $muelles = Muelles::all();
         $vehiculos = Vehiculo::all();
@@ -1100,11 +1100,11 @@ public function updateGuiaData(Request $request, $viajeId)
     {
         try {
             if($tipo==1){
-            $cliente = Cliente::where('id', $id)
+            $cliente = Cliente::where('id', $id)->orderBy('nombre')
                         ->select('id', 'nombre', 'rif', 'direccion', 'contacto', 'telefono', 'email')
                         ->first();
             }else{
-                $cliente= CaptacionCliente::where('id', $id)
+                $cliente= CaptacionCliente::where('id', $id)->orderBy('razon_social')
                         ->select('id', 'razon_social as nombre', 'rif', 'direccion', 'representante as contacto', 'telefono', 'correo as email')
                         ->first();
             }   

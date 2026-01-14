@@ -34,13 +34,37 @@ class VehiculoController extends BaseController
      */
     
     public function filter(Request $request)
-        {
-        // 1. Inicializar el Query Builder del modelo correcto
-        $query = Vehiculo::query(); 
-        
-        // 2. Llamar al list() del padre, que ejecutará el applyBusinessFilters(si existe)
-        // y luego el filtro de seguridad de cliente.
-        return $this->list($query); 
+            {
+            // 1. Inicializar el Query Builder del modelo correcto
+            $query = Vehiculo::query(); 
+            
+            // 2. Llamar al list() del padre, que ejecutará el applyBusinessFilters(si existe)
+            // y luego el filtro de seguridad de cliente.
+            return $this->list($query); 
+        }
+
+    public function controlDocumentacion(Request $request)
+    {
+        $query = Vehiculo::query();
+
+        // Filtro por cliente si es necesario
+        if ($request->filled('cliente_id')) {
+            $query->where('id_cliente', $request->cliente_id);
+        }
+
+        // Filtro de búsqueda general (Placa o Marca)
+        if ($request->filled('search')) {
+            $search = strtoupper($request->search);
+            $query->where(function($q) use ($search) {
+                $q->where('placa', 'LIKE', "%{$search}%")
+                ->orWhere('marca', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $vehiculos = $query->orderBy('placa', 'asc')->paginate(20);
+        $clientes = Cliente::orderBy('nombre', 'asc')->get();
+
+        return view('vehiculo.documentacion', compact('vehiculos', 'clientes'));
     }
 
      protected function applyBusinessFilters(Builder $query): Builder

@@ -28,6 +28,7 @@
                             <th class="text-center">Cant. Despachos</th>
                             <th class="text-end">Total Litros</th>
                             <th class="text-end">Promedio x Carga</th>
+                            <th class="text-end">Disponible</th>
                             <th>Última Actividad</th>
                         </tr>
                     </thead>
@@ -46,6 +47,10 @@
                             <td class="text-end text-muted">
                                 {{ number_format($item->total_litros / $item->total_despachos, 2) }} L
                             </td>
+                            <td class="text-end">
+                                <span class="badge rounded-pill bg-{{ $item->cliente && $item->cliente->prepagado > 100 ? 'success' : 'danger' }}">
+                                    {{ $item->cliente->prepagado ?? 0 }} L
+                                </span>
                             <td>
                                 <small>{{ \Carbon\Carbon::parse($item->ultimo_despacho)->diffForHumans() }}</small>
                             </td>
@@ -62,7 +67,7 @@
                             <th>TOTAL GENERAL</th>
                             <th class="text-center">{{ $resumen->sum('total_despachos') }}</th>
                             <th class="text-end">{{ number_format($resumen->sum('total_litros'), 2) }} L</th>
-                            <th colspan="2"></th>
+                            <th colspan="3"></th>
                         </tr>
                     </tfoot>
                     @endif

@@ -17,6 +17,9 @@
             </div>
         </div>
     </div>
+    <a href="{{ route('combustible.createPrepago') }}" class="btn btn-primary btn-block shadow mb-3">
+            <i class="ti-plus"></i> Recargar Saldo Prepago
+        </a>
     
             <a href="{{ route('combustible.historialIndustrial') }}" class="btn btn-info mb-3">Ver Historial de Despachos</a>
             <a href="{{ route('combustible.resumenDesp') }}" class="btn btn-info mb-3">Ver Resumen</a>
@@ -54,7 +57,7 @@
             <select name="cliente_id" id="cliente_selector" class="form-select select2" required>
                 <option value="">Seleccione Cliente</option>
                 @foreach($clientes as $c)
-                    <option value="{{ $c->id }}">{{ $c->nombre }} {{ $c->alias }}</option>
+                    <option value="{{ $c->id }}">{{ $c->nombre }} {{ $c->alias }} ({{ $c->prepagado }} Lts)</option>
                 @endforeach
             </select>
         </div>
@@ -83,6 +86,11 @@
             <input type="number" step="0.01" name="cantidad_litros" class="form-control" required>
         </div>
         <div class="col-md-4 mb-3">
+            <label class="form-label">Nro Ticket</label>
+            <input type="text" name="nro_ticket" class="form-control">
+        </div>
+
+        <div class="col-md-4 mb-3">
             <label class="form-label">Fecha</label>
             <input type="datetime-local" name="fecha" class="form-control" value="{{ $hoy }}" required>
         </div>
@@ -98,7 +106,7 @@
     <div class="card-body">
         <h6 class="text-primary"><i class="ti-ticket"></i> Vista Previa del Ticket</h6>
         <div id="ticket_preview" class="bg-light p-3 font-monospace" style="font-size: 0.9rem;">
-            <div><b>🎫 TICKET DE DESPACHO</b></div>
+            <div><b>🎫 TICKET DE DESPACHO <span id="ticket_number"></span></b></div>
             <div>---------------------------</div>
             <div>📍 Origen: Tanque 00</div>
             <div id="p_cliente">🏢 Cliente: --</div>
@@ -137,6 +145,14 @@ $('#cliente_selector').on('change', function() {
 $('input[name="cantidad_litros"]').on('input', function() {
     $('#p_litros').text('💧 Cantidad: ' + $(this).val() + ' Lts');
 });
+$('#vehiculo_id').on('change', function() {
+    let selectedText = $("#vehiculo_id option:selected").text();
+    $('#p_vehiculo').text('🚚 Vehículo: ' + selectedText);
+});
+$('input[name="nro_ticket"]').on('input', function() {
+    $('#ticket_number').text($(this).val());
+});
+
 $('#cliente_selector').on('change', function() {
     $('#p_cliente').text('🏢 Cliente: ' + $("#cliente_selector option:selected").text());
 });

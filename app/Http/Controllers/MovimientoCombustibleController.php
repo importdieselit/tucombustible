@@ -58,8 +58,8 @@ class MovimientoCombustibleController extends Controller
         // Obtenemos todos los clientes con parent 0.
         $clientesPadre = Cliente::where('parent', 0)
                                 ->select('nombre', 'disponible', 'cupo','id')
-                                ->get();
-        $clientes = Cliente::all();
+                                ->orderBy('nombre', 'asc')->get();
+        $clientes = Cliente::orderBy('nombre', 'asc')->get();
 
         $user = Auth::user();
         
@@ -388,7 +388,7 @@ public function createPrecarga()
     {
         // Se obtienen todos los depósitos y clientes para los dropdowns del formulario.
         $depositos = Deposito::all();
-        $clientes = Cliente::where();
+        $clientes = Cliente::orderBy('nombre', 'asc')->get();
         $hoy = now()->format('Y-m-d\TH:i'); // Obtiene la fecha actual en formato YYYY-MM-DD
         
         return view('combustible.despacho', compact('depositos', 'clientes', 'hoy'));
@@ -396,7 +396,7 @@ public function createPrecarga()
 
     public function createDespachoIndustrial()
     {
-        $clientes = Cliente::orderBy('nombre', 'asc')->get();
+        $clientes = Cliente::where('prepagado', '>', 0)->orderBy('nombre', 'asc')->get();
         $tanque00 = Deposito::find(3); 
         $hoy = Carbon::now()->format('Y-m-d\TH:i');
         return view('combustible.despacho_industrial', compact('clientes', 'tanque00', 'hoy'));
@@ -470,7 +470,7 @@ public function createPrecarga()
     {
         // Se obtienen todos los depósitos, clientes y vehículos para los dropdowns.
         $depositos = Deposito::all();
-        $clientes = Cliente::all();
+        $clientes = Cliente::orderBy('nombre', 'asc')->get();
         $vehiculos = Vehiculo::all();
          // Obtener los vehículos tipo cisterna (asumiendo que tipo = 2)
         $cisternas = Vehiculo::where('tipo', 2)->get();
@@ -652,6 +652,7 @@ public function storeDespachoIndustrial(Request $request)
 
         // 4. Actualizar Tanque
         $tanque00->decrement('nivel_actual_litros', $cantidad);
+        $cliente->decrement('prepagado', $cantidad);
 
         $fechaFormateada = Carbon::parse($request->fecha)->format('d/m/Y h:i A');
         $ticket = "<b>🎫 TICKET DE DESPACHO INDUSTRIAL</b>\n"
@@ -689,6 +690,56 @@ public function storeDespachoIndustrial(Request $request)
         return redirect()->back()->with('success', 'Ticket enviado y despacho registrado.');
         });
 }
+
+    public function createPrepago()
+    {
+        $clientes = Cliente::orderBy('nombre', 'asc')->get();
+        $hoy = Carbon::now()->format('Y-m-d\TH:i');
+        return view('combustible.prepago', compact('clientes', 'hoy'));
+    }
+
+    public function storePrepago(Request $request)
+    {
+        $request->validate([
+            'cliente_id' => 'required|exists:clientes,id',
+            'cantidad_litros' => 'required|numeric|min:1',
+            'monto_pagado' => 'nullable|numeric',
+            'referencia' => 'nullable|string',
+        ]);
+
+        return DB::transaction(function () use ($request) {
+            $cliente = Cliente::find($request->cliente_id);
+
+            // Registro del movimiento contable de litros
+            $mov = MovimientoCombustible::create([
+                'tipo_movimiento' => 'recarga_prepago',
+                'deposito_id' => 0,
+                'cliente_id' => $request->cliente_id,
+                'cantidad_litros' => $request->cantidad_litros,
+                'cant_inicial' => $cliente->prepagado,
+                'cant_final' => $cliente->prepagado + $request->cantidad_litros,
+                'observaciones' => "PAGO ANTICIPADO. Ref: " . $request->referencia,
+                'created_at' => $request->fecha ?? now()
+            ]);
+
+            // Si tienes una columna 'saldo_litros' en la tabla clientes, la actualizamos
+            $cliente->increment('prepagado', $request->cantidad_litros);
+
+            // Notificación a Telegram
+            $token = "8267350827:AAGWkn8hFmqIyQmW1ojlKk-eTfXke5um1Po";
+            $ticket = "<b>💰 RECARGA PREPAGADA</b>\n"
+                    . "--------------------------------\n"
+                    . "<b>🏢 Cliente:</b> {$cliente->nombre}\n"
+                    . "<b>💧 Litros Abonados:</b> " . number_format($request->cantidad_litros, 2) . " Lts\n"
+                    . "<b>💳 Ref:</b> " . ($request->referencia ?? 'N/A') . "\n"
+                    . "--------------------------------\n"
+                    . "✅ <i>Saldo actualizado en sistema</i>";
+
+            $this->telegramService->sendSimpleMessage("-1002935486238", $ticket, $token);
+
+            return redirect()->route('combustible.prepago')->with('success', 'Abono de combustible registrado con éxito.');
+        });
+    }
 
     public function historialDespachosIndustrial()
     {
@@ -749,7 +800,7 @@ public function storeDespachoIndustrial(Request $request)
      */
     public function pedidos()
     {
-        $clientes = Cliente::all();
+        $clientes = Cliente::orderBy('nombre', 'asc')->get();
         
         $pedidos = Pedido::with(['cliente'])
             ->whereIn('estado', ['pendiente'])
