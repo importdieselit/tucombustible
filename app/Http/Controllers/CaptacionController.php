@@ -45,6 +45,7 @@ class CaptacionController extends Controller
                 //'gestion' => 'MIGRACION',
                 'telefono' => $validated['telefono'] ?? null,
                 'direccion' => $validated['direccion'] ?? null,
+                'paso_actual'  => 1,
                 'estatus_captacion' => 'registro_inicial'
             ]);
 
@@ -349,6 +350,44 @@ class CaptacionController extends Controller
     
 }
 
+
+    // Dentro de CaptacionController.php
+
+    public function getFlujos() {
+        return [
+            'CUPO' => [
+                'nombre' => 'Nuevo Usuario',
+                'pasos' => [
+                    1 => 'Solicitud a Impordiesel',
+                    2 => 'Entrega de documentos (Digitalización)',
+                    3 => 'Entrega solicitud a MPPPH',
+                    4 => 'Asignación fecha de Inspección MPPPH',
+                    5 => 'Inspección realizada (Acta)',
+                    6 => 'Incorporación a listado SEAVCOM'
+                ]
+            ],
+            'MIGRACION' => [
+                'nombre' => 'Migración de Usuario',
+                'pasos' => [
+                    1 => 'Solicitud a Impordiesel',
+                    2 => 'Carta de solicitud de migración (MPPPH)',
+                    3 => 'Asignación de fecha de inspección MPPPH',
+                    4 => 'Acta de inspección',
+                    5 => 'Incorporación a listado SEAVCOM'
+                ]
+            ],
+            'AJUSTE' => [
+                'nombre' => 'Ajuste de Cupo',
+                'pasos' => [
+                    1 => 'Solicitud a Impordiesel',
+                    2 => 'Carta de solicitud y exposición de motivos (MPPPH)',
+                    3 => 'Inspección de MPPPH',
+                    4 => 'Acta de inspección de MPPPH',
+                    5 => 'Incorporación/Ajuste en listado SEAVCOM'
+                ]
+            ]
+        ];
+    }
 
 
     public function aprobar(CaptacionCliente $cliente)
