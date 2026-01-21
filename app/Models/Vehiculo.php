@@ -247,7 +247,7 @@ class Vehiculo extends Model
     {
         $today = Carbon::now()->toDateString();
         $date30Days = Carbon::now()->addDays(30)->toDateString();
-        $dateFields = ['rotc_venc', 'poliza_fecha', 'rcv', 'racda', 'permiso_intt']; 
+        $dateFields = ['rotc_venc', 'poliza_fecha_out', 'rcv', 'racda', 'permiso_intt']; 
 
         $query->where(function ($q) use ($dateFields, $today, $date30Days) {
             foreach ($dateFields as $field) {
