@@ -23,6 +23,7 @@
     
             <a href="{{ route('combustible.historialIndustrial') }}" class="btn btn-info mb-3">Ver Historial de Despachos</a>
             <a href="{{ route('combustible.resumenDesp') }}" class="btn btn-info mb-3">Ver Resumen</a>
+            <a href="{{ route('combustible.estadisticas') }}" class="btn btn-info mb-3">Ver Reporte</a>
 
 <div class="card shadow-sm">
         <div class="card-body text-center">
