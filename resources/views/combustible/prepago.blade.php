@@ -14,7 +14,7 @@
                         <select name="cliente_id" class="form-select select2" required>
                             <option value="">Seleccione Cliente</option>
                             @foreach($clientes as $c)
-                                <option value="{{ $c->id }}">{{ $c->nombre }} (Saldo: {{ $c->saldo_litros ?? 0 }} L)</option>
+                                <option value="{{ $c->id }}">{{ $c->nombre }} (Saldo: {{ $c->prepagado ?? 0 }} L)</option>
                             @endforeach
                         </select>
                     </div>

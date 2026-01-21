@@ -737,7 +737,7 @@ public function storeDespachoIndustrial(Request $request)
 
             $this->telegramService->sendSimpleMessage("-1002935486238", $ticket, $token);
 
-            return redirect()->route('combustible.despacho')->with('success', 'Abono de combustible registrado con éxito.');
+            return redirect()->route('combustible.createDespachoIndustrial')->with('success', 'Abono de combustible registrado con éxito.');
         });
     }
 

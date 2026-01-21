@@ -79,7 +79,7 @@ class VehiculoController extends BaseController
                     break;
 
                 case 'documentos_alerta':
-                    $query->VehiculosConDocumentosEnAlerta(Auth::user()->cliente_id);
+                    $query->ConDocumentosEnAlerta(Auth::user()->cliente_id);
                     break;
                 
                 case 'disponibles':
