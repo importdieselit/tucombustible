@@ -816,9 +816,8 @@ public function storeDespachoIndustrial(Request $request)
         // Obtenemos los despachos de forma descendente (los más recientes primero)
         $historial = MovimientoCombustible::with(['cliente', 'vehiculo', 'deposito'])
             ->where('deposito_id', 3) // Tanque 00
-            ->where('tipo_movimiento', 'salida')
-            ->orderBy('created_at', 'desc')
-            ; // Paginación para no sobrecargar la vista
+             ->whereIn('tipo_movimiento', ['salida','recarga_prepago'])
+            ->orderBy('created_at', 'desc'); // Paginación para no sobrecargar la vista
 
         return view('combustible.historial_industrial', compact('historial'));
     }
@@ -828,7 +827,7 @@ public function storeDespachoIndustrial(Request $request)
         $periodo = $request->get('periodo', 'diario'); // Valor por defecto
         $query = MovimientoCombustible::query()
             ->where('deposito_id', 3)
-            ->where('tipo_movimiento', 'salida');
+            ->whereIn('tipo_movimiento', ['salida','recarga_prepago']);
 
         // Filtro dinámico de tiempo
         switch ($periodo) {
