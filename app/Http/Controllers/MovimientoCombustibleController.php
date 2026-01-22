@@ -817,8 +817,8 @@ public function storeDespachoIndustrial(Request $request)
         $historial = MovimientoCombustible::with(['cliente', 'vehiculo', 'deposito'])
             ->where('deposito_id', 3) // Tanque 00
              ->whereIn('tipo_movimiento', ['salida','recarga_prepago'])
-            ->orderBy('created_at', 'desc'); // Paginación para no sobrecargar la vista
-            dd($historial);
+            ->orderBy('created_at', 'desc')->get(); // Paginación para no sobrecargar la vista
+            
 
         return view('combustible.historial_industrial', compact('historial'));
     }
