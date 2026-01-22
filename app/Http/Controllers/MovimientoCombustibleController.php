@@ -779,7 +779,7 @@ public function storeDespachoIndustrial(Request $request)
             ->orderBy('fecha')
             ->get();
 
-            $resumenClientes = Cliente::select('id', 'nombre', 'saldo_litros')
+            $resumenClientes = Cliente::select('id', 'nombre', 'prepagado')
         ->withCount(['movimientosCombustible as total_despachos' => function($query) {
             $query->where('tipo_movimiento', 'salida');
         }])
