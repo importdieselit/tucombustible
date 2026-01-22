@@ -818,7 +818,7 @@ public function storeDespachoIndustrial(Request $request)
             ->where('deposito_id', 3) // Tanque 00
             ->where('tipo_movimiento', 'salida')
             ->orderBy('created_at', 'desc')
-            ->paginate(15); // Paginación para no sobrecargar la vista
+            ; // Paginación para no sobrecargar la vista
 
         return view('combustible.historial_industrial', compact('historial'));
     }
