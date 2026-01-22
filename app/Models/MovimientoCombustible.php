@@ -28,7 +28,8 @@ class MovimientoCombustible extends Model
         'created_at',
         'cisterna_id',
         'cant_inicial',
-        'cant_final'
+        'cant_final',
+        'nro_ticket'
     ];
 
     /**

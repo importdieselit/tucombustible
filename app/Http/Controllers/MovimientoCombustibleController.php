@@ -529,6 +529,7 @@ public function createPrecarga()
             $movimiento = new MovimientoCombustible();
             $movimiento->created_at = $request->fecha;
             $movimiento->tipo_movimiento = 'salida';
+            $movimiento->nro_ticket = $request->nro_ticket;
             $movimiento->deposito_id = $request->deposito_id;
             $movimiento->cliente_id = $request->cliente_id;
             $movimiento->vehiculo_id = $request->vehiculo_id;
@@ -575,6 +576,21 @@ public function createPrecarga()
             return Redirect::back()->withInput();
         }
     }
+
+
+    public function updateTicket(Request $request)
+{
+    try {
+        $mov = MovimientoCombustible::findOrFail($request->id);
+        $mov->nro_ticket = strtoupper($request->nro_ticket);
+        $mov->save();
+
+        return response()->json(['ok' => true]);
+    } catch (\Exception $e) {
+        return response()->json(['ok' => false], 500);
+    }
+}
+
      public function list()
     {
         // Obtiene todos los movimientos, ordenados por fecha de creación (más recientes primero)

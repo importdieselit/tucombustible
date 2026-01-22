@@ -23,6 +23,7 @@
                         <tr class="table-dark">
                             <th>Fecha</th>
                             <th>Cliente</th>
+                            <th>Nro Nota</th>
                             <th>Vehículo / Placa</th>
                             <th>Cant. (Lts)</th>
                             <th>Stock Inicial</th>
@@ -35,6 +36,9 @@
                         <tr>
                             <td>{{ \Carbon\Carbon::parse($mov->created_at)->format('d/m/Y H:i') }}</td>
                             <td><b>{{ $mov->cliente->nombre ?? 'N/A' }}</b></td>
+                            <td class="editable-ticket" data-id="{{ $mov->id }}" title="Doble clic para editar">
+                                <span class="ticket-text">{{ $mov->nro_ticket ?? '---' }}</span>
+                            </td>
                             <td>
                                 <span class="badge bg-light text-dark border">
                                     {{ $mov->vehiculo->placa ?? 'Sin Placa' }}
@@ -57,3 +61,64 @@
     </div>
 </div>
 @endsection
+@push('scripts')
+<script>
+$(document).on('dblclick', '.editable-ticket', function() {
+    let cell = $(this);
+    let currentVal = cell.find('.ticket-text').text().trim();
+    if (currentVal === '---') currentVal = '';
+
+    // Evitar múltiples inputs
+    if (cell.find('input').length > 0) return;
+
+    let input = $('<input>', {
+        type: 'text',
+        class: 'form-control form-control-sm',
+        value: currentVal,
+        style: 'width: 100px; display: inline-block;'
+    });
+
+    cell.find('.ticket-text').hide();
+    cell.append(input);
+    input.focus();
+
+    // Función para guardar
+    function saveUpdate() {
+        let newVal = input.val();
+        let id = cell.data('id');
+
+        $.ajax({
+            url: "{{ route('combustible.updateTicket') }}",
+            method: "POST",
+            data: {
+                _token: "{{ csrf_token() }}",
+                id: id,
+                nro_ticket: newVal
+            },
+            success: function(response) {
+                cell.find('.ticket-text').text(newVal || '---').show();
+                input.remove();
+                // Efecto visual de éxito
+                cell.addClass('table-success');
+                setTimeout(() => cell.removeClass('table-success'), 1000);
+            },
+            error: function() {
+                alert('Error al actualizar el número de ticket');
+                cell.find('.ticket-text').show();
+                input.remove();
+            }
+        });
+    }
+
+    // Guardar al presionar Enter
+    input.on('keypress', function(e) {
+        if (e.which == 13) saveUpdate();
+    });
+
+    // Guardar al salir del campo
+    input.on('blur', function() {
+        saveUpdate();
+    });
+});
+</script>
+@endpush
