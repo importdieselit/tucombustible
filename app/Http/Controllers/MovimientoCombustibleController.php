@@ -851,7 +851,7 @@ public function storeDespachoIndustrial(Request $request)
                 DB::raw('COUNT(*) as total_despachos'),
                 DB::raw('MAX(created_at) as ultimo_despacho')
             )
-            ->with('cliente:id,nombre')
+            ->with('cliente:id,nombre,prepagado')
             ->groupBy('cliente_id')
             ->get();
 
