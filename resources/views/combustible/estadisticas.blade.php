@@ -91,14 +91,14 @@
                             <tr>
                                 <td><strong>{{ $index + 1 }}</strong></td>
                                 <td>{{ $c->nombre }}</td>
-                                <td class="text-end fw-bold">{{ number_format($c->saldo_litros, 2) }} L</td>
+                                <td class="text-end fw-bold">{{ number_format($c->prepagado, 2) }} L</td>
                                 <td class="text-end text-primary fw-bold">{{ number_format($c->total_consumido ?? 0, 2) }} L</td>
                                 <td class="text-end">{{ number_format($c->promedio_consumo ?? 0, 2) }} L</td>
                                 <td class="text-center">{{ $c->total_despachos }}</td>
                                 <td class="text-center">
-                                    @if($c->saldo_litros <= 100)
+                                    @if($c->prepagado <= 50)
                                         <span class="badge bg-danger">Saldo Crítico</span>
-                                    @elseif($c->saldo_litros <= 500)
+                                    @elseif($c->prepagado <= 100)
                                         <span class="badge bg-warning text-dark">Saldo Bajo</span>
                                     @else
                                         <span class="badge bg-success">Óptimo</span>
