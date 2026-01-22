@@ -669,7 +669,7 @@ public function storeDespachoIndustrial(Request $request)
         $grupoId = "-1002935486238"; 
         
         // Enviar al grupo principal
-        $this->telegramService->sendSimpleMessage($grupoId, $ticket, $token);
+       // $this->telegramService->sendSimpleMessage($grupoId, $ticket, $token);
 
         // Enviar a la persona designada (si el cliente tiene un telegram_id vinculado)
         // $usuarioCliente = User::where('id_cliente', $request->cliente_id)->whereNotNull('telegram_id')->first();
@@ -685,7 +685,7 @@ public function storeDespachoIndustrial(Request $request)
             $alerta = "⚠️ <b>ALERTA DE INVENTARIO CRÍTICO</b>\n"
                     . "El <b>Tanque 00</b> ha bajado del 10%.\n"
                     . "<b>Nivel Actual:</b> " . number_format($tanque00->nivel_actual_litros, 2) . " Lts.";
-            $this->telegramService->sendSimpleMessage($grupoId, $alerta, $token);
+            //$this->telegramService->sendSimpleMessage($grupoId, $alerta, $token);
         }
         return redirect()->back()->with('success', 'Ticket enviado y despacho registrado.');
         });
@@ -735,7 +735,7 @@ public function storeDespachoIndustrial(Request $request)
                     . "--------------------------------\n"
                     . "✅ <i>Saldo actualizado en sistema</i>";
 
-            $this->telegramService->sendSimpleMessage("-1002935486238", $ticket, $token);
+            //$this->telegramService->sendSimpleMessage("-1002935486238", $ticket, $token);
 
             return redirect()->route('combustible.createDespachoIndustrial')->with('success', 'Abono de combustible registrado con éxito.');
         });
