@@ -34,7 +34,9 @@
     <tbody>
         @foreach($historial as $mov)
         <tr>
-            <td>{{ \Carbon\Carbon::parse($mov->created_at)->format('d/m/Y H:i') }}</td>
+            <td data-order="{{ $mov->created_at->format('YmdHis') }}">
+                {{ \Carbon\Carbon::parse($mov->created_at)->format('d/m/Y H:i') }}
+            </td>
             <td><b>{{ $mov->cliente->nombre ?? 'N/A' }}</b></td>
             {{-- Columna editable con DataTables --}}
             <td class="editable-ticket" data-id="{{ $mov->id }}" title="Doble clic para editar">
@@ -75,6 +77,9 @@ $(document).ready(function() {
     // 1. Inicializar DataTable con estilos corregidos
     var table = $('#historialTable').DataTable({
         "order": [[ 0, "desc" ]], // Ordenar por fecha reciente
+       "columnDefs": [
+         { "type": "num", "targets": 0 } // Le decimos que use el valor numérico de 'data-order'
+        ],
         "language": {
             "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" // Idioma español
         },
