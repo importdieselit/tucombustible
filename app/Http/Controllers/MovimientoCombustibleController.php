@@ -788,7 +788,7 @@ public function storeDespachoIndustrial(Request $request)
         }], 'cantidad_litros')
         ->withAvg(['movimientosCombustible as promedio_consumo' => function($query) {
             $query->where('tipo_movimiento', 'salida');
-        }], 'cantidad_litros')
+        }], 'cantidad_litros')->where('prepagado','>',0)->orWhere('periodo','P')
         ->orderBy('total_consumido', 'desc') // Orden de mayor a menor consumo
         ->get();
 
