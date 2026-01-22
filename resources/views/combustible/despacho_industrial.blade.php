@@ -58,7 +58,7 @@
             <select name="cliente_id" id="cliente_selector" class="form-select select2" required>
                 <option value="">Seleccione Cliente</option>
                 @foreach($clientes as $c)
-                    <option value="{{ $c->id }}">{{ $c->nombre }} {{ $c->alias }} ({{ $c->prepagado }} Lts)</option>
+                    <option value="{{ $c->id }}">{{ $c->alias ?? $c->nombre }}  <strong @if($c->prepagado<0) style="color: red" @endif>({{ $c->prepagado }} Lts)</strong></option>
                 @endforeach
             </select>
         </div>
