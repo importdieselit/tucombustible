@@ -396,7 +396,7 @@ public function createPrecarga()
 
     public function createDespachoIndustrial()
     {
-        $clientes = Cliente::where('prepagado', '>', 0)->orderBy('nombre', 'asc')->get();
+        $clientes = Cliente::where('prepagado', '>', 0)->orWhere('periodo', 'P')->orderBy('nombre', 'asc')->get();
         $tanque00 = Deposito::find(3); 
         $hoy = Carbon::now()->format('Y-m-d\TH:i');
         return view('combustible.despacho_industrial', compact('clientes', 'tanque00', 'hoy'));
@@ -779,7 +779,20 @@ public function storeDespachoIndustrial(Request $request)
             ->orderBy('fecha')
             ->get();
 
-        return view('combustible.estadisticas', compact('stats', 'porCliente', 'tendencia', 'periodo'));
+            $resumenClientes = Cliente::select('id', 'nombre', 'saldo_litros')
+        ->withCount(['movimientosCombustible as total_despachos' => function($query) {
+            $query->where('tipo_movimiento', 'salida');
+        }])
+        ->withSum(['movimientosCombustible as total_consumido' => function($query) {
+            $query->where('tipo_movimiento', 'salida');
+        }], 'cantidad_litros')
+        ->withAvg(['movimientosCombustible as promedio_consumo' => function($query) {
+            $query->where('tipo_movimiento', 'salida');
+        }], 'cantidad_litros')
+        ->orderBy('total_consumido', 'desc') // Orden de mayor a menor consumo
+        ->get();
+
+        return view('combustible.estadisticas', compact('stats', 'porCliente', 'tendencia', 'periodo','resumenClientes'));
     }
 
     public function historialDespachosIndustrial()
