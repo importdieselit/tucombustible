@@ -12,7 +12,7 @@
             <a href="{{ route('combustible.createDespachoIndustrial') }}" class="btn btn-success">
                 <i class="fa fa-plus-circle"></i> Nuevo Despacho
             </a>
-            <button type="button" class="btn btn-warning mb-3" data-bs-toggle="modal" data-bs-target="#modalTraspaso">
+            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modalTraspaso">
                 <i class="fa fa-exchange"></i> Traspaso T3 -> T00
             </button>
         </div>
