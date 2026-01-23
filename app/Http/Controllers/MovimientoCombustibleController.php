@@ -858,7 +858,7 @@ public function storeDespachoIndustrial(Request $request)
     {
         // Obtenemos los despachos de forma descendente (los más recientes primero)
         $historial = MovimientoCombustible::with(['cliente', 'vehiculo', 'deposito'])
-            ->where('deposito_id', 3) // Tanque 00
+            ->whereIn('deposito_id', [0,3]) // TanqInue 00
              ->whereIn('tipo_movimiento', ['salida','recarga_prepago'])
             ->orderBy('created_at', 'desc')->get(); // Paginación para no sobrecargar la vista
             $t3=Deposito::find(6);
