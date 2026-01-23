@@ -43,7 +43,8 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Cantidad de Litros a Traspasar</label>
-                    <input type="number" step="1" name="cantidad" class="form-control" required>
+                    <input type="number" step="0.01" name="cantidad" id="inputCantidadTraspaso" class="form-control" required>
+            <input type="hidden" id="hiddenStockT3" value="{{ $t3->nivel_actual_litros }}">
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Observaciones / Motivo</label>
@@ -199,20 +200,29 @@ function toggleNuevoVehiculo() {
     $('#vehiculo_id').val(''); // Limpia el select si va a crear uno nuevo
 }
 
-// Coloca esto en la sección de scripts de tu vista
 $('#modalTraspaso form').on('submit', function(e) {
-    let cantidad = parseFloat($(this).find('input[name="cantidad"]').val());
-    let stockT3 = {{ $t3->nivel_actual_litros }}; // Aquí podrías pasar dinámicamente el stock actual del T3
+    // 1. Capturar valores forzando tipo numérico
+    let cantidad = Number($('#inputCantidadTraspaso').val());
+    let stockDisponible = Number($('#hiddenStockT3').val());
 
-    if (cantidad <= 0) {
-        alert("La cantidad debe ser mayor a 0");
+    // Debug para que veas en consola qué está leyendo realmente
+    console.log("Cantidad ingresada:", cantidad);
+    console.log("Stock en T3:", stockDisponible);
+
+    // 2. Validaciones lógicas
+    if (isNaN(cantidad) || cantidad <= 0) {
+        alert("Por favor, ingrese una cantidad válida mayor a cero.");
         e.preventDefault();
-        return;
+        return false;
     }
 
-    if (!confirm("¿Está seguro de traspasar " + cantidad + " Lts del Tanque 3 al Tanque 00? Esta acción no se puede deshacer.")) {
+    if (cantidad > stockDisponible) {
+        alert("¡Error! No puede traspasar " + cantidad + " Lts porque el Tanque 3 solo tiene " + stockDisponible + " Lts.");
         e.preventDefault();
+        return false;
     }
+
+    return confirm("¿Confirmar traspaso de " + cantidad + " Lts?");
 });
 </script>
 @endpush
