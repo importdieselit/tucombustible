@@ -644,6 +644,7 @@ public function storeDespachoIndustrial(Request $request)
             'tipo_movimiento' => 'salida',
             'deposito_id' => $tanque00->id,
             'cliente_id' => $request->cliente_id,
+            'nro_ticket' => $request->nro_ticket,
             'vehiculo_id' => $vehiculo->id,
             'cantidad_litros' => $cantidad,
             'cant_inicial' => $tanque00->nivel_actual_litros,
