@@ -708,6 +708,45 @@ public function storeDespachoIndustrial(Request $request)
         });
 }
 
+  public function storeTraspaso(Request $request)
+{
+    // 1. Validar entrada
+    $request->validate(['cantidad' => 'required|numeric|min:0.01']);
+
+    return DB::transaction(function () use ($request) {
+        $t3 = Deposito::where('nombre', 'TANQUE 3')->first();
+        $t00 = Deposito::where('nombre', 'TANQUE 00')->first();
+
+        if ($t3->stock_actual < $request->cantidad) {
+            return back()->with('error', 'Stock insuficiente en Tanque 3');
+        }
+
+        // 2. Registrar Salida T3
+        MovimientoCombustible::create([
+            'deposito_id' => $t3->id,
+            'tipo_movimiento' => 'salida',
+            'cantidad_litros' => $request->cantidad,
+            'cant_inicial' => $t3->stock_actual,
+            'cant_final' => $t3->stock_actual - $request->cantidad,
+            'observaciones' => 'TRASPASO INTERNO -> T00: ' . $request->observaciones
+        ]);
+        $t3->decrement('stock_actual', $request->cantidad);
+
+        // 3. Registrar Entrada T00
+        MovimientoCombustible::create([
+            'deposito_id' => $t00->id,
+            'tipo_movimiento' => 'entrada',
+            'cantidad_litros' => $request->cantidad,
+            'cant_inicial' => $t00->stock_actual,
+            'cant_final' => $t00->stock_actual + $request->cantidad,
+            'observaciones' => 'TRASPASO INTERNO <- T3: ' . $request->observaciones
+        ]);
+        $t00->increment('stock_actual', $request->cantidad);
+
+        return back()->with('success', 'Traspaso realizado correctamente');
+    });
+}
+
     public function createPrepago()
     {
         $clientes = Cliente::orderBy('nombre', 'asc')->get();

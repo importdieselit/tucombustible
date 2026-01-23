@@ -25,6 +25,38 @@
             <a href="{{ route('combustible.resumenDesp') }}" class="btn btn-info mb-3">Ver Resumen</a>
             <a href="{{ route('combustible.estadisticas') }}" class="btn btn-info mb-3">Ver Reporte</a>
 
+            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modalTraspaso">
+                <i class="fa fa-exchange"></i> Traspaso T3 -> T00
+            </button>
+
+<div class="modal fade" id="modalTraspaso" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="{{ route('combustible.storeTraspaso') }}" method="POST" class="modal-content">
+            @csrf
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title font-weight-bold">Traspaso Interno de Combustible</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info small">
+                    Esta operación rebajará el stock del <b>Tanque 3</b> e incrementará el <b>Tanque 00</b>.
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Cantidad de Litros a Traspasar</label>
+                    <input type="number" step="0.01" name="cantidad" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Observaciones / Motivo</label>
+                    <textarea name="observaciones" class="form-control" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-warning">Confirmar Traspaso</button>
+            </div>
+        </form>
+    </div>
+</div>
 <div class="card shadow-sm">
         <div class="card-body text-center">
             <h5 class="card-title">Precarga de Cisterna</h5>
@@ -166,5 +198,21 @@ function toggleNuevoVehiculo() {
     $('#nuevo_vehiculo_fields').toggleClass('d-none');
     $('#vehiculo_id').val(''); // Limpia el select si va a crear uno nuevo
 }
+
+// Coloca esto en la sección de scripts de tu vista
+$('#modalTraspaso form').on('submit', function(e) {
+    let cantidad = parseFloat($(this).find('input[name="cantidad"]').val());
+    let stockT3 = 5000; // Aquí podrías pasar dinámicamente el stock actual del T3
+
+    if (cantidad <= 0) {
+        alert("La cantidad debe ser mayor a 0");
+        e.preventDefault();
+        return;
+    }
+
+    if (!confirm("¿Está seguro de traspasar " + cantidad + " Lts del Tanque 3 al Tanque 00? Esta acción no se puede deshacer.")) {
+        e.preventDefault();
+    }
+});
 </script>
 @endpush
