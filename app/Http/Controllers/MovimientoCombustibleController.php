@@ -714,8 +714,8 @@ public function storeDespachoIndustrial(Request $request)
     $request->validate(['cantidad' => 'required|numeric|min:0.01']);
 
     return DB::transaction(function () use ($request) {
-        $t3 = Deposito::where('nombre', 'TANQUE 3')->first();
-        $t00 = Deposito::where('nombre', 'TANQUE 00')->first();
+        $t3 = Deposito::where('serial', '3')->first();
+        $t00 = Deposito::find(3);
 
         if ($t3->stock_actual < $request->cantidad) {
             return back()->with('error', 'Stock insuficiente en Tanque 3');
