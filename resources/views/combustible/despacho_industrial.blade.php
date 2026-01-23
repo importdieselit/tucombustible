@@ -97,7 +97,7 @@
         </div>
         <div class="col-md-12 mb-3">
             <label class="form-label">Observacion</label>
-            <textarea name="observaciones" id="observaciones" cols="30" rows="10"></textarea>
+            <textarea name="observaciones" id="observaciones" rows="10" style="width:95%; height:100px;"></textarea>
         </div>
         
         <div class="col-12 mt-3">
