@@ -48,8 +48,10 @@
             <td class="text-danger fw-bold">- {{ number_format($mov->cantidad_litros, 2) }} L</td>
             <td>{{ number_format($mov->cant_inicial, 2) }}</td>
             <td class="text-primary">{{ number_format($mov->cant_final, 2) }}</td>
-            <td><small>{{ $mov->observaciones }}</small></td>
-        </tr>
+            <td class="editable-obs" data-id="{{ $mov->id }}" data-field="observaciones" title="Doble clic para editar observación">
+                <span class="obs-text text-muted small">{{ $mov->observaciones ?? 'Sin observaciones' }}</span>
+            </td>
+            </tr>
         @endforeach
     </tbody>
 </table>
@@ -112,43 +114,63 @@ $(document).ready(function() {
 
     // 2. Función de edición (Doble Clic)
     // Usamos delegación de eventos para que funcione al cambiar de página en el DataTable
-    $('#historialTable').on('dblclick', '.editable-ticket', function() {
-        let cell = $(this);
-        if (cell.find('input').length > 0) return;
+    $(document).on('dblclick', '.editable-ticket, .editable-obs', function() {
+    let cell = $(this);
+    let field = cell.data('field') || 'nro_ticket'; // Por defecto nro_ticket si no existe data-field
+    let textSpan = cell.find('span');
+    let currentVal = textSpan.text().trim();
+    
+    if (currentVal === '---' || currentVal === 'Sin observaciones') currentVal = '';
+    if (cell.find('input').length > 0) return;
 
-        let currentVal = cell.find('.ticket-text').text().trim();
-        if (currentVal === '---') currentVal = '';
-
-        let input = $('<input>', {
-            type: 'text',
-            class: 'form-control form-control-sm',
-            value: currentVal,
-            style: 'width: 100%;'
-        });
-
-        cell.find('.ticket-text').hide();
-        cell.append(input);
-        input.focus();
-
-        input.on('blur keypress', function(e) {
-            if (e.type === 'keypress' && e.which !== 13) return;
-            
-            let newVal = $(this).val().toUpperCase();
-            let id = cell.data('id');
-
-            $.ajax({
-                url: "{{ route('combustible.updateTicket') }}",
-                method: "POST",
-                data: { _token: "{{ csrf_token() }}", id: id, nro_ticket: newVal },
-                success: function() {
-                    cell.find('.ticket-text').text(newVal || '---').show();
-                    input.remove();
-                    // Actualizar el valor interno de DataTables para que el buscador lo encuentre
-                    table.cell(cell).data(cell.html()).draw(false);
-                }
-            });
-        });
+    let input = $('<input>', {
+        type: 'text',
+        class: 'form-control form-control-sm',
+        value: currentVal,
+        style: 'width: 100%; min-width: 150px;'
     });
+
+    textSpan.hide();
+    cell.append(input);
+    input.focus();
+
+    function saveUpdate() {
+        let newVal = input.val();
+        let id = cell.data('id');
+
+        $.ajax({
+            url: "{{ route('combustible.updateMovimientoField') }}", // Nueva ruta genérica
+            method: "POST",
+            data: {
+                _token: "{{ csrf_token() }}",
+                id: id,
+                field: field,
+                value: newVal
+            },
+            success: function(response) {
+                // Si es ticket, lo ponemos en mayúsculas por estándar
+                let displayVal = (field === 'nro_ticket') ? newVal.toUpperCase() : newVal;
+                textSpan.text(displayVal || (field === 'nro_ticket' ? '---' : 'Sin observaciones')).show();
+                input.remove();
+                
+                // Efecto visual y actualizar DataTable
+                cell.addClass('table-success');
+                setTimeout(() => cell.removeClass('table-success'), 800);
+                $('#historialTable').DataTable().cell(cell).data(cell.html());
+            },
+            error: function() {
+                alert('Error al actualizar');
+                textSpan.show();
+                input.remove();
+            }
+        });
+    }
+
+    input.on('keypress blur', function(e) {
+        if (e.type === 'keypress' && e.which !== 13) return;
+        saveUpdate();
+    });
+});
 });
 </script>
 @endpush

@@ -964,6 +964,32 @@ public function storeDespachoIndustrial(Request $request)
         return view('combustible.aprobados', compact('pedidos', 'vehiculos', 'depositos'));
     }
 
+    public function updateMovimientoField(Request $request)
+    {
+        // Validamos que el campo sea uno de los permitidos para editar
+        $request->validate([
+            'id' => 'required|exists:movimiento_combustible,id',
+            'field' => 'required|in:nro_ticket,observaciones',
+            'value' => 'nullable|string'
+        ]);
+
+        try {
+            $mov = MovimientoCombustible::findOrFail($request->id);
+            $field = $request->field;
+            
+            // Aplicamos estándar de mayúsculas solo al ticket
+            $mov->$field = ($field === 'nro_ticket') 
+                ? strtoupper($request->value) 
+                : $request->value;
+                
+            $mov->save();
+
+            return response()->json(['ok' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['ok' => false], 500);
+        }
+    }
+
 
     public function enviarResumenTelegram(Request $request) 
     {
