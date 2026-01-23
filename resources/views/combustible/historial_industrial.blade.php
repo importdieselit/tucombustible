@@ -31,7 +31,7 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Cantidad de Litros a Traspasar</label>
-                            <input type="number" step="0.01" name="cantidad" class="form-control" required>
+                            <input type="number" step="1" name="cantidad" class="form-control" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Observaciones / Motivo</label>
@@ -207,7 +207,7 @@ $(document).ready(function() {
 // Coloca esto en la sección de scripts de tu vista
 $('#modalTraspaso form').on('submit', function(e) {
     let cantidad = parseFloat($(this).find('input[name="cantidad"]').val());
-    let stockT3 = 5000; // Aquí podrías pasar dinámicamente el stock actual del T3
+    let stockT3 = {{ $t3->nivel_actual_litros }}; // Aquí podrías pasar dinámicamente el stock actual del T3
 
     if (cantidad <= 0) {
         alert("La cantidad debe ser mayor a 0");

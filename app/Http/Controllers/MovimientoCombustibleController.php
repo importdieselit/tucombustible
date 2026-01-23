@@ -398,8 +398,9 @@ public function createPrecarga()
     {
         $clientes = Cliente::where('prepagado', '>', 0)->orWhere('periodo', 'P')->orderBy('nombre', 'asc')->get();
         $tanque00 = Deposito::find(3); 
+        $t3= Deposito::find(6);
         $hoy = Carbon::now()->format('Y-m-d\TH:i');
-        return view('combustible.despacho_industrial', compact('clientes', 'tanque00', 'hoy'));
+        return view('combustible.despacho_industrial', compact('clientes', 'tanque00', 'hoy','t3'));
     }
 
     /**
@@ -858,9 +859,9 @@ public function storeDespachoIndustrial(Request $request)
             ->where('deposito_id', 3) // Tanque 00
              ->whereIn('tipo_movimiento', ['salida','recarga_prepago'])
             ->orderBy('created_at', 'desc')->get(); // Paginación para no sobrecargar la vista
-            
+            $t3=Deposito::find(6);
 
-        return view('combustible.historial_industrial', compact('historial'));
+        return view('combustible.historial_industrial', compact('historial','t3'));
     }
 
     public function resumenDespachos(Request $request)
