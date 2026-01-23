@@ -968,7 +968,7 @@ public function storeDespachoIndustrial(Request $request)
     {
         // Validamos que el campo sea uno de los permitidos para editar
         $request->validate([
-            'id' => 'required|exists:movimiento_combustible,id',
+            'id' => 'required|exists:movimientos_combustible,id',
             'field' => 'required|in:nro_ticket,observaciones',
             'value' => 'nullable|string'
         ]);
