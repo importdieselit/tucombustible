@@ -74,7 +74,17 @@
             <td data-order="{{ $mov->created_at->format('YmdHis') }}">
                 {{ \Carbon\Carbon::parse($mov->created_at)->format('d/m/Y H:i') }}
             </td>
-            <td><b>{{ $mov->cliente->nombre ?? 'N/A' }}</b></td>
+            <td>
+                @if($mov->cliente)
+                    <b>{{ $mov->cliente->nombre }}</b>
+                @elseif(str_contains(strtolower($mov->observaciones), 'traspaso'))
+                    <span class="badge bg-warning text-dark">
+                        <i class="fa fa-exchange"></i> Tanque 03
+                    </span>
+                @else
+                    <span class="text-muted">N/A</span>
+                @endif
+            </td>
             {{-- Columna editable con DataTables --}}
             <td class="editable-ticket" data-id="{{ $mov->id }}" title="Doble clic para editar">
                 <span class="ticket-text">{{ $mov->nro_ticket ?? '---' }}</span>
