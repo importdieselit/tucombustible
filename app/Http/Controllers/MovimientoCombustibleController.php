@@ -860,6 +860,7 @@ public function storeDespachoIndustrial(Request $request)
         $historial = MovimientoCombustible::with(['cliente', 'vehiculo', 'deposito'])
             ->whereIn('deposito_id', [0,3]) // TanqInue 00
              ->whereIn('tipo_movimiento', ['salida','recarga_prepago'])
+            ->orWhere('deposito_id',3)->where('observaciones','like','%traspaso%')
             ->orderBy('created_at', 'desc')->get(); // Paginación para no sobrecargar la vista
             $t3=Deposito::find(6);
 
