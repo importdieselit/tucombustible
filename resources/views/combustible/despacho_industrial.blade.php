@@ -25,7 +25,7 @@
             <a href="{{ route('combustible.resumenDesp') }}" class="btn btn-info mb-3">Ver Resumen</a>
             <a href="{{ route('combustible.estadisticas') }}" class="btn btn-info mb-3">Ver Reporte</a>
 
-            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modalTraspaso">
+            <button type="button" class="btn btn-warning mb-3" data-bs-toggle="modal" data-bs-target="#modalTraspaso">
                 <i class="fa fa-exchange"></i> Traspaso T3 -> T00
             </button>
 
@@ -46,7 +46,7 @@
                     <input type="number" step="0.01" name="cantidad" id="inputCantidadTraspaso" class="form-control" required>
             <input type="hidden" id="hiddenStockT3" value="{{ $t3->nivel_actual_litros }}">
                 </div>
-                <div>
+                <div class="mb-3">
                     <label class="form-label">fecha</label>
                      <input type="datetime-local" name="fechaT" id="fechaT" class="form-control" value="{{ $hoy }}" required>
                 </div>
