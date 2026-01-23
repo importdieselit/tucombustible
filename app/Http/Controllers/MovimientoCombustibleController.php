@@ -727,6 +727,7 @@ public function storeDespachoIndustrial(Request $request)
             'deposito_id' => $t3->id,
             'tipo_movimiento' => 'salida',
             'cantidad_litros' => $request->cantidad,
+            'created_at' => $request->fechaT,
             'cant_inicial' => $t3->nivel_actual_litros,
             'cant_final' => $t3->nivel_actual_litros - $request->cantidad,
             'observaciones' => 'TRASPASO INTERNO -> T00: ' . $request->observaciones
@@ -737,6 +738,7 @@ public function storeDespachoIndustrial(Request $request)
         MovimientoCombustible::create([
             'deposito_id' => $t00->id,
             'tipo_movimiento' => 'entrada',
+            'created_at' => $request->fechaT,
             'cantidad_litros' => $request->cantidad,
             'cant_inicial' => $t00->nivel_actual_litros,
             'cant_final' => $t00->nivel_actual_litros + $request->cantidad,

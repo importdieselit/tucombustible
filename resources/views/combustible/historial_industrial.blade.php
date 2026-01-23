@@ -34,6 +34,10 @@
                             <input type="number" step="0.01" name="cantidad" id="inputCantidadTraspaso" class="form-control" required>
                             <input type="hidden" id="hiddenStockT3" value="{{ $t3->nivel_actual_litros }}">
                         </div>
+                        <div>
+                    <label class="form-label">fecha</label>
+                     <input type="datetime-local" name="fechaT" id="fechaT" class="form-control" value="{{ $hoy }}" required>
+                </div>
                         <div class="mb-3">
                             <label class="form-label">Observaciones / Motivo</label>
                             <textarea name="observaciones" class="form-control" rows="2"></textarea>
