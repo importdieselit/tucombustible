@@ -863,7 +863,10 @@ public function storeDespachoIndustrial(Request $request)
             ->orderBy('created_at', 'desc')->get(); // Paginación para no sobrecargar la vista
             $t3=Deposito::find(6);
 
-        return view('combustible.historial_industrial', compact('historial','t3'));
+        
+        $hoy = Carbon::now()->format('Y-m-d\TH:i');
+
+        return view('combustible.historial_industrial', compact('historial','t3','hoy'));
     }
 
     public function resumenDespachos(Request $request)
