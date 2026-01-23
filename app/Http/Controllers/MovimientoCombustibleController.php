@@ -718,7 +718,7 @@ public function storeDespachoIndustrial(Request $request)
         $t3 = Deposito::where('serial', '3')->first();
         $t00 = Deposito::find(3);
 
-        if ($t3->nivel_actual->litros < $request->cantidad) {
+        if ($t3->nivel_actual_litros < $request->cantidad) {
             return back()->with('error', 'Stock insuficiente en Tanque 3');
         }
 
