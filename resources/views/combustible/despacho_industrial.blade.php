@@ -43,7 +43,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Cantidad de Litros a Traspasar</label>
-                    <input type="number" step="0.01" name="cantidad" class="form-control" required>
+                    <input type="number" step="1" name="cantidad" class="form-control" required>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Observaciones / Motivo</label>
