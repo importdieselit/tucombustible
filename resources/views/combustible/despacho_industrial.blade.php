@@ -95,6 +95,10 @@
             <label class="form-label">Fecha</label>
             <input type="datetime-local" name="fecha" class="form-control" value="{{ $hoy }}" required>
         </div>
+        <div class="col-md-12 mb-3">
+            <label class="form-label">Observacion</label>
+            <textarea name="observaciones" id="observaciones" cols="30" rows="10"></textarea>
+        </div>
         
         <div class="col-12 mt-3">
             <button type="submit" class="btn btn-success w-100">Confirmar Despacho (Tanque 00)</button>
