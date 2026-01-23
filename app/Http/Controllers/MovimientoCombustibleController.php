@@ -718,7 +718,7 @@ public function storeDespachoIndustrial(Request $request)
         $t3 = Deposito::where('serial', '3')->first();
         $t00 = Deposito::find(3);
 
-        if ($t3->stock_actual < $request->cantidad) {
+        if ($t3->nivel_actual->litros < $request->cantidad) {
             return back()->with('error', 'Stock insuficiente en Tanque 3');
         }
 
@@ -727,22 +727,22 @@ public function storeDespachoIndustrial(Request $request)
             'deposito_id' => $t3->id,
             'tipo_movimiento' => 'salida',
             'cantidad_litros' => $request->cantidad,
-            'cant_inicial' => $t3->stock_actual,
-            'cant_final' => $t3->stock_actual - $request->cantidad,
+            'cant_inicial' => $t3->nivel_actual_litros,
+            'cant_final' => $t3->nivel_actual_litros - $request->cantidad,
             'observaciones' => 'TRASPASO INTERNO -> T00: ' . $request->observaciones
         ]);
-        $t3->decrement('stock_actual', $request->cantidad);
+        $t3->decrement('nivel_actual_litros', $request->cantidad);
 
         // 3. Registrar Entrada T00
         MovimientoCombustible::create([
             'deposito_id' => $t00->id,
             'tipo_movimiento' => 'entrada',
             'cantidad_litros' => $request->cantidad,
-            'cant_inicial' => $t00->stock_actual,
-            'cant_final' => $t00->stock_actual + $request->cantidad,
+            'cant_inicial' => $t00->nivel_actual_litros,
+            'cant_final' => $t00->nivel_actual_litros + $request->cantidad,
             'observaciones' => 'TRASPASO INTERNO <- T3: ' . $request->observaciones
         ]);
-        $t00->increment('stock_actual', $request->cantidad);
+        $t00->increment('nivel_actual_litros', $request->cantidad);
 
         return back()->with('success', 'Traspaso realizado correctamente');
     });
