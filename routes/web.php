@@ -245,6 +245,8 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
         ->name('createDespachoIndustrial');
         Route::get('/despacho-industrial/resumen', [MovimientoCombustibleController::class, 'resumenDespachos'])
         ->name('resumenDesp');
+        Route::get('/storeTraspaso', [MovimientoCombustibleController::class, 'storeTraspaso'])
+        ->name('storeTraspaso');
         Route::post('/update-field', [MovimientoCombustibleController::class, 'updateMovimientoField'])->name('updateMovimientoField');
         Route::post('/update-ticket', [MovimientoCombustibleController::class, 'updateTicket'])->name('updateTicket');
         Route::get('/estadisticas', [MovimientoCombustibleController::class, 'dashboardEstadistico'])->name('estadisticas');
