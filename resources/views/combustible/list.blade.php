@@ -26,7 +26,7 @@
             
             <div class=" p-6 rounded-lg shadow-lg">
                 <div class="overflow-x-auto rounded-lg">
-                    <table class="min-w-full divide-y datatable ">
+                    <table class="min-w-full divide-y datatable table table-hover table-striped">
                         <thead class="">
                             <tr>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium  uppercase tracking-wider">
