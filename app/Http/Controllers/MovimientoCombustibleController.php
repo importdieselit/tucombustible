@@ -802,15 +802,28 @@ public function storeDespachoIndustrial(Request $request)
 
     public function dashboardEstadistico(Request $request)
     {
-        $periodo = $request->get('periodo', 'mensual');
-        $fechaInicio = now()->startOfMonth();
-        
-        if ($periodo == 'anual') $fechaInicio = now()->startOfYear();
+        $view = $request->get('view', 'mes');
+        $date = $request->get('date', now()->format('Y-m-d'));
+        $fecha = \Carbon\Carbon::parse($date);
 
+        if ($view == 'hoy') {
+            $fechaInicio = $fecha->copy()->startOfDay();
+            $fechaFin = $fecha->copy()->endOfDay();
+            $label = $fecha->translatedFormat('d \d\e F, Y');
+        } elseif ($view == 'semana') {
+            // HTML5 week input devuelve "2026-W05"
+            $fechaInicio = $fecha->copy()->startOfWeek();
+            $fechaFin = $fecha->copy()->endOfWeek();
+            $label = "Semana del " . $fechaInicio->format('d/m') . " al " . $fechaFin->format('d/m');
+        } else { // mes
+            $fechaInicio = $fecha->copy()->startOfMonth();
+            $fechaFin = $fecha->copy()->endOfMonth();
+            $label = ucfirst($fecha->translatedFormat('F Y'));
+        }
         // 1. Métricas Globales
         $stats = MovimientoCombustible::where('tipo_movimiento', 'salida')
             ->where('deposito_id', 3) // Tanque 00
-            ->where('created_at', '>=', $fechaInicio)
+            ->whereBetween('created_at', [$fechaInicio, $fechaFin])
             ->select(
                 DB::raw('SUM(cantidad_litros) as total_litros'),
                 DB::raw('COUNT(*) as total_despachos'),
@@ -820,7 +833,7 @@ public function storeDespachoIndustrial(Request $request)
         // 2. Datos para Gráfico de Pastel (Distribución por Cliente)
         $porCliente = MovimientoCombustible::where('tipo_movimiento', 'salida')
             ->where('deposito_id', 3)
-            ->where('created_at', '>=', $fechaInicio)
+            ->whereBetween('created_at', [$fechaInicio, $fechaFin])
             ->with('cliente:id,nombre')
             ->select('cliente_id', DB::raw('SUM(cantidad_litros) as total'))
             ->groupBy('cliente_id')
@@ -829,7 +842,7 @@ public function storeDespachoIndustrial(Request $request)
         // 3. Datos para Gráfico de Líneas (Tendencia Diaria)
         $tendencia = MovimientoCombustible::where('tipo_movimiento', 'salida')
             ->where('deposito_id', 3)
-            ->where('created_at', '>=', $fechaInicio)
+            ->whereBetween('created_at', [$fechaInicio, $fechaFin])
             ->select(
                 DB::raw('DATE(created_at) as fecha'),
                 DB::raw('SUM(cantidad_litros) as total')
@@ -838,7 +851,7 @@ public function storeDespachoIndustrial(Request $request)
             ->orderBy('fecha')
             ->get();
 
-            $resumenClientes = Cliente::select('id', 'nombre', 'prepagado')
+        $resumenClientes = Cliente::select('id', 'nombre', 'prepagado')
         ->withCount(['movimientosCombustible as total_despachos' => function($query) {
             $query->where('tipo_movimiento', 'salida');
         }])
@@ -851,7 +864,7 @@ public function storeDespachoIndustrial(Request $request)
         ->orderBy('total_consumido', 'desc') // Orden de mayor a menor consumo
         ->get();
 
-        return view('combustible.estadisticas', compact('stats', 'porCliente', 'tendencia', 'periodo','resumenClientes'));
+        return view('combustible.estadisticas', compact('stats', 'view', 'fechaInicio', 'fechaFin','label', 'date', 'porCliente', 'tendencia', 'periodo','resumenClientes'));
     }
 
     public function historialDespachosIndustrial()

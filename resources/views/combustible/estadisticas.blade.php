@@ -6,12 +6,35 @@
         <div class="col-md-8">
             <h3>📊 Indicadores de Despacho Industrial (Tanque 00)</h3>
         </div>
-        <div class="col-md-4 text-end">
-            <div class="btn-group">
-                <a href="?periodo=mensual" class="btn btn-{{ $periodo == 'mensual' ? 'primary' : 'outline-primary' }}">Este Mes</a>
-                <a href="?periodo=anual" class="btn btn-{{ $periodo == 'anual' ? 'primary' : 'outline-primary' }}">Este Año</a>
-            </div>
+ <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
+    <div class="btn-group shadow-sm">
+        <a href="?view=hoy" class="btn btn-outline-primary {{ $view == 'hoy' ? 'active' : '' }}">Día</a>
+        <a href="?view=semana" class="btn btn-outline-primary {{ $view == 'semana' ? 'active' : '' }}">Semana</a>
+        <a href="?view=mes" class="btn btn-outline-primary {{ $view == 'mes' ? 'active' : '' }}">Mes</a>
+    </div>
+
+    <form action="{{ route('combustible.estadisticas') }}" method="GET" class="d-flex align-items-center">
+        <input type="hidden" name="view" value="{{ $view }}">
+        
+        <div class="input-group">
+            <span class="input-group-text bg-white border-end-0"><i class="fa fa-calendar-check-o text-primary"></i></span>
+            
+            @if($view == 'hoy')
+                <input type="date" name="date" class="form-control border-start-0 fw-bold" value="{{ $date }}" onchange="this.form.submit()">
+            @elseif($view == 'semana')
+                <input type="week" name="date" class="form-control border-start-0 fw-bold" value="{{ \Carbon\Carbon::parse($date)->format('Y-\WW') }}" onchange="this.form.submit()">
+            @else
+                <input type="month" name="date" class="form-control border-start-0 fw-bold" value="{{ \Carbon\Carbon::parse($date)->format('Y-m') }}" onchange="this.form.submit()">
+            @endif
         </div>
+
+        <div class="ms-3 d-none d-md-block">
+            <span class="badge bg-light text-primary border p-2">
+                {{ $label }}
+            </span>
+        </div>
+    </form>
+</div>
     </div>
 
     <div class="row mb-4">
