@@ -26,7 +26,7 @@
             
             <div class=" p-6 rounded-lg shadow-lg">
                 <div class="overflow-x-auto rounded-lg">
-                    <table class="min-w-full divide-y ">
+                    <table class="min-w-full divide-y datatable ">
                         <thead class="">
                             <tr>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium  uppercase tracking-wider">
@@ -113,3 +113,43 @@
         </div>
     </div>
 @endsection
+
+
+@push('scripts')
+    <!-- Script de jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Script de DataTables -->
+    <script src="https://cdn.datatables.net/2.0.7/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Inicializar DataTables
+            $('.datatable').DataTable({
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
+                },
+                layout: {
+                    topStart: {
+                        buttons: ['csv', 'excel', 'pdf', 'print']
+                    }
+                },
+                "order": [
+                    [ 0, 'desc' ] 
+                ]
+            });
+
+            // // Lógica para redirigir al hacer clic en una fila
+            // $('.datatable tbody').on('click', 'tr', function() {
+            //     var id = $(this).data('id');
+            //     if (id) {
+            //         window.location.href = '/ordenes/' + id;
+            //     }
+            // });
+        });
+    </script>
+@endpush
