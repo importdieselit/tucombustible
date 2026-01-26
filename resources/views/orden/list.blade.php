@@ -1,4 +1,11 @@
 @extends('layouts.app')
+@section('title', 'Listado de Órdenes de Trabajo')
+
+@push('styles')
+    <!-- CSS de DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.0.7/css/dataTables.dataTables.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.dataTables.css" />
+@endpush
 
 @section('title', 'Listado de Órdenes de Trabajo')
 
@@ -55,13 +62,15 @@
                 <tbody>
                     @foreach ($data as $orden)
                     <tr class="clickable-row" data-id="{{ $orden->id }}">
-                        <td>{{ $orden->id }}</td>
+                        <td data-order="{{ $orden->created_at->format('YmdHis') }}">
+                            {{ $orden->id }}
+                        </td>
                         <td>{{ $orden->nro_orden }}</td>
                         <td>{{ $orden->vehiculo()?$orden->vehiculo()->flota.' '.$orden->vehiculo()->placa:null }}</td>
                         <td>{{ $orden->tipo }}</td>
                         <td>
                             @if(isset($orden->created_at) && $orden->created_at)
-                                {{ $orden->created_at->format('d/m/Y') }}
+                               {{ \Carbon\Carbon::parse($orden->created_at)->format('d/m/Y H:i') }}
                             @else
                                 N/A
                             @endif
@@ -111,9 +120,10 @@
                         buttons: ['csv', 'excel', 'pdf', 'print']
                     }
                 },
-                "order": [
-                    [ 0, 'desc' ] 
-                ]
+                "order": [[ 0, "desc" ]], // Ordenar por fecha reciente
+                "columnDefs": [
+                    { "type": "num", "targets": 0 } // Le decimos que use el valor numérico de 'data-order'
+                ],
             });
 
             // Lógica para redirigir al hacer clic en una fila
