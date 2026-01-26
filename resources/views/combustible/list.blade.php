@@ -19,7 +19,7 @@
     </style>
 @endpush
 
-@section('title', 'Listado de Órdenes de Trabajo')
+@section('title', 'Listado de Movimientos Generales')
 
 @push('styles')
     <!-- CSS de DataTables -->
@@ -59,7 +59,7 @@
                             @if(isset($movimientos) && count($movimientos) > 0)
                                 @foreach ($movimientos as $movimiento)
                                 <tr class=" transition-colors duration-150">
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td data-order="{{ $movimiento->created_at->format('YmdHis') }}">
                                         <div class="text-sm font-medium ">{{ \Carbon\Carbon::parse($movimiento->created_at)->format('d/m/Y H:i') }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
@@ -148,7 +148,10 @@
                 },
                 "order": [
                     [ 0, 'desc' ] 
-                ]
+                ],
+                "columnDefs": [
+                    { "type": "num", "targets": 0 } // Le decimos que use el valor numérico de 'data-order'
+                ],
             });
 
             // // Lógica para redirigir al hacer clic en una fila
