@@ -1,22 +1,12 @@
 @extends('layouts.app')
 
+
+@section('title', 'Listado de movimientos Generales')
+
 @push('styles')
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .container-fluid {
-            padding-left: 1rem;
-            padding-right: 1rem;
-        }
-        @media (min-width: 640px) {
-            .container-fluid {
-                padding-left: 2rem;
-                padding-right: 2rem;
-            }
-        }
-    </style>
+    <!-- CSS de DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.0.7/css/dataTables.dataTables.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.dataTables.css" />
 @endpush
 
 @section('content')
