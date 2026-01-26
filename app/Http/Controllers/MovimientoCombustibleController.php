@@ -864,7 +864,7 @@ public function storeDespachoIndustrial(Request $request)
         ->orderBy('total_consumido', 'desc') // Orden de mayor a menor consumo
         ->get();
 
-        return view('combustible.estadisticas', compact('stats', 'view', 'fechaInicio', 'fechaFin','label', 'date', 'porCliente', 'tendencia', 'periodo','resumenClientes'));
+        return view('combustible.estadisticas', compact('stats', 'view', 'fechaInicio', 'fechaFin','label', 'date', 'porCliente', 'tendencia','resumenClientes'));
     }
 
     public function historialDespachosIndustrial()
