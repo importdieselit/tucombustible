@@ -67,7 +67,7 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm ">{{ $movimiento->deposito->serial>0?$movimiento->deposito->serial:'N/A' }}</div>
+                                        <div class="text-sm ">{{ $movimiento->deposito_id>0?$movimiento->deposito->serial:'N/A' }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm ">{{ $movimiento->cantidad_litros }} L</div>
