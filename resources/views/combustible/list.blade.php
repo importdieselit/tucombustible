@@ -1,7 +1,25 @@
 @extends('layouts.app')
 
+@push('styles')
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .container-fluid {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        @media (min-width: 640px) {
+            .container-fluid {
+                padding-left: 2rem;
+                padding-right: 2rem;
+            }
+        }
+    </style>
+@endpush
 
-@section('title', 'Listado de movimientos Generales')
+@section('title', 'Listado de Órdenes de Trabajo')
 
 @push('styles')
     <!-- CSS de DataTables -->
