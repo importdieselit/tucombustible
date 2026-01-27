@@ -12,28 +12,44 @@
         <a href="?view=semana" class="btn btn-outline-primary {{ $view == 'semana' ? 'active' : '' }}">Semana</a>
         <a href="?view=mes" class="btn btn-outline-primary {{ $view == 'mes' ? 'active' : '' }}">Mes</a>
     </div>
+<form action="{{ route('combustible.estadisticas') }}" method="GET" class="d-flex align-items-center">
+    <input type="hidden" name="view" value="{{ $view }}">
+    
+    <div class="me-3" style="min-width: 250px;">
+        <select name="cliente_id" class="form-select fw-bold border-primary" onchange="this.form.submit()">
+            <option value="">-- Todos los Clientes --</option>
+            @foreach($clientes as $c)
+                <option value="{{ $c->id }}" {{ request('cliente_id') == $c->id ? 'selected' : '' }}>
+                    {{ $c->nombre }}
+                </option>
+            @endforeach
+        </select>
+    </div>
 
-    <form action="{{ route('combustible.estadisticas') }}" method="GET" class="d-flex align-items-center">
-        <input type="hidden" name="view" value="{{ $view }}">
+    <div class="input-group">
+        <span class="input-group-text bg-white border-end-0"><i class="fa fa-calendar-check-o text-primary"></i></span>
         
-        <div class="input-group">
-            <span class="input-group-text bg-white border-end-0"><i class="fa fa-calendar-check-o text-primary"></i></span>
-            
-            @if($view == 'hoy')
-                <input type="date" name="date" class="form-control border-start-0 fw-bold" value="{{ $date }}" onchange="this.form.submit()">
-            @elseif($view == 'semana')
-                <input type="week" name="date" class="form-control border-start-0 fw-bold" value="{{ \Carbon\Carbon::parse($date)->format('Y-\WW') }}" onchange="this.form.submit()">
-            @else
-                <input type="month" name="date" class="form-control border-start-0 fw-bold" value="{{ \Carbon\Carbon::parse($date)->format('Y-m') }}" onchange="this.form.submit()">
-            @endif
-        </div>
+        @if($view == 'hoy')
+            <input type="date" name="date" class="form-control border-start-0 fw-bold" value="{{ $date }}" onchange="this.form.submit()">
+        @elseif($view == 'semana')
+            <input type="week" name="date" class="form-control border-start-0 fw-bold" value="{{ \Carbon\Carbon::parse($date)->format('Y-\WW') }}" onchange="this.form.submit()">
+        @else
+            <input type="month" name="date" class="form-control border-start-0 fw-bold" value="{{ \Carbon\Carbon::parse($date)->format('Y-m') }}" onchange="this.form.submit()">
+        @endif
+    </div>
 
-        <div class="ms-3 d-none d-md-block">
-            <span class="badge bg-light text-primary border p-2">
-                {{ $label }}
-            </span>
-        </div>
-    </form>
+    <div class="ms-3 d-none d-md-block">
+        <span class="badge bg-light text-primary border p-2 text-uppercase">
+            <i class="fa fa-info-circle"></i> {{ $label }}
+        </span>
+    </div>
+
+    @if(request('cliente_id') || request('date') != now()->format('Y-m-d'))
+        <a href="{{ route('combustible.estadisticas', ['view' => $view]) }}" class="ms-2 btn btn-sm btn-outline-danger" title="Resetear Filtros">
+            <i class="fa fa-times"></i>
+        </a>
+    @endif
+</form>
 </div>
     </div>
 
