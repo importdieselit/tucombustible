@@ -297,7 +297,7 @@ class MovimientoCombustibleController extends Controller
 public function createPrecarga()
     {
         $depositos = Deposito::all();
-        $vehiculos_cisterna = Vehiculo::all();//where('es_cisterna', 1)->get();
+        $vehiculos_cisterna = Vehiculo::where('tipo', 2)->get();
         return view('combustible.precarga', compact('depositos', 'vehiculos_cisterna'));
     }
     

@@ -57,7 +57,7 @@
                             <option value="">Seleccione una cisterna</option>
                             @foreach($vehiculos_cisterna as $vehiculo)
                                 <option value="{{ $vehiculo->id }}" {{ old('vehiculo_id') == $vehiculo->id ? 'selected' : '' }}>
-                                   ({{ $vehiculo->flota }}) {{ $vehiculo->placa }} - {{ $vehiculo->marca()->marca }} {{ $vehiculo->modelo()->modelo }} ({{ $vehiculo->capacidad_litros }} L)
+                                   ({{ $vehiculo->flota }}) {{ $vehiculo->placa }} - @if(!is_null($vehiculo->marca())) {{ $vehiculo->marca()->marca }} @if(!is_null($vehiculo->modelo())) {{ $vehiculo->modelo()->modelo }} @endif @endif ({{ $vehiculo->capacidad_litros }} L)
                                 </option>
                             @endforeach
                         </select>
