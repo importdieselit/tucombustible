@@ -867,13 +867,25 @@ public function storeDespachoIndustrial(Request $request)
             ->get();
 
         // 3. Datos para Gráfico de Líneas (Tendencia Diaria)
-        $tendencia = (clone $query)->select(
-                DB::raw('DATE(created_at) as fecha'),
-                DB::raw('SUM(cantidad_litros) as total')
-            )
-            ->groupBy('fecha')
-            ->orderBy('fecha')
-            ->get();
+        if ($view == 'hoy') {
+            // Si es hoy, agrupamos por hora (ej: 08:00, 09:00...)
+            $tendencia = (clone $query)->select(
+                    DB::raw('DATE_FORMAT(created_at, "%H:00") as tiempo'),
+                    DB::raw('SUM(cantidad_litros) as total')
+                )
+                ->groupBy('tiempo')
+                ->orderBy('tiempo')
+                ->get();
+        } else {
+            // Si es semana o mes, agrupamos por fecha (ej: 2026-01-27)
+            $tendencia = (clone $query)->select(
+                    DB::raw('DATE(created_at) as tiempo'),
+                    DB::raw('SUM(cantidad_litros) as total')
+                )
+                ->groupBy('tiempo')
+                ->orderBy('tiempo')
+                ->get();
+        }
 
         $resumenClientes = Cliente::select('id', 'nombre', 'prepagado')
         ->withCount(['movimientosCombustible as total_despachos' => function($q) {

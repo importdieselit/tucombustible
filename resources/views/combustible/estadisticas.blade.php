@@ -222,9 +222,15 @@
 document.addEventListener('DOMContentLoaded', function () {
     // Grafico de Tendencia (Lineas)
         Highcharts.chart('grafico-tendencia', {
-            title: { text: 'Tendencia de Consumo Diaria' },
+            title: { 
+                text: '{{ $view == "hoy" ? "Consumo por Horas" : "Tendencia de Consumo Diaria" }}' 
+            },
             chart: { type: 'line' },
-            xAxis: { categories: @json($tendencia->pluck('fecha')) },
+            xAxis: { 
+                // Usamos la columna 'tiempo' que ahora trae o la hora o la fecha
+                categories: @json($tendencia->pluck('tiempo')),
+                title: { text: '{{ $view == "hoy" ? "Intervalo Horario" : "Días del Periodo" }}' }
+            },
             yAxis: { 
                 title: { text: 'Litros' },
                 labels: { format: '{value} L' } 
@@ -232,21 +238,19 @@ document.addEventListener('DOMContentLoaded', function () {
             plotOptions: {
                 line: {
                     dataLabels: {
-                        enabled: true, // <--- ESTO ACTIVA LAS ETIQUETAS
-                        format: '{y} L', // Muestra el valor seguido de "L"
-                        style: {
-                            fontWeight: 'bold',
-                            color: '#333'
-                        }
-                    },
-                    enableMouseTracking: true
-                }},
+                        enabled: true,
+                        format: '{y} L',
+                        style: { fontWeight: 'bold' }
+                    }
+                }
+            },
             series: [{
                 name: 'Litros Despachados',
+                // Aseguramos que los datos sean numéricos para Highcharts
                 data: @json($tendencia->pluck('total')).map(Number),
                 color: '#007bff'
             }],
-            credits:false
+            credits: false
         });
 
     // Grafico de Distribucion (Pastel)
