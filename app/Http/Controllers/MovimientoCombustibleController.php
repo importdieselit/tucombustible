@@ -827,8 +827,30 @@ public function storeDespachoIndustrial(Request $request)
             ->whereBetween('created_at', [$fechaInicio, $fechaFin]);
 
             // Si hay cliente seleccionado, filtramos la query base
-            if ($cliente_id) {
+           if ($cliente_id) {
                 $query->where('cliente_id', $cliente_id);
+                
+                // DISTRIBUCIÓN POR UNIDADES (Para el Gráfico de Pastel)
+                $distribucionUnidades = (clone $query)
+                    ->select('vehiculo_id', DB::raw('SUM(cantidad_litros) as total'))
+                    ->with('vehiculo:id,placa') // Asumiendo que tienes esta relación
+                    ->groupBy('vehiculo_id')
+                    ->get();
+
+                    $tendenciaDetallada = (clone $query)
+                    ->with(['vehiculo:id,placa'])
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+
+                // MÉTRICA PREDICTIVA: Días de Autonomía
+                // Promedio diario del cliente en los últimos 30 días
+                $consumo30d = MovimientoCombustible::where('cliente_id', $cliente_id)
+                    ->where('tipo_movimiento', 'salida')
+                    ->where('created_at', '>=', now()->subDays(30))
+                    ->avg('cantidad_litros') ?: 0;
+                    
+                $clienteSeleccionado = Cliente::find($cliente_id);
+                $diasAutonomia = $consumo30d > 0 ? ($clienteSeleccionado->prepagado / $consumo30d) : 0;
             }
 
         // 1. Métricas Globales
@@ -881,8 +903,15 @@ public function storeDespachoIndustrial(Request $request)
     
         // Si hay cliente, buscamos sus datos específicos (como el saldo actual)
         $clienteSeleccionado = $cliente_id ? Cliente::find($cliente_id) : null;
-
-        return view('combustible.estadisticas', compact('stats', 'cliente_id','clientes','clienteSeleccionado', 'view', 'fechaInicio', 'fechaFin','label', 'date', 'porCliente', 'tendencia','resumenClientes'));
+        if($cliente_id){
+            return view('combustible.estadisticas', compact(
+                'stats', 'cliente_id', 'clientes', 'clienteSeleccionado', 
+                'view', 'label', 'date', 'fechaInicio', 'fechaFin', 'porCliente', 'tendencia', 
+                'resumenClientes', 'distribucionUnidades', 'diasAutonomia','tendenciaDetallada'
+            ));
+        }
+        return view('combustible.estadisticas', compact(
+                'stats', 'cliente_id','clientes','clienteSeleccionado', 'view', 'fechaInicio', 'fechaFin','label', 'date', 'porCliente', 'tendencia','resumenClientes'));
     }
 
     public function historialDespachosIndustrial()

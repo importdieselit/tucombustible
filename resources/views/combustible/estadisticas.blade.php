@@ -4,7 +4,13 @@
 <div class="container-fluid mt-4">
     <div class="row mb-4">
         <div class="col-md-8">
-            <h3>📊 Indicadores de Despacho Industrial (Tanque 00)</h3>
+           <h3>
+                @if($clienteSeleccionado)
+                    📊 Reporte de Consumo: {{ $clienteSeleccionado->nombre }}
+                @else
+                    📊 Indicadores de Despacho Industrial (Tanque 00)
+                @endif
+            </h3>
         </div>
  <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
     <div class="btn-group shadow-sm">
@@ -54,6 +60,24 @@
     </div>
 
     <div class="row mb-4">
+        @if($clienteSeleccionado)
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0 bg-dark text-white">
+                    <div class="card-body">
+                        <h6>DISPONIBLE ACTUAL</h6>
+                        <h2 class="mb-0">{{ number_format($clienteSeleccionado->prepagado, 2) }} L</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0 {{ $diasAutonomia < 3 ? 'bg-danger' : 'bg-info' }} text-white">
+                    <div class="card-body">
+                        <h6>AUTONOMÍA ESTIMADA</h6>
+                        <h2 class="mb-0">{{ round($diasAutonomia) }} Días</h2>
+                    </div>
+                </div>
+            </div>
+        @endif
         <div class="col-md-3">
             <div class="card shadow-sm border-0 bg-primary text-white">
                 <div class="card-body">
@@ -65,7 +89,7 @@
         <div class="col-md-3">
             <div class="card shadow-sm border-0 bg-success text-white">
                 <div class="card-body">
-                    <h6>PROMEDIO POR CLIENTE</h6>
+                    <h6>@if($clienteSeleccionado) CONSUMO PROMEDIO @else PROMEDIO POR CLIENTE @endif</h6>
                     <h2 class="mb-0">{{ number_format($stats->promedio_ticket, 2) }} L</h2>
                 </div>
             </div>
@@ -78,14 +102,16 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0 bg-warning text-dark">
-                <div class="card-body">
-                    <h6>CLIENTE MÁS ACTIVO</h6>
-                    <h5 class="mb-0">{{ $porCliente->sortByDesc('total')->first()->cliente->nombre ?? 'N/A' }}</h5>
+        @if(!$clienteSeleccionado)
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0 bg-warning text-dark">
+                    <div class="card-body">
+                        <h6>CLIENTE MÁS ACTIVO</h6>
+                        <h5 class="mb-0">{{ $porCliente->sortByDesc('total')->first()->cliente->nombre ?? 'N/A' }}</h5>
+                    </div>
                 </div>
             </div>
-        </div>
+        @endif
     </div>
 
     <div class="row">
@@ -116,35 +142,55 @@
                     <table class="table table-hover align-middle" id="tabla-resumen">
                         <thead class="table-light">
                             <tr>
-                                <th>#</th>
-                                <th>Cliente</th>
-                                <th class="text-end">Saldo Actual (Lts)</th>
-                                <th class="text-end">Total Consumido</th>
-                                <th class="text-end">Promedio x Despacho</th>
-                                <th class="text-center">Nro. Despachos</th>
-                                <th class="text-center">Estatus Saldo</th>
+                                @if($clienteSeleccionado)
+                                    <th>Fecha</th>
+                                    <th>Vehículo/Placa</th>
+                                    <th>Ticket</th>
+                                    <th class="text-end">Litros</th>
+                                    <th>Operador</th>
+                                @else
+                                    <th>#</th>
+                                    <th>Cliente</th>
+                                    <th class="text-end">Saldo Actual (Lts)</th>
+                                    <th class="text-end">Total Consumido</th>
+                                    <th class="text-end">Promedio x Despacho</th>
+                                    <th class="text-center">Nro. Despachos</th>
+                                    <th class="text-center">Estatus Saldo</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($resumenClientes as $index => $c)
-                            <tr>
-                                <td><strong>{{ $index + 1 }}</strong></td>
-                                <td>{{ $c->nombre }}</td>
-                                <td class="text-end fw-bold">{{ number_format($c->prepagado, 2) }} L</td>
-                                <td class="text-end text-primary fw-bold">{{ number_format($c->total_consumido ?? 0, 2) }} L</td>
-                                <td class="text-end">{{ number_format($c->promedio_consumo ?? 0, 2) }} L</td>
-                                <td class="text-center">{{ $c->total_despachos }}</td>
-                                <td class="text-center">
-                                    @if($c->prepagado <= 50)
-                                        <span class="badge bg-danger">Saldo Crítico</span>
-                                    @elseif($c->prepagado <= 100)
-                                        <span class="badge bg-warning text-dark">Saldo Bajo</span>
-                                    @else
-                                        <span class="badge bg-success">Óptimo</span>
-                                    @endif
-                                </td>
-                            </tr>
-                            @endforeach
+                            @if($clienteSeleccionado)
+                                @foreach($tendenciaDetallada as $mov) {{-- Necesitarás traer estos movs en el controlador --}}
+                                <tr>
+                                    <td>{{ $mov->created_at->format('d/m/Y H:i') }}</td>
+                                    <td>{{ $mov->vehiculo->placa }}</td>
+                                    <td>{{ $mov->nro_ticket }}</td>
+                                    <td class="text-end fw-bold">{{ number_format($mov->cantidad_litros, 2) }} L</td>
+                                    <td>--</td>
+                                </tr>
+                                @endforeach
+                            @else
+                                @foreach($resumenClientes as $index => $c)
+                                <tr>
+                                    <td><strong>{{ $index + 1 }}</strong></td>
+                                    <td>{{ $c->nombre }}</td>
+                                    <td class="text-end fw-bold">{{ number_format($c->prepagado, 2) }} L</td>
+                                    <td class="text-end text-primary fw-bold">{{ number_format($c->total_consumido ?? 0, 2) }} L</td>
+                                    <td class="text-end">{{ number_format($c->promedio_consumo ?? 0, 2) }} L</td>
+                                    <td class="text-center">{{ $c->total_despachos }}</td>
+                                    <td class="text-center">
+                                        @if($c->prepagado <= 50)
+                                            <span class="badge bg-danger">Saldo Crítico</span>
+                                        @elseif($c->prepagado <= 100)
+                                            <span class="badge bg-warning text-dark">Saldo Bajo</span>
+                                        @else
+                                            <span class="badge bg-success">Óptimo</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            @endif
                         </tbody>
                     </table>
                 </div>
@@ -189,11 +235,12 @@ document.addEventListener('DOMContentLoaded', function () {
     // Grafico de Distribucion (Pastel)
     Highcharts.chart('grafico-clientes', {
         chart: { type: 'pie' },
-        title: { text: '% Consumo por Cliente' },
+        title: { text: '{{ $clienteSeleccionado ? "% Por Unidad" : "% Por Cliente" }}' },
         series: [{
             name: 'Litros',
-            colorByPoint: true,
-            data: @json($porCliente->map(fn($c) => ['name' => $c->cliente->nombre, 'y' => (float)$c->total]))
+            data: @json($clienteSeleccionado 
+                ? $distribucionUnidades->map(fn($u) => ['name' => $u->vehiculo->placa ?? 'S/P', 'y' => (float)$u->total])
+                : $porCliente->map(fn($c) => ['name' => $c->cliente->nombre, 'y' => (float)$c->total]))
         }]
     });
 });
