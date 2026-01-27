@@ -166,9 +166,9 @@
                                     <th>Cliente</th>
                                     <th class="text-end">Saldo Actual (Lts)</th>
                                     <th class="text-end">Total Consumido</th>
-                                    <th class="text-end">Promedio x Despacho</th>
+                                    <th class="text-end no-tg">Promedio x Despacho</th>
                                     <th class="text-center">Nro. Despachos</th>
-                                    <th class="text-center">Estatus Saldo</th>
+                                    <th class="text-center no-tg">Estatus Saldo</th>
                                 @endif
                             </tr>
                         </thead>
