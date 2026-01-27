@@ -866,7 +866,7 @@ public function storeDespachoIndustrial(Request $request)
         ->orderBy('total_consumido', 'desc') // Orden de mayor a menor consumo
         ->get();
 
-        dd($tendencia)
+        dd($tendencia);
 
        $clientes = Cliente::whereHas('movimientosCombustible', function($query) use ($fechaInicio, $fechaFin) {
             $query->whereBetween('created_at', [$fechaInicio, $fechaFin]);
