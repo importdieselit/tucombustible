@@ -830,7 +830,7 @@ public function storeDespachoIndustrial(Request $request)
             if ($cliente_id) {
                 $query->where('cliente_id', $cliente_id);
             }
-
+        dd($query);
         // 1. Métricas Globales
         $stats = $query->select(
                 DB::raw('SUM(cantidad_litros) as total_litros'),
@@ -865,6 +865,8 @@ public function storeDespachoIndustrial(Request $request)
         }], 'cantidad_litros')->where('prepagado','>',0)->orWhere('periodo','P')
         ->orderBy('total_consumido', 'desc') // Orden de mayor a menor consumo
         ->get();
+
+        dd($tendencia)
 
        $clientes = Cliente::whereHas('movimientosCombustible', function($query) use ($fechaInicio, $fechaFin) {
             $query->whereBetween('created_at', [$fechaInicio, $fechaFin]);
