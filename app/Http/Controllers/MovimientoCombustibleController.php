@@ -830,22 +830,22 @@ public function storeDespachoIndustrial(Request $request)
             if ($cliente_id) {
                 $query->where('cliente_id', $cliente_id);
             }
-        dd($query);
+
         // 1. Métricas Globales
-        $stats = $query->select(
+        $stats = (clone $query)->select(
                 DB::raw('SUM(cantidad_litros) as total_litros'),
                 DB::raw('COUNT(*) as total_despachos'),
                 DB::raw('AVG(cantidad_litros) as promedio_ticket')
             )->first();
 
         // 2. Datos para Gráfico de Pastel (Distribución por Cliente)
-        $porCliente = $query->with('cliente:id,nombre')
+        $porCliente = (clone $query)->with('cliente:id,nombre')
             ->select('cliente_id', DB::raw('SUM(cantidad_litros) as total'))
             ->groupBy('cliente_id')
             ->get();
 
         // 3. Datos para Gráfico de Líneas (Tendencia Diaria)
-        $tendencia = $query->select(
+        $tendencia = (clone $query)->select(
                 DB::raw('DATE(created_at) as fecha'),
                 DB::raw('SUM(cantidad_litros) as total')
             )
@@ -854,19 +854,19 @@ public function storeDespachoIndustrial(Request $request)
             ->get();
 
         $resumenClientes = Cliente::select('id', 'nombre', 'prepagado')
-        ->withCount(['movimientosCombustible as total_despachos' => function($query) {
-            $query->where('tipo_movimiento', 'salida');
+        ->withCount(['movimientosCombustible as total_despachos' => function($q) {
+            $q->where('tipo_movimiento', 'salida');
         }])
-        ->withSum(['movimientosCombustible as total_consumido' => function($query) {
-            $query->where('tipo_movimiento', 'salida');
+        ->withSum(['movimientosCombustible as total_consumido' => function($q) {
+            $q->where('tipo_movimiento', 'salida');
         }], 'cantidad_litros')
-        ->withAvg(['movimientosCombustible as promedio_consumo' => function($query) {
-            $query->where('tipo_movimiento', 'salida');
+        ->withAvg(['movimientosCombustible as promedio_consumo' => function($q) {
+            $q->where('tipo_movimiento', 'salida');
         }], 'cantidad_litros')->where('prepagado','>',0)->orWhere('periodo','P')
         ->orderBy('total_consumido', 'desc') // Orden de mayor a menor consumo
         ->get();
 
-        dd($tendencia);
+      
 
        $clientes = Cliente::whereHas('movimientosCombustible', function($query) use ($fechaInicio, $fechaFin) {
             $query->whereBetween('created_at', [$fechaInicio, $fechaFin]);
