@@ -3,6 +3,12 @@
     <!-- CSS de DataTables -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.0.7/css/dataTables.dataTables.css" />
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.dataTables.css" />
+    <style>
+    /* Esta clase solo se activará vía JS durante la captura */
+    .hide-for-capture .no-tg {
+        display: none !important;
+    }
+</style>
 @endpush
 @section('content')
 <div class="container-fluid mt-4">
@@ -74,7 +80,7 @@
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card shadow-sm border-0 {{ $diasAutonomia < 3 ? 'bg-danger' : 'bg-info' }} text-white">
+                <div class="card shadow-sm border-0 {{ $diasAutonomia < 3 ? 'bg-danger' : 'bg-success' }} text-white">
                     <div class="card-body">
                         <h6>AUTONOMÍA ESTIMADA</h6>
                         <h2 class="mb-0">{{ round($diasAutonomia) }} Días</h2>
@@ -142,7 +148,10 @@
                 <button class="btn btn-sm btn-outline-secondary" onclick="exportTableToCSV('resumen.csv')">Exportar</button>
             </div>
             <div class="card-body">
-                <div class="table-responsive ">
+                <button id="sendTelegramButton" class="btn btn-primary mt-3">
+                    <i class="fa fa-paper-plane"></i> Enviar Reporte a Telegram
+                </button>
+                <div class="table-responsive printableArea">
                     <table class="table table-hover datatable align-middle" id="tabla-resumen">
                         <thead class="table-light">
                             <tr>
@@ -181,9 +190,9 @@
                                     <td>{{ $c->nombre }}</td>
                                     <td class="text-end fw-bold">{{ number_format($c->prepagado, 2) }} L</td>
                                     <td class="text-end text-primary fw-bold">{{ number_format($c->total_consumido ?? 0, 2) }} L</td>
-                                    <td class="text-end">{{ number_format($c->promedio_consumo ?? 0, 2) }} L</td>
+                                    <td class="text-end no-tg">{{ number_format($c->promedio_consumo ?? 0, 2) }} L</td>
                                     <td class="text-center">{{ $c->total_despachos }}</td>
-                                    <td class="text-center">
+                                    <td class="text-center no-tg">
                                         @if($c->prepagado <= 50)
                                             <span class="badge bg-danger">Saldo Crítico</span>
                                         @elseif($c->prepagado <= 100)
@@ -198,6 +207,7 @@
                         </tbody>
                     </table>
                 </div>
+
             </div>
         </div>
     </div>
@@ -218,7 +228,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
 <script>
+
+    const printableArea = document.querySelector('.printableArea');
+const sendTelegramButton = document.querySelector('#sendTelegramButton');
+const elementToCaptureSelector = '.printableArea';
+
 document.addEventListener('DOMContentLoaded', function () {
     // Grafico de Tendencia (Lineas)
         Highcharts.chart('grafico-tendencia', {
@@ -264,6 +282,94 @@ document.addEventListener('DOMContentLoaded', function () {
                 : $porCliente->map(fn($c) => ['name' => $c->cliente->nombre, 'y' => (float)$c->total]))
         }]
     });
+
+
+async function sendReportToTelegram() {
+    sendTelegramButton.disabled = true;
+    
+    // 1. Ocultar columnas no deseadas para la foto
+    const area = document.querySelector('.printableArea');
+    area.classList.add('hide-for-capture');
+
+    try {
+        // 1. Extraer datos básicos del DOM
+        const totalSurtido = document.querySelector('.bg-primary h2').innerText;
+        const totalOps = document.querySelector('.bg-info h2').innerText;
+        const periodoLabel = "{{ $label }}";
+        const esIndividual = "{{ $cliente_id ? 'true' : 'false' }}" === 'true';
+
+        let caption = `📊 *REPORTE DE CONSUMO INDUSTRIAL*\n`;
+        caption += `📅 *Periodo:* ${periodoLabel}\n`;
+        caption += `━━━━━━━━━━━━━━━━━━\n`;
+
+        if (esIndividual) {
+            // --- MODO CLIENTE ESPECÍFICO ---
+            const clienteNombre = "{{ $clienteSeleccionado->nombre ?? '' }}";
+            const saldoActual = "{{ number_format($clienteSeleccionado->prepagado ?? 0, 2) }} L";
+            const autonomia = document.querySelector('.bg-info, .bg-danger')?.querySelector('h2')?.innerText || 'N/A';
+
+            caption += `👤 *Cliente:* ${clienteNombre}\n`;
+            caption += `⛽ *Consumido:* ${totalSurtido}\n`;
+            caption += `💰 *Saldo Disponible:* ${saldoActual}\n`;
+            caption += `⏳ *Autonomía Est.:* ${autonomia}\n`;
+            caption += `🎫 *Despachos:* ${totalOps}\n`;
+        } else {
+            // --- MODO GENERAL (TODOS LOS CLIENTES) ---
+            const topCliente = document.querySelector('.bg-warning h5').innerText;
+            
+            caption += `👥 *Cobertura:* Todos los Clientes\n`;
+            caption += `⛽ *Total Despachado:* ${totalSurtido}\n`;
+            caption += `🎫 *Total Operaciones:* ${totalOps}\n`;
+            caption += `🏆 *Mayor Consumo:* ${topCliente}\n`;
+            
+            // Opcional: Agregar conteo de la tabla de resumen
+            const cantClientes = document.querySelectorAll('#tabla-resumen tbody tr').length;
+            caption += `📋 *Clientes Atendidos:* ${cantClientes}\n`;
+        }
+
+        caption += `━━━━━━━━━━━━━━━━━━\n`;
+        caption += `✅ _Generado por Sistema Impordiesel_`;
+
+        // 3. Capturar la imagen con html2canvas
+        const canvas = await html2canvas(area, {
+            allowTaint: true, 
+            useCORS: true,
+            scale: 2,
+            backgroundColor: "#ffffff"
+        });
+
+        // Revelar columnas nuevamente
+        area.classList.remove('hide-for-capture');
+
+        // 4. Procesar imagen
+        const imageBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        
+        // 5. Preparar envío
+        const formData = new FormData();
+        formData.append('chart_image', imageBlob, 'reporte_industrial.png');
+        formData.append('caption', caption); // Usamos el caption generado arriba
+
+        const response = await fetch('{{ route('telegram.send.photo') }}', {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            body: formData
+        });
+
+        if (response.ok) {
+            alert('✅ Reporte y resumen enviados a Telegram.');
+        }
+
+    } catch (error) {
+        area.classList.remove('hide-for-capture');
+        console.error('Error:', error);
+        alert('❌ Error al generar el reporte.');
+    } finally {
+        area.classList.remove('hide-for-capture');
+        document.querySelector('h3').innerText = tituloOriginal;
+        sendTelegramButton.disabled = false;
+    }
+}
+
 });
 
  $(document).ready(function() {
