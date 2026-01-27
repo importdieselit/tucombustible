@@ -1,5 +1,9 @@
 @extends('layouts.app')
-
+@push('styles')
+    <!-- CSS de DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.0.7/css/dataTables.dataTables.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.dataTables.css" />
+@endpush
 @section('content')
 <div class="container-fluid mt-4">
     <div class="row mb-4">
@@ -138,8 +142,8 @@
                 <button class="btn btn-sm btn-outline-secondary" onclick="exportTableToCSV('resumen.csv')">Exportar</button>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle" id="tabla-resumen">
+                <div class="table-responsive ">
+                    <table class="table table-hover datatable align-middle" id="tabla-resumen">
                         <thead class="table-light">
                             <tr>
                                 @if($clienteSeleccionado)
@@ -199,8 +203,21 @@
     </div>
 </div>
 </div>
+@endsection
 
+
+@push('scripts')
+
+    <!-- Script de jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://code.highcharts.com/highcharts.js"></script>
+    <!-- Script de DataTables -->
+    <script src="https://cdn.datatables.net/2.0.7/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     // Grafico de Tendencia (Lineas)
@@ -244,5 +261,18 @@ document.addEventListener('DOMContentLoaded', function () {
         }]
     });
 });
+
+ $(document).ready(function() {
+     $('.datatable').DataTable({
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.13.4/i18n/es-ES.json"
+                },
+                layout: {
+                    topStart: {
+                        buttons: ['csv', 'excel', 'pdf', 'print']
+                    }
+                },
+            });
+});
 </script>
-@endsection
+@endpush
