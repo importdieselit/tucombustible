@@ -370,6 +370,10 @@ async function sendReportToTelegram() {
     }
 }
 
+if (sendTelegramButton) {
+        sendTelegramButton.addEventListener('click', sendReportToTelegram);
+    }
+
 });
 
  $(document).ready(function() {
