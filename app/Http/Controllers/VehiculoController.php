@@ -89,6 +89,9 @@ class VehiculoController extends BaseController
                 case 'con_orden_abierta':
                     $query->VehiculosConOrdenAbierta();
                     break;
+                case 'flota':
+                    $query->esFlota();
+                    break;
                 
             }
         }

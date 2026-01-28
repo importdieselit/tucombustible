@@ -168,13 +168,13 @@ $chartDataCierre = array_column($historicoEficiencia, 'disponibilidad');
     </div>
     <div class="col-md-2">
         <div class="card shadow-sm border-0 text-center">
-            <a href="{{ route('vehiculos.list') }}" target="_blank">
+            <a href="{{ route('vehiculos.list' , ['filter' => 'flota']) }}" target="_blank">
             <div class="card-body">
                 <span class="rounded-circle p-3 mb-2 d-inline-block bg-dark">
                     <i class="fa fa-car text-white" style="font-size:2rem;"></i>
                 </span>
-                <h2 class="fw-bold">{{ $total_vehiculos }}</h2>
-                <div class="text-muted small">Total Vehículos</div>
+                <h2 class="fw-bold">{{ $total_flota }}</h2>
+                <div class="text-muted small">Total flota</div>
             </div>
             </a>
         </div>
