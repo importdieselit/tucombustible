@@ -291,7 +291,7 @@ class Vehiculo extends Model
     {
         // Llama al Scope 'porCliente' ANTES de realizar el conteo.
         // El Scope ya tiene toda la lógica de seguridad y jerarquía.
-        return self::porCliente()->where('es_flota',true);
+        return self::miFlota()->where('es_flota',true);
     }
     
     
