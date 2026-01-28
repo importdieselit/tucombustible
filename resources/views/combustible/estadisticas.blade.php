@@ -159,10 +159,10 @@
                                     <th>Fecha</th>
                                     <th>Vehículo/Placa</th>
                                     <th>Ticket</th>
-                                    <th>Saldo Inicial</th>
+                                    <th class="text-end">Saldo Inicial</th>
                                     <th class="text-end">Litros</th>
-                                    <th>Saldo Restante</th>
-                                @else
+                                    <th class="text-end">Saldo Restante</th>
+                                @else 
                                     <th>#</th>
                                     <th>Cliente</th>
                                     <th class="text-end">Disponible Actual (Lts)</th>
@@ -178,8 +178,10 @@
 
                                 <tr class="table-info">
                                     <td class="small"><strong>{{ $fechaInicio->format('d/m/Y') }}</strong></td>
-                                    <td colspan="2" class="text-center"><strong>INICIO DE PERIODO (Saldo Anterior)</strong></td>
-                                    <td colspan="2" class="text-end fw-bold">{{ number_format($saldoInicialPeriodo, 2) }} L</td>
+                                    <td  class="text-end"><strong>INICIO DE PERIODO </strong></td>
+                                    <td  ><strong>(Saldo Anterior)</strong></td>
+                                    <td  class="text-end fw-bold">{{ number_format($saldoInicialPeriodo, 2) }} L</td>
+                                    <td  class="text-center"><i class="fa fa-lock text-muted"></i></td>
                                     <td  class="text-center"><i class="fa fa-lock text-muted"></i></td>
                                 </tr>
                                 @foreach($tendenciaDetallada as $mov) {{-- Necesitarás traer estos movs en el controlador --}}
