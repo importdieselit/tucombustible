@@ -858,7 +858,7 @@ public function storeDespachoIndustrial(Request $request)
 
                 if ($primerMovimiento) {
                     // El 'saldo_anterior' de ese primer registro es el punto de partida
-                    $saldoInicialPeriodo = $primerMovimiento->saldo_anterior;
+                    $saldoInicialPeriodo = $primerMovimiento->cant_inicial;
                 } else {
                     // Si no hubo movimientos en el periodo, el saldo inicial es el saldo actual del cliente
                     $saldoInicialPeriodo = $clienteSeleccionado->prepagado;
