@@ -842,7 +842,7 @@ public function storeDespachoIndustrial(Request $request)
                     ->whereBetween('created_at', [$fechaInicio, $fechaFin])
                     ->with(['vehiculo:id,placa'])
                     ->orderBy('created_at', 'asc')->get();
-                    dd($tendenciaDetallada);
+                   
 
                 // MÉTRICA PREDICTIVA: Días de Autonomía
                 // Promedio diario del cliente en los últimos 30 días
