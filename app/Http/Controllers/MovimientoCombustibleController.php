@@ -839,7 +839,7 @@ public function storeDespachoIndustrial(Request $request)
                     ->groupBy('vehiculo_id')
                     ->get();
 
-                    $tendenciaDetallada = (clone $query)
+                    $tendenciaDetallada = $query
                     ->with(['vehiculo:id,placa'])
                     ->orderBy('created_at', 'desc')
                     ->get();
