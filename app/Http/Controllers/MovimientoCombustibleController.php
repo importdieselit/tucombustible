@@ -828,9 +828,7 @@ public function storeDespachoIndustrial(Request $request)
 
             // Si hay cliente seleccionado, filtramos la query base
            if ($cliente_id) {
-                $query->where('cliente_id', $cliente_id)
-                ->whereIn('tipo_movimiento', ['salida', 'recarga_prepago']) // Ajusta según tus tipos
-                ->whereBetween('created_at', [$fechaInicio, $fechaFin]);
+                $query->where('cliente_id', $cliente_id);
                 
                 // DISTRIBUCIÓN POR UNIDADES (Para el Gráfico de Pastel)
                 $distribucionUnidades = (clone $query)
@@ -839,10 +837,11 @@ public function storeDespachoIndustrial(Request $request)
                     ->groupBy('vehiculo_id')
                     ->get();
 
-                    $tendenciaDetallada = $query
-                    ->with(['vehiculo:id,placa'])
-                    ->orderBy('created_at', 'desc')
-                    ->get();
+                    $tendenciaDetallada = MovimientoCombustible::where('cliente_id', $cliente_id)
+                    ->whereIn('tipo_movimiento', ['salida', 'recarga_prepago'])
+                    ->whereBetween('created_at', [$fechaInicio, $fechaFin])
+                    ->with(['vehiculo:id,placa', 'usuario:id,name'])
+                    ->orderBy('created_at', 'asc')->get();
 
                 // MÉTRICA PREDICTIVA: Días de Autonomía
                 // Promedio diario del cliente en los últimos 30 días
@@ -854,9 +853,7 @@ public function storeDespachoIndustrial(Request $request)
                 $clienteSeleccionado = Cliente::find($cliente_id);
                 $diasAutonomia = $consumo30d > 0 ? ($clienteSeleccionado->prepagado / $consumo30d) : 0;
 
-                $primerMovimiento = (clone $query)
-                    ->orderBy('created_at', 'asc')
-                    ->first();
+                $primerMovimiento = (clone $tendenciaDetallada)->first();
 
                 if ($primerMovimiento) {
                     // El 'saldo_anterior' de ese primer registro es el punto de partida
