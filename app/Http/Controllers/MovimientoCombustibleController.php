@@ -840,7 +840,7 @@ public function storeDespachoIndustrial(Request $request)
                     $tendenciaDetallada = MovimientoCombustible::where('cliente_id', $cliente_id)
                     ->whereIn('tipo_movimiento', ['salida', 'recarga_prepago'])
                     ->whereBetween('created_at', [$fechaInicio, $fechaFin])
-                    ->with(['vehiculo:id,placa', 'usuario:id,name'])
+                    ->with(['vehiculo:id,placa'])
                     ->orderBy('created_at', 'asc')->get();
 
                 // MÉTRICA PREDICTIVA: Días de Autonomía
