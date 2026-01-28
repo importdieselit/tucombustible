@@ -187,7 +187,13 @@
                                 @foreach($tendenciaDetallada as $mov) {{-- Necesitarás traer estos movs en el controlador --}}
                                 <tr>
                                     <td>{{ $mov->created_at->format('d/m/Y H:i') }}</td>
-                                    <td>{{ $mov->vehiculo->placa }}</td>
+                                    <td>
+                                        @if($mov->tipo_movimiento == 'salida')
+                                            <span class="badge bg-light text-dark border">{{ $mov->vehiculo->placa ?? 'N/A' }}</span>
+                                        @else
+                                            <span class="badge bg-success text-white"><i class="fa fa-arrow-up"></i> RECARGA</span>
+                                        @endif
+                                    </td>
                                     <td>{{ $mov->nro_ticket }}</td>
                                     <td class="text-end fw-bold">{{ number_format($mov->cant_inicial ?? 0, 2) }} L</td>
                                     <td class="text-end fw-bold">{{ number_format($mov->cantidad_litros, 2) }} L</td>

@@ -828,7 +828,9 @@ public function storeDespachoIndustrial(Request $request)
 
             // Si hay cliente seleccionado, filtramos la query base
            if ($cliente_id) {
-                $query->where('cliente_id', $cliente_id);
+                $query->where('cliente_id', $cliente_id)
+                ->whereIn('tipo_movimiento', ['salida', 'recarga_prepago']) // Ajusta según tus tipos
+                ->whereBetween('created_at', [$fechaInicio, $fechaFin]);
                 
                 // DISTRIBUCIÓN POR UNIDADES (Para el Gráfico de Pastel)
                 $distribucionUnidades = (clone $query)
