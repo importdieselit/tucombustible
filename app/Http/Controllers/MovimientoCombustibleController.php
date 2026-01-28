@@ -806,7 +806,7 @@ public function storeDespachoIndustrial(Request $request)
         $date = $request->get('date', now()->format('Y-m-d'));
         $cliente_id = $request->get('cliente_id');
         $fecha = \Carbon\Carbon::parse($date);
-
+        $saldoInicialPeriodo = 0;
         if ($view == 'hoy') {
             $fechaInicio = $fecha->copy()->startOfDay();
             $fechaFin = $fecha->copy()->endOfDay();
@@ -851,6 +851,18 @@ public function storeDespachoIndustrial(Request $request)
                     
                 $clienteSeleccionado = Cliente::find($cliente_id);
                 $diasAutonomia = $consumo30d > 0 ? ($clienteSeleccionado->prepagado / $consumo30d) : 0;
+
+                $primerMovimiento = (clone $query)
+                    ->orderBy('created_at', 'asc')
+                    ->first();
+
+                if ($primerMovimiento) {
+                    // El 'saldo_anterior' de ese primer registro es el punto de partida
+                    $saldoInicialPeriodo = $primerMovimiento->saldo_anterior;
+                } else {
+                    // Si no hubo movimientos en el periodo, el saldo inicial es el saldo actual del cliente
+                    $saldoInicialPeriodo = $clienteSeleccionado->prepagado;
+                }
             }
 
         // 1. Métricas Globales
@@ -919,7 +931,7 @@ public function storeDespachoIndustrial(Request $request)
             return view('combustible.estadisticas', compact(
                 'stats', 'cliente_id', 'clientes', 'clienteSeleccionado', 
                 'view', 'label', 'date', 'fechaInicio', 'fechaFin', 'porCliente', 'tendencia', 
-                'resumenClientes', 'distribucionUnidades', 'diasAutonomia','tendenciaDetallada'
+                'resumenClientes', 'distribucionUnidades', 'diasAutonomia','tendenciaDetallada','saldoInicialPeriodo'
             ));
         }
         return view('combustible.estadisticas', compact(

@@ -164,7 +164,7 @@
                                 @else
                                     <th>#</th>
                                     <th>Cliente</th>
-                                    <th class="text-end">Saldo Actual (Lts)</th>
+                                    <th class="text-end">Disponible Actual (Lts)</th>
                                     <th class="text-end">Total Consumido</th>
                                     <th class="text-end no-tg">Promedio x Despacho</th>
                                     <th class="text-center">Nro. Despachos</th>
@@ -174,6 +174,13 @@
                         </thead>
                         <tbody>
                             @if($clienteSeleccionado)
+
+                                <tr class="table-info">
+                                    <td class="small"><strong>{{ $fechaInicio->format('d/m/Y') }}</strong></td>
+                                    <td colspan="2" class="text-center"><strong>INICIO DE PERIODO (Saldo Anterior)</strong></td>
+                                    <td class="text-end fw-bold">{{ number_format($saldoInicialPeriodo, 2) }} L</td>
+                                    <td class="text-center"><i class="fa fa-lock text-muted"></i></td>
+                                </tr>
                                 @foreach($tendenciaDetallada as $mov) {{-- Necesitarás traer estos movs en el controlador --}}
                                 <tr>
                                     <td>{{ $mov->created_at->format('d/m/Y H:i') }}</td>
