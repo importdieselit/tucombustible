@@ -159,8 +159,9 @@
                                     <th>Fecha</th>
                                     <th>Vehículo/Placa</th>
                                     <th>Ticket</th>
+                                    <th>Saldo Inicial</th>
                                     <th class="text-end">Litros</th>
-                                    <th>Operador</th>
+                                    <th>Saldo Restante</th>
                                 @else
                                     <th>#</th>
                                     <th>Cliente</th>
@@ -178,16 +179,18 @@
                                 <tr class="table-info">
                                     <td class="small"><strong>{{ $fechaInicio->format('d/m/Y') }}</strong></td>
                                     <td colspan="2" class="text-center"><strong>INICIO DE PERIODO (Saldo Anterior)</strong></td>
-                                    <td class="text-end fw-bold">{{ number_format($saldoInicialPeriodo, 2) }} L</td>
-                                    <td class="text-center"><i class="fa fa-lock text-muted"></i></td>
+                                    <td colspan="2" class="text-end fw-bold">{{ number_format($saldoInicialPeriodo, 2) }} L</td>
+                                    <td  class="text-center"><i class="fa fa-lock text-muted"></i></td>
                                 </tr>
                                 @foreach($tendenciaDetallada as $mov) {{-- Necesitarás traer estos movs en el controlador --}}
                                 <tr>
                                     <td>{{ $mov->created_at->format('d/m/Y H:i') }}</td>
                                     <td>{{ $mov->vehiculo->placa }}</td>
                                     <td>{{ $mov->nro_ticket }}</td>
+                                    <td class="text-end fw-bold">{{ number_format($mov->cant_inicial ?? 0, 2) }} L</td>
                                     <td class="text-end fw-bold">{{ number_format($mov->cantidad_litros, 2) }} L</td>
-                                    <td>--</td>
+                                    <td class="text-end fw-bold">{{ number_format($mov->cant_final ?? $mov->cantidad_litros, 2) }} L</td>
+                                    
                                 </tr>
                                 @endforeach
                             @else
