@@ -237,6 +237,11 @@ class Vehiculo extends Model
         // Ajustar el estatus según tu lógica de "Disponible"
         $query->where('estatus', 2)->where('es_flota', true);
     }
+
+    public function scopeEsFlota(Builder $query): void
+    {
+       $query->where('es_flota', true);
+    }
     
     /**
      * Scope: Filtra vehículos que tienen documentos vencidos, próximos a vencer o sin registrar (S/P).
@@ -285,13 +290,6 @@ class Vehiculo extends Model
         // Llama al Scope 'porCliente' ANTES de realizar el conteo.
         // El Scope ya tiene toda la lógica de seguridad y jerarquía.
         return self::porCliente()->where('es_flota',true);
-    }
-
-     public static function scopeEsFlota()
-    {
-        // Llama al Scope 'porCliente' ANTES de realizar el conteo.
-        // El Scope ya tiene toda la lógica de seguridad y jerarquía.
-        return self::miFlota()->where('es_flota',true);
     }
     
     
