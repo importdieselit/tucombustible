@@ -243,6 +243,7 @@ class Vehiculo extends Model
        $query->where('es_flota', true);
     }
     
+    
     /**
      * Scope: Filtra vehículos que tienen documentos vencidos, próximos a vencer o sin registrar (S/P).
      * Nota: La lógica es compleja y asumo las columnas de fecha más importantes.

@@ -116,7 +116,7 @@ $chartDataCierre = array_column($historicoEficiencia, 'disponibilidad');
             </a>
         </div>
     </div>
-    <div class="col-md-2">
+    {{-- <div class="col-md-2">
         <div class="card shadow-sm border-0 text-center">
             <div class="card-body">
                 <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#ffc10710;">
@@ -126,7 +126,7 @@ $chartDataCierre = array_column($historicoEficiencia, 'disponibilidad');
                 <div class="text-muted small">En Ruta/Servicio</div>
             </div>
         </div>
-    </div>
+    </div> --}}
     <div class="col-md-2">
         <div class="card shadow-sm border-0 text-center">
             <a href="{{ route('vehiculos.list', ['filter' => 'mantenimiento']) }}" target="_blank">
@@ -174,7 +174,21 @@ $chartDataCierre = array_column($historicoEficiencia, 'disponibilidad');
                     <i class="fa fa-car text-white" style="font-size:2rem;"></i>
                 </span>
                 <h2 class="fw-bold">{{ $total_flota }}</h2>
-                <div class="text-muted small">Total flota</div>
+                <div class="text-muted small">Total Flota</div>
+                <div class="text-muted small">{{ $unidades_en_servicio }} En Ruta/Servicio</div>
+            </div>
+            </a>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card shadow-sm border-0 text-center">
+            <a href="{{ route('vehiculos.list') }}" target="_blank">
+            <div class="card-body">
+                <span class="rounded-circle p-3 mb-2 d-inline-block bg-dark">
+                    <i class="fa fa-car text-white" style="font-size:2rem;"></i>
+                </span>
+                <h2 class="fw-bold">{{ $total_vehiculos }}</h2>
+                <div class="text-muted small">Todos los Vehículos</div>
             </div>
             </a>
         </div>
