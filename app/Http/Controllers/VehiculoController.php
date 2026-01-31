@@ -248,69 +248,121 @@ class VehiculoController extends BaseController
                 if (empty(array_filter($row))) {
                     continue;
                 }
-                
+
+
+                $rotc_venc=null;
                 $rowData = array_combine($header, $row);
 //                $vard=var_dump($rowData);
 
-
                 // // Lógica de búsqueda y creación de marca y modelo
-                // $marcaNombre = $rowData['marca'] ?? null;
-                // $modeloNombre = $rowData['modelo'] ?? null;
-                // $marcaId = null;
-                // $modeloId = null;
+                $marcaNombre = $rowData['MARCA'] ?? null;
+                $modeloNombre = $rowData['MODELO'] ?? null;
+                $marcaId = null;
+                $modeloId = null;
+                $flota = explode(' ', $rowData['VEHICULO']);
 
-                // if ($marcaNombre) {
-                //     $marca = Marca::firstOrCreate(['nombre' => $marcaNombre]);
-                //     $marcaId = $marca->id;
+                if ($marcaNombre) {
+                    $marca = Marca::firstOrCreate(
+                        ['marca' => trim(strtoupper($marcaNombre))]
+                    );
+                    $marcaId = $marca->id;
 
-                //     if ($modeloNombre && $marcaId) {
-                //         $modelo = Modelo::firstOrCreate(
-                //         );
-                //         $modeloId = $modelo->id;
-                //     }
-                // }
-                 $vehiculo=Vehiculo::where('placa', $rowData['PLACAS'])->first();
-                    if($vehiculo){
-                        $tiposVehiculo= TipoVehiculo::where('tipo', $rowData['TIPO'])->first();
-                        $vehiculo->color = $rowData['COLOR'] ?? $vehiculo->color;
-                        $vehiculo->kilometraje = $rowData['KILOMETRAJE'] ?? $vehiculo->kilometraje;
-                        //$vehiculo->observacion = $rowData['detalles'] ?? $vehiculo->observacion;
-                        $vehiculo->serial_motor = $rowData['SERIAL_MOTOR'] ?? $vehiculo->serial_motor;
-                        $vehiculo->serial_carroceria = $rowData['SERIAL_CARROCERIA'] ?? $vehiculo->serial_carroceria;
-                        $vehiculo->tipo = $tiposVehiculo->id ?? $vehiculo->tipo;
-                        $vehiculo->anno = $rowData['AÑO'] ?? $vehiculo->anno;
-                        $vehiculo->agencia = $rowData['EMPRESA'] ?? $vehiculo->agencia;
-                        $vehiculo->carga_max = $rowData['CAPACIDAD'] ?? 0;
-                        $vehiculo->gps = $rowData['GPS']== 'SI' ? true : false;
-                        $vehiculo->es_flota = true;
-                        $vehiculo->save();
+                    if ($modeloNombre && $marcaId) {
+                        $modelo = Modelo::firstOrCreate(
+                            [
+                                'modelo' => trim(strtoupper($modeloNombre)),
+                                'id_marca' => $marcaId
+                            ]
+                        );
+                        $modeloId = $modelo->id;
                     }
-
-
-                    // // Preparar los datos del vehículo
-                    // $vehiculoData = [
-                    // //    'flota' => $rowData['vehiculo'] ?? null,
-                    //     'placa' => $rowData['placas'] ?? null,
-                    //     'estatus' => $rowData['estatus'] ?? null,
-                    //     'id_marca' => $marcaId,
-                    //     'id_modelo' => $modeloId,
-                    //     'kilometraje' => $rowData['kilometraje'] ?? 0,
-                    //     'observacion' => $rowData['detalles'] ?? null,
-                    //     'rotc_venc' => $rowData['rotc'], 
-                    //     'poliza_fecha' => $rowData['poliza de seguro'], 
-                    //     'rcv'=> $rowData['rcv'], 
-                    //     'racda' => $rowData['racda'], 
-                    //     'semcamer' => $rowData['semcamer'], 
-                    //     'homologacion_intt' => $rowData['homologacion_intt'],
-                    //     'permiso_intt' => $rowData['permiso_intt']
-                        
-                    // ];
-
-                    // // Crear el registro del vehículo en la base de datos
-                    // Vehiculo::create($vehiculoData);
                 }
-            
-            // 4. Mensaje de éxito
+
+                $poliza = $rowData['POLIZA DE SEGURO'];
+                if (strtoupper($poliza) === 'PENDIENTE' || !strtotime($poliza)) {
+                    $poliza = null;
+                }else{
+                    $poliza= \Carbon\Carbon::parse($poliza)->format('Y-m-d');
+                }
+
+                $RCV = $rowData['POLIZA DE SEGURO'];
+                if (strtoupper($RCV) === 'PENDIENTE' || !strtotime($RCV)) {
+                    $RCV = null;
+                }else{
+                    $RCV= \Carbon\Carbon::parse($RCV)->format('Y-m-d');
+                }
+
+                $rotc = $rowData['ROTC'];
+                if (strtoupper($rotc) === 'PENDIENTE') {
+                    $rotc = null;
+                    $rotc_venc=null;
+                }else{
+                    $rotc= explode('- AL ',$rotc);
+                    $rotc_venc= (!empty($rotc[1]) && $rotc[1] !== 'PENDIENTE') 
+                        ? \Carbon\Carbon::createFromFormat('d/m/Y', $rotc[1])->format('Y-m-d'):null;
+                    $rotc=trim($rotc[0]);
+                }
+               // dd($rowData);    
+                
+                $tiposVehiculo= TipoVehiculo::where('tipo', $rowData['TIPO'])->first();
+                if(is_null($tiposVehiculo)){ dd( $rowData['TIPO']);}
+                $vehiculo=Vehiculo::where('placa', $rowData['PLACAS'])->first();
+                if($vehiculo){
+                    $vehiculo->flota = $flota[1].' '.$flota[2];
+                    $vehiculo->color = $rowData['COLOR'] ?? $vehiculo->color;
+                    $vehiculo->kilometraje = $rowData['KILOMETRAJE'] ?? $vehiculo->kilometraje;
+                    $vehiculo->observacion = $rowData['OBSERVACION'].' - '.$rowData['DETALLES'] ?? $vehiculo->observacion;
+                    $vehiculo->serial_motor = $rowData['SERIAL DEL MOTOR'] ?? $vehiculo->serial_motor;
+                    $vehiculo->serial_carroceria = $rowData['SERIAL DE CARROCERIA'] ?? $vehiculo->serial_carroceria;
+                    $vehiculo->tipo = $tiposVehiculo->id ?? $vehiculo->tipo;
+                    $vehiculo->poliza_fecha_out = $poliza;
+                    $vehiculo->rcv=  trim($RCV);
+                    $vehiculo->rotc=  !is_null($rotc)?$rotc:'PENDIENTE';
+                    $vehiculo->rotc_venc=  $rotc_venc;
+                    $vehiculo->racda=  $rowData['RACDA'];
+                    //$vehiculo->anno = $rowData['AÑO'] ?? $vehiculo->anno;
+                    $vehiculo->agencia = $rowData['EMPRESA'] ?? $vehiculo->agencia;
+                    $vehiculo->carga_max = $rowData['ALMACENAMIENTO'] ?? 0;
+                    $vehiculo->consumo = $rowData['AUTONOMIA'] ?? 0;
+                //  $vehiculo->gps = $rowData['GPS']== 'SI' ? true : false;
+                    $vehiculo->marca= $marcaId;
+                    $vehiculo->semcamer = $rowData['SEMCAMER'];
+                    $vehiculo->homologacion_intt= $rowData['HOMOLOGACION INTT'];
+                    $vehiculo->modelo= $modeloId;
+                    $vehiculo->es_flota = true;
+                    $vehiculo->save();
+                }else{
+
+                   // // Preparar los datos del vehículo
+                    $vehiculoData = [
+                        'flota' =>$flota[1].' '.$flota[2],
+                        'color' => $rowData['COLOR'],
+                        //'kilometraje' => $rowData['KILOMETRAJE'],
+                        'observacion' => $rowData['OBSERVACION'].' - '.$rowData['DETALLES'],
+                        'serial_motor' => $rowData['SERIAL DEL MOTOR'],
+                        'serial_carroceria' => $rowData['SERIAL DE CARROCERIA'],
+                        'tipo' => $tiposVehiculo->id,
+                        'poliza_fecha_out' => $poliza,
+                        'rcv'=>  trim($RCV),
+                        'rotc'=>  !is_null($rotc)?$rotc:'PENDIENTE',
+                        'rotc_venc'=>  $rotc_venc,
+                        'racda'=>  $rowData['RACDA'],
+                       // 'anno' => $rowData['AÑO'],
+                        'agencia' => $rowData['EMPRESA'],
+                        'carga_max' => $rowData['ALMACENAMIENTO'],
+                        'consumo' => $rowData['AUTONOMIA'],
+                      //  $vehiculo->gps = $rowData['GPS']== 'SI' ? true : false;
+                        'marca'=> $marcaId,
+                        'semcamer' => $rowData['SEMCAMER'],
+                        'homologacion_intt'=> $rowData['HOMOLOGACION INTT'],
+                        'modelo'=> $modeloId,
+                        'es_flota' => true
+                    ];
+                    Vehiculo::create($vehiculoData);
+                }
+                
+            }
+           // 4. Mensaje de éxito
             Session::flash('success', '¡Vehículos importados exitosamente!');
         } catch (\Exception $e) {
             // 5. Manejo de errores

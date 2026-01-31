@@ -613,8 +613,12 @@ public function storeDespachoIndustrial(Request $request)
     $request->validate([
         'cliente_id' => 'required|exists:clientes,id',
         'cantidad_litros' => 'required|numeric|min:1',
-        'vehiculo_id' => 'required_without_all:nueva_placa,nuevo_modelo',
+        'vehiculo_id' => 'required_without:nueva_placa',
+        // VALIDACIÓN CLAVE: Solo si 'nueva_placa' tiene valor, debe ser única en la tabla vehiculos
+        'nueva_placa' => 'nullable|unique:vehiculos,placa', 
         'fecha' => 'required|date'
+    ], [
+        'nueva_placa.unique' => 'Esta placa ya se encuentra registrada en el sistema.'
     ]);
 
     return DB::transaction(function () use ($request) {
@@ -630,6 +634,7 @@ public function storeDespachoIndustrial(Request $request)
 
         // 1. Gestión del Vehículo (Existente o Nuevo)
         if ($request->filled('nueva_placa')) {
+
             $vehiculo = Vehiculo::create([
                 'placa' => $request->nueva_placa,
                 'flota' => $request->nuevo_modelo,

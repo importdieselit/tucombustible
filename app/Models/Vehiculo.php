@@ -151,10 +151,10 @@ class Vehiculo extends Model
         'semcamer' => 'string',
         'homologacion_intt' => 'string',
         'permiso_intt' => 'string',
-        'rotc' => 'date',
+        'rotc' => 'string',
         'rotc_venc' => 'date',
         'rcv' => 'date',
-        'racda' => 'date',
+        'racda' => 'string',
         'facturacion_completa' => 'boolean', // Si aplicara, basado en otro contexto si no fuera booleano nativo
     ];
 
