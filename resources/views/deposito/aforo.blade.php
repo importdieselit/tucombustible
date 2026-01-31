@@ -9,18 +9,11 @@
 <a href="{{ route('depositos.aforo.export', ['deposito' => $deposito->id ]) }}" class="btn btn-success">
     <i class="fas fa-file-excel"></i> Exportar a Excel
 </a>
-
 <table class="table table-bordered table-sm table-striped">
     <thead>
         <tr>
             @for ($j = 0; $j < $numColumnasRango; $j++)
-                @php
-                    $inicio = $j * $rangoPorColumna;
-                    $fin = min($deposito->diametro, ($j + 1) * $rangoPorColumna - $pasoAforo);
-                @endphp
-                {{-- <th colspan="2" class="text-center">
-                    {{ number_format($inicio, 0) }} cm a {{ number_format($fin, 1) }} cm
-                </th> --}}
+                <th class="text-center" colspan="2">Rango {{ $j + 1 }}</th>
             @endfor
         </tr>
         <tr>
@@ -35,15 +28,15 @@
             <tr>
                 @for ($j = 0; $j < $numColumnasRango; $j++)
                     @php
-                        // Calcular la Profundidad para esta celda
-                        $profundidad = $j * $rangoPorColumna + ($i * $pasoAforo);
-                        $volumen = $tablaCondensada[$i][$j] ?? null;
+                        $celda = $tablaCondensada[$i][$j] ?? null;
                     @endphp
-                    
-                    @if ($profundidad <= $deposito->diametro)
-                        <td class="text-right">{{ number_format($profundidad, 1) }}</td>
+
+                    @if ($celda)
+                        <td class="text-right table-secondary" style="width: 70px;">
+                            {{ number_format($celda['cm'], 1) }}
+                        </td>
                         <td class="text-right">
-                            {{ $volumen !== null ? number_format($volumen, 2) : '-' }}
+                            {{ number_format($celda['litros'], 2) }}
                         </td>
                     @else
                         <td class="text-muted text-center">-</td>

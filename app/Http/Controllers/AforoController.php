@@ -30,7 +30,6 @@ class AforoController extends Controller
 
         $tablaCondensada = [];
         $maxFilas = 0;
-
         // Generamos el aforo dinámicamente
         for ($h = 0; $h <= $alturaMaxima; $h += $pasoAforo) {
             $litros = $this->calcularLitros($deposito, $h);
