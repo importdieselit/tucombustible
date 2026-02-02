@@ -7,9 +7,11 @@ use App\Models\Deposito;
 use App\Models\Aforo;
 use App\Services\AforoCalculoService;
 use Illuminate\Database\Seeder;
+use App\Traits\CalcularAforo;
 
 class AforoTableSeeder extends Seeder
 {
+    use CalcularAforo;
     public function run(): void
     {
         $depositos = Deposito::all();
@@ -20,15 +22,20 @@ class AforoTableSeeder extends Seeder
 
             $diametro = $deposito->diametro;
             $longitud = $deposito->longitud;
+            $h_max= ($deposito->forma == 'R' || $deposito->forma == 'OV') 
+                        ? $deposito->alto 
+                        : $deposito->diametro;
 
             // Iterar desde 0 cm hasta el diámetro del tanque, en pasos de 0.5 cm
-            for ($h = 0.5; $h <= $diametro; $h += 0.5) {
+            for ($h = 0.5; $h <= $h_max; $h += 0.5) {
 
-                $volumen = AforoCalculoService::calcularVolumenTeorico(
-                    $diametro,
-                    $longitud,
-                    $h
-                );
+                $volumen = $this->calcularLitros($deposito, $h);
+
+                // $volumen = AforoCalculoService::calcularVolumenTeorico(
+                //     $diametro,
+                //     $longitud,
+                //     $h
+                // );
 
                 Aforo::create([
                     'deposito_id' => $deposito->id,
