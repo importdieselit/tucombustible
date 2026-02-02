@@ -14,10 +14,12 @@ use App\Models\MovimientoCombustible;
 use App\Services\FcmNotificationService;
 use App\Models\Parametro;
 use App\Services\TelegramNotificationService;
+use App\Traits\CalcularAforo;
 
 class DepositoController extends BaseController
 {
 
+    use CalcularAforo;
     protected $fcmService;
     protected $telegramService;
 

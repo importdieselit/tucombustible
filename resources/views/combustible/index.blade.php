@@ -1071,7 +1071,7 @@ async function submitAjuste(e) {
 
     const btnSubmit = document.getElementById('btn-submit-ajuste');
     btnSubmit.disabled = true; // Deshabilita el botón mientras se envía
-
+    console.log(nuevoNivel);
     try {
         const response = await fetch(`/depositos/ajustedinamic`, {
             method: 'PUT',
@@ -1085,7 +1085,7 @@ async function submitAjuste(e) {
                 observacion: observacion
             })
         });
-
+        
         const data = await response.json();
 
         if (response.ok) {
