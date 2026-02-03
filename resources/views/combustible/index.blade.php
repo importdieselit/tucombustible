@@ -530,7 +530,7 @@
 </div>
     </div>
 <div class="row g-4 mb-5">
-        @foreach ($tipoDeposito as $tipo )
+         @foreach ($tipoDeposito as $tipo )
     <div class="col-lg-6">        
         
         <div class="card shadow-sm p-4 h-100">
@@ -601,8 +601,32 @@
             </div>
         </div>
 
-</div>
-        @endforeach
+    </div>
+        @endforeach 
+
+        @foreach ($tipoDeposito as $tipo)
+    <div class="col-lg-12 mb-4">
+        <div class="card shadow-sm p-4 h-100">
+            <div class="card-header bg-white">
+                <h5 class="card-title m-0">Estado de Tanques: {{ $tipo->producto }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    @foreach($tipo->depositos as $deposito)
+                        <div class="col-md-6 mb-2">
+                            <div id="chart-3d-{{ $deposito->id }}" style="height: 400px;"></div>
+                            
+                            <div class="text-center mt-2">
+                                <strong>{{ $deposito->serial }}</strong><br>
+                                <small class="text-muted">{{ number_format($deposito->nivel, 2) }}% de carga</small>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                </div>
+        </div>
+    </div>
+@endforeach
 </div>
 
 
@@ -751,15 +775,18 @@
     <script src="https://code.highcharts.com/modules/drilldown.js"></script>
     <script src="https://code.highcharts.com/modules/exporting.js"></script>
     <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <script src="https://code.highcharts.com/highcharts-3d.js"></script>
+    <script src="https://code.highcharts.com/modules/cylinder.js"></script> 
+    <script src="https://code.highcharts.com/modules/funnel3d.js"></script>
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     {{-- <script src="{{ asset('js/dashboard-operaciones.js') }}"></script> --}}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
     <script>
-        console.log('Dashboard Operaciones cargado');
-        console.log('Pedidos:', @json($pedidos));
-        console.log('Solicitudes:', @json($solicitudes));    
-        console.log('Notificaciones:', @json($notificaciones));
+        // console.log('Dashboard Operaciones cargado');
+        // console.log('Pedidos:', @json($pedidos));
+        // console.log('Solicitudes:', @json($solicitudes));    
+        // console.log('Notificaciones:', @json($notificaciones));
         const pedidos = @json($pedidos);
 // const solicitudes = @json($solicitudes);
 // const notificaciones = @json($notificaciones);
@@ -1090,30 +1117,41 @@ async function submitAjuste(e) {
 
         if (response.ok) {
             // Actualizar la vista dinámicamente
-            const depositoInfo = document.getElementById(`deposito-info-${id_deposito}`);
-            const progressParent = depositoInfo.closest('li').querySelector('.progress');
-            const totaldeps = document.getElementById('tanques-res');
-            const total00 = document.getElementById('tanque00-res');
+             const depositoInfo = document.getElementById(`deposito-info-${id_deposito}`);
+             const progressParent = depositoInfo.closest('li').querySelector('.progress');
+             const totaldeps = document.getElementById('tanques-res');
+             const total00 = document.getElementById('tanque00-res');
             
-            const nuevoPorcentaje = (data.nuevo_nivel / data.capacidad) * 100;
-            const progressBar = progressParent.querySelector('.progress-bar');
+             const nuevoPorcentaje = (data.nuevo_nivel / data.capacidad) * 100;
+             const progressBar = progressParent.querySelector('.progress-bar');
             
-            // Actualizar los datos del DOM
-            depositoInfo.dataset.nivel = data.nuevo_nivel;
-            depositoInfo.dataset.capacidad = data.capacidad;
-            depositoInfo.querySelector('p:nth-child(2) small').textContent = `Nivel: ${nuevoPorcentaje.toFixed(2)}%`;
-            depositoInfo.querySelector('p:nth-child(3) small').textContent = `${data.nuevo_nivel}L/${data.capacidad}L Litros`;
+             // Actualizar los datos del DOM
+             depositoInfo.dataset.nivel = data.nuevo_nivel;
+             depositoInfo.dataset.capacidad = data.capacidad;
+             depositoInfo.querySelector('p:nth-child(2) small').textContent = `Nivel: ${nuevoPorcentaje.toFixed(2)}%`;
+             depositoInfo.querySelector('p:nth-child(3) small').textContent = `${data.nuevo_nivel}L/${data.capacidad}L Litros`;
             
-            progressBar.style.width = `${nuevoPorcentaje}%`;
-            progressBar.textContent = `${data.nuevo_nivel}L - ${nuevoPorcentaje.toFixed(2)}%`;
-            totaldeps.textContent = `${data.total} Lts`;
-            total00.textContent = `${data.total00} Lts`;
-            progressBar.ariaValueNow = nuevoPorcentaje;
+             progressBar.style.width = `${nuevoPorcentaje}%`;
+             progressBar.textContent = `${data.nuevo_nivel}L - ${nuevoPorcentaje.toFixed(2)}%`;
+             totaldeps.textContent = `${data.total} Lts`;
+             total00.textContent = `${data.total00} Lts`;
+             progressBar.ariaValueNow = nuevoPorcentaje;
             
-            // Cambiar color de la barra según el nivel
-            progressBar.style.backgroundColor = nuevoPorcentaje > 50 ? '#28a745' : (nuevoPorcentaje > 15 ? '#ffc107' : '#dc3545');
+            // // Cambiar color de la barra según el nivel
+             progressBar.style.backgroundColor = nuevoPorcentaje > 50 ? '#28a745' : (nuevoPorcentaje > 15 ? '#ffc107' : '#dc3545');
 
             // Cerrar el modal y mostrar un mensaje de éxito
+            // Localizar el gráfico de Highcharts por su ID de contenedor
+            const chartInstance = Highcharts.charts.find(c => c && c.renderTo.id === `chart-3d-${id_deposito}`);
+
+            if (chartInstance) {
+                const nuevoVacio = data.capacidad - data.nuevo_nivel;
+                const nuevoPorcentaje = (data.nuevo_nivel / data.capacidad) * 100;
+                const nuevoColor = nuevoPorcentaje > 50 ? '#28a745' : (nuevoPorcentaje > 15 ? '#ffc107' : '#dc3545');
+                chartInstance.series[1].setData([data.nuevo_nivel], false); // false para no redibujar aún
+                chartInstance.series[1].update({ color: nuevoColor }, false);
+                chartInstance.series[0].setData([nuevoVacio], true); // true para redibujar con ambos cambios
+            }
             const ajustarNivelModal = bootstrap.Modal.getInstance(document.getElementById('ajustarNivelModal'));
             ajustarNivelModal.hide();
             Swal.fire('¡Ajuste Guardado!', data.message, 'success');
@@ -1265,7 +1303,7 @@ function mostrarDetallesPedido(id) {
             });
              document.getElementById('btn-submit-ajuste').addEventListener('click', submitAjuste);
              document.getElementById('btn-submit-resguardo').addEventListener('click', submitResguardo);
-            document.getElementById('btn-crear-despacho').addEventListener('click', mostrarSelectorTipoDespacho);
+           // document.getElementById('btn-crear-despacho').addEventListener('click', mostrarSelectorTipoDespacho);
 
             // Lógica para el gráfico de Highcharts con drilldown
             Highcharts.chart('chart-container', {
@@ -1699,21 +1737,20 @@ async function mostrarSelectorVehiculoParaInspeccion() {
 
 document.addEventListener('DOMContentLoaded', function() {
 
-const printableArea = document.querySelector('.printableArea');
-const sendTelegramButton = document.querySelector('#sendTelegramButton');
-const elementToCaptureSelector = '.printableArea';
+    const printableArea = document.querySelector('.printableArea');
+    const sendTelegramButton = document.querySelector('#sendTelegramButton');
+    const elementToCaptureSelector = '.printableArea';
 
-async function sendReportToTelegram() {
+    async function sendReportToTelegram() {
         sendTelegramButton.disabled = true;
-       try {
-
+        try {
             const responseC = await fetch(`/combustible/resumen`, {
-                method: 'POST',
+            method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': csrfToken
                 }
-                // Si el backend no necesita un body, puedes omitir 'body: JSON.stringify({})'
+                    // Si el backend no necesita un body, puedes omitir 'body: JSON.stringify({})'
             });
 
             // 2. Verificar si la respuesta HTTP fue exitosa (código 200-299)
@@ -1721,10 +1758,9 @@ async function sendReportToTelegram() {
                 // Si hay un error HTTP, lanzar una excepción para el bloque catch
                 throw new Error(`Error en el servidor: ${responseC.status} ${responseC.statusText}`);
             }
-
             // 3. CAPTURAR EL TEXTO DEL CUERPO: Usar await response.text() para leer el string.
             const caption = await responseC.text();
-            
+                
             // 4. Mostrar el texto capturado correctamente
             console.log("Caption capturado correctamente:");
             console.log(caption);
@@ -1750,7 +1786,6 @@ async function sendReportToTelegram() {
             const formData = new FormData();
             formData.append('chart_image', imageBlob, 'reporte_disponibilidad.png');
             formData.append('caption', `*Reporte de Inventario de Combustible*\nGenerado el: ${new Date().toLocaleString('es-VE')}\n`+caption);
-
             
             // 4. Enviar al endpoint de Laravel (ruta que debe existir: telegram.send.photo)
             const response = await fetch('{{ route('telegram.send.photo') }}', {
@@ -1764,15 +1799,15 @@ async function sendReportToTelegram() {
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.message || `Error ${response.status}: Fallo en el servidor al enviar a Telegram.`);
-            }
+        }
 
             // 5. Éxito
-          
+            
 
         } catch (error) {
             console.error('Error al enviar a Telegram:', error);
             // Mostrar mensaje amigable al usuario
-       //     showStatus(`Error al enviar a Telegram: ${error.message}`, 'error');
+        //     showStatus(`Error al enviar a Telegram: ${error.message}`, 'error');
 
         } finally {
             // 6. Reestablecer el botón
@@ -1784,6 +1819,92 @@ async function sendReportToTelegram() {
     if (sendTelegramButton) {
         sendTelegramButton.addEventListener('click', sendReportToTelegram);
     }
+
+    const tanques = [
+        @foreach($tipoDeposito as $tipo)
+            @foreach($tipo->depositos as $deposito)
+            {
+                id: '{{ $deposito->id }}',
+                serial: '{{ $deposito->serial }}',
+                actual: {{ $deposito->nivel_actual_litros }},
+                vacio: {{ $deposito->capacidad_litros - $deposito->nivel_actual_litros }},
+                color: '{{ $deposito->nivel > 50 ? "#28a745" : ($deposito->nivel > 15 ? "#ffc107" : "#dc3545") }}',
+                urlAforo: '{{ route("depositos.aforo.show", ["deposito" => $deposito->id]) }}'
+            },
+            @endforeach
+        @endforeach
+    ];
+
+    tanques.forEach(tanque => {
+        Highcharts.chart('chart-3d-' + tanque.id, {
+            chart: {
+                type: 'cylinder',
+                options3d: {
+                    enabled: true,
+                    alpha: 10,
+                    beta: 10,
+                    depth: 30,
+                    viewDistance: 80
+                },
+                events: {
+                    load: function () {
+                        const chart = this;
+                        // Botones de acción (Ajuste y Aforo)
+                        chart.renderer.button('📝', chart.chartWidth - 65, 250, function () {
+                            openAjusteModal(tanque.id);
+                        }, { fill: '#3b82f6', style: { color: 'white' }, r: 5 }).add();
+
+                        chart.renderer.button('📊', chart.chartWidth - 30, 250, function () {
+                            window.open(tanque.urlAforo, '_blank');
+                        }, { fill: '#6c757d', style: { color: 'white' }, r: 5 }).add();
+                    }
+                }
+            },
+            title: { text: null },
+            xAxis: { 
+                categories: ['Tanque'], // Una sola categoría fuerza el apilamiento vertical
+                visible: false 
+            },
+            yAxis: { 
+                title: { text: null }, 
+                visible: false,
+                min: 0,
+                max: tanque.actual + tanque.vacio, // Forzamos el tope a la capacidad total
+                stackLabels: { enabled: false }
+            },
+            plotOptions: {
+                cylinder: {
+                    stacking: 'normal', // Esto apila uno sobre otro
+                    showInLegend: false,
+                    grouping: false,    
+                    depth: 500,
+                    width: 50,
+                    height: 50           // Grosor del cilindro
+                }
+            },
+            series: [
+                {
+                    name: 'Vacío',
+                    data: [tanque.vacio],
+                    color: '#e9ecef', // Gris claro para el aire
+                    dataLabels: { enabled: false }
+                },
+                {
+                    name: 'Combustible',
+                    data: [tanque.actual],
+                    color: tanque.color,
+                    dataLabels: {
+                        enabled: true,
+                        format: '{y} L',
+                        inside: true,
+                        style: { fontSize: '12px', textOutline: 'none' }
+                    }
+                }
+                
+            ],
+            credits: { enabled: false }
+        });
+    });
 });
     </script>
 @endpush

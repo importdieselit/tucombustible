@@ -30,7 +30,6 @@ class AforoTableSeeder extends Seeder
             for ($h = 0.5; $h <= $h_max; $h += 0.5) {
 
                 $volumen = $this->calcularLitros($deposito, $h);
-
                 // $volumen = AforoCalculoService::calcularVolumenTeorico(
                 //     $diametro,
                 //     $longitud,
