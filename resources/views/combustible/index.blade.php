@@ -531,7 +531,7 @@
     </div>
 <div class="row g-4 mb-5">
          @foreach ($tipoDeposito as $tipo )
-    <div class="col-lg-6">        
+    <div class="col-lg-6 col-md-12 mb-4">        
         
         <div class="card shadow-sm p-4 h-100">
             <div class="card-header bg-white">
@@ -613,7 +613,7 @@
             <div class="card-body">
                 <div class="row">
                     @foreach($tipo->depositos as $deposito)
-                        <div class="col-md-6 mb-2">
+                        <div class="col-md-4 mb-2">
                             <div id="chart-3d-{{ $deposito->id }}" style="height: 400px;"></div>
                             
                             <div class="text-center mt-2">
