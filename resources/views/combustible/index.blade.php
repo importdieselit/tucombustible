@@ -1150,7 +1150,7 @@ async function submitAjuste(e) {
                 const nuevoColor = nuevoPorcentaje > 50 ? '#28a745' : (nuevoPorcentaje > 15 ? '#ffc107' : '#dc3545');
                 chartInstance.series[1].setData([data.nuevo_nivel], false); // false para no redibujar aún
                 chartInstance.series[1].update({ color: nuevoColor }, false);
-                chartInstance.series[0].setData([nuevoVacio], true); // true para redibujar con ambos cambios
+                chartInstance.series[0].setData([nuevoVacio], { color: 'rgba(233, 236, 239, 0.3)' }, true); // true para redibujar con ambos cambios
             }
             const ajustarNivelModal = bootstrap.Modal.getInstance(document.getElementById('ajustarNivelModal'));
             ajustarNivelModal.hide();
@@ -1843,8 +1843,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     enabled: true,
                     alpha: 10,
                     beta: 10,
-                    depth: 30,
-                    viewDistance: 80
+                    depth: 160,
+                    viewDistance: 250
                 },
                 events: {
                     load: function () {
@@ -1874,19 +1874,27 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             plotOptions: {
                 cylinder: {
-                    stacking: 'normal', // Esto apila uno sobre otro
-                    showInLegend: false,
-                    grouping: false,    
-                    depth: 500,
-                    width: 50,
-                    height: 50           // Grosor del cilindro
+                    stacking: 'normal',
+                    grouping: false,
+                    depth: 220,
+                    edgeWidth: 1,      // Borde fino para realismo
+                    edgeColor: '#ccc',
+                    gradientForSides: true, // Sombreado 3D automático
+                    dataLabels: {
+                        enabled: true,
+                        formatter: function() {
+                            return this.series.name === 'Combustible' ? 
+                                `<span style="color:#333; font-size:11px;">${this.y.toLocaleString()} L</span>` : '';
+                        },
+                        inside: true
+                    }
                 }
             },
             series: [
                 {
                     name: 'Vacío',
                     data: [tanque.vacio],
-                    color: '#e9ecef', // Gris claro para el aire
+                    color: 'rgba(233, 236, 239, 0.3)',
                     dataLabels: { enabled: false }
                 },
                 {
