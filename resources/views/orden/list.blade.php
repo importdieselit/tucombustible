@@ -70,7 +70,12 @@
                         <td>
                             @php($estatusInfo = $estatusData->get($orden->estatus))
                             @if ($estatusInfo)
-                                @php($css=$orden->created_at->diffInDays(now())>1?($orden->created_at->diffInDays(now())>2?'danger':'warning'):$estatusInfo->css)
+                               @php
+                                    $horas = $orden->created_at->diffInHours(now());
+                                    $css = ($horas >= 48) 
+                                        ? 'danger' 
+                                        : (($horas >= 24) ? 'warning' : $estatusInfo->css);
+                                @endphp
                                 <span class="badge bg-{{ $css }}" title="{{ $estatusInfo->descripcion }}">
                                     <i class="mr-1 fa-solid {{ $estatusInfo->icon_orden }}"></i>
                                     {{ $estatusInfo->orden }}
