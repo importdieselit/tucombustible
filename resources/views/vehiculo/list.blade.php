@@ -40,21 +40,50 @@
             </div>
         @endif
         <div class="table-responsive">
-            <div class="card p-2 mb-3 shadow-sm border-light">
-                <p class="mb-1 fw-bold">Leyenda de Estatus de Documentos:</p>
-                <div class="d-flex flex-wrap gap-3 small">
-                    <span class="badge bg-success" style="min-width: 150px;">
-                        <i class="bi bi-check-circle me-1"></i> Vigente / OK
-                    </span>
-                    <span class="badge bg-warning" style="min-width: 150px;">
-                        <i class="bi bi-exclamation-triangle-fill me-1"></i> Próximo a Vencer (< 30 días)
-                    </span>
-                    <span class="badge bg-danger" style="min-width: 150px;">
-                        <i class="bi bi-x-octagon-fill me-1"></i> Vencido / Sin Permiso (S/P)
-                    </span>
-                    <span class="badge bg-secondary" style="min-width: 150px;">
-                        <i class="bi bi-slash-circle me-1"></i> Sin Informacion / N/A
-                    </span>
+            <div class="card mb-3 shadow-sm">
+                <div class="card-body p-3">
+                    <h6 class="text-muted mb-3"><i class="fa fa-info-circle me-2"></i> Leyenda de Estatus de Vehiculos</h6>
+                    <div class="d-flex flex-wrap gap-3">
+                        <div class="d-flex align-items-center me-4">
+                            <div class="rounded-circle bg-danger me-2" style="width: 15px; height: 15px; border: 1px solid #0002;"></div>
+                            <span class="small">Fuera de Servicio</span>
+                        </div>
+                        <div class="d-flex align-items-center me-4">
+                            <div class="rounded-circle bg-warning me-2" style="width: 15px; height: 15px; border: 1px solid #0002;"></div>
+                            <span class="small">En Mantenimiento</span>
+                        </div>
+                        
+                        <div class="d-flex align-items-center me-4">
+                            <div class="rounded-circle bg-info me-2" style="width: 15px; height: 15px; border: 1px solid #0002;"></div>
+                            <span class="small">En Servicio</span>
+                        </div>
+                        <div class="d-flex align-items-center me-4">
+                            <div class="rounded-circle bg-success me-2" style="width: 15px; height: 15px; border: 1px solid #0002;"></div>
+                            <span class="small">Disponible</span>
+                        </div>
+                        <div class="d-flex align-items-center me-4">
+                            <div class="rounded-circle bg-secondary me-2" style="width: 15px; height: 15px; border: 1px solid #0002;"></div>
+                            <span class="small">Desincorporado/Inoperativo</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="card p-2 mb-3 shadow-sm border-light">
+                    <p class="mb-1 fw-bold">Leyenda de Estatus de Documentos:</p>
+                    <div class="d-flex flex-wrap gap-3 small">
+                        <span class="rounded-circle bg-success" style="min-width: 150px;">
+                            <i class="bi bi-check-circle me-1"></i> Vigente / OK
+                        </span>
+                        <span class="rounded-circle bg-warning" style="min-width: 150px;">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Próximo a Vencer (< 30 días)
+                        </span>
+                        <span class="rounded-circle bg-danger" style="min-width: 150px;">
+                            <i class="bi bi-x-octagon-fill me-1"></i> Vencido / Sin Permiso (S/P)
+                        </span>
+                        <span class="rounded-circle bg-secondary" style="min-width: 150px;">
+                            <i class="bi bi-slash-circle me-1"></i> Sin Informacion / N/A
+                        </span>
+                    </div>
                 </div>
             </div>
             <table id="vehiculosTable" class="table table-hover table-striped">
