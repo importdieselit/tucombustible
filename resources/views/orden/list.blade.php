@@ -40,6 +40,30 @@
             </div>
         @endif
         <div class="table-responsive">
+            <div class="card mb-3 shadow-sm">
+    <div class="card-body p-3">
+        <h6 class="text-muted mb-3"><i class="fa fa-info-circle me-2"></i> Leyenda de Estados y Tiempos</h6>
+        <div class="d-flex flex-wrap gap-3">
+            <div class="d-flex align-items-center me-4">
+                <div class="rounded-circle bg-danger me-2" style="width: 15px; height: 15px; border: 1px solid #0002;"></div>
+                <span class="small">Crítico (> 48h Abierta)</span>
+            </div>
+            <div class="d-flex align-items-center me-4">
+                <div class="rounded-circle bg-warning me-2" style="width: 15px; height: 15px; border: 1px solid #0002;"></div>
+                <span class="small">Atención (> 24h Abierta)</span>
+            </div>
+            
+            <div class="d-flex align-items-center me-4">
+                <div class="rounded-circle bg-success me-2" style="width: 15px; height: 15px; border: 1px solid #0002;"></div>
+                <span class="small">Cerrada / Finalizada</span>
+            </div>
+            <div class="d-flex align-items-center me-4">
+                <div class="rounded-circle bg-secondary me-2" style="width: 15px; height: 15px; border: 1px solid #0002;"></div>
+                <span class="small">Cancelada / Anulada</span>
+            </div>
+        </div>
+    </div>
+</div>
             <table id="ordenesTable" class="table table-hover table-striped">
                 <thead>
                     <tr>
