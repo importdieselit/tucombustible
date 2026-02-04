@@ -68,7 +68,7 @@
                         </td>
                         <td>{{$orden->created_at->diffForHumans(now())}}</td>
                         <td>
-                            @php($estatusInfo = $estatusData->get($orden->estatus))
+                            @php $estatusInfo = $estatusData->get($orden->estatus); @endphp
                             @if ($estatusInfo)
                                @php
                                     $horas = $orden->created_at->diffInHours(now());
@@ -81,11 +81,6 @@
                                     {{ $estatusInfo->orden }}
                                 </span>
                             @else
-
-                                
-
-
-                            
                                 <span class="badge bg-gray">Desconocido</span>
                             @endif
                         </td>
