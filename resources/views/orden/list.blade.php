@@ -54,6 +54,10 @@
             </div>
             
             <div class="d-flex align-items-center me-4">
+                <div class="rounded-circle bg-info me-2" style="width: 15px; height: 15px; border: 1px solid #0002;"></div>
+                <span class="small">Abierta (0-24h)</span>
+            </div>
+            <div class="d-flex align-items-center me-4">
                 <div class="rounded-circle bg-success me-2" style="width: 15px; height: 15px; border: 1px solid #0002;"></div>
                 <span class="small">Cerrada / Finalizada</span>
             </div>
