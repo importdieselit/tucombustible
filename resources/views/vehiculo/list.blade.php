@@ -69,7 +69,7 @@
                 </div>
             
                 <div class="card p-2 mb-3 shadow-sm border-light">
-                    <p class="mb-1 fw-bold">Leyenda de Estatus de Documentos:</p>
+                    <h6 class="text-muted mb-3"><i class="fa fa-info-circle me-2"></i> Leyenda de Estatus de Documentos</h6>
                     <div class="d-flex flex-wrap gap-3 small">
                         <div class="d-flex align-items-center me-4">
                             <div class="rounded-circle bg-success me-2" style="width: 15px; height: 15px; border: 1px solid #0002;"></div>
@@ -161,8 +161,6 @@
                         </td>
                         <td>
                            @php
-    // Definimos un array asociativo con el nombre y los campos del vehículo.
-    // 'Documento' => ['campo_fecha', 'campo_texto']
                                 $documentos = [
                                     'Póliza'       => ['poliza_fecha_out', null],
                                     'RCV'          => ['rcv', null],
@@ -177,12 +175,9 @@
 
                             @foreach ($documentos as $label => $fields)
                                 @php
-                                    // 1. Llama al método del modelo para obtener el estatus
                                     $status = $vehiculo->getDocumentStatus($label, $fields[0], $fields[1]);
                                     $statusClass = $status['class'] ?? 'bg-secondary';
                                 @endphp
-
-                                {{-- 2. Mostrar SOLO si el estatus NO es de éxito. --}}
                                 @if ($statusClass === 'bg-danger' || $statusClass === 'bg-warning' || $statusClass === 'bg-secondary')
                                     <x-document-status-badge :status="$status" label="{{ $label }}" />
                                     @php $hasAlerts = true; @endphp
