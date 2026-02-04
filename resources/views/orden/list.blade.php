@@ -70,12 +70,17 @@
                         <td>
                             @php($estatusInfo = $estatusData->get($orden->estatus))
                             @if ($estatusInfo)
-                                @php($css=$orden->created_at->diffInDays(now())>1?'danger':$estatusInfo->css)
+                                @php($css=$orden->created_at->diffInDays(now())>1?($orden->created_at->diffInDays(now())>2?'danger':'warning'):$estatusInfo->css)
                                 <span class="badge bg-{{ $css }}" title="{{ $estatusInfo->descripcion }}">
                                     <i class="mr-1 fa-solid {{ $estatusInfo->icon_orden }}"></i>
                                     {{ $estatusInfo->orden }}
                                 </span>
                             @else
+
+                                
+
+
+                            
                                 <span class="badge bg-gray">Desconocido</span>
                             @endif
                         </td>
