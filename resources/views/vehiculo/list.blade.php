@@ -71,18 +71,23 @@
                 <div class="card p-2 mb-3 shadow-sm border-light">
                     <p class="mb-1 fw-bold">Leyenda de Estatus de Documentos:</p>
                     <div class="d-flex flex-wrap gap-3 small">
-                        <span class="rounded-circle bg-success" style="min-width: 150px;">
-                            <i class="bi bi-check-circle me-1"></i> Vigente / OK
-                        </span>
-                        <span class="rounded-circle bg-warning" style="min-width: 150px;">
-                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Próximo a Vencer (< 30 días)
-                        </span>
-                        <span class="rounded-circle bg-danger" style="min-width: 150px;">
-                            <i class="bi bi-x-octagon-fill me-1"></i> Vencido / Sin Permiso (S/P)
-                        </span>
-                        <span class="rounded-circle bg-secondary" style="min-width: 150px;">
-                            <i class="bi bi-slash-circle me-1"></i> Sin Informacion / N/A
-                        </span>
+                        <div class="d-flex align-items-center me-4">
+                            <div class="rounded-circle bg-success me-2" style="width: 15px; height: 15px; border: 1px solid #0002;"></div>
+                            <span class="small">Vigente / OK</span>
+                            
+                        </div>
+                        <div class="d-flex align-items-center me-4">
+                            <div class="rounded-circle bg-warning me-2" style="width: 15px; height: 15px; border: 1px solid #0002;"></div>
+                            <span class="small">Próximo a Vencer (< 30 días)</span>
+                        </div>
+                        <div class="d-flex align-items-center me-4">
+                            <div class="rounded-circle bg-danger me-2" style="width: 15px; height: 15px; border: 1px solid #0002;"></div>
+                            <span class="small">Vencido / Sin Permiso (S/P)</span>
+                        </div>
+                        <div class="d-flex align-items-center me-4">
+                            <div class="rounded-circle bg-secondary me-2" style="width: 15px; height: 15px; border: 1px solid #0002;"></div>
+                            <span class="small">Sin Informacion / N/A</span>
+                        </div>
                     </div>
                 </div>
             </div>
