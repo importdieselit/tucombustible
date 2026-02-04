@@ -15,6 +15,7 @@ class DespachoViaje extends Model
     protected $fillable = [
         'viaje_id',
         'cliente_id',
+        'observacion',
         'otro_cliente', // Para clientes no registrados
         'litros',
     ];
