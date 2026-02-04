@@ -68,7 +68,7 @@
                     </div>
                 </div>
             
-                <div class="card p-2 mb-3 shadow-sm border-light">
+                <div class="card p-3 mb-3 shadow-sm border-light">
                     <h6 class="text-muted mb-3"><i class="fa fa-info-circle me-2"></i> Leyenda de Estatus de Documentos</h6>
                     <div class="d-flex flex-wrap gap-3 small">
                         <div class="d-flex align-items-center me-4">
