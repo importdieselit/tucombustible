@@ -4,6 +4,7 @@
 /storage/*.key
 /vendor
 error_log
+tucombustible-76660-firebase-adminsdk-fbsvc-186df7ef1c.json
 .env
 .env.backup
 .phpunit.result.cache
