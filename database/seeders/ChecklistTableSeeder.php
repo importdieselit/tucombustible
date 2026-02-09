@@ -1,0 +1,343 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+
+class ChecklistTableSeeder extends Seeder
+{
+
+    /**
+     * Auto generated seed file
+     *
+     * @return void
+     */
+    public function run()
+    {
+        
+
+        \DB::table('checklist')->delete();
+        
+        \DB::table('checklist')->insert(array (
+            0 => 
+            array (
+                'activo' => 1,
+                'checklist' => '{
+    "checklist_name": "checklist Inspeccion",
+    "version": "1.3",
+    "sections": [
+        {
+            "section_title": "Información General",
+            "items": [
+                {"label": "Responsable de inspeccion", "response_type": "text", "value": "", "col_width": 12},
+   {"label": "Fecha de Inspección", "response_type": "date", "value": "", "col_width": 6}
+            ]
+        },
+        {
+            "section_title": "Datos del Vehículo",
+            "items": [
+                {"label": "Placa", "response_type": "text", "value": "", "col_width": 4, "data_source": "Vehiculo.placa"},
+                {"label": "Color", "response_type": "text", "value": "", "col_width": 4, "data_source": "Vehiculo.color"},
+                {"label": "Marca", "response_type": "text", "value": "", "col_width": 4, "data_source": "Vehiculo.marca"},
+                {"label": "Modelo", "response_type": "text", "value": "", "col_width": 4, "data_source": "Vehiculo.modelo"},
+                {"label": "Versión", "response_type": "text", "value": "", "col_width": 4, "data_source": "Vehiculo.version"},
+                {"label": "No. Motor", "response_type": "text", "value": "", "col_width": 6, "data_source": "Vehiculo.serial_motor"},
+                {"label": "No. Serial", "response_type": "text", "value": "", "col_width": 6, "data_source": "Vehiculo.serial_carroceria"},
+                {"label": "Tipo de Vehículo", "response_type": "text", "value": "", "col_width": 6, "data_source": "Vehiculo.tipo_vehiculo"},
+                {"label": "Km. Recorridos", "response_type": "text", "value": "", "col_width": 6, "data_source": "Vehiculo.kilometraje"},
+                {"label": "Volumetria", "response_type": "text", "value": "", "col_width": 6, "data_source": "Vehiculo.volumetria"},
+                {"label": "Verificación Técnica", "response_type": "composite", "value": {"status": null, "vigencia": null},
+                    "fields": [{"label": "Estado", "type": "boolean"}, {"label": "Vigente Hasta", "type": "date"}], 
+                    "col_width": 6, 
+                    "data_source": {"model": "Vehiculo", "status_field": "certif_reg_status", "date_field": "certif_reg_vigencia"}
+                },
+                {"label": "Documentos de Seguros", "response_type": "composite", "value": {"status": null, "vigencia": null},
+                    "fields": [{"label": "Estado", "type": "boolean"}, {"label": "Vigente Hasta", "type": "date"}], 
+                    "col_width": 6, 
+                    "data_source": {"model": "Vehiculo", "status_field": "poliza_status", "date_field": "poliza_fecha_out"}
+                },
+                {"label": "Documentos de propiedad", "response_type": "boolean", "value": true, "col_width": 6, "data_source": "Vehiculo.documentos_propiedad"},
+                {"label": "Lugar de Inspección", "response_type": "text", "value": "", "col_width": 6, "data_source": "Vehiculo.ubicacion"},
+                {"label": "Inspección a cargo de", "response_type": "text", "value": "", "col_width": 12}
+            ]
+        },
+        {
+            "section_title": "Datos del Conductor",
+            "items": [
+                {"label": "Nombre", "response_type": "text", "value": "", "col_width": 6, "data_source": "Chofer.name"},
+                {"label": "Empresa", "response_type": "text", "value": "", "col_width": 6, "data_source": "Chofer.empresa"},
+                {"label": "No. Licencia", "response_type": "text", "value": "", "col_width": 4, "data_source": "Chofer.no_licencia"},
+                {"label": "Categoría", "response_type": "text", "value": "", "col_width": 4, "data_source": "Chofer.licencia_categoria"},
+                {"label": "Vigente hasta", "response_type": "date", "value": null, "col_width": 4, "data_source": "Chofer.licencia_vigencia"},
+                {"label": "Permiso para conducir", "response_type": "boolean", "value": true, "col_width": 6, "data_source": "Chofer.permiso_conducir"},
+                {"label": "Curso de Manejo Defensivo Vigente", "response_type": "composite", "value": {"status": null, "vigencia": null},
+                    "fields": [{"label": "Estado", "type": "boolean"}, {"label": "Vigente Hasta", "type": "date"}], 
+                    "col_width": 6, 
+                    "data_source": {"model": "Chofer", "status_field": "curso_status", "date_field": "curso_vigencia"}
+                }
+            ]
+        },
+        {"section_title": "1.- SISTEMA ELÉCTRICO", "items": [
+            {"label": "Luces de Alta y Baja", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Luces de Frenos", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Luces de Cruce (Giro/guiñadores)", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Luz de Retroceso", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Luces Intermitentes (Balizas)", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Luces de delimitación", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Luz del Tablero", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Bocina ó Corneta", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Alarma de Retroceso", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Alternador", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Batería", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Cables de Batería", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Aire Acondicionado", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Limpiaparabrisas", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Lavaparabrisas", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Vidrios Eléctricos", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Indicador de Combustible y otros", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Velocímetro/Odometro", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Tacógrafo (Drive Right)", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Vigia", "response_type": "boolean", "value": true, "col_width": 4}
+        ]},
+        {"section_title": "2.- NEUMÁTICOS", "items": [
+            {"label": "Neumáticos Delanteros", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Neumáticos Traseros", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Neumático de Repuesto", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Tuercas / Pernos", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Presión de Aire", "response_type": "boolean", "value": true, "col_width": 4}
+        ]},
+        {"section_title": "3.- SISTEMA MECÁNICO", "items": [
+            {"label": "Nivel de Aceite del Motor", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Nivel de Aceite de Transmisión", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Nivel de Agua del Radiador", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Funcionamiento de Frenos", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Frenos de Estacionamiento (de mano)", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Tapa del Radiador", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Tapa Compartimiento de Aceite", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Tapa Depósito de Agua del Motor", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Tapa Tanque de Gasolina/Gasoil", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Filtro de aire", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Amortiguadores", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Caño de escape/Silenciador", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Arrestachispas", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Sistema de dirección", "response_type": "boolean", "value": true, "col_width": 4}
+        ]},
+        {"section_title": "4.- TAPICERÍA", "items": [
+            {"label": "Asientos del Conductor", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Asientos del Copiloto/acompañante", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Asientos Traseros", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Asientos de Pasajeros", "response_type": "boolean", "value": true, "col_width": 4}
+        ]},
+        {"section_title": "5.- CRISTALERIA", "items": [
+            {"label": "Parabrisas", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Vidrios Puertas", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Vidrio Trasero", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Vidrios Laterales (Autobuses)", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Espejo Retrovisor Interno", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Espejo Retrovisor Izquierdo", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Espejo Retrovisor Derecho", "response_type": "boolean", "value": true, "col_width": 4}
+        ]},
+        {"section_title": "6.- LATONERÍA Y PINTURA", "items": [
+            {"label": "Maleta (Baúl)", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Caja Trasera (Pick Up)", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Parachoques Delanteros", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Parachoques Traseros", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Careta / Parrilla Frontal", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Capot", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Guardafangos Delanteros", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Guardafangos Traseros", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Techo", "response_type": "boolean", "value": true, "col_width": 4}
+        ]},
+        {"section_title": "7.- OTROS ELEMENTOS", "items": [
+            {"label": "Cinturón de Seguridad", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Apoya Cabezas", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Caja de Herramientas", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Barra Anti-vuelco", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Botiquín Primeros Auxilios", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Extintores (Matafuegos)", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Criket (Gato) y Llaves de Ruedas", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Triángulos (Balizas) o Conos", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Banderas de Advertencia", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Kit de emergencias (Vans)", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Cable o Barra de Remolque", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Cadenas/Eslingas para cargas", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Caja/Plataforma de carga", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Plato de enganche", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Protección de Cabina", "response_type": "boolean", "value": true, "col_width": 4},
+            {"label": "Cisterna", "response_type": "boolean", "value": true, "col_width": 4}
+        ]},
+        {"section_title": "8.- DOCUMENTACIÓN Y EQUIPO", "subsections": [
+            {"subsection_title": "Documentación de la Unidad", "items": [
+                {"label": "Permiso de Transporte Terrestre", "response_type": "composite", "value": {"status": null, "vigencia": null}, "col_width": 6, "data_source": {"model": "Vehiculo", "status_field": "permiso_status", "date_field": "permiso_vigencia"}},
+                {"label": "Póliza de Seguro - Cobertura de Daños Ambientales", "response_type": "composite", "value": {"status": null, "vigencia": null}, "col_width": 6, "data_source": {"model": "Vehiculo", "status_field": "poliza_amb_status", "date_field": "poliza_amb_vigencia"}},
+                {"label": "RACDA", "response_type": "composite", "value": {"status": null, "vigencia": null}, "col_width": 6, "data_source": {"model": "Vehiculo", "status_field": "racda_status", "date_field": "racda_vigencia"}},
+                {"label": "ROTC", "response_type": "composite", "value": {"status": null, "vigencia": null}, "col_width": 6, "data_source": {"model": "Vehiculo", "status_field": "rotc_status", "date_field": "rotc_vigencia"}},
+                {"label": "RCV", "response_type": "composite", "value": {"status": null, "vigencia": null}, "col_width": 6, "data_source": {"model": "Vehiculo", "status_field": "rcv_status", "date_field": "rcv_vigencia"}}
+            ]},
+            {"subsection_title": "Documentación del Conductor", "items": [
+                {"label": "Cédula de Identidad", "response_type": "composite", "value": {"status": null, "vigencia": null}, "col_width": 6, "data_source": {"model": "Chofer", "status_field": "cedula_status", "date_field": "cedula_vigencia"}},
+                {"label": "Certificado Médico", "response_type": "composite", "value": {"status": null, "vigencia": null}, "col_width": 6, "data_source": {"model": "Chofer", "status_field": "certif_medico_status", "date_field": "certif_medico_vigencia"}},
+                {"label": "Licencia de Conducir Profesional", "response_type": "composite", "value": {"status": null, "vigencia": null}, "col_width": 6, "data_source": {"model": "Chofer", "status_field": "licencia_prof_status", "date_field": "licencia_prof_vigencia"}},
+                {"label": "Certificado de Manejo de Materiales Peligrosos", "response_type": "composite", "value": {"status": null, "vigencia": null}, "col_width": 6, "data_source": {"model": "Chofer", "status_field": "certif_mat_pel_status", "date_field": "certif_mat_pel_vigencia"}}
+            ]},
+            {"subsection_title": "Implementos de Trabajo", "items": [
+                {"label": "Uniforme", "response_type": "boolean", "value": true, "col_width": 4},
+                {"label": "Camisa", "response_type": "boolean", "value": true, "col_width": 4},
+                {"label": "Pantalón", "response_type": "boolean", "value": true, "col_width": 4},
+                {"label": "Gorra", "response_type": "boolean", "value": true, "col_width": 4},
+                {"label": "Botas", "response_type": "boolean", "value": true, "col_width": 4},
+                {"label": "Kit de Seguridad", "response_type": "boolean", "value": true, "col_width": 4},
+                {"label": "Kit Antiderrame", "response_type": "boolean", "value": true, "col_width": 4},
+                {"label": "Lentes", "response_type": "boolean", "value": true, "col_width": 4},
+                {"label": "Guantes", "response_type": "boolean", "value": true, "col_width": 4},
+                {"label": "Poncho", "response_type": "boolean", "value": true, "col_width": 4},
+                {"label": "Aserrín", "response_type": "boolean", "value": true, "col_width": 4}
+            ]}
+        ]},
+        {"section_title": "9.- KIT DE EQUIPAMIENTO", "items": [
+            {"label": "Manguera de 1 pulgada y 1/2", "response_type": "boolean", "value": true, "col_width": 6},
+            {"label": "Manguera de 1 pulgada", "response_type": "boolean", "value": true, "col_width": 6},
+            {"label": "Pico para abastecer de 1 pulgada y 1/2", "response_type": "boolean", "value": true, "col_width": 6},
+            {"label": "Pico para abastecer de 1 pulgada", "response_type": "boolean", "value": true, "col_width": 6},
+            {"label": "Tapón para los picos de la manguera", "response_type": "boolean", "value": true, "col_width": 6},
+            {"label": "Mecate", "response_type": "boolean", "value": true, "col_width": 6},
+            {"label": "Gracera", "response_type": "boolean", "value": true, "col_width": 6},
+            {"label": "Dispensador de aceite", "response_type": "boolean", "value": true, "col_width": 6},
+            {"label": "Manguera de aire grasera", "response_type": "boolean", "value": true, "col_width": 6},
+            {"label": "Manguera de aire dispensador de aceite", "response_type": "boolean", "value": true, "col_width": 6},
+            {"label": "Tapa de los tanques", "response_type": "boolean", "value": true, "col_width": 6},
+            {"label": "Protector del medidor de nivel de los tanques", "response_type": "boolean", "value": true, "col_width": 6},
+            {"label": "Medidor", "response_type": "boolean", "value": true, "col_width": 6},
+            {"label": "Bomba y medidor de 1 pulgada", "response_type": "boolean", "value": true, "col_width": 6},
+            {"label": "Llaves de paso", "response_type": "boolean", "value": true, "col_width": 6},
+            {"label": "Filtro Yee", "response_type": "boolean", "value": true, "col_width": 6},
+            {"label": "Candados", "response_type": "boolean", "value": true, "col_width": 6},
+            {"label": "Llaves de candados", "response_type": "boolean", "value": true, "col_width": 6},
+            {"label": "Tapón de la salida de despacho de la motobomba", "response_type": "boolean", "value": true, "col_width": 6},
+            {"label": "Gato y palanca", "response_type": "boolean", "value": true, "col_width": 6},
+            {"label": "Bandejas contenedores de líquidos", "response_type": "boolean", "value": true, "col_width": 6},
+            {"label": "Calcomanías", "response_type": "boolean", "value": true, "col_width": 6},
+            {"label": "Kit de herramientas", "response_type": "boolean", "value": true, "col_width": 6},
+            {"label": "Conos", "response_type": "boolean", "value": true, "col_width": 6},
+            {"label": "Extintores", "response_type": "boolean", "value": true, "col_width": 6}
+        ]},
+        {"section_title": "10.- ESTATUS DE SALIDA", "items": [
+            {"label": "Vehiculo Operativo?", "response_type": "boolean", "value": true, "col_width": 12},
+            {"label": "Apto para Carga de Combustible?", "response_type": "boolean", "value": true, "col_width": 12}
+        ]},
+        {"section_title": "Observaciones", "items": [
+            {"label": "Observaciones Generales", "response_type": "textarea", "value": "", "col_width": 12}
+        ]}
+    ]
+}',
+                'created_at' => '2025-09-25 16:16:16',
+                'id' => 1,
+                'tipo' => 1,
+                'titulo' => 'Checklist Inspeccion',
+                'updated_at' => '2025-10-21 16:16:16',
+            ),
+            1 => 
+            array (
+                'activo' => 1,
+                'checklist' => '
+
+{
+    "checklist_name": "Checklist Mantenimiento",
+    "version": "1.4",
+    "sections": [
+        {
+            "section_title": "Información General",
+            "items": [
+                {"label": "Responsable de inspección", "response_type": "text", "value": "", "col_width": 12},
+                {"label": "Fecha de Inspección", "response_type": "date", "value": "", "col_width": 6},
+                {"label": "Tipo de Inspeccion", "response_type": "radio", "options": ["Mantenimiento M1 (Filtros)", "Mantenimiento M2 (Revisión Profunda)", "Rutina Diaria"], "value": "Mantenimiento M1 (Filtros)", "col_width": 12}
+            ]
+        },
+        {
+            "section_title": "Datos del Vehículo",
+            "items": [
+                {"label": "Placa", "response_type": "text", "value": "", "col_width": 4, "data_source": "Vehiculo.placa"},
+                {"label": "Kilometraje (Al Momento de Inspección)", "response_type": "number", "value": "", "col_width": 4},
+                {"label": "Unidad N°", "response_type": "text", "value": "", "col_width": 4, "data_source": "Vehiculo.unidad_no"},
+                {"label": "Verificación Técnica", "response_type": "composite", "value": {"status": null, "vigencia": null},
+                    "fields": [{"label": "Estado", "type": "boolean"}, {"label": "Vigente Hasta", "type": "date"}], 
+                    "col_width": 6, 
+                    "data_source": {"model": "Vehiculo", "status_field": "certif_reg_status", "date_field": "certif_reg_vigencia"}
+                },
+                {"label": "Documentos de Seguros", "response_type": "composite", "value": {"status": null, "vigencia": null},
+                    "fields": [{"label": "Estado", "type": "boolean"}, {"label": "Vigente Hasta", "type": "date"}], 
+                    "col_width": 6, 
+                    "data_source": {"model": "Vehiculo", "status_field": "poliza_status", "date_field": "poliza_fecha_out"}
+                }
+            ]
+        },
+        {
+            "section_title": "1. Rutina: Fugas de Fluidos y Aire",
+            "items": [
+                {"label": "Fugas por Sellos del Motor", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Fugas por Radiador / Verificar Fijación/Limpieza", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Fugas por Mangueras del Motor", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Roturas en Envase del Agua para Radiador", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Fugas por Mangueras y Conexiones (Chuto/Cava)", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Fugas por Pulmones de Frenos", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Fugas por Intercooler", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Fugas por Válvula Principal de Frenos", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Fugas por Estoperas de Ruedas", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Fugas por Tapa Válvulas del Motor", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Fugas por Cuello del Cigüeñal (Trasero y Delantero)", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Fugas por Mangueras y Cilindro de Elevación de Cabina", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Observaciones Generales de Fugas", "response_type": "text", "value": "", "col_width": 12, "is_critical_flag": true, "critical_condition": "!boolean"}
+            ]
+        },
+        {
+            "section_title": "2. Rutina: Frenos y Sistema Neumático",
+            "items": [
+                {"label": "Estado de las Bandas (Delanteras y Traseras)", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Estado de los Raches / Lubricación", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Estado de los Tambores", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Graduación de Todas las Bandas", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Funcionamiento del Compresor (Desengranado)", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Funcionamiento de Válvula Secante", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Funcionamiento de Válvula Freno de Estacionamiento", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Funcionamiento de Manómetros del Tablero", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Observaciones de Frenos y Neumático", "response_type": "text", "value": "", "col_width": 12, "is_critical_flag": true, "critical_condition": "!boolean"}
+            ]
+        },
+        {
+            "section_title": "3. Rutina: Componentes de Transmisión y Tren",
+            "items": [
+                {"label": "Funcionamiento del Embrague y Palanca de Cambios", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Nivel de Liga del Embrague", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Estado de Bombines (Superior/Inferior)", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Estado del Servo Embrague (Si aplica)", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Tren Delantero (Alineación, barras, terminales, amortiguadores)", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Suspensión Trasera (Ballestas, guías, bujes, soportes)", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Sistema de Propulsión (Crucetas, chumacera, cuplones)", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Motor (Correa, poleas, inyectores, turbo)", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Observaciones de Transmisión y Tren", "response_type": "text", "value": "", "col_width": 12, "is_critical_flag": true, "critical_condition": "!boolean"}
+            ]
+        },
+        {
+            "section_title": "4. Rutina: Carrocería, Cabina y Eléctrico",
+            "items": [
+                {"label": "Vestidura (Asientos, parabrisas, retrovisores, tapicería, A/A)", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Furgón / Carrocería (Láminas internas, externas y puertas)", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Quinta Rueda (Engrase, juego y tornillos de fijación)", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Sistema Eléctrico (Funcionamiento de luces, fusiblera)", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Elevador Hidráulico (Funcionamiento de comandos, nivel de aceite)", "response_type": "boolean", "value": true, "col_width": 6},
+                {"label": "Observaciones de Carrocería y Cabina", "response_type": "text", "value": "", "col_width": 12, "is_critical_flag": false}
+            ]
+        }
+    ]
+}',
+                'created_at' => '2025-09-25 16:16:16',
+                'id' => 2,
+                'tipo' => 2,
+                'titulo' => 'Checklist Mantenimiento',
+                'updated_at' => '2025-10-21 16:16:16',
+            ),
+        ));
+        
+        
+    }
+}

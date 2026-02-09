@@ -1,0 +1,100 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use App\Models\User; // Asegúrate de importar el modelo User
+use App\Models\Inventario; // Asegúrate de importar el modelo Inventario
+use App\Models\Orden; // Asegúrate de importar el modelo Orden
+
+class InventarioSuministro extends Model
+{
+    use HasFactory;
+
+    /**
+     * El nombre de la tabla asociada al modelo.
+     * @var string
+     */
+    protected $table = 'inventario_suministro';
+
+    /**
+     * La clave primaria de la tabla.
+     * Por defecto, Eloquent asume que la clave primaria es 'id'.
+     * @var string
+     */
+    protected $primaryKey = 'id_inventario_suministro';
+
+    /**
+     * Indica si el ID es autoincremental.
+     * @var bool
+     */
+    public $incrementing = true;
+
+
+    /**
+     * Los atributos que se pueden asignar masivamente.
+     * Esto previene el error de Asignación Masiva.
+     *
+     * @var array<int, string>
+     */
+    protected $fillable = [
+        'estatus',
+        'id_usuario',
+        'id_orden',
+        'destino',
+        'servicio',
+        'id_auto',
+        'id_inventario',
+        'anulacion',
+        'id_emisor',
+        'cantidad',
+    ];
+
+    
+
+    /**
+     * Indica si el modelo debe manejar automáticamente los timestamps.
+     * @var bool
+     */
+    public $timestamps = true;  
+
+    /**
+     * Define la relación con el modelo Usuario.
+     * Una entrada de inventario_suministro pertenece a un usuario.
+     */
+    public function usuario()
+    {
+        return $this->belongsTo(User::class, 'id', 'id_usuario');
+    }
+    /**
+     * Define la relación con el modelo Inventario.
+     * Una entrada de inventario_suministro pertenece a un inventario.
+     */
+    public function inventario()
+    {
+        return $this->belongsTo(Inventario::class, 'id_inventario');   
+    }
+
+    /**
+     * Define la relación con el modelo Orden.
+     * Una entrada de inventario_suministro pertenece a una orden.
+     */
+    public function orden()
+    {
+        return $this->belongsTo(Orden::class, 'id_orden');  
+    }
+
+    public function vehiculo()
+    {
+        return $this->belongsTo(Orden::class, 'id_orden')->first()->vehiculo();  
+    }
+
+    public function estatus()
+    {
+        return $this->belongsTo(EstatusData::class, 'estatus', 'id_estatus')->first();
+    }
+    
+
+}
+
