@@ -298,7 +298,6 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
                 'icon' => 'fa-truck',
                 'title' => 'Vehículos',
                 'color' => 'bg-info',
-                'target' => '_blank',
                 'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
             ])
         </div>
@@ -310,7 +309,6 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
                 'icon' => 'fa-calendar',
                 'title' => 'Planificacion Mantenimiento',
                 'color' => 'bg-warning',
-                'target' => '_blank',
                 'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
             ])
         </div>
@@ -325,7 +323,6 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
                 'icon' => 'fa-screwdriver-wrench',
                 'title' => 'Mantenimiento',
                 'color' => 'bg-warning',
-                'target' => '_blank',
                 'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
             ])
         </div>
@@ -341,7 +338,6 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
                 'icon' => 'fa-box-open',
                 'title' => 'Inventario',
                 'color' => 'bg-success',
-                'target' => '_blank',
                 'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
             ])
         </div>
@@ -356,7 +352,6 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
                 'route' => route('combustible.index'),
                 'icon' => 'fa-gas-pump',
                 'title' => 'Combustible',
-                'target' => '_blank',
                 'color' => 'bg-secondary',
                 'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
             ])
@@ -373,7 +368,6 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
                 'icon' => 'fa-list',
                 'title' => 'Checklist',
                 'color' => 'bg-primary',
-                'target' => '_blank',
                 'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
             ])
         </div>
@@ -389,7 +383,6 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
                 'icon' => 'fa-truck-fast',
                 'title' => 'Surtir Combustible',
                 'color' => 'bg-primary',
-                'target' => '_blank',
                 'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
             ])
         </div>
@@ -402,8 +395,7 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
                 'icon' => 'fa-address-book',
                 'title' => 'Clientes',
                 'color' => 'bg-primary',
-                'target' => '_blank',
-                'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
+                'target' => '_blank', 'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
             ])
         </div>
         @endif
@@ -417,7 +409,6 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
                 'icon' => 'fa-list',
                 'title' => 'Reportes',
                 'color' => 'bg-primary',
-                'target' => '_blank',
                 'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
             ])
         </div>
@@ -432,7 +423,6 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
                 'icon' => 'fa-route',
                 'title' => 'Cargas / Despachos',
                 'color' => 'bg-primary',
-                'target' => '_blank',
                 'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
             ])
         </div>
@@ -460,7 +450,6 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
                 'icon' => 'fa-calendar',
                 'title' => 'Planificacion Combustible',
                 'color' => 'bg-warning',
-                'target' => '_blank',
                 'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
             ])
         </div>
@@ -471,7 +460,6 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
                 'icon' => 'fa-user',
                 'title' => 'Choferes',
                 'color' => 'bg-warning',
-                'target' => '_blank',
                 'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
             ])
         </div>

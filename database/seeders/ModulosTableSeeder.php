@@ -1,0 +1,418 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+
+class ModulosTableSeeder extends Seeder
+{
+
+    /**
+     * Auto generated seed file
+     *
+     * @return void
+     */
+    public function run()
+    {
+        
+
+        \DB::table('modulos')->delete();
+        
+        \DB::table('modulos')->insert(array (
+            0 => 
+            array (
+                'created_at' => NULL,
+                'descripcion' => NULL,
+                'icono' => 'fa-address-book',
+                'id' => 52,
+                'id_padre' => 0,
+                'modulo' => 'Clientes',
+                'orden' => 8,
+                'ruta' => 'captacion.admin.index',
+                'updated_at' => NULL,
+                'url_directa' => NULL,
+                'visible' => NULL,
+            ),
+            1 => 
+            array (
+                'created_at' => NULL,
+                'descripcion' => NULL,
+                'icono' => 'fa-users',
+                'id' => 51,
+                'id_padre' => 5,
+                'modulo' => 'Usuarios',
+                'orden' => 3,
+                'ruta' => 'usuarios.list',
+                'updated_at' => NULL,
+                'url_directa' => 1,
+                'visible' => 1,
+            ),
+            2 => 
+            array (
+                'created_at' => NULL,
+                'descripcion' => NULL,
+                'icono' => NULL,
+                'id' => 50,
+                'id_padre' => 4,
+                'modulo' => 'Por Despachar',
+                'orden' => 6,
+                'ruta' => 'combustible.aprobados',
+                'updated_at' => NULL,
+                'url_directa' => 1,
+                'visible' => 1,
+            ),
+            3 => 
+            array (
+                'created_at' => NULL,
+                'descripcion' => NULL,
+                'icono' => NULL,
+                'id' => 49,
+                'id_padre' => 4,
+                'modulo' => 'Pedidos Clientes',
+                'orden' => 5,
+                'ruta' => 'combustible.pedidos',
+                'updated_at' => NULL,
+                'url_directa' => 1,
+                'visible' => 1,
+            ),
+            4 => 
+            array (
+                'created_at' => NULL,
+                'descripcion' => NULL,
+                'icono' => 'bi-document',
+                'id' => 48,
+                'id_padre' => 3,
+                'modulo' => 'Solicitudes',
+                'orden' => 3,
+                'ruta' => 'inventario.requests',
+                'updated_at' => NULL,
+                'url_directa' => 1,
+                'visible' => 1,
+            ),
+            5 => 
+            array (
+                'created_at' => NULL,
+                'descripcion' => NULL,
+                'icono' => 'bi-user',
+                'id' => 47,
+                'id_padre' => 5,
+                'modulo' => 'Choferes',
+                'orden' => 1,
+                'ruta' => 'choferes.index',
+                'updated_at' => NULL,
+                'url_directa' => 1,
+                'visible' => 1,
+            ),
+            6 => 
+            array (
+                'created_at' => NULL,
+                'descripcion' => NULL,
+                'icono' => NULL,
+                'id' => 45,
+                'id_padre' => 4,
+                'modulo' => 'Despacho',
+                'orden' => 6,
+                'ruta' => 'combustible.despacho',
+                'updated_at' => NULL,
+                'url_directa' => 1,
+                'visible' => 1,
+            ),
+            7 => 
+            array (
+                'created_at' => NULL,
+                'descripcion' => '1',
+                'icono' => NULL,
+                'id' => 44,
+                'id_padre' => 4,
+                'modulo' => 'Recarga',
+                'orden' => 5,
+                'ruta' => 'combustible.recarga',
+                'updated_at' => NULL,
+                'url_directa' => 1,
+                'visible' => 1,
+            ),
+            8 => 
+            array (
+                'created_at' => NULL,
+                'descripcion' => '',
+                'icono' => 'bi-person',
+                'id' => 43,
+                'id_padre' => 4,
+                'modulo' => 'Clientes',
+                'orden' => 4,
+                'ruta' => 'clientes.list',
+                'updated_at' => NULL,
+                'url_directa' => 1,
+                'visible' => 1,
+            ),
+            9 => 
+            array (
+                'created_at' => NULL,
+                'descripcion' => NULL,
+                'icono' => 'bi-list-ol',
+                'id' => 42,
+                'id_padre' => 4,
+                'modulo' => 'Despachos',
+                'orden' => 3,
+                'ruta' => 'despachos.list',
+                'updated_at' => NULL,
+                'url_directa' => 1,
+                'visible' => 0,
+            ),
+            10 => 
+            array (
+                'created_at' => '2025-08-12 23:07:11',
+                'descripcion' => 'Historial de repostajes',
+                'icono' => 'bi-list-ol',
+                'id' => 41,
+                'id_padre' => 4,
+                'modulo' => 'Entradas/salidas',
+                'orden' => 2,
+                'ruta' => 'combustible.list',
+                'updated_at' => '2025-08-12 23:07:11',
+                'url_directa' => 1,
+                'visible' => 1,
+            ),
+            11 => 
+            array (
+                'created_at' => '2025-08-12 23:07:11',
+                'descripcion' => 'Ver tanques',
+                'icono' => 'bi-list-ol',
+                'id' => 40,
+                'id_padre' => 4,
+                'modulo' => 'Depositos',
+                'orden' => 1,
+                'ruta' => 'depositos.index',
+                'updated_at' => '2025-08-12 23:07:11',
+                'url_directa' => 1,
+                'visible' => 0,
+            ),
+            12 => 
+            array (
+                'created_at' => '2025-08-12 23:07:11',
+                'descripcion' => 'Gestión de proveedores',
+                'icono' => 'bi-truck',
+                'id' => 31,
+                'id_padre' => 3,
+                'modulo' => 'Proveedores',
+                'orden' => 2,
+                'ruta' => 'proveedores.index',
+                'updated_at' => '2025-08-12 23:07:11',
+                'url_directa' => 1,
+                'visible' => 0,
+            ),
+            13 => 
+            array (
+                'created_at' => '2025-08-12 23:07:11',
+                'descripcion' => 'Ver productos',
+                'icono' => 'bi-box',
+                'id' => 30,
+                'id_padre' => 3,
+                'modulo' => 'Inventario',
+                'orden' => 1,
+                'ruta' => 'inventario.index',
+                'updated_at' => '2025-08-12 23:07:11',
+                'url_directa' => 1,
+                'visible' => 1,
+            ),
+            14 => 
+            array (
+                'created_at' => '2025-08-12 23:07:11',
+                'descripcion' => 'Crear nueva orden',
+                'icono' => 'bi-plus-circle',
+                'id' => 21,
+                'id_padre' => 2,
+                'modulo' => 'Crear',
+                'orden' => 2,
+                'ruta' => 'ordenes.create',
+                'updated_at' => '2025-08-12 23:07:11',
+                'url_directa' => 1,
+                'visible' => 1,
+            ),
+            15 => 
+            array (
+                'created_at' => '2025-08-12 23:07:11',
+                'descripcion' => 'Ver todas las órdenes',
+                'icono' => 'bi-list-check',
+                'id' => 20,
+                'id_padre' => 2,
+                'modulo' => 'Listado',
+                'orden' => 1,
+                'ruta' => 'ordenes.list',
+                'updated_at' => '2025-08-12 23:07:11',
+                'url_directa' => 1,
+                'visible' => 1,
+            ),
+            16 => 
+            array (
+                'created_at' => '2025-08-12 23:07:11',
+                'descripcion' => 'Gestión de modelos',
+                'icono' => 'bi-tag',
+                'id' => 13,
+                'id_padre' => 1,
+                'modulo' => 'Modelos',
+                'orden' => 4,
+                'ruta' => 'modelos.index',
+                'updated_at' => '2025-08-12 23:07:11',
+                'url_directa' => 1,
+                'visible' => 1,
+            ),
+            17 => 
+            array (
+                'created_at' => '2025-08-12 23:07:11',
+                'descripcion' => 'Gestión de marcas',
+                'icono' => 'bi-tags',
+                'id' => 12,
+                'id_padre' => 1,
+                'modulo' => 'Marcas',
+                'orden' => 3,
+                'ruta' => 'marcas.index',
+                'updated_at' => '2025-08-12 23:07:11',
+                'url_directa' => 1,
+                'visible' => 1,
+            ),
+            18 => 
+            array (
+                'created_at' => '2025-08-12 23:07:11',
+                'descripcion' => 'Registrar nuevo vehículo',
+                'icono' => 'bi-plus-circle',
+                'id' => 11,
+                'id_padre' => 1,
+                'modulo' => 'Crear',
+                'orden' => 2,
+                'ruta' => 'vehiculos.create',
+                'updated_at' => '2025-08-12 23:07:11',
+                'url_directa' => 1,
+                'visible' => 1,
+            ),
+            19 => 
+            array (
+                'created_at' => '2025-08-12 23:07:11',
+                'descripcion' => 'Ver todos los vehículos',
+                'icono' => 'bi-list-ul',
+                'id' => 10,
+                'id_padre' => 1,
+                'modulo' => 'Listado',
+                'orden' => 1,
+                'ruta' => 'vehiculos.list',
+                'updated_at' => '2025-08-12 23:07:11',
+                'url_directa' => 1,
+                'visible' => 1,
+            ),
+            20 => 
+            array (
+                'created_at' => NULL,
+                'descripcion' => NULL,
+                'icono' => 'bi bi-geo-alt-fill me-2',
+                'id' => 8,
+                'id_padre' => 0,
+                'modulo' => 'Cargas/Despachos',
+                'orden' => 7,
+                'ruta' => 'viajes.index',
+                'updated_at' => NULL,
+                'url_directa' => 1,
+                'visible' => 1,
+            ),
+            21 => 
+            array (
+                'created_at' => NULL,
+                'descripcion' => NULL,
+                'icono' => NULL,
+                'id' => 7,
+                'id_padre' => NULL,
+                'modulo' => 'Reportes',
+                'orden' => 0,
+                'ruta' => 'reportes.index',
+                'updated_at' => NULL,
+                'url_directa' => 1,
+                'visible' => 1,
+            ),
+            22 => 
+            array (
+                'created_at' => NULL,
+                'descripcion' => NULL,
+                'icono' => 'fa-list',
+                'id' => 6,
+                'id_padre' => 0,
+                'modulo' => 'Cheklist',
+                'orden' => 0,
+                'ruta' => 'inspeccion.index',
+                'updated_at' => NULL,
+                'url_directa' => 1,
+                'visible' => 1,
+            ),
+            23 => 
+            array (
+                'created_at' => NULL,
+                'descripcion' => NULL,
+                'icono' => 'fa-users-gear',
+                'id' => 5,
+                'id_padre' => 0,
+                'modulo' => 'Administrar',
+                'orden' => 5,
+                'ruta' => 'usuarios.index',
+                'updated_at' => NULL,
+                'url_directa' => 0,
+                'visible' => 1,
+            ),
+            24 => 
+            array (
+                'created_at' => '2025-08-12 23:07:11',
+                'descripcion' => 'Gestión de tanques',
+                'icono' => 'bi-fuel-pump',
+                'id' => 4,
+                'id_padre' => 0,
+                'modulo' => 'Combustible',
+                'orden' => 4,
+                'ruta' => 'combustible.index',
+                'updated_at' => '2025-08-12 23:07:11',
+                'url_directa' => 1,
+                'visible' => 1,
+            ),
+            25 => 
+            array (
+                'created_at' => '2025-08-12 23:07:11',
+                'descripcion' => 'Gestión de inventario',
+                'icono' => 'bi-box-seam',
+                'id' => 3,
+                'id_padre' => 0,
+                'modulo' => 'Almacen',
+                'orden' => 3,
+                'ruta' => 'inventario.index',
+                'updated_at' => '2025-08-12 23:07:11',
+                'url_directa' => 1,
+                'visible' => 1,
+            ),
+            26 => 
+            array (
+                'created_at' => '2025-08-12 23:07:11',
+                'descripcion' => 'Gestión de órdenes',
+                'icono' => 'bi-clipboard-check',
+                'id' => 2,
+                'id_padre' => 0,
+                'modulo' => 'Órdenes',
+                'orden' => 2,
+                'ruta' => 'ordenes.index',
+                'updated_at' => '2025-08-12 23:07:11',
+                'url_directa' => 1,
+                'visible' => 1,
+            ),
+            27 => 
+            array (
+                'created_at' => '2025-08-12 23:07:11',
+                'descripcion' => 'Gestión de vehículos',
+                'icono' => 'bi-car-front',
+                'id' => 1,
+                'id_padre' => 0,
+                'modulo' => 'Vehículos',
+                'orden' => 1,
+                'ruta' => 'vehiculos.index',
+                'updated_at' => '2025-08-12 23:07:11',
+                'url_directa' => 1,
+                'visible' => 1,
+            ),
+        ));
+        
+        
+    }
+}

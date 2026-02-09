@@ -263,9 +263,6 @@
 
         <!-- Secciones de Acciones y Vistas -->
         <div class="row g-4 mb-5">
-
-
-
             <div class="col-12 col-md-6 col-lg-3">
                 {{-- <a href="{{route('combustible.list')}}" class="card-link" > --}}
                     <div class="card h-100 p-4 d-flex flex-column justify-content-center text-center">
@@ -530,7 +527,8 @@
 </div>
     </div>
 <div class="row g-4 mb-5">
-         @foreach ($tipoDeposito as $tipo )
+        @php($vacio=0)
+        @foreach ($tipoDeposito as $tipo )
     <div class="col-lg-6 col-md-12 mb-4">        
         
         <div class="card shadow-sm p-4 h-100">
@@ -543,6 +541,7 @@
                     @php($total = 0)
                     @php($capacidadTotal = 0) 
                      @foreach($tipo->depositos as $deposito)
+                        @php($vacio+=$deposito->capacidad_litros - $deposito->nivel_actual_litros)
                         @php($total += $deposito->nivel_actual_litros)
                         @php($capacidadTotal += $deposito->capacidad_litros)
                         @php($percentage = $deposito->nivel)
@@ -618,10 +617,16 @@
                             
                             <div class="text-center mt-2">
                                 <strong>{{ $deposito->serial }}</strong><br>
-                                <small class="text-muted">{{ number_format($deposito->nivel, 2) }}% de carga</small>
+                                <span class="text-black">{{ number_format($deposito->nivel, 2) }}% de carga</span>
                             </div>
                         </div>
                     @endforeach
+                    <div class="col-md-4 mb-2 p-4">
+                        <div class="text-center mt-2" style="border: 2px dashed #ccc; padding: 20px; height: 400px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                            <h1><strong>Faltante</strong></h1>
+                            <h1 class="text-black">{{ number_format($vacio, 2) }} Litros</h1>
+                        </div>
+                    </div>
                 </div>
                 </div>
         </div>

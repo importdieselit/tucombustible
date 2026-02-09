@@ -1,0 +1,34 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('aforo', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->bigInteger('deposito_id')->comment('ID del tanque (1 para Tanque 01)');
+            $table->decimal('profundidad_cm', 6)->comment('Profundidad medida con la varilla.');
+            $table->decimal('litros', 12)->comment('Volumen real asociado a la profundidad.');
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('aforo');
+    }
+};
