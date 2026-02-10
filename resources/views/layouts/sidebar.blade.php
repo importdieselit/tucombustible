@@ -35,12 +35,12 @@
     top: 0;
     left: 0;
     width: 250px;
-    padding-top: 5rem; /* Ajusta el padding superior para no solapar con el navbar */
+    padding-top: 1rem; /* Ajusta el padding superior para no solapar con el navbar */
 }
 .sidebar .nav-link {
     color: #bfc9da;
     font-weight: 500;
-    padding: 0.75rem 1.25rem;
+    padding: 0.2rem 0.75rem;
     border-radius: 0.375rem;
     transition: background 0.2s, color 0.2s;
 }
@@ -69,7 +69,7 @@
 .sidebar .submenu .nav-link {
     padding-left: 2.5rem;
     color: #bfc9da;
-    font-size: 0.97em;
+    font-size: 0.8em;
 }
 .sidebar .submenu .nav-link:hover {
     background: #2c3a5a;
@@ -105,14 +105,14 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <div class="col-md-3 col-lg-2 d-md-block sidebar " style="overflow-y: auto">
-    <div class="d-flex flex-column align-items-center mb-4" >
-          <img src="{{ asset('img/logomini.png') }}" alt="Logo de la empresa" class="img-fluid rounded-circle mb-3 border border-3 border-secondary" style="max-width: 100px;background: white; padding: 10px;">
+    <div class="d-flex flex-column align-items-center mb-1" >
+          <img src="{{ asset('img/logomini.png') }}" alt="Logo de la empresa" class="img-fluid rounded-circle border border-3 border-secondary" style="max-width: 100px;background: white; padding: 10px;">
             
-            <p class=" text-center mt-1"><strong>TuCombustible</strong></p>
-            <p class=" text-center mt-1">Impordiesel  </p>
+            <span class=" text-center"><strong>TuCombustible</strong></span>
+            <span class=" text-center">Impordiesel  </span>
 
         </div>
-    <div class="position-sticky pt-3" style="overflow-y: auto">
+    <div class="position-sticky pt-2" style="overflow-y: auto">
         <ul class="nav flex-column" style="overflow-y: auto">
             {{-- Enlace del Dashboard, siempre visible --}}
             <li class="nav-item">
@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             </li>
                             @foreach($secciones as $seccion)
                                 <li class="nav-item">
-                                    <a class="nav-link" href="{{ route($seccion->ruta) }}" title="{{ $seccion->descripcion }}">
+                                    <a class="nav-link"  href="{{ $seccion->url_directa==1 ? route($seccion->ruta) : '#' }}"  title="{{ $seccion->descripcion }}">
                                         <i class="{{ $seccion->icono }}"></i> {{ $seccion->modulo }}
                                     </a>
                                 </li>

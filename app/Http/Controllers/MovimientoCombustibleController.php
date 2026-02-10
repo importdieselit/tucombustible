@@ -391,7 +391,7 @@ public function createPrecarga()
         $clientes = Cliente::orderBy('nombre', 'asc')->get();
         $hoy = now()->format('Y-m-d\TH:i'); // Obtiene la fecha actual en formato YYYY-MM-DD
         
-        return view('combustible.despacho', compact('depositos', 'clientes', 'hoy'));
+        return view('combustible.recarga', compact('depositos', 'clientes', 'hoy'));
     }
 
     public function createDespachoIndustrial()
