@@ -136,6 +136,21 @@ class VehiculoController extends BaseController
         // Esto lanzará una excepción y redirigirá si la validación falla.
         app(VehiculoStoreRequest::class);
         try {
+            $marcaId = $request->marca;
+            if ($marcaId === 'otro') {
+                $nuevaMarca = Marca::create(['nombre' => $request->nueva_marca]);
+                $request->marca = $nuevaMarca->id;
+            }
+
+            $modeloId = $request->modelo;
+            if ($modeloId === 'otro') {
+                $nuevoModelo = Modelo::create([
+                    'nombre' => $request->nuevo_modelo,
+                    'marca_id' => $request->marca, // Usamos el ID de la marca recién creada o seleccionada
+                ]);
+                $request->modelo = $nuevoModelo->id;
+            }
+
             $vehiculo=Vehiculo::create($request->all());
 
             $this->handleFotoUpload($request, $vehiculo);
