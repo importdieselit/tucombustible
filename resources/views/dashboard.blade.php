@@ -97,6 +97,114 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
     return $historicoReal[$key - 1]->disponibilidad;
 })->toArray();
 
+    $cards = [
+        [
+            'modulo' => $MODULO_VEHICULOS,
+            'permiso' => 'read',
+            'route' => route('vehiculos.index'),
+            'icon' => 'fa-truck',
+            'title' => 'Vehículos',
+            'color' => 'bg-info',
+            'target' => '_self'
+        ],
+        [
+            'modulo' => null, // Sin permiso requerido
+            'route' => route('mantenimiento.planificacion.index'),
+            'icon' => 'fa-calendar',
+            'title' => 'Planificación Mantenimiento',
+            'color' => 'bg-warning',
+            'target' => '_blank'
+        ],
+        [
+            'modulo' => $MODULO_ORDENES,
+            'permiso' => 'read',
+            'route' => route('ordenes.list'),
+            'icon' => 'fa-screwdriver-wrench',
+            'title' => 'Mantenimiento',
+            'color' => 'bg-warning',
+            'target' => '_self'
+        ],
+        [
+            'modulo' => $MODULO_INVENTARIO,
+            'permiso' => 'read',
+            'route' => route('inventario.index'),
+            'icon' => 'fa-box-open',
+            'title' => 'Inventario',
+            'color' => 'bg-success',
+            'target' => '_self'
+        ],
+        [
+            'modulo' => $MODULO_COMBUSTIBLE,
+            'permiso' => 'read',
+            'route' => route('combustible.index'),
+            'icon' => 'fa-gas-pump',
+            'title' => 'Combustible',
+            'color' => 'bg-secondary',
+            'target' => '_self'
+        ],
+        [
+            'modulo' => $MODULO_CHECKLIST,
+            'permiso' => 'create',
+            'route' => route('inspeccion.index'),
+            'icon' => 'fa-list',
+            'title' => 'Checklist',
+            'color' => 'bg-primary',
+            'target' => '_self'
+        ],
+        [
+            'modulo' => $MODULO_DESPACHOS,
+            'permiso' => 'create',
+            'route' => route('combustible.createDespachoIndustrial'),
+            'icon' => 'fa-truck-fast',
+            'title' => 'Surtir Combustible',
+            'color' => 'bg-primary',
+            'target' => '_self'
+        ],
+        [
+            'modulo' => $MODULO_CLIENTES,
+            'permiso' => 'create',
+            'route' => route('captacion.index'),
+            'icon' => 'fa-address-book',
+            'title' => 'Clientes',
+            'color' => 'bg-primary',
+            'target' => '_self'
+        ],
+        [
+            'modulo' => $MODULO_REPORTES,
+            'permiso' => 'create',
+            'route' => route('reports.index'),
+            'icon' => 'fa-list',
+            'title' => 'Reportes',
+            'color' => 'bg-primary',
+            'target' => '_self'
+        ],
+        [
+            'modulo' => $MODULO_VIAJES,
+            'permiso' => 'create',
+            'route' => route('viajes.index'),
+            'icon' => 'fa-route',
+            'title' => 'Cargas / Despachos',
+            'color' => 'bg-primary',
+            'target' => '_self'
+        ],
+        [
+            'modulo' => null,
+            'route' => route('viajes.calendario'),
+            'icon' => 'fa-calendar',
+            'title' => 'Planificación Combustible',
+            'color' => 'bg-warning',
+            'target' => '_blank'
+        ],
+        [
+            'modulo' => null,
+            'route' => route('choferes.list'),
+            'icon' => 'fa-user',
+            'title' => 'Choferes',
+            'color' => 'bg-warning',
+            'target' => '_self'
+        ],
+    ];
+
 
 ?>
 
@@ -286,198 +394,21 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
 
        {{-- Contenedor de Tarjetas de Acceso --}}
     <div class="row g-4 mb-4 justify-content-center">
-        
-        {{-- =============================================== --}}
-        {{-- TARJETA DE VEHÍCULOS (ID 1) --}}
-        {{-- El usuario necesita al menos permiso de LECTURA para ver este módulo --}}
-        {{-- =============================================== --}}
-        @if(Auth::user()->canAccess('read', $MODULO_VEHICULOS))
-        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-            @include('partials.access_card', [
-                'route' => route('vehiculos.index'),
-                'icon' => 'fa-truck',
-                'title' => 'Vehículos',
-                'color' => 'bg-info',
-                'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
-            ])
-        </div>
-        @endif
-        
-        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-            @include('partials.access_card', [
-                'route' => route('mantenimiento.planificacion.index'),
-                'icon' => 'fa-calendar',
-                'title' => 'Planificacion Mantenimiento',
-                'color' => 'bg-warning',
-                'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
-            ])
-        </div>
-        
-        {{-- =============================================== --}}
-        {{-- TARJETA DE ÓRDENES DE MANTENIMIENTO (ID 2) --}}
-        {{-- =============================================== --}}
-        @if(Auth::user()->canAccess('read', $MODULO_ORDENES))
-        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-            @include('partials.access_card', [
-                'route' => route('ordenes.list'),
-                'icon' => 'fa-screwdriver-wrench',
-                'title' => 'Mantenimiento',
-                'color' => 'bg-warning',
-                'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
-            ])
-        </div>
-        @endif
-        
-        {{-- =============================================== --}}
-        {{-- TARJETA DE INVENTARIO / ALMACÉN (ID 30) --}}
-        {{-- =============================================== --}}
-        @if(Auth::user()->canAccess('read', $MODULO_INVENTARIO))
-        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-            @include('partials.access_card', [
-                'route' => route('inventario.index'),
-                'icon' => 'fa-box-open',
-                'title' => 'Inventario',
-                'color' => 'bg-success',
-                'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
-            ])
-        </div>
-        @endif
-
-        {{-- =============================================== --}}
-        {{-- TARJETA DE COMBUSTIBLE (ID 4) --}}
-        {{-- =============================================== --}}
-        @if(Auth::user()->canAccess('read', $MODULO_COMBUSTIBLE))
-        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-            @include('partials.access_card', [
-                'route' => route('combustible.index'),
-                'icon' => 'fa-gas-pump',
-                'title' => 'Combustible',
-                'color' => 'bg-secondary',
-                'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
-            ])
-        </div>
-        @endif
-        
-{{-- =============================================== --}}
-        {{-- TARJETA DE inspecciones (ID 42) --}}
-        {{-- =============================================== --}}
-        @if(Auth::user()->canAccess('create', $MODULO_CHECKLIST))
-        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-            @include('partials.access_card', [
-                'route' => route('inspeccion.index'),
-                'icon' => 'fa-list',
-                'title' => 'Checklist',
-                'color' => 'bg-primary',
-                'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
-            ])
-        </div>
-        @endif
-
-        {{-- =============================================== --}}
-        {{-- TARJETA DE DESPACHOS / LOGÍSTICA (ID 42) --}}
-        {{-- =============================================== --}}
-        @if(Auth::user()->canAccess('create', $MODULO_DESPACHOS))
-        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-            @include('partials.access_card', [
-                'route' => route('combustible.createDespachoIndustrial'),
-                'icon' => 'fa-truck-fast',
-                'title' => 'Surtir Combustible',
-                'color' => 'bg-primary',
-                'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
-            ])
-        </div>
-        @endif
-
-        @if(Auth::user()->canAccess('create', $MODULO_CLIENTES))
-        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-            @include('partials.access_card', [
-                'route' => route('captacion.index'),
-                'icon' => 'fa-address-book',
-                'title' => 'Clientes',
-                'color' => 'bg-primary',
-                'target' => '_blank', 'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
-            ])
-        </div>
-        @endif
-        
-{{-- TARJETA DE reportes (ID 42) --}}
-        {{-- =============================================== --}}
-        @if(Auth::user()->canAccess('create', $MODULO_REPORTES))
-        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-            @include('partials.access_card', [
-                'route' => route('reports.index'),
-                'icon' => 'fa-list',
-                'title' => 'Reportes',
-                'color' => 'bg-primary',
-                'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
-            ])
-        </div>
-        @endif
-
-        {{-- TARJETA DE viajes (ID 8) --}}
-        {{-- =============================================== --}}
-        @if(Auth::user()->canAccess('create', $MODULO_VIAJES))
-        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-            @include('partials.access_card', [
-                'route' => route('viajes.index'),
-                'icon' => 'fa-route',
-                'title' => 'Cargas / Despachos',
-                'color' => 'bg-primary',
-                'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
-            ])
-        </div>
-        @endif
-
-        {{-- =============================================== --}}
-        {{-- TARJETA DE ADMINISTRACIÓN DE USUARIOS (ID 51) --}}
-        {{-- =============================================== --}}
-        {{-- @if(Auth::user()->canAccess('read', $MODULO_USUARIOS))
-        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-            @include('partials.access_card', [
-                'route' => route('usuarios.index'),
-                'icon' => 'fa-users-gear',
-                'title' => 'Usuarios',
-                'color' => 'bg-danger',
-                'target' => '_blank',
-                'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
-            ])
-        </div>
-        @endif --}}
-
-        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-            @include('partials.access_card', [
-                'route' => route('viajes.calendario'),
-                'icon' => 'fa-calendar',
-                'title' => 'Planificacion Combustible',
-                'color' => 'bg-warning',
-                'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
-            ])
-        </div>
-
-        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-            @include('partials.access_card', [
-                'route' => route('choferes.list'),
-                'icon' => 'fa-user',
-                'title' => 'Choferes',
-                'color' => 'bg-warning',
-                'bg_opacity' => 'rgba(0, 123, 255, 0.15)'
-            ])
-        </div>
-        {{-- =============================================== --}}
-        {{-- TARJETA DE CONFIGURACIÓN GENERAL (ID 5) --}}
-        {{-- =============================================== --}}
-        {{-- @if(Auth::user()->canAccess('read', $MODULO_ADMINISTRAR))
-        <div class="col-6 col-sm-4 col-md-3 col-lg-2">
-            @include('partials.access_card', [
-                'route' => route('admin.settings'),
-                'icon' => 'fa-gear',
-                'title' => 'Configuración',
-                'color' => 'bg-dark',
-                'bg_opacity' => 'rgba(33, 37, 41, 0.15)'
-            ])
-        </div>
-        @endif
-         --}}
+        @foreach($cards as $card)
+            {{-- Verificamos si el módulo es nulo (libre acceso) o si el usuario tiene el permiso --}}
+            @if(is_null($card['modulo']) || Auth::user()->canAccess($card['permiso'], $card['modulo']))
+                <div class="col-6 col-sm-4 col-md-3 col-lg-2">
+                    @include('partials.access_card', [
+                        'route'      => $card['route'],
+                        'icon'       => $card['icon'],
+                        'title'      => $card['title'],
+                        'color'      => $card['color'],
+                        'bg_opacity' => 'rgba(0, 123, 255, 0.15)',
+                        'target'     => $card['target'] ?? '_self'
+                    ])
+                </div>
+            @endif
+        @endforeach
     </div>
 
     <div class="row g-4">
