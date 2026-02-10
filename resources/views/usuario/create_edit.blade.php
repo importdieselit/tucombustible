@@ -159,7 +159,7 @@
             $switch.addClass('opacity-50');
 
             $.ajax({
-                url: `/usuarios/${$switch.data('user')}/update-single-permission`,
+                url: "{{ route('usuarios.update_single_permission', $item->id ?? '') }}",
                 method: 'POST',
                 data: payload,
                 success: function(response) {
