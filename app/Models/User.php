@@ -195,6 +195,14 @@ class User extends Authenticatable
     {
         return $this->perfil ? $this->perfil->nombre : 'Usuario';
     }
+    
+    public function modulos()
+    {
+        // Mapeamos a la tabla 'accesos' definiendo las columnas del pivote
+        return $this->belongsToMany(Modulo::class, 'accesos', 'id_usuario', 'id_modulo')
+                    ->withPivot('read', 'update', 'create', 'delete')
+                    ->withTimestamps();
+    }
 
     public function index()
     {
