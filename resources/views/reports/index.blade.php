@@ -227,10 +227,11 @@
                 if (response.ok) {
                     renderReport(data); // Función para dibujar el reporte (definida abajo)
                 } else {
+                    console.error('Error en la respuesta del servidor:', data);
                     Swal.fire('Error', 'No se pudieron cargar los datos del reporte: ' + data.message, 'error');
                 }
 
-            } catch (error) {
+            x} catch (error) {
                 console.error('Error de fetch:', error);
                 Swal.fire('Error de Conexión', 'No se pudo contactar al servidor de reportes.', 'error');
             } finally {
@@ -803,14 +804,22 @@
             html += `<tr><td colspan="4" class="text-center text-muted">No hay nuevos clientes en este período.</td></tr>`;
         } else {
             clientes.forEach(cliente => {
+               const nombre = cliente.nombre || 'Sin nombre';
+                const fecha = cliente.created_at ? new Date(cliente.created_at).toLocaleDateString() : 'N/A';
+                
+                // Aquí evitamos el error del substring validando si existe la dirección
+                const direccion = cliente.direccion 
+                    ? (cliente.direccion.length > 50 ? cliente.direccion.substring(0, 50) + '...' : cliente.direccion)
+                    : 'Dirección no especificada';
+
                 html += `
                     <tr>
                         <td>${cliente.id}</td>
-                        <td>${cliente.nombre}</td>
-                        <td>${new Date(cliente.created_at).toLocaleDateString()}</td>
-                        <td>${cliente.direccion.substring(0, 50)}...</td>
+                        <td>${nombre}</td>
+                        <td>${fecha}</td>
+                        <td>${direccion}</td>
                     </tr>
-                `;
+                `; 
             });
         }
         
