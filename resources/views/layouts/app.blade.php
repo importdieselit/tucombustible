@@ -13,6 +13,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2C22gB7Fz2i4M8c9tU8vQ+I6bLwK6z+a6D+Q==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <!-- CSS de DataTables -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.0.7/css/dataTables.dataTables.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.dataTables.css" />
+
     @stack('styles')
 </head>
 <body>
@@ -107,6 +111,15 @@
     <script src="{{ asset('js/alerts.js') }}" defer></script>
     <script src="{{ asset('js/jquery.PrintArea.js') }}"></script>
     
+    <!-- Script de DataTables -->
+    <script src="https://cdn.datatables.net/2.0.7/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
     @stack('scripts')
     <script>
@@ -119,6 +132,8 @@
             new bootstrap.Toast(toastEl, { delay: 4500 }).show()
         })
     });
+
+    
 
         document.addEventListener("DOMContentLoaded", function () {
             $("#print").on("click", function () {
@@ -134,6 +149,46 @@
                 $(".noPrint").show();
                 $(".siPrint").hide();
             });
+
+
+           $('.datatable').each(function() {
+            let $tabla = $(this);
+
+            let isEmpty = $tabla.find('tbody td[colspan]').length > 0;
+
+            if (isEmpty) {
+                $tabla.removeClass('datatable');
+                console.log('Tabla vacía detectada: Saltando inicialización para evitar warning.');
+            } else {
+                $tabla.DataTable({
+                    language: {
+                        "decimal": "",
+                        "emptyTable": "No hay información",
+                        "info": "Mostrando _START_ a _END_ de _TOTAL_ Entradas",
+                        "infoEmpty": "Mostrando 0 a 0 de 0 Entradas",
+                        "infoFiltered": "(Filtrado de _MAX_ total entradas)",
+                        "infoPostFix": "",
+                        "thousands": ",",
+                        "lengthMenu": "Mostrar _MENU_ Entradas",
+                        "loadingRecords": "Cargando...",
+                        "processing": "Procesando...",
+                        "search": "Buscar:",
+                        "zeroRecords": "Sin resultados encontrados",
+                        "paginate": {
+                            "first": "Primero",
+                            "last": "Ultimo",
+                            "next": "Siguiente",
+                            "previous": "Anterior"
+                        }
+                    },
+                    layout: {
+                        topStart: {
+                            buttons: ['csv', 'excel', 'pdf', 'print']
+                        }
+                    }
+                });
+            }
+        });
        
     });
 
