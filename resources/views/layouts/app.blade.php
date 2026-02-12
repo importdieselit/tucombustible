@@ -52,13 +52,7 @@
             <div class="container-fluid">
                 <div class="row">
                     @php($user = Auth::user())
-                    @if($user->id_perfil == 3)
-                        @include('layouts.sidebar-cliente')
-                    @elseif($user->id_perfil == 2)
-                        @include('layouts.sidebar-cliente')
-                    @else
-                        @include('layouts.sidebar')
-                    @endif
+                    @include('layouts.sidebar')
                     <main class="col ms-sm-auto col-lg-10 px-md-4 py-4 z-1">
                         @yield('content')
                     </main>
