@@ -26,6 +26,7 @@
 
 <style>
 /* Sidebar Estilo Profesional Impormotor */
+
 .sidebar {
     background: #1a233a;
     min-height: 100vh;
@@ -98,6 +99,49 @@
 /* Scrollbar personalizado */
 .sidebar::-webkit-scrollbar { width: 4px; }
 .sidebar::-webkit-scrollbar-thumb { background: #4e73df; border-radius: 10px; }
+/* --- Ajustes Responsive --- */
+
+/* Botón de cierre para móviles (opcional, dentro del sidebar) */
+.close-sidebar {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        left: -250px; /* Oculto por defecto */
+        transition: all 0.3s ease;
+        z-index: 9999;
+        width: 250px;
+    }
+
+    .sidebar.active {
+        left: 0; /* Aparece */
+    }
+
+    /* Overlay para oscurecer el fondo cuando el menú esté abierto */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 9998;
+    }
+
+    .sidebar-overlay.active {
+        display: block;
+    }
+}
+
+/* Ajuste del contenido principal para que no se solape */
+@media (min-width: 769px) {
+    body {
+        padding-left: 250px; /* Espacio para el sidebar fijo */
+    }
+}
+
 </style>
 
 <div class="sidebar d-md-block">

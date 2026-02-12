@@ -17,6 +17,31 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/2.0.7/css/dataTables.dataTables.css" />
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.dataTables.css" />
 
+
+<style>
+    @media (max-width: 767.98px) {
+    .search-form-header.active {
+        display: flex !important;
+        position: absolute;
+        top: 60px;
+        left: 0;
+        width: 100%;
+        background: white;
+        padding: 10px 15px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        z-index: 1000;
+    }
+}
+
+/* Mejora estética del input */
+.search-form-header input {
+    border-radius: 20px 0 0 20px !important;
+}
+.search-form-header button {
+    border-radius: 0 20px 20px 0 !important;
+}
+</style>
+
     @stack('styles')
 </head>
 <body>
@@ -136,6 +161,32 @@
     
 
         document.addEventListener("DOMContentLoaded", function () {
+            
+            $(document).ready(function() {
+                // Toggle Sidebar
+                $('#sidebarCollapse').on('click', function() {
+                    $('.sidebar, .sidebar-overlay').toggleClass('active');
+                    // Cambiar icono de barras a X (opcional)
+                    $(this).find('i').toggleClass('bi-list bi-x-lg');
+                });
+
+                // Toggle Buscador en Móviles
+                $('#toggleMobileSearch').on('click', function() {
+                    $('#globalSearchForm').toggleClass('active');
+                    // Si se abre, poner foco en el input
+                    if($('#globalSearchForm').hasClass('active')) {
+                        $('#globalSearchForm input').focus();
+                    }
+                });
+
+                // Cerrar buscador si se hace click fuera
+                $(document).on('click', function(e) {
+                    if (!$(e.target).closest('#globalSearchContainer').length) {
+                        $('#globalSearchForm').removeClass('active');
+                    }
+                });
+            });
+
             $("#print").on("click", function () {
                 var mode = 'iframe'; //popup
                 var close = mode == "popup";
