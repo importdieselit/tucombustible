@@ -156,7 +156,6 @@
 
         document.addEventListener("DOMContentLoaded", function () {
             
-            $(document).ready(function() {
                 // Toggle Sidebar
                 $('#sidebarCollapse').on('click', function() {
                     $('.sidebar, .sidebar-overlay').toggleClass('active');
@@ -179,7 +178,31 @@
                         $('#globalSearchForm').removeClass('active');
                     }
                 });
+            
+            if ($('.sidebar-overlay').length === 0) {
+                $('body').append('<div class="sidebar-overlay"></div>');
+            }
+
+            $('#sidebarCollapse').on('click', function(e) {
+                e.preventDefault();
+                $('.sidebar').addClass('active');
+                $('.sidebar-overlay').addClass('active');
+                $('body').css('overflow', 'hidden'); // Evita scroll al estar abierto
             });
+
+            // 3. Función para CERRAR el menú (al dar click al overlay)
+            $('.sidebar-overlay').on('click', function() {
+                cerrarMenuMovil();
+            });
+
+            // 4. Cierre automático al hacer click en una opción que NO sea un desplegable
+            $('.sidebar .nav-link').on('click', function() {
+                // Si no es un padre con submenú, cerramos al navegar
+                if (!$(this).hasClass('dropdown-toggle')) {
+                    cerrarMenuMovil();
+                }
+            });
+
 
             $("#print").on("click", function () {
                 var mode = 'iframe'; //popup
@@ -230,12 +253,21 @@
                         topStart: {
                             buttons: ['csv', 'excel', 'pdf', 'print']
                         }
-                    }
+                    },
+                    "order": [
+                        [ 0, 'desc' ] 
+                    ]
                 });
             }
         });
        
     });
+
+    function cerrarMenuMovil() {
+        $('.sidebar').removeClass('active');
+        $('.sidebar-overlay').removeClass('active');
+        $('body').css('overflow', 'auto'); // Restaurar scroll
+    }
 
     </script>
 </body>
