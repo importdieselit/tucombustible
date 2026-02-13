@@ -14,8 +14,8 @@ return new class extends Migration
     public function up()
     {
         Schema::create('requisitos_captacion', function (Blueprint $table) {
-            $table->unsignedBigInteger('id');
-            $table->string('tipo_cliente');
+            $table->id();
+            $table->enum('tipo_cliente', ['padre', 'sucursal', 'ambos']);
             $table->string('codigo');
             $table->string('descripcion');
             $table->boolean('obligatorio')->default(true);
