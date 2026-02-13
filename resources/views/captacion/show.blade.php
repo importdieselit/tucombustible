@@ -1,421 +1,319 @@
 @extends('layouts.app')
 
 @section('title', 'Detalle Cliente en Captación')
+
 @push('styles')
 {{-- CSS para Toastr --}}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+<style>
+    .preview-cell .btn { transition: all 0.2s; }
+    .preview-cell .btn:hover { transform: scale(1.05); }
+    .card-header { border-bottom: none; font-weight: 600; }
+    
+    /* Visor mejorado para evitar cuadros negros y asegurar visibilidad */
+    #previewContent {
+        background-color: #f4f4f4 !important;
+        min-height: 75vh;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow-y: auto;
+    }
+    
+    #previewContent img {
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        border: 10px solid white;
+        border-radius: 4px;
+        max-width: 95%;
+        max-height: 70vh;
+        object-fit: contain;
+        display: block;
+        margin: 20px auto;
+    }
+</style>
 @endpush
+
 @section('content')
 <div class="container-fluid py-4">
 
-    {{-- MENSAJES TIPO TOAST --}}
+    {{-- MENSAJES DE RETROALIMENTACIÓN --}}
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 border-start border-success border-4" role="alert">
             <i class="ri-check-double-line"></i> {{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-            <i class="ri-error-warning-line"></i> {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-
 
     <div class="row g-4">
-        <!-- =======================
-             PANEL PRINCIPAL
-        =========================== -->
+        {{-- COLUMNA IZQUIERDA --}}
         <div class="col-lg-8">
-
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">
-                        <i class="ri-building-line"></i> Información del Cliente
-                    </h5>
-
-                    <span class="badge bg-info fs-6 text-uppercase">
+            {{-- INFORMACIÓN DEL SOLICITANTE --}}
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-success text-white d-flex justify-content-between align-items-center py-3">
+                    <h5 class="mb-0"><i class="ri-building-line"></i> Información del Solicitante</h5>
+                    <span class="badge bg-info fs-6 text-uppercase px-3 shadow-sm">
                         {{ str_replace('_',' ', $cliente->estatus_captacion) }}
                     </span>
                 </div>
-
-                <div class="card-body">
-
-                    <div class="row mb-2">
+                <div class="card-body p-4">
+                    <div class="row mb-4">
                         <div class="col-md-6">
-                            <strong>Nombre / Razón Social:</strong><br>
-                            {{ $cliente->razon_social }}
+                            <label class="text-muted small fw-bold text-uppercase">Razón Social</label>
+                            <p class="fs-5 mb-0 text-dark fw-bold">{{ $cliente->razon_social }}</p>
                         </div>
-
                         <div class="col-md-6">
-                            <strong>RIF:</strong><br>
-                            {{ $cliente->rif }}
+                            <label class="text-muted small fw-bold text-uppercase">RIF</label>
+                            <p class="fs-5 mb-0">{{ $cliente->rif }}</p>
                         </div>
                     </div>
-
-                    <div class="row mb-2">
+                    <div class="row mb-4">
                         <div class="col-md-6">
-                            <strong>Correo:</strong><br>
-                            {{ $cliente->correo ?? 'N/D' }}
+                            <label class="text-muted small fw-bold text-uppercase">Correo Electrónico</label>
+                            <p class="mb-0 text-primary">{{ $cliente->correo ?? 'N/D' }}</p>
                         </div>
-
                         <div class="col-md-6">
-                            <strong>Teléfono:</strong><br>
-                            {{ $cliente->telefono ?? 'N/D' }}
+                            <label class="text-muted small fw-bold text-uppercase">Teléfono</label>
+                            <p class="mb-0">{{ $cliente->telefono ?? 'N/D' }}</p>
                         </div>
                     </div>
-
-                    <div class="row mb-2">
-                        <div class="col">
-                            <strong>Dirección Fiscal:</strong><br>
-                            {{ $cliente->direccion ?? 'N/D' }}
+                    <div class="row">
+                        <div class="col-12">
+                            <label class="text-muted small fw-bold text-uppercase">Ubicación y Dirección</label>
+                            <p class="mb-0">{{ $cliente->estado }}, {{ $cliente->ciudad }}</p>
                         </div>
                     </div>
-
-                    <hr>
-
-                    {{-- <a href="{{ route('captacion.edit', $cliente->id) }}" class="btn btn-warning">
-                        <i class="ri-edit-2-line"></i> Editar Datos
-                    </a> --}}
-
                 </div>
             </div>
 
-          <!-- ==================================================
-     DOCUMENTOS SUBIDOS Y VALIDACIÓN
-=================================================== -->
-<div class="card shadow-sm border-0 mt-4">
-    <div class="card-header bg-primary text-white">
-        <h5 class="mb-0"><i class="ri-folder-2-line"></i> Documentación</h5>
-    </div>
-<div class="card-body">
-
-    <h6 class="fw-bold mb-3">Documentos Requeridos</h6>
-
-    <table class="table table-bordered align-middle">
-        <thead class="table-light">
-            <tr>
-                <th style="width: 60px;">Estado</th>
-                <th>Anexo</th>
-                <th>Documento</th>
-                <th style="width: 100px;">Vista</th>
-                <th style="width: 120px;">Acción</th>
-            </tr>
-        </thead>
-        <tbody>
-
-            @foreach($requisitos as $req)
-                @php
-                    $archivo = $cliente->documentos
-                        ->where('requisito_id', $req->id)
-                        ->first();
-                        @endphp
-
-                <tr id="row-{{ $req->id }}">
-                    <td class="text-center icon-cell">
-                        @if($archivo)
-                            <i class="fa fa-check text-success fs-4"></i>
-                        @else 
-                            <i class="fa fa-close text-danger fs-4"></i> 
-                        @endif
-                    </td>
-                    <td>{{ $req->codigo }} </td>
-                    <td>{{ $req->descripcion }}</td>
-
-                    <td class="text-center preview-cell">
-                        @if($archivo)
-                            <button class="btn btn-sm btn-dark preview-btn"
-                                    data-file="{{ asset('storage/'.$archivo->ruta) }}">
-                                <i class="ri-eye-line"></i> Ver
-                            </button>
-                        @else
-                            —
-                        @endif
-                    </td>
-
-                    <td class="text-center">
-                            @if($archivo)
-                                @if($archivo->validado)
-                                    <span class="badge bg-success">Validado</span>
-                                @else
-                                    <form action="{{ route('captacion.validar_documentos', $archivo->id) }}" method="POST">
-                                        @csrf
-                                        <button class="btn btn-sm btn-success">
-                                            <i class="ri-check-line"></i> Validar
-                                        </button>
-                                    </form>
-                                @endif
-                            @endif
-                        <button type="button" class="btn btn-sm btn-warning upload-btn"
-                                data-id="{{ $cliente->id }}"
-                                data-req="{{ $req->id }}"
-                                data-cod="{{ $req->codigo }}">
-                            <i class="fa fa-upload"></i> Subir
-                        </button>
-                    </td>
-                </tr>
-            @endforeach
-
-        </tbody>
-    </table>
-
-    <!-- Input oculto -->
-    <input type="file" id="upload-file" class="d-none" name="archivo" accept="image/*,application/pdf">
-
-</div>
-
-</div>
-
-
+            {{-- EXPEDIENTE DIGITAL --}}
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-success text-white py-3">
+                    <h5 class="mb-0"><i class="ri-folder-2-line"></i> Expediente Digital</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="text-center" style="width: 80px;">Estado</th>
+                                    <th>Documento Requerido</th>
+                                    <th class="text-center" style="width: 100px;">Vista</th>
+                                    <th class="text-center" style="width: 200px;">Validación / Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($requisitos as $req)
+                                    @php
+                                        $archivo = $cliente->documentos->where('requisito_id', $req->id)->first();
+                                    @endphp
+                                    <tr id="row-{{ $req->id }}">
+                                        <td class="text-center icon-cell">
+                                            @if($archivo)
+                                                <i class="ri-checkbox-circle-fill text-success fs-3"></i>
+                                            @else 
+                                                <i class="ri-close-circle-fill text-danger fs-3"></i> 
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <span class="fw-bold d-block">{{ $req->codigo }}</span>
+                                            <small class="text-muted">{{ $req->descripcion }}</small>
+                                        </td>
+                                        <td class="text-center preview-cell">
+                                            @if($archivo)
+                                                <button class="btn btn-sm btn-dark preview-btn" data-file="{{ asset('storage/'.$archivo->ruta) }}">
+                                                    <i class="ri-eye-line"></i> Ver
+                                                </button>
+                                            @else
+                                                <span class="text-muted">—</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="d-flex justify-content-center gap-2">
+                                                @if($archivo)
+                                                    @if($archivo->validado)
+                                                        <span class="badge bg-success py-2 px-3"><i class="ri-check-line"></i> Validado</span>
+                                                    @else
+                                                        <form action="{{ route('captacion.validar_documentos', $archivo->id) }}" method="POST">
+                                                            @csrf
+                                                            <button class="btn btn-sm btn-outline-success">Validar</button>
+                                                        </form>
+                                                    @endif
+                                                @endif
+                                                <button type="button" class="btn btn-sm btn-outline-warning upload-btn"
+                                                        data-id="{{ $cliente->id }}" data-req="{{ $req->id }}">
+                                                    <i class="ri-upload-2-line"></i> Subir
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    {{-- Input de archivo con aria-label para evitar error de accesibilidad --}}
+                    <input type="file" id="upload-file" class="d-none" name="archivo" accept="image/*,application/pdf" aria-label="Seleccionar documento para cargar">
+                </div>
+            </div>
         </div>
 
-
-        <!-- =======================
-             PANEL DERECHO – ACCIONES
-        =========================== -->
+        {{-- COLUMNA DERECHA --}}
         <div class="col-lg-4">
 
-            <!-- =======================
-                 PLANILLAS
-            =========================== -->
+            {{-- APROBACIÓN FINAL --}}
             <div class="card shadow-sm border-0">
-                <div class="card-header bg-secondary text-white">
-                    <h5 class="mb-0">
-                        <i class="ri-file-paper-2-line"></i> Planillas
-                    </h5>
+                <div class="card-header bg-success text-white py-3">
+                    <h5 class="mb-0"><i class="ri-shield-check-line"></i> Aprobación Final</h5>
                 </div>
-
                 <div class="card-body">
+                    <div class="mb-3 text-center">
+                        <label class="text-muted small fw-bold text-uppercase">Consumo Solicitado</label>
+                        <p class="fs-4 fw-bold text-success mb-0">{{ number_format($cliente->cantidad_litros, 0, ',', '.') }} Lts</p>
+                    </div>
 
-                    @if($cliente->estatus_captacion !== 'planillas_enviadas')
-                        <form action="{{ route('captacion.enviar_planillas', $cliente->id) }}" method="POST">
+                    <div class="d-grid gap-2 mt-4">
+                        <form action="{{ route('captacion.aprobar', $cliente->id) }}" method="POST" 
+                              onsubmit="return confirm('¿Confirmar aprobación final?')">
                             @csrf
-                            <button class="btn btn-secondary w-100">
-                                <i class="ri-mail-send-line"></i> Enviar Planillas
+                            <button type="submit" class="btn btn-success w-100 py-2 fw-bold">
+                                <i class="ri-checkbox-circle-line"></i> APROBAR CLIENTE
                             </button>
                         </form>
-                    @else
-                        <div class="alert alert-success">
-                            <i class="ri-check-double-line"></i> Planillas ya enviadas.
-                        </div>
-                    @endif
 
+                        <button type="button" class="btn btn-outline-danger w-100 py-2" data-bs-toggle="modal" data-bs-target="#modalRechazo">
+                            <i class="ri-delete-bin-line"></i> RECHAZAR SOLICITUD
+                        </button>
+                    </div>
                 </div>
             </div>
-
-
-            <!-- =======================
-                 ESTATUS Y APROBACIÓN
-            =========================== -->
-            <div class="card shadow-sm border-0 mt-4">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">
-                        <i class="ri-shield-check-line"></i> Estatus de Aprobación
-                    </h5>
-                </div>
-
-                <div class="card-body">
-
-                    <p><strong>Estatus actual:</strong></p>
-
-                    <span class="badge bg-dark text-uppercase p-2">
-                        {{ str_replace('_',' ', $cliente->estatus_captacion) }}
-                    </span>
-
-
-                    <!-- SI TIENE DOCUMENTOS FALTANTES -->
-                    @if(count($cliente->faltantes()) > 0)
-                        <div class="alert alert-warning mt-3">
-                            <i class="ri-alert-line"></i>
-                            Faltan documentos para continuar.
-                        </div>
-                    @endif
-
-
-                    <!-- APROBAR SOLO SI YA PASÓ TODO -->
-                    @if($cliente->estatus_captacion === 'esperando_inspeccion')
-                        <form action="{{ route('captacion.aprobar', $cliente->id) }}" method="POST" class="mt-3">
-                            @csrf
-                            <button class="btn btn-success w-100">
-                                <i class="ri-checkbox-circle-line"></i> Aprobar Cliente
-                            </button>
-                        </form>
-                    @endif
-
-                </div>
-            </div>
-
+            
+            <a href="{{ route('captacion.index') }}" class="btn btn-link w-100 mt-3 text-muted text-decoration-none">
+                <i class="ri-arrow-left-line"></i> Volver al Listado
+            </a>
         </div>
-
     </div>
 </div>
 
-<!-- MODAL PREVIEW -->
+{{-- MODAL VISOR --}}
 <div class="modal fade" id="previewModal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content">
-
+        <div class="modal-content border-0 shadow">
             <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title"><i class="ri-eye-line"></i> Vista Previa del Documento</h5>
+                <h5 class="modal-title"><i class="ri-eye-line"></i> Visor de Documentos</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-
-            <div class="modal-body text-center" id="previewContent" 
-                 style="min-height: 75vh; display:flex; align-items:center; justify-content:center;">
-                <!-- Aquí se carga la vista previa -->
+            <div class="modal-body p-0" id="previewContent">
+                {{-- Contenido dinámico --}}
             </div>
-
         </div>
     </div>
 </div>
+
+{{-- MODAL RECHAZO --}}
+<div class="modal fade" id="modalRechazo" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Confirmar Rechazo</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <p class="fs-5">¿Seguro que desea rechazar la solicitud de <strong>{{ $cliente->razon_social }}</strong>?</p>
+                <div class="alert alert-danger mb-0">
+                    <i class="ri-error-warning-fill"></i> Se eliminarán permanentemente sus documentos y su acceso.
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form action="{{ route('captacion.rechazar', $cliente->id) }}" method="POST">
+                    @csrf
+                    <button type="submit" class="btn btn-danger px-4">Confirmar y Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 <script>
-
 document.addEventListener('DOMContentLoaded', function () {
     const input = document.getElementById('upload-file');
-    if (!input) {
-        console.error('No se encontró input#upload-file');
-        return;
-    }
-    console.log('input#upload-file encontrado correctamente');
-
-    // contexto compartido
     let currentReq = null;
     let currentCliente = null;
-    let currentCod = null;
 
-    // función única y reutilizable para procesar la subida
-    async function handleFileChange() {
-        console.log('Archivo seleccionado para subir:', input.files);
-        if (!input.files || !input.files.length) return;
-
-        const file = input.files[0];
-        if (!file) return;
-
-        if (!currentReq || !currentCliente) {
-            toastr?.error('Contexto inválido: falta requisito o cliente.');
-            input.value = '';
-            return;
-        }
-
-        const form = new FormData();
-        form.append('archivo', file);
-        form.append('requisito_id', currentReq);
-        if (currentCod) form.append('codigo', currentCod);
-        form.append('_token', '{{ csrf_token() }}');
-        console.log('Iniciando subida para cliente:', currentCliente, 'requisito:', currentReq);
-
-         // Realiza la petición
-        try {
-            // muestra feedback básico
-            toastr?.info('Subiendo documento...');
-
-            const resp = await fetch(`/captacion/${currentCliente}/subir-documento`, {
-                method: 'POST',
-                body: form,
-                credentials: 'same-origin'
-            });
-
-            const json = await resp.json();
-
-            if (resp.ok && json.ok === true) {
-                toastr?.success('Documento cargado correctamente.');
-                console.log('Upload exitoso:', json);
-                // Actualizar fila sin recargar
-                const row = document.getElementById('row-' + currentReq);
-                if (row) {
-                    const iconCell = row.querySelector('.icon-cell');
-                    if (iconCell) iconCell.innerHTML = '<i class="ri-check-line text-success fs-4"></i>';
-
-                    const previewCell = row.querySelector('.preview-cell');
-                    if (previewCell) {
-                        previewCell.innerHTML = `<button class="btn btn-sm btn-dark preview-btn" data-file="/storage/${json.ruta}">
-                            <i class="ri-eye-line"></i> Ver
-                        </button>`;
-                    }
-                    
-                    // reemplaza el botón subir por el badge/validar si quieres:
-                    const actionCell = row.querySelector('td:last-child');
-                    if (actionCell) {
-                        actionCell.innerHTML = json.validado ? '<span class="badge bg-success">Validado</span>'
-                            : `<form action="/captacion/validar-documento/${json.id}" method="POST">
-                                <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                                <button class="btn btn-sm btn-success">Validar</button>
-                               </form>`;
-                    }
-                }
-            } else {
-                const msg = json.message || 'Error al subir documento';
-                toastr?.error(msg);
-                console.error('Upload error', json);
-            }
-        } catch (err) {
-            console.error('Error de red al subir documento', err);
-            toastr?.error('Error de red al subir documento');
-        } finally {
-            // limpiar estado para próxima operación
-            input.value = '';
-            currentReq = null;
-            currentCliente = null;
-            currentCod = null;
-        }
-    }
-
-    // attach once
-    input.addEventListener('change', handleFileChange);
-
-    // Delegación: escucha clicks en todo el body para botones .upload-btn
+    // Delegación para subida
     document.body.addEventListener('click', function (e) {
         const btn = e.target.closest('.upload-btn');
         if (!btn) return;
-
-        currentReq = btn.dataset.req ?? btn.getAttribute('data-req');
-        currentCliente = btn.dataset.id ?? btn.getAttribute('data-id');
-        currentCod = btn.dataset.cod ?? btn.getAttribute('data-cod');
-
-        console.log('Iniciando upload -> req:', currentReq, 'cliente:', currentCliente, 'cod:', currentCod);
-
-        if (!currentReq || !currentCliente) {
-            toastr?.error('Botón mal configurado (falta data-req o data-id).');
-            return;
-        }
-
-        // dispara selector
+        currentReq = btn.dataset.req;
+        currentCliente = btn.dataset.id;
         input.click();
     });
 
-    // Delegación para preview (soporta elementos dinámicos)
+    input.addEventListener('change', async function() {
+        if (!input.files.length) return;
+        const form = new FormData();
+        form.append('archivo', input.files[0]);
+        form.append('requisito_id', currentReq);
+        form.append('_token', '{{ csrf_token() }}');
+
+        toastr.info('Subiendo archivo...');
+        try {
+            const resp = await fetch(`/admin/captacion/subir-documento/${currentCliente}`, {
+                method: 'POST',
+                body: form
+            });
+            if (resp.ok) {
+                toastr.success('Archivo cargado correctamente.');
+                setTimeout(() => window.location.reload(), 1000);
+            } else { toastr.error('Error al subir el archivo.'); }
+        } catch (err) { toastr.error('Error de conexión.'); }
+        input.value = '';
+    });
+
+    // Delegación para vista previa
     document.body.addEventListener('click', function (e) {
         const btn = e.target.closest('.preview-btn');
         if (!btn) return;
 
         const url = btn.dataset.file;
-        if (!url) return;
-
         const ext = url.split('.').pop().toLowerCase();
+        const container = document.getElementById('previewContent');
         const modalEl = document.getElementById('previewModal');
         const modal = new bootstrap.Modal(modalEl);
-        const container = document.getElementById('previewContent');
 
-        container.innerHTML = '<div>Cargando vista previa...</div>';
+        // Reset inicial del contenedor
+        container.innerHTML = '<div class="text-center w-100 p-5"><div class="spinner-border text-success" role="status"></div><p class="mt-2">Procesando archivo...</p></div>';
 
-        if (ext === 'pdf') {
-            container.innerHTML = `<iframe src="${url}" style="width:100%;height:75vh;border:none;"></iframe>`;
-        } else if (['jpg','jpeg','png','webp'].includes(ext)) {
-            container.innerHTML = `<img src="${url}" style="max-width:100%;max-height:75vh;border-radius:6px;">`;
-        } else {
-            container.innerHTML = `<div class="p-4 text-center">
-                <p class="mb-3">No es posible mostrar este formato en el visor.</p>
-                <a href="${url}" target="_blank" class="btn btn-primary">Abrir / Descargar</a>
-            </div>`;
-        }
+        setTimeout(() => {
+            if (ext === 'pdf') {
+                container.innerHTML = `<iframe src="${url}" style="width:100%; height:80vh; border:none;"></iframe>`;
+            } else if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'JPG', 'PNG', 'JPEG'].includes(ext)) {
+                // Inyección limpia de imagen con botón de fallback
+                container.innerHTML = `
+                    <div class="w-100 p-3 text-center">
+                        <img src="${url}" class="img-fluid shadow-lg" style="max-height: 70vh; width: auto; display: block; margin: 0 auto;">
+                        <div class="mt-3 p-3 bg-white w-100 border-top">
+                            <a href="${url}" target="_blank" class="btn btn-success px-4">
+                                <i class="ri-external-link-line"></i> Abrir en pestaña nueva
+                            </a>
+                        </div>
+                    </div>`;
+            } else {
+                container.innerHTML = `
+                    <div class="p-5 text-center">
+                        <i class="ri-file-warning-line fs-1 text-warning"></i>
+                        <p class="mt-3">El formato (.${ext}) no permite vista previa directa.</p>
+                        <a href="${url}" target="_blank" class="btn btn-dark px-4">Descargar Archivo</a>
+                    </div>`;
+            }
+        }, 300);
+
         modal.show();
     });
-
 });
-
 </script>
 @endpush
 @endsection

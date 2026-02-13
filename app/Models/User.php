@@ -25,6 +25,8 @@ class User extends Authenticatable
         'fcm_token',
         'id_master',
         'status',
+        'status_usuario',      
+        'must_change_password',
         'telegram_id',
         'telegram_username',
         'ultimo_login'
@@ -182,10 +184,12 @@ class User extends Authenticatable
      */
     public function getFullNameAttribute(): string
     {
-        if ($this->persona) {
+        if ($this->persona && $this->persona->first_name) {
             return $this->persona->first_name . ' ' . $this->persona->last_name;
         }
-        return $this->name;
+    
+        // Si es un prospecto o no tiene persona vinculada, usa el nombre de la tabla users
+        return $this->name ?? 'Prospecto Nuevo';
     }
 
     /**
@@ -204,7 +208,7 @@ class User extends Authenticatable
                     ->withTimestamps();
     }
 
-    public function index()
+    /*public function index()
     {
         if (!auth()->user()->canAccess('read', $this->moduloIdUsuarios)) {
             abort(403, 'No tiene permiso para ver el dashboard de usuarios.');
@@ -235,5 +239,13 @@ class User extends Authenticatable
         $totalGeneral = $perfilesConteo->sum('total');
 
         return view('usuarios.index', compact('perfilesConteo', 'totalGeneral'));
+    }*/
+
+    public function getPersonaParentAttribute()
+    {
+        if ($this->persona) {
+            return $this->persona->parent;
+        }
+        return null; // Si no hay persona, devuelve null en lugar de dar error
     }
 }
