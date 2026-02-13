@@ -4,7 +4,8 @@
 @section('title', isset($item) ? 'Editar Vehículo' : 'Crear Vehículo')
 
 @push('styles')
-    <!-- Aquí puedes añadir estilos específicos para el formulario si es necesario -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 @endpush
 
 @section('content')
@@ -72,26 +73,42 @@
                                         <input type="text" class="form-control" id="placa" name="placa" value="{{ old('placa', $item->placa ?? '') }}">
                                         @error('placa')<div class="text-danger mt-1">{{ $message }}</div>@enderror
                                     </div>
+                                    <div class="row g-3">
+                                    
                                     <div class="col-md-6">
                                         <label for="marca" class="form-label text-primary">Marca</label>
-                                        <select name="marca" id="marca" class="form-control">
+                                        <select name="marca" id="marca" class="form-control select2">
                                             <option value="">Seleccione una marca</option>
                                             @foreach($marcas as $id => $marca)
                                                 <option value="{{ $id }}" {{ old('marca', $item->marca ?? '') == $id ? 'selected' : '' }}>{{ $marca }}</option>
                                             @endforeach
+                                            <option value="otro">-- Otra (Agregar nueva) --</option>
                                         </select>
                                         @error('marca')<div class="text-danger mt-1">{{ $message }}</div>@enderror
+                                        
+                                        {{-- Campo dinámico para nueva marca --}}
+                                        <div id="nueva_marca_group" class="mt-2" style="display: none;">
+                                            <input type="text" name="nueva_marca" id="nueva_marca" class="form-control" placeholder="Escriba el nombre de la nueva marca">
+                                        </div>
                                     </div>
+
                                     <div class="col-md-6">
                                         <label for="modelo" class="form-label text-primary">Modelo</label>
-                                        <select name="modelo" id="modelo" class="form-control">
+                                        <select name="modelo" id="modelo" class="form-control select2">
                                             <option value="">Seleccione un modelo</option>
                                             @foreach($modelos as $id => $modelo)
                                                 <option value="{{ $id }}" {{ old('modelo', $item->modelo ?? '') == $id ? 'selected' : '' }}>{{ $modelo }}</option>
                                             @endforeach
+                                            <option value="otro">-- Otro (Agregar nuevo) --</option>
                                         </select>
                                         @error('modelo')<div class="text-danger mt-1">{{ $message }}</div>@enderror
+
+                                        {{-- Campo dinámico para nuevo modelo --}}
+                                        <div id="nuevo_modelo_group" class="mt-2" style="display: none;">
+                                            <input type="text" name="nuevo_modelo" id="nuevo_modelo" class="form-control" placeholder="Escriba el nombre del nuevo modelo">
+                                        </div>
                                     </div>
+                                </div>
                                     <div class="col-md-6">
                                         <label for="anno" class="form-label text-primary">Año</label>
                                         <input type="number" class="form-control" id="anno" name="anno" value="{{ old('anno', $item->anno ?? '') }}">
@@ -257,6 +274,23 @@
                                         <input type="date"  class="form-control" id="rotc_venc" name="rotc_venc" value="{{ old('rotc_venc', $item->rotc_venc ?? '') }}">
                                         @error('rotc_venc')<div class="text-danger mt-1">{{ $message }}</div>@enderror
                                     </div>
+
+                                    <div class="col-md-6">
+                                        <label for="permiso_intt">PERMISO INTT</label>    
+                                        <input type="date"  class="form-control" id="permiso_intt" name="permiso_intt" value="{{ old('permiso_intt', $item->permiso_intt ?? '') }}">
+                                        @error('permiso_intt')<div class="text-danger mt-1">{{ $message }}</div>@enderror
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="semcamer">SEMCAMER</label>    
+                                        <input type="checkbox"  id="semcamer" name="semcamer" value="NO VENCE" {{ old('semcamer', $item->semcamer ?? '') ? 'checked' : '' }}>
+                                        @error('semcamer')<div class="text-danger mt-1">{{ $message }}</div>@enderror
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="homologacion_intt">HOMOLOGACIÓN INTT</label>    
+                                        <input type="checkbox"   id="homologacion_intt" name="homologacion_intt" value="NO VENCE" {{ old('homologacion_intt', $item->homologacion_intt ?? '') ? 'checked' : '' }}>
+                                        @error('homologacion_intt')<div class="text-danger mt-1">{{ $message }}</div>@enderror
+                                    </div>
+                                    
                                     
                                 </div>
                             </div>
@@ -337,34 +371,57 @@
 @endsection
 
 @push('scripts')
-    <!-- Carga de jQuery para la funcionalidad del formulario, si fuera necesario -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
     <script>
         $(document).ready(function() {
-            // Cargar modelos según la marca seleccionada
-            $('#marca').change(function() {
-                var marcaId = $(this).val();
-                if (marcaId) {
-                    $.ajax({
-                        url: '{{ route('marcas.getModelos') }}',
-                        method: 'GET',
-                        data: { marca_id: marcaId },
-                        success: function(data) {
-                            $('#modelo').empty().append('<option value="">Seleccione un modelo</option>');
-                            $.each(data, function(id, modelo) {
-                                $('#modelo').append('<option value="' + id + '">' + modelo + '</option>');
-                            });
-                            
-                            // Si estamos en modo edición, seleccionamos el modelo actual
-                            @if(isset($item))
-                                $('#modelo').val("{{ old('modelo', $item->modelo ?? '') }}");
-                            @endif
-                        }
-                    });
-                } else {
-                    $('#modelo').empty().append('<option value="">Seleccione una marca primero</option>');
-                }
-            });
+    // Inicializar Select2 con tema Bootstrap 5
+        $('.select2').select2({
+            theme: 'bootstrap-5',
+            width: '100%'
+        });
+
+    // Manejo de Marca
+    $('#marca').change(function() {
+        var marcaId = $(this).val();
+        
+        if (marcaId === 'otro') {
+            $('#nueva_marca_group').fadeIn();
+            $('#nueva_marca').attr('required', 'required');
+            $('#modelo').empty().append('<option value="otro">-- Otro (Agregar nuevo) --</option>');
+            $('#nuevo_modelo_group').fadeIn(); // Si la marca es nueva, el modelo también debe serlo
+        } else {
+            $('#nueva_marca_group').hide();
+            $('#nueva_marca').removeAttr('required').val('');
+            
+            // Cargar modelos vía AJAX (Tu lógica existente mejorada)
+            if (marcaId) {
+                $.ajax({
+                    url: '{{ route('marcas.getModelos') }}',
+                    method: 'GET',
+                    data: { marca_id: marcaId },
+                    success: function(data) {
+                        $('#modelo').empty().append('<option value="">Seleccione un modelo</option>');
+                        $.each(data, function(id, modelo) {
+                            $('#modelo').append('<option value="' + id + '">' + modelo + '</option>');
+                        });
+                        $('#modelo').append('<option value="otro">-- Otro (Agregar nuevo) --</option>');
+                    }
+                });
+            }
+        }
+    });
+
+    // Manejo de Modelo
+    $('#modelo').change(function() {
+        if ($(this).val() === 'otro') {
+            $('#nuevo_modelo_group').fadeIn();
+            $('#nuevo_modelo').attr('required', 'required');
+        } else {
+            $('#nuevo_modelo_group').hide();
+            $('#nuevo_modelo').removeAttr('required').val('');
+        }
+    });
 
             // Disparar el evento change al cargar la página si ya hay una marca seleccionada
             @if(isset($item) && $item->marca)

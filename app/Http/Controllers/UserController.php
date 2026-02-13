@@ -114,14 +114,15 @@ class UserController extends BaseController
         $filterKey = request()->get('filter'); // Usamos el helper global 'request()'
         
         if ($filterKey) {
+            $value = request()->get('value'); // Valor del filtro
             switch ($filterKey) {
                 
-                case 'perfil':
-                     $query->where('id_perfil', request()->get('value'));
+                case 'id_perfil':
+                     $query->where('id_perfil', $value);
                     break;                
             }
         }
-
+        
         return $query; // Devolvemos el Query Builder modificado
     }
 
@@ -173,6 +174,10 @@ class UserController extends BaseController
             if (!auth()->user()->canAccess('read', $this->moduloIdUsuarios)) {
                 abort(403, 'No tiene permiso para ver detalles de usuarios.');
             }    
+            $query = $this->model->with(['perfil', 'cliente', 'persona']);
+            
+            view()->share('modulos', \App\Models\Modulo::all());
+        
             return parent::show($id);
         }
 
@@ -348,8 +353,46 @@ class UserController extends BaseController
         $item = $this->model->findOrFail($id);
         $perfiles = Perfil::all();
         $clientes = Cliente::all();
+        $modulos = \App\Models\Modulo::all(); // Para mostrar permisos en la vista
         
-        return view('usuario.create_edit', compact('item', 'perfiles', 'clientes'));
+        return view('usuario.create_edit', compact('item', 'perfiles', 'clientes', 'modulos'));
+    }
+
+    public function editPermissions($id)
+    {
+        // 1. Validar acceso (Siguiendo tu estándar de seguridad)
+        if (!auth()->user()->canAccess('update', $this->moduloIdUsuarios)) {
+            abort(403, 'No tiene autorización para editar permisos.');
+        }
+
+        // 2. Buscar el usuario
+        $usuario = $this->model->with('perfil')->findOrFail($id);
+
+        // 3. Obtener los módulos para la matriz de permisos
+        $modulos = \App\Models\Modulo::all(); 
+
+        // 4. Retornar la vista (puedes crear una específica o usar un modal)
+        return view('usuario.edit_permissions', compact('usuario', 'modulos'));
+    }
+
+    public function updateSinglePermission(Request $request, $id)
+    {
+        // Validar acceso rápido
+        if (!auth()->user()->canAccess('update', $this->moduloIdUsuarios)) {
+            return response()->json(['error' => 'No autorizado'], 403);
+        }
+
+        $usuario = User::findOrFail($id);
+        
+        // Lógica para actualizar la tabla pivot
+        // Suponiendo que usas una relación 'modulos' con columnas r, w, d
+        $columna = $request->accion; // 'r', 'w' o 'd'
+        
+        $usuario->modulos()->updateExistingPivot($request->modulo_id, [
+            $columna => $request->estado
+        ]);
+
+        return response()->json(['status' => 'ok']);
     }
     
     /**

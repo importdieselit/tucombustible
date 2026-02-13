@@ -283,6 +283,14 @@
                 {{-- </a> --}}
             </div>
             <div class="col-12 col-md-6 col-lg-3">
+                <a href="{{route('viajes.index')}}" class="card-link" >
+                    <div class="card h-100 p-4 d-flex flex-column justify-content-center text-center">
+                        <i class="fas fa-truck-ramp-box stat-card-icon mb-2 text-warning"></i>
+                        <h5 class="fw-bold mb-1">Cargas/Despachos</h5>
+                    </div>
+                </a>
+            </div>
+            <div class="col-12 col-md-6 col-lg-3">
                 <a href="{{route('combustible.list')}}" class="card-link" >
                     <div class="card h-100 p-4 d-flex flex-column justify-content-center text-center">
                         <i class="fas fa-list stat-card-icon mb-2 text-black"></i>
@@ -339,15 +347,13 @@
             {{-- <button class="btn btn-primary-custom btn-lg rounded-pill px-4 py-2 shadow-lg fs-5" data-bs-toggle="modal" data-bs-target="#hacerPedidoModal">
                 <i class="fas fa-plus-circle me-2"></i> Hacer Pedido
             </button> --}}
-            <a href="{{route('combustible.recarga')}}" class="btn btn-primary-custom btn-lg rounded-pill px-4 py-2 shadow-lg fs-5" id="btn-crear-carga">
+            {{-- <a href="{{route('combustible.recarga')}}" class="btn btn-primary-custom btn-lg rounded-pill px-4 py-2 shadow-lg fs-5" id="btn-crear-carga">
                 <i class="fa fa-truck me-2"></i> Carga
-            </a>
+            </a> --}}
             
             <a href="{{route('combustible.createDespachoIndustrial')}}" class="btn btn-primary-custom btn-lg rounded-pill px-4 py-2 shadow-lg fs-5" id="btn-crear">
                 <i class="fa fa-truck me-2"></i> Nuevo Despacho
             </a>
-
-
             <button class="btn btn-warning btn-lg rounded-pill px-4 py-2 shadow-lg fs-5" id="btn-inspeccion-salida">
                 <i class="fa fa-clipboard-check me-2"></i> Checkout Vehículo
             </button>

@@ -78,8 +78,243 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/password/change', [UserController::class, 'showChangePassword'])->name('password.change');
     Route::post('/password/change', [UserController::class, 'updatePassword'])->name('password.update_change');
 
-    // Captación - Módulo Admin
-    Route::prefix('admin/captacion')->group(function () {
+    Route::post('/ordenes/{orden}/cerrar', [OrdenController::class, 'cerrarOrden'])->name('ordenes.cerrar');
+    Route::post('/ordenes/{orden}/anular', [OrdenController::class, 'anularOrden'])->name('ordenes.anular');
+    Route::post('/ordenes/{orden}/reactivar', [OrdenController::class, 'reactivarOrden'])->name('ordenes.reactivar');
+
+    Route::get('clientes/import', [ClienteController::class, 'import'])->name('clientes.import');
+    Route::post('clientes/handle', [ClienteController::class, 'handleImport'])->name('clientes.handleImport');
+
+    Route::get('/usuarios/importar', [UserController::class, 'import'])->name('usuarios.importar');
+    Route::post('/usuarios/importarP', [UserController::class, 'handleImport'])->name('usuarios.importarprocess');
+    Route::put('/depositos', [DepositoController::class, 'index'])->name('depositos');
+    Route::put('/depositos/ajustedinamic', [DepositoController::class, 'ajusteDinamic'])->name('deposito.ajusteD');
+    Route::put('/depositos/ajusteresguardo', [DepositoController::class, 'ajusteResguardo'])->name('deposito.ajusteR');
+   
+  Route::get('/permisos', [AccesoController::class, 'index'])->name('permisos.index');
+  Route::get('/clientes/{id}/vehiculos', function($id) {
+    return App\Models\Vehiculo::where('id_cliente', $id)
+        ->select('id', 'placa', 'alias')
+        ->get();
+});
+
+
+    // Rutas para la gestión de permisos específicos (Usuario Individual)
+    Route::get('usuarios/{usuario}/permissions', [UserController::class, 'editPermissions'])->name('usuarios.edit_permissions');
+    Route::put('usuarios/{usuario}/permissions', [UserController::class, 'updatePermissions'])->name('usuarios.update_permissions');
+
+    // Rutas para la gestión de perfiles (CRUD + Permisos Base)
+    // Usamos 'except' para indicar que la edición de permisos reemplaza al 'edit' genérico.
+    Route::resource('perfiles', PerfilController::class)->except(['edit', 'update']); 
+    
+    // Ruta para la edición de permisos base de un perfil
+    Route::get('perfiles/{perfil}/permissions', [PerfilController::class, 'editPermissions'])->name('perfiles.edit_permissions');
+    Route::put('perfiles/{perfil}/permissions', [PerfilController::class, 'updatePermissions'])->name('perfiles.update_permissions');
+
+    
+    // Las rutas de la API para obtener y actualizar permisos
+    Route::get('/api/permisos/{user}/get', [AccesoController::class, 'getPermissionsForUser'])->name('permisos.get');
+    Route::post('/api/permisos/{user}/update', [AccesoController::class, 'updatePermissions'])->name('permisos.update');
+
+    Route::get('ordenes/search-supplies', [OrdenController::class, 'searchSupplies'])->name('ordenes.search-supplies');
+    Route::post('/ordenes/supplies/receive/{supply}', [OrdenController::class, 'markAsReceived'])->name('ordenes.supplies.receive');
+    Route::get('ordenes/compras/{id_order?}/{id?}', [OrdenController::class, 'purchaseOrder'])->name('ordenes.compra');
+    Route::post('/compras/actualizar-precio', [OrdenController::class,'actualizarPrecio'])
+    ->name('compras.actualizar_precio');
+    // Asegúrate de que el nombre del método coincida con el controlador
+    Route::post('usuarios/{id}/update-single-permission', [UserController::class, 'updateSinglePermission'])
+    ->name('usuarios.update_single_permission');
+
+    Route::post('/compras/cambiar-estatus', [OrdenController::class,'cambiarEstatus'])
+        ->name('compras.cambiar_estatus');
+    // Recursos principales
+    $resourceControllers = [
+        'vehiculos' => VehiculoController::class,
+        'marcas' => MarcaController::class,
+        'modelos' => ModeloController::class,
+        'choferes' => ChoferController::class,
+        'ordenes' => OrdenController::class,
+        'tanques' => TanqueController::class,
+        'depositos' => DepositoController::class,
+        'clientes' => ClienteController::class,
+        'almacenes' => AlmacenController::class,
+        //'repostaje-tanques' => RepostController::class,
+        'inventario' => InventarioController::class,
+        'proveedores' => ProveedorController::class,
+        //'servicios' => ServicioController::class,
+        'perfiles' => PerfilController::class,
+        'usuarios' => UserController::class,
+        'reportes' => ReporteController::class
+        //'plan-mantenimiento' => PlanMantenimientoController::class,
+        //'historial-mantenimiento' => HistorialMantenimientoController::class,
+        // Agrega aquí otros recursos según tus tablas/modelos
+    ];
+
+    // Recorre el array para generar las rutas de recursos y la ruta 'list'
+    foreach ($resourceControllers as $prefix => $controller) {
+         // Agrega la ruta 'list' para cada recurso
+        Route::get(str_replace('-', '', $prefix) . "/list", [$controller, 'list'])->name(str_replace('-', '', $prefix) . '.list');
+        // Genera las rutas resource con el prefijo en singular
+        
+        Route::resource($prefix, $controller)->names([
+            'index' => str_replace('-', '', $prefix) . '.index',
+            'create' => str_replace('-', '', $prefix) . '.create',
+            'store' => str_replace('-', '', $prefix) . '.store',
+            'show' => str_replace('-', '', $prefix) . '.show',
+            'edit' => str_replace('-', '', $prefix) . '.edit',
+            'update' => str_replace('-', '', $prefix) . '.update',
+            'destroy' => str_replace('-', '', $prefix) . '.destroy',
+        ]);    
+    }
+    // Ejemplo de rutas adicionales para importación/exportación, reportes, etc.
+    
+    
+    //Route::get('/ordenes/report/pdf', [OrdenController::class, 'reportPdf'])->name('ordenes.report.pdf');
+    Route::get('/vehiculos/report/pdf', [VehiculoController::class, 'reportPdf'])->name('vehiculos.report.pdf');
+    Route::get('/documentacion/vehiculos/', [VehiculoController::class, 'controlDocumentacion'])
+    ->name('vehiculos.documentacion');
+
+    // Rutas para gestión de perfiles y permisos 
+    Route::post('/perfiles/{perfil}/permisos', [PerfilController::class, 'updatePermisos'])->name('perfiles.updatePermisos'); 
+    Route::post('/pedidos', [PedidoController::class, 'crearPedido'])->name('pedidos.store');
+    // Rutas de Combustible (Pedidos y Despachos)
+    Route::prefix('combustible')->name('combustible.')->group(function () {
+        // Rutas para los movimientos de combustible
+        Route::get('/recarga', [MovimientoCombustibleController::class, 'createRecarga'])->name('recarga');
+        Route::post('/recargaStore', [MovimientoCombustibleController::class, 'storeRecarga'])->name('storeRecarga');
+
+
+        Route::get('/index', [MovimientoCombustibleController::class, 'index'])->name('index');
+        Route::get('/list', [MovimientoCombustibleController::class, 'list'])->name('list');
+        Route::get('/despacholist', [MovimientoCombustibleController::class, 'despachoList'])->name('despachos.list');
+        Route::post('/despacho-industrial/store', [MovimientoCombustibleController::class, 'storeDespachoIndustrial'])
+        ->name('storeDespachoIndustrial');
+        Route::get('/despacho-industrial/create', [MovimientoCombustibleController::class, 'createDespachoIndustrial'])
+        ->name('createDespachoIndustrial');
+        Route::get('/despacho-industrial/resumen', [MovimientoCombustibleController::class, 'resumenDespachos'])
+        ->name('resumenDesp');
+        Route::post('/storeTraspaso', [MovimientoCombustibleController::class, 'storeTraspaso'])
+        ->name('storeTraspaso');
+        Route::post('/update-field', [MovimientoCombustibleController::class, 'updateMovimientoField'])->name('updateMovimientoField');
+        Route::post('/update-ticket', [MovimientoCombustibleController::class, 'updateTicket'])->name('updateTicket');
+        Route::get('/estadisticas', [MovimientoCombustibleController::class, 'dashboardEstadistico'])->name('estadisticas');
+
+        Route::get('/despacho-industrial/historial', [MovimientoCombustibleController::class, 'historialDespachosIndustrial'])
+        ->name('historialIndustrial');
+        Route::get('/pedidos', [MovimientoCombustibleController::class, 'pedidos'])->name('pedidos');
+        
+        Route::post('/pedidos/{id}/aprobar', [MovimientoCombustibleController::class, 'aprobar'])->name('aprobar');
+        Route::post('/pedidos/{id}/rechazar', [MovimientoCombustibleController::class, 'rechazar'])->name('rechazar');
+        
+        Route::get('/compra/crear', [MovimientoCombustibleController::class, 'createCompra'])->name('createCompra');
+        Route::post('/solicitud', [MovimientoCombustibleController::class, 'storeCompra'])->name('storeCompra');
+        Route::get('/compras',[MovimientoCombustibleController::class, 'comprasList'])->name('compras');
+
+        Route::get('/flete/crear', [MovimientoCombustibleController::class, 'createFlete'])->name('createFlete');
+        Route::post('/store-flete', [MovimientoCombustibleController::class, 'storeFlete'])->name('storeFlete');
+        Route::get('/fletes',[MovimientoCombustibleController::class, 'fleteList'])->name('fletes');
+
+        // Ruta para aprobar un pedido
+        Route::post('/pedido/{id}/aprobar', [PedidoController::class, 'aprobar'])->name('pedido.aprobar');
+        Route::post('/resumen', [MovimientoCombustibleController::class, 'generateInventoryCaption'])->name('resumen');
+
+        // Ruta para crear un despacho
+        Route::post('/pedido/{id}/despachar', [PedidoController::class, 'despachar'])->name('pedido.despachar');
+
+        Route::get('/aprobados', [MovimientoCombustibleController::class, 'despachos'])->name('aprobados');
+        Route::post('/despachos/{id}/despachar', [MovimientoCombustibleController::class, 'despachar'])->name('despachar');
+        // Nuevas rutas para el despacho de combustible
+        Route::get('/despacho', [MovimientoCombustibleController::class, 'createDespacho'])->name('despacho');
+        Route::post('/despacho', [MovimientoCombustibleController::class, 'storeDespacho'])->name('storeDespacho');
+
+        // Nuevas rutas para el despacho de combustible
+        Route::get('/precarga', [MovimientoCombustibleController::class, 'createPrecarga'])->name('precarga');
+        Route::post('/precarga', [MovimientoCombustibleController::class, 'storePrecarga'])->name('storePrecarga');
+        Route::post('/aprobado', [MovimientoCombustibleController::class, 'storeAprobado'])->name('storeAprobado');
+        Route::get('/prepago', [MovimientoCombustibleController::class, 'createPrepago'])->name('createPrepago');
+Route::post('/prepago/store', [MovimientoCombustibleController::class, 'storePrepago'])->name('storePrepago');
+
+    });
+
+    Route::get('/viajes/calendario', [ViajesController::class, 'calendar'])->name('viajes.calendario');
+    Route::get('/viajes/mgo', [ViajesController::class, 'createMGO'])->name('viajes.mgo');
+  
+    Route::get('/alertas', [AlertaController::class, 'index'])->name('alertas.index');
+    Route::get('/alertas/read/{id}', [AlertaController::class, 'markAsRead'])->name('alertas.read');
+
+    
+    Route::resource('viajes', ViajesController::class)->only(['create','store', 'index', 'show']);
+
+    Route::get('viajes/dashboard', [ViajesController::class, 'dashboard'])->name('viajes.dashboard');
+    Route::get('viaje/list', [ViajesController::class, 'list'])->name('viajes.list');
+    Route::get('/viajes/{id}/assign', [ViajesController::class, 'assign'])->name('viajes.assign');
+Route::put('/viajes/{id}/assign', [ViajesController::class, 'processAssignment'])->name('viajes.processAssignment');    
+    Route::get('viajes/{viaje}/viaticos/edit', [ViajesController::class, 'editViaticos'])->name('viajes.viaticos.edit');
+    Route::put('viajes/{viaje}/viaticos', [ViajesController::class, 'updateViaticos'])->name('viajes.viaticos.update');
+    Route::delete('/viajes/{id}', [ViajesController::class, 'destroy'])->name('viajes.destroy');
+    // Muestra el formulario de edición
+Route::get('/viajes/{id}/edit', [ViajesController::class, 'edit'])->name('viaje.edit');
+route::post('/viajes/mgo-store', [ViajesController::class, 'storeMGO'])->name('mgo.store');
+// Ruta AJAX para actualizar un campo del Viaje
+Route::put('/viajes/{id}/update-field', [ViajesController::class, 'updateField'])->name('viaje.update.field');
+
+// Ruta AJAX para actualizar un campo de Despacho
+// Usamos el ID del viaje en la ruta para mantener el contexto
+Route::put('/viajes/{viajeId}/despachos/{despachoId}', [ViajesController::class, 'updateDespacho'])->name('despacho.update.field');
+
+// Procesa la actualización del formulario (PUT/PATCH)
+Route::put('/viajes/{id}', [ViajesController::class, 'update'])->name('viaje.update');
+    // Nueva ruta para el resumen de programación
+    Route::get('/viajes/resumen-programacion/{id?}', [ViajesController::class, 'resumenProgramacion'])->name('viajes.resumenProgramacion');
+    Route::get('viajes/report/index', [ViajesController::class, 'reportsIndex'])->name('reportes.viajes');
+    Route::put('viajes/report/generate', [ViajesController::class, 'generateReport'])->name('viajes.report.generate');
+    Route::get('viaticos/tabulador', [ViajesController::class, 'tabuladorIndex'])->name('viaticos.tabulador');
+    Route::put('viaticos/tabulador/update', [ViajesController::class, 'tabuladorUpdate'])->name('viaticos.tabulador.update');
+    Route::put('viaticos/parametros/update', [ViajesController::class, 'parametrosUpdate'])->name('viaticos.parametros.update');
+
+    Route::post('/send-telegram-photo', [TelegramController::class, 'sendPhoto'])
+    ->name('telegram.send.photo');
+    Route::post('/send-telegram-message', [TelegramController::class, 'sendMessage'])->name('telegram.send.message');
+
+    Route::get('eventos', [ViajesController::class, 'getCombinedEventos'])->name('eventos');
+
+     Route::get('/mantenimiento/planificacion', [PlanificacionMantenimientoController::class, 'index'])
+         ->name('mantenimiento.planificacion.index');
+    
+    Route::get('/api/mantenimiento/eventos', [PlanificacionMantenimientoController::class, 'getEventos'])
+         ->name('mantenimiento.planificacion.eventos');
+
+    Route::post('/api/mantenimiento/planificar', [PlanificacionMantenimientoController::class, 'store'])
+         ->name('mantenimiento.planificacion.store');
+
+    // Rutas para historial de mantenimiento
+    
+
+
+    // Rutas para repostaje específico
+    //Route::get('/tanques/{tanque}/repostajes', [RepostajeTanqueController::class, 'showByTanque'])->name('tanques.repostajes');
+    //Route::get('/vehiculos/{vehiculo}/repostajes', [RepostajeVehiculoController::class, 'showByVehiculo'])->name('vehiculos.repostajes');
+    Route::get('captacion/crear', [CaptacionController::class,'create'])->name('captacion.create');
+    Route::post('captacion/store', [CaptacionController::class,'store'])->name('captacion.store');
+    Route::get('captacion/thanks', [CaptacionController::class,'thanks'])->name('captacion.thanks');
+
+    Route::get('/despachos/guia-distribucion/{viajeId}', [ViajesController::class, 'printGuiaDistribucion'])
+     ->name('despachos.guia_distribucion');
+    // Admin (proteger con middleware 'auth' y permisos necesarios)
+
+    // 2. Boleta de Combustible Marino (Segundo formato)
+    Route::get('/despachos/boleta/{viajeId}', [ViajesController::class, 'showBoleta'])
+        ->name('despachos.boleta');
+
+    // 3. Autorización/Nominación (Tercer formato)
+    Route::get('/despachos/nominacion/{viajeId}', [ViajesController::class, 'showNominacion'])
+        ->name('despachos.nominacion');
+
+    Route::get('/reportes', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/export-pdf', [ReportController::class, 'exportPdf'])->name('reports.export_pdf');
+    Route::post('/api/reports/summary', [ReportController::class, 'getSummary'])->name('reports.summary');    
+
+    Route::prefix('captacion')->middleware(['auth'])->group(function () {
         Route::get('/', [CaptacionController::class, 'index'])->name('captacion.index');
         Route::get('/{cliente}/show', [CaptacionController::class, 'show'])->name('captacion.show');
         Route::get('/{cliente}/edit', [CaptacionController::class, 'edit'])->name('captacion.edit');

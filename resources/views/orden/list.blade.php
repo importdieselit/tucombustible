@@ -170,7 +170,7 @@
             $('#ordenesTable tbody').on('click', 'tr', function() {
                 var id = $(this).data('id');
                 if (id) {
-                    window.location.href = '/ordenes/' + id;
+                    window.location.href = "{{ route('ordenes.show', '__ID__') }}".replace('__ID__', id);
                 }
             });
         });
