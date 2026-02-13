@@ -1,92 +1,61 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
+<nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom shadow-sm sticky-top">
     <div class="container-fluid">
         
-        <a class="navbar-brand" href="{{ route('dashboard') }}">
-            <img src="{{ asset('img/logomini.png') }}" alt="Logo de la empresa" class="img-fluid rounded-circle mb-3 border border-3 border-secondary" style="max-width: 100px;background: white; padding: 10px;">
-          TuCombustible</a>
-        
-        <!-- INICIO: Buscador Universal -->
-        <form class="d-flex me-3" action="{{ route('search.global') }}" method="GET" style="width: 50%; margin-left:50%">
-            <div class="input-group">
-                <input 
-                    class="form-control form-control-sm" 
-                    type="search" 
-                    placeholder="Buscar por Placa, Chofer, Cliente..."  
-                    aria-label="Search" 
-                    name="query" 
-                    value="{{ request('query') }}" 
-                    required
-                >
-                <button class="btn btn-outline-primary btn-sm" type="submit">
-                    <i class="bi bi-search"></i>
-                </button>
-            </div>
-        </form>
-        <!-- FIN: Buscador Universal -->
+        <button type="button" id="sidebarCollapse" class="btn btn-outline-primary me-2 d-md-none border-0">
+            <i class="fa fa-list fs-3"></i>
+        </button>
 
-        <div class="d-flex ms-auto align-items-center">
-            <!-- Fragmento de tu Cabecera -->
+        <a class="navbar-brand d-flex align-items-center" href="{{ route('dashboard') }}">
+            <img src="{{ asset('img/logomini.png') }}" alt="Logo" class="img-fluid rounded-circle border border-2 border-secondary me-2" style="max-width: 35px; background: white; padding: 2px;">
+            <span class="d-none d-sm-inline fw-bold text-primary">TuCombustible</span>
+        </a>
 
-<!-- Notificaciones Dinámicas -->
-<div class="me-3 dropdown">
-    <!-- Botón de Notificaciones -->
-    <a href="#" 
-       class="btn btn-outline-secondary position-relative" 
-       id="alertsDropdown" 
-       data-bs-toggle="dropdown" 
-       aria-expanded="false">
-        <i class="bi bi-bell"></i>
-        
-        <!-- Badge Dinámico: Solo se muestra si hay alertas no leídas -->
-        @if($unreadAlertsCount > 0)
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger px-1" style="min-width: 20px;">
-                {{ $unreadAlertsCount }}
-                <span class="visually-hidden">notificaciones nuevas</span>
-            </span>
-        @endif
-    </a>
+        <div class="ms-md-auto me-2 me-md-5" id="globalSearchContainer">
+            <button class="btn btn-link text-secondary d-md-none p-2" id="toggleMobileSearch">
+                <i class="fa fa-search fs-5"></i>
+            </button>
 
-    <!-- Dropdown del Menú de Alertas -->
-    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="alertsDropdown" style="min-width: 300px;">
-        <li class="dropdown-header text-center">
-            @if($unreadAlertsCount > 0)
-                Tienes **{{ $unreadAlertsCount }}** alertas sin leer
-            @else
-                No tienes alertas pendientes.
-            @endif
-        </li>
-        @forelse($unreadAlerts as $alerta)
-            <li>
-                <a class="dropdown-item" href="{{ url('/alertas/ver', $alerta->id) }}">
-                    <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i> 
-                    <!-- Observación truncada para el menú -->
-                    {{ Str::limit($alerta->observacion, 40) }}
-                    
+            <form id="globalSearchForm" class="search-form-header d-none d-md-flex" action="{{ route('search.global') }}" method="GET">
+                <div class="input-group">
+                    <input 
+                        class="form-control form-control-sm border-primary-subtle" 
+                        type="search" 
+                        placeholder="Placa, Chofer, Cliente..."  
+                        name="query" 
+                        value="{{ request('query') }}" 
+                        required
+                    >
+                    <button class="btn btn-primary btn-sm" type="submit">
+                        <i class="fa fa-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="d-flex align-items-center">
+            <div class="dropdown me-2">
+                <a href="#" class="btn btn-link text-secondary position-relative p-1" id="alertsDropdown" data-bs-toggle="dropdown">
+                    <i class="fa fa-bell fs-5"></i>
+                    @if($unreadAlertsCount > 0)
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
+                            {{ $unreadAlertsCount }}
+                        </span>
+                    @endif
                 </a>
-            </li>
-        @empty
-            <li><span class="dropdown-item text-center text-muted">Todo está tranquilo.</span></li>
-        @endforelse
-        
-        @if($unreadAlertsCount > 0)
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item text-center text-primary" href="{{ url('/alertas') }}">Ver todas las alertas</a></li>
-        @endif
-    </ul>
-</div>
-<!-- Fin Notificaciones Dinámicas -->
+                </div>
 
-            <!-- Menú de usuario básico -->
             <div class="dropdown">
-                <a class="btn btn-outline-primary dropdown-toggle" href="#" role="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
-                    {{ Auth::user()->name ?? 'Usuario' }}
+                <a class="btn btn-sm btn-outline-primary rounded-pill px-3 dropdown-toggle d-flex align-items-center" href="#" id="userMenu" data-bs-toggle="dropdown">
+                    <i class="fa fa-person-circle me-1"></i>
+                    <span class="d-none d-lg-inline">{{ Auth::user()->name ?? 'User' }}</span>
                 </a>
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
-                    <li><a class="dropdown-item" href="{{ route('usuarios.index') }}">Perfil</a></li>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                    <li><a class="dropdown-item py-2" href="{{ route('usuarios.index') }}"><i class="fa fa-person me-2"></i> Perfil</a></li>
+                    <li><hr class="dropdown-divider"></li>
                     <li>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-                            <button class="dropdown-item" type="submit">Cerrar sesión</button>
+                            <button class="dropdown-item text-danger py-2" type="submit"><i class="fa fa-box-arrow-right me-2"></i> Salir</button>
                         </form>
                     </li>
                 </ul>

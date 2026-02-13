@@ -80,13 +80,13 @@
                                     <a href="{{ route('usuarios.edit', $user->id) }}" class="btn btn-sm btn-warning text-white" title="Editar">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                     @if($user->id_perfil != 1)
+                                     {{-- @if($user->id_perfil != 1)
                                         <button class="btn btn-sm btn-info text-white" data-bs-toggle="modal" data-bs-target="#permissionsModal" data-user-id="{{ $user->id }}">
                                             <i class="fas fa-user-lock"></i> Administrar Permisos
                                         </button>
                                     @else
                                         <span class="badge bg-success">Super Usuario</span>
-                                    @endif
+                                    @endif --}}
                                     <form action="{{ route('usuarios.destroy', $user->id) }}" method="POST" style="display: inline;">
                                         @csrf
                                         @method('DELETE')

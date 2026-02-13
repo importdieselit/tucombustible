@@ -24,7 +24,7 @@
     <div class="card shadow-sm border-0">
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-hover table-striped">
+                <table class="table table-hover table-striped @if(count($inspecciones)>0)datatable @endif">
                     <thead class="bg-primary text-white">
                         <tr>
                             <th>ID</th>
@@ -77,11 +77,7 @@
                     </tbody>
                 </table>
             </div>
-            
-            {{-- Enlaces de paginación --}}
-            <div class="d-flex justify-content-center mt-3">
-                {{ $inspecciones->links() }}
-            </div>
+
         </div>
     </div>
 </div>

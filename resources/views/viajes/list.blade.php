@@ -33,7 +33,7 @@
 
     <!-- Tabla de Viajes -->
     <div class="table-responsive">
-        <table class="table table-hover table-striped shadow-sm">
+        <table class="table table-hover table-striped shadow-sm @if(count($viajes)>0)datatable @endif">
             <thead class="bg-info text-white">
                 <tr>
                     <th>#</th>

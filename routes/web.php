@@ -176,6 +176,9 @@ Route::get('inventario/entry', [inventarioController::class, 'entry'])->name('in
     Route::get('ordenes/compras/{id_order?}/{id?}', [OrdenController::class, 'purchaseOrder'])->name('ordenes.compra');
     Route::post('/compras/actualizar-precio', [OrdenController::class,'actualizarPrecio'])
     ->name('compras.actualizar_precio');
+    // Asegúrate de que el nombre del método coincida con el controlador
+    Route::post('usuarios/{id}/update-single-permission', [UserController::class, 'updateSinglePermission'])
+    ->name('usuarios.update_single_permission');
 
     Route::post('/compras/cambiar-estatus', [OrdenController::class,'cambiarEstatus'])
         ->name('compras.cambiar_estatus');
