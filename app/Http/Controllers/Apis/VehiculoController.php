@@ -7,6 +7,12 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Vehiculo;
+use App\Models\ResumenDiario;
+use Carbon\Carbon;
+use App\Models\Mantenimiento;
+use App\Models\Orden;
+
 
 class VehiculoController extends Controller
 {
@@ -125,6 +131,94 @@ class VehiculoController extends Controller
             ], 500);
         }
     }
+
+     public function daily()
+    {
+        $today = Carbon::now();
+       // $this->info("Iniciando cálculo del resumen diario para la fecha: {$today->toDateString()}");
+
+        // ----------------------------------------------------------------------
+        // 1. CÁLCULO DE EFICIENCIA DE FLOTA (DISPONIBILIDAD)
+        // ----------------------------------------------------------------------
+        $totalVehiculos = Vehiculo::where('es_flota', true)->count();
+        $unidadesDisponibles = Vehiculo::where('es_flota', true)
+            ->where('estatus',1) // Asumiendo que status 1 = disponible
+            ->count(); 
+
+        $disponibilidad = $totalVehiculos > 0 
+            ? round(($unidadesDisponibles / $totalVehiculos) * 100, 2)
+            : 0.00;
+            
+        //$this->info("-> Disponibilidad de Flota: {$disponibilidad}% ({$unidadesDisponibles}/{$totalVehiculos})");
+
+
+        // ----------------------------------------------------------------------
+        // 2. CÁLCULO DE MANTENIMIENTOS (PLAN y REAL)
+        // ----------------------------------------------------------------------
+        
+        // Planificados (Plan): Asumimos que es el total de planificados en el rango de hoy
+        $mantenimientosPlan = Vehiculo::where('km_mantt','>' ,4800)->orWhere('hrs_mantt','>' ,180)->count();      
+        // $mantenimientosPlan = Mantenimiento::where('status', 'PLANIFICADO')
+        //     ->whereDate('fecha_programada', $today)
+        //     ->count();
+
+        // Realizados (Real): Asumimos que es el total de finalizados el día de hoy
+        $mantenimientosReal = Orden::whereIn('tipo', [1,5])->where('estatus',1)
+            ->whereDate('fecha_out', $today)
+            ->count();
+            
+        //$this->info("-> Mantenimientos: Planificados ({$mantenimientosPlan}), Realizados ({$mantenimientosReal})");
+
+
+        // ----------------------------------------------------------------------
+        // 3. CÁLCULO DE PLAN MODELS (Agrupación por Modelo de Vehículo)
+        // ----------------------------------------------------------------------
+        // Obtener los IDs de vehículos planificados para hoy
+        // Contar por modelo (asumiendo que 'modelo' es un campo en la tabla 'vehiculos')
+        $planModelsRaw = Vehiculo::where('km_mantt','>' ,4800)
+            ->select('modelo', DB::raw('count(*) as total'))
+            ->groupBy('modelo')
+            ->pluck('total', 'modelo')
+            ->toArray();
+            
+        //$this->info("-> Modelos planificados: " . json_encode($planModelsRaw));
+
+
+        // ----------------------------------------------------------------------
+        // 4. CÁLCULO DE CONTEO (Efectividad de Almacén)
+        // ----------------------------------------------------------------------
+        // SIMULACIÓN: Asume que Inventario tiene registros diarios de conteo.
+        // $totalIntentosConteo = Inventario::whereDate('fecha_conteo', $today)->count();
+        // $conteoExitoso = Inventario::whereDate('fecha_conteo', $today)
+        //     ->where('conteo_exitoso', true) // Asume este campo
+        //     ->count();
+
+        // $conteoEfectividad = $totalIntentosConteo > 0
+        //     ? round(($conteoExitoso / $totalIntentosConteo) * 100, 2)
+        //     : 0.00;
+
+        // $this->info("-> Efectividad de Conteo: {$conteoEfectividad}%");
+        
+        
+        // ----------------------------------------------------------------------
+        // 5. ALMACENAR O ACTUALIZAR EL REGISTRO
+        // ----------------------------------------------------------------------
+        ResumenDiario::create(
+            [
+                'fecha' => $today,
+                'plan' => $mantenimientosPlan,
+                'real' => $mantenimientosReal,
+                'disponibilidad' => $disponibilidad,
+                'conteo' => 0, //$conteoEfectividad,
+                'plan_models' => $planModelsRaw,
+            ]
+        );
+
+       // $this->info('✅ Resumen diario guardado/actualizado exitosamente.');
+
+        return true;
+    }
+
 
     /**
      * Crear un nuevo vehículo

@@ -42,6 +42,11 @@ use App\Http\Controllers\TelegramController;
 |
 */
 
+//Route para Daily Summary (Resumen Diario)
+    Route::get('/vehiculos/daily-summary', [VehiculoController::class, 'daily'])->name('api.vehiculos.daily-summary');
+
+    
+
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
@@ -311,9 +316,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Creación de cliente al vuelo
     Route::post('clientes/store-al-vuelo', [ClienteController::class, 'storeAlVuelo'])->name('api.clientes.store-al-vuelo');
-
-    //Route para Daily Summary (Resumen Diario)
-    Route::get('/vehiculos/daily-summary', [VehiculoController::class, 'daily'])->name('api.vehiculos.daily-summary');
 
     
 }); 
