@@ -61,7 +61,7 @@ class ViajesController extends Controller
     public function create()
     {
         // En un escenario real, aquí se cargan dinámicamente:
-        $choferes = Chofer::with('persona')->orderBy('nombre', 'asc')->get();
+        $choferes = Chofer::with('persona')->get();
         $vehiculos = Vehiculo::where('es_flota',true)->get(['id', 'placa', 'flota']);
         $destino = TabuladorViatico::orderBy('destino', 'asc')->pluck('destino')->unique();
         $clientes = Cliente::where('status',1)->orderBy('nombre', 'asc')->get(['id','nombre','alias']);
@@ -75,7 +75,7 @@ class ViajesController extends Controller
         
         // Cargar los recursos necesarios para la asignación
         // Asumiendo que Chofer::with('persona') es la forma correcta de cargar los choferes disponibles
-        $choferes = Chofer::with('persona')->orderBy('nombre', 'asc')->get(); 
+        $choferes = Chofer::with('persona')->get(); 
         $vehiculos = Vehiculo::where('es_flota',true)->where('estatus', 1)->get(['id', 'placa', 'flota']);
         $clientes = Cliente::where('status',1)->orderBy('nombre', 'asc')->get(['id','nombre']);
 
@@ -615,7 +615,7 @@ class ViajesController extends Controller
     public function edit($id)
 {
     $viaje = Viaje::findOrFail($id);
-         $choferes = Chofer::with('persona')->orderBy('nombre')->get();
+         $choferes = Chofer::with('persona')->get();
         $vehiculos = Vehiculo::where('estatus', 1)->where('es_flota',true)->get(['id', 'placa', 'flota']);
         $destino = TabuladorViatico::orderBy('destino')->pluck('destino')->unique();
         $clientes = Cliente::where('status',1)->orderBy('nombre', 'asc')->get(['id','nombre','alias']);
