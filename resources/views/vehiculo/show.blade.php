@@ -334,7 +334,7 @@ $viajes = App\Models\DespachoViaje::query()
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4">No hay rutas registradas.</td>
+                                    <td colspan="5">No hay rutas registradas.</td>
                                 </tr>
                             @endforelse
                         </tbody>
