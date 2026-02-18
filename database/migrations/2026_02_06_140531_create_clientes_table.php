@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('clientes', function (Blueprint $table) {
-            $table->unsignedBigInteger('id');
+            $table->id();
             $table->string('nombre', 100)->comment('Nombre del cliente o empresa');
             $table->string('alias')->nullable();
             $table->string('contacto', 50)->nullable()->comment('Nombre de la persona de contacto');

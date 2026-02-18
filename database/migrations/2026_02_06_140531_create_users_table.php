@@ -30,6 +30,7 @@ return new class extends Migration
             $table->text('fcm_token')->nullable();
             $table->string('telegram_id', 100)->nullable();
             $table->string('telegram_username', 50)->nullable();
+            $table->boolean('must_change_password')->default(true);
         });
     }
 

@@ -14,73 +14,26 @@ class RequisitosCaptacionTableSeeder extends Seeder
      */
     public function run()
     {
-        
-
         \DB::table('requisitos_captacion')->delete();
+    
+        $requisitos = [
+            // Solo para el Cliente Padre
+            ['id' => 1, 'codigo' => 'RIF_LEG', 'descripcion' => 'RIF legalizado', 'tipo_cliente' => 'padre'],
+            ['id' => 2, 'codigo' => 'DOC_CONST', 'descripcion' => 'Documento constitutivo', 'tipo_cliente' => 'padre'],
+            ['id' => 3, 'codigo' => 'CED_REP', 'descripcion' => 'Copia del representante legal', 'tipo_cliente' => 'padre'],
         
-        \DB::table('requisitos_captacion')->insert(array (
-            0 => 
-            array (
-                'codigo' => 'A',
-                'created_at' => '2025-11-28 15:50:08',
-                'descripcion' => 'RIF legalizado',
-                'id' => 1,
+            // Para ambos (Padre y Sucursales)
+            ['id' => 4, 'codigo' => 'LIST_EQ', 'descripcion' => 'Lista de equipos y tanques', 'tipo_cliente' => 'ambos'],
+            ['id' => 5, 'codigo' => 'CROQUIS', 'descripcion' => 'Croquis de ubicación', 'tipo_cliente' => 'ambos'],
+            ['id' => 6, 'codigo' => 'BOMBEROS', 'descripcion' => 'Constancia de bomberos', 'tipo_cliente' => 'ambos'],
+        ];
+
+        foreach ($requisitos as $req) {
+            \DB::table('requisitos_captacion')->insert(array_merge($req, [
                 'obligatorio' => 1,
-                'tipo_cliente' => 'industrial',
-                'updated_at' => '2025-11-28 15:50:08',
-            ),
-            1 => 
-            array (
-                'codigo' => 'B',
-                'created_at' => '2025-11-28 15:50:08',
-                'descripcion' => 'Documento constitutivo',
-                'id' => 2,
-                'obligatorio' => 1,
-                'tipo_cliente' => 'industrial',
-                'updated_at' => '2025-11-28 15:50:08',
-            ),
-            2 => 
-            array (
-                'codigo' => 'C',
-                'created_at' => '2025-11-28 15:50:08',
-                'descripcion' => 'Copia del representante legal',
-                'id' => 3,
-                'obligatorio' => 1,
-                'tipo_cliente' => 'industrial',
-                'updated_at' => '2025-11-28 15:50:08',
-            ),
-            3 => 
-            array (
-                'codigo' => 'D',
-                'created_at' => '2025-11-28 15:50:08',
-                'descripcion' => 'Lista de equipos y tanques',
-                'id' => 4,
-                'obligatorio' => 1,
-                'tipo_cliente' => 'industrial',
-                'updated_at' => '2025-11-28 15:50:08',
-            ),
-            4 => 
-            array (
-                'codigo' => 'E',
-                'created_at' => '2025-11-28 15:50:08',
-                'descripcion' => 'Croquis de ubicación',
-                'id' => 5,
-                'obligatorio' => 1,
-                'tipo_cliente' => 'industrial',
-                'updated_at' => '2025-11-28 15:50:08',
-            ),
-            5 => 
-            array (
-                'codigo' => 'F',
-                'created_at' => '2025-11-28 15:50:08',
-                'descripcion' => 'Constancia de bomberos',
-                'id' => 6,
-                'obligatorio' => 1,
-                'tipo_cliente' => 'industrial',
-                'updated_at' => '2025-11-28 15:50:08',
-            ),
-        ));
-        
-        
+                'created_at' => now(),
+                'updated_at' => now()
+            ]));
+        }
     }
 }

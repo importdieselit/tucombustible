@@ -9,18 +9,28 @@ use Symfony\Component\HttpFoundation\Response;
 class CheckUserRole
 {
     /**
-     * Handle an incoming request.
-     *
+     * 
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     public function handle(Request $request, Closure $next, $roleId): Response
     {
-        // Verifica si hay un usuario autenticado y si su perfil_id no coincide con el rol requerido.
-        if (!Auth::check() || Auth::user()->id_perfil != $roleId) {
-            // Si el usuario no tiene el rol adecuado, puedes abortar con un error 403
-            // o redirigirlo a una página de inicio.
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+
+        if (Auth::user()->status_usuario === 'prospecto') {
+            if (!$request->routeIs('captacion.completar')) {
+                return redirect()->route('captacion.completar');
+            }
+            return $next($request);
+        }
+
+        if (Auth::user()->id_perfil == 1) {
+            return $next($request);
+        }
+
+        if (Auth::user()->id_perfil != $roleId) {
             return abort(403, 'Acceso no autorizado.');
-            // return redirect()->route('home'); // Alternativa: redirigir a otra ruta
         }
 
         return $next($request);

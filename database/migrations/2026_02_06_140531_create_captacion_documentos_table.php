@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('captacion_documentos', function (Blueprint $table) {
-            $table->unsignedBigInteger('id');
+            $table->id();
             $table->unsignedBigInteger('captacion_id');
             $table->integer('requisito_id');
             $table->string('tipo_anexo')->nullable();

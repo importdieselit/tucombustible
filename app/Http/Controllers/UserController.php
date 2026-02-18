@@ -8,6 +8,7 @@ use App\Models\Persona;
 use App\Models\Cliente;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Session;
@@ -394,4 +395,33 @@ class UserController extends BaseController
         return response()->json(['status' => 'ok']);
     }
     
+    /**
+    * Muestra la vista para que el prospecto cambie su contraseña inicial.
+    */
+    public function showChangePassword()
+    {
+        return view('auth.passwords.change');     
+    }
+
+    /**
+    * Procesa el cambio de contraseña.
+    */
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|string|min:6|confirmed',
+        ], [
+            'password.confirmed' => 'Las contraseñas no coinciden.',
+            'password.min' => 'La clave debe tener al menos 6 caracteres.'
+        ]);
+
+        $user = Auth::user();
+        $user->password = bcrypt($request->password);
+        $user->must_change_password = 0; // Aquí le quitamos el candado
+        $user->save();
+
+        // Lo mandamos directo a que empiece a subir sus papeles
+        return redirect()->route('captacion.completar')
+                     ->with('success', 'Contraseña actualizada. Ahora puede completar su expediente.');
+    }
 }

@@ -18,14 +18,15 @@
 
         @php
             $cards = [
-                'registro_inicial' => ['title' => 'Nuevos', 'color' => 'primary', 'icon' => 'ri-user-star-line'],
-                'CUPO' => ['title' => 'Solicitud Recibida', 'color' => 'info', 'icon' => 'ri-mail-open-line'],
-                'MIGRACION' => ['title' => 'Migración', 'color' => 'warning', 'icon' => 'ri-refresh-line'],
-                'espera' => ['title' => 'En Espera', 'color' => 'secondary', 'icon' => 'ri-time-line'],
-                'planillas_enviadas' => ['title' => 'Planillas Enviadas', 'color' => 'success', 'icon' => 'ri-file-list-3-line'],
-                'falta_documentacion' => ['title' => 'Esperando Documentos', 'color' => 'danger', 'icon' => 'ri-folder-warning-line'],
+                'registro_inicial'     => ['title' => 'Nuevos', 'color' => 'primary', 'icon' => 'ri-user-star-line'],
+                'revision_pendiente'   => ['title' => 'Revisión de Expediente', 'color' => 'danger', 'icon' => 'ri-file-search-line'], 
+                'CUPO'                 => ['title' => 'Solicitud Recibida', 'color' => 'info', 'icon' => 'ri-mail-open-line'],
+                'MIGRACION'            => ['title' => 'Migración', 'color' => 'warning', 'icon' => 'ri-refresh-line'],
+                'espera'               => ['title' => 'En Espera', 'color' => 'secondary', 'icon' => 'ri-time-line'],
+                'planillas_enviadas'   => ['title' => 'Planillas Enviadas', 'color' => 'success', 'icon' => 'ri-file-list-3-line'],
+                'falta_documentacion'  => ['title' => 'Esperando Documentos', 'color' => 'orange', 'icon' => 'ri-folder-warning-line'],
                 'esperando_inspeccion' => ['title' => 'Esperando Inspección', 'color' => 'dark', 'icon' => 'ri-search-eye-line'],
-                'aprobado' => ['title' => 'Aprobados', 'color' => 'success', 'icon' => 'ri-checkbox-circle-line'],
+                'aprobado'             => ['title' => 'Aprobados', 'color' => 'success', 'icon' => 'ri-checkbox-circle-line'],
             ];
         @endphp
 
@@ -119,8 +120,12 @@
 
                             <td>
                                 <span class="badge bg-{{ $cards[$cliente->estatus_captacion]['color'] ?? 'secondary' }}">
-                                    {{ $cards[$cliente->estatus_captacion]['title'] ?? 'Sin definir' }}
+                                    {{ $cards[$cliente->estatus_captacion]['title'] ?? $cliente->estatus_captacion }}
                                 </span>
+                                @if($cliente->estatus_captacion == 'revision_pendiente')
+                                    <br>
+                                    <small class="text-muted"><i class="ri-attachment-line"></i> {{ $cliente->documentos->count() }} archivos</small>
+                                @endif
                             </td>
 
                             <td>{{ $cliente->gestion }}</td>
@@ -130,10 +135,6 @@
                             <td class="text-end">
                                 <a href="{{ route('captacion.show', $cliente) }}" class="btn btn-sm btn-primary">
                                     <i class="fa fa-eye"></i>
-                                </a>
-
-                                <a href="{{ route('captacion.edit', $cliente) }}" class="btn btn-sm btn-warning">
-                                    <i class="fa fa-pencil"></i>
                                 </a>
                             </td>
                         </tr>

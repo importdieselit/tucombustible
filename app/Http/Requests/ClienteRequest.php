@@ -27,14 +27,13 @@ class ClienteRequest extends FormRequest
         $clienteId = $this->route('cliente');
 
         return [
-            'nombre' => 'required|string|max:255',
-            // La regla 'unique' ahora ignora el ID del cliente actual si existe.
-            'rif' => 'nullable|string|max:20|unique:clientes,rif,' . $clienteId,
-            'direccion' => 'nullable|string|max:255',
-            'telefono' => 'nullable|string|max:20',
-            'contacto' => 'nullable|string|max:20',
-            // La regla 'unique' ahora ignora el ID del cliente actual si existe.
-            'email' => 'nullable|email|max:255|unique:clientes,email,' . $clienteId,
+            'nombre' => 'required|string|min:3|max:100', // Razón Social obligatoria
+            'rif_tipo' => 'required|in:J,G,V,E',           // Para la matriz concatenada
+            'rif_num'  => 'required|numeric',              // El número del RIF
+            'telefono' => 'required|numeric|digits_between:10,20', // Campo numérico
+            'contacto' => 'required|string|max:100',       // Persona de contacto obligatoria
+            'email'    => 'nullable|email|unique:clientes,email,' . $clienteId,
+            'direccion'=> 'required|string|max:255',
         ];
     }
 }

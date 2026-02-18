@@ -18,36 +18,15 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $user = Auth::user(); // Simplificado: ya tienes el objeto user
 
-        $userId=Auth::id();
-        $user=User::find($userId);
-        // Redirigir a la vista de cliente si el perfil es 3
-            if ($user->id_perfil == 3) {
-                //     // 1. Indicadores de clientes
-                // $clientesPadre = Cliente::where('parent', 0)
-                //                         ->select('nombre', 'disponible', 'cupo')
-                //                         ->get();
-                
-                // // 2. Gráficas de disponibilidad de clientes.
-                // $disponibilidadData = $clientesPadre->map(function ($cliente) {
-                //     return [
-                //         'nombre' => $cliente->nombre,
-                //         'disponible' => $cliente->disponible,
-                //         'cupo' => $cliente->cupo,
-                //     ];
-                // });
+        if ($user->id_perfil == 1) {
+            return redirect()->route('captacion.index');
+        }
 
-                // // 3. Indicadores de pedidos pendientes y en proceso.
-                // $pedidosPendientes = Pedido::where('estatus', 'Pendiente')->count();
-                // $pedidosAprobados = Pedido::where('estatus', 'Aprobado')->count();
-
-                // // 4. Indicadores de volumen de combustible despachado
-                // $movimientosHoy = MovimientoCombustible::whereDate('created_at', now())->sum('cantidad_litros');
-                // $movimientosMes = MovimientoCombustible::whereMonth('created_at', now()->month)->sum('cantidad_litros');
-
-
-                return redirect()->route('clientes.dashboard');
-            }
+        if ($user->id_perfil == 3) {
+            return redirect()->route('clientes.dashboard');
+        }
 
          
         $totalVehiculos = Vehiculo::count();
