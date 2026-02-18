@@ -61,7 +61,7 @@ class ViajesController extends Controller
     public function create()
     {
         // En un escenario real, aquí se cargan dinámicamente:
-        $choferes = Chofer::with('persona')->get();
+        $choferes = Chofer::with('persona')->orderBy('persona.nombre', 'asc')->get();
         $vehiculos = Vehiculo::where('es_flota',true)->get(['id', 'placa', 'flota']);
         $destino = TabuladorViatico::orderBy('destino', 'asc')->pluck('destino')->unique();
         $clientes = Cliente::where('status',1)->orderBy('nombre', 'asc')->get(['id','nombre','alias']);
@@ -75,7 +75,7 @@ class ViajesController extends Controller
         
         // Cargar los recursos necesarios para la asignación
         // Asumiendo que Chofer::with('persona') es la forma correcta de cargar los choferes disponibles
-        $choferes = Chofer::with('persona')->get(); 
+        $choferes = Chofer::with('persona')->orderBy('persona.nombre', 'asc')->get(); 
         $vehiculos = Vehiculo::where('es_flota',true)->where('estatus', 1)->get(['id', 'placa', 'flota']);
         $clientes = Cliente::where('status',1)->orderBy('nombre', 'asc')->get(['id','nombre']);
 
@@ -481,7 +481,7 @@ class ViajesController extends Controller
                 $monto = $viatico->monto_ajustado ?? $viatico->monto_base;
                 return $monto * $viatico->cantidad;
             });
-        });
+        });order
 
         // Cargar datos para mantener los filtros
         $choferes = User::where('id_perfil', 4)->get(['id', 'name']);
@@ -499,7 +499,7 @@ class ViajesController extends Controller
       public function tabuladorIndex()
     {
         // Se carga todo el tabulador para la edición en línea
-        $tabulador = TabuladorViatico::orderBy('id')->get();
+        $tabulador = TabuladorViatico::orderBy('destino')->get();
         $parametros = Parametro::all()->keyBy('nombre')
             ->map(function($item) {
                 return $item->valor;
