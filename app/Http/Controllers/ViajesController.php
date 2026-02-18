@@ -481,7 +481,7 @@ class ViajesController extends Controller
                 $monto = $viatico->monto_ajustado ?? $viatico->monto_base;
                 return $monto * $viatico->cantidad;
             });
-        });order
+        });
 
         // Cargar datos para mantener los filtros
         $choferes = User::where('id_perfil', 4)->get(['id', 'name']);
@@ -615,7 +615,7 @@ class ViajesController extends Controller
     public function edit($id)
 {
     $viaje = Viaje::findOrFail($id);
-         $choferes = Chofer::with('persona')->get();
+         $choferes = Chofer::with('persona')->orderBy('persona.nombre')->get();
         $vehiculos = Vehiculo::where('estatus', 1)->where('es_flota',true)->get(['id', 'placa', 'flota']);
         $destino = TabuladorViatico::orderBy('destino')->pluck('destino')->unique();
         $clientes = Cliente::where('status',1)->orderBy('nombre', 'asc')->get(['id','nombre','alias']);
