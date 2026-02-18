@@ -313,7 +313,7 @@ $viajes = App\Models\DespachoViaje::query()
             <div class="card shadow-sm h-100">
                 <div class="card-header">Últimas Rutas y Movimientos <span class="text-danger">(MODO DEMO)</span></div>
                 <div class="card-body">
-                    <table id="historicoViajes" class="table table-striped table-hover datatable">
+                    <table class="table table-striped table-hover datatable">
                         <thead>
                             <tr>
                                 <th>Fecha</th>
@@ -403,40 +403,11 @@ $viajes = App\Models\DespachoViaje::query()
 
 {{-- Scripts para Highcharts --}}
 <script src="https://code.highcharts.com/highcharts.js"></script>
-<script src="https://cdn.datatables.net/2.0.7/js/dataTables.js"></script>
-    <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>
-    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.html5.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
 
 
-        $('#historicoViajes').DataTable({
-                language: {
-                    "decimal": "",
-                    "emptyTable": "No hay información",
-                    "info": "Mostrando _START_ a _END_ de _TOTAL_ Entradas",
-                    "infoEmpty": "Mostrando 0 a 0 de 0 Entradas",
-                    "infoFiltered": "(Filtrado de _MAX_ total entradas)",
-                    "infoPostFix": "",
-                    "thousands": ",",
-                    "lengthMenu": "Mostrar _MENU_ Entradas",
-                    "loadingRecords": "Cargando...",
-                    "processing": "Procesando...",
-                    "search": "Buscar:",
-                    "zeroRecords": "Sin resultados encontrados",
-                    "paginate": {
-                        "first": "Primero",
-                        "last": "Ultimo",
-                        "next": "Siguiente",
-                        "previous": "Anterior"
-                    }
-                },
-                layout: {
-                    topStart: {
-                        buttons: ['csv', 'excel', 'pdf', 'print']
-                    }
-                }
-            });
+      
 
         // Datos de PHP pasados a JavaScript
         const historialMensual = @json($historialMensual);
