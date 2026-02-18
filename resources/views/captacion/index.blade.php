@@ -101,7 +101,7 @@
                         <th>Litros Solicitados</th>
                         <th>Estatus</th>
                         <th>Gestion</th>
-                        <th>Atendido por</th>
+                        {{-- <th>Atendido por</th> --}}
                         <th>Fecha</th>
                         <th class="text-end">Acciones</th>
                     </tr>
@@ -129,7 +129,7 @@
                             </td>
 
                             <td>{{ $cliente->gestion }}</td>
-                            <td>{{ $cliente->atendido_por }}</td>
+                            {{-- <td>{{ $cliente->atendido_por }}</td> --}}
                             <td>{{ $cliente->created_at->format('d/m/Y') }}</td>
 
                             <td class="text-end">
