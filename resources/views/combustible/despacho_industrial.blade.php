@@ -87,7 +87,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             @endif
-<form action="{{ route('combustible.storeDespachoIndustrial') }}" method="POST">
+<form action="{{ route('combustible.storeDespachoIndustrial') }}" class="offline-form" method="POST">
     @csrf
     <div class="row">
         <div class="col-md-6 mb-3">
