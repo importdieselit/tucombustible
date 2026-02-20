@@ -15,17 +15,20 @@ class CaptacionCliente extends Model
     protected $guarded = [];
 
     protected $fillable = [
-        'razon_social', 
-        'rif', 
-        'correo', 
-        'telefono', 
-        'tipo_cliente', 
-        'tipo_solicitud', 
-        'estado',          
-        'ciudad',          
-        'cantidad_litros', 
-        'tipo_servicio',   
-        'estatus_captacion'
+        'cliente_id',
+        'tipo_cliente',
+        'rif',
+        'razon_social',
+        'representante',
+        'correo',
+        'telefono',
+        'direccion',
+        'datos_adicionales',
+        'estatus_captacion',
+        'observaciones',
+        'atendido_por',
+        'gestion',
+        'solicitados'
     ];
 
     protected $casts = [
@@ -57,25 +60,15 @@ class CaptacionCliente extends Model
 
     public function faltantes()
     {
-        // 1. Buscamos solo los requisitos que le corresponden a este tipo de cliente
-        $esPadre = ($this->tipo_cliente === 'padre');
-        
-        $requisitosIds = RequisitoCaptacion::where(function ($query) use ($esPadre) {
-            $query->where('tipo_cliente', 'ambos');
-            if ($esPadre) {
-                $query->orWhere('tipo_cliente', 'padre');
-            }
-        })->pluck('id')->toArray();
+        $requisitos = RequisitoCaptacion::pluck('id')->toArray();
 
-        // 2. Obtenemos los IDs de los documentos que YA subió
-        $cargados = $this->documentos()
+        $cargados = $this->documentos
                         ->pluck('requisito_id')
                         ->filter()
                         ->unique()
                         ->toArray();
 
-        // 3. La diferencia son los que realmente le faltan SEGÚN SU TIPO
-        return array_diff($requisitosIds, $cargados);
+        return array_diff($requisitos, $cargados);
     }
 
     public function requisitosPendientes()
@@ -85,7 +78,12 @@ class CaptacionCliente extends Model
 
     public function requisitosCompletos()
     {
-         return count($this->faltantes()) === 0;
+        $faltantes = $this->faltantes();
+
+        return RequisitoCaptacion::when(
+            count($faltantes) > 0,
+            fn ($q) => $q->whereNotIn('id', $faltantes)
+        )->get();
     }
 
 }

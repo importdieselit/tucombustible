@@ -13,12 +13,15 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('requisitos_captacion', function (Blueprint $table) {
+        Schema::create('personal_access_tokens', function (Blueprint $table) {
             $table->unsignedBigInteger('id');
-            $table->string('tipo_cliente');
-            $table->string('codigo');
-            $table->string('descripcion');
-            $table->boolean('obligatorio')->default(true);
+            $table->string('tokenable_type');
+            $table->unsignedBigInteger('tokenable_id');
+            $table->text('name');
+            $table->string('token', 64);
+            $table->text('abilities')->nullable();
+            $table->timestamp('last_used_at')->nullable();
+            $table->timestamp('expires_at')->nullable();
             $table->timestamps();
         });
     }
@@ -30,6 +33,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('requisitos_captacion');
+        Schema::dropIfExists('personal_access_tokens');
     }
 };
