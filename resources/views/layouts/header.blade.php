@@ -43,6 +43,13 @@
                     @endif
                 </a>
                 </div>
+                <div id="sync-status-container" class="me-3 d-none">
+                    <div class="badge rounded-pill bg-warning text-dark p-2 d-flex align-items-center" title="Datos pendientes por sincronizar">
+                        <i class="fa fa-solid fa-cloud-arrow-up fs-6 me-1"></i>
+                        <span id="sync-count">0</span>
+                        <span class="d-none d-md-inline ms-1"> Pendientes</span>
+                    </div>
+                </div>
 
             <div class="dropdown">
                 <a class="btn btn-sm btn-outline-primary rounded-pill px-3 dropdown-toggle d-flex align-items-center" href="#" id="userMenu" data-bs-toggle="dropdown">

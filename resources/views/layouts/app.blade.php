@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="{{ asset('img/favicon.ico') }}" type="image/x-icon">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="theme-color" content="#4e73df">
+    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    <link rel="apple-touch-icon" href="{{ asset('img/icon-192x192.png') }}">
     <title>@yield('title', 'Dashboard - TuCombustible')</title>
 <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
@@ -33,12 +36,39 @@
     }
 }
 
+
+
 /* Mejora estética del input */
 .search-form-header input {
     border-radius: 20px 0 0 20px !important;
 }
 .search-form-header button {
     border-radius: 0 20px 20px 0 !important;
+}#offline-toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #323232;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 50px;
+    display: none; /* Oculto por defecto */
+    z-index: 10000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+}
+
+#offline-toast.show {
+    display: flex;
+    animation: fadeInOut 0.5s ease;
+}
+
+@keyframes fadeInOut {
+    from { bottom: 0; opacity: 0; }
+    to { bottom: 20px; opacity: 1; }
 }
 </style>
 
@@ -119,6 +149,12 @@
 
 
     @include('layouts.footer')
+
+<div id="offline-toast">
+    <i class="bi bi-wifi-off text-warning"></i>
+    <span>Sin conexión. Trabajando en modo local.</span>
+</div>
+
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.7.0.min.js" xintegrity="sha256-2Pmvv0kuTBOenSvLm6bvfBSSHrUJ+3A7x6P5Ebd07/g=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" xintegrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf198Ytg5eI4Nkz5q+0Ukn" crossorigin="anonymous"></script>
@@ -269,6 +305,109 @@
         $('body').css('overflow', 'auto'); // Restaurar scroll
     }
 
-    </script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(registration => {
+                    console.log('SW registrado con éxito en el alcance:', registration.scope);
+                })
+                .catch(error => {
+                    console.error('Fallo en el registro del SW:', error);
+                });
+        });
+    }
+
+    $(document).ready(function() {
+        const toast = $('#offline-toast');
+
+
+        // Función para actualizar el contador visual
+        function updateSyncBadge() {
+            const pending = JSON.parse(localStorage.getItem('pending_sync') || '[]');
+            const $container = $('#sync-status-container');
+            const $count = $('#sync-count');
+
+            if (pending.length > 0) {
+                $container.removeClass('d-none').addClass('d-inline-block');
+                $count.text(pending.length);
+            } else {
+                $container.addClass('d-none');
+            }
+        }
+
+        function updateOnlineStatus() {
+            if (navigator.onLine) {
+                toast.removeClass('show');
+                console.log('Sincronizando datos...');
+            } else {
+                toast.addClass('show');
+            }
+        }
+
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+
+        if (!navigator.onLine) toast.addClass('show');
+    
+        $('.offline-form').on('submit', function(e) {
+            if (!navigator.onLine) {
+                e.preventDefault(); // Detenemos el envío real
+                
+                const $form = $(this);
+                const formData = $form.serializeArray();
+                const formId = $form.attr('id') || 'form_' + Date.now();
+
+                // Guardamos en LocalStorage
+                saveForLater(formId, $form.attr('action'), formData);
+
+                // Feedback visual
+                alert('Sin conexión: Los datos se guardaron localmente y se enviarán automáticamente al recuperar la señal.');
+                $form[0].reset(); // Limpiamos para el siguiente registro
+            }
+        });
+
+        function saveForLater(id, url, data) {
+            let pending = JSON.parse(localStorage.getItem('pending_sync') || '[]');
+            pending.push({ id, url, data, timestamp: new Date().getTime() });
+            localStorage.setItem('pending_sync', JSON.stringify(pending));
+            updateSyncBadge(); 
+        }   
+        updateSyncBadge();
+    });
+
+    window.addEventListener('online', function() {
+        const pending = JSON.parse(localStorage.getItem('pending_sync') || '[]');
+        
+        if (pending.length > 0) {
+            console.log('Sincronizando datos pendientes...');
+            
+            pending.forEach((item, index) => {
+                $.ajax({
+                    url: item.url,
+                    method: 'POST',
+                    data: item.data,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function() {
+                        console.log('Sincronizado con éxito:', item.id);
+                        // Eliminar de la cola si se envió bien
+                        removerDePendientes(index);
+                    },
+                    error: function() {
+                        console.error('Fallo al sincronizar item:', item.id);
+                    }
+                });
+            });
+        }
+        updateSyncBadge();
+    });
+
+    function removerDePendientes(index) {
+        let pending = JSON.parse(localStorage.getItem('pending_sync') || '[]');
+        pending.splice(index, 1);
+        localStorage.setItem('pending_sync', JSON.stringify(pending));
+    }
+</script>
 </body>
 </html>
