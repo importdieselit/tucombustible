@@ -78,6 +78,11 @@
                                 <input type="text" name="ciudad" class="form-control" required>
                             </div>
 
+                            <div class="col-md-8 form-group">
+                                <label>Dirección Operativa</label>
+                                <input type="textarea" name="direccion_operativa" class="form-control" required>
+                            </div>
+
                             <div class="col-md-4 form-group">
                                 <label>Teléfono</label>
                                 <input type="text" name="telefono" class="form-control" 

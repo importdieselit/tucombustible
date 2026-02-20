@@ -259,6 +259,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/send-telegram-photo', [TelegramController::class, 'sendPhoto'])->name('telegram.send.photo');
         Route::post('/send-telegram-message', [TelegramController::class, 'sendMessage'])->name('telegram.send.message');
 
+        //Clientes
+        Route::patch('clientes/{id}/toggle-status', [ClienteController::class, 'toggleStatus'])->name('clientes.toggleStatus');
+
         // --- Loop de Recursos Genéricos (Resource Controllers) ---
         $resourceControllers = [
             'vehiculos' => VehiculoController::class,

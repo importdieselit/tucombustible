@@ -20,6 +20,7 @@ class Cliente extends Model
         'contacto',
         'dni',
         'direccion',
+        'direccion_operativa',
         'telefono',
         'email',
         'disponible',

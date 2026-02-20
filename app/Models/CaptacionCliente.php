@@ -22,7 +22,8 @@ class CaptacionCliente extends Model
         'tipo_cliente', 
         'tipo_solicitud', 
         'estado',          
-        'ciudad',          
+        'ciudad',  
+        'direccion_operativa',        
         'cantidad_litros', 
         'tipo_servicio',   
         'estatus_captacion'

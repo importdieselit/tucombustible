@@ -32,8 +32,9 @@ class ClienteRequest extends FormRequest
             'rif_num'  => 'required|numeric',              // El número del RIF
             'telefono' => 'required|numeric|digits_between:10,20', // Campo numérico
             'contacto' => 'required|string|max:100',       // Persona de contacto obligatoria
-            'email'    => 'nullable|email|unique:clientes,email,' . $clienteId,
+            'email'    => 'required|email|unique:clientes,email,' . $clienteId,
             'direccion'=> 'required|string|max:255',
+            'direccion_operativa' => 'required|string',
         ];
     }
 }

@@ -126,7 +126,7 @@ class ClienteController extends BaseController
         if ($user->id_perfil == 3) {
             $queryVehiculos->whereIn('id_cliente', $idsAsociados);
         } else {
-            $queryVehiculos->where('estado', 'cargado');
+            $queryVehiculos->where('estatus', 'cargado');
         }
         $camionesCargados = $queryVehiculos->count();
 
@@ -148,7 +148,7 @@ class ClienteController extends BaseController
         }
 
         // Default para Admin/Logística (Perfil 1 y 2)
-        return view('combustible.dashboard', $data);
+        return view('cliente.index', $data);
         }
 
     public function store(Request $request)
@@ -189,17 +189,18 @@ class ClienteController extends BaseController
 
     public function update(Request $request, $id)
     {
-        // Validamos los datos con las reglas del Request (el ID ayuda a validarlas)
-        $rules = (new ClienteRequest())->rules($id); // Pasamos el ID para la validación de unicidad
+        $rules = (new ClienteRequest())->rules($id); 
         $validatedData = $request->validate($rules);
 
         try {
             $cliente = Cliente::findOrFail($id);
-            $validateData['rif'] = $request->rif_tipo . '-' . $request->rif_num;
-            $cliente->update($validatedData);
 
+            // 2. Construimos el RIF y lo metemos en el array de datos VALIDADOS
+            $validatedData['rif'] = strtoupper($request->rif_tipo . '-' . $request->rif_num);
+            $validatedData['direccion_operativa'] = $request->direccion_operativa;
+            $cliente->update($validatedData);
             Session::flash('success', 'Cliente actualizado exitosamente.');
-            return Redirect::route('clientes.index');
+            return Redirect::route('clientes.show', $id);
 
         } catch (ModelNotFoundException $e) {
             Session::flash('error', 'Cliente no encontrado.');
@@ -207,7 +208,7 @@ class ClienteController extends BaseController
 
         } catch (\Exception $e) {
             Log::error('Error al actualizar cliente: ' . $e->getMessage());
-            Session::flash('error', 'Hubo un error al actualizar el cliente.');
+            Session::flash('error', 'Hubo un error al actualizar el cliente: ' . $e->getMessage());
             return Redirect::back()->withInput();
         }
     }
@@ -363,5 +364,16 @@ class ClienteController extends BaseController
         ]);
 
         return response()->json(['message' => 'Cliente registrado', 'cliente' => $cliente], 201);
+    }
+
+    public function toggleStatus($id)
+    {
+        $cliente = Cliente::findOrFail($id);
+
+        $cliente->status = ($cliente->status == 1) ? 0 : 1;
+        $cliente->save();
+
+        $mensaje = $cliente->status ? 'Cliente habilitado.' : 'Cliente inhabilitado.';
+        return back()->with('success', $mensaje);
     }
 }

@@ -49,6 +49,7 @@ class CaptacionController extends Controller
             'tipo_solicitud'  => 'required|in:nuevo,migracion',
             'estado'          => 'required|string',
             'ciudad'          => 'required|string',
+            'direccion_operativa' => 'required|string',
             'cantidad_litros' => 'required|numeric|min:1',
             'tipo_servicio'   => 'required|in:Maritimo,Industrial',
         ], [
@@ -73,6 +74,7 @@ class CaptacionController extends Controller
             'tipo_solicitud'    => $request->tipo_solicitud,
             'estado'            => $request->estado,
             'ciudad'            => $request->ciudad,
+            'direccion_operativa' => $request->direccion_operativa,
             'cantidad_litros'   => $request->cantidad_litros,
             'tipo_servicio'     => $request->tipo_servicio,
             'estatus_captacion' => 'prospecto'
@@ -292,6 +294,7 @@ class CaptacionController extends Controller
                 'correo'     => $cliente->correo,
                 'telefono'   => $cliente->telefono,
                 'direccion'  => $cliente->estado . ", " . $cliente->ciudad,
+                'direccion_operativa' => $cliente->direccion_operativa,
                 'cupo'       => $cliente->cantidad_litros, 
                 'disponible' => $cliente->cantidad_litros,
                 'parent'     => ($cliente->tipo_cliente == 'sucursal') ? 1 : 0,
