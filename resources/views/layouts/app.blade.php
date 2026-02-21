@@ -307,7 +307,7 @@
 
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            const swPath = "{{ asset('sw.js') }}";
+            const swPath = "{{ asset('../sw.js') }}";
             
             navigator.serviceWorker.register(swPath , { scope: '/' })
                 .then(registration => {
