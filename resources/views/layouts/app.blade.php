@@ -309,7 +309,7 @@
         window.addEventListener('load', () => {
             const swPath = "{{ asset('../sw.js') }}";
             
-            navigator.serviceWorker.register(swPath , { scope: '/' })
+            navigator.serviceWorker.register(swPath)
                 .then(registration => {
                     console.log('SW registrado con éxito en el alcance:', registration.scope);
                 })
