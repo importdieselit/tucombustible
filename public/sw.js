@@ -1,18 +1,29 @@
 const CACHE_NAME = 'tucombustible-v1';
-// Archivos críticos para que la App abra sin internet
+
+// 1. Lista de recursos esenciales (Assets y Rutas)
+// Agrega aquí las URLs de las páginas que más usas
 const urlsToCache = [
     '/',
+    '/dashboard',
+    '/viajes',
+    '/viajes/create',
+    '/combustible/compra/crear',
+    '/combustible/flete/crear',
+    '/combustible/create',
+    '/mantenimiento',
     '/css/app.css',
     '/js/app.js',
     '/img/logomini.png',
-    '/img/icon-192x192.png'
+    'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css'
 ];
 
-// Instalación: Guarda los archivos en el caché del navegador
+// Instalación: Descarga TODO el sitio base para uso offline
 self.addEventListener('install', event => {
     event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then(cache => cache.addAll(urlsToCache))
+        caches.open(CACHE_NAME).then(cache => {
+            console.log('Cache abierto: Descargando sitio para uso offline');
+            return cache.addAll(urlsToCache);
+        })
     );
 });
 
@@ -31,12 +42,35 @@ self.addEventListener('activate', event => {
     );
 });
 
-// Estrategia: Network First (Busca en internet, si falla, usa el caché)
-// Ideal para sistemas de gestión donde la data cambia constantemente
+// Esto hace que la navegación sea instantánea porque lee del disco, no de internet
 self.addEventListener('fetch', event => {
+    // Solo manejamos peticiones GET (Navegación y recursos)
+    if (event.request.method !== 'GET') return;
+
     event.respondWith(
-        fetch(event.request).catch(() => {
-            return caches.match(event.request);
+        caches.match(event.request).then(response => {
+            // Si está en caché, lo devuelve inmediatamente
+            if (response) {
+                return response;
+            }
+
+            // Si no está, intenta ir a la red y lo guarda en caché para la próxima vez
+            return fetch(event.request).then(networkResponse => {
+                if (!networkResponse || networkResponse.status !== 200) {
+                    return networkResponse;
+                }
+                
+                const responseToCache = networkResponse.clone();
+                caches.open(CACHE_NAME).then(cache => {
+                    cache.put(event.request, responseToCache);
+                });
+                
+                return networkResponse;
+            }).catch(() => {
+                // Si falla la red y no hay caché (ej. página nueva), 
+                // podrías devolver una página personalizada de "Offline"
+                return caches.match('/');
+            });
         })
     );
 });

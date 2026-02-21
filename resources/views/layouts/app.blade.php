@@ -307,7 +307,9 @@
 
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            navigator.serviceWorker.register('/sw.js')
+            const swPath = "{{ asset('sw.js') }}";
+            
+            navigator.serviceWorker.register(swPath)
                 .then(registration => {
                     console.log('SW registrado con éxito en el alcance:', registration.scope);
                 })
