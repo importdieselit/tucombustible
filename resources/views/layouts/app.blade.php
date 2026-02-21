@@ -309,7 +309,7 @@
         window.addEventListener('load', () => {
             const swPath = "{{ asset('sw.js') }}";
             
-            navigator.serviceWorker.register(swPath)
+            navigator.serviceWorker.register(swPath , { scope: '/' })
                 .then(registration => {
                     console.log('SW registrado con éxito en el alcance:', registration.scope);
                 })
@@ -317,6 +317,10 @@
                     console.error('Fallo en el registro del SW:', error);
                 });
         });
+    }
+
+    function persistirDataOffline(key, data) {
+        localStorage.setItem('cache_data_' + key, JSON.stringify(data));
     }
 
     $(document).ready(function() {
@@ -409,6 +413,25 @@
         let pending = JSON.parse(localStorage.getItem('pending_sync') || '[]');
         pending.splice(index, 1);
         localStorage.setItem('pending_sync', JSON.stringify(pending));
+    }
+
+    // Ejemplo aplicado a tu fetch de vehículos que hicimos antes
+    function cargarVehiculos(clienteId) {
+        const cacheKey = `vehiculos_cliente_${clienteId}`;
+        
+        // Si estamos offline, cargar inmediatamente de LocalStorage
+        if (!navigator.onLine) {
+            const cached = localStorage.getItem('cache_data_' + cacheKey);
+            if (cached) renderizarVehiculos(JSON.parse(cached));
+            return;
+        }
+
+        fetch(`/api/clientes/${clienteId}/vehiculos`)
+            .then(r => r.json())
+            .then(data => {
+                persistirDataOffline(cacheKey, data); // Guardar para la próxima vez que esté offline
+                renderizarVehiculos(data);
+            });
     }
 </script>
 </body>

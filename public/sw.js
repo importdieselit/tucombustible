@@ -1,19 +1,21 @@
+const appBase = self.location.pathname.substring(0, self.location.pathname.lastIndexOf('/') + 1);
+
 const CACHE_NAME = 'tucombustible-v1';
 
 // 1. Lista de recursos esenciales (Assets y Rutas)
 // Agrega aquí las URLs de las páginas que más usas
 const urlsToCache = [
-    '/',
-    '/dashboard',
-    '/viajes',
-    '/viajes/create',
-    '/combustible/compra/crear',
-    '/combustible/flete/crear',
-    '/combustible/create',
-    '/mantenimiento',
-    '/css/app.css',
-    '/js/app.js',
-    '/img/logomini.png',
+    appBase,
+    appBase + 'dashboard',
+    appBase + 'viajes',
+    appBase + 'viajes/create',
+    appBase + 'combustible/compra/crear',
+    appBase + 'combustible/flete/crear',
+    appBase + 'combustible/create',
+    appBase + 'mantenimiento',
+    appBase + 'css/app.css',
+    appBase + 'js/app.js',
+    appBase + 'img/logomini.png',
     'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css'
 ];
 
