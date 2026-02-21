@@ -1,9 +1,6 @@
 const appBase = self.location.pathname.substring(0, self.location.pathname.lastIndexOf('/') + 1);
-
 const CACHE_NAME = 'tucombustible-v1';
 
-// 1. Lista de recursos esenciales (Assets y Rutas)
-// Agrega aquí las URLs de las páginas que más usas
 const urlsToCache = [
     appBase,
     appBase + 'dashboard',
@@ -19,17 +16,29 @@ const urlsToCache = [
     'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css'
 ];
 
-// Instalación: Descarga TODO el sitio base para uso offline
+// Instalación Tolerante: Descarga uno por uno
 self.addEventListener('install', event => {
+    console.log('SW: Iniciando instalación...');
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
-            console.log('Cache abierto: Descargando sitio para uso offline');
-            return cache.addAll(urlsToCache);
+            // En lugar de addAll, mapeamos cada URL a una promesa individual
+            return Promise.all(
+                urlsToCache.map(url => {
+                    return fetch(url)
+                        .then(response => {
+                            if (response.ok) {
+                                return cache.put(url, response);
+                            }
+                            throw new TypeError('Error al cargar recurso: ' + url);
+                        })
+                        .catch(err => console.warn('SW: No se pudo cachear:', url, err));
+                })
+            );
         })
     );
 });
 
-// Activación: Limpia cachés antiguos si actualizas la versión
+// Activación: Limpia cachés antiguos
 self.addEventListener('activate', event => {
     event.waitUntil(
         caches.keys().then(cacheNames => {
@@ -44,23 +53,16 @@ self.addEventListener('activate', event => {
     );
 });
 
-// Esto hace que la navegación sea instantánea porque lee del disco, no de internet
+// Estrategia de Fetch
 self.addEventListener('fetch', event => {
-    // Solo manejamos peticiones GET (Navegación y recursos)
     if (event.request.method !== 'GET') return;
 
     event.respondWith(
         caches.match(event.request).then(response => {
-            // Si está en caché, lo devuelve inmediatamente
-            if (response) {
-                return response;
-            }
+            if (response) return response;
 
-            // Si no está, intenta ir a la red y lo guarda en caché para la próxima vez
             return fetch(event.request).then(networkResponse => {
-                if (!networkResponse || networkResponse.status !== 200) {
-                    return networkResponse;
-                }
+                if (!networkResponse || networkResponse.status !== 200) return networkResponse;
                 
                 const responseToCache = networkResponse.clone();
                 caches.open(CACHE_NAME).then(cache => {
@@ -68,11 +70,7 @@ self.addEventListener('fetch', event => {
                 });
                 
                 return networkResponse;
-            }).catch(() => {
-                // Si falla la red y no hay caché (ej. página nueva), 
-                // podrías devolver una página personalizada de "Offline"
-                return caches.match('/');
-            });
+            }).catch(() => caches.match(appBase));
         })
     );
 });
