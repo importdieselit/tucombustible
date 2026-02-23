@@ -54,15 +54,26 @@ self.addEventListener('activate', event => {
 });
 
 // Estrategia de Fetch
+
 self.addEventListener('fetch', event => {
+    // 1. FILTRO DE SEGURIDAD: Solo procesar peticiones HTTP o HTTPS
+    // Esto ignora las extensiones de Chrome (chrome-extension://) y evita el error
+    if (!event.request.url.startsWith('http')) return;
+
+    // 2. Solo manejamos peticiones GET para el caché de navegación
     if (event.request.method !== 'GET') return;
 
     event.respondWith(
         caches.match(event.request).then(response => {
+            // Si está en caché, lo devuelve inmediatamente
             if (response) return response;
 
+            // Si no está, intenta ir a la red
             return fetch(event.request).then(networkResponse => {
-                if (!networkResponse || networkResponse.status !== 200) return networkResponse;
+                // Solo cacheamos respuestas válidas del servidor
+                if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+                    return networkResponse;
+                }
                 
                 const responseToCache = networkResponse.clone();
                 caches.open(CACHE_NAME).then(cache => {
@@ -70,7 +81,12 @@ self.addEventListener('fetch', event => {
                 });
                 
                 return networkResponse;
-            }).catch(() => caches.match(appBase));
+            }).catch(() => {
+                // Si falla la red y es una navegación, enviamos a la base (offline)
+                if (event.request.mode === 'navigate') {
+                    return caches.match(appBase);
+                }
+            });
         })
     );
 });
