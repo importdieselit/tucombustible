@@ -35,7 +35,7 @@ class VehiculoStoreRequest extends FormRequest
             //'anno' => 'required|integer|min:1900|max:' . (date('Y') + 1),
             //'id_usuario' => 'nullable|integer|exists:users,id',
             'estatus' => 'nullable|string|max:255',
-            'tipo'  => 'nullable|integer|exists:tipos_vehiculo,id',
+            'tipo'  => 'nullable|integer|exists:tipo_vehiculos,id',
             'tipo_diagrama' => 'nullable|string|max:255',
             'serial_motor' => 'nullable|string|max:255',
             'serial_carroceria' => 'nullable|string|max:255',
