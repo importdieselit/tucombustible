@@ -170,7 +170,7 @@ $('#cliente_selector').on('change', function() {
     
     $vehiculoSelect.html('<option>Cargando...</option>');
     
-    fetch(`/api/clientes/${clienteId}/vehiculos`)
+    fetch(`/clientes/${clienteId}/vehiculos`)
         .then(response => response.json())
         .then(data => {
             let options = '<option value="">Seleccione Vehículo</option>';
