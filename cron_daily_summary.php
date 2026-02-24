@@ -23,7 +23,7 @@ function logStatus($message, $type = 'info') {
     $icons = ['error' => '❌', 'success' => '✅', 'info' => '🔍', 'step' => '📈'];
     $icon = $icons[$type] ?? '📋';
     echo "[{$timestamp}] {$icon} {$message}\n";
-    Log::info("Cron Resumen - {$message}");
+   // Log::info("Cron Resumen - {$message}");
 }
 
 logStatus('Iniciando cálculo del resumen diario...', 'info');
@@ -43,7 +43,7 @@ try {
         ? round(($unidadesDisponibles / $totalVehiculos) * 100, 2)
         : 0.00;
         
-    logStatus("Disponibilidad: {$disponibilidad}% ({$unidadesDisponibles}/{$totalVehiculos})", 'step');
+    //logStatus("Disponibilidad: {$disponibilidad}% ({$unidadesDisponibles}/{$totalVehiculos})", 'step');
 
 
     // 2. MANTENIMIENTOS (PLAN vs REAL)
@@ -59,7 +59,7 @@ try {
         ->whereDate('fecha_out', $fechaString)
         ->count();
             
-    logStatus("Mantenimientos: Plan ({$mantenimientosPlan}) / Real ({$mantenimientosReal})", 'step');
+    //logStatus("Mantenimientos: Plan ({$mantenimientosPlan}) / Real ({$mantenimientosReal})", 'step');
 
 
     // 3. AGRUPACIÓN POR MODELOS (PLAN MODELS)
@@ -70,7 +70,7 @@ try {
         ->pluck('total', 'modelo')
         ->toArray();
             
-    logStatus("Modelos detectados: " . count($planModelsRaw), 'step');
+   // logStatus("Modelos detectados: " . count($planModelsRaw), 'step');
 
 
     // 4. PERSISTENCIA DE DATOS
@@ -87,7 +87,7 @@ try {
         ]
     );
 
-    logStatus("Resumen diario guardado exitosamente para la fecha {$fechaString}", 'success');
+   // logStatus("Resumen diario guardado exitosamente para la fecha {$fechaString}", 'success');
     
     exit(0);
 

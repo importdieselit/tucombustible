@@ -14,6 +14,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
@@ -137,9 +140,7 @@ class AuthController extends Controller
         }
 
         // Debug: Verificar que la relación se carga correctamente
-        \Log::info('User cliente_id: ' . $user->cliente_id);
-        \Log::info('User cliente relation: ' . ($user->cliente ? 'loaded' : 'null'));
-
+       
         // Generar token
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -267,7 +268,7 @@ class AuthController extends Controller
         }
 
         try {
-            \DB::beginTransaction();
+            DB::beginTransaction();
 
             // Crear la persona
             $persona = Persona::create([
@@ -316,7 +317,7 @@ class AuthController extends Controller
             // Enviar notificaciones a los usuarios especificados
             $this->enviarNotificacionPreregistro($user, $cliente, $usuariosParaNotificar);
 
-            \DB::commit();
+            DB::commit();
 
             return response()->json([
                 'success' => true,
@@ -329,8 +330,8 @@ class AuthController extends Controller
             ], 201);
 
         } catch (\Exception $e) {
-            \DB::rollBack();
-            \Log::error ('Error al procesar preregistro: ' . $e->getMessage());  
+            DB::rollBack();
+            Log::error ('Error al procesar preregistro: ' . $e->getMessage());  
             return response()->json([
                 'success' => false,
                 'message' => 'Error al procesar el preregistro',
@@ -351,7 +352,7 @@ class AuthController extends Controller
                           ->get();
 
             if ($usuarios->isEmpty()) {
-                \Log::warning('No se encontraron usuarios con tokens FCM para notificar preregistro');
+                Log::warning('No se encontraron usuarios con tokens FCM para notificar preregistro');
                 return;
             }
 
@@ -384,20 +385,13 @@ class AuthController extends Controller
                     
                     if ($success) {
                         $successCount++;
-                        \Log::info("Notificación de preregistro enviada al usuario: {$usuario->email}");
                     }
                 } else {
-                    \Log::warning("Usuario {$usuario->email} no tiene token FCM");
+                    Log::warning("Usuario {$usuario->email} no tiene token FCM");
                 }
             }
-
-            \Log::info("Notificaciones de preregistro enviadas: {$successCount}/" . $usuarios->count() . " usuarios", [
-                'cliente_id' => $cliente->id,
-                'usuario_ids' => $usuarioIds
-            ]);
-
         } catch (\Exception $e) {
-            \Log::error('Error enviando notificación de preregistro: ' . $e->getMessage());
+            Log::error('Error enviando notificación de preregistro: ' . $e->getMessage());
         }
     }
 
@@ -411,14 +405,14 @@ class AuthController extends Controller
             $projectId = config('services.fcm.project_id');
             
             if (!$projectId) {
-                \Log::error('FCM Project ID no configurado');
+                Log::error('FCM Project ID no configurado');
                 return false;
             }
 
             $credentialsFilePath = storage_path("tucombustible-76660-firebase-adminsdk-fbsvc-186df7ef1c.json");
             
             if (!file_exists($credentialsFilePath)) {
-                \Log::error('Archivo de credenciales FCM no encontrado: ' . $credentialsFilePath);
+                Log::error('Archivo de credenciales FCM no encontrado: ' . $credentialsFilePath);
                 return false;
             }
 
@@ -431,7 +425,7 @@ class AuthController extends Controller
             $token = $client->getAccessToken();
             
             if (!isset($token['access_token'])) {
-                \Log::error('No se pudo obtener token de acceso para FCM');
+                Log::error('No se pudo obtener token de acceso para FCM');
                 return false;
             }
 
@@ -477,15 +471,15 @@ class AuthController extends Controller
             ])->post("https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send", $payload);
 
             if ($response->successful()) {
-                \Log::info("Notificación FCM enviada exitosamente a token: " . substr($fcmToken, 0, 20) . "...");
+                Log::info("Notificación FCM enviada exitosamente a token: " . substr($fcmToken, 0, 20) . "...");
                 return true;
             } else {
-                \Log::error("Error enviando notificación FCM: " . $response->body());
+                Log::error("Error enviando notificación FCM: " . $response->body());
                 return false;
             }
 
         } catch (\Exception $e) {
-            \Log::error("Excepción enviando notificación FCM: " . $e->getMessage());
+            Log::error("Excepción enviando notificación FCM: " . $e->getMessage());
             return false;
         }
     }
@@ -677,7 +671,7 @@ class AuthController extends Controller
             }
 
             // Eliminar usuario preregistrado y sus relaciones
-            \DB::beginTransaction();
+            DB::beginTransaction();
             
             // Eliminar cliente asociado
             if ($usuarioPreregistrado->cliente_id) {
@@ -692,7 +686,7 @@ class AuthController extends Controller
             // Eliminar usuario
             $usuarioPreregistrado->delete();
             
-            \DB::commit();
+            DB::commit();
 
             return response()->json([
                 'success' => true,
@@ -700,7 +694,7 @@ class AuthController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \DB::rollBack();
+            DB::rollBack();
             return response()->json([
                 'success' => false,
                 'message' => 'Error al rechazar usuario preregistrado',

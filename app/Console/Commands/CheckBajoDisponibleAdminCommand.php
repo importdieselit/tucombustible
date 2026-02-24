@@ -86,12 +86,12 @@ class CheckBajoDisponibleAdminCommand extends Command
                         $this->info("✅ Notificación consolidada enviada a super admins sobre {$clientesConBajoDisponible} clientes");
                         
                         // Log de la notificación consolidada enviada a super admins
-                        Log::info("Notificación consolidada de bajo disponible enviada a super admins por cron job admin", [
-                            'total_clientes' => $clientesConBajoDisponible,
-                            'clientes' => $clientesConBajoDisponibleData,
-                            'fecha' => now()->toDateTimeString(),
-                            'tipo_cron' => 'admin_hourly_consolidado'
-                        ]);
+                        // Log::info("Notificación consolidada de bajo disponible enviada a super admins por cron job admin", [
+                        //     'total_clientes' => $clientesConBajoDisponible,
+                        //     'clientes' => $clientesConBajoDisponibleData,
+                        //     'fecha' => now()->toDateTimeString(),
+                        //     'tipo_cron' => 'admin_hourly_consolidado'
+                        // ]);
                     } else {
                         $this->error("❌ Error enviando notificación consolidada a super admins");
                     }
@@ -113,14 +113,14 @@ class CheckBajoDisponibleAdminCommand extends Command
             }
 
             // Log del resumen
-            Log::info("Cron job de bajo disponible para super admins completado", [
-                'clientes_revisados' => $clientes->count(),
-                'clientes_con_bajo_disponible' => $clientesConBajoDisponible,
-                'notificaciones_enviadas' => $notificacionesEnviadas,
-                'fecha_ejecucion' => now()->toDateTimeString(),
-                'modo_dry_run' => $isDryRun,
-                'tipo_cron' => 'admin_hourly'
-            ]);
+            // Log::info("Cron job de bajo disponible para super admins completado", [
+            //     'clientes_revisados' => $clientes->count(),
+            //     'clientes_con_bajo_disponible' => $clientesConBajoDisponible,
+            //     'notificaciones_enviadas' => $notificacionesEnviadas,
+            //     'fecha_ejecucion' => now()->toDateTimeString(),
+            //     'modo_dry_run' => $isDryRun,
+            //     'tipo_cron' => 'admin_hourly'
+            // ]);
 
             $this->info('✅ Revisión para super admins completada exitosamente');
             return 0;

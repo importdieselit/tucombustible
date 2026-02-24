@@ -107,7 +107,6 @@ class TelegramNotificationService
 
             // 3. Verificar si la respuesta de Telegram es exitosa
             if ($response->successful() && $response->json('ok')) {
-                Log::info("Reporte enviado a Telegram con éxito. Chat ID: {$this->chatId}");
                 return response()->json(['message' => 'Reporte enviado a Telegram con éxito.'], 200);
             } else {
                 // Registrar el error detallado de la API de Telegram para debugging
@@ -150,7 +149,6 @@ class TelegramNotificationService
             ]);
 
             if ($response->successful() && $response->json('ok')) {
-                Log::info("Foto enviada correctamente a Telegram");
                 return true;
             }
 

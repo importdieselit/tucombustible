@@ -25,7 +25,6 @@ class IntegracionIAController extends Controller
    public function handleWebhook(Request $request)
     {
         $payload = $request->all();
-        Log::info('Payload recibido: ' . json_encode($payload));
         // 1. Verificar si el payload es un lote (array de acciones)
         if (is_array($payload) && !empty($payload) && isset($payload[0]['action'])) {
             $results = [];
@@ -65,8 +64,7 @@ class IntegracionIAController extends Controller
         
         // Asume que la ID de usuario o administrador se puede encontrar en 'userId' o dentro de 'params'
         $userId = $data['userId'] ?? $data['params']['admin_id'] ?? 'N/A';
-        Log::info("Ejecutando Acción: {$action}, Usuario: {$userId}");
-
+       
         if (!$action) {
             return ['success' => false, 'message' => 'Acción no especificada en el item del lote.'];
         }
@@ -112,9 +110,7 @@ class IntegracionIAController extends Controller
         // ==========================================================
         // ETAPA 1: BÚSQUEDA CANÓNICA POR USER (Por telegram_id)
         // ==========================================================
-        Log::info('valida telegramid: '.$telegramId);
-        Log::info('valida telegramid: '.$request);
-
+       
         $user = User::where('telegram_id', $telegramId)
                     ->first();
 
@@ -224,12 +220,7 @@ class IntegracionIAController extends Controller
         return response()->json($response);
     }
     
-   
     // --- FUNCIONES DE LÓGICA DE NEGOCIO ---
-
-    /**
-     * Cliente consulta cupo disponible.
-     */
     protected function consultarCupo(Request $request)
     {
         $clienteId = $request->input('clienteId');
@@ -271,15 +262,12 @@ class IntegracionIAController extends Controller
 
         try {
             // Asumimos que tu modelo Cliente tiene un campo 'telefono'
-            $cliente = Cliente::where('telefono', $telefonoLimpio)
-                              ->first();
-
+            $cliente = Cliente::where('telefono', $telefonoLimpio)->first();
             if ($cliente) {
                 if(!is_null($telegramId)){
                     $cliente->telegram_id = $telegramId;
                     $cliente->save();
                 }
-                Log::info('cliente encontrado');
                 // Éxito: Cliente encontrado
                 $mensajeBienvenida = "Hola, {$cliente->contacto}. ¿En qué puedo ayudarte hoy?";
                 
@@ -302,7 +290,6 @@ class IntegracionIAController extends Controller
                     Log::info('persona encontrada '.$persona);
                
                     $user=User::where('id_persona', $persona->id)->first();
-                    Log::info($user);
             // Asignación de Funciones basada en el Perfil
                     if ($user->id_perfil == 3) {
                         // PERFIL CLIENTE (Datos de cliente)
@@ -343,7 +330,6 @@ class IntegracionIAController extends Controller
             Log::error("Error de identificación por teléfono: " . $e->getMessage());
             return response()->json(['success' => false, 'response' => 'Error interno al buscar el cliente.'], 500);
         }
-        Log::info('response: '.json_encode($response));
         return response()->json($response);
     }
 
@@ -491,11 +477,6 @@ class IntegracionIAController extends Controller
         $tanqueId = $request->input('tanque_id');
         $nuevoNivelCm = $request->input('nuevo_nivel_cm');
         $nuevoNivelitros = $request->input('nuevo_nivel_litros');
-        Log::info('inicia ajuste');
-        Log::info('adminId: '.$adminId);
-        Log::info('tanqueId: '.$tanqueId);
-        Log::info('nuevoNivelCm: '.$nuevoNivelCm);
-        Log::info('nuevoNivelitros: '.$nuevoNivelitros);
         
         // 1. **VALIDACIÓN DE DATOS BÁSICOS**
         // if (!$tanqueId || !is_numeric($nuevoNivelCm)) {
