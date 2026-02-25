@@ -328,12 +328,18 @@
         const toast = $('#offline-toast');
    
         function updateOnlineStatus() {
-            if (navigator.onLine) {
-                toast.removeClass('show');
-                console.log('Conexión restablecida.');
-                // Opcional: intentar sincronizar aquí
+            const toast = $('#offline-toast');
+            
+            // Si el navegador dice offline, esperamos 2 segundos para confirmar
+            // que no es un simple cambio de celda o carga lenta
+            if (!navigator.onLine) {
+                setTimeout(() => {
+                    if (!navigator.onLine) { // Si 2 segundos después sigue offline...
+                        toast.addClass('show');
+                    }
+                }, 2000);
             } else {
-                toast.addClass('show');
+                toast.removeClass('show');
             }
         }
 
