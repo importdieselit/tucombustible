@@ -11,7 +11,6 @@ const urlsToCache = [
     appBase + 'combustible/index',
     appBase + 'combustible/pedidos',
     appBase + 'combustible/estadisticas',
-    appBase + 'combustible/despacho-industrial/estadisticas',
     appBase + 'combustible/despacho-industrial/historial',
     appBase + 'combustible/despacho-industrial/create',
     appBase + 'ordenes',
