@@ -70,6 +70,7 @@
     </thead>
     <tbody>
         @foreach($historial as $mov)
+        @if($mov->cliente->id ==5) {{ dd($mov) }} @endif
         <tr>
             <td data-order="{{ $mov->created_at->format('YmdHis') }}">
                 {{ \Carbon\Carbon::parse($mov->created_at)->format('d/m/Y H:i') }}
