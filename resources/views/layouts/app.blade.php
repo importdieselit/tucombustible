@@ -337,7 +337,7 @@
                     if (!navigator.onLine) { // Si 2 segundos después sigue offline...
                         toast.addClass('show');
                     }
-                }, 2000);
+                }, 10000);
             } else {
                 toast.removeClass('show');
             }
