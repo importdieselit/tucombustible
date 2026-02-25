@@ -310,7 +310,7 @@
         window.addEventListener('load', () => {
             // 1. Verificamos si ya existe un SW activo para no molestar
             if (navigator.serviceWorker.controller) {
-                console.log('SW: Ya se encuentra activo y controlando la página.');
+              //  console.log('SW: Ya se encuentra activo y controlando la página.');
             }
 
             navigator.serviceWorker.register("{{ asset('sw.js') }}")
@@ -321,7 +321,7 @@
                         installingWorker.onstatechange = () => {
                             if (installingWorker.state === 'installed') {
                                 if (navigator.serviceWorker.controller) {
-                                    console.log('SW: Nueva versión lista. Por favor recarga.');
+                                   // console.log('SW: Nueva versión lista. Por favor recarga.');
                                 } else {
                                     console.log('SW: Instalado por primera vez.');
                                 }
@@ -415,7 +415,7 @@
             const pending = JSON.parse(localStorage.getItem('pending_sync') || '[]');
             
             if (pending.length > 0) {
-                console.log('Sincronizando datos pendientes...');
+               // console.log('Sincronizando datos pendientes...');
                 
                 pending.forEach((item, index) => {
                     $.ajax({
@@ -426,7 +426,7 @@
                             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                         },
                         success: function() {
-                            console.log('Sincronizado con éxito:', item.id);
+                        //    console.log('Sincronizado con éxito:', item.id);
                             // Eliminar de la cola si se envió bien
                             removerDePendientes(index);
                         },

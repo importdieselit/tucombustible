@@ -18,7 +18,7 @@ const urlsToCache = [
 
 // Instalación Tolerante: Descarga uno por uno
 self.addEventListener('install', event => {
-    console.log('SW: Iniciando instalación...');
+    //console.log('SW: Iniciando instalación...');
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
             // En lugar de addAll, mapeamos cada URL a una promesa individual
