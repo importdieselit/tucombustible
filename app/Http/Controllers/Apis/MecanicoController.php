@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class MecanicoController extends Controller
 {
@@ -50,8 +51,6 @@ class MecanicoController extends Controller
                 'total_vehiculos' => DB::table('vehiculos')->where('estatus', 1)->count(),
                 'vehiculos_disponibles' => DB::table('vehiculos')->where('estatus', 1)->count(),
             ];
-
-            \Log::info("Estadísticas del mecánico obtenidas para usuario {$user->id} - Cliente: {$user->cliente_id}");
 
             return response()->json([
                 'success' => true,
@@ -93,8 +92,7 @@ class MecanicoController extends Controller
             ])
             ->get();
 
-            \Log::info("Depósitos obtenidos para mecánico: " . $depositos->count() . " - Usuario: {$user->id}");
-
+         
             return response()->json([
                 'success' => true,
                 'data' => $depositos
@@ -156,12 +154,7 @@ class MecanicoController extends Controller
                 // Sin filtro de estatus - mostrar TODOS los vehículos
                 ->get();
 
-            \Log::info("Vehículos obtenidos para mecánico: " . $vehiculos->count() . " - Usuario: {$user->id}");
-            
-            // Log detallado de cada vehículo
-            foreach ($vehiculos as $vehiculo) {
-                \Log::info("Vehículo: {$vehiculo->placa} - Estatus: {$vehiculo->estatus} - Disp: {$vehiculo->disp}");
-            }
+
 
             return response()->json([
                 'success' => true,
@@ -207,8 +200,6 @@ class MecanicoController extends Controller
                 ])
                 ->get();
 
-            \Log::info("Tanques obtenidos para mecánico: " . $tanques->count() . " - Usuario: {$user->id}");
-
             return response()->json([
                 'success' => true,
                 'data' => $tanques
@@ -245,8 +236,7 @@ class MecanicoController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            \Log::info("Pedidos obtenidos para mecánico {$user->id} - Cliente: {$user->cliente_id} - Total: {$pedidos->count()}");
-
+         
             return response()->json([
                 'success' => true,
                 'data' => $pedidos
@@ -280,9 +270,7 @@ class MecanicoController extends Controller
                 ->orderBy('nombre')
                 ->get();
 
-            \Log::info("Proveedores obtenidos para mecánico - Usuario: {$user->id}");
-
-            return response()->json([
+          return response()->json([
                 'success' => true,
                 'data' => $proveedores
             ]);
@@ -379,8 +367,6 @@ class MecanicoController extends Controller
                 'mecanico_id' => $user->id,
                 'movimiento_id' => $movimiento->id,
             ];
-
-            \Log::info("Egreso/despacho realizado por mecánico {$user->id} - Cliente: {$user->cliente_id}");
 
             return response()->json([
                 'success' => true,
@@ -485,9 +471,7 @@ class MecanicoController extends Controller
                 'movimiento_id' => $movimiento->id,
             ];
 
-            \Log::info("Ingreso/recarga realizado por mecánico {$user->id} - Cliente: {$user->cliente_id}");
-
-            return response()->json([
+             return response()->json([
                 'success' => true,
                 'message' => 'Ingreso/recarga realizado exitosamente',
                 'data' => $resultado
@@ -539,9 +523,7 @@ class MecanicoController extends Controller
                 ], 404);
             }
 
-            \Log::info("Check {$request->tipo} - Vehículo encontrado: {$vehiculo->placa} - Estado actual: {$vehiculo->disp} - ID: {$vehiculo->id}");
-
-            $fechaActual = now();
+           $fechaActual = now();
             $updateData = [];
 
             if ($request->tipo === 'check_in') {
@@ -568,7 +550,6 @@ class MecanicoController extends Controller
                 ->where('id', $request->vehiculo_id)
                 ->update($updateData);
 
-            \Log::info("Check {$request->tipo} - Actualización realizada: " . ($updated ? 'SÍ' : 'NO') . " - Datos: " . json_encode($updateData));
 
             $resultado = [
                 'id' => uniqid(),
@@ -581,8 +562,6 @@ class MecanicoController extends Controller
                 'estado_anterior' => $request->tipo === 'check_in' ? 'S' : 'n',
                 'estado_nuevo' => $request->tipo === 'check_in' ? 'n' : 'S',
             ];
-
-            \Log::info("Check {$request->tipo} realizado por mecánico {$user->id} - Vehículo: {$vehiculo->placa} - Cliente: {$user->cliente_id}");
 
             return response()->json([
                 'success' => true,

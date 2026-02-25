@@ -471,7 +471,6 @@ class AuthController extends Controller
             ])->post("https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send", $payload);
 
             if ($response->successful()) {
-                Log::info("Notificación FCM enviada exitosamente a token: " . substr($fcmToken, 0, 20) . "...");
                 return true;
             } else {
                 Log::error("Error enviando notificación FCM: " . $response->body());
