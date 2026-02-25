@@ -111,4 +111,5 @@ class MovimientoCombustible extends Model
     {
         return $query->whereBetween('created_at', [$fechaInicio, $fechaFin]);
     }
+
 }
