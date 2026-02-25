@@ -21,76 +21,62 @@ const urlsToCache = [
 ];
 
 // Instalación Tolerante: Descarga uno por uno
+
 self.addEventListener('install', event => {
-    console.log('SW: Iniciando instalación...');
+    self.skipWaiting(); // FUERZA al SW a convertirse en el nuevo SW activo de inmediato
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
-            // En lugar de addAll, mapeamos cada URL a una promesa individual
             return Promise.all(
                 urlsToCache.map(url => {
-                    return fetch(url)
-                        .then(response => {
-                            if (response.ok) {
-                                return cache.put(url, response);
-                            }
-                            throw new TypeError('Error al cargar recurso: ' + url);
-                        })
-                        .catch(err => console.warn('SW: No se pudo cachear:', url, err));
+                    return fetch(url).then(response => {
+                        if (response.ok) return cache.put(url, response);
+                    }).catch(err => console.warn('Falló cache:', url));
                 })
             );
         })
     );
 });
 
-// Activación: Limpia cachés antiguos
 self.addEventListener('activate', event => {
+    // Toma el control de todas las pestañas abiertas de inmediato
+    event.waitUntil(clients.claim()); 
+    
+    // Limpieza de cachés viejos...
     event.waitUntil(
-        caches.keys().then(cacheNames => {
-            return Promise.all(
-                cacheNames.map(cacheName => {
-                    if (cacheName !== CACHE_NAME) {
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        })
+        caches.keys().then(keys => Promise.all(
+            keys.map(key => (key !== CACHE_NAME) ? caches.delete(key) : null)
+        ))
     );
 });
 
 // Estrategia de Fetch
-
 self.addEventListener('fetch', event => {
-    // 1. FILTRO DE SEGURIDAD: Solo procesar peticiones HTTP o HTTPS
-    // Esto ignora las extensiones de Chrome (chrome-extension://) y evita el error
-    if (!event.request.url.startsWith('http')) return;
-
-    // 2. Solo manejamos peticiones GET para el caché de navegación
-    if (event.request.method !== 'GET') return;
+    // 1. Solo peticiones HTTP/HTTPS y método GET
+    if (!event.request.url.startsWith('http') || event.request.method !== 'GET') return;
 
     event.respondWith(
-        caches.match(event.request).then(response => {
-            // Si está en caché, lo devuelve inmediatamente
-            if (response) return response;
-
-            // Si no está, intenta ir a la red
-            return fetch(event.request).then(networkResponse => {
-                // Solo cacheamos respuestas válidas del servidor
-                if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-                    return networkResponse;
+        // INTENTAR RED PRIMERO
+        fetch(event.request)
+            .then(networkResponse => {
+                // Si la red responde bien, clonamos y guardamos/actualizamos en caché
+                if (networkResponse && networkResponse.status === 200) {
+                    const responseToCache = networkResponse.clone();
+                    caches.open(CACHE_NAME).then(cache => {
+                        cache.put(event.request, responseToCache);
+                    });
                 }
-                
-                const responseToCache = networkResponse.clone();
-                caches.open(CACHE_NAME).then(cache => {
-                    cache.put(event.request, responseToCache);
-                });
-                
                 return networkResponse;
-            }).catch(() => {
-                // Si falla la red y es una navegación, enviamos a la base (offline)
-                if (event.request.mode === 'navigate') {
-                    return caches.match(appBase);
-                }
-            });
-        })
+            })
+            .catch(() => {
+                // SI LA RED FALLA (Offline real), BUSCAR EN CACHÉ
+                return caches.match(event.request).then(response => {
+                    if (response) return response;
+                    
+                    // Si es una página y no está en caché, enviar al dashboard/base
+                    if (event.request.mode === 'navigate') {
+                        return caches.match(appBase);
+                    }
+                });
+            })
     );
 });

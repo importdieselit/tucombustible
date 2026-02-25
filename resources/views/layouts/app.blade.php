@@ -308,15 +308,28 @@
 
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-            const swPath = "{{ asset('sw.js') }}";
-            
-            navigator.serviceWorker.register(swPath)
+            // 1. Verificamos si ya existe un SW activo para no molestar
+            if (navigator.serviceWorker.controller) {
+                console.log('SW: Ya se encuentra activo y controlando la página.');
+            }
+
+            navigator.serviceWorker.register("{{ asset('sw.js') }}")
                 .then(registration => {
-                    console.log('SW registrado con éxito en el alcance:', registration.scope);
+                    // 2. Detectar si hay una actualización esperando
+                    registration.onupdatefound = () => {
+                        const installingWorker = registration.installing;
+                        installingWorker.onstatechange = () => {
+                            if (installingWorker.state === 'installed') {
+                                if (navigator.serviceWorker.controller) {
+                                    console.log('SW: Nueva versión lista. Por favor recarga.');
+                                } else {
+                                    console.log('SW: Instalado por primera vez.');
+                                }
+                            }
+                        };
+                    };
                 })
-                .catch(error => {
-                    console.error('Fallo en el registro del SW:', error);
-                });
+                .catch(error => console.error('SW Error:', error));
         });
     }
 
