@@ -326,6 +326,27 @@
 
     $(document).ready(function() {
         const toast = $('#offline-toast');
+   
+        function updateOnlineStatus() {
+            if (navigator.onLine) {
+                toast.removeClass('show');
+                console.log('Conexión restablecida.');
+                // Opcional: intentar sincronizar aquí
+            } else {
+                toast.addClass('show');
+            }
+        }
+
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+
+        // DEBEMOS esperar un poco antes de la primera validación
+        setTimeout(() => {
+            if (!navigator.onLine) {
+                toast.addClass('show');
+            }
+        }, 1500); // 1.5 segundos de gracia para que el SW y la red se estabilicen
+
 
 
         // Función para actualizar el contador visual
@@ -342,18 +363,8 @@
             }
         }
 
-        function updateOnlineStatus() {
-            if (navigator.onLine) {
-                toast.removeClass('show');
-                console.log('Sincronizando datos...');
-            } else {
-                toast.addClass('show');
-            }
-        }
 
-        window.addEventListener('online', updateOnlineStatus);
-        window.addEventListener('offline', updateOnlineStatus);
-
+       
         if (!navigator.onLine) toast.addClass('show');
     
         $('.offline-form').on('submit', function(e) {
