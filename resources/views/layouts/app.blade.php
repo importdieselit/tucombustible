@@ -339,6 +339,21 @@
 
     $(document).ready(function() {
         const toast = $('#offline-toast');
+
+         // Función para actualizar el contador visual
+        function updateSyncBadge() {
+            const pending = JSON.parse(localStorage.getItem('pending_sync') || '[]');
+            const $container = $('#sync-status-container');
+            const $count = $('#sync-count');
+
+            if (pending.length > 0) {
+                $container.removeClass('d-none').addClass('d-inline-block');
+                $count.text(pending.length);
+            } else {
+                $container.addClass('d-none');
+            }
+        }
+
    
         function updateOnlineStatus() {
             const toast = $('#offline-toast');
@@ -364,23 +379,7 @@
             if (!navigator.onLine) {
                 toast.addClass('show');
             }
-        }, 1500); // 1.5 segundos de gracia para que el SW y la red se estabilicen
-
-
-
-        // Función para actualizar el contador visual
-        function updateSyncBadge() {
-            const pending = JSON.parse(localStorage.getItem('pending_sync') || '[]');
-            const $container = $('#sync-status-container');
-            const $count = $('#sync-count');
-
-            if (pending.length > 0) {
-                $container.removeClass('d-none').addClass('d-inline-block');
-                $count.text(pending.length);
-            } else {
-                $container.addClass('d-none');
-            }
-        }
+        }, 1500); // 1.5 segundos de gracia para que el SW y la red se estabilice
 
 
        
@@ -410,35 +409,37 @@
             updateSyncBadge(); 
         }   
         updateSyncBadge();
+
+        
+        window.addEventListener('online', function() {
+            const pending = JSON.parse(localStorage.getItem('pending_sync') || '[]');
+            
+            if (pending.length > 0) {
+                console.log('Sincronizando datos pendientes...');
+                
+                pending.forEach((item, index) => {
+                    $.ajax({
+                        url: item.url,
+                        method: 'POST',
+                        data: item.data,
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function() {
+                            console.log('Sincronizado con éxito:', item.id);
+                            // Eliminar de la cola si se envió bien
+                            removerDePendientes(index);
+                        },
+                        error: function() {
+                            console.error('Fallo al sincronizar item:', item.id);
+                        }
+                    });
+                });
+            }
+            updateSyncBadge();
+        });
     });
 
-    window.addEventListener('online', function() {
-        const pending = JSON.parse(localStorage.getItem('pending_sync') || '[]');
-        
-        if (pending.length > 0) {
-            console.log('Sincronizando datos pendientes...');
-            
-            pending.forEach((item, index) => {
-                $.ajax({
-                    url: item.url,
-                    method: 'POST',
-                    data: item.data,
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function() {
-                        console.log('Sincronizado con éxito:', item.id);
-                        // Eliminar de la cola si se envió bien
-                        removerDePendientes(index);
-                    },
-                    error: function() {
-                        console.error('Fallo al sincronizar item:', item.id);
-                    }
-                });
-            });
-        }
-        updateSyncBadge();
-    });
 
     function removerDePendientes(index) {
         let pending = JSON.parse(localStorage.getItem('pending_sync') || '[]');
