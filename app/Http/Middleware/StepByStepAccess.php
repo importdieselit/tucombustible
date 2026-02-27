@@ -20,7 +20,7 @@ class StepByStepAccess
         if ($user->must_change_password) {
             if (!$request->is('password/change*') && !$request->is('logout')) {
                 return redirect()->route('password.change')
-                                 ->with('info', 'Debe cambiar su clave inicial para continuar.');
+                ->with('info', 'Debe cambiar su clave inicial para continuar.');
             }
             return $next($request);
         }
@@ -34,7 +34,7 @@ class StepByStepAccess
                 'logout'
             ];
 
-            if (!$request->routeIs($allowedRoutes)) {
+            if (!$request->routeIs($allowedRoutes) && !$request->expectsJson()) {
                 return redirect()->route('captacion.completar');
             }
         }

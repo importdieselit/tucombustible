@@ -59,13 +59,14 @@ self.addEventListener('fetch', event => {
         fetch(event.request)
             .then(networkResponse => {
                 // Si la red responde bien, clonamos y guardamos/actualizamos en caché
-                if (networkResponse && networkResponse.status === 200) {
-                    const responseToCache = networkResponse.clone();
-                    caches.open(CACHE_NAME).then(cache => {
-                        cache.put(event.request, responseToCache);
-                    });
-                }
-                return networkResponse;
+            if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+                const responseToCache = networkResponse.clone();
+                caches.open(CACHE_NAME).then(cache => {
+                    cache.put(event.request, responseToCache);
+                });
+            }
+            // Si es una redirección (302), simplemente devuélvela sin cachear
+            return networkResponse;
             })
             .catch(() => {
                 // SI LA RED FALLA (Offline real), BUSCAR EN CACHÉ

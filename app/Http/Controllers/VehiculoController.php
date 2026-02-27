@@ -10,6 +10,7 @@ use App\Models\TipoVehiculo;
 use App\Models\Orden;
 use App\Models\ResumenDiario;
 use App\Models\Cliente;
+use App\Models\MantenimientoProgramado;
 use Illuminate\Http\Request;
 use App\Http\Requests\VehiculoStoreRequest;
 use Maatwebsite\Excel\Facades\Excel;
@@ -26,6 +27,7 @@ use App\Traits\PluralizaEnEspanol;
 use App\Models\VehiculoFoto;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use App\Models\Viaje;
 
 
 class VehiculoController extends BaseController
@@ -44,6 +46,134 @@ class VehiculoController extends BaseController
             // y luego el filtro de seguridad de cliente.
             return $this->list($query); 
         }
+
+
+    protected function getAdditionalData()
+    {
+        $cliente_id = Auth::user()->cliente_id;
+        
+        $unidades_con_alerta = Vehiculo::getUnidadesConDocumentosVencidos($cliente_id)->count();
+        $total_vehiculos     = Vehiculo::misVehiculos()->count();
+        $total_flota = Vehiculo::miFlota()->count();
+
+        $unidades_con_orden_abierta = Vehiculo::VehiculosConOrdenAbierta()->count();
+        $unidades_en_mantenimiento = Vehiculo::countVehiculosEnMantenimiento();
+        $unidades_disponibles = Vehiculo::Disponibles()->count();
+        $unidades_en_servicio = Vehiculo::EnServicio()->count();
+        $historicoEficiencia = ResumenDiario::where('fecha', '>=', now()->subDays(15))->orderBy('fecha')->get()->toArray();
+        $mantenimientos = MantenimientoProgramado::with('vehiculo')
+                ->whereIn('estatus', [1, 2])
+                ->orderBy('fecha', 'asc') // o por km si lo deseas
+                ->limit(5)
+                ->get();
+
+        $eficienciaActual = $total_flota > 0 ? ($unidades_disponibles / $total_flota) * 100 : 0; 
+        $eficienciaActual = round($eficienciaActual, 2); 
+
+        $fechaLimite = now()->subDays(45); // últimos 45 días
+
+        $vehiculos = Vehiculo::select('vehiculos.id', 'vehiculos.placa', 'vehiculos.modelo')
+                ->withCount(['ordenes as fallas_count' => function ($q) use ($fechaLimite) {
+                    $q->where('created_at', '>=', $fechaLimite);
+                    // Si quieres incluir solo órdenes marcadas como "falla":
+                    // $q->where('tipo', 'falla');
+                }])
+                ->orderByDesc('fallas_count')
+                ->take(10)
+                ->get();
+
+
+                    $desde = now()->subMonths(11)->startOfMonth();
+            $hasta = now()->endOfMonth();
+
+            $fallas = Orden::select(
+                    DB::raw("DATE_FORMAT(created_at, '%Y-%m') AS mes"),
+                    DB::raw("COUNT(*) AS total")
+                )->whereBetween('created_at', [$desde, $hasta])
+                ->groupBy('mes')
+                ->orderBy('mes')
+                ->get();
+
+            // arrays finales
+            $fallas_labels = [];
+            $fallas_values = [];
+
+            $cursor = $desde->copy();
+            while ($cursor <= $hasta) {
+                $key = $cursor->format('Y-m');
+                $fallas_labels[] = $cursor->isoFormat('MMM');  // Ene, Feb, Mar...
+                $fallas_values[] = $fallas->firstWhere('mes', $key)->total ?? 0;
+                $cursor->addMonth();
+            }
+
+
+        $viajesActivos = Viaje::with(['vehiculo', 'cliente'])
+                ->whereDate('fecha_salida', now()->format('Y-m-d')) // según tus estados reales
+                ->orderBy('fecha_salida', 'desc')
+                ->get()
+                ->map(function($v){
+
+                    $vehiculo = $v->vehiculo;
+
+                    // si el vehículo no tiene dato, evitar error
+                    $km = $vehiculo->km ?? 0;
+                    $consumo = $vehiculo->consumo_promedio ?? null;
+
+                    return [
+                        'placa'     => $vehiculo->placa ?? 'N/D',
+                        'modelo'    => $vehiculo->modelo ?? 'N/D',
+                        'marca'     => $vehiculo->marca ?? 'N/D',
+                        'ruta'      => $v->cliente->nombre ?? $v->otro_cliente ?? $v->destino_ciudad ?? 'Sin Destino',
+                        'km'        => number_format($vehiculo->km_mantt, 0, ',', '.'),
+                        'consumo'   => 'N/D',
+                        'estatus'   => $v->status
+                    ];
+                });
+
+        // Preparar datos para Chart.js
+        $chartLabels = array_map(function($date) {
+            return  Carbon::parse($date)->format('d/M');
+        }, array_column($historicoEficiencia, 'fecha'));
+
+        $chartDataCierre = array_column($historicoEficiencia, 'disponibilidad');
+
+        
+
+
+        return [
+            'unidades_con_alerta' => $unidades_con_alerta,
+            'total_vehiculos'     => $total_vehiculos,
+            'total_flota'         => $total_flota,
+            'unidades_con_orden_abierta'    => $unidades_con_orden_abierta,
+            'unidades_en_mantenimiento'    => $unidades_en_mantenimiento,
+            'unidades_disponibles'         => $unidades_disponibles,
+            'unidades_en_servicio'         => $unidades_en_servicio,
+            'historicoEficiencia' => $historicoEficiencia,
+            'mantenimientos'      => $mantenimientos,
+            'eficienciaActual'    => $eficienciaActual,
+            'viajesActivos'       => $viajesActivos,
+            'chartLabels'        => $chartLabels,
+            'chartDataCierre'    => $chartDataCierre,
+            'fallas_labels'      => $fallas_labels,
+            'fallas_values'      => $fallas_values,
+            'v_tot' => $total_vehiculos,
+            'm_tot' => Vehiculo::where('es_flota', true)->whereIn('tipo', [1,3])->count(),
+            't_tot' => Vehiculo::where('es_flota', true)->whereIn('tipo', [2,5])->count(),
+            
+            'v_dis' => $unidades_disponibles,
+            'v_fue' => $unidades_con_orden_abierta,
+            
+            'promsem' => ResumenDiario::where('fecha', '>=', now()->subDays(7))
+                            ->orderBy('fecha', 'asc')
+                            ->get(),       
+            'status_distribucion' => Vehiculo::select('estatus', DB::raw('count(*) as total'))
+                                        ->groupBy('estatus')
+                                        ->get(),
+            
+        ];
+      
+    }
+
 
     public function controlDocumentacion(Request $request)
     {

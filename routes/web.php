@@ -91,12 +91,10 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/depositos/ajustedinamic', [DepositoController::class, 'ajusteDinamic'])->name('deposito.ajusteD');
     Route::put('/depositos/ajusteresguardo', [DepositoController::class, 'ajusteResguardo'])->name('deposito.ajusteR');
    
-  Route::get('/permisos', [AccesoController::class, 'index'])->name('permisos.index');
-  Route::get('/clientes/{id}/vehiculos', function($id) {
-    return App\Models\Vehiculo::where('id_cliente', $id)
-        ->select('id', 'placa', 'alias')
-        ->get();
-});
+    Route::get('/permisos', [AccesoController::class, 'index'])->name('permisos.index');
+    Route::get('/clientes/{id}/vehiculos', function($id) {
+        return App\Models\Vehiculo::where('id_cliente', $id)->select('id', 'placa', 'alias')->get();
+    });
 
 
     // Rutas para la gestión de permisos específicos (Usuario Individual)
@@ -248,22 +246,22 @@ Route::post('/prepago/store', [MovimientoCombustibleController::class, 'storePre
     Route::get('viajes/dashboard', [ViajesController::class, 'dashboard'])->name('viajes.dashboard');
     Route::get('viaje/list', [ViajesController::class, 'list'])->name('viajes.list');
     Route::get('/viajes/{id}/assign', [ViajesController::class, 'assign'])->name('viajes.assign');
-Route::put('/viajes/{id}/assign', [ViajesController::class, 'processAssignment'])->name('viajes.processAssignment');    
+    Route::put('/viajes/{id}/assign', [ViajesController::class, 'processAssignment'])->name('viajes.processAssignment');    
     Route::get('viajes/{viaje}/viaticos/edit', [ViajesController::class, 'editViaticos'])->name('viajes.viaticos.edit');
     Route::put('viajes/{viaje}/viaticos', [ViajesController::class, 'updateViaticos'])->name('viajes.viaticos.update');
     Route::delete('/viajes/{id}', [ViajesController::class, 'destroy'])->name('viajes.destroy');
     // Muestra el formulario de edición
-Route::get('/viajes/{id}/edit', [ViajesController::class, 'edit'])->name('viaje.edit');
-route::post('/viajes/mgo-store', [ViajesController::class, 'storeMGO'])->name('mgo.store');
-// Ruta AJAX para actualizar un campo del Viaje
-Route::put('/viajes/{id}/update-field', [ViajesController::class, 'updateField'])->name('viaje.update.field');
+    Route::get('/viajes/{id}/edit', [ViajesController::class, 'edit'])->name('viaje.edit');
+    route::post('/viajes/mgo-store', [ViajesController::class, 'storeMGO'])->name('mgo.store');
+    // Ruta AJAX para actualizar un campo del Viaje
+    Route::put('/viajes/{id}/update-field', [ViajesController::class, 'updateField'])->name('viaje.update.field');
 
-// Ruta AJAX para actualizar un campo de Despacho
-// Usamos el ID del viaje en la ruta para mantener el contexto
-Route::put('/viajes/{viajeId}/despachos/{despachoId}', [ViajesController::class, 'updateDespacho'])->name('despacho.update.field');
+    // Ruta AJAX para actualizar un campo de Despacho
+    // Usamos el ID del viaje en la ruta para mantener el contexto
+    Route::put('/viajes/{viajeId}/despachos/{despachoId}', [ViajesController::class, 'updateDespacho'])->name('despacho.update.field');
 
-// Procesa la actualización del formulario (PUT/PATCH)
-Route::put('/viajes/{id}', [ViajesController::class, 'update'])->name('viaje.update');
+    // Procesa la actualización del formulario (PUT/PATCH)
+    Route::put('/viajes/{id}', [ViajesController::class, 'update'])->name('viaje.update');
     // Nueva ruta para el resumen de programación
     Route::get('/viajes/resumen-programacion/{id?}', [ViajesController::class, 'resumenProgramacion'])->name('viajes.resumenProgramacion');
     Route::get('viajes/report/index', [ViajesController::class, 'reportsIndex'])->name('reportes.viajes');

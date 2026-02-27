@@ -1,4 +1,94 @@
 @extends('layouts.app')
+@php
+$unidades_con_alerta = App\Models\Vehiculo::getUnidadesConDocumentosVencidos(Auth::user()->cliente_id)->count(); 
+$total_vehiculos = App\Models\Vehiculo::misVehiculos()->count(); 
+$total_flota = App\Models\Vehiculo::miFlota()->count(); 
+$unidades_con_orden_abierta = App\Models\Vehiculo::VehiculosConOrdenAbierta()->count();
+$unidades_en_mantenimiento = App\Models\Vehiculo::countVehiculosEnMantenimiento();
+$unidades_disponibles = App\Models\Vehiculo::Disponibles()->count();
+$unidades_en_servicio = App\Models\Vehiculo::EnServicio()->count();
+$historicoEficiencia = App\Models\ResumenDiario::where('fecha', '>=', now()->subDays(15))->orderBy('fecha')->get()->toArray();
+  $mantenimientos = App\Models\MantenimientoProgramado::with('vehiculo')
+        ->whereIn('estatus', [1, 2])
+        ->orderBy('fecha', 'asc') // o por km si lo deseas
+        ->limit(5)
+        ->get();
+
+$eficienciaActual = $total_flota > 0 
+    ? ($unidades_disponibles / $total_flota) * 100 
+    : 0; 
+$eficienciaActual = round($eficienciaActual, 2); 
+
+ $fechaLimite = now()->subDays(45); // últimos 45 días
+
+    $vehiculos = App\Models\Vehiculo::select('vehiculos.id', 'vehiculos.placa', 'vehiculos.modelo')
+        ->withCount(['ordenes as fallas_count' => function ($q) use ($fechaLimite) {
+            $q->where('created_at', '>=', $fechaLimite);
+            // Si quieres incluir solo órdenes marcadas como "falla":
+            // $q->where('tipo', 'falla');
+        }])
+        ->orderByDesc('fallas_count')
+        ->take(10)
+        ->get();
+
+
+            $desde = now()->subMonths(11)->startOfMonth();
+    $hasta = now()->endOfMonth();
+
+    $fallas = App\Models\Orden::select(
+            Illuminate\Support\Facades\DB::raw("DATE_FORMAT(created_at, '%Y-%m') AS mes"),
+            Illuminate\Support\Facades\DB::raw("COUNT(*) AS total")
+        )
+       // ->where('tipo', 'falla')  // ajusta si tus fallas se identifican de otra forma
+        ->whereBetween('created_at', [$desde, $hasta])
+        ->groupBy('mes')
+        ->orderBy('mes')
+        ->get();
+
+    // arrays finales
+    $fallas_labels = [];
+    $fallas_values = [];
+
+    $cursor = $desde->copy();
+    while ($cursor <= $hasta) {
+        $key = $cursor->format('Y-m');
+        $fallas_labels[] = $cursor->isoFormat('MMM');  // Ene, Feb, Mar...
+        $fallas_values[] = $fallas->firstWhere('mes', $key)->total ?? 0;
+        $cursor->addMonth();
+    }
+
+
+ $viajesActivos = App\Models\Viaje::with(['vehiculo', 'cliente'])
+        ->whereDate('fecha_salida', now()->format('Y-m-d')) // según tus estados reales
+        ->orderBy('fecha_salida', 'desc')
+        ->get()
+        ->map(function($v){
+
+            $vehiculo = $v->vehiculo;
+
+            // si el vehículo no tiene dato, evitar error
+            $km = $vehiculo->km ?? 0;
+            $consumo = $vehiculo->consumo_promedio ?? null;
+
+            return [
+                'placa'     => $vehiculo->placa ?? 'N/D',
+                'modelo'    => $vehiculo->modelo ?? 'N/D',
+                'marca'     => $vehiculo->marca ?? 'N/D',
+                'ruta'      => $v->cliente->nombre ?? $v->otro_cliente ?? $v->destino_ciudad ?? 'Sin Destino',
+                'km'        => number_format($vehiculo->km_mantt, 0, ',', '.'),
+                'consumo'   => 'N/D',
+                'estatus'   => $v->status
+            ];
+        });
+
+// Preparar datos para Chart.js
+$chartLabels = array_map(function($date) {
+    return  Illuminate\Support\Carbon::parse($date)->format('d/M');
+}, array_column($historicoEficiencia, 'fecha'));
+
+$chartDataCierre = array_column($historicoEficiencia, 'disponibilidad');
+
+@endphp
 @section('title', 'Dashboard de Vehículos')
 
 @section('content')

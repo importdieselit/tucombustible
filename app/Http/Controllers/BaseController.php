@@ -90,11 +90,27 @@ abstract class BaseController extends Controller
      * Muestra una lista de todos los recursos.
      * @return \Illuminate\View\View
      */
-    public function index()
-    {
-        $data = $this->model->all();
-        return view($this->getModelNameLowerCase() . '.index', compact('data'));
-    }
+
+        public function index()
+        {
+            $items = $this->model->all();
+            
+            // Llamamos a este método que por defecto devuelve un array vacío
+            $additionalData = $this->getAdditionalData();
+            
+            // Combinamos los datos base con los adicionales
+            $viewData = array_merge([
+                'data' => $items,
+                'modelName' => class_basename($this->model)
+            ], $additionalData);
+            return view($this->getModelNameLowerCase() . '.index', $viewData);
+        }
+
+
+        protected function getAdditionalData()
+        {
+            return [];
+        }
 
     /**
      * Muestra una lista de todos los recursos. Este método puede ser sobrescrito para vistas de listado.
