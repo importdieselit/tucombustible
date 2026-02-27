@@ -105,7 +105,29 @@
     </div>
     
 </div>
+<div class="row">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <h6 class="text-uppercase">Total Unidades</h6>
+                <h2 class="display-4">{{ $v_tot }}</h2>
+                <div class="progress" style="height: 5px;">
+                    <div class="progress-bar bg-white" style="width: 100%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <h6 class="text-uppercase">Disponibles</h6>
+                <h2>{{ $v_dis }}</h2>
+                <small>{{ number_format(($v_dis / ($v_tot ?: 1)) * 100, 2) }}% de la flota</small>
+            </div>
+        </div>
+    </div>
+</div>
 <div class="row g-4 mb-4">
     <!-- Acciones rápidas -->
     <div class="col-lg-3">
