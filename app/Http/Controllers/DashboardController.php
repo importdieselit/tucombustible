@@ -2,60 +2,33 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Vehiculo;
-use App\Models\User;
-use App\Models\Orden;
-use App\Models\Tanque;
-use App\Models\MantenimientoProgramado;
-use App\Models\Cliente;
-use App\Models\Pedido;
-use App\Models\MovimientoCombustible;
-use Illuminate\Http\Request;
+use App\Services\DashboardService;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Carbon;
-use App\Models\SuministroCompra;
+
 class DashboardController extends Controller
 {
+    protected $dashboardService;
+
+    public function __construct(DashboardService $dashboardService)
+    {
+        $this->dashboardService = $dashboardService;
+    }
+
     public function index()
     {
-        $user = Auth::user(); // Simplificado: ya tienes el objeto user
+        $data = $this->dashboardService->getDashboardData(Auth::user());
 
-        if ($user->id_perfil == 1) {
-            return redirect()->route('captacion.index');
+        // 1. Cliente en Proceso de Captación
+        if ($data['perfil'] === 'cliente_proceso') {
+            return view('dashboard.cliente_proceso', $data);
         }
 
-        if ($user->id_perfil == 3) {
-            return redirect()->route('clientes.dashboard');
+        // 2. Cliente Aprobado (Panel Operativo)
+        if ($data['perfil'] === 'cliente') {
+            return view('dashboard.cliente_aprobado', $data);
         }
 
-         
-        $totalVehiculos = Vehiculo::count();
-        $totalUsuarios = User::count();
-        $totalOrdenesAbiertas = Orden::where('estatus', 'Abierta')->count(); // Asumiendo que 'estatus' tiene este valor
-        $totalTanques = Tanque::count();
-        $unidades_con_orden_abierta = Vehiculo::VehiculosConOrdenAbierta()->count();
-        $unidades_en_mantenimiento = Vehiculo::countVehiculosEnMantenimiento();
-        $unidades_disponibles = Vehiculo::where('es_flota',true)->where('estatus',1)->count();
-        $programados=MantenimientoProgramado::whereDate('fecha','>=',now())->count();
-        $programadosHoy=MantenimientoProgramado::whereDate('fecha',now())->count();
-        $suministros_compra = SuministroCompra::where('estatus', 1)->count();
-
-        // Puedes añadir más información, como las últimas 5 órdenes
-        $ultimasOrdenes = Orden::orderBy('id', 'desc')->take(5)->get();
-
-        return view('dashboard', compact(
-            'totalVehiculos',
-            'totalUsuarios',
-            'totalOrdenesAbiertas',
-            'totalTanques',
-            'ultimasOrdenes',
-            'unidades_con_orden_abierta',
-            'unidades_en_mantenimiento',
-            'unidades_disponibles',
-            'programados',
-            'programadosHoy',
-            'suministros_compra',
-            'user'
-        ));
+        // 3. Administrador/Gerencia (Panel Principal)
+        return view('dashboard.admin', $data);
     }
 }

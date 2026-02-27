@@ -19,7 +19,10 @@ class Cliente extends Model
         'rif',
         'contacto',
         'dni',
-        'direccion',
+        'estado_id', 
+        'ciudad_id',
+        'registro_paso', 
+        'token_registro',
         'direccion_operativa',
         'telefono',
         'email',
@@ -135,6 +138,12 @@ class Cliente extends Model
     
     public function pedidos() {
           return $this->hasMany(Pedido::class, 'cliente_id');
+    }
+
+    public function user()
+    {
+        // Un Cliente PERTENECE A un Usuario
+        return $this->belongsTo(User::class, 'user_id');
     }
   
 }

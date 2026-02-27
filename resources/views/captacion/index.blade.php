@@ -1,160 +1,78 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard de Captación')
+@section('title', 'Control de Captación')
 
 @section('content')
-<div class="container-fluid py-4">
-
-    {{-- ======== ENCABEZADO ======== --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="mb-0">📊 Panel de Captación de Clientes</h3>
-        <a href="{{ route('captacion.create') }}" class="btn btn-primary">
-            <i class="ri-user-add-line"></i> Nuevo Cliente
-        </a>
+<div class="space-y-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+            <p class="text-sm font-medium text-gray-500 uppercase">En Proceso Total</p>
+            <p class="text-3xl font-bold text-blue-600">{{ $stats['total_prospectos'] }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+            <p class="text-sm font-medium text-gray-500 uppercase">En Revisión (Paso 4)</p>
+            <p class="text-3xl font-bold text-yellow-500">{{ $stats['en_revision'] }}</p>
+        </div>
+        <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+            <p class="text-sm font-medium text-gray-500 uppercase">En Espera del Ministerio</p>
+            <p class="text-3xl font-bold text-purple-600">{{ $stats['esperando_minpet'] }}</p>
+        </div>
     </div>
 
-    {{-- ======== TARJETAS RESUMEN ======== --}}
-    <div class="row">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div class="p-6 border-b border-gray-50 flex justify-between items-center">
+            <h2 class="text-lg font-bold text-gray-800">Listado de Prospectos</h2>
+            <input type="text" placeholder="Buscar cliente..." class="text-sm border border-gray-200 rounded-lg px-4 py-2 w-64 focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
 
-        @php
-            $cards = [
-                'registro_inicial'     => ['title' => 'Nuevos', 'color' => 'primary', 'icon' => 'ri-user-star-line'],
-                'revision_pendiente'   => ['title' => 'Revisión de Expediente', 'color' => 'danger', 'icon' => 'ri-file-search-line'], 
-                'CUPO'                 => ['title' => 'Solicitud Recibida', 'color' => 'info', 'icon' => 'ri-mail-open-line'],
-                'MIGRACION'            => ['title' => 'Migración', 'color' => 'warning', 'icon' => 'ri-refresh-line'],
-                'espera'               => ['title' => 'En Espera', 'color' => 'secondary', 'icon' => 'ri-time-line'],
-                'planillas_enviadas'   => ['title' => 'Planillas Enviadas', 'color' => 'success', 'icon' => 'ri-file-list-3-line'],
-                'falta_documentacion'  => ['title' => 'Esperando Documentos', 'color' => 'orange', 'icon' => 'ri-folder-warning-line'],
-                'esperando_inspeccion' => ['title' => 'Esperando Inspección', 'color' => 'dark', 'icon' => 'ri-search-eye-line'],
-                'aprobado'             => ['title' => 'Aprobados', 'color' => 'success', 'icon' => 'ri-checkbox-circle-line'],
-            ];
-        @endphp
-
-        @foreach($cards as $status => $info)
-            <div class="col-md-3 mb-4">
-                <div class="card border-{{ $info['color'] }} shadow-sm">
-                    <div class="card-body d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-uppercase text-{{ $info['color'] }}">{{ $info['title'] }}</h6>
-                            <h2 class="fw-bold">{{ $estadisticas[$status] ?? 0 }}</h2>
-                        </div>
-                        <i class="{{ $info['icon'] }} text-{{ $info['color'] }}" style="font-size: 40px;"></i>
+        <table class="w-full text-left">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-4 text-xs font-semibold text-gray-400 uppercase">Cliente</th>
+                    <th class="px-6 py-4 text-xs font-semibold text-gray-400 uppercase">Estado Actual</th>
+                    <th class="px-6 py-4 text-xs font-semibold text-gray-400 uppercase">Progreso</th>
+                    <th class="px-6 py-4 text-xs font-semibold text-gray-400 uppercase text-right">Acción</th>
+                </tr>
+            </thead>
+    <tbody class="divide-y divide-gray-50">
+        @foreach($clientes as $cliente) {{-- Cambiado de 'prospectos' a 'clientes' --}}
+        <tr class="hover:bg-blue-50/30 transition">
+            <td class="px-6 py-4">
+                <div class="font-bold text-gray-900">{{ $cliente->name }}</div>
+                <div class="text-[10px] text-gray-400 font-mono tracking-widest">{{ $cliente->cliente->rif ?? 'RIF NO CARGADO' }}</div>
+            </td>
+            <td class="px-6 py-4">
+                <div class="flex flex-col">
+                    <span class="text-xs font-semibold text-slate-600">
+                        Paso {{ $cliente->cliente->registro_paso }}: {{ $dashboardService->getNombrePaso($cliente->cliente->registro_paso) }}
+                    </span>
+                    <span class="text-[10px] text-gray-400 uppercase tracking-tighter italic">Cliente Inactivo</span>
+                </div>
+            </td>
+            <td class="px-6 py-4">
+                {{-- Barra de progreso basada en los 10 pasos --}}
+                <div class="flex items-center gap-3">
+                    <div class="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+                        <div class="bg-blue-600 h-full transition-all duration-500" 
+                             style="width: {{ ($cliente->cliente->registro_paso / 10) * 100 }}%"></div>
                     </div>
+                    <span class="text-[10px] font-bold text-gray-500">{{ ($cliente->cliente->registro_paso / 10) * 100 }}%</span>
                 </div>
-            </div>
+            </td>
+            <td class="px-6 py-4 text-right">
+                <a href="{{ route('captacion.show', $cliente->id) }}" 
+                class="inline-flex items-center bg-white border border-slate-200 text-slate-700 text-[11px] font-bold px-3 py-1.5 rounded-lg hover:bg-slate-50 transition shadow-sm">
+                    GESTIONAR EXPEDIENTE
+                </a>
+            </td>
+        </tr>
         @endforeach
-
-    </div>
-
-    {{-- ======== FILTRO GENERAL ======== --}}
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-
-            <form method="GET" action="{{ route('captacion.index') }}" class="row g-3">
-                
-                <div class="col-md-4">
-                    <label class="form-label">Buscar por nombre o RIF</label>
-                    <input type="text" name="search" class="form-control" value="{{ request('search') }}">
-                </div>
-
-                <div class="col-md-3">
-                    <label class="form-label">Estatus</label>
-                    <select name="estatus_captacion" class="form-select">
-                        <option value="">Todos</option>
-                        @foreach($cards as $key => $val)
-                            <option value="{{ $key }}" {{ request('estatus_captacion') == $key ? 'selected' : '' }}>
-                                {{ $val['title'] }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="col-md-3">
-                    <label class="form-label">Fecha</label>
-                    <input type="date" name="fecha" class="form-control" value="{{ request('fecha') }}">
-                </div>
-
-                <div class="col-md-2 d-flex align-items-end">
-                    <button class="btn btn-dark w-100">
-                        <i class="ri-filter-2-line"></i> Filtrar
-                    </button>
-                </div>
-
-            </form>
-
+    </tbody>
+        </table>
+        
+        <div class="p-4 border-t border-gray-50">
+            {{ $prospectos->links() }}
         </div>
     </div>
-
-    {{-- ======== TABLA DE CLIENTES ======== --}}
-    <div class="card shadow-sm">
-        <div class="card-body table-responsive">
-
-            <table class="table table-hover align-middle">
-                <thead class="table-dark">
-                    <tr>
-                        <th>#</th>
-                        <th>Nombre / Empresa</th>
-                        <th>RIF</th>
-                        <th>Correo</th>
-                        <th>Teléfono</th>
-                        <th>Tipo</th>
-                        <th>Litros Solicitados</th>
-                        <th>Estatus</th>
-                        <th>Gestion</th>
-                        <th>Atendido por</th>
-                        <th>Fecha</th>
-                        <th class="text-end">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($clientes as $cliente)
-                        <tr>
-                            <td>{{ $cliente->id }}</td>
-                            <td>{{ $cliente->razon_social }}</td>
-                            <td>{{ $cliente->rif }}</td>
-                            <td>{{ $cliente->correo }}</td>
-                            <td>{{ $cliente->telefono }}</td>
-                            <td>{{ $cliente->tipo_cliente }}</td>
-                            <td>{{ $cliente->solicitados }}</td>
-                            
-
-                            <td>
-                                <span class="badge bg-{{ $cards[$cliente->estatus_captacion]['color'] ?? 'secondary' }}">
-                                    {{ $cards[$cliente->estatus_captacion]['title'] ?? $cliente->estatus_captacion }}
-                                </span>
-                                @if($cliente->estatus_captacion == 'revision_pendiente')
-                                    <br>
-                                    <small class="text-muted"><i class="ri-attachment-line"></i> {{ $cliente->documentos->count() }} archivos</small>
-                                @endif
-                            </td>
-
-                            <td>{{ $cliente->gestion }}</td>
-                            <td>{{ $cliente->atendido_por }}</td>
-                            <td>{{ $cliente->created_at->format('d/m/Y') }}</td>
-
-                            <td class="text-end">
-                                <a href="{{ route('captacion.show', $cliente) }}" class="btn btn-sm btn-primary">
-                                    <i class="fa fa-eye"></i>
-                                </a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="8" class="text-center py-4 text-muted">
-                                <i class="fa fa-file-search" style="font-size: 40px;"></i>
-                                <p class="mt-2">No se encontraron registros</p>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-
-            <div class="mt-3">
-                {{ $clientes->links() }}
-            </div>
-
-        </div>
-    </div>
-
 </div>
 @endsection
