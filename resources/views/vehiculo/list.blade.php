@@ -39,8 +39,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
-        <div class="table-responsive">
-            <div class="card mb-3 shadow-sm">
+        <div class="card mb-3 shadow-sm">
                 <div class="card-body p-3">
                     <h6 class="text-muted mb-3"><i class="fa fa-info-circle me-2"></i> Leyenda de Estatus de Vehiculos</h6>
                     <div class="d-flex flex-wrap gap-3">
@@ -91,6 +90,28 @@
                     </div>
                 </div>
             </div>
+        <div class="table-responsive">
+            
+            @php
+                $agrupados = $data->groupBy(function($vehiculo) {
+                    return $vehiculo->tipoVehiculo->tipo ?? 'OTROS';
+                });
+            @endphp 
+
+        <ul class="nav nav-tabs mb-3" id="tipoVehiculoTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-bold" data-filter="all" type="button">
+                    TODOS <span class="badge bg-secondary ms-1">{{ $data->count() }}</span>
+                </button>
+            </li>
+            @foreach($agrupados as $tipo => $vehiculosPorTipo)
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold text-uppercase" data-filter="{{ $tipo }}" type="button">
+                        {{ $tipo }} <span class="badge bg-primary ms-1">{{ $vehiculosPorTipo->count() }}</span>
+                    </button>
+                </li>
+            @endforeach
+        </ul>
             <table id="vehiculosTable" class="table table-hover table-striped">
                 <thead>
                     <tr>
@@ -100,7 +121,7 @@
                         {{-- <th>Clase</th> --}}
                         <th>Marca/Modelo</th>
                         <th>Año</th>
-                        <th>Placa</th>
+                        <th width="10%">Placa</th>
                         <th>Tipo</th>
                         <th>Kilometraje</th>
                         <th>Estatus</th>
@@ -128,7 +149,41 @@
                         {{-- <td>{{ $vehiculo->clase ?? 'N/A' }}</td> --}}
                         <td>{{ $vehiculo->marca()->marca ?? 'N/A' }} / {{ $vehiculo->modelo()->modelo ?? 'N/A' }}</td>
                         <td>{{ $vehiculo->anno }}</td>
-                        <td>{{ $vehiculo->placa }}</td>
+                        <td><div class="d-flex flex-column">
+                        <strong>{{ $vehiculo->placa }}</strong>
+                        
+                        {{-- Lógica de Acople --}}
+                        @php $tipo = strtoupper($vehiculo->tipoVehiculo->tipo ?? ''); @endphp
+
+                        @if($tipo == 'CHUTO')
+                            <div class="mt-1">
+                                @if($vehiculo->acoplado_id && $vehiculo->cisternaAcoplada)
+                                    <span class="badge bg-info text-dark d-inline" style="font-size: 0.6rem;">
+                                        <i class="fa fa-link" style="font-size: 0.5rem;"></i> {{ $vehiculo->cisternaAcoplada->placa }}
+                                    </span>
+                                    <button type="button" class="btn btn-link text-danger p-0 ms-1 d-inline" style="font-size: 0.6rem;"
+                                            onclick="event.stopPropagation(); desacoplar({{ $vehiculo->id }})" 
+                                            title="Desacoplar">
+                                        <i class="fa fa-times-circle" style="font-size: 0.6rem;"></i>
+                                    </button>
+                                @else
+                                    <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" 
+                                            style="font-size: 0.75rem;"
+                                            onclick="event.stopPropagation(); abrirModalAcoplar({{ $vehiculo->id }}, '{{ $vehiculo->placa }}')">
+                                        <i class="fa fa-plus-circle"></i> Cisterna
+                                    </button>
+                                @endif
+                            </div>
+                        @elseif($tipo == 'CISTERNA' || $tipo == 'TANQUE')
+                            @if($vehiculo->chutoAsignado)
+                                <small class="text-muted" style="font-size: 0.7rem;">
+                                    <i class="fa fa-truck"></i>: {{ $vehiculo->chutoAsignado->placa }}
+                                </small>
+                            @else
+                                <small class="text-muted" style="font-size: 0.7rem;">(Disponible)</small>
+                            @endif
+                        @endif
+                    </div></td>
                         <td>{{ $vehiculo->tipoVehiculo->tipo ?? 'N/A' }}</td>
                         <td>{{ number_format($vehiculo->kilometraje ?? 0, 0, ',', '.') }} km</td>
                         <td>
@@ -159,35 +214,71 @@
                                     0
                                 @endif                            
                         </td>
-                        <td>
-                           @php
-                                $documentos = [
-                                    'Póliza'       => ['poliza_fecha_out', null],
-                                    'RCV'          => ['rcv', null],
-                                    'RACDA'        => ['racda', null],
-                                    'ROTC'         => ['rotc_venc', null],
-                                    'SEMCAMMER'    => [null, 'semcamer'], // Solo campo de texto
-                                    'Homologacion INTT' => [null, 'homologacion_intt'], // Solo campo de texto
-                                    'Permiso INTT' => ['permiso_intt',null], // O si tiene campo de texto, ajusta a [null, 'permiso_intt']
-                                ];
-                                $hasAlerts = false; 
+                        <td class="text-center">
+                            @php
+                                $alertas = $vehiculo->getDocumentosAlertas();
                             @endphp
 
-                            @foreach ($documentos as $label => $fields)
-                                @php
-                                    $status = $vehiculo->getDocumentStatus($label, $fields[0], $fields[1]);
-                                    $statusClass = $status['class'] ?? 'bg-secondary';
-                                @endphp
-                                @if ($statusClass === 'bg-danger' || $statusClass === 'bg-warning' || $statusClass === 'bg-secondary')
-                                    <x-document-status-badge :status="$status" label="{{ $label }}" />
-                                    @php $hasAlerts = true; @endphp
-                                @endif
-                            @endforeach
+                            @if($alertas['vencidos']->count() > 0)
+                                <span class="badge rounded-pill bg-danger" 
+                                    style="cursor: help;"
+                                    data-bs-toggle="tooltip" 
+                                    data-bs-html="true" 
+                                    title="<b>VENCIDOS:</b><br>{{ $alertas['vencidos']->implode('<br>') }}">
+                                    {{ $alertas['vencidos']->count() }}
+                                </span>
+                            @endif
+
+                            @if($alertas['por_vencer']->count() > 0)
+                                <span class="badge rounded-pill bg-warning text-dark" 
+                                    style="cursor: help;"
+                                    data-bs-toggle="tooltip" 
+                                    data-bs-html="true" 
+                                    title="<b>POR VENCER:</b><br>{{ $alertas['por_vencer']->implode('<br>') }}">
+                                    {{ $alertas['por_vencer']->count() }}
+                                </span>
+                            @endif
+                            @if($alertas['sin_registrar']->count() > 0)
+                                <span class="badge rounded-pill bg-secondary" 
+                                    style="cursor: help;"
+                                    data-bs-toggle="tooltip" 
+                                    data-bs-html="true" 
+                                    title="<b>SIN REGISTRAR:</b><br>{{ $alertas['sin_registrar']->implode('<br>') }}">
+                                    {{ $alertas['sin_registrar']->count() }}
+                                </span>
+                            @endif
                         </td>
                     </tr>
                     @endforeach
                 </tbody>
             </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalAcoplar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h6 class="modal-title">Acoplar a <span id="placaChutoModal"></span></h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="formAcoplar" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <input type="hidden" name="chuto_id" id="chuto_id_input">
+                    <label class="form-label small">Seleccione Cisterna/Tanque</label>
+                    <select name="acoplado_id" class="form-select form-select-sm" required>
+                        <option value="">-- Seleccionar --</option>
+                        @foreach($data->whereIn('tipoVehiculo.tipo', ['CISTERNA', 'TANQUE'])->whereNull('chutoAsignado') as $cisterna)
+                            <option value="{{ $cisterna->id }}">{{ $cisterna->flota }} - {{ $cisterna->placa }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-sm btn-primary w-100">Confirmar Acople</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -207,7 +298,7 @@
     <script>
         $(document).ready(function() {
             // Inicializar DataTables
-            $('#vehiculosTable').DataTable({
+           const table = $('#vehiculosTable').DataTable({
                 language: {
                     "decimal": "",
                     "emptyTable": "No hay información",
@@ -228,15 +319,33 @@
                         "previous": "Anterior"
                     }
                 },
-                dom: 'Bfrtip',
+                dom: '<"row"<"col-sm-12 col-md-6"B><"col-sm-12 col-md-6"f>>rtip', // Fuerza el grid de Bootstrap
                 layout: {
                     topStart: {
                         buttons: ['csv', 'excel', 'pdf', 'print']
                     }
                 },
+               drawCallback: function() {
+                    // Activa los tooltips cada vez que la tabla cambie (filtro, página, etc)
+                    $('[data-bs-toggle="tooltip"]').tooltip();
+                },
                 "order": [
                     [ 8, 'desc' ] 
                 ]
+            });
+
+            $('#tipoVehiculoTabs button').on('click', function() {
+                $('#tipoVehiculoTabs button').removeClass('active');
+                $(this).addClass('active');
+
+                const filterValue = $(this).data('filter');
+
+                if (filterValue === 'all') {
+                    table.column(5).search('').draw();
+                } else {
+                    // Buscamos el término exacto en la columna 5 (Tipo)
+                    table.column(5).search('^' + filterValue + '$', true, false).draw();
+                }
             });
 
             // Lógica para redirigir al hacer clic en una fila
@@ -247,5 +356,42 @@
                 }
             });
         });
+       function abrirModalAcoplar(id, placa) {
+        // Limpiar el select por si se abrió antes
+        $('#formAcoplar')[0].reset();
+        
+        // Asignar valores a los campos ocultos
+        $('#chuto_id_input').val(id);
+        $('#placaChutoModal').text(placa);
+        
+        // Configurar la acción del formulario dinámicamente
+        $('#formAcoplar').attr('action', "{{ route('vehiculos.acoplar') }}");
+        
+        $('#modalAcoplar').modal('show');
+    }
+
+    $('#modalAcoplar').on('shown.bs.modal', function () {
+        $('.form-select').select2({
+            dropdownParent: $('#modalAcoplar'),
+            placeholder: "Buscar cisterna por placa o flota..."
+        });
+    });
+
+    function desacoplar(id) {
+        Swal.fire({
+            title: '¿Desacoplar unidad?',
+            text: "El chuto y la cisterna figurarán como independientes.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, desacoplar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `/vehiculos/desacoplar/${id}`;
+            }
+        });
+    }
     </script>
 @endpush

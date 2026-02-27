@@ -346,6 +346,9 @@ Route::post('/prepago/store', [MovimientoCombustibleController::class, 'storePre
         Route::get('/inspecciones-dashboard', [InspeccionController::class, 'index'])->name('inspeccion.index');
         Route::get('/inspecciones/{inspeccion_id}', [InspeccionController::class, 'show'])->name('inspeccion.show');
         Route::get('/inspecciones/{inspeccion_id}/pdf', [InspeccionController::class, 'exportPdf'])->name('inspeccion.pdf');
+        Route::get('/reporte/vehiculos-disponibilidad', [VehiculoController::class, 'reporteDisponibilidad'])
+            ->name('vehiculos.reporte.disponibilidad');
+        
         
         // Búsqueda
         Route::get('search/global', [SearchController::class, 'globalSearch'])->name('search.global');
@@ -518,7 +521,10 @@ Route::post('/prepago/store', [MovimientoCombustibleController::class, 'storePre
         // Rutas Adicionales de PDF/Docs
         Route::get('/vehiculos/report/pdf', [VehiculoController::class, 'reportPdf'])->name('vehiculos.report.pdf');
         Route::get('/documentacion/vehiculos/', [VehiculoController::class, 'controlDocumentacion'])->name('vehiculos.documentacion');
-
+        Route::post('vehiculos/acoplar', [VehiculoController::class, 'acoplar'])->name('vehiculos.acoplar');
+        // Ruta para visualizar el reporte dentro del layout
+        // Ruta para el desacople rápido
+        Route::get('/vehiculos/desacoplar/{id}', [VehiculoController::class, 'desacoplar'])->name('vehiculos.desacoplar');
         // API Interna
         Route::get('/clientes/{id}/vehiculos', function($id) {
             return App\Models\Vehiculo::where('id_cliente', $id)->select('id', 'placa', 'alias')->get();

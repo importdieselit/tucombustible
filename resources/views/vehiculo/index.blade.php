@@ -148,9 +148,9 @@
                     <i class="fa fa-list"></i> Planificar Mantenimiento
                 </a>
                  
-                {{-- <a href="#" class="btn btn-outline-info w-100">
-                    <i class="fa fa-file-excel"></i> Exportar Excel
-                </a> --}}
+                <a href="{{ route('vehiculos.reporte.disponibilidad') }}" class="btn btn-outline-info w-100">
+                    <i class="fa fa-file-excel"></i> Reporte Disponibilidad
+                </a>
             </div>
         </div>
     </div>

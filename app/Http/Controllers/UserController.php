@@ -233,8 +233,6 @@ class UserController extends BaseController
         }
 
         $file = $request->file('file');
-        Log::info('Archivo recibido', ['file_name' => $file->getClientOriginalName()]);
-        ;
         try {
             DB::beginTransaction();
 

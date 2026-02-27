@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\PlanillasGeneradas;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use DB;
+use Illuminate\Support\Facades\DB;
 
 class CaptacionController extends Controller
 {
@@ -58,7 +58,7 @@ class CaptacionController extends Controller
 
         $telefonoLimpio = preg_replace('/[^0-9]/', '', $request->telefono);
 
-    Log::info('Iniciando registro de prospecto', $request->all());
+   // Log::info('Iniciando registro de prospecto', $request->all());
 
     try {
         DB::beginTransaction();

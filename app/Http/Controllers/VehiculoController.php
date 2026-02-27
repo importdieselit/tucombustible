@@ -288,7 +288,6 @@ class VehiculoController extends BaseController
             $this->handleFotoUpload($request, $vehiculo);
 
             Session::flash('success', 'Vehiculo creado exitosamente.');
-            Log::info('Vehiculo creado exitosamente.');
         } catch (\Exception $e) {
             Log::info('Error al crear el registro: ' . $e->getMessage());
             Session::flash('error', 'Error al crear el registro: ' . $e->getMessage());
@@ -367,11 +366,66 @@ class VehiculoController extends BaseController
         }
     }
     
+    public function acoplar(Request $request)
+    {
+        $request->validate([
+            'chuto_id' => 'required|exists:vehiculos,id',
+            'acoplado_id' => 'required|exists:vehiculos,id',
+        ]);
 
+        try {
+            $chuto = Vehiculo::findOrFail($request->chuto_id);
+            $chuto->acoplado_id = $request->acoplado_id;
+            $chuto->save();
+
+            return back()->with('success', "Unidades acopladas exitosamente (Placa: {$chuto->placa})");
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al acoplar: ' . $e->getMessage());
+        }
+    }
+
+    public function desacoplar($id)
+    {
+        try {
+            $chuto = Vehiculo::findOrFail($id);
+            $chuto->acoplado_id = null;
+            $chuto->save();
+
+            return back()->with('success', 'Unidad desacoplada correctamente.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al desacoplar: ' . $e->getMessage());
+        }
+    }
      public function importForm()
     {
         return view('vehiculo.import');
     }
+
+    public function reporteDisponibilidad()
+{
+    $today = now();
+    $data = Vehiculo::with(['tipoVehiculo', 'cisternaAcoplada', 'ordenActiva'])->get();
+
+    $total = $data->count();
+    $operativosCount = $data->where('estatus', 1)->count();
+    $fallaCount = $data->where('estatus', '!=', 1)->count();
+    $porcentajeDisponibilidad = $total > 0 ? round(($operativosCount / $total) * 100) : 0;
+
+    // Clasificación para el cuerpo del reporte
+    $chutosOperativos = $data->where('tipoVehiculo.tipo', 'CHUTO')->where('estatus', 1);
+    $chutosFalla = $data->where('tipoVehiculo.tipo', 'CHUTO')->where('estatus', '!=', 1);
+    $cisternasFalla = $data->whereIn('tipoVehiculo.tipo', ['CISTERNA', 'TANQUE'])->where('estatus', '!=', 1);
+    $camionesFalla = $data->where('tipoVehiculo.tipo', 'CAMION')->where('estatus', '!=', 1);
+    $camionetasFalla = $data->whereIn('tipoVehiculo.tipo', ['CAMIONETA', 'PICKUP'])->where('estatus', '!=', 1);
+    $camionetasOperativas = $data->whereIn('tipoVehiculo.tipo', ['CAMIONETA', 'PICKUP'])->where('estatus', 1);
+    $camionesOperativos = $data->where('tipoVehiculo.tipo', 'CAMION')->where('estatus', 1);
+
+    return view('vehiculo.reporte_disponibilidad', compact(
+        'today', 'chutosOperativos', 'chutosFalla', 'cisternasFalla', 
+        'camionesFalla', 'camionetasFalla', 'camionetasOperativas', 
+        'camionesOperativos', 'total', 'operativosCount', 'fallaCount', 'porcentajeDisponibilidad'
+    ));
+}
 
     /**
      * Procesa y guarda los vehículos del archivo cargado.

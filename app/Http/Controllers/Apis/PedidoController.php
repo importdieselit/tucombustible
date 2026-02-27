@@ -14,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 
@@ -51,7 +52,6 @@ class PedidoController extends Controller
                 $sucursales = Cliente::where('parent', $user->cliente_id)->pluck('id')->toArray();
                 $clientesIds = array_merge($clientesIds, $sucursales);
                 
-                \Log::info("Cliente padre {$user->cliente_id} - Incluyendo sucursales: " . implode(', ', $sucursales));
             }
 
             $query = Pedido::with(['deposito', 'cliente'])
@@ -62,15 +62,12 @@ class PedidoController extends Controller
                 $year = $request->input('year');
                 $month = $request->input('month');
                 
-                \Log::info("Filtrando pedidos por mes: $year-$month");
                 
                 $query->whereYear('fecha_solicitud', $year)
                       ->whereMonth('fecha_solicitud', $month);
             }
 
             $pedidos = $query->orderBy('fecha_solicitud', 'desc')->get();
-
-            \Log::info("Pedidos encontrados para cliente(s) " . implode(', ', $clientesIds) . ": " . $pedidos->count());
 
             return response()->json([
                 'success' => true,
@@ -219,12 +216,7 @@ class PedidoController extends Controller
             // Verificar disponible del cliente
             $disponible = $cliente->disponible ?? 0;
             
-            // Debug: Log de valores para verificar
-            \Log::info('Debug Pedido - Cliente ID: ' . $cliente->id);
-            \Log::info('Debug Pedido - Cliente Nombre: ' . $cliente->nombre);
-            \Log::info('Debug Pedido - Disponible: ' . $disponible);
-            \Log::info('Debug Pedido - Cantidad Solicitada: ' . $request->cantidad_solicitada);
-
+                    
             if (!$isAdmin && $request->cantidad_solicitada > $disponible) {
                 return response()->json([
                     'success' => false,
@@ -238,7 +230,7 @@ class PedidoController extends Controller
                     $fechaFormateada = Carbon::parse($request->fecha_requerida)->format('Y-m-d');
                     $observacionesAdmin = trim(($observacionesAdmin ? $observacionesAdmin . ' | ' : '') . "Fecha requerida: {$fechaFormateada}");
                 } catch (\Exception $e) {
-                    \Log::warning('Formato de fecha_requerida inválido: ' . $e->getMessage());
+                    Log::warning('Formato de fecha_requerida inválido: ' . $e->getMessage());
                 }
             }
 
@@ -247,7 +239,7 @@ class PedidoController extends Controller
                 try {
                     $fechaSolicitud = Carbon::parse($request->fecha_requerida)->startOfDay();
                 } catch (\Exception $e) {
-                    \Log::warning('No se pudo aplicar fecha_requerida como fecha_solicitud: ' . $e->getMessage());
+                    Log::warning('No se pudo aplicar fecha_requerida como fecha_solicitud: ' . $e->getMessage());
                 }
             }
 
@@ -265,9 +257,8 @@ class PedidoController extends Controller
             // Enviar notificación FCM al administrador sobre el nuevo pedido
             try {
                 FcmNotificationService::sendNewPedidoNotificationToAdmin($pedido);
-                \Log::info("Notificación FCM enviada al administrador sobre nuevo pedido del cliente {$pedido->cliente_id}");
-            } catch (\Exception $e) {
-                \Log::error("Error enviando notificación FCM al administrador: " . $e->getMessage());
+             } catch (\Exception $e) {
+                Log::error("Error enviando notificación FCM al administrador: " . $e->getMessage());
                 // No fallar la operación principal por error en notificación
             }
 
@@ -280,12 +271,11 @@ class PedidoController extends Controller
                     if ($sucursalUser && $sucursalUser->fcm_token) {
                         // Enviar notificación al usuario de la sucursal
                         FcmNotificationService::sendPedidoNotificationToSucursal($pedido, $sucursalUser);
-                        \Log::info("Notificación FCM enviada al usuario de sucursal {$sucursalUser->id} sobre nuevo pedido del cliente {$pedido->cliente_id}");
-                    } else {
-                        \Log::warning("No se encontró usuario con FCM token para la sucursal {$pedido->cliente_id}");
+                     } else {
+                        Log::warning("No se encontró usuario con FCM token para la sucursal {$pedido->cliente_id}");
                     }
                 } catch (\Exception $e) {
-                    \Log::error("Error enviando notificación FCM a la sucursal: " . $e->getMessage());
+                    Log::error("Error enviando notificación FCM a la sucursal: " . $e->getMessage());
                     // No fallar la operación principal por error en notificación
                 }
             }
@@ -491,9 +481,7 @@ class PedidoController extends Controller
             if ($clientePrincipal->parent == 0) {
                 $sucursales = Cliente::where('parent', $user->cliente_id)->pluck('id')->toArray();
                 $clientesIds = array_merge($clientesIds, $sucursales);
-                
-                \Log::info("Estadísticas - Cliente padre {$user->cliente_id} - Incluyendo sucursales: " . implode(', ', $sucursales));
-            }
+              }
 
             // Base query para los clientes (principal + sucursales si aplica)
             $baseQuery = Pedido::whereIn('cliente_id', $clientesIds);
@@ -503,7 +491,6 @@ class PedidoController extends Controller
                 $year = $request->input('year');
                 $month = $request->input('month');
                 
-                \Log::info("Filtrando estadísticas por mes: $year-$month");
                 
                 $baseQuery->whereYear('fecha_solicitud', $year)
                           ->whereMonth('fecha_solicitud', $month);
@@ -520,8 +507,6 @@ class PedidoController extends Controller
                     ->whereNotNull('calificacion')
                     ->avg('calificacion'),
             ];
-
-            \Log::info("Estadísticas calculadas para cliente(s) " . implode(', ', $clientesIds));
 
             return response()->json([
                 'success' => true,
@@ -747,8 +732,6 @@ class PedidoController extends Controller
             
             $pedido->update($updateData);
 
-            \Log::info("Pedido {$pedido->id} aprobado por admin {$user->id} - Sin descuento de disponible");
-
             // Enviar notificación FCM al cliente
             try {
                 FcmNotificationService::sendPedidoStatusNotification(
@@ -757,9 +740,8 @@ class PedidoController extends Controller
                     'aprobado',
                     $request->observaciones_admin
                 );
-                \Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por aprobación de pedido");
             } catch (\Exception $e) {
-                \Log::error("Error enviando notificación FCM al cliente: " . $e->getMessage());
+                Log::error("Error enviando notificación FCM al cliente: " . $e->getMessage());
                 // No fallar la operación principal por error en notificación
             }
 
@@ -770,9 +752,8 @@ class PedidoController extends Controller
                         $pedido->fresh(['cliente']),
                         $request->chofer_id
                     );
-                    \Log::info("Notificación FCM enviada al conductor {$request->chofer_id} por asignación de pedido #{$pedido->id}");
                 } catch (\Exception $e) {
-                    \Log::error("Error enviando notificación FCM al conductor: " . $e->getMessage());
+                    Log::error("Error enviando notificación FCM al conductor: " . $e->getMessage());
                     // No fallar la operación principal por error en notificación
                 }
             }
@@ -852,8 +833,7 @@ class PedidoController extends Controller
                 'fecha_aprobacion' => now(),
             ]);
 
-            \Log::info("Pedido {$pedido->id} rechazado por admin {$user->id}");
-
+        
             // Enviar notificación FCM al cliente
             try {
                 FcmNotificationService::sendPedidoStatusNotification(
@@ -862,9 +842,8 @@ class PedidoController extends Controller
                     'rechazado',
                     $request->motivo
                 );
-                \Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por rechazo de pedido");
             } catch (\Exception $e) {
-                \Log::error("Error enviando notificación FCM: " . $e->getMessage());
+                Log::error("Error enviando notificación FCM: " . $e->getMessage());
                 // No fallar la operación principal por error en notificación
             }
 
@@ -945,8 +924,7 @@ class PedidoController extends Controller
             
             $pedido->update($updateData);
 
-            \Log::info("Pedido {$pedido->id} actualizado por admin {$user->id}");
-
+    
             // Enviar notificación FCM si cambió el estatus
             if (isset($updateData['estado']) && $updateData['estado'] !== $oldStatus) {
                 try {
@@ -956,9 +934,8 @@ class PedidoController extends Controller
                         $updateData['estado'],
                         $updateData['observaciones_admin'] ?? null
                     );
-                    \Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por cambio de estatus a {$updateData['estado']}");
-                } catch (\Exception $e) {
-                    \Log::error("Error enviando notificación FCM: " . $e->getMessage());
+               } catch (\Exception $e) {
+                    Log::error("Error enviando notificación FCM: " . $e->getMessage());
                     // No fallar la operación principal por error en notificación
                 }
             }

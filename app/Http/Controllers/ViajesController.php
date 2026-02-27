@@ -312,7 +312,6 @@ class ViajesController extends Controller
                         $pedido->fresh(['cliente']),
                         $request->chofer_id
                     );
-                    Log::info("Notificación FCM enviada al conductor {$request->chofer_id} por asignación de pedido #{$pedido->id}");
                 } catch (\Exception $e) {
                     Log::error("Error enviando notificación FCM al conductor: " . $e->getMessage());
                     // No fallar la operación principal por error en notificación

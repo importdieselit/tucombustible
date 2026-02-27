@@ -19,8 +19,6 @@ class DepositoObserver
             $oldNivel = $deposito->getOriginal('nivel_actual_litros');
             $newNivel = $deposito->nivel_actual_litros;
 
-            Log::info("Cambio de nivel en deposito {$deposito->id}: de {$oldNivel}L a {$newNivel}L");
-            
             // Cuando se despacha de un deposito
             // Asume que el cambio de nivel es por un despacho
             // Lógica para el deposito 00:
@@ -45,7 +43,6 @@ class DepositoObserver
                     'estatus' => 0,
                     'accion' => "/depositos/{$deposito->id}"
                  ]);
-                 Log::info("Alerta de bajo nivel creada para deposito {$deposito->id}");
             }
         }
     }
