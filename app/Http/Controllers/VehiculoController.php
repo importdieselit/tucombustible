@@ -106,7 +106,7 @@ class VehiculoController extends BaseController
                 $fallas_values[] = $fallas->firstWhere('mes', $key)->total ?? 0;
                 $cursor->addMonth();
             }
-// 1. Obtener los tipos de vehículos y los estatus que queremos mostrar
+    // 1. Obtener los tipos de vehículos y los estatus que queremos mostrar
     $tipos = TipoVehiculo::all();
     $estatusList = EstatusData::whereIn('id_estatus', [1, 2, 5])->get();
 
