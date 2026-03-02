@@ -64,7 +64,7 @@ class VehiculoController extends BaseController
         $historicoEficiencia = ResumenDiario::where('fecha', '>=', now()->subDays(15))->orderBy('fecha')->get()->toArray();
         $mantenimientos = MantenimientoProgramado::with('vehiculo')
                 ->whereIn('estatus', [1, 2])
-                ->orderBy('fecha', 'asc') // o por km si lo deseas
+                ->orderBy('fecha', 'desc') // o por km si lo deseas
                 ->limit(5)
                 ->get();
 

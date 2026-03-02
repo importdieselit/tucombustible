@@ -161,7 +161,7 @@
     <div class="col-lg-6" style="display: none">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-0">
-                <h5 class="mb-0">Relación Kilometraje / Consumo  (Demo)</h5>
+                <h5 class="mb-0">Relación Kilometraje / Consumo</h5>
             </div>
             <div class="card-body">
                 <canvas id="kmConsumoChart" height="120"></canvas>
@@ -260,7 +260,7 @@
     <div class="col-md-6">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-0">
-                <h5 class="mb-0">Índice de Reportes de Falla  (Demo)</h5>
+                <h5 class="mb-0">Índice de Reportes de Falla</h5>
             </div>
             <div class="card-body">
                 <canvas id="fallasChart" height="80"></canvas>
