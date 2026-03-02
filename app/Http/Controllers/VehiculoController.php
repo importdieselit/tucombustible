@@ -28,6 +28,7 @@ use App\Models\VehiculoFoto;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\Viaje;
+use App\Models\EstatusData;
 
 
 class VehiculoController extends BaseController
@@ -105,6 +106,39 @@ class VehiculoController extends BaseController
                 $fallas_values[] = $fallas->firstWhere('mes', $key)->total ?? 0;
                 $cursor->addMonth();
             }
+// 1. Obtener los tipos de vehículos y los estatus que queremos mostrar
+    $tipos = TipoVehiculo::all();
+    $estatusList = EstatusData::whereIn('id_estatus', [1, 2, 5])->get();
+
+    $series = [];
+    $categorias = $tipos->pluck('tipo')->toArray(); // Nombres de los tipos para el eje X
+
+    foreach ($estatusList as $est) {
+        // Definir colores según tu lógica vieja
+        $color = match($est->id_estatus) {
+            1 => '#28a745', // Disponible
+            2 => '#dc3545', // Fuera de servicio
+            5 => '#555555', // Otro / Desincorporado
+            default => '#cccccc'
+        };
+
+        $dataPorTipo = [];
+        foreach ($tipos as $tipo) {
+            // Contamos los vehículos que coincidan con este estatus Y este tipo
+            $conteo = Vehiculo::where('estatus', $est->id_estatus)
+                        ->where('tipo', $tipo->id)
+                        ->count();
+            $dataPorTipo[] = $conteo;
+        }
+
+        $series[] = [
+            'name'  => $est->auto, // Ajusta según el campo de tu tabla
+            'data'  => $dataPorTipo,
+            'color' => $color,
+            'url'   => route('vehiculos.index', ['estatus' => $est->id_estatus]) 
+        ];
+    }
+
 
 
         $viajesActivos = Viaje::with(['vehiculo', 'cliente'])
@@ -137,9 +171,6 @@ class VehiculoController extends BaseController
 
         $chartDataCierre = array_column($historicoEficiencia, 'disponibilidad');
 
-        
-
-
         return [
             'unidades_con_alerta' => $unidades_con_alerta,
             'total_vehiculos'     => $total_vehiculos,
@@ -159,9 +190,13 @@ class VehiculoController extends BaseController
             'v_tot' => $total_vehiculos,
             'm_tot' => Vehiculo::where('es_flota', true)->whereIn('tipo', [1,3])->count(),
             't_tot' => Vehiculo::where('es_flota', true)->whereIn('tipo', [2,5])->count(),
-            
+            'm_dis' => Vehiculo::where('es_flota', true)->where('id_cliente',$cliente_id)->where('estatus', 1)->whereIn('tipo', [1])->count(),
+            'ch_dis' => Vehiculo::where('es_flota', true)->where('id_cliente',$cliente_id)->where('estatus', 1)->whereIn('tipo', [3])->count(),
+            'c_dis' => Vehiculo::where('es_flota', true)->where('id_cliente',$cliente_id)->where('estatus', 1)->whereIn('tipo', [2,4,5])->count(),
             'v_dis' => $unidades_disponibles,
             'v_fue' => $unidades_con_orden_abierta,
+            'chartCategorias' => $categorias,
+            'chartSeries'     => $series,   
             
             'promsem' => ResumenDiario::where('fecha', '>=', now()->subDays(7))
                             ->orderBy('fecha', 'asc')

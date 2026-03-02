@@ -2,207 +2,162 @@
 @section('title', 'Dashboard de Vehículos')
 
 @section('content')
-<div class="row mb-4">
-    <div class="col-12">
-        <h1 class="mb-2">Dashboard de Vehículos</h1>
-        <p class="text-muted">Monitorea el estado de la flota, consumo, mantenimientos y desempeño operativo.</p>
+<div class="row mb-4 align-items-center">
+    <div class="col">
+        <h1 class="h3 mb-0 text-gray-800">Dashboard de Vehículos</h1>
+        <p class="text-muted small">Estado operativo de la flota en tiempo real.</p>
+    </div>
+    <div class="col-auto">
+            <a class="btn btn-sm btn-primary shadow-sm" href="{{ route('vehiculos.create') }}" >
+                <i class="fa fa-plus fa-sm"></i> Nuevo Vehiculo
+            </a>
+            <a class="btn btn-sm btn-secondary shadow-sm" href="{{ route('vehiculos.list') }}" >
+                <i class="fa fa-list fa-sm"></i> Listado Completo
+            </a>
+            <a class="btn btn-sm btn-info shadow-sm" href="{{ route('vehiculos.reporte.disponibilidad') }}" >
+                <i class="fa fa-file-excel fa-sm"></i> Reporte Disponibilidad
+            </a>
+            <a class="btn btn-sm btn-warning shadow-sm" href="{{ route('mantenimiento.planificacion.index') }}" >
+                <i class="fa fa-wrench fa-sm"></i> Planificar Mantenimiento
+            </a>
     </div>
 </div>
 
-<div class="row g-4 mb-4">
+<div class="row g-3 mb-4">
+    @php
+        $stats = [
+            [
+                'label' => 'Eficiencia Flota',
+                'val' => $eficienciaActual.'%',
+                'sub' => "$unidades_disponibles de $total_flota operativas",
+                'icon' => 'fa-chart-line',
+                'color' => 'success',
+                'details' => [
+                    'Camiones y Chutos' => $m_dis+$ch_dis.' / '.$m_tot ,
+                    'Cisternas' => $c_dis.' / '.$t_tot
+                ], // KPI General
+                'link' => '#'
+            ],
+            [
+                'label' => 'Disponibles',
+                'val' => $unidades_disponibles,
+                'sub' => 'Listos para ruta',
+                'icon' => 'fa-check-circle',
+                'color' => 'success',
+                'details' => [
+                    'Camiones' => $m_dis ?? 0,
+                    'Chutos' => $ch_dis ?? 0,
+                    'Cisternas' => $c_dis ?? 0
+                ],
+                'link' => route('vehiculos.list', ['filter' => 'disponibles'])
+            ],
+            [
+                'label' => 'No Disponibles',
+                'val' => $total_flota - $unidades_disponibles,
+                'sub' => 'Fuera de operación',
+                'icon' => 'fa-ban',
+                'color' => 'danger',
+                'details' => [
+                    'En Ruta' => $unidades_en_servicio,
+                    'Con Falla' => $unidades_con_falla ?? 0,
+                    'En Taller' => $unidades_en_mantenimiento
+                ],
+                'link' => route('vehiculos.list', ['filter' => 'no_disponibles'])
+            ],
+            [
+                'label' => 'Alertas Doc.',
+                'val' => $unidades_con_alerta,
+                'sub' => 'Vencimientos próximos',
+                'icon' => 'fa-triangle-exclamation',
+                'color' => 'warning',
+                'details' => [],
+                'link' => route('vehiculos.list', ['filter' => 'documentos_alerta'])
+            ]
+        ];
+    @endphp
 
-     
-    <!-- KPIs principales -->
-    <div class="col-md-2">
-        <div class="card shadow-sm border-0 text-center">
-            <a href="{{ route('vehiculos.list', ['filter' => 'disponibles']) }}" target="_blank">
-            <div class="card-body">
-                <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#28a74510;">
-                    <i class="fa fa-flag text-success" style="font-size:2rem;"></i>
-                </span>
-                <h2 class="fw-bold text-success">{{ $unidades_disponibles}}</h2>
-                <div class="text-muted small">Disponibles</div>
-            </div>
-            </a>
-        </div>
-    </div>
-    {{-- <div class="col-md-2">
-        <div class="card shadow-sm border-0 text-center">
-            <div class="card-body">
-                <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#ffc10710;">
-                    <i class="fa fa-car text-warning" style="font-size:2rem;"></i>
-                </span>
-                <h2 class="fw-bold text-warning">{{ $unidades_en_servicio }}</h2>
-                <div class="text-muted small">En Ruta/Servicio</div>
-            </div>
-        </div>
-    </div> --}}
-    <div class="col-md-2">
-        <div class="card shadow-sm border-0 text-center">
-            <a href="{{ route('vehiculos.list', ['filter' => 'mantenimiento']) }}" target="_blank">
-            <div class="card-body">
-                <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#007bff10;">
-                    <i class="fa fa-exclamation-triangle text-primary" style="font-size:2rem;"></i>
-                </span>
-                <h2 class="fw-bold text-primary">{{ $unidades_en_mantenimiento}}</h2>
-                <div class="text-muted small">Por Mantenimiento</div>
-            </div>
-            </a>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <div class="card shadow-sm border-0 text-center">
-            <a href="{{ route('vehiculos.list', ['filter' => 'con_orden_abierta']) }}" target="_blank">
-            <div class="card-body">
-                <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#6c757d10;">
-                    <i class="fa fa-exclamation-triangle text-secondary" style="font-size:2rem;"></i>
-                </span>
-                <h2 class="fw-bold text-secondary">{{$unidades_con_orden_abierta}}</h2>
-                <div class="text-muted small">Fuera Servicio</div>
-            </div>
-            </a>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <div class="card shadow-sm border-0 text-center">
-            <a href="{{ route('vehiculos.list', ['filter' => 'documentos_alerta']) }}" target="_blank">
-            <div class="card-body">
-                <span class="rounded-circle p-3 mb-2 d-inline-block" style="background:#d12638e0;">
-                    <i class="fa fa-times text-danger" style="font-size:2rem;"></i>
-                </span>
-                <h2 class="fw-bold text-danger">{{ $unidades_con_alerta }}</h2>
-                <div class="text-muted small">Documentos Vencidos</div>
-            </div>
-            </a>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <div class="card shadow-sm border-0 text-center">
-            <a href="{{ route('vehiculos.list' , ['filter' => 'flota']) }}" target="_blank">
-            <div class="card-body">
-                <span class="rounded-circle p-3 mb-2 d-inline-block bg-dark">
-                    <i class="fa fa-car text-white" style="font-size:2rem;"></i>
-                </span>
-                <h2 class="fw-bold">{{ $total_flota }}</h2>
-                <div class="text-muted small">Total Flota</div>
-                <div class="text-muted small">{{ $unidades_en_servicio }} En Ruta/Servicio</div>
-            </div>
-            </a>
-        </div>
-    </div>
-    <div class="col-md-2">
-        <div class="card shadow-sm border-0 text-center">
-            <a href="{{ route('vehiculos.list') }}" target="_blank">
-            <div class="card-body">
-                <span class="rounded-circle p-3 mb-2 d-inline-block bg-dark">
-                    <i class="fa fa-car text-white" style="font-size:2rem;"></i>
-                </span>
-                <h2 class="fw-bold">{{ $total_vehiculos }}</h2>
-                <div class="text-muted small">Todos los Vehículos</div>
-            </div>
-            </a>
-        </div>
-    </div>
-    
-</div>
-<div class="row">
-    <div class="col-md-3">
-        <div class="card bg-primary text-white">
-            <div class="card-body">
-                <h6 class="text-uppercase">Total Unidades</h6>
-                <h2 class="display-4">{{ $v_tot }}</h2>
-                <div class="progress" style="height: 5px;">
-                    <div class="progress-bar bg-white" style="width: 100%"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-3">
-        <div class="card bg-success text-white">
-            <div class="card-body">
-                <h6 class="text-uppercase">Disponibles</h6>
-                <h2>{{ $v_dis }}</h2>
-                <small>{{ number_format(($v_dis / ($v_tot ?: 1)) * 100, 2) }}% de la flota</small>
-            </div>
-        </div>
-    </div>
-</div>
-<div class="row g-4 mb-4">
-    <!-- Acciones rápidas -->
-    <div class="col-lg-3">
-            <div class="card shadow-sm border-0 text-center">
+   <div class="row g-3 mb-4">
+    @foreach($stats as $s)
+    <div class="col-xl-3 col-md-6">
+        <a href="{{ $s['link'] }}" class="text-decoration-none">
+            <div class="card  border-{{ $s['color'] }} shadow-sm h-100">
                 <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Eficiencia de Flota 
+                    <div class="row align-items-center">
+                        <div class="col-12 text-xs font-weight-bold text-{{ $s['color'] }} text-uppercase mb-1" >
+                                {{ $s['label'] }} <i class="fa {{ $s['icon'] }} text-gray-200"></i>
                             </div>
-                            <div class="h2 mb-0 font-weight-bold text-gray-800">
-                                {{ $eficienciaActual }}%
+                        <div class="col">
+                            
+                            <div class="h4 mb-0 font-weight-bold text-gray-800">{{ $s['val'] }}</div>
+                        </div>
+                         @if(!empty($s['details']))
+                            @php $cont=count($s['details'])>2?6:12; @endphp
+                            <div class="col-8 row p-0">
+                                @foreach($s['details'] as $name => $count)
+                                    
+                                    <div class="col-{{ $cont }} rounded" style="min-width: 30%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                            <span class="text-dark fw-bold">{{ $count }}</span>
+                                            <span class="text-muted" style="font-size: 0.7rem;">{{ $name }}</span>
+                                        </div>
+                                @endforeach
                             </div>
-                            <small class="h5 text-muted">
-                                {{ $unidades_disponibles }} / {{ $total_flota }} Unidades Disponibles
-                            </small>
-                        </div>
-                        <div class="col-auto">
-                            <i class="bi bi-graph-up-arrow fa-2x text-gray-300" style="font-size: 2.5rem; color: #10b981;"></i>
-                        </div>
+                        @endif
+                       
+                    </div>
+                    
+                    <div class="">
+                        <div class="text-muted small">{{ $s['sub'] }}</div>
+                        
+                       
                     </div>
                 </div>
             </div>
-    
+        </a>
+    </div>
+    @endforeach
+
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Acciones rápidas -->
+    <div class="col-lg-4">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-0">
-                <h5 class="mb-0">Acciones rápidas</h5>
+                <h5 class="mb-0">Distribución por Estatus</h5>
             </div>
-            <div class="card-body">
-                 @if(Auth::user()->canAccess('create', 10))
-                <a href="{{ route('vehiculos.create') }}" class="btn btn-primary w-100 mb-2">
-                    <i class="fa fa-plus"></i> Registrar Vehículo
-                </a>
-                @endif
-               
-                <a href="{{ route('vehiculos.list') }}" class="btn btn-outline-secondary w-100 mb-2">
-                    <i class="fa fa-list"></i> Ver Listado
-                </a>
-                <a href="{{ route('mantenimiento.planificacion.index') }}" class="btn btn-outline-secondary w-100 mb-2">
-                    <i class="fa fa-list"></i> Planificar Mantenimiento
-                </a>
-                 
-                <a href="{{ route('vehiculos.reporte.disponibilidad') }}" class="btn btn-outline-info w-100">
-                    <i class="fa fa-file-excel"></i> Reporte Disponibilidad
-                </a>
+            <div style="position: relative; margin: auto; height: 500px; width: 350px;">
+                <canvas id="vehiculosEstatusChart"></canvas>
             </div>
         </div>
     </div>
-    
     <!-- Gráfica de vehículos por estatus -->
 
      
         <!-- Gráfico 1: Histórico de Eficiencia de Flota (NUEVO GRÁFICO DE LÍNEA) -->
-        <div class="col-xl-8 col-lg-7 mb-4">
+        <div class="col-xl-8 col-lg-8 mb-4">
             <div class="card shadow mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold text-primary">Histórico de Eficiencia de Flota (15 Días)</h6>
                 </div>
                 <div class="card-body">
                     <div class="chart-area">
-                        <canvas id="eficienciaHistoricoChart" style="height: 300px; "></canvas>
+                        <canvas id="eficienciaHistoricoChart" style="height: 200px; "></canvas>
                     </div>
                 </div>
             </div>
-        </div>
-    <div class="col-lg-6">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white border-0">
-                <h5 class="mb-0">Distribución por Estatus</h5>
+    <!--  Claficiación por tipo -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title text-uppercase">Distribución de Flota por Tipo</h5>
+                </div>
+                <div class="card-body">
+                    <div id="grafico-grupo" style="width:100%; height:300px;"></div>
+                </div>
             </div>
-            <div class="card-body">
-                <canvas id="vehiculosEstatusChart" height="120"></canvas>
-            </div>
         </div>
-    </div> <!-- Relación Kilometraje vs Consumo -->
+
+
+     <!-- Relación Kilometraje vs Consumo -->
     <div class="col-lg-6" style="display: none">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-0">
@@ -429,14 +384,11 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-
-
-
-
-// =======================================================
+    // =======================================================  
     // GRÁFICO 1: Histórico de Eficiencia (Línea)
     // =======================================================
     var ctxEficiencia = document.getElementById('eficienciaHistoricoChart').getContext('2d');
@@ -459,7 +411,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     backgroundColor: 'rgba(16, 185, 129, 0.1)',
                     fill: true,
                     tension: 0.3,
-                    pointRadius: 4,
+                    pointRadius: 3,
                     pointBackgroundColor: '#10b981',
                 }
             ]
@@ -532,20 +484,48 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
-    // Gráfica de vehículos por estatus
     var ctx = document.getElementById('vehiculosEstatusChart').getContext('2d');
     new Chart(ctx, {
-        type: 'doughnut',
+        type: 'pie',
         data: {
             labels: ['Disponible', 'En servicio', 'En Mantenimiento', 'Fuera Servicio'],
             datasets: [{
-                data: [{{$unidades_disponibles}}, {{$unidades_en_servicio}}, {{$unidades_en_mantenimiento }}, {{ $unidades_con_orden_abierta-$unidades_en_mantenimiento}}],
+                data: [
+                    {{ $unidades_disponibles }}, 
+                    {{ $unidades_en_servicio }}, 
+                    {{ $unidades_en_mantenimiento }}, 
+                    {{ $unidades_con_orden_abierta - $unidades_en_mantenimiento }}
+                ],
                 backgroundColor: ['#28a745', '#ffc107', '#007bff', '#dc3545'],
+                borderWidth: 2,
+                borderColor: '#ffffff'
             }]
         },
         options: {
+            responsive: true,
+            maintainAspectRatio: false, // Permite que respete el tamaño del DIV padre
             plugins: {
-                legend: { display: true, position: 'bottom' }
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        padding: 10,
+                        color: '#333', // Color de fuente oscuro para legibilidad
+                        font: {
+                            size: 16, // Tamaño de letra más grande
+                            family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
+                            weight: 'bold'
+                        }
+                    }
+                },
+                tooltip: {
+                    bodyFont: { size: 18 },
+                    titleFont: { size: 20 }
+                }
+            },
+            // Animación para que no sea tan brusco el cambio de tamaño
+            animation: {
+                duration: 1000
             }
         }
     });
@@ -614,6 +594,54 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     });
+
+    Highcharts.chart('grafico-grupo', {
+        chart: { type: 'column' },
+        title: { text: null },
+        xAxis: {
+            categories: @json($chartCategorias),
+            crosshair: true
+        },
+        yAxis: {
+            min: 0,
+            title: { text: 'Cantidad de Unidades' },
+            stackLabels: {
+                enabled: true,
+                style: { fontWeight: 'bold', color: '#555' }
+            }
+        },
+        legend: {
+            align: 'right',
+            verticalAlign: 'top',
+            y: 25,
+            floating: false,
+            backgroundColor: 'white',
+            shadow: false
+        },
+        tooltip: {
+            headerFormat: '<b>{point.x}</b><br/>',
+            pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
+        },
+        plotOptions: {
+            column: {
+                stacking: 'normal',
+                dataLabels: { enabled: true }
+            },
+            series: {
+                cursor: 'pointer',
+                point: {
+                    events: {
+                        click: function () {
+                            // Redirección dinámica usando la URL enviada desde el controlador
+                            window.location.href = this.series.options.url;
+                        }
+                    }
+                }
+            }
+        },
+        series: @json($chartSeries)
+    });
+
 
     // Simulación de datos de los 10 camiones con mayor consumo
     const topVehiculos = [
