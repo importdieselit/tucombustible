@@ -158,7 +158,7 @@ class VehiculoController extends BaseController
                 // Obtenemos los nombres de los clientes/destinos de forma única
                 $destinos = $v->despachos->map(function($d) {
                     // Prioridad: 1. Relación Cliente, 2. Campo otro_cliente
-                    return $d->cliente->nombre ?? $d->otro_cliente ?? 'Desconocido';
+                    return $d->cliente->alias ?? $d->cliente->nombre ?? $d->otro_cliente ?? 'Desconocido';
                 })->unique()->implode(', ');
 
                     return [
