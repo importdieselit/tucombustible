@@ -331,6 +331,10 @@ Route::post('/prepago/store', [MovimientoCombustibleController::class, 'storePre
     Route::get('clientes/dashboard', [ClienteController::class, 'dashboard'])->name('clientes.dashboard');
     Route::get('combustible/dashboard', [MovimientoCombustibleController::class, 'index'])->name('combustible.dashboard');
 
+Route::get('/reporte/vehiculos-disponibilidad', [VehiculoController::class, 'reporteDisponibilidad'])
+            ->name('vehiculos.reporte.disponibilidad');
+
+
     // --- Middleware de Control de Acceso Paso a Paso ---
     Route::middleware(['access.step'])->group(function () {
 
