@@ -299,8 +299,8 @@
                             <th>Marca</th>
                             <th>Ruta</th>
                             <th>Kilometraje</th>
-                            <th>Consumo (L/100km)</th>
-                            <th>Estatus</th>
+                            <th>Carga Total (Lts)</th>
+                            <th>Cliente Destino</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -312,9 +312,9 @@
                             <td>{{ $v['marca'] }}</td>
                             <td>{{ $v['ruta'] }}</td>
                             <td>{{ $v['km'] }} km</td>
-                            <td>{{ $v['consumo'] }}</td>
+                            <td>{{ $v['carga_total'] }}</td>
                             <td>
-                                <span class="badge bg-warning text-dark">En ruta</span>
+                                {{ $v['cliente_destino'] }}
                             </td>
                         </tr>
                     @empty

@@ -141,7 +141,7 @@ class VehiculoController extends BaseController
 
 
 
-        $viajesActivos = Viaje::with(['vehiculo','despachos'])
+        $viajesActivos = Viaje::with(['vehiculo','despachos','marca','modelo'])
                 ->whereDate('fecha_salida', now()->format('Y-m-d')) // según tus estados reales
                 ->orderBy('fecha_salida', 'desc')
                 ->get()
@@ -152,14 +152,23 @@ class VehiculoController extends BaseController
                     // si el vehículo no tiene dato, evitar error
                     $km = $vehiculo->km ?? 0;
                   //  $consumo = $vehiculo->consumo_promedio ?? null;
+                  // Calculamos la carga total sumando los litros de todos los despachos asociados
+                $cargaTotal = $v->despachos->sum('litros');
+
+                // Obtenemos los nombres de los clientes/destinos de forma única
+                $destinos = $v->despachos->map(function($d) {
+                    // Prioridad: 1. Relación Cliente, 2. Campo otro_cliente
+                    return $d->cliente->nombre ?? $d->otro_cliente ?? 'Desconocido';
+                })->unique()->implode(', ');
 
                     return [
                         'placa'     => $vehiculo->placa ?? 'N/D',
-                        'modelo'    => $vehiculo->modelo ?? 'N/D',
-                        'marca'     => $vehiculo->marca ?? 'N/D',
-                        'ruta'      => 'en test',//$v->despacho->cliente->nombre ?? $v->otro_cliente ?? $v->destino_ciudad ?? 'Sin Destino',
+                        'modelo'    => $vehiculo->modelo->modelo ?? 'N/D',
+                        'marca'     => $vehiculo->marca->marca ?? 'N/D',
+                        'ruta'      => $v->destino_ciudad ?? 'Sin Destino', //$v->despacho->cliente->nombre ?? $v->otro_cliente ??
                         'km'        => number_format($vehiculo->km_mantt, 0, ',', '.'),
-                        'consumo'   => 'N/D',
+                        'carga_total' => number_format($cargaTotal, 2, ',', '.') . ' Lts',
+                        'cliente_destino' => $destinos,
                         'estatus'   => '',//$v->status
                     ];
                 });
