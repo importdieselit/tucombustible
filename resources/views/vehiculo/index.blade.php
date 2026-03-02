@@ -256,23 +256,8 @@
             </div>
         </div>
     </div>
-    <!-- Gasto estimado mensual -->
-    <div class="col-md-4" style="display: none">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white border-0">
-                <h5 class="mb-0">Gasto Estimado Mensual  (Demo)</h5>
-            </div>
-            <div class="card-body">
-                <h2 class="fw-bold text-danger">$12,500</h2>
-                <small class="text-muted">En mantenimientos y reparaciones</small>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row g-4 mb-4">
     <!-- Índice de reportes de falla mensuales -->
-    <div class="col-md-4">
+    <div class="col-md-6">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-0">
                 <h5 class="mb-0">Índice de Reportes de Falla  (Demo)</h5>
@@ -283,8 +268,24 @@
             </div>
         </div>
     </div>
+   
+</div>
+
+<div class="row g-4 mb-4">
+     <div class="col-md-4" style="display: none">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-0">
+                <h5 class="mb-0">Gasto Estimado Mensual  (Demo)</h5>
+            </div>
+            <div class="card-body">
+                <h2 class="fw-bold text-danger">$12,500</h2>
+                <small class="text-muted">En mantenimientos y reparaciones</small>
+            </div>
+        </div>
+    </div>
+    
     <!-- Camiones en ruta o servicio -->
-    <div class="col-md-8">
+    <div class="col-md-12">
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-0">
                 <h5 class="mb-0">Camiones en Ruta/Servicio  (Demo)</h5>
