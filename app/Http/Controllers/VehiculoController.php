@@ -163,7 +163,6 @@ class VehiculoController extends BaseController
                         'estatus'   => '',//$v->status
                     ];
                 });
-    dd($viajesActivos);
         // Preparar datos para Chart.js
         $chartLabels = array_map(function($date) {
             return  Carbon::parse($date)->format('d/M');
