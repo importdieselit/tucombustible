@@ -151,19 +151,19 @@ class VehiculoController extends BaseController
 
                     // si el vehículo no tiene dato, evitar error
                     $km = $vehiculo->km ?? 0;
-                    $consumo = $vehiculo->consumo_promedio ?? null;
+                  //  $consumo = $vehiculo->consumo_promedio ?? null;
 
                     return [
                         'placa'     => $vehiculo->placa ?? 'N/D',
                         'modelo'    => $vehiculo->modelo ?? 'N/D',
                         'marca'     => $vehiculo->marca ?? 'N/D',
-                        'ruta'      => $v->cliente->nombre ?? $v->otro_cliente ?? $v->destino_ciudad ?? 'Sin Destino',
+                        'ruta'      => 'en test',//$v->despacho->cliente->nombre ?? $v->otro_cliente ?? $v->destino_ciudad ?? 'Sin Destino',
                         'km'        => number_format($vehiculo->km_mantt, 0, ',', '.'),
                         'consumo'   => 'N/D',
-                        'estatus'   => $v->status
+                        'estatus'   => '',//$v->status
                     ];
                 });
-
+    dd($viajesActivos);
         // Preparar datos para Chart.js
         $chartLabels = array_map(function($date) {
             return  Carbon::parse($date)->format('d/M');
