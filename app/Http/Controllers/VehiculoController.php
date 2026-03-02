@@ -141,7 +141,7 @@ class VehiculoController extends BaseController
 
 
 
-        $viajesActivos = Viaje::with(['vehiculo', 'cliente'])
+        $viajesActivos = Viaje::with(['vehiculo','despachos'])
                 ->whereDate('fecha_salida', now()->format('Y-m-d')) // según tus estados reales
                 ->orderBy('fecha_salida', 'desc')
                 ->get()
