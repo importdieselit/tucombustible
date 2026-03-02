@@ -65,7 +65,7 @@ class VehiculoController extends BaseController
         $mantenimientos = MantenimientoProgramado::with('vehiculo')
                 ->whereIn('estatus', [1, 2])
                 ->orderBy('fecha', 'desc') // o por km si lo deseas
-                ->limit(5)
+                ->limit(7)
                 ->get();
 
         $eficienciaActual = $total_flota > 0 ? ($unidades_disponibles / $total_flota) * 100 : 0; 
