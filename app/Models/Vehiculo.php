@@ -302,6 +302,11 @@ class Vehiculo extends Model
         return $this->belongsTo(Modelo::class, 'modelo', 'id')->first(); // Ajusta 'App\Modelo::class' al nombre de tu modelo de Modelo
     }
 
+    public function isModelo()
+    {
+        return $this->belongsTo(Modelo::class, 'modelo', 'id'); // Ajusta 'App\Modelo::class' al nombre de tu modelo de Modelo
+    }
+
     public function tipoVehiculo()
     {
         return $this->belongsTo(TipoVehiculo::class, 'tipo', 'id'); // Ajusta 'App\TipoVehiculo::class' al nombre de tu modelo de TipoVehiculo

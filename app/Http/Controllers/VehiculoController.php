@@ -163,8 +163,8 @@ class VehiculoController extends BaseController
 
                     return [
                         'placa'     => $vehiculo->placa ?? 'N/D',
-                        'modelo'    => $vehiculo->modelo->modelo ?? 'N/D',
-                        'marca'     => $vehiculo->marca->marca ?? 'N/D',
+                        'modelo'    => $vehiculo->modelo()->modelo ?? 'N/D',
+                        'marca'     => $vehiculo->marca()->marca ?? 'N/D',
                         'ruta'      => $v->destino_ciudad ?? 'Sin Destino', //$v->despacho->cliente->nombre ?? $v->otro_cliente ??
                         'km'        => number_format($vehiculo->km_mantt, 0, ',', '.'),
                         'carga_total' => number_format($cargaTotal, 2, ',', '.') . ' Lts',
