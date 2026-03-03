@@ -216,51 +216,51 @@
                         @endphp
 
                         <li class="list-group-item">
-                            <div class="d-flex align-items-center justify-content-between flex-wrap">
-                                <div class="d-flex align-items-center me-auto">
-                                    <i class="fa-solid fa-wrench text-warning me-2"></i>
-                                    <strong class="me-3">{{ $item->vehiculo->placa ?? 'Sin placa' }}</strong>
-                                </div>
-
-                                <div class="d-flex align-items-center gap-3">
-                                    <small class="text-muted d-flex align-items-center">
-                                        <i class="fa-solid fa-calendar me-1"></i>
-                                        {{ $item->fecha->format('d/m/Y') }}
-                                    </small>
-
-                                    @if($item->km)
-                                        <small class="text-muted d-flex align-items-center">
-                                            <i class="fa-solid fa-gauge-high me-1"></i>
-                                            {{ number_format($item->km) }} km
-                                        </small>
-                                    @endif
-                                </div>
+                        <div class="d-flex align-items-center justify-content-between flex-wrap">
+                            <div class="d-flex align-items-center me-auto">
+                                <i class="fa-solid fa-wrench text-warning me-2"></i>
+                                <strong class="me-3">{{ $item->vehiculo->placa ?? 'Sin placa' }}</strong>
                             </div>
 
-                            <div class="mt-1 d-flex justify-content-between align-items-center">
-                                <small class="text-secondary italic">
-                                    {{ $item->descripcion }}
+                            <div class="d-flex align-items-center gap-3">
+                                <small class="text-muted d-flex align-items-center">
+                                    <i class="fa-solid fa-calendar me-1"></i>
+                                    {{ $item->fecha->format('d/m/Y') }}
                                 </small>
-                                
-                                <div>
-                                    @if($hecho == 0)
-                                        <span class="badge bg-danger">Atrasado</span>
-                                    @else
-                                        @switch($item->estatus)
-                                            @case('1')
-                                                <span class="badge bg-warning text-dark">Pendiente</span>
-                                                @break
-                                            @case('2')
-                                                <span class="badge bg-primary">Programado</span>
-                                                @break
-                                            @case('3')
-                                                <span class="badge bg-success">Realizado</span>
-                                                @break
-                                        @endswitch
-                                    @endif
-                                </div>
+
+                                @if($item->km)
+                                    <small class="text-muted d-flex align-items-center">
+                                        <i class="fa-solid fa-gauge-high me-1"></i>
+                                        {{ number_format($item->km) }} km
+                                    </small>
+                                @endif
                             </div>
-                        </li>
+                        </div>
+
+                        <div class="mt-1 d-flex justify-content-between align-items-center">
+                            <small class="text-secondary italic">
+                                {{ $item->descripcion }}
+                            </small>
+                            
+                            <div>
+                                @if($hecho == 0)
+                                    <span class="badge bg-danger">Atrasado</span>
+                                @else
+                                    @switch($item->estatus)
+                                        @case('1')
+                                            <span class="badge bg-warning text-dark">Pendiente</span>
+                                            @break
+                                        @case('2')
+                                            <span class="badge bg-primary">Programado</span>
+                                            @break
+                                        @case('3')
+                                            <span class="badge bg-success">Realizado</span>
+                                            @break
+                                    @endswitch
+                                @endif
+                            </div>
+                        </div>
+                    </li>
                     @endforeach
                 </ul>
             @endif
