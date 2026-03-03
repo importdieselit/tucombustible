@@ -352,7 +352,8 @@
             $('#vehiculosTable tbody').on('click', 'tr', function() {
                 var id = $(this).data('id');
                 if (id) {
-                    window.location.href = '/vehiculos/show/' + id;
+                    let url = "{{ route('vehiculos.show', ':id') }}";
+                    window.location.href = url.replace(':id', id);
                 }
             });
         });
