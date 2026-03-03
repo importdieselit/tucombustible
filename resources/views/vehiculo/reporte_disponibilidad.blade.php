@@ -8,6 +8,10 @@
             <h2 class="fw-bold text-navy">Dashboard Operativo</h2>
             <p class="text-muted">Estado de flota en tiempo real</p>
         </div>
+
+        <button id="sendTelegramButton" class="btn btn-info shadow-sm">
+            <i class="fa fa-telegram me-2"></i> Enviar a Telegram
+        </button>
         <button onclick="window.print()" class="btn btn-primary shadow-sm px-4">
             <i class="bi bi-printer-fill me-2"></i>Exportar Reporte
         </button>
@@ -154,9 +158,7 @@
             <p class="mb-0 small fw-bold text-muted text-uppercase">Este documento es una declaración oficial de disponibilidad de flota.</p>
         </div>
     </div>
-    <button id="sendTelegramButton" class="btn btn-info shadow-sm">
-                    <i class="fa fa-telegram me-2"></i> Enviar a Telegram
-                </button>
+    
 </div>
 
 <style>

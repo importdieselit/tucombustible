@@ -11,6 +11,8 @@ use App\Models\Orden;
 use App\Models\ResumenDiario;
 use App\Models\Cliente;
 use App\Models\MantenimientoProgramado;
+use App\Models\InventarioSuministro;
+use App\Models\DespachoViaje;
 use Illuminate\Http\Request;
 use App\Http\Requests\VehiculoStoreRequest;
 use Maatwebsite\Excel\Facades\Excel;
@@ -48,6 +50,114 @@ class VehiculoController extends BaseController
             return $this->list($query); 
         }
 
+    protected function getDetailsForView($item)
+    {
+        
+
+        $orden=false;
+        $insumos_usados=false;
+
+     // NOTA: En una aplicación real, estos datos vendrían de la base de datos.
+            $rutas = collect([
+                ['fecha' => '2024-05-15', 'origen' => 'Caracas', 'destino' => 'Valencia', 'km' => 170, 'conductor' => 'Pedro Pérez'],
+                ['fecha' => '2024-05-12', 'origen' => 'Valencia', 'destino' => 'Maracay', 'km' => 60, 'conductor' => 'Ana López'],
+                ['fecha' => '2024-05-10', 'origen' => 'Maracay', 'destino' => 'Caracas', 'km' => 120, 'conductor' => 'Juan Rivas'],
+                ['fecha' => '2024-05-08', 'origen' => 'Caracas', 'destino' => 'La Guaira', 'km' => 40, 'conductor' => 'Pedro Pérez'],
+                ['fecha' => '2024-05-05', 'origen' => 'La Guaira', 'destino' => 'Caracas', 'km' => 45, 'conductor' => 'Ana López'],
+            ]);
+
+            $historialMensual = collect([
+                ['mes' => 'Mayo 2024', 'km' => 1500, 'consumo' => 120.5],
+                ['mes' => 'Abril 2024', 'km' => 1800, 'consumo' => 145.7],
+                ['mes' => 'Marzo 2024', 'km' => 2100, 'consumo' => 170.3],
+                ['mes' => 'Febrero 2024', 'km' => 1950, 'consumo' => 155.0],
+                ['mes' => 'Enero 2024', 'km' => 1750, 'consumo' => 135.2],
+            ]);
+
+            // Cálculo de indicadores económicos (con datos simulados)
+            $precioLitroCombustible = 0.5; // Precio ficticio por litro en USD
+            $consumoTotalLitros = $historialMensual->sum('consumo');
+            $gastoCombustible = $consumoTotalLitros * $precioLitroCombustible;
+            $kmTotales = $historialMensual->sum('km');
+            $costoPorKm = $kmTotales > 0 ? $gastoCombustible / $kmTotales : 0;
+   
+            // 1. Foto Principal
+            $foto = VehiculoFoto::where('vehiculo_id', $item->id)
+                ->where('es_principal', true)
+                ->first();
+
+            // 2. Historial de Viajes y Despachos (Optimizado con relaciones)
+            $viajes = DespachoViaje::query()
+                ->join('viajes', 'despachos_viajes.viaje_id', '=', 'viajes.id')
+                ->with([
+                    'viaje.chofer.persona', 
+                    'viaje.ayudante_chofer.persona',
+                    'cliente'
+                ])
+                ->where('viajes.vehiculo_id', $item->id)
+                ->orderBy('viajes.fecha_salida', 'desc')
+                ->select('despachos_viajes.*') 
+                ->get()
+                ->map(function ($v) {
+                    return [
+                        'id'       => $v->id,
+                        'fecha'    => $v->viaje->fecha_salida ? $v->viaje->fecha_salida->format('d/m/Y H:i') : 'N/D',
+                        'destino'  => $v->viaje->destino_ciudad ?? 'Sin datos',
+                        'chofer'   => $v->viaje->chofer->persona->nombre ?? 'N/D',
+                        'ayudante' => $v->viaje->ayudante_chofer->persona->nombre ?? 'N/D',        
+                        'cliente'  => $v->cliente->nombre ?? $v->otro_cliente ?? 'N/D',
+                        'litros'   => number_format($v->litros, 2, ',', '.')
+                    ];
+                });
+
+            // 3. Lógica de Orden Abierta (Si está en Taller o Fuera de Servicio)
+            if (in_array($item->estatus, [2, 3, 5])) { // Estatus que implican taller o revisión
+                $ordenD = Orden::where('id_vehiculo', $item->id)
+                    ->where('estatus', 2) // Asumiendo 2 como 'En Proceso/Abierta'
+                    ->first();
+
+                if ($ordenD) {
+                    $orden = [
+                        'id'             => $ordenD->id,
+                        'fecha_ingreso'  => $ordenD->fecha_in,
+                        'dias_parada'    => Carbon::parse($ordenD->fecha_in)->diffInDays(now()),
+                        'insumos'        => InventarioSuministro::with('inventario')
+                                            ->where('id_orden', $ordenD->id)->get()
+                    ];
+                }
+            }
+            
+            $estatus = EstatusData::where('id_estatus', $item->estatus)->first();
+            $tipo = TipoVehiculo::where('id', $item->tipo)->first()->tipo ?? 'N/D';
+            $esChuto = $item->tipo == 3; // Asumiendo tipo 3 es Chuto
+            $esCisterna = in_array($item->tipo, [2, 5]); // Asumiendo tipo 2 y 5 son Cisterna/Tanque
+            $acoples = [];
+            if($esCisterna){
+                $acoples = Vehiculo::where('es_flota', true)->whereIn('tipo', [3])->whereNull('acoplado_id')->get();
+            
+            }
+            if($esChuto){
+                $acoples = Vehiculo::where('es_flota', true)->whereIn('tipo', [2,5])->whereNull('acoplado_id')->get();
+            
+            }
+        return [
+            'foto'   => $foto,
+            'viajes' => $viajes,
+            'orden'  => $orden,
+            'indicadores' => [
+                'gasto_combustible' => number_format($gastoCombustible, 2, ',', '.'),
+                'costo_por_km' => number_format($costoPorKm, 4, ',', '.'),
+            ],
+            'historialMensual' => $historialMensual,
+            'rutas' => $rutas,
+            'estatus' => $estatus,
+            'esChuto' => $esChuto,
+            'esCisterna' => $esCisterna,
+            'tipo' => $tipo,
+            'acoples' => $acoples
+
+        ];
+    }
 
     protected function getAdditionalData()
     {
@@ -216,6 +326,8 @@ class VehiculoController extends BaseController
         ];
       
     }
+
+    
 
 
     public function controlDocumentacion(Request $request)

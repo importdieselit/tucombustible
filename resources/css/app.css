@@ -93,3 +93,39 @@ footer.footer {
     background: #4e73df;
     border-radius: 4px;
 }
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+            color: #495057;
+        }
+        .info-label {
+            font-weight: 500;
+            color: #6c757d;
+        }
+        .info-value {
+            font-weight: 400;
+            color: #343a40;
+        }
+        .indicator-card {
+            background-color: #e9f5ff;
+            border: 1px solid #cce5ff;
+        }
+        .indicator-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #f2A435;
+        }
+        .indicator-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #f2A435;
+        }
+        .text-success {
+            color: #f16201 !important;
+        }
+        .text-info {
+            color: #f2A435 !important;
+        }
+
+     

@@ -32,7 +32,7 @@
         background: white;
         padding: 10px 15px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        z-index: 1000;
+        z-index: 10;
     }
 }
 
@@ -157,7 +157,7 @@
 
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
 
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js"></script>
@@ -166,6 +166,12 @@
     <script src="{{ asset('js/app.js') }}"></script>
     <script src="{{ asset('js/alerts.js') }}" defer></script>
     <script src="{{ asset('js/jquery.PrintArea.js') }}"></script>
+    <!-- Popper.js para dropdowns y tooltips de Bootstrap -->
+
+{{-- Scripts para Highcharts --}}
+<script src="{{ asset('js/highcharts.js') }}"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
     
     <!-- Script de DataTables -->
     <script src="https://cdn.datatables.net/2.0.7/js/dataTables.js"></script>
@@ -180,18 +186,56 @@
     @stack('scripts')
     <script>
 
-        
-    // Activar automáticamente todos los toasts
-    document.addEventListener('DOMContentLoaded', function () {
-        const toastElList = [].slice.call(document.querySelectorAll('.toast'))
-        toastElList.map(function (toastEl) {
-            new bootstrap.Toast(toastEl, { delay: 4500 }).show()
-        })
-    });
+    /**
+     * Motor de Inicialización Universal Impordiesel
+     * Este script asegura que los componentes de Bootstrap funcionen 
+     * independientemente de otras librerías o errores externos.
+     */
+    const BootstrapManager = (function() {
+        const init = () => {
+            // 1. Verificar si Bootstrap está cargado
+            const bs = window.bootstrap || (typeof bootstrap !== 'undefined' ? bootstrap : null);
+            
+            if (!bs) {
+                console.error("Bootstrap JS no detectado. Verifique la carga de la librería.");
+                return;
+            }
+
+            // 2. Inicializar todos los Dropdowns de forma masiva
+            // Usamos un selector genérico para no ensuciar las vistas
+            const dropdownElementList = [].slice.call(document.querySelectorAll('[data-bs-toggle="dropdown"]'));
+            dropdownElementList.map(function (el) {
+                // Evitamos duplicar la instancia si ya existe
+                if (!bs.Dropdown.getInstance(el)) {
+                    new bs.Dropdown(el, {
+                        boundary: 'viewport',
+                        display: 'dynamic'
+                    });
+                }
+            });
+        };
+
+        return {
+            boot: function() {
+                // Ejecutar al cargar el DOM
+                document.addEventListener('DOMContentLoaded', init);
+                // Ejecutar después de cualquier cambio en el DOM (Útil para AJAX)
+                const observer = new MutationObserver(init);
+                observer.observe(document.body, { childList: true, subtree: true });
+            }
+        };
+    })();
+
+    BootstrapManager.boot();
 
     
 
         document.addEventListener("DOMContentLoaded", function () {
+
+            const toastElList = [].slice.call(document.querySelectorAll('.toast'))
+        toastElList.map(function (toastEl) {
+            new bootstrap.Toast(toastEl, { delay: 4500 }).show()
+        })
             
                 // Toggle Sidebar
                 $('#sidebarCollapse').on('click', function() {

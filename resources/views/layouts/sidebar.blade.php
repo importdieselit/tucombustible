@@ -37,7 +37,7 @@
     left: 0;
     width: 250px;
     padding-top: 1rem;
-    z-index: 1030;
+    z-index: 10;
     overflow-y: auto;
 }
 

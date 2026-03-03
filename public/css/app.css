@@ -3379,7 +3379,7 @@ textarea.form-control-lg {
 }
 
 .dropdown-menu {
-  --bs-dropdown-zindex: 1000;
+  --bs-dropdown-zindex: 100;
   --bs-dropdown-min-width: 10rem;
   --bs-dropdown-padding-x: 0;
   --bs-dropdown-padding-y: 0.5rem;
@@ -5435,7 +5435,7 @@ textarea.form-control-lg {
   --bs-modal-color: var(--bs-body-color);
   --bs-modal-bg: var(--bs-body-bg);
   --bs-modal-border-color: var(--bs-border-color-translucent);
-  --bs-modal-border-width: var(--bs-border-width);
+  --bs-modal-border-width: solid;
   --bs-modal-border-radius: var(--bs-border-radius-lg);
   --bs-modal-box-shadow: var(--bs-box-shadow-sm);
   --bs-modal-inner-border-radius: calc(var(--bs-border-radius-lg) - (var(--bs-border-width)));
@@ -5450,7 +5450,7 @@ textarea.form-control-lg {
   --bs-modal-footer-border-color: var(--bs-border-color);
   --bs-modal-footer-border-width: var(--bs-border-width);
   position: fixed;
-  top: 0;
+  top: 20%;
   left: 0;
   z-index: var(--bs-modal-zindex);
   display: none;
@@ -5509,7 +5509,7 @@ textarea.form-control-lg {
   pointer-events: auto;
   background-color: var(--bs-modal-bg);
   background-clip: padding-box;
-  border: var(--bs-modal-border-width) solid var(--bs-modal-border-color);
+  border: solid;
   border-radius: var(--bs-modal-border-radius);
   outline: 0;
 }
@@ -5517,7 +5517,7 @@ textarea.form-control-lg {
 .modal-backdrop {
   --bs-backdrop-zindex: 0;
   --bs-backdrop-bg: #000;
-  --bs-backdrop-opacity: 0.5;
+  --bs-backdrop-opacity: 0.0;
   position: fixed;
   top: 0;
   left: 0;
@@ -6711,7 +6711,7 @@ textarea.form-control-lg {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 1040;
+  z-index: 10;
   width: 100vw;
   height: 100vh;
   background-color: #000;
@@ -6990,7 +6990,7 @@ textarea.form-control-lg {
   top: 0;
   right: 0;
   left: 0;
-  z-index: 1030;
+  z-index: 10;
 }
 
 .fixed-bottom {
@@ -6998,79 +6998,79 @@ textarea.form-control-lg {
   right: 0;
   bottom: 0;
   left: 0;
-  z-index: 1030;
+  z-index: 10;
 }
 
 .sticky-top {
   position: sticky;
   top: 0;
-  z-index: 1020;
+  z-index: 20;
 }
 
 .sticky-bottom {
   position: sticky;
   bottom: 0;
-  z-index: 1020;
+  z-index: 10;
 }
 
 @media (min-width: 576px) {
   .sticky-sm-top {
     position: sticky;
     top: 0;
-    z-index: 1020;
+    z-index: 20;
   }
   .sticky-sm-bottom {
     position: sticky;
     bottom: 0;
-    z-index: 1020;
+    z-index: 20;
   }
 }
 @media (min-width: 768px) {
   .sticky-md-top {
     position: sticky;
     top: 0;
-    z-index: 1020;
+    z-index: 20;
   }
   .sticky-md-bottom {
     position: sticky;
     bottom: 0;
-    z-index: 1020;
+    z-index: 20;
   }
 }
 @media (min-width: 992px) {
   .sticky-lg-top {
     position: sticky;
     top: 0;
-    z-index: 1020;
+    z-index: 20;
   }
   .sticky-lg-bottom {
     position: sticky;
     bottom: 0;
-    z-index: 1020;
+    z-index: 20;
   }
 }
 @media (min-width: 1200px) {
   .sticky-xl-top {
     position: sticky;
     top: 0;
-    z-index: 1020;
+    z-index: 20;
   }
   .sticky-xl-bottom {
     position: sticky;
     bottom: 0;
-    z-index: 1020;
+    z-index: 20;
   }
 }
 @media (min-width: 1400px) {
   .sticky-xxl-top {
     position: sticky;
     top: 0;
-    z-index: 1020;
+    z-index: 20;
   }
   .sticky-xxl-bottom {
     position: sticky;
     bottom: 0;
-    z-index: 1020;
+    z-index: 20;
   }
 }
 .hstack {
@@ -11975,3 +11975,33 @@ textarea.form-control-lg {
     display: none !important;
   }
 }
+
+   :root {
+        --corpo-base: #f2A435;
+        --corpo-dark: #f16201;
+        --corpo-light: #FCD124;
+        --corpo-bg: #4C474F;
+    }
+    .bg-corporate { background-color: var(--corpo-bg) !important; color: white; }
+    .btn-corporate { background-color: var(--corpo-base); color: white; border: none; }
+    .btn-corporate:hover { background-color: var(--corpo-dark); color: white; }
+    .btn-outline-corporate { border: 2px solid var(--corpo-base); color: var(--corpo-base); font-weight: bold; }
+    .btn-outline-corporate:hover { background-color: var(--corpo-base); color: white; }
+    .border-corporate { border-left: 4px solid var(--corpo-base) !important; }
+    .text-corporate { color: var(--corpo-base) !important; }
+    .text-corporate-emphasis { color: var(--corpo-bg) !important;} 
+    .text-corporate-emphasis.active, 
+    .text-corporate-emphasis:active { 
+        color: var(--corpo-dark) !important; 
+        font-weight: bold; 
+    }
+    .text-corporate-emphasis:hover { 
+        color: var(--corpo-base) !important; 
+        font-weight: bold; 
+    }
+
+    /* Fondo corporativo oscuro (el de los headers del sistema viejo) */
+    .bg-corporate-dark {
+        background-color: var(--corpo-bg) !important;
+        color: var(--corpo-light) !important;
+    }
