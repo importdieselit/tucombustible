@@ -129,12 +129,12 @@
                                 <tr><td class="text-muted">Serial Chasis:</td><td>{{ $item->serial_carroceria }}</td></tr>
                                 <tr><td class="text-muted">Carga Máxima:</td><td>{{ number_format($item->carga_max) }} kg</td></tr>
                                 <tr><td class="text-muted">Tipo de Combustible:</td><td>{{ $item->tipo_combustible }}</td></tr>
-                                <tr><td class="text-muted">Consumo Promedio:</td><td>{{ number_format($item->consumo_promedio, 2) }} L/100km</td></tr>
+                                <tr><td class="text-muted">Capacidad Tanque<td>{{ number_format($item->consumo, 2) }} Ltrs</td></tr>
                                 <tr><td class="text-muted">Kilometraje Recorrido:</td><td>{{ number_format($item->km_mantt) }} km</td></tr>
                                 <tr><td class="text-muted">Proximo Mantenimiento:</td><td class="font-weight-bold text-{{ 5000-$item->km_mantt < 50 ? 'danger' : (5000-$item->km_mantt< 200 ? 'warning' : 'success') }} "><strong>{{ number_format(5000-$item->km_mantt) }} km</strong></td></tr>
                                 <tr><td class="text-muted">Horas de Trabajo:</td><td>{{ number_format($item->hrs_mantt) }} hrs</td></tr>
                                 <tr><td class="text-muted">Próximo Mantenimiento:</td><td class="font-weight-bold text-{{ 200-$item->hrs_mantt <= 15 ? 'danger' : (200-$item->hrs_mantt<= 36 ? 'warning' : 'success') }} "><strong>{{ number_format(200-$item->hrs_mantt) }} hrs</strong></td></tr>
-                            
+                                <tr><td class="text-muted">Afecta Disponibilidad:</td><td>{{ $item->es_flota ? 'Sí' : 'No' }}</td></tr>
                             </table>
                         </div>
                     </div>

@@ -545,6 +545,11 @@ class Vehiculo extends Model
     {
         return $this->hasOne(Vehiculo::class, 'acoplado_id');
     }
+    
+    public function choferes()
+    {        
+        return $this->belongsToMany(Chofer::class, 'vehiculo_chofer', 'vehiculo_id', 'chofer_id')->withTimestamps();
+    }
 
     
 }
