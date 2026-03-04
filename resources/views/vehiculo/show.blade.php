@@ -161,7 +161,7 @@
                             <tbody>
                                 @forelse ($mantenimientos as $m)
                                     <tr>
-                                        <td><a href="{{ route('ot.show', $m->id) }}" class="text-decoration-none">#{{ $m->nro_orden }}</a></td>
+                                        <td><a href="{{ route('ordenes.show', $m->id) }}" class="text-decoration-none">#{{ $m->nro_orden }}</a></td>
                                         <td>{{ $m->fecha_in }}</td>
                                         <td>{{ $m->tipo }} - {{ $m->descripcion }}</td>
                                         <td>{{ $m->responsable }}</td>
