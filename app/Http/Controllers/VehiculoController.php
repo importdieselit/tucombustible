@@ -127,7 +127,7 @@ class VehiculoController extends BaseController
                 }
             }
 
-            $mantenimientos = Orden::where('id_vehiculo', $item->id)->with('estatusData')
+            $mantenimientos = Orden::where('id_vehiculo', $item->id)
                     //->where('tipo', 'mantenimiento')
                     ->orderBy('created_at', 'desc')
                     //->limit(5)
@@ -160,8 +160,8 @@ class VehiculoController extends BaseController
             'esChuto' => $esChuto,
             'esCisterna' => $esCisterna,
             'tipo' => $tipo,
-            'acoples' => $acoples
-
+            'acoples' => $acoples,
+             'mantenimientos' => $mantenimientos
         ];
     }
 
