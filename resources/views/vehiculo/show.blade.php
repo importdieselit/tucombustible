@@ -151,14 +151,26 @@
                         <table class="table table-hover">
                             <thead>
                                 <tr>
+                                    <th>Nro Orden</th>
                                     <th>Fecha</th>
                                     <th>Descripción</th>
-                                    <th>Costo</th>
+                                    <th>Responsable</th>
                                     <th>Estatus</th>
                                 </tr>
                             </thead>
                             <tbody>
+                                @forelse ($mantenimientos as $m)
+                                    <tr>
+                                        <td><a href="{{ route('ot.show', $m->id) }}" class="text-decoration-none">#{{ $m->nro_orden }}</a></td>
+                                        <td>{{ $m->fecha_in }}</td>
+                                        <td>{{ $m->tipo }} - {{ $m->descripcion }}</td>
+                                        <td>{{ $m->responsable }}</td>
+                                        <td><span class="badge bg-{{ $m->estatusData ? $m->estatusData->css : 'secondary' }}">{{ $m->estatusData ? $m->estatusData->orden : 'Sin Estatus' }}</span></td>
+                                    </tr>
+                                @empty
                                 <tr class="text-center"><td colspan="4">No hay mantenimientos registrados</td></tr>
+                                    
+                                @endforelse
                             </tbody>
                         </table>
                     </div>

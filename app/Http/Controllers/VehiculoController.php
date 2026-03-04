@@ -126,6 +126,12 @@ class VehiculoController extends BaseController
                     ];
                 }
             }
+
+            $mantenimientos = Orden::where('id_vehiculo', $item->id)->with('estatusData')
+                    //->where('tipo', 'mantenimiento')
+                    ->orderBy('created_at', 'desc')
+                    //->limit(5)
+                    ->get();
             
             $estatus = EstatusData::where('id_estatus', $item->estatus)->first();
             $tipo = TipoVehiculo::where('id', $item->tipo)->first()->tipo ?? 'N/D';
