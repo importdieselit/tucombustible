@@ -279,10 +279,10 @@
             </div>
         </div>
     
-    <!-- Camiones en ruta o servicio -->
+    <!-- Camiones en ruta o srvicio -->
         <div class="card shadow-sm border-0">
             <div class="card-header bg-white border-0">
-                <h5 class="mb-0">Camiones en Ruta/Servicio  (Demo)</h5>
+                <h5 class="mb-0">Camiones en Ruta/Servicio</h5>
             </div>
             <div class="card-body p-0">
                 <table class="table table-hover mb-0">
@@ -298,7 +298,6 @@
                         </tr>
                     </thead>
                     <tbody>
-                        
                        @forelse($viajesActivos as $v)
                         <tr>
                             <td>{{ $v['placa'] }}</td>
