@@ -165,7 +165,7 @@
                                         <td>{{ $m->fecha_in }}</td>
                                         <td>{{ $m->tipo }} - {{ $m->descripcion }}</td>
                                         <td>{{ $m->responsable }}</td>
-                                        <td><span class="badge bg-{{ $m->estatusData ? $m->estatusData->css : 'secondary' }}">{{ $m->estatusData ? $m->estatusData->orden : 'Sin Estatus' }}</span></td>
+                                        <td><span class="badge bg-{{ $m->estatus() ? $m->estatus()->css : 'secondary' }}">{{ $m->estatus() ? $m->estatus()->orden : 'Sin Estatus' }}</span></td>
                                     </tr>
                                 @empty
                                 <tr class="text-center"><td colspan="4">No hay mantenimientos registrados</td></tr>
