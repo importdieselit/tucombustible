@@ -548,7 +548,7 @@ class Vehiculo extends Model
     
     public function choferes()
     {        
-        return $this->belongsToMany(Chofer::class, 'vehiculo_chofer', 'vehiculo_id', 'chofer_id')->withTimestamps();
+         return $this->belongsToMany(Chofer::class, 'vehiculo_chofer', 'vehiculo_id', 'chofer_id')->withTimestamps();
     }
 
     

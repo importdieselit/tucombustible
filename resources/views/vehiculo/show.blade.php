@@ -109,6 +109,9 @@
                     <a class="nav-link text-corporate-emphasis" id="mantenimiento-tab" data-bs-toggle="tab" href="#mantenimiento" role="tab"><i class="fa-solid fa-screwdriver-wrench me-1"></i> Mantenimientos</a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link text-corporate-emphasis" id="viajes-tab" data-bs-toggle="tab" href="#viajes" role="tab"><i class="fa-solid fa-route me-1"></i> Viajes</a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link text-corporate-emphasis" id="fotos-tab" data-bs-toggle="tab" href="#fotos" role="tab"><i class="fa-solid fa-image me-1"></i> Galería</a>
                 </li>
             </ul>
@@ -170,6 +173,40 @@
                                 @empty
                                 <tr class="text-center"><td colspan="4">No hay mantenimientos registrados</td></tr>
                                     
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="viajes" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Origen</th>
+                                    <th>Destino</th>
+                                    <th>Conductor</th>
+                                    <th>Cliente</th>
+                                    <th>Carga Litros</th>
+                                    <th>Kilometraje</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($viajes as $viaje)
+                              
+                                    <tr>
+                                        <td>{{ $viaje["fecha"] }}</td>
+                                        <td> Sede Principal</td>
+                                        <td>{{ $viaje["destino"] }}</td>
+                                        <td>{{ $viaje["chofer"]}}</td>
+                                        <td>{{ $viaje["cliente"] }}</td>
+                                        <td>{{ $viaje["litros"] }} L</td>
+                                        <td>-- km</td>
+                                    </tr>
+                                @empty
+                                    <tr class="text-center"><td colspan="7">No hay viajes registrados</td></tr>
                                 @endforelse
                             </tbody>
                         </table>
