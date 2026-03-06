@@ -12005,3 +12005,25 @@ textarea.form-control-lg {
         background-color: var(--corpo-bg) !important;
         color: var(--corpo-light) !important;
     }
+
+      /* Estándar Impordiesel */
+        .card-step { border: none; border-top: 5px solid #4C474F; }
+        .card-step.border-orange { border-top-color: #f2A435; }
+        .bg-corporate { background-color: #4C474F !important; color: white; }
+        .text-orange { color: #f2A435 !important; }
+        .btn-orange { background-color: #f2A435; color: white; }
+        .btn-orange:hover { background-color: #d9922e; color: white; }
+        
+        /* Ajustes de Tabla */
+        #ordenesTable thead { background-color: #4C474F; color: white; text-transform: uppercase; font-size: 0.85rem; }
+        .clickable-row { cursor: pointer; transition: all 0.2s; }
+        .clickable-row:hover { background-color: rgba(242, 164, 53, 0.1) !important; }
+        
+        /* Estilo de los botones de DataTables para que no rompan el diseño */
+        .dt-buttons .dt-button {
+            background-color: #4C474F !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 4px !important;
+            font-size: 0.8rem !important;
+        }
