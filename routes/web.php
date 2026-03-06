@@ -2,111 +2,105 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+
+// IMPORTACIÓN DE CONTROLADORES
+use App\Http\Controllers\Admin\ClienteController as AdminClienteController;
+use App\Http\Controllers\Cliente\ClienteController as PortalClienteController;
 use App\Http\Controllers\{
     DashboardController, VehiculoController, MarcaController, ModeloController,
     OrdenController, TanqueController, MovimientoCombustibleController,
     InventarioController, ProveedorController, PerfilController, UserController,
-    DepositoController, ClienteController, AlmacenController, ChoferController,
+    DepositoController, AlmacenController, ChoferController,
     AlertaController, AccesoController, InspeccionController, PedidoController,
     ReporteController, AforoController, SearchController, DataDeletionController,
     ViajesController, TelegramController, PlanificacionMantenimientoController,
-    CaptacionController, ReportController
+    CaptacionController, ReportController, ClienteActivosController
 };
 
-/*
-|--------------------------------------------------------------------------
-| Rutas Públicas
-|--------------------------------------------------------------------------
-*/
+/* --- Rutas Públicas y Auth --- */
 Auth::routes();
+Route::get('/', function () { return redirect()->route('login'); });
 
-Route::get('/', function () {
-    return redirect()->route('login');
-});
+/**
+ * PASO 1: REGISTRO PÚBLICO
+ * Estas rutas deben estar fuera de 'auth' para que el botón "Registrar" del login funcione.
+ */
+Route::get('/registro-cliente', [CaptacionController::class, 'showRegistrationForm'])->name('cliente.register');
+Route::post('/registro-cliente', [CaptacionController::class, 'store'])->name('cliente.register.store');
 
-// Otros Públicos (Mantenidos)
-Route::get('/politica-eliminacion-datos', [DataDeletionController::class, 'showRequestForm'])->name('data.deletion.form');
-Route::post('/solicitud-eliminacion-datos', [DataDeletionController::class, 'submitRequest'])->name('data.deletion.submit');
-Route::post('/telegram/webhook', [TelegramController::class, 'handleWebhook']);
 
-/*
-|--------------------------------------------------------------------------
-| Rutas Protegidas (Auth)
-|--------------------------------------------------------------------------
-*/
+/* --- Rutas Protegidas --- */
 Route::middleware(['auth'])->group(function () {
 
     /**
-     * ZONA CERO: Dashboard Unificado
-     * Esta es la ruta a la que llegará el usuario tras el login.
+     * PASO 2: SEGURIDAD INICIAL (Cambio de Contraseña)
+     * Estas rutas NO llevan el middleware 'check.password' para permitir el acceso al formulario.
      */
-    Route::get('/dashboard', function () {
-        // Si no existe el controlador DashboardController@index, podemos usar una vista simple por ahora
-        return view('dashboard'); 
-    })->name('dashboard');
-
-    Route::get('/home', function () { return redirect()->route('dashboard'); });
-
-    /**
-     * Perfil y Contraseña
-     */
-    Route::get('/usuarios/perfil', [UserController::class, 'show'])->name('perfil.show');
     Route::get('/password/change', [UserController::class, 'showChangePassword'])->name('password.change');
-    Route::post('/password/change', [UserController::class, 'updatePassword'])->name('password.update_change');
+    Route::post('/password/update', [UserController::class, 'updatePassword'])->name('password.update');
+
 
     /**
-     * Módulos de Administración (Solo para Perfiles 1 y 2)
-     * Aquí agrupamos todo lo que NO es del cliente.
+     * ACCESO CONTROLADO: Requiere haber cambiado la clave (must_change_password = 0)
      */
-    Route::middleware(['CheckUserRole:1,2'])->group(function () {
+    Route::middleware(['check.password'])->group(function () {
+
+        // Dashboard Unificado (Decide si va al Paso 3-9 o al Dashboard Final)
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+        /**
+         * MÓDULOS DE ADMINISTRACIÓN (Perfiles 1 y 2: Admin y Super)
+         */
+        Route::middleware(['role:1,2'])->group(function () {
+            
+            // --- SECCIÓN: GESTIÓN DE CLIENTES (ADMIN) ---
+            Route::prefix('admin-clientes')->name('clientes.')->group(function () {
+                // Usamos el AdminClienteController que es el que tiene la lógica de Dashboard Admin
+                Route::get('/panel-control', [AdminClienteController::class, 'index'])->name('index'); 
+                Route::get('/{id}/expediente', [AdminClienteController::class, 'show'])->name('show');
         
-        // Gestión de Clientes (Vista para Admin)
-        Route::patch('clientes/{id}/toggle-status', [ClienteController::class, 'toggleStatus'])->name('clientes.toggleStatus');
+                // OJO: En tu controlador el método se llama updatePaso, no updateStep.
+                Route::patch('/{id}/avanzar', [AdminClienteController::class, 'updatePaso'])->name('avanzar'); 
+                Route::patch('/{id}/toggle-status', [AdminClienteController::class, 'toggleStatus'])->name('toggleStatus');
         
-        // Combustible, Viajes, etc. (Mantengo tus lógicas originales pero sin el middleware de pasos)
-        Route::prefix('combustible')->name('combustible.')->group(function () {
-            Route::get('/index', [MovimientoCombustibleController::class, 'index'])->name('index');
-            Route::get('/recarga', [MovimientoCombustibleController::class, 'createRecarga'])->name('recarga');
-            Route::post('/recargaStore', [MovimientoCombustibleController::class, 'storeRecarga'])->name('storeRecarga');
-            // ... (Resto de rutas de combustible iguales)
+                Route::post('/asignar-activos', [ClienteActivosController::class, 'asignarActivos'])->name('activos.asignar');
+            });
+
+            // --- CRUDs MAESTROS ---
+            $resourceControllers = [
+                'vehiculos'  => VehiculoController::class,
+                'marcas'     => MarcaController::class,
+                'modelos'    => ModeloController::class,
+                'choferes'   => ChoferController::class,
+                'ordenes'    => OrdenController::class,
+                'tanques'    => TanqueController::class,
+                'depositos'  => DepositoController::class,
+                'almacenes'  => AlmacenController::class,
+                'inventario' => InventarioController::class,
+                'proveedores'=> ProveedorController::class,
+                'usuarios'   => UserController::class,
+            ];
+
+            foreach ($resourceControllers as $prefix => $controller) {
+                $name = str_replace('-', '', $prefix);
+                Route::resource($prefix, $controller)->names($name);
+            }
         });
 
-        // Recursos Genéricos
-        $resourceControllers = [
-            'vehiculos' => VehiculoController::class,
-            'marcas' => MarcaController::class,
-            'modelos' => ModeloController::class,
-            'choferes' => ChoferController::class,
-            'ordenes' => OrdenController::class,
-            'tanques' => TanqueController::class,
-            'depositos' => DepositoController::class,
-            'clientes' => ClienteController::class,
-            'almacenes' => AlmacenController::class,
-            'inventario' => InventarioController::class,
-            'proveedores' => ProveedorController::class,
-            'usuarios' => UserController::class,
-            'reportes' => ReporteController::class
-        ];
-
-        foreach ($resourceControllers as $prefix => $controller) {
-            $name = str_replace('-', '', $prefix);
-            Route::get("$prefix/list", [$controller, 'list'])->name("$name.list");
-            Route::resource($prefix, $controller)->names($name);
-        }
+        /**
+         * ZONA CLIENTES (Solo Perfil 3 - Portal del Usuario Externo)
+         */
+        Route::middleware(['role:3'])->prefix('mi-cuenta')->name('portal.clientes.')->group(function () {
+            
+            // Dashboard dinámico del cliente (Paso 2 al 10)
+            Route::get('/resumen', [PortalClienteController::class, 'index'])->name('index');
+            
+            // Rutas de Carga de Documentos (Paso 2)
+            Route::post('/subir-documento', [PortalClienteController::class, 'uploadDoc'])->name('upload.doc');
+            Route::post('/finalizar-carga', [CaptacionController::class, 'finalizarCargaDocs'])->name('finalizar.paso2');
+            
+            // Perfil y Expediente propio
+            Route::get('/mi-perfil', [PortalClienteController::class, 'perfil'])->name('perfil');
+        });
     });
-
-    /**
-     * Módulos Compartidos o API Interna
-     */
-    Route::get('/marcas/get-modelos', [MarcaController::class, 'getModelos'])->name('marcas.getModelos');
-    Route::get('search/global', [SearchController::class, 'globalSearch'])->name('search.global');
-
 });
-
-/*
-|--------------------------------------------------------------------------
-| Notas de Limpieza:
-| Se eliminó el Middleware 'access.step' y 'StepAccess' para evitar bucles.
-| Se eliminaron las rutas de 'captacion' que dependían de la tabla eliminada.
-|--------------------------------------------------------------------------
-*/

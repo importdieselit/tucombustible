@@ -35,46 +35,49 @@ class DashboardService
 
     public function getDashboardData($user)
     {
+        // --- LÓGICA PARA CLIENTES (id_perfil = 3) ---
         if ($user->id_perfil == 3) {
             $cliente = $user->cliente;
             $pasoActual = $cliente->registro_paso;
 
-            // Si el paso es 10, es un cliente ya aprobado
-            if ($pasoActual >= 10) {
+            // CASO: CLIENTE EN PROCESO DE REGISTRO (Dashboard Nivel 0)
+            if ($pasoActual < 10) {
                 return [
-                    'perfil' => 'cliente',
-                    'cliente' => $cliente,
-                    'stats' => [
-                        // Aquí podrías meter lógica de sus consumos reales
-                        'consumo_mes' => 0, 
-                        'pedidos_activos' => 0,
-                    ]
+                    'perfil' => 'cliente_proceso',
+                    'paso_actual' => $pasoActual,
+                    'nombre_paso' => $this->getNombrePaso($pasoActual),
+                    'porcentaje' => ($pasoActual / 10) * 100,
+                    'cliente' => $cliente
                 ];
             }
 
-            // Si es menor a 10, sigue en proceso de captación
+            // CASO: CLIENTE ACTIVO (Padre vs Sucursal)
+            $esPadre = ($cliente->parent == 0);
             return [
-                'perfil' => 'cliente_proceso',
-                'paso_actual' => $pasoActual,
-                'nombre_paso' => $this->getNombrePaso($pasoActual),
-                'porcentaje' => ($pasoActual / 10) * 100
+                'perfil'  => $esPadre ? 'cliente_padre' : 'cliente_sucursal',
+                'cliente' => $cliente,
+                'es_padre' => $esPadre,
+                'stats'   => [
+                    'consumo_mes' => 0, 
+                    'pedidos_activos' => 0,
+                    'sucursales_vinculadas' => $esPadre ? $cliente->sucursales()->count() : 0
+                ]
             ];
         }
 
-        // Para perfiles 1 y 2 (Superadmin y Gerencia)
+        // --- LÓGICA PARA ADMIN / SUPER (Dashboard Principal del Sistema) ---
         return [
-            'perfil' => 'admin',
+            'perfil' => 'admin_sistema',
             'stats' => [
                 'totalVehiculos' => $this->vehicleRepo->countAll(),
                 'totalUsuarios' => $this->userRepo->countAll(),
                 'totalOrdenesAbiertas' => $this->orderRepo->countAbiertas(),
                 'totalTanques' => $this->tankRepo->countAll(),
-                'unidades_disponibles' => $this->vehicleRepo->countDisponibles(),
-                'unidades_en_mantenimiento' => $this->vehicleRepo->countEnMantenimiento(),
-                'unidades_con_orden_abierta' => $this->vehicleRepo->countConOrdenAbierta(),
-                'programados' => $this->maintenanceRepo->countProximos(),
                 'programadosHoy' => $this->maintenanceRepo->countHoy(),
-                'suministros_compra' => $this->purchaseRepo->countPendientes(),
+                
+                // Stats de Gestión de Clientes (Sin usar la palabra "prospecto")
+                'clientes_activos'      => $this->clientRepo->countByPaso(10),
+                'clientes_en_registro'  => $this->clientRepo->countByPaso('<', 10),
             ],
             'ultimasOrdenes' => $this->orderRepo->getUltimas(5)
         ];
@@ -84,64 +87,33 @@ class DashboardService
     {
         $pasos = [
             1  => 'Registro Inicial',
-            2  => 'Envio de Planillas por Correo Electronico',
-            3  => 'Recepcion de Planillas y Demas Documentos de Cliente',
-            4  => 'Documentos en Revision',
-            5  => 'Carpeta de Documentos Realizada',
-            6  => 'Carpeta Enviada a MINPET',
-            7  => 'Esperando Respuesta de MINPET',
-            8  => 'Fecha de Inspeccion Asignada',
-            9  => 'Esperando Respuesta de MINPET',
-            10 => 'Cupo Aprobado'
+            2  => 'Envío de Planillas',
+            3  => 'Recepción de Documentos',
+            4  => 'Documentos en Revisión',
+            5  => 'Carpeta Realizada',
+            6  => 'Expediente enviado al Ministerio de Hidrocarburos',
+            7  => 'Esperando Respuesta del Ministerio',
+            8  => 'Inspección Asignada',
+            9  => 'Validación Final de Expediente',
+            10 => 'Cliente Activo / Cupo Aprobado'
         ];
         return $pasos[$paso] ?? 'Estatus Pendiente';
     }
 
-    public function getCaptacionStats()
-    {
-        return [
-            'total_prospectos' => $this->clientRepo->countByPaso('<', 10),
-            'en_revision'      => $this->clientRepo->countByPaso(4),
-            'esperando_minpet' => $this->clientRepo->countByPaso(7),
-        ];
-    }
-
     /**
-    * Gestiona la progresión de pasos del cliente
+    * Gestiona la progresión de pasos (Llamado por Admin)
     */
     public function avanzarPasoCliente($clienteId, $nuevoPaso)
     {
-        // Aquí podrías añadir validaciones adicionales antes de actualizar
-        // Ej: if ($nuevoPaso == 4 && !$this->documentosValidados($clienteId)) ...
-
-        $actualizado = $this->clientRepo->updatePaso($clienteId, $nuevoPaso);
-
-        if ($actualizado) {
-            // Si el paso llega a 10, activamos al cliente automáticamente
-            if ($nuevoPaso == 10) {
-                $this->activarClienteFinal($clienteId);
-            }
-            return true;
-        }
-
-        return false;
+        // El estatus 1 se asigna manualmente o por lógica de aprobación, 
+        // NO depende de la carga de vehículos/chóferes.
+        return $this->clientRepo->updatePaso($clienteId, $nuevoPaso);
     }
 
-    protected function activarClienteFinal($clienteId)
-    {
-        // Lógica para setear status = 1 cuando llega al paso 10
-        $cliente = \App\Models\Cliente::find($clienteId);
-        $cliente->update(['status' => 1]);
-    }
-
-    /**
-    * Valida o rechaza un documento individual
-    */
     public function validarDocumento($documentoId, $status, $observaciones = null)
     {
-        // Usamos el repositorio para la persistencia
         return $this->clientRepo->updateDocumentStatus($documentoId, [
-            'estatus_archivo' => $status, // 'validado' o 'rechazado'
+            'estatus_archivo' => $status,
             'observaciones' => $observaciones,
             'validado_por' => auth()->id(),
             'fecha_validacion' => now()

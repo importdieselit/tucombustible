@@ -4,99 +4,99 @@ namespace App\Repositories;
 
 use App\Models\User;
 use App\Models\Cliente;
+use App\Models\ClienteCupo;
+use App\Models\CaptacionDocumento;
+use App\Models\PlacaVehiculo;
+use App\Models\ChoferCliente;
 
 class ClienteRepository
 {
-    public function create(array $data)
-    {
-        return Cliente::create($data);
-    }
+    public function create(array $data) { return Cliente::create($data); }
 
-    public function findByRif($rif)
+    public function crearUsuario(array $data) { return User::create($data); }
+
+    public function registrarCupo(array $data) { return ClienteCupo::create($data); }
+
+    public function findByToken($token) { return Cliente::where('token_registro', $token)->first(); }
+
+    public function find($id) { return Cliente::with(['sucursales', 'user', 'documentos'])->findOrFail($id); }
+
+    public function findByRif($rif) { return Cliente::where('rif', $rif)->first(); }
+
+    public function guardarDocumento(array $data)
     {
-        return Cliente::where('rif', $rif)->first();
+        return CaptacionDocumento::updateOrCreate(
+            ['cliente_id' => $data['cliente_id'], 'tipo_documento' => $data['tipo_documento']],
+            ['ruta_archivo' => $data['ruta_archivo'], 'status' => 'pendiente']
+        );
     }
 
     /**
-     * Obtener prospectos (clientes en proceso de captación)
+     * Cuenta cuántos documentos tiene un cliente para validar el paso 2
      */
-    public function getProspectos($limit = 10)
+    public function contarDocumentos($clienteId)
     {
-        return User::where('id_perfil', 3)
-            ->whereHas('cliente', function($query) {
-                $query->where('registro_paso', '<', 10);
-            })
-            ->with('cliente')
-            ->orderBy('updated_at', 'desc')
-            ->paginate($limit);
+        return CaptacionDocumento::where('cliente_id', $clienteId)->count();
     }
 
-    /**
-     * Contar cuántos clientes hay en cada paso (para estadísticas)
-     */
-    public function countByPaso($operador,$paso = null)
+    public function getClientesEnRegistro($filtros)
     {
-        // Si solo pasas un número, asume que es una búsqueda exacta (ej: 4)
-        if ($paso === null) {
-            return Cliente::where('registro_paso', $operador)->count();
-        }
-    
-        // Si pasas ('<', 10), usa el operador
-        return Cliente::where('registro_paso', $operador, $paso)->count();
-    }
+        $query = Cliente::query()->with('user')->where('registro_paso', '<', 10);
 
-    /**
-     * Actualizar el paso de registro de un cliente
-     */
-    public function updatePaso($clienteId, $nuevoPaso)
-    {
-        $cliente = Cliente::find($clienteId);
-        if ($cliente) {
-            $cliente->registro_paso = $nuevoPaso;
-            return $cliente->save();
-        }
-        return false;
-    }
-
-    /**
-     * Obtener un cliente específico con su usuario y documentos
-     */
-    public function findWithDetails($id)
-    {
-        return User::with(['cliente', 'documentos'])->findOrFail($id);
-    }
-
-    /**
-    * Sustituye la lógica de filtros del index viejo
-    */
-    public function getFiltrados($filtros)
-    {
-        $query = Cliente::query()->with('user');
-
-        if (isset($filtros['search'])) {
-            $query->where('razon_social', 'like', "%{$filtros['search']}%")
+        if (!empty($filtros['search'])) {
+            $query->where(function($q) use ($filtros) {
+                $q->where('nombre', 'like', "%{$filtros['search']}%")
                   ->orWhere('rif', 'like', "%{$filtros['search']}%");
+            });
         }
 
-        if (isset($filtros['paso'])) {
-            $query->where('registro_paso', $filtros['paso']);
-        } else {
-            $query->where('registro_paso', '<', 10);
-        }
-
-        return $query->paginate(20);
+        return $query->orderBy('updated_at', 'desc')->paginate(20);
     }
 
-    /**
-    * Actualiza el estatus de un documento específico
-    */
-    public function updateDocumentStatus($documentoId, array $data)
+    public function getStatsGlobales()
     {
-        // Usamos el modelo CaptacionDocumento que es el que maneja los archivos
-        $documento = \App\Models\CaptacionDocumento::find($documentoId);
-        if ($documento) {
-            return $documento->update($data);
+        return [
+            'total'             => Cliente::count(),
+            'activos'           => Cliente::where('registro_paso', 10)->where('status', 1)->count(),
+            'inactivos'         => Cliente::where('registro_paso', 10)->where('status', 0)->count(),
+            'total_en_registro' => Cliente::where('registro_paso', '<', 10)->count(),
+            'en_espera_revision'=> Cliente::where('registro_paso', 3)->count(),
+        ];
+    }
+
+    public function avanzarPaso($clienteId, $nuevoPaso, array $datosExtra = [])
+    {
+        $cliente = Cliente::findOrFail($clienteId);
+
+        if (isset($datosExtra['fecha_inspeccion'])) {
+            $cliente->fecha_inspeccion = $datosExtra['fecha_inspeccion'];
+            $cliente->inspector = $datosExtra['inspector'] ?? null;
         }
-        return false;
+
+        if ($nuevoPaso == 10) {
+            $cliente->status = 1;
+            if ($cliente->user) {
+                $cliente->user->update(['status_usuario' => 'activo']);
+            }
+        }
+
+        $cliente->registro_paso = $nuevoPaso;
+        $cliente->save();
+        return $cliente;
+    }
+
+    public function update($id, array $data)
+    {
+        $cliente = Cliente::findOrFail($id);
+        $cliente->update($data);
+        return $cliente;
+    }
+
+    public function toggleStatus($id)
+    {
+        $cliente = Cliente::findOrFail($id);
+        $cliente->status = ($cliente->status == 1) ? 0 : 1;
+        $cliente->save();
+        return $cliente;
     }
 }

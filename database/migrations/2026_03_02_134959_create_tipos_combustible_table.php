@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddDireccionOperativaToClientesTable extends Migration
+class CreateTiposCombustibleTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,8 +13,10 @@ class AddDireccionOperativaToClientesTable extends Migration
      */
     public function up()
     {
-        Schema::table('clientes', function (Blueprint $table) {
-            $table->text('direccion_operativa')->after('direccion');
+        Schema::create('tipos_combustible', function (Blueprint $table) {
+            $table->id();
+            $table->string('nombre', 20);
+            $table->timestamps();
         });
     }
 
@@ -25,8 +27,6 @@ class AddDireccionOperativaToClientesTable extends Migration
      */
     public function down()
     {
-        Schema::table('clientes', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('tipos_combustible');
     }
 }
