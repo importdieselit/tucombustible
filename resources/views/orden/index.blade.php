@@ -1,189 +1,232 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard de Órdenes')
+@section('title', 'Control de Flota | Dashboard')
+
+@push('styles')
+<style>
+    /* Estándar Impordiesel */
+    .card-kpi { border: none; border-bottom: 4px solid #4C474F; transition: all 0.3s ease; }
+    .card-kpi:hover { transform: translateY(-5px); box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important; }
+    .card-kpi.border-orange { border-bottom-color: #f2A435; }
+    
+    .bg-corporate { background-color: #4C474F !important; color: white; }
+    .text-corporate { color: #f2A435 !important; }
+    
+    .timeline-item { border-left: 2px solid #f2A435; padding-left: 15px; position: relative; }
+    .timeline-item::before { 
+        content: ''; position: absolute; left: -7px; top: 5px; 
+        width: 12px; height: 12px; border-radius: 50%; background: #4C474F; 
+    }
+</style>
+@endpush
 
 @section('content')
-<div class="container-fluid mt-4">
-    <div class="row page-titles mb-4">
-        
-        <div class="col-12 d-flex justify-content-between align-items-center">
-            <h3 class="text-themecolor mb-0">Dashboard de Órdenes de Trabajo</h3>
-            <a href="{{ route('ordenes.compra') }}" class="btn btn-info d-flex align-items-center">
-                <i class="fas fa-list me-2"></i> Orden de Compra
-            </a>
-            <a href="{{ route('ordenes.list') }}" class="btn btn-info d-flex align-items-center">
-                <i class="fas fa-list me-2"></i> Ver Listado
-            </a>
+<div class="container-fluid py-4">
+    {{-- Header de Acción Rápida --}}
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center bg-white p-3 shadow-sm rounded">
+            <div>
+                <h4 class="fw-bold mb-0 text-uppercase">Gestión de Órdenes y Mantenimiento</h4>
+                <small class="text-muted">Resumen operativo en tiempo real</small>
+            </div>
+            <div class="btn-group">
+                <a href="{{ route('ordenes.compra') }}" class="btn btn-outline-dark">
+                    <i class="fas fa-shopping-cart me-2"></i> Compras
+                </a>
+                <a href="{{ route('ordenes.list') }}" class="btn btn-dark">
+                    <i class="fas fa-table me-2"></i> Listado General
+                </a>
+                <a href="{{ route('ordenes.create') }}" class="btn btn-orange" style="background-color: #f2A435; color: white;">
+                    <i class="fas fa-plus me-2"></i> Nueva OT
+                </a>
+            </div>
         </div>
     </div>
 
-    {{-- Filtros --}}
-    {{-- Primera fila de métricas --}}
-    <div class="row mb-4">
+    {{-- KPIs Operativos --}}
+    <div class="row g-3 mb-4">
+        {{-- Órdenes Abiertas --}}
         <div class="col-md-4">
-            <div class="card shadow-sm bg-success text-white">
+            <div class="card card-kpi shadow-sm h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Tiempo Promedio de Orden</h5>
-                    <h2 class="card-text">{{ $tiempo_promedio_orden }} días</h2>
-                    <p class="card-text"><small>Tiempo entre apertura y cierre</small></p>
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-muted text-uppercase small fw-bold">Órdenes Activas</h6>
+                            <h2 class="fw-bold mb-0">{{ $ordenes_abiertas }}</h2>
+                        </div>
+                        <div class="icon-shape bg-light text-success rounded p-3">
+                            <i class="fas fa-wrench fa-2x"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="text-success small fw-bold"><i class="fas fa-check-circle"></i> En proceso</span>
+                    </div>
                 </div>
             </div>
         </div>
+
+        {{-- Mantenimientos (Lista limpia) --}}
         <div class="col-md-4">
-            <div class="card shadow-sm bg-warning text-white">
+            <div class="card card-kpi border-orange shadow-sm h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Próximos Mantenimientos</h5>
-                    <ul class="list-unstyled mb-0">
+                    <h6 class="text-muted text-uppercase small fw-bold mb-3">Próximos Servicios</h6>
+                    <div class="overflow-auto" style="max-height: 120px;">
                         @foreach ($mantenimientos_proximos as $m)
-                        <li><strong>{{ $m->vehiculo }}:</strong> {{ $m->tarea }} ({{ $m->fecha }})</li>
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="badge bg-light text-dark me-2">{{ $m->fecha_programada }}</div>
+                            <small class="text-truncate"><strong>{{ $m->vehiculo }}:</strong> {{ $m->tipo_mantenimiento }}</small>
+                        </div>
                         @endforeach
-                    </ul>
+                    </div>
                 </div>
             </div>
         </div>
+
+        {{-- Alertas de KM --}}
         <div class="col-md-4">
-            <div class="card shadow-sm bg-primary text-white">
+            <div class="card card-kpi bg-corporate shadow-sm h-100">
                 <div class="card-body">
-                    <h5 class="card-title">Alertas de Kilometraje</h5>
-                    <ul class="list-unstyled mb-0">
+                    <h6 class="text-white-50 text-uppercase small fw-bold mb-3">Alertas de Kilometraje</h6>
+                    <div class="overflow-auto" style="max-height: 120px;">
                         @foreach ($alertas_kilometraje as $alerta)
-                        <li><strong>{{ $alerta->vehiculo }} ({{ $alerta->placa }}):</strong> @if($alerta->kilometraje>5000) Excedió {{ $alerta->kilometraje - 5000 }} @else faltan {{5000- $alerta->kilometraje }} @endif  km</li>
+                        <div class="mb-2 border-bottom border-secondary pb-1">
+                            <small class="d-block">
+                                <span class="text-corporate fw-bold">{{ $alerta->vehiculo }}</span>
+                                @php $diff = $alerta->kilometraje - 5000; @endphp
+                                <span class="{{ $diff > 0 ? 'text-danger' : 'text-white' }}">
+                                    {{ $diff > 0 ? "Excedido por $diff km" : "Faltan ".abs($diff)." km" }}
+                                </span>
+                            </small>
+                        </div>
                         @endforeach
-                    </ul>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    
-
-    {{-- Segunda fila de gráficos --}}
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="card-title mb-0">Gasto Mensual en Insumos</h5>
+    {{-- Gráficos de Gestión --}}
+    <div class="row g-4 mb-4">
+        <div class="col-lg-7">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3">
+                    <h6 class="m-0 fw-bold text-dark">Inversión Mensual en Insumos ($)</h6>
                 </div>
                 <div class="card-body">
-                    <div id="gasto-mensual-chart" style="height: 300px;"></div>
+                    <div id="gasto-mensual-chart" style="height: 320px;"></div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="card-title mb-0">Vehículos con más Reportes de Falla</h5>
+        <div class="col-lg-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3">
+                    <h6 class="m-0 fw-bold text-dark">Frecuencia de Fallas por Unidad ultimos 60 días</h6>
                 </div>
                 <div class="card-body">
-                    <div id="vehiculos-fallas-chart" style="height: 300px;"></div>
+                    <div id="vehiculos-fallas-chart" style="height: 320px;"></div>
                 </div>
             </div>
         </div>
+        
     </div>
 
-    {{-- Timeline de reportes de falla --}}
+    {{-- Timeline de Reportes --}}
     <div class="row">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="card-title mb-0">Línea de Tiempo de Reportes de Falla</h5>
+        <div class="col-7">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-corporate text-white">
+                    <h6 class="m-0 fw-bold">Bitácora Reciente de Incidencias</h6>
+                </div>
+                <div class="card-body p-4">
+                    @foreach ($reportes_falla as $reporte)
+                    <div class="timeline-item mb-3 pb-2">
+                        <small class="text-muted fw-bold">{{ $reporte->fecha }}</small>
+                        <p class="mb-0">{{ $reporte->descripcion }}</p>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    <div class="col-lg-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3">
+                    <h6 class="m-0 fw-bold text-dark">Fallas por Tipo</h6>
                 </div>
                 <div class="card-body">
-                    <ul class="list-group list-group-flush">
-                        @foreach ($reportes_falla as $reporte)
-                        <li class="list-group-item">
-                            <span class="badge bg-secondary me-2">{{ $reporte->fecha }}</span>
-                            {{ $reporte->descripcion }}
-                        </li>
-                        @endforeach
-                    </ul>
+                    <div id="tipos-fallas-chart" style="height: 320px;"></div>
                 </div>
             </div>
         </div>
     </div>
+    
 </div>
 
-{{-- Scripts para Highcharts --}}
-<script src="https://code.highcharts.com/highcharts.js"></script>
+{{-- Scripts con validación de carga --}}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // --- Gráfico de Gasto Mensual ---
-        const gastoMensual = @json($gasto_mensual);
+        if (typeof Highcharts === 'undefined') {
+            console.error("Highcharts no detectado. Cargue la librería localmente.");
+            return;
+        }
+
+        // Configuración Global de Colores
+        const corpoColors = ['#f2A435', '#4C474F', '#f16201', '#FCD124', '#7d787e'];
+
+        // Gráfico de Gastos (Barras Corporativas)
         Highcharts.chart('gasto-mensual-chart', {
-            chart: {
-                type: 'column'
+            chart: { type: 'column', backgroundColor: 'transparent' },
+            title: { text: null },
+            xAxis: { 
+                categories: @json(collect($gasto_mensual)->pluck('name')),
+                labels: { style: { color: '#4C474F', fontWeight: 'bold' } }
             },
-            title: {
-                text: ''
-            },
-            xAxis: {
-                categories: gastoMensual.map(item => item.name)
-            },
-            yAxis: {
-                min: 0,
-                title: {
-                    text: 'Gasto ($)'
-                }
-            },
-            tooltip: {
-                formatter: function () {
-                    return '<b>' + this.x + '</b><br/>' +
-                        'Gasto: $' + Highcharts.numberFormat(this.y, 2);
-                }
-            },
-            plotOptions: {
-                column: {
-                    pointPadding: 0.2,
-                    borderWidth: 0
-                }
-            },
-            credits: {
-                enabled: false
-            },
+            yAxis: { title: { text: 'Dólares ($)' }, gridLineDashStyle: 'Dot' },
+            tooltip: { shared: true, valuePrefix: '$ ' },
             series: [{
-                name: 'Gasto',
-                data: gastoMensual.map(item => item.y)
-            }]
+                name: 'Gasto Mensual',
+                data: @json(collect($gasto_mensual)->pluck('y')),
+                color: '#f2A435',
+                borderRadius: 4
+            }],
+            credits: { enabled: false }
         });
 
-        // --- Gráfico de Vehículos con más Fallas ---
-        const vehiculosFallas = @json($vehiculos_mas_fallas);
+        // Gráfico de Fallas (Doughnut Moderno)
         Highcharts.chart('vehiculos-fallas-chart', {
-            chart: {
-                plotBackgroundColor: null,
-                plotBorderWidth: null,
-                plotShadow: false,
-                type: 'pie'
-            },
-            title: {
-                text: ''
-            },
-            tooltip: {
-                pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
-            },
-            accessibility: {
-                point: {
-                    valueSuffix: '%'
-                }
-            },
+            chart: { type: 'pie', backgroundColor: 'transparent' },
+            title: { text: null },
             plotOptions: {
-                pie: {
-                    allowPointSelect: true,
-                    cursor: 'pointer',
-                    dataLabels: {
-                        enabled: true,
-                        format: '<b>{point.name}</b>: {point.percentage:.1f} %'
-                    }
+                pie: { 
+                    innerSize: '70%', 
+                    dataLabels: { enabled: true, format: '{point.name}: {point.y} Ordenes' } 
                 }
-            },
-            credits: {
-                enabled: false
             },
             series: [{
-                name: 'Reportes',
-                colorByPoint: true,
-                data: vehiculosFallas
-            }]
+                name: 'Fallas',
+                data: @json($vehiculos_mas_fallas),
+                colors: corpoColors
+            }],
+            credits: { enabled: false }
+        });
+
+
+        Highcharts.chart('tipos-fallas-chart', {
+            chart: { type: 'pie', backgroundColor: 'transparent' },
+            title: { text: null },
+            plotOptions: {
+                pie: { 
+                    innerSize: '70%', 
+                    dataLabels: { enabled: true, format: '{point.name}: {point.y}' } 
+                }
+            },
+            series: [{
+                name: 'Fallas',
+                data: @json($ordenes_por_tipo->map(function($item) {
+                    return ['name' => $item->tipo, 'y' => $item->total];
+                })),
+                colors: corpoColors
+            }],
+            credits: { enabled: false }
         });
     });
 </script>

@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\SuministroCompra;
 use App\Models\SuministroCompraDetalle;
 use App\Services\TelegramNotificationService;
+use App\Models\MantenimientoProgramado;
 use App\Models\OrdenFoto;
 use App\Models\User;
 use Google\Service\Datastore\Sum;
@@ -61,19 +62,26 @@ class OrdenController extends BaseController
             (object)['fecha' => '2024-05-12', 'descripcion' => 'Motor sobrecalentado en el Vehículo 005.'],
             (object)['fecha' => '2024-05-10', 'descripcion' => 'Problema eléctrico en luces delanteras del Vehículo 012.'],
         ];
+        $ordenes_abiertas = Orden::where('estatus', 2)->count();
 
         // Simulación de próximos mantenimientos programados
-        $mantenimientos_proximos = [
-            (object)['vehiculo' => 'Flota 012', 'tarea' => 'Cambio de aceite', 'fecha' => '2024-05-20'],
-            (object)['vehiculo' => 'Flota 008', 'tarea' => 'Revisión de frenos', 'fecha' => '2024-05-25'],
-            (object)['vehiculo' => 'Flota 001', 'tarea' => 'Rotación de neumáticos', 'fecha' => '2024-06-01'],
-        ];
+        $mantenimientos_proximos = MantenimientoProgramado::where('fecha', '>=', Carbon::now())->get()->map(function($mantenimiento) {
+            return (object)[
+                'vehiculo' => $mantenimiento->vehiculo ? $mantenimiento->vehiculo->flota . " ({$mantenimiento->vehiculo->placa})" : 'N/A',
+                'tipo_mantenimiento' => $mantenimiento->tipo,
+                'fecha_programada' => Carbon::parse($mantenimiento->fecha_programada)->format('Y-m-d'),
+            ];
+        });
 
+        $ordenes_por_tipo = Orden::select('tipo', \DB::raw('count(*) as total'))->where('estatus', 2)
+            ->groupBy('tipo')
+            ->get();
+         
         // Simulación de tiempo promedio de la orden
         // En un entorno real, esto se calcularía en base a las fechas de apertura y cierre.
         $tiempo_promedio_orden = 1.5; // Días
 
-        // Simulación de gasto mensual en insumos
+        
         $gasto_mensual = collect([
             (object)['name' => 'Enero', 'y' => 2500],
             (object)['name' => 'Febrero', 'y' => 3100],
@@ -82,13 +90,25 @@ class OrdenController extends BaseController
             (object)['name' => 'Mayo', 'y' => 3900],
         ]);
 
-        // Simulación de vehículos con más reportes de falla
-        $vehiculos_mas_fallas = collect([
-            (object)['name' => 'Flota 003', 'y' => 15],
-            (object)['name' => 'Flota 005', 'y' => 10],
-            (object)['name' => 'Flota 013', 'y' => 8],
-            (object)['name' => 'Otros', 'y' => 12],
-        ]);
+        // Simulación de vehículos con más reportes de falla 
+
+        $vehiculos_mas_fallas = Vehiculo::select('flota as name', \DB::raw('count(*) as y'))
+            ->join('ordenes', 'vehiculos.id', '=', 'ordenes.id_vehiculo')
+            ->where('ordenes.fecha_in', '>=', Carbon::now()->subDays(60))
+            ->groupBy('vehiculos.flota')
+            ->orderByDesc('y')
+            ->limit(5)
+            ->get();
+
+        //  // Datos de ejemplo para el gráfico de frecuencia de fallas por unidad
+        //  $vehiculos_mas_fallas =
+        
+        // collect([
+        //     (object)['name' => 'Flota 003', 'y' => 15],
+        //     (object)['name' => 'Flota 005', 'y' => 10],
+        //     (object)['name' => 'Flota 013', 'y' => 8],
+        //     (object)['name' => 'Otros', 'y' => 12],
+        // ]);
 
         // Simulación de alertas de kilometraje
         $alertas_kilometraje=Vehiculo::where('km_mantt','>',4700)->orWhere('hrs_mantt','>',180)->select('flota as vehiculo','placa','km_mantt as kilometraje')->get();
@@ -103,7 +123,9 @@ class OrdenController extends BaseController
             'tiempo_promedio_orden',
             'gasto_mensual',
             'vehiculos_mas_fallas',
-            'alertas_kilometraje'
+            'alertas_kilometraje',
+            'ordenes_abiertas',
+            'ordenes_por_tipo'
         ));
     }
 

@@ -2,519 +2,362 @@
 
 @section('title', 'Crear Nueva Orden de Trabajo')
 
-@push('scripts')
-<!-- jQuery para manejar las llamadas AJAX -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!-- Bootstrap JS para el modal -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@push('styles')
+<style>
+    /* Estándar Impordiesel */
+    .card-step { border: none; border-top: 5px solid #4C474F; }
+    .card-step.border-orange { border-top-color: #f2A435; }
+    .bg-corporate { background-color: #4C474F !important; color: white; }
+    .text-orange { color: #f2A435 !important; }
+    .btn-orange { background-color: #f2A435; color: white; }
+    .btn-orange:hover { background-color: #d9922e; color: white; }
+    .table-supply thead { background-color: #4C474F; color: white; }
+    .form-label { font-weight: 700; font-size: 0.85rem; text-transform: uppercase; color: #4C474F; }
+</style>
 @endpush
 
 @section('content')
-<div class="row mb-4">
-    <div class="col-12">
-        <h1 class="mb-2">Crear Orden de Trabajo</h1>
-        <p class="text-muted">Registra una nueva orden de reparación o mantenimiento.</p>
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 shadow-sm rounded">
+        <div>
+            <h3 class="fw-bold mb-0 text-uppercase"><i class="fas fa-file-signature text-orange me-2"></i>Crear Orden de Trabajo</h3>
+            <p class="text-muted mb-0 small">Registro de reparación o mantenimiento para la flota.</p>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-corporate p-2 fs-6">ORDEN NRO: {{$nro_orden}}</span>
+        </div>
     </div>
+
+    <form action="{{ route('ordenes.store') }}" method="POST" id="orden-form" enctype="multipart/form-data">
+        @csrf
+        <input type="hidden" name="estatus" value="2">
+        <input type="hidden" name="fecha_in" value="{{ date('Y-m-d') }}">
+        <input type="hidden" name="nro_orden" value="{{$nro_orden}}">
+        <input type="hidden" name="supplies_json" id="supplies_json">
+
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="card card-step border-orange shadow-sm mb-4">
+                    <div class="card-header bg-white fw-bold py-3">
+                        <i class="fas fa-truck text-orange me-2"></i>Detalles del Vehículo y Servicio
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="id_vehiculo" class="form-label">Vehículo</label>
+                            @if(is_null($vehiculo))
+                                <select class="form-select border-2" id="id_vehiculo" name="id_vehiculo">
+                                    <option value="">Seleccione Vehículo</option>
+                                    @foreach ($vehiculos as $v)
+                                        <option value="{{ $v->id }}">{{ $v->flota }} (Placa: {{ $v->placa }})</option>
+                                    @endforeach
+                                </select>
+                            @else
+                                <input type="hidden" name="vehiculo_id" value="{{$vehiculo->vehiculo_id}}">
+                                <div class="p-2 bg-light border rounded fw-bold text-dark">
+                                    {{$vehiculo->flota}} - {{$vehiculo->placa}}
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="tipo" class="form-label">Tipo de Orden</label>
+                                <select class="form-select" id="tipo" name="tipo" required>
+                                    <option value="Preventivo">Preventivo</option>
+                                    <option value="Revision">Revision</option>
+                                    <option value="Correctivo">Correctivo</option>
+                                    <option value="Mantenimiento">Mantenimiento</option>
+                                    <option value="Otro">Otros</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="prioridad" class="form-label">Prioridad</label>
+                                <select class="form-select" id="prioridad" name="prioridad" required>
+                                    <option value="Baja">Baja</option>
+                                    <option value="Media" selected>Media</option>
+                                    <option value="Alta">Alta</option>
+                                    <option value="Crítica">Crítica</option>
+                                </select>
+                            </div>
+                            <select name="tipo" class="form-control form-control-sm s2 col-11">
+                            @foreach ($this->extra->read(['tipoOrden'],'tipo_orden',null,null,'result',['tipoOrden'=>'asc']) as $item)
+                             <option value="<?= $item['tipoOrden'] ?>" <?=$this->session->Parent==0?'':($item['tipoOrden']=="Mantenimiento Preventivo"?'disabled':'')?>><?= $item['tipoOrden'] ?></option>
+                            @endforeach
+                        </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="descripcion_1" class="form-label">Falla Principal / Título</label>
+                            <input type="text" class="form-control" id="descripcion_1" name="descripcion_1" placeholder="Ej: Falla en frenos traseros" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="descripcion" class="form-label">Descripción Detallada</label>
+                            <textarea class="form-control" id="descripcion" name="descripcion" rows="3" placeholder="Detalle técnico de lo observado..." required></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="responsable" class="form-label">Responsable / Mecánico</label>
+                                <input type="text" class="form-control" id="responsable" name="responsable">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="fecha_prometida" class="form-label">Fecha Prometida Entrega</label>
+                                <input type="date" class="form-control" id="fecha_prometida" name="fecha_prometida" value="{{ date('Y-m-d', strtotime('+3 days')) }}" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-step shadow-sm border-0">
+                    <div class="card-body py-3 bg-light rounded">
+                        <label class="form-label mb-2"><i class="fas fa-camera text-orange me-1"></i> Evidencia Fotográfica</label>
+                        <input type="file" name="fotos_orden[]" class="form-control border-dashed" accept="image/*" capture="environment" multiple>
+                        <small class="text-muted mt-1 d-block">Nota: Puede subir varias fotos simultáneamente.</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card card-step shadow-sm h-100">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                        <h5 class="m-0 fw-bold text-uppercase small" style="letter-spacing: 1px;">Lista de Repuestos e Insumos</h5>
+                        <div class="btn-group shadow-sm">
+                            <button type="button" class="btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#searchSupplyModal">
+                                <i class="fas fa-search me-1"></i> Inventario
+                            </button>
+                            <button type="button" class="btn btn-outline-dark btn-sm" data-bs-toggle="modal" data-bs-target="#manualSupplyModal">
+                                <i class="fas fa-plus me-1"></i> Manual
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="min-height: 300px;">
+                            <table class="table table-hover align-middle mb-0 table-supply">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-3 border-0">CÓDIGO</th>
+                                        <th class="border-0">DESCRIPCIÓN</th>
+                                        <th class="text-end border-0">STOCK</th>
+                                        <th class="text-end border-0">CANT.</th>
+                                        <th class="text-center border-0">ACCIONES</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="selectedSuppliesTableBody">
+                                    {{-- Renderizado dinámico vía JS --}}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="observations-container" class="card-footer bg-white border-top-0" style="display: none;">
+                        <label for="supplies_observations" class="form-label small">Observaciones de Repuestos:</label>
+                        <textarea class="form-control form-control-sm bg-light" id="supplies_observations" name="supplies_observations" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 mt-4 mb-5">
+                <button type="submit" class="btn btn-orange btn-lg w-100 shadow-lg fw-bold py-3 text-uppercase" style="letter-spacing: 2px;">
+                    <i class="fas fa-save me-2 text-white"></i> Procesar y Guardar Orden
+                </button>
+            </div>
+        </div>
+    </form>
 </div>
 
-<div class="card shadow-sm mb-4">
-    <div class="card-header bg-white">
-        <h5 class="card-title m-0">Datos de la Orden {{$nro_orden}}</h5>
-    </div>
-    <div class="card-body">
-        {{-- Se añade un campo oculto para el modo de guardado --}}
-        <form action="{{ route('ordenes.store') }}" method="POST" id="orden-form" enctype="multipart/form-data">
-            @csrf
-            <input type="hidden" name="estatus" value="2"> {{-- Estatus "Abierta" --}}
-            <input type="hidden" name="fecha_in" value="{{ date('Y-m-d') }}">
-            <input type="hidden" name="nro_orden" value="{{$nro_orden}}">
-            
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="id_vehiculo" class="form-label">Vehículo</label>
-                    @if(is_null($vehiculo))
-                    <select class="form-select" id="id_vehiculo" name="id_vehiculo" >
-                        <option value="">Seleccione Vehículo</option>
-                       @foreach ($vehiculos as $vehiculo)
-                            <option value="{{ $vehiculo->id }}">{{ $vehiculo->flota }} (Placa: {{ $vehiculo->placa }})</option>
-                        @endforeach
-                    </select>
-                    @else
-                    <input type="hidden" name="vehiculo_id" value="{{$vehiculo->vehiculo_id}}">
-                    <input type="text" name="none" id="none" disabled value="{{$vehiculo->flota}} {{$vehiculo->placa}}">
-                    @endif
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="tipo" class="form-label">Tipo de Orden</label>
-                    <select class="form-select" id="tipo" name="tipo" required>
-                        <option value="Preventivo">Preventivo</option>
-                        <option value="Revision">Revision</option>
-                        <option value="Correctivo">Correctivo</option>
-                        <option value="Mantenimiento">Mantenimiento</option>
-                        <option value="Otro">Otros</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="mb-3">
-                <label for="descripcion_1" class="form-label">Falla Principal/Título</label>
-                <input type="text" class="form-control" id="descripcion_1" name="descripcion_1" placeholder="Ej: Ruido en motor o Mantenimiento Preventivo" required>
-            </div>
-            <div class="mb-3">
-                <label for="descripcion" class="form-label">Descripción Detallada</label>
-                <textarea class="form-control" id="descripcion" name="descripcion" rows="3" required></textarea>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="prioridad" class="form-label">Prioridad</label>
-                    <select class="form-select" id="prioridad" name="prioridad" required>
-                        <option value="Baja">Baja</option>
-                        <option value="Media" selected>Media</option>
-                        <option value="Alta">Alta</option>
-                        <option value="Crítica">Crítica</option>
-                    </select>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="responsable">Responsable</label>
-                    <input type="text" class="form-control" id="responsable" name="responsable">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="fecha_prometida" class="form-label">Fecha de Cierre Prometida</label>
-                    <input type="date" class="form-control" id="fecha_prometida" name="fecha_prometida" value="{{ date('Y-m-d', strtotime('+3 days')) }}" required>
-                </div>
-            </div>
-            
-            <hr class="my-4">
-
-<div class="col-md-6 mb-3">
-                    <label for="fotos_orden" class="form-label">
-                        Registro Fotografico (Usar Cámara en Móvil)
-                        <i class="bi bi-camera-fill text-primary ms-1"></i> 
-                    </label>
-                    <input 
-                        type="file" 
-                        name="fotos_orden[]" 
-                        id="fotos_orden" 
-                        class="form-control" 
-                        accept="image/*" 
-                        capture="environment" 
-                        multiple
-                        
-                    >
-                    <small class="form-text text-muted">En dispositivos móviles, esto abrirá la cámara trasera.</small>
-                </div>
-            <hr class="my-4">
-
-
-            {{-- ---------------------------------------------------- --}}
-            {{-- BLOQUE DE INSUMOS (Inventario y Manuales) --}}
-            {{-- ---------------------------------------------------- --}}
-            
-            <h5 class="card-title m-0 mb-3">Insumos y Repuestos Requeridos</h5>
-            
-            <div class="d-flex gap-2 mb-3">
-                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#searchSupplyModal">
-                    <i class="bi bi-search me-1"></i> Buscar en Inventario
-                </button>
-                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#manualSupplyModal">
-                    <i class="bi bi-plus-circle me-1"></i> Agregar Suministro Manual
-                </button>
-            </div>
-
-            {{-- Tabla de Insumos Seleccionados (Previsualización) --}}
-            <div class="table-responsive">
-                <table class="table table-striped table-hover align-middle">
-                    <thead class="table-primary">
-                        <tr>
-                            <th>Código</th>
-                            <th>Descripción</th>
-                            <th class="text-end">Existencia</th>
-                            <th class="text-end">Cant. Requerida</th>
-                            <th>Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody id="selectedSuppliesTableBody">
-                        {{-- Filas generadas por JS --}}
-                        <tr><td colspan="5" class="text-center text-muted">Aún no se han agregado insumos.</td></tr>
-                    </tbody>
-                </table>
-            </div>
-
-            {{-- Input Oculto para enviar los datos serializados al controlador --}}
-            <input type="hidden" name="supplies_json" id="supplies_json">
-            <div id="observations-container" style="display: none;">
-                <hr class="my-4">
-                <h5 class="card-title m-0 mb-3 text-primary">Observaciones de Suministros</h5>
-                <div class="mb-3">
-                    <label for="supplies_observations" class="form-label">Comentarios Adicionales sobre Repuestos Requeridos:</label>
-                    <textarea class="form-control" id="supplies_observations" name="supplies_observations" rows="2" 
-                              placeholder="Ej: Priorizar la compra del aceite 20W50 ya que no hay existencia."></textarea>
-                    <small class="form-text text-muted">Este campo solo se enviará si se han agregado suministros a la orden.</small>
-                </div>
-                <hr class="my-4">
-            </div>
-            <hr class="my-4">
-
-            <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-success btn-lg shadow-sm">
-                    <i class="bi bi-save me-2"></i> Guardar Orden de Trabajo
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-@endsection
-
-{{-- ---------------------------------------------------- --}}
-{{-- MODALES --}}
-{{-- ---------------------------------------------------- --}}
-
-{{-- Modal para Búsqueda en Inventario (Permite múltiples adiciones) --}}
-<div class="modal fade" id="searchSupplyModal" tabindex="-1" aria-labelledby="searchSupplyModalLabel" aria-hidden="true">
+<div class="modal fade" id="searchSupplyModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="searchSupplyModalLabel"><i class="bi bi-search me-1"></i> Buscar Repuestos en Inventario</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-corporate text-white">
+                <h5 class="modal-title fw-bold">CATÁLOGO DE INVENTARIO</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-3">
-                    <label for="supplySearchInput" class="form-label">Buscar por Código o Descripción:</label>
-                    <input type="text" class="form-control" id="supplySearchInput" placeholder="Escriba aquí para buscar en tiempo real...">
+                <div class="input-group mb-3">
+                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" class="form-control border-start-0 ps-0" id="supplySearchInput" placeholder="Escriba código o nombre del producto...">
                 </div>
-
-                <div class="table-responsive">
-                    <table class="table table-bordered table-sm">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Código</th>
-                                <th>Descripción</th>
-                                <th class="text-end">Existencia</th>
-                                <th class="text-center" style="width: 120px;">Cantidad</th>
-                                <th style="width: 50px;"></th>
+                <div class="table-responsive" style="max-height: 400px;">
+                    <table class="table table-sm table-hover border">
+                        <thead class="bg-light sticky-top">
+                            <tr class="small text-muted">
+                                <th>CÓDIGO</th>
+                                <th>DESCRIPCIÓN</th>
+                                <th class="text-center">EXISTENCIA</th>
+                                <th class="text-center" style="width: 100px;">CANT.</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody id="searchResultsTableBody">
-                            <tr><td colspan="5" class="text-center text-muted">Escriba en el campo de búsqueda para empezar.</td></tr>
+                            {{-- Resultados de búsqueda AJAX --}}
                         </tbody>
                     </table>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar y Volver</button>
-                {{-- No hay botón de guardar aquí, la adición es por fila --}}
-            </div>
         </div>
     </div>
 </div>
 
-{{-- Modal para Suministro Manual (Permite múltiples adiciones) --}}
-<div class="modal fade" id="manualSupplyModal" tabindex="-1" aria-labelledby="manualSupplyModalLabel" aria-hidden="true">
+<div class="modal fade" id="manualSupplyModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-secondary text-white">
-                <h5 class="modal-title" id="manualSupplyModalLabel"><i class="bi bi-plus-circle me-1"></i> Agregar Suministro Manual</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title fw-bold">SUMINISTRO NO CATALOGADO</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <p class="text-muted">Utilice esta opción para artículos que no están en inventario o que se comprarán aparte.</p>
+            <div class="modal-body bg-light">
                 <div class="mb-3">
-                    <label for="manual-descripcion" class="form-label">Descripción del Artículo:</label>
-                    <input type="text" class="form-control" id="manual-descripcion" required placeholder="Ej: Aceite 20w50 (Comprado en Ferretería)">
+                    <label class="form-label">Descripción del Repuesto</label>
+                    <input type="text" class="form-control" id="manual-descripcion" placeholder="Ej: Tornillo grado 8 1/2 pulgada">
                 </div>
                 <div class="mb-3">
-                    <label for="manual-cantidad" class="form-label">Cantidad Requerida:</label>
-                    <input type="number" class="form-control text-end" id="manual-cantidad" value="1" min="1" required>
+                    <label class="form-label">Cantidad Requerida</label>
+                    <input type="number" class="form-control text-end fw-bold" id="manual-cantidad" value="1" min="1">
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Terminar y Cerrar</button>
-                <button type="button" class="btn btn-success" id="addManualSupplyBtn">
-                    <i class="bi bi-check-lg me-1"></i> Agregar a la Orden
-                </button>
+                <button type="button" class="btn btn-success w-100 fw-bold" id="addManualSupplyBtn">AÑADIR A LA LISTA</button>
             </div>
         </div>
     </div>
 </div>
-
+@endsection
 
 @push('scripts')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function() {
-        // Objeto global para almacenar los suministros seleccionados (Inventario y Manuales)
-        // Key: id del inventario (numérico) o 'MANUAL_X'
+        // --- TUS VARIABLES ORIGINALES ---
         let selectedSupplies = {};
-        let manualSupplyCounter = 0; // Contador para generar IDs únicos para items manuales
+        let manualSupplyCounter = 0;
 
-        // Referencias a elementos del DOM
         const selectedSuppliesTableBody = document.getElementById('selectedSuppliesTableBody');
         const searchInput = document.getElementById('supplySearchInput');
         const searchResultsBody = document.getElementById('searchResultsTableBody');
         const suppliesJsonInput = document.getElementById('supplies_json');
         const addManualSupplyBtn = document.getElementById('addManualSupplyBtn');
 
-        // Función de utilidad para debouncing (limita la frecuencia de ejecución)
+        // --- TU LÓGICA AJAX ---
         function debounce(func, timeout = 300) {
             let timer;
             return (...args) => {
                 clearTimeout(timer);
-                timer = setTimeout(() => {
-                    func.apply(this, args);
-                }, timeout);
+                timer = setTimeout(() => { func.apply(this, args); }, timeout);
             };
         }
 
-        // --- LÓGICA DE BÚSQUEDA EN INVENTARIO (AJAX) ---
+        function performSupplySearch() {
+            const query = searchInput.value.trim();
+            if (query.length < 3) {
+                searchResultsBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted p-4">Ingrese al menos 3 caracteres para buscar.</td></tr>';
+                return;
+            }
+            $.ajax({
+                url: '{{ route("ordenes.search-supplies") }}',
+                method: 'GET',
+                data: { query: query },
+                success: function(response) { renderSearchResults(response); }
+            });
+        }
+
+        searchInput.addEventListener('input', debounce(performSupplySearch, 300));
+
+        // --- TUS FUNCIONES DE RENDERIZADO ---
         function renderSearchResults(data) {
             let html = '';
-            if (data.length === 0) {
-                html = '<tr><td colspan="5" class="text-center text-warning">No se encontraron resultados.</td></tr>';
+            if(data.length === 0) {
+                html = '<tr><td colspan="5" class="text-center text-danger p-4">No se encontraron productos.</td></tr>';
             } else {
                 data.forEach(item => {
-                    // Determinar si el item ya está seleccionado para mostrar el estado
-                    const isSelected = selectedSupplies.hasOwnProperty(item.id);
-                    const selectedQty = isSelected ? selectedSupplies[item.id].cantidad : 1;
-                    const stockClass = item.existencia < selectedQty ? 'text-danger fw-bold' : '';
-
                     html += `
-                        <tr class="${isSelected ? 'table-info' : ''}">
-                            <td>${item.codigo}</td>
+                        <tr class="align-middle">
+                            <td class="fw-bold">${item.codigo}</td>
                             <td>${item.descripcion}</td>
-                            <td class="text-end ${stockClass}">${item.existencia}</td>
-                            <td class="text-center">
-                                <input type="number" class="form-control form-control-sm text-end search-quantity" 
-                                       data-item-id="${item.id}"
-                                       value="${selectedQty}" 
-                                       min="1" style="width: 100px; display: inline-block;">
-                            </td>
-                            <td class="text-center">
-                                <button type="button" class="btn btn-sm btn-success add-supply" data-item-id="${item.id}"
-                                    title="Agregar/Actualizar a la Orden">
-                                    <i class="bi bi-plus-lg"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
+                            <td class="text-center"><span class="badge ${item.existencia > 0 ? 'bg-success' : 'bg-danger'}">${item.existencia}</span></td>
+                            <td><input type="number" class="form-control form-control-sm search-quantity text-center fw-bold" data-item-id="${item.id}" value="1" min="1"></td>
+                            <td class="text-end"><button type="button" class="btn btn-sm btn-orange add-supply" data-item-id="${item.id}"><i class="fas fa-plus"></i></button></td>
+                        </tr>`;
                 });
             }
             searchResultsBody.innerHTML = html;
         }
 
-        // Ejecuta la búsqueda de inventario
-        function performSupplySearch() {
-            const query = searchInput.value.trim();
-            if (query.length < 3) {
-                searchResultsBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Escriba al menos 3 caracteres.</td></tr>';
-                return;
-            }
-
-            searchResultsBody.innerHTML = '<tr><td colspan="5" class="text-center text-primary"><div class="spinner-border spinner-border-sm me-2" role="status"></div> Buscando...</td></tr>';
-
-            // Realizar la llamada AJAX (Asumimos una ruta 'supplies.search' que devuelve JSON)
-            $.ajax({
-                url: '{{ route("ordenes.search-supplies") }}', // RUTA DE EJEMPLO: DEBES CREAR ESTA RUTA EN LARAVEL
-                method: 'GET',
-                data: { query: query },
-                success: function(response) {
-                    renderSearchResults(response); // Asume que el controlador devuelve { data: [...] }
-                },
-                error: function(xhr) {
-                    searchResultsBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error al cargar el inventario.</td></tr>';
-                    console.error("Error en la búsqueda:", xhr.responseText);
-                }
-            });
-        }
-        // Listener con debounce para la búsqueda en tiempo real
-        searchInput.addEventListener('input', debounce(performSupplySearch, 300));
-
-
-        // --- LÓGICA DE TABLA PRINCIPAL Y PREVISUALIZACIÓN ---
-
-        // Dibuja la tabla de suministros seleccionados y actualiza el input JSON oculto
         function renderSuppliesTable() {
             let html = '';
             const suppliesArray = Object.values(selectedSupplies);
-            const observationsContainer = document.getElementById('observations-container'); // Referencia al nuevo contenedor
+            const obsContainer = document.getElementById('observations-container');
 
             if (suppliesArray.length === 0) {
-                html = '<tr><td colspan="5" class="text-center text-muted">Aún no se han agregado insumos.</td></tr>';
-                // OCULTAR campo si no hay insumos
-                if (observationsContainer) {
-                    observationsContainer.style.display = 'none';
-                }
+                html = '<tr><td colspan="5" class="text-center text-muted py-5">No se han añadido repuestos a esta orden.</td></tr>';
+                if(obsContainer) obsContainer.style.display = 'none';
             } else {
-                if (observationsContainer) {
-                    observationsContainer.style.display = 'block';
-                }
+                if(obsContainer) obsContainer.style.display = 'block';
                 suppliesArray.forEach(item => {
-                    // Clase de estilo si el item es de inventario y la cantidad excede la existencia
-                    let rowClass = '';
-                    let existenceText = item.existencia;
-                    if (!item.id.startsWith('MANUAL_') && item.cantidad > item.existencia) {
-                         // Item de inventario y requerimiento > existencia
-                        rowClass = 'table-warning';
-                    }
-                    
-                    if (item.id.startsWith('MANUAL_')) {
-                        // Item Manual
-                        existenceText = 'N/A (Manual)';
-                        rowClass = 'table-light';
-                    }
-
                     html += `
-                        <tr class="${rowClass}">
-                            <td>${item.codigo}</td>
-                            <td>${item.descripcion}</td>
-                            <td class="text-end">${existenceText}</td>
-                            <td class="text-end">${item.cantidad}</td>
+                        <tr class="align-middle">
+                            <td class="ps-3 fw-bold text-muted">${item.codigo}</td>
+                            <td class="small fw-bold">${item.descripcion}</td>
+                            <td class="text-end"><span class="text-muted small">${item.id.toString().startsWith('MANUAL') ? '-' : item.existencia}</span></td>
+                            <td class="text-end fw-bold text-orange">${item.cantidad}</td>
                             <td class="text-center">
-                                <button type="button" class="btn btn-sm btn-danger remove-supply" data-item-id="${item.id}" title="Quitar de la Orden">
-                                    <i class="bi bi-trash"></i>
-                                </button>
+                                <button type="button" class="btn btn-link btn-sm text-danger remove-supply" data-item-id="${item.id}"><i class="fas fa-times-circle"></i></button>
                             </td>
-                        </tr>
-                    `;
+                        </tr>`;
                 });
             }
             selectedSuppliesTableBody.innerHTML = html;
-            
-            // Actualizar el input oculto que se enviará con el formulario
             suppliesJsonInput.value = JSON.stringify(suppliesArray);
         }
 
         // --- MANEJO DE EVENTOS ---
+        $(document).on('click', '.add-supply', function() {
+            const itemId = $(this).data('item-id');
+            const row = $(this).closest('tr');
+            const quantity = parseInt(row.find('.search-quantity').val());
 
-        // 1. Añadir/Actualizar Suministro de Inventario (dentro del modal de búsqueda)
-        searchResultsBody.addEventListener('click', function(e) {
-            const addButton = e.target.closest('.add-supply');
-            if (addButton) {
-                const itemId = addButton.dataset.itemId;
-                const row = addButton.closest('tr');
-                // Buscamos el input de cantidad dentro de la fila
-                const quantityInput = row.querySelector('.search-quantity');
-                const quantity = parseInt(quantityInput.value, 10);
-                
-                if (quantity <= 0 || isNaN(quantity)) {
-                    Swal.fire('Error', 'La cantidad debe ser un número positivo.', 'error');
-                    return;
-                }
-                
-                // Los datos de la existencia y descripción se toman del HTML para evitar otra llamada
-                const itemData = {
-                    id: itemId,
-                    codigo: row.cells[0].textContent,
-                    descripcion: row.cells[1].textContent,
-                    // Parseamos la existencia, manejando el caso de errores de lectura si ocurre
-                    existencia: parseInt(row.cells[2].textContent, 10) || 0, 
-                    cantidad: quantity
-                };
-
-                // Si ya existe, se actualiza, si no, se añade
-                selectedSupplies[itemId] = itemData;
-                
-                renderSuppliesTable();
-                
-                // Retroalimentación visual
-                Swal.fire({
-                    toast: true,
-                    position: 'top-end',
-                    icon: 'success',
-                    title: `Agregado: ${itemData.descripcion} (x${quantity})`,
-                    showConfirmButton: false,
-                    timer: 2000
-                });
-                
-                // Vuelve a ejecutar la búsqueda para refrescar el color de la fila agregada/actualizada
-                // (Opcional: solo refrescar la fila, pero la búsqueda completa es más simple)
-                performSupplySearch(); 
-            }
-        });
-        
-        // 2. Añadir Suministro Manual (del modal manual)
-        addManualSupplyBtn.addEventListener('click', function(e) {
-            const descripcionInput = document.getElementById('manual-descripcion');
-            const cantidadInput = document.getElementById('manual-cantidad');
-            
-            const descripcion = descripcionInput.value.trim();
-            const cantidad = parseInt(cantidadInput.value, 10);
-
-            if (!descripcion || cantidad <= 0 || isNaN(cantidad)) {
-                 Swal.fire('Error', 'Debe ingresar una descripción y una cantidad válida.', 'error');
-                 return;
-            }
-
-            // Generar un ID temporal único
-            manualSupplyCounter++;
-            const manualId = 'MANUAL_' + manualSupplyCounter;
-
-            const itemData = {
-                id: manualId,
-                codigo: 'N/A', // No tiene código de inventario
-                descripcion: descripcion,
-                tipo: 'COMPRA',
-                existencia: 0, // 0 existencia fuerza la compra (si aplica tu lógica de negocio)
-                cantidad: cantidad
+            selectedSupplies[itemId] = {
+                id: itemId,
+                codigo: row.find('td:eq(0)').text(),
+                descripcion: row.find('td:eq(1)').text(),
+                existencia: parseInt(row.find('td:eq(2)').text()),
+                cantidad: quantity
             };
-
-            selectedSupplies[manualId] = itemData;
             renderSuppliesTable();
-
-            // Limpiar el formulario manual para permitir una nueva adición
-            descripcionInput.value = '';
-            cantidadInput.value = 1;
-
-            // Retroalimentación visual
-            Swal.fire({
-                toast: true,
-                position: 'top-end',
-                icon: 'success',
-                title: `Agregado Manual: ${itemData.descripcion} (x${cantidad})`,
-                showConfirmButton: false,
-                timer: 2000
-            });
-            
-            // NOTA: El modal manual permanece abierto para seguir agregando si el usuario lo desea.
+            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Agregado al listado', showConfirmButton: false, timer: 1500 });
         });
 
-
-        // 3. Eliminar un suministro de la tabla principal
-        selectedSuppliesTableBody.addEventListener('click', function(e) {
-            if (e.target.closest('.remove-supply')) {
-                const itemId = e.target.closest('.remove-supply').dataset.itemId;
-                delete selectedSupplies[itemId];
-                renderSuppliesTable();
-                 Swal.fire({
-                    toast: true,
-                    position: 'top-end',
-                    icon: 'info',
-                    title: 'Suministro Eliminado',
-                    showConfirmButton: false,
-                    timer: 1500
-                });
-                // Si el modal de búsqueda está abierto, refresca los resultados
-                if ($('#searchSupplyModal').hasClass('show')) {
-                     performSupplySearch(); 
-                }
+        addManualSupplyBtn.addEventListener('click', function() {
+            const desc = $('#manual-descripcion').val();
+            const cant = parseInt($('#manual-cantidad').val());
+            if(!desc || cant <= 0) {
+                Swal.fire('Atención', 'Debe ingresar descripción y cantidad válida', 'warning');
+                return;
             }
+
+            manualSupplyCounter++;
+            const id = 'MANUAL_' + manualSupplyCounter;
+            selectedSupplies[id] = { id: id, codigo: 'MANUAL', descripcion: desc, cantidad: cant, existencia: 0 };
+            renderSuppliesTable();
+            $('#manual-descripcion').val('');
+            $('#manualSupplyModal').modal('hide');
+            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Agregado Manual', showConfirmButton: false, timer: 1500 });
         });
-        
-        // 4. Listener para la serialización final antes del submit
-        document.getElementById('orden-form').addEventListener('submit', function(e) {
-            // Asegúrate de que el input oculto tenga el valor correcto antes de enviar.
+
+        $(document).on('click', '.remove-supply', function() {
+            const id = $(this).data('item-id');
+            delete selectedSupplies[id];
+            renderSuppliesTable();
+        });
+
+        // Asegurar que el JSON se envíe al procesar
+        $('#orden-form').on('submit', function() {
             suppliesJsonInput.value = JSON.stringify(Object.values(selectedSupplies));
-            
-            // Puedes añadir una validación para asegurar que se agregaron items
-            if (Object.values(selectedSupplies).length === 0) {
-                 // Puedes emitir una advertencia, pero es mejor permitir órdenes sin insumos si aplica tu caso
-                 // Swal.fire('Atención', 'No se ha añadido ningún suministro a la orden.', 'warning');
-                 // e.preventDefault();
-            }
+            return true;
         });
 
-        // Inicializar la tabla vacía al cargar la página
         renderSuppliesTable();
     });
 </script>
-@endpush
+@endpush    
