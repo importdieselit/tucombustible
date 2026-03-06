@@ -128,7 +128,18 @@ class Orden extends Model
     {
         // Asegúrate de que tu modelo OrdenFoto esté importado
         return $this->hasMany(OrdenFoto::class, 'orden_id'); 
-    }   
+    } 
+    
+    public function tipoFalla()
+    {
+        return $this->belongsTo(TipoFalla::class, 'tipo', 'id_tipo_falla')->first();
+    }
+
+    public function trabajos()
+    {
+        return $this->hasMany(Trabajos::class, 'id_orden', 'id');
+    }
+
 
     public function inspeccion()
     {

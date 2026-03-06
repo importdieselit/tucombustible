@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use App\Models\TipoOrden; 
+use App\Models\TipoFalla;   
 use App\Models\EstatusData; 
 use Carbon\Carbon; 
 use Illuminate\Support\Facades\Auth;
@@ -28,6 +29,9 @@ use App\Models\OrdenFoto;
 use App\Models\User;
 use Google\Service\Datastore\Sum;
 use Illuminate\Database\Eloquent\Builder;
+use App\Models\TemparioCategoria;
+use App\Models\Trabajos;
+use App\Models\TemparioServicio;
 
 
 class OrdenController extends BaseController
@@ -83,11 +87,10 @@ class OrdenController extends BaseController
 
         
         $gasto_mensual = collect([
-            (object)['name' => 'Enero', 'y' => 2500],
-            (object)['name' => 'Febrero', 'y' => 3100],
-            (object)['name' => 'Marzo', 'y' => 2800],
-            (object)['name' => 'Abril', 'y' => 4500],
-            (object)['name' => 'Mayo', 'y' => 3900],
+            (object)['name' => 'Diciembre', 'y' => 2500],
+            (object)['name' => 'Enero', 'y' => 3100],
+            (object)['name' => 'Febrero', 'y' => 2200],
+            
         ]);
 
         // Simulación de vehículos con más reportes de falla 
@@ -368,13 +371,16 @@ class OrdenController extends BaseController
         $vehiculos = Vehiculo::all();
         $personal = Personal::all();
         $tipos = TipoOrden::all();
+        $tipo_falla= TipoFalla::all();
         $nro_orden = $this->generateOrdenCode();
+        $categorias_tempario = TemparioCategoria::all();
+        $servicios_tempario = TemparioServicio::all();
         $suministros = Inventario::all();
         $estatusOpciones = EstatusData::all()->keyBy('id_estatus');        
         if(!is_null($vehiculo_id)){
             $vehiculo = Vehiculo::findOrFail($vehiculo_id); 
         }
-        return view('orden.create', compact('vehiculo','vehiculos', 'personal','tipos', 'nro_orden','suministros','estatusOpciones'));
+        return view('orden.create', compact('vehiculo','vehiculos', 'personal','tipos', 'nro_orden','suministros','estatusOpciones', 'tipo_falla','categorias_tempario','servicios_tempario'));
     }
 
     /**
@@ -742,6 +748,27 @@ class OrdenController extends BaseController
             return response()->json(['success' => false, 'message' => 'Error al anular la orden de trabajo: ' . $e->getMessage()], 500);
         }
     }
+
+    public function getTemparioServicios(Request $request) 
+    {
+        // Obtenemos el ID que enviamos desde el JS como 'catemp'
+        $catId = $request->catemp; 
+
+        if (!$catId) {
+            return response('<option value="">Seleccione categoría válida</option>');
+        }
+
+        // Tu lógica para buscar servicios
+        $servicios = TemparioServicio::where('id_tempario_categoria', $catId)->get();
+
+        $output = '<option value="">Seleccione un servicio...</option>';
+        foreach ($servicios as $s) {
+            $output .= '<option value="' . $s->id_tempario_servicio . '">' . $s->servicio . '</option>';
+        }
+
+        return response($output);
+    }
+
      public function reactivarOrden(Request $request, $id)
     {
         try {

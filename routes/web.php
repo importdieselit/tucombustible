@@ -400,6 +400,7 @@ Route::get('/reporte/vehiculos-disponibilidad', [VehiculoController::class, 'rep
         Route::get('ordenes/compras/{id_order?}/{id?}', [OrdenController::class, 'purchaseOrder'])->name('ordenes.compra');
         Route::post('/compras/actualizar-precio', [OrdenController::class,'actualizarPrecio'])->name('compras.actualizar_precio');
         Route::post('/compras/cambiar-estatus', [OrdenController::class,'cambiarEstatus'])->name('compras.cambiar_estatus');
+        Route::post('/get-tempario-servicios', [OrdenController::class, 'getTemparioServicios'])->name('get.tempario_servicios');
 
         // Permisos y Perfiles
         Route::get('/permisos', [AccesoController::class, 'index'])->name('permisos.index');

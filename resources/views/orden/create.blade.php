@@ -79,12 +79,7 @@
                                     <option value="Crítica">Crítica</option>
                                 </select>
                             </div>
-                            <select name="tipo" class="form-control form-control-sm s2 col-11">
-                            @foreach ($this->extra->read(['tipoOrden'],'tipo_orden',null,null,'result',['tipoOrden'=>'asc']) as $item)
-                             <option value="<?= $item['tipoOrden'] ?>" <?=$this->session->Parent==0?'':($item['tipoOrden']=="Mantenimiento Preventivo"?'disabled':'')?>><?= $item['tipoOrden'] ?></option>
-                            @endforeach
-                        </select>
-                        </div>
+                       </div>
 
                         <div class="mb-3">
                             <label for="descripcion_1" class="form-label">Falla Principal / Título</label>
@@ -119,6 +114,61 @@
             </div>
 
             <div class="col-lg-6">
+                <div class="card card-step border-orange shadow-sm mb-4">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                        <h5 class="m-0 fw-bold text-uppercase small"><i class="fas fa-tools text-orange me-2"></i>Planificación de Trabajos</h5>
+                        <button type="button" class="btn btn-sm btn-danger" id="btn-limpiar-trabajos" title="Limpiar lista">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                    <div class="card-body bg-light border-bottom">
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <label class="small fw-bold">Categoría</label>
+                              
+                                <select id="select-categoria" class="form-select form-select-sm s2">
+                                    <option value="">Seleccione...</option>
+                                    @foreach ($categorias_tempario as $cat)
+
+                                        
+                                        <option value="{{ $cat->id_tempario_categoria }}">[{{ $cat->codigo }}] {{ $cat->categoria }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="small fw-bold">Servicio / Trabajo</label>
+                                <select id="select-servicio" class="form-select form-select-sm s2">
+                                    <option value="">Seleccione categoría primero</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="small fw-bold">Mecánico(s)</label>
+                                <select id="select-mecanicos" class="form-select form-select-sm s2" multiple>
+                                                                   </select>
+                            </div>
+                            <div class="col-12 text-end mt-2">
+                                <button type="button" class="btn btn-orange btn-sm px-4 fw-bold" id="btn-agregar-trabajo">
+                                    <i class="fas fa-plus me-1"></i> AGREGAR TRABAJO
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive" style="max-height: 250px;">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-corporate text-white small">
+                                <tr>
+                                    <th class="ps-3">CONCEPTO</th>
+                                    <th>MECÁNICOS ASIGNADOS</th>
+                                    <th class="text-center">ACCIÓN</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-trabajos-body">
+                                <tr><td colspan="3" class="text-center text-muted py-4 small">No hay trabajos asignados</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                
+
                 <div class="card card-step shadow-sm h-100">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
                         <h5 class="m-0 fw-bold text-uppercase small" style="letter-spacing: 1px;">Lista de Repuestos e Insumos</h5>
@@ -155,6 +205,7 @@
                         <textarea class="form-control form-control-sm bg-light" id="supplies_observations" name="supplies_observations" rows="2"></textarea>
                     </div>
                 </div>
+            </div>
             </div>
 
             <div class="col-12 mt-4 mb-5">
@@ -228,10 +279,17 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
     $(document).ready(function() {
         // --- TUS VARIABLES ORIGINALES ---
         let selectedSupplies = {};
         let manualSupplyCounter = 0;
+        let trabajosAsignados = [];
 
         const selectedSuppliesTableBody = document.getElementById('selectedSuppliesTableBody');
         const searchInput = document.getElementById('supplySearchInput');
@@ -358,6 +416,78 @@
         });
 
         renderSuppliesTable();
+
+
+            // 1. CARGA DINÁMICA DE TEMPARIO
+        $('#select-categoria').on('change', function() {
+            const catId = $(this).val();
+            if (!catId) return;
+
+            $.post('{{ route("get.tempario_servicios") }}', { catemp: catId }, function(data) {
+                $('#select-servicio').html(data);
+            });
+        });
+
+        // 2. AGREGAR TRABAJO A LA LISTA
+        $('#btn-agregar-trabajo').on('click', function() {
+            const servicioId = $('#select-servicio').val();
+            const servicioTexto = $('#select-servicio option:selected').text();
+            const mecanicosIds = $('#select-mecanicos').val();
+            const mecanicosNombres = $('#select-mecanicos option:selected').map(function(){ return $(this).text(); }).get();
+
+            if (!servicioId || mecanicosIds.length === 0) {
+                Swal.fire('Error', 'Debe seleccionar un servicio y al menos un mecánico', 'error');
+                return;
+            }
+
+            const nuevoTrabajo = {
+                id_tempario: servicioId,
+                concepto: servicioTexto,
+                mecanicos: mecanicosIds,
+                mecanicos_nombres: mecanicosNombres.join(', ')
+            };
+
+            trabajosAsignados.push(nuevoTrabajo);
+            renderTrabajos();
+            
+            // Limpiar selectores
+            $('#select-mecanicos').val(null).trigger('change');
+        });
+
+        function renderTrabajos() {
+            let html = '';
+            if (trabajosAsignados.length === 0) {
+                html = '<tr><td colspan="3" class="text-center text-muted py-4 small">No hay trabajos asignados</td></tr>';
+            } else {
+                trabajosAsignados.forEach((t, index) => {
+                    html += `
+                    <tr class="small">
+                        <td class="ps-3 fw-bold">${t.concepto}</td>
+                        <td><span class="text-muted">${t.mecanicos_nombres}</span></td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-link btn-sm text-danger btn-remove-trabajo" data-index="${index}">
+                                <i class="fas fa-times-circle"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+                });
+            }
+            $('#tabla-trabajos-body').html(html);
+            $('#trabajos_json').val(JSON.stringify(trabajosAsignados));
+        }
+
+        $(document).on('click', '.btn-remove-trabajo', function() {
+            const index = $(this).data('index');
+            trabajosAsignados.splice(index, 1);
+            renderTrabajos();
+        });
+
+        $('#btn-limpiar-trabajos').on('click', function() {
+            if(confirm('¿Desea limpiar todos los trabajos?')) {
+                trabajosAsignados = [];
+                renderTrabajos();
+            }
+        });
     });
 </script>
 @endpush    
