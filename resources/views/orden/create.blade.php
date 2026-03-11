@@ -7,7 +7,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 shadow-sm rounded">
         <div>
             <h3 class="fw-bold mb-0 text-uppercase"><i class="fas fa-file-signature text-orange me-2"></i>Crear Orden de Trabajo</h3>
-            <p class="text-muted mb-0 small">Registro de reparación o mantenimiento para la flota.</p>
+            <p class="text-muted mb-0 small">Registro dinámico de reparaciones, mantenimientos y servicios generales.</p>
         </div>
         <div class="text-end">
             <span class="badge bg-corporate p-2 fs-6">ORDEN NRO: {{$nro_orden}}</span>
@@ -16,196 +16,220 @@
 
     <form action="{{ route('ordenes.store') }}" method="POST" id="orden-form" enctype="multipart/form-data">
         @csrf
+        {{-- Campos ocultos de control --}}
         <input type="hidden" name="estatus" value="2">
         <input type="hidden" name="fecha_in" value="{{ date('Y-m-d') }}">
         <input type="hidden" name="nro_orden" value="{{$nro_orden}}">
         <input type="hidden" name="supplies_json" id="supplies_json">
         <input type="hidden" name="trabajos_json" id="trabajos_json">
 
+        {{-- 1. SELECTOR MAESTRO DE TIPO DE ORDEN --}}
+        <div class="card card-step border-orange shadow-sm mb-4">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-orange"><i class="fas fa-list-ul me-2"></i>Tipo de Requerimiento</label>
+                        <select name="tipo_orden_maestro" id="tipo_orden_maestro" class="form-select form-select-lg fw-bold border-orange">
+                            <option value="vehiculo" selected>🚜 REPARACIÓN / MANTT VEHÍCULO (INTERNO)</option>
+                            <option value="auxilio_vial">🚨 AUXILIO VIAL (RESCATE)</option>
+                            <option value="taller_externo">🛠️ ORDEN DE TALLER EXTERNO</option>
+                            <option value="servicios_generales">🏢 SERVICIOS GENERALES (SEDES/INFRA)</option>
+                            <option value="servicios_terceros">🔌 TRABAJOS A TERCEROS / EQUIPOS EXTERNOS</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 section-dinamica" id="group-sede" style="display:none;">
+                        <label class="form-label fw-bold">Sede / Ubicación Administrativa</label>
+                        <select name="id_sede" class="form-select border-2">
+                            <option value="">Seleccione Sede...</option>
+                            @foreach($sedes ?? [] as $sede)
+                                <option value="{{ $sede->id }}">{{ $sede->nombre }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row g-4">
+            {{-- COLUMNA IZQUIERDA: DATOS DE CABECERA --}}
             <div class="col-lg-6">
                 <div class="card card-step border-orange shadow-sm mb-4">
                     <div class="card-header bg-white fw-bold py-3">
-                        <i class="fas fa-truck text-orange me-2"></i>Detalles del Vehículo y Servicio
+                        <i class="fas fa-info-circle text-orange me-2"></i>Detalles del Servicio
                     </div>
                     <div class="card-body">
-                        <div class="mb-3">
-                            <label for="id_vehiculo" class="form-label">Vehículo</label>
-                            @if(is_null($vehiculo))
-                                <select class="form-select border-2" id="id_vehiculo" name="id_vehiculo">
-                                    <option value="">Seleccione Vehículo</option>
-                                    @foreach ($vehiculos as $v)
-                                        <option value="{{ $v->id }}">{{ $v->flota }} (Placa: {{ $v->placa }})</option>
-                                    @endforeach
-                                </select>
-                            @else
-                                <input type="hidden" name="vehiculo_id" value="{{$vehiculo->vehiculo_id}}">
-                                <div class="p-2 bg-light border rounded fw-bold text-dark">
-                                    {{$vehiculo->flota}} - {{$vehiculo->placa}}
+                        
+                        {{-- BLOQUE VEHÍCULO (Condicional) --}}
+                        <div class="section-dinamica mb-3" id="group-vehiculo">
+                            <label for="id_vehiculo" class="form-label fw-bold">Vehículo / Unidad</label>
+                            <select class="form-select select2" id="id_vehiculo" name="id_vehiculo">
+                                <option value="">Buscar unidad...</option>
+                                @foreach ($vehiculos as $v)
+                                    <option value="{{ $v->id }}" data-km="{{ $v->kilometraje }}">[{{ $v->flota }}] {{ $v->placa }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- BLOQUE UBICACIÓN / TALLER (Condicional) --}}
+                        <div class="section-dinamica mb-3" id="group-ubicacion-externa" style="display:none;">
+                            <label class="form-label fw-bold" id="label-ubicacion">Ubicación del Trabajo</label>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+                                <input type="text" name="ubicacion_detalle" class="form-control" placeholder="Ej: Carretera Nacional / Planta Cliente">
+                            </div>
+                            
+                            <div id="subgroup-taller-ext" style="display:none;">
+                                <label class="form-label small fw-bold mt-2">Taller Externo Responsable</label>
+                                <div class="input-group">
+                                    <select name="id_taller_externo" class="form-select">
+                                        <option value="">Seleccione Taller...</option>
+                                        {{-- Carga dinámica de talleres --}}
+                                    </select>
+                                    <button type="button" class="btn btn-outline-dark"><i class="fas fa-plus"></i></button>
                                 </div>
-                            @endif
+                            </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="tipo" class="form-label">Tipo de Orden</label>
+                                <label for="tipo" class="form-label fw-bold">Sub-Tipo</label>
                                 <select class="form-select" id="tipo" name="tipo" required>
                                     <option value="Preventivo">Preventivo</option>
-                                    <option value="Revision">Revision</option>
-                                    <option value="Correctivo">Correctivo</option>
+                                    <option value="Correctivo" selected>Correctivo</option>
                                     <option value="Mantenimiento">Mantenimiento</option>
-                                    <option value="Otro">Otros</option>
+                                    <option value="Otro">Otro / General</option>
                                 </select>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="prioridad" class="form-label">Prioridad</label>
-                                <select class="form-select" id="prioridad" name="prioridad" required>
-                                    <option value="Baja">Baja</option>
-                                    <option value="Media" selected>Media</option>
-                                    <option value="Alta">Alta</option>
-                                    <option value="Crítica">Crítica</option>
-                                </select>
+                            <div class="col-md-6 mb-3" id="group-km">
+                                <label for="kilometraje" class="form-label fw-bold">Kilometraje</label>
+                                <input type="number" class="form-control fw-bold border-orange" id="kilometraje" name="kilometraje" placeholder="0">
                             </div>
-                       </div>
-
-                        <div class="mb-3">
-                            <label for="descripcion_1" class="form-label">Falla Principal / Título</label>
-                            <input type="text" class="form-control" id="descripcion_1" name="descripcion_1" placeholder="Ej: Falla en frenos traseros" required>
                         </div>
 
                         <div class="mb-3">
-                            <label for="descripcion" class="form-label">Descripción Detallada</label>
-                            <textarea class="form-control" id="descripcion" name="descripcion" rows="3" placeholder="Detalle técnico de lo observado..." required></textarea>
+                            <label for="descripcion_1" class="form-label fw-bold">Título del Requerimiento</label>
+                            <input type="text" class="form-control" id="descripcion_1" name="descripcion_1" placeholder="Ej: Falla en frenos / Reparación de aire acondicionado" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="descripcion" class="form-label fw-bold">Descripción / Alcance</label>
+                            <textarea class="form-control" id="descripcion" name="descripcion" rows="3" placeholder="Detalles específicos del servicio..." required></textarea>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="responsable" class="form-label">Responsable / Mecánico</label>
-                                <input type="text" class="form-control" id="responsable" name="responsable">
+                                <label for="responsable" class="form-label fw-bold">Solicitante / Responsable</label>
+                                <input type="text" class="form-control" id="responsable" name="responsable" value="{{ Auth::user()->name }}">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="fecha_prometida" class="form-label">Fecha Prometida Entrega</label>
-                                <input type="date" class="form-control" id="fecha_prometida" name="fecha_prometida" value="{{ date('Y-m-d', strtotime('+3 days')) }}" required>
+                                <label for="fecha_prometida" class="form-label fw-bold">Fecha Estimada Final</label>
+                                <input type="date" class="form-control" id="fecha_prometida" name="fecha_prometida" value="{{ date('Y-m-d', strtotime('+2 days')) }}">
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <div class="card card-step shadow-sm border-0">
-                    <div class="card-body py-3 bg-light rounded">
-                        <label class="form-label mb-2"><i class="fas fa-camera text-orange me-1"></i> Evidencia Fotográfica</label>
-                        <input type="file" name="fotos_orden[]" class="form-control border-dashed" accept="image/*" capture="environment" multiple>
-                        <small class="text-muted mt-1 d-block">Nota: Puede subir varias fotos simultáneamente.</small>
+                        <div class="bg-light p-3 rounded border-dashed mt-2">
+                            <label class="form-label fw-bold small"><i class="fas fa-camera me-1"></i> Fotos Iniciales</label>
+                            <input type="file" name="fotos_orden[]" class="form-control form-control-sm" accept="image/*" multiple>
+                        </div>
                     </div>
                 </div>
             </div>
 
+            {{-- COLUMNA DERECHA: TRABAJOS E INSUMOS --}}
             <div class="col-lg-6">
+                {{-- SECCIÓN TRABAJOS --}}
                 <div class="card card-step border-orange shadow-sm mb-4">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                        <h5 class="m-0 fw-bold text-uppercase small"><i class="fas fa-tools text-orange me-2"></i>Planificación de Trabajos</h5>
-                        <button type="button" class="btn btn-sm btn-danger" id="btn-limpiar-trabajos" title="Limpiar lista">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
+                        <h5 class="m-0 fw-bold text-uppercase small"><i class="fas fa-tools text-orange me-2"></i>Planificación de Tareas</h5>
+                        <button type="button" class="btn btn-sm btn-outline-danger border-0" id="btn-limpiar-trabajos"><i class="fas fa-trash"></i></button>
                     </div>
                     <div class="card-body bg-light border-bottom">
                         <div class="row g-2">
-                            <div class="col-md-4">
-                                <label class="small fw-bold">Categoría</label>
-                              
-                                <select id="select-categoria" name="id_categoria" class="form-select form-select-sm select2 s2">
+                            <div class="col-md-6">
+                                <label class="small fw-bold">Categoría de Servicio</label>
+                                <select id="select-categoria" class="form-select form-select-sm select2">
                                     <option value="">Seleccione...</option>
                                     @foreach ($categorias_tempario as $cat)
-
-                                        
-                                        <option value="{{ $cat->id_tempario_categoria }}">[{{ $cat->codigo }}] {{ $cat->categoria }}</option>
+                                        {{-- El backend debe proveer un 'contexto' para filtrar: vehiculo, infraestructura, etc --}}
+                                        <option value="{{ $cat->id_tempario_categoria }}" data-context="{{ $cat->contexto ?? 'vehiculo' }}">
+                                            [{{ $cat->codigo }}] {{ $cat->categoria }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-md-4">
-                                <label class="small fw-bold">Servicio / Trabajo</label>
-                                <select id="select-servicio" name="id_servicio" class="form-select form-select-sm select2 s2">
+                            <div class="col-md-6">
+                                <label class="small fw-bold">Tarea / Trabajo Específico</label>
+                                <select id="select-servicio" class="form-select form-select-sm select2">
                                     <option value="">Seleccione categoría primero</option>
                                 </select>
                             </div>
-                            <div class="col-md-4">
-                                <label class="small fw-bold">Mecánico(s)</label>
-                                <select id="select-mecanicos" name="mecanicos[]" class="form-select form-select-sm s2" multiple>
+                            <div class="col-12 mt-2">
+                                <label class="small fw-bold">Personal Asignado</label>
+                                <select id="select-mecanicos" class="form-select form-select-sm" multiple>
                                     @foreach ($personal as $p)
                                         <option value="{{ $p->id_personal }}">{{ $p->persona->nombre }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-12 text-end mt-2">
-                                <button type="button" class="btn btn-orange btn-sm px-4 fw-bold" id="btn-agregar-trabajo">
-                                    <i class="fas fa-plus me-1"></i> AGREGAR TRABAJO
+                                <button type="button" class="btn btn-orange btn-sm fw-bold px-4" id="btn-agregar-trabajo">
+                                    <i class="fas fa-plus me-1"></i> ASIGNAR TAREA
                                 </button>
                             </div>
                         </div>
                     </div>
-                    <div class="table-responsive" style="max-height: 250px;">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-corporate text-white small">
+                    <div class="table-responsive" style="max-height: 200px;">
+                        <table class="table table-sm table-hover align-middle mb-0">
+                            <thead class="bg-corporate text-white x-small">
                                 <tr>
                                     <th class="ps-3">CONCEPTO</th>
-                                    <th>MECÁNICOS ASIGNADOS</th>
-                                    <th class="text-center">ACCIÓN</th>
+                                    <th>RESPONSABLES</th>
+                                    <th class="text-center"></th>
                                 </tr>
                             </thead>
                             <tbody id="tabla-trabajos-body">
-                                <tr><td colspan="3" class="text-center text-muted py-4 small">No hay trabajos asignados</td></tr>
+                                <tr><td colspan="3" class="text-center text-muted py-4 small">No hay tareas asignadas</td></tr>
                             </tbody>
                         </table>
                     </div>
-                
+                </div>
 
-                <div class="card card-step shadow-sm h-100">
+                {{-- SECCIÓN INSUMOS --}}
+                <div class="card card-step shadow-sm border-orange">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                        <h5 class="m-0 fw-bold text-uppercase small" style="letter-spacing: 1px;"><i class="fas fa-box-open text-orange me-2"></i>Lista de Repuestos e Insumos</h5>
-                        <div class="btn-group shadow-sm">
-                            <button type="button" class="btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#searchSupplyModal">
-                                <i class="fas fa-search me-1"></i> Inventario
-                            </button>
-                            <button type="button" class="btn btn-outline-dark btn-sm" data-bs-toggle="modal" data-bs-target="#manualSupplyModal">
-                                <i class="fas fa-plus me-1"></i> Manual
-                            </button>
+                        <h5 class="m-0 fw-bold text-uppercase small"><i class="fas fa-box-open text-orange me-2"></i>Repuestos e Insumos</h5>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#searchSupplyModal"><i class="fas fa-search"></i></button>
+                            <button type="button" class="btn btn-outline-dark btn-sm" data-bs-toggle="modal" data-bs-target="#manualSupplyModal"><i class="fas fa-plus"></i></button>
                         </div>
                     </div>
                     <div class="card-body p-0">
-                        <div class="table-responsive" style="min-height: 300px;">
-                            <table class="table table-hover align-middle mb-0 table-supply">
+                        <div class="table-responsive" style="min-height: 250px;">
+                            <table class="table table-hover align-middle mb-0 small">
                                 <thead>
-                                    <tr>
-                                        <th class="ps-3 border-0">CÓDIGO</th>
-                                        <th class="border-0">DESCRIPCIÓN</th>
-                                        <th class="text-end border-0">STOCK</th>
-                                        <th class="text-end border-0">CANT.</th>
-                                        <th class="text-center border-0">ACCIONES</th>
+                                    <tr class="bg-light text-muted">
+                                        <th class="ps-3">CÓDIGO</th>
+                                        <th>DESCRIPCIÓN</th>
+                                        <th class="text-end">CANT.</th>
+                                        <th class="text-center"></th>
                                     </tr>
                                 </thead>
-                                <tbody id="selectedSuppliesTableBody">
-                                    {{-- Renderizado dinámico vía JS --}}
-                                </tbody>
+                                <tbody id="selectedSuppliesTableBody"></tbody>
                             </table>
                         </div>
                     </div>
-
-                    <div id="observations-container" class="card-footer bg-white border-top-0" style="display: none;">
-                        <label for="supplies_observations" class="form-label small">Observaciones de Repuestos:</label>
-                        <textarea class="form-control form-control-sm bg-light" id="supplies_observations" name="supplies_observations" rows="2"></textarea>
-                    </div>
                 </div>
-            </div>
             </div>
 
             <div class="col-12 mt-4 mb-5">
-                <button type="submit" class="btn btn-orange btn-lg w-100 shadow-lg fw-bold py-3 text-uppercase" style="letter-spacing: 2px;">
-                    <i class="fas fa-save me-2 text-white"></i> Procesar y Guardar Orden
+                <button type="submit" class="btn btn-orange btn-lg w-100 shadow fw-bold py-3 text-uppercase">
+                    <i class="fas fa-save me-2"></i> Procesar Orden de Trabajo
                 </button>
             </div>
         </div>
     </form>
 </div>
+<
 
 <div class="modal fade" id="searchSupplyModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
@@ -266,7 +290,6 @@
 @endsection
 
 @push('scripts')
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 
@@ -276,6 +299,22 @@
         }
     });
     $(document).ready(function() {
+
+        var checkSelect2 = setInterval(function() {
+        if ($.isFunction($.fn.select2)) {
+            clearInterval(checkSelect2); // Detener la espera
+            
+            // AQUÍ inicializas todo
+            $('.select2').select2({
+                theme: 'bootstrap-5',
+                
+            });
+            console.log("Select2 cargado y listo");
+        }else{                                                                                                                                                                                                                          
+            console.log("Esperando a que Select2 esté disponible...");
+        }
+    }, 100); //
+
         // --- TUS VARIABLES ORIGINALES ---
         let selectedSupplies = {};
         let manualSupplyCounter = 0;
@@ -295,6 +334,77 @@
                 timer = setTimeout(() => { func.apply(this, args); }, timeout);
             };
         }
+
+
+// --- 1. LÓGICA DEL ORQUESTADOR DINÁMICO ---
+    const $tipoMaestro = $('#tipo_orden_maestro');
+    
+    function adaptarFormulario() {
+        const tipo = $tipoMaestro.val();
+        
+        // Reset inicial
+        $('.section-dinamica, #subgroup-taller-ext').hide();
+        $('#group-km').fadeIn(); // Mostrar por defecto, ocultar solo en infraestructura
+        
+        switch(tipo) {
+            case 'vehiculo':
+                $('#group-vehiculo').fadeIn();
+                break;
+                
+            case 'auxilio_vial':
+                $('#group-vehiculo, #group-ubicacion-externa').fadeIn();
+                $('#label-ubicacion').text('Ubicación del Auxilio (Punto de Falla)');
+                break;
+                
+            case 'taller_externo':
+                $('#group-vehiculo, #group-ubicacion-externa, #subgroup-taller-ext').fadeIn();
+                $('#label-ubicacion').text('Datos del Taller Externo');
+                break;
+                
+            case 'servicios_generales':
+                $('#group-sede, #group-ubicacion-externa, #group-km').toggle(); // Ocultamos KM en infra
+                $('#group-sede, #group-ubicacion-externa').fadeIn();
+                $('#label-ubicacion').text('Área / Oficina específica');
+                $('#group-km').hide();
+                break;
+                
+            case 'servicios_terceros':
+                $('#group-ubicacion-externa').fadeIn();
+                $('#label-ubicacion').text('Ubicación / Cliente Final');
+                $('#group-km').hide();
+                break;
+        }
+
+        filterTempario(tipo);
+    }
+
+    // Filtrado de categorías basado en el contexto
+    function filterTempario(tipoMaestro) {
+        const $catSelect = $('#select-categoria');
+        $catSelect.val(null).trigger('change');
+        
+        // Mapeo simple: vehiculo, auxilio y taller externo usan contexto 'vehiculo'
+        // servicios_generales usa 'infraestructura', etc.
+        const contextoBuscado = (tipoMaestro === 'servicios_generales') ? 'infraestructura' : 'vehiculo';
+
+        $('#select-categoria option').each(function() {
+            const optContext = $(this).data('context');
+            if (!optContext || optContext === contextoBuscado) {
+                $(this).prop('disabled', false);
+            } else {
+                $(this).prop('disabled', true);
+            }
+        });
+        if (typeof $.fn.select2 !== 'undefined') {
+            $catSelect.select2(); 
+        }
+        
+    }
+
+    $tipoMaestro.on('change', adaptarFormulario);
+    adaptarFormulario(); // Inicializar
+
+
 
         function performSupplySearch() {
             const query = searchInput.value.trim();

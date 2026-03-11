@@ -12100,3 +12100,31 @@ textarea.form-control-lg {
     .border-timeline-success { border-left-color: #1cc88a !important; }
     .border-timeline-warning { border-left-color: #f6c23e !important; }
     .border-timeline-primary { border-left-color: #4C474F !important; } /* Gris Corporativo */
+
+  #calendar-mantenimiento {
+    max-width: 1100px; margin: 20px auto; padding: 25px;
+    background: #ffffff; border-radius: 12px; border: none;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+  }
+  /* Colores FullCalendar Estándar */
+  .fc-event { background-color: #4C474F !important; border: none !important; padding: 2px 5px; }
+  .fc-daygrid-event:hover { background-color: #f2A435 !important; }
+  .fc-toolbar-title { color: #4C474F; font-weight: bold; text-transform: uppercase; font-size: 1.2rem !important; }
+  .fc-button-primary { background-color: #4C474F !important; border: none !important; }
+  .fc-button-primary:hover { background-color: #f2A435 !important; }
+  .select2-container--bootstrap-5 .select2-selection {
+    border: 1px solid #ced4da !important;
+    min-height: 38px !important;
+    border-radius: 0.375rem !important;
+}
+
+/* Forzar que el buscador siempre sea visible y el menú baje */
+.select2-dropdown {
+    z-index: 9999 !important;
+    border: 1px solid #f2A435 !important; /* Borde naranja corporativo */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.select2-container .select2-search--inline .select2-search__field {
+    margin-top: 7px !important;
+}

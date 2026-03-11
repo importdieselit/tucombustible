@@ -3,58 +3,38 @@
 @section('title', 'Planificación de Mantenimiento')
 
 @push('styles')
-    <!-- Asegúrate de tener cargado FullCalendar y Bootstrap Icons -->
     <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/main.min.css' rel='stylesheet' />
-    <style>
-        #calendar-mantenimiento {
-            max-width: 1100px;
-            margin: 40px auto;
-            padding: 20px;
-            background: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-        }
-        .fc-daygrid-event {
-            font-size: 0.85rem;
-            padding: 2px 4px;
-            white-space: normal;
-        }
-        .custom-swal-popup {
-            max-width: 600px !important;
-            width: 90%;
-        }
-    </style>
 @endpush
 
 @section('content')
-<div class="container-fluid mt-4">
-    <h1 class="mb-4 text-primary text-center">
-        <i class="bi bi-calendar-range me-3"></i> Planificación de Mantenimientos
-    </h1>
-    
-    <!-- Contenedor del Calendario -->
-    <div id='calendar-mantenimiento'>
-        <!-- FullCalendar se renderizará aquí -->
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="fw-bold mb-0 text-uppercase">Planificación de Mantenimientos</h4>
+            <small class="text-muted">Calendario operativo y programación de unidades</small>
+        </div>
+        <i class="fas fa-calendar-alt fa-2x text-light"></i>
     </div>
+    
+    <div id='calendar-mantenimiento' class="bg-white"></div>
 </div>
 
-<!-- Modal para Planificar Mantenimiento -->
-<div class="modal fade" id="planificarModal" tabindex="-1" aria-labelledby="planificarModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="planificarModalLabel">Programar Mantenimiento para <span id="modalDateDisplay"></span></h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+{{-- Modal con Estilo Impordiesel --}}
+<div class="modal fade" id="planificarModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-corporate text-white">
+                <h6 class="modal-title fw-bold text-uppercase">Programar OT: <span id="modalDateDisplay"></span></h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form id="planificacionForm">
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     @csrf
                     <input type="hidden" id="fecha_programada" name="fecha_programada">
 
                     <div class="mb-3">
-                        <label for="vehiculo_id" class="form-label">Vehículo</label>
-                        <select class="form-select" id="vehiculo_id" name="vehiculo_id" required>
-                            <option value="" disabled selected>Seleccione la unidad</option>
+                        <label class="small fw-bold text-uppercase text-muted">Unidad de Flota</label>
+                        <select class="form-select border-0 bg-light" id="vehiculo_id" name="vehiculo_id" required>
                             @foreach($vehiculos as $vehiculo)
                                 <option value="{{ $vehiculo->id }}">{{ $vehiculo->flota }} ({{ $vehiculo->placa }})</option>
                             @endforeach
@@ -62,24 +42,23 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="tipo_mantenimiento" class="form-label">Tipo de Mantenimiento</label>
-                        <select class="form-select" id="tipo_mantenimiento" name="tipo_mantenimiento" required>
-                            <option value="" disabled selected>Seleccione el servicio</option>
+                        <label class="small fw-bold text-uppercase text-muted">Servicio Requerido</label>
+                        <select class="form-select border-0 bg-light" id="tipo_mantenimiento" name="tipo_mantenimiento" required>
                             @foreach($tiposMantenimiento as $key => $value)
                                 <option value="{{ $key }}">{{ $value }}</option>
                             @endforeach
                         </select>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="descripcion_plan" class="form-label">Descripción / Tareas</label>
-                        <textarea class="form-control" id="descripcion_plan" name="descripcion_plan" rows="3"></textarea>
+                    <div class="mb-0">
+                        <label class="small fw-bold text-uppercase text-muted">Instrucciones Técnicas</label>
+                        <textarea class="form-control border-0 bg-light" id="descripcion_plan" name="descripcion_plan" rows="3"></textarea>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" id="btnGuardar">
-                        <i class="bi bi-calendar-check me-1"></i> Guardar Planificación y Generar OT
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-orange px-4" id="btnGuardar" style="background-color: #f2A435; color: white;">
+                        <i class="fas fa-check-circle me-1"></i> Generar Orden Trabajo
                     </button>
                 </div>
             </form>
@@ -131,8 +110,8 @@
                 eventClick: function(info) {
                     const props = info.event.extendedProps;
                     const statusText = props.estatus === 2 
-                        ? '<span class=""><i class="bi bi-check-circle"></i> OT Generada (#<a href="/ordenes/' + props.orden_id + '" target="_blank">' + props.nro_orden + '</a>)</span>'
-                        : '<span class="badge bg-primary"><i class="bi bi-clock"></i> Programado</span>';
+                        ? '<span class=""><i class="fa fa-check-circle"></i> OT Generada (#<a href="/ordenes/' + props.orden_id + '" target="_blank">' + props.nro_orden + '</a>)</span>'
+                        : '<span class="badge bg-primary"><i class="fa fa-clock"></i> Programado</span>';
 
                     Swal.fire({
                         title: `Planificación de Mantenimiento`,
@@ -226,4 +205,5 @@
         });
     </script>
 @endpush
+
 @endsection
