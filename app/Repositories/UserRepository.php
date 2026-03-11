@@ -59,4 +59,9 @@ class UserRepository
                      ->orderBy('total', 'desc')
                      ->get();
     }
+
+    public function countAll()
+    {
+        return User::count();
+    }
 }

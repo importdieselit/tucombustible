@@ -12,8 +12,10 @@
         {{-- SOLO SI ES ADMIN (Perfil 1 o 2) SE MUESTRAN LOS MÓDULOS --}}
         @if(Auth::user()->id_perfil != 3)
             <p class="mt-6 px-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Módulos Administrativos</p>
-            <a href="{{ route('captacion.index') }}" class="flex items-center px-4 py-2 text-sm font-medium rounded-lg hover:bg-slate-800 transition">
-                <i class="fas fa-users w-6"></i> Clientes
+            
+            {{-- Cambiamos 'captacion.index' por 'clientes.index' que es la ruta real en web.php --}}
+            <a href="{{ route('clientes.index') }}" class="flex items-center px-4 py-2 text-sm font-medium rounded-lg hover:bg-slate-800 transition">
+                <i class="fas fa-users w-6"></i> Gestión de Clientes
             </a>
         @endif
 

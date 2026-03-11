@@ -2,47 +2,29 @@
 
 namespace App\Repositories;
 
-use App\Models\User;
-use App\Models\Cliente;
-use App\Models\ClienteCupo;
-use App\Models\CaptacionDocumento;
-use App\Models\PlacaVehiculo;
-use App\Models\ChoferCliente;
+use App\Models\{User, Cliente, ClienteCupo, Documento};
+use Illuminate\Support\Facades\DB;
 
 class ClienteRepository
 {
-    public function create(array $data) { return Cliente::create($data); }
-
-    public function crearUsuario(array $data) { return User::create($data); }
-
-    public function registrarCupo(array $data) { return ClienteCupo::create($data); }
-
-    public function findByToken($token) { return Cliente::where('token_registro', $token)->first(); }
-
-    public function find($id) { return Cliente::with(['sucursales', 'user', 'documentos'])->findOrFail($id); }
-
-    public function findByRif($rif) { return Cliente::where('rif', $rif)->first(); }
-
-    public function guardarDocumento(array $data)
+    public function find($id)
     {
-        return CaptacionDocumento::updateOrCreate(
-            ['cliente_id' => $data['cliente_id'], 'tipo_documento' => $data['tipo_documento']],
-            ['ruta_archivo' => $data['ruta_archivo'], 'status' => 'pendiente']
-        );
+        return Cliente::with(['user', 'documentos'])->findOrFail($id);
     }
 
-    /**
-     * Cuenta cuántos documentos tiene un cliente para validar el paso 2
-     */
-    public function contarDocumentos($clienteId)
+    public function countByPaso($operador, $paso = null)
     {
-        return CaptacionDocumento::where('cliente_id', $clienteId)->count();
+        if ($paso === null) {
+            return Cliente::where('registro_paso', $operador)->count();
+        }
+        return Cliente::where('registro_paso', $operador, $paso)->count();
     }
 
     public function getClientesEnRegistro($filtros)
     {
-        $query = Cliente::query()->with('user')->where('registro_paso', '<', 10);
+        $query = Cliente::query();
 
+        // Filtro de Búsqueda (RIF o Nombre)
         if (!empty($filtros['search'])) {
             $query->where(function($q) use ($filtros) {
                 $q->where('nombre', 'like', "%{$filtros['search']}%")
@@ -50,53 +32,88 @@ class ClienteRepository
             });
         }
 
-        return $query->orderBy('updated_at', 'desc')->paginate(20);
+        // Filtro por Estatus (Opcional, si quieres ver solo Activos o solo en Proceso)
+        if (!empty($filtros['status_filtro'])) {
+            if ($filtros['status_filtro'] == 'activos') {
+                $query->where('registro_paso', 10);
+            } elseif ($filtros['status_filtro'] == 'proceso') {
+                $query->where('registro_paso', '<', 10);
+            }
+        }
+
+        return $query->orderBy('updated_at', 'desc')->paginate(15);
     }
 
     public function getStatsGlobales()
     {
         return [
-            'total'             => Cliente::count(),
-            'activos'           => Cliente::where('registro_paso', 10)->where('status', 1)->count(),
-            'inactivos'         => Cliente::where('registro_paso', 10)->where('status', 0)->count(),
-            'total_en_registro' => Cliente::where('registro_paso', '<', 10)->count(),
-            'en_espera_revision'=> Cliente::where('registro_paso', 3)->count(),
+            'total_clientes'      => Cliente::count(),
+            'total_en_registro'   => $this->countByPaso('<', 10),
+            'en_espera_revision'  => $this->countByPaso(3),
+            'activos'             => $this->countByPaso(10),
         ];
     }
 
-    public function avanzarPaso($clienteId, $nuevoPaso, array $datosExtra = [])
+    public function avanzarPaso($clienteId, $nuevoPaso, array $extra = [])
     {
         $cliente = Cliente::findOrFail($clienteId);
 
-        if (isset($datosExtra['fecha_inspeccion'])) {
-            $cliente->fecha_inspeccion = $datosExtra['fecha_inspeccion'];
-            $cliente->inspector = $datosExtra['inspector'] ?? null;
-        }
-
         if ($nuevoPaso == 10) {
             $cliente->status = 1;
-            if ($cliente->user) {
-                $cliente->user->update(['status_usuario' => 'activo']);
-            }
         }
 
         $cliente->registro_paso = $nuevoPaso;
         $cliente->save();
+
         return $cliente;
     }
 
-    public function update($id, array $data)
+    public function guardarDocumento(array $data)
     {
-        $cliente = Cliente::findOrFail($id);
-        $cliente->update($data);
-        return $cliente;
+        $mapaRequisitos = [
+            'planilla_solicitud'        => 1,
+            'declaracion_jurada'        => 2,
+            'carta_ministerio'          => 3,
+            'registro_mercantil'        => 4,
+            'acta_constitutiva'         => 5,
+            'rif_legalizado'            => 6,
+            'dni_contacto'              => 7,
+            'rif_contacto'              => 8,
+            'islr'                      => 9,
+            'permiso_bomberos'          => 10,
+            'maquinaria_tanques'        => 11,
+            'croquis_ubicacion'         => 12,
+        ];
+
+        return Documento::updateOrCreate(
+            [
+                'cliente_id'       => $data['cliente_id'],
+                'nombre_documento' => $data['tipo_documento'] 
+            ],
+            [
+                'requisito_id'     => $mapaRequisitos[$data['tipo_documento']] ?? 0,
+                'tipo_anexo'       => $data['tipo_anexo'],
+                'nombre_documento' => $data['tipo_documento'], 
+                'ruta'             => $data['ruta'],
+                'validado'         => 0
+            ]
+        );
     }
+
+    public function create(array $data) { return Cliente::create($data); }
+    public function crearUsuario(array $data) { return User::create($data); }
+    public function registrarCupo(array $data) { return ClienteCupo::create($data); }
 
     public function toggleStatus($id)
     {
         $cliente = Cliente::findOrFail($id);
-        $cliente->status = ($cliente->status == 1) ? 0 : 1;
+        $cliente->status = !$cliente->status;
         $cliente->save();
         return $cliente;
+    }
+
+    public function getSucursales($parentId)
+    {
+        return Cliente::where('parent', $parentId)->get();
     }
 }

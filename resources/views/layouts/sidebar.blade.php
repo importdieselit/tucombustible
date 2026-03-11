@@ -122,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function () {
             </li>
             <hr class="text-white my-2" >
 
-            @foreach($modulos as $modulo)
+            {{-- @foreach($modulos as $modulo)
                 @php
                     $secciones = App\Models\Modulo::where('id_padre', $modulo->id)
                         ->where('visible', 1);
@@ -159,7 +159,14 @@ document.addEventListener('DOMContentLoaded', function () {
                         </a>
                     @endif
                 </li>
-            @endforeach
+            @endforeach --}}
+            <ul class="nav flex-column">
+    <li class="nav-item">
+        <a href="{{ route('clientes.index') }}" class="nav-link">
+            <i class="bi bi-people"></i> GESTIÓN DE CLIENTES
+        </a>
+    </li>
+</ul>
         </ul>
     </div>
 </div>

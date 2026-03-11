@@ -6,7 +6,7 @@
           TuCombustible</a>
         
         <!-- INICIO: Buscador Universal -->
-        <form class="d-flex me-3" action="{{ route('search.global') }}" method="GET" style="width: 50%; margin-left:50%">
+        {{-- <form class="d-flex me-3" action="{{ route('search.global') }}" method="GET" style="width: 50%; margin-left:50%">
             <div class="input-group">
                 <input 
                     class="form-control form-control-sm" 
@@ -21,7 +21,7 @@
                     <i class="bi bi-search"></i>
                 </button>
             </div>
-        </form>
+        </form> --}}
         <!-- FIN: Buscador Universal -->
 
         <div class="d-flex ms-auto align-items-center">

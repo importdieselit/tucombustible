@@ -21,14 +21,11 @@ class UserController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        // 1. Verificación de permisos (Método en el Modelo User)
         if (!$user->canAccess('read', 51)) {
             abort(403, 'No tiene permisos para acceder a este módulo.');
         }
 
         $clienteId = $user->cliente_id;
-        
-        // 2. Obtención de datos mediante el Servicio
         $stats = $this->userService->obtenerDashboardData($clienteId);
         $usuarios = $this->userService->obtenerListaFiltrada($request->all(), $clienteId);
 
@@ -44,18 +41,22 @@ class UserController extends Controller
             'password.min' => 'La contraseña debe tener al menos 8 caracteres.'
         ]);
 
-        // Usamos el servicio para actualizar y apagar la bandera
-        $this->userService->actualizarPasswordObligatorio(Auth::id(), $request->password);
+        $user = Auth::user();
 
-        return redirect()->route('dashboard')->with('success', 'Contraseña actualizada correctamente. Bienvenido al sistema.');
+        // 1. Actualizamos la contraseña y removemos el flag de cambio obligatorio
+        $this->userService->actualizarPasswordObligatorio($user->id, $request->password);
+
+        // 2. AUTOMATIZACIÓN PASO 1 -> 2
+        // Si el usuario es un cliente y está en el paso inicial de registro, lo movemos a carga de documentos
+        if ($user->id_perfil == 3 && $user->cliente && $user->cliente->registro_paso == 1) {
+            $user->cliente->update(['registro_paso' => 2]);
+        }
+
+        return redirect()->route('dashboard')->with('success', 'Contraseña actualizada correctamente. Acceso concedido.');
     }
 
-    /**
-    * Muestra la vista de cambio de contraseña obligatorio (Paso 2)
-    */
     public function showChangePassword()
     {
-        // Verificamos si realmente debe cambiarla, por si llega aquí por error
         if (Auth::user()->must_change_password != 1) {
             return redirect()->route('dashboard');
         }

@@ -11,7 +11,8 @@
             <div class="card shadow-sm border-0">
                 <div class="card-body d-flex justify-content-between align-items-center">
                     <div>
-                        <h2 class="font-weight-bold mb-0">{{ $cliente->razon_social }}</h2>
+                        {{-- CORREGIDO: razon_social -> nombre --}}
+                        <h2 class="font-weight-bold mb-0">{{ $cliente->nombre }}</h2>
                         <span class="badge badge-primary">RIF: {{ $cliente->rif }}</span>
                     </div>
                     <div class="text-right">
@@ -40,10 +41,14 @@
                         <tbody>
                             @forelse($cliente->documentos as $doc)
                             <tr>
-                                <td class="align-middle font-weight-bold">{{ strtoupper(str_replace('_', ' ', $doc->tipo_documento)) }}</td>
+                                <td class="align-middle font-weight-bold">
+                                    {{-- CORREGIDO: nombre_documento es la columna real --}}
+                                    {{ strtoupper(str_replace('_', ' ', $doc->nombre_documento)) }}
+                                </td>
                                 <td class="text-center">
-                                    <a href="{{ asset('storage/' . $doc->ruta_archivo) }}" target="_blank" class="btn btn-sm btn-outline-info">
-                                        <i class="fas fa-external-link-alt mr-1"></i> Ver PDF
+                                    {{-- CORREGIDO: ruta_archivo -> ruta --}}
+                                    <a href="{{ asset('storage/' . $doc->ruta) }}" target="_blank" class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-external-link-alt mr-1"></i> Ver Documentos
                                     </a>
                                 </td>
                                 <td class="text-right">
@@ -68,24 +73,25 @@
                     <i class="fas fa-tasks mr-2"></i> Gestión de Pasos
                 </div>
                 <div class="card-body">
+                    {{-- IMPORTANTE: Asegúrate de que NO haya @method('PATCH') --}}
                     <form action="{{ route('clientes.avanzar', $cliente->id) }}" method="POST">
                         @csrf
-                        @method('PATCH')
                         
                         <div class="form-group">
                             <label class="font-weight-bold small text-uppercase">Cambiar a Estatus:</label>
                             <select name="paso" class="form-control">
-                                @for($i = 1; $i <= 10; $i++)
-                                    <option value="{{ $i }}" {{ $cliente->registro_paso == $i ? 'selected' : '' }}>
-                                        Paso {{ $i }}
+                                {{-- Usamos la constante del modelo para mostrar los nombres reales --}}
+                                @foreach(\App\Models\Cliente::PASOS_REGISTRO as $valor => $nombre)
+                                    <option value="{{ $valor }}" {{ $cliente->registro_paso == $valor ? 'selected' : '' }}>
+                                        Paso {{ $valor }}: {{ $nombre }}
                                     </option>
-                                @endfor
+                                @endforeach
                             </select>
                         </div>
 
                         <div class="form-group">
                             <label class="font-weight-bold small text-uppercase">Observaciones (Opcional):</label>
-                            <textarea name="observaciones" class="form-control" rows="3" placeholder="Indique si hay errores en los documentos..."></textarea>
+                            <textarea name="observaciones" class="form-control" rows="3" placeholder="Indique si hay errores..."></textarea>
                         </div>
 
                         <button type="submit" class="btn btn-primary btn-block font-weight-bold shadow-sm py-2">

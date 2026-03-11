@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Services\ClienteService;
 use App\Models\Cliente;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\{Redirect, Session, Log};
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Log;
 
 class ClienteController extends Controller
 {
@@ -17,41 +19,33 @@ class ClienteController extends Controller
         $this->clienteService = $clienteService;
     }
 
-    /**
-     * Nivel 1: Listado Global de Clientes (Dashboard Admin)
-     */
     public function index(Request $request)
     {
+        // Capturamos search y el nuevo status_filtro
         $filtros = $request->only(['search', 'status_filtro']);
         $data = $this->clienteService->obtenerDashboardAdmin($filtros);
 
         return view('admin.cliente.index', [
             'clientes' => $data['clientes'],
             'stats'    => $data['stats'],
-            'pasos'    => Cliente::PASOS_REGISTRO
+            'pasos'    => Cliente::PASOS_REGISTRO,
+            'filtros'  => $filtros // Enviamos de vuelta los filtros para mantenerlos en la vista
         ]);
     }
 
-    /**
-     * Nivel 2: Expediente Detallado (Revisión de Pasos)
-     */
     public function show($id)
     {
         $cliente = $this->clienteService->obtenerExpediente($id);
         return view('admin.cliente.show', compact('cliente'));
     }
 
-    /**
-     * Acción: Avanzar el flujo de los 10 pasos
-     */
     public function updatePaso(Request $request, $id)
     {
         try {
-            $nuevoPaso = $request->input('nuevo_paso');
-            // Pasamos todos los datos (incluyendo fecha de inspección si es paso 8)
+            $nuevoPaso = $request->input('paso');
             $this->clienteService->avanzarPaso($id, $nuevoPaso, $request->all());
             
-            Session::flash('success', '¡Paso actualizado con éxito!');
+            Session::flash('success', '¡Estatus actualizado con éxito!');
             return Redirect::back();
         } catch (\Exception $e) {
             Log::error("Error en Admin/ClienteController@updatePaso: " . $e->getMessage());
@@ -59,12 +53,14 @@ class ClienteController extends Controller
         }
     }
 
-    /**
-     * Acción: Activar/Desactivar cuenta de cliente (Paso 10)
-     */
     public function toggleStatus($id)
     {
-        $this->clienteService->cambiarEstatus($id);
-        return back()->with('success', 'Estatus del cliente actualizado.');
+        try {
+            $this->clienteService->cambiarEstatus($id);
+            Session::flash('success', 'Estatus operativo actualizado.');
+            return Redirect::back();
+        } catch (\Exception $e) {
+            return Redirect::back()->with('error', 'No se pudo cambiar el estatus.');
+        }
     }
 }

@@ -13,9 +13,9 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('captacion_documentos', function (Blueprint $table) {
+        Schema::create('clientes_documentos', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('captacion_id');
+            $table->unsignedBigInteger('cliente_id');
             $table->integer('requisito_id');
             $table->string('tipo_anexo')->nullable();
             $table->string('nombre_documento')->nullable();
@@ -33,6 +33,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('captacion_documentos');
+        Schema::dropIfExists('clientes_documentos');
     }
 };

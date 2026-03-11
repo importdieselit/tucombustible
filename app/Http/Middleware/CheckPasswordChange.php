@@ -17,10 +17,10 @@ class CheckPasswordChange
 
             // Si tiene la bandera activa y NO está ya en la ruta de cambio o saliendo
             if ($user->must_change_password == 1 && 
-                !$request->is('password/change*', 'logout', 'api/*')) {
-                
+                !$request->is('password/change', 'password/update', 'logout', 'api/*')) { // Agregamos 'password/update'
+    
                 return redirect()->route('password.change')
-                    ->with('info', 'Por seguridad, debe actualizar su contraseña inicial (su RIF) para poder continuar con el registro.');
+                    ->with('info', 'Por seguridad, debe actualizar su contraseña inicial...');
             }
         }
 

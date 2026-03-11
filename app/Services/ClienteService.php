@@ -15,97 +15,101 @@ class ClienteService
         $this->repository = $repository;
     }
 
-    public function subirDocumentoExpediente($clienteId, $file, $tipoDocumento)
-    {
-        return DB::transaction(function () use ($clienteId, $file, $tipoDocumento) {
-            $cliente = $this->repository->find($clienteId);
-            $rifCarpeta = str_replace(['-', ' '], '', $cliente->rif);
-
-            $documentosValidos = [
-                'rif_legalizado', 'documento_constitutivo', 'copia_representante_legal',
-                'lista_equipos_tanques', 'croquis_ubicacion', 'constancia_bomberos'
-            ];
-
-            if (!in_array($tipoDocumento, $documentosValidos)) {
-                throw new \Exception("Tipo de documento inválido.");
-            }
-
-            $fileName = "{$tipoDocumento}_" . time() . "." . $file->getClientOriginalExtension();
-            $ruta = $file->storeAs("expedientes/{$rifCarpeta}", $fileName, 'public');
-
-            $this->repository->guardarDocumento([
-                'cliente_id'     => $clienteId,
-                'tipo_documento' => $tipoDocumento,
-                'ruta_archivo'   => $ruta
-            ]);
-
-            return ['success' => true, 'ruta' => $ruta];
-        });
-    }
-
-    public function enviarExpedienteARevision($clienteId)
-    {
-        // Usamos el repositorio para contar, no el modelo directamente
-        $conteoDocs = $this->repository->contarDocumentos($clienteId);
-        
-        if ($conteoDocs < 6) {
-            throw new \Exception("Debe cargar los 6 documentos obligatorios.");
-        }
-
-        return $this->repository->avanzarPaso($clienteId, 3);
-    }
-
     public function registrarCliente(array $data)
     {
         return DB::transaction(function () use ($data) {
-            $parentId = 0;
-            $rifLimpio = strtoupper(trim($data['rif']));
+            $rifOficial = strtoupper($data['rif']);
+            $rifLimpio = str_replace(['-', ' '], '', $rifOficial);
+            
+            $servicios = [];
+            if (!empty($data['litros_diesel']) && $data['litros_diesel'] > 0) $servicios[] = 'Diesel';
+            if (!empty($data['litros_mgo']) && $data['litros_mgo'] > 0) $servicios[] = 'MGO';
+            $tipoServicioTexto = implode(' y ', $servicios);
 
-            if (isset($data['tipo_cliente']) && $data['tipo_cliente'] === 'sucursal' && !empty($data['token_padre'])) {
-                $padre = $this->repository->findByToken($data['token_padre']);
-                if (!$padre) throw new \Exception("Token de asociación inválido.");
-                $parentId = $padre->id;
-            }
+            $cliente = $this->repository->create([
+                'nombre'              => strtoupper($data['nombre']), 
+                'rif'                 => $rifOficial,
+                'contacto'            => strtoupper($data['contacto']),
+                'email'               => $data['email'],
+                'telefono'            => $data['telefono'],
+                'estado_id'           => $data['estado_id'],
+                'ciudad_id'           => $data['ciudad_id'],
+                'direccion_operativa' => $data['direccion_operativa'],
+                'tipo_servicio'       => $tipoServicioTexto,
+                'registro_paso'       => 1,
+                'status'              => 0,
+                'token_registro'      => Str::random(40),
+            ]);
 
-            $user = $this->repository->crearUsuario([
+            $this->repository->crearUsuario([
                 'name'                 => strtoupper($data['contacto']),
                 'email'                => $data['email'],
-                'password'             => Hash::make($rifLimpio),
+                'password'             => Hash::make($rifLimpio), 
                 'id_perfil'            => 3,
+                'cliente_id'           => $cliente->id,
                 'status_usuario'       => 'en_registro',
                 'must_change_password' => 1
             ]);
 
-            $cliente = $this->repository->create([
-                'user_id'             => $user->id,
-                'nombre'              => strtoupper($data['razon_social']),
-                'rif'                 => $rifLimpio,
-                'contacto'            => strtoupper($data['contacto']),
-                'telefono'            => $data['telefono'],
-                'email'               => $data['email'],
-                'estado_id'           => $data['estado_id'],
-                'direccion_operativa' => strtoupper($data['direccion_operativa']),
-                'parent'              => $parentId,
-                'registro_paso'       => 1,
-                'status'              => 0,
-                'tipo_solicitud'      => $data['tipo_solicitud'],
-                'tipo_servicio'       => $data['tipo_servicio'],
-                'token_registro'      => ($parentId == 0) ? Str::upper(Str::random(10)) : null,
-            ]);
-
-            if (!empty($data['litros_solicitados'])) {
-                $combustibleId = (strtolower($data['tipo_servicio']) === 'diesel') ? 1 : 2;
+            if (!empty($data['litros_diesel']) && $data['litros_diesel'] > 0) {
                 $this->repository->registrarCupo([
-                    'cliente_id' => $cliente->id,
-                    'tipo_combustible_id' => $combustibleId,
-                    'litros_solicitados' => $data['litros_solicitados'],
-                    'litros_aprobados' => 0,
+                    'cliente_id'          => $cliente->id,
+                    'tipo_combustible_id' => 1,
+                    'litros_solicitados'  => $data['litros_diesel'],
+                    'litros_aprobados'    => 0,
+                ]);
+            }
+
+            if (!empty($data['litros_mgo']) && $data['litros_mgo'] > 0) {
+                $this->repository->registrarCupo([
+                    'cliente_id'          => $cliente->id,
+                    'tipo_combustible_id' => 2,
+                    'litros_solicitados'  => $data['litros_mgo'],
+                    'litros_aprobados'    => 0,
                 ]);
             }
 
             return $cliente;
         });
     }
+
+    public function subirDocumentoExpediente($clienteId, $file, $tipoDocumento)
+    {
+        return DB::transaction(function () use ($clienteId, $file, $tipoDocumento) {
+            $extension = $file->getClientOriginalExtension();
+            $fileName = "{$tipoDocumento}_" . time() . "." . $extension;
+            $ruta = $file->storeAs("expedientes/{$clienteId}", $fileName, 'public');
+
+            // Solo guardamos el documento. NO avanzamos el paso aquí.
+            return $this->repository->guardarDocumento([
+                'cliente_id'       => $clienteId,
+                'tipo_documento'   => $tipoDocumento,
+                'tipo_anexo'       => $extension,
+                'ruta'             => $ruta,
+                'nombre_documento' => $tipoDocumento
+            ]);
+        });
+    }
+
+    public function enviarExpedienteARevision($clienteId)
+    {
+        return DB::transaction(function () use ($clienteId) {
+            // Contamos documentos distintos
+            $conteo = \App\Models\Documento::where('cliente_id', $clienteId)
+                        ->distinct('nombre_documento')
+                        ->count();
+
+            // Validamos que estén los 12
+            if ($conteo < 12) {
+                throw new \Exception("Expediente incompleto. Debe cargar los 12 documentos obligatorios antes de enviar a revisión.");
+            }
+
+            // AHORA SÍ: El paso cambia a 3 SOLO cuando el cliente decide enviar
+            return $this->repository->avanzarPaso($clienteId, 3);
+        });
+    }
+
+    public function obtenerExpediente($id) { return $this->repository->find($id); }
 
     public function obtenerDashboardAdmin(array $filtros)
     {
@@ -115,11 +119,12 @@ class ClienteService
         ];
     }
 
-    public function cambiarEstatus($id)
+    public function avanzarPaso($id, $paso, $extra = [])
     {
-        return $this->repository->toggleStatus($id);
+        return DB::transaction(function () use ($id, $paso, $extra) {
+            return $this->repository->avanzarPaso($id, $paso, $extra);
+        });
     }
 
-    public function avanzarPaso($id, $paso, $extra = []) { return $this->repository->avanzarPaso($id, $paso, $extra); }
-    public function obtenerExpediente($id) { return $this->repository->find($id); }
+    public function cambiarEstatus($id) { return $this->repository->toggleStatus($id); }
 }
