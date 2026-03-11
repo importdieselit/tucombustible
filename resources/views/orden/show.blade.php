@@ -170,7 +170,7 @@
                             <tr>
                                 <th class="ps-3">Cant</th>
                                 <th>Descripción</th>
-                                <th class="text-end">P.U.</th>
+                                <th class="text-end">Precio Unitario</th>
                                 <th class="text-end pe-3">Total</th>
                             </tr>
                         </thead>
@@ -179,11 +179,23 @@
                             @forelse($orden->suministros as $item)
                             @php($subtotal = $item->cantidad * $item->precio_unitario)
                             @php($totalInsumos += $subtotal)
-                            <tr class="small">
+                            <tr class="small {{ $item->recibido ? 'table-success' : '' }}">
                                 <td class="ps-3 text-center">{{ $item->cantidad }}</td>
-                                <td>{{ $item->inventario->descripcion }}</td>
+                                <td>
+                                    {{ $item->inventario->descripcion }} {{ $item->estatus }}
+                                    @if($item->estatus == 1)
+                                        <span class="badge bg-success small ms-2"><i class="fas fa-check"></i> Recibido</span>
+                                    @endif
+                                </td>
                                 <td class="text-end">${{ number_format($item->precio_unitario, 2) }}</td>
-                                <td class="text-end pe-3 fw-bold">${{ number_format($subtotal, 2) }}</td>
+                                <td class="text-end pe-3 fw-bold">
+                                    @if($item->estatus != 1 && ($orden->estatus == 2 || $orden->estatus == 'ABIERTA'))
+                                        <button class="btn btn-sm btn-outline-success mark-recibido no-print" data-id="{{ $item->id_inventario_suministro }}">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    @endif
+                                    ${{ number_format($subtotal, 2) }}
+                                </td>
                             </tr>
                             @empty
                             <tr><td colspan="4" class="text-center py-3 text-muted">Sin insumos cargados.</td></tr>
@@ -218,7 +230,38 @@
             </div>
         </div>
     </div>
-
+    {{-- BLOQUE DE EVIDENCIA FOTOGRÁFICA --}}
+<div class="card card-step shadow-sm mt-4 no-print">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 fw-bold text-uppercase small"><i class="fas fa-camera text-orange me-2"></i>Evidencia Fotográfica</h6>
+        @if($orden->estatus == 2 || $orden->estatus == 'ABIERTA')
+            <button class="btn btn-sm btn-orange" data-bs-toggle="modal" data-bs-target="#modalFoto">
+                <i class="fas fa-plus"></i> Añadir Foto
+            </button>
+        @endif
+    </div>
+    <div class="card-body">
+        <div class="row g-2">
+            @forelse($fotos as $foto)
+                <div class="col-md-4 col-6 position-relative mb-2">
+                    <a href="{{ asset('storage/' . $foto->ruta_archivo) }}" target="_blank">
+                        <img src="{{ asset('storage/' . $foto->ruta_archivo) }}"  class="img-fluid rounded shadow-sm border"  style="height: 200px; width: 100%; object-fit: cover;">
+                    </a>
+                    @if($orden->estatus == 2 || $orden->estatus == 'ABIERTA')
+                        <button class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 delete-item" data-type="foto" data-id="{{ $foto->id }}">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    @endif
+                </div>
+            @empty
+                <div class="col-12 text-center py-3 text-muted small">
+                    <i class="fas fa-images d-block mb-2 fa-2x"></i>
+                    No hay fotos registradas.
+                </div>
+            @endforelse
+        </div>
+    </div>
+</div>
     {{-- FIRMAS --}}
     <div class="row mt-5 justify-content-around">
         <div class="col-auto">
@@ -501,6 +544,52 @@
             if(confirm('¿Desea limpiar todos los trabajos?')) {
                 trabajosAsignados = [];
                 renderTrabajos();
+            }
+        });
+    });
+
+    async function apiCall(url, method = 'POST', body = null) {
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: body ? JSON.stringify(body) : null
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: data.message || 'Operación realizada.',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => window.location.reload());
+            } else {
+                Swal.fire('Error', data.message || 'Error en el servidor', 'error');
+            }
+        } catch (error) {
+            console.error('Error API:', error);
+            Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
+        }
+    }
+
+    $(document).on('click', '.mark-recibido', function() {
+        const insumoId = $(this).data('id');
+        Swal.fire({
+            title: '¿Confirmar recepción?',
+            text: "El insumo se marcará como entregado al mecánico.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, recibido'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                apiCall(`/ordenes/supplies/receive/${insumoId}`, 'POST');
             }
         });
     });

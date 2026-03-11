@@ -111,10 +111,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/api/permisos/{user}/update', [AccesoController::class, 'updatePermissions'])->name('permisos.update');
 
     Route::get('ordenes/search-supplies', [OrdenController::class, 'searchSupplies'])->name('ordenes.search-supplies');
-    Route::post('/ordenes/supplies/receive/{supply}', [OrdenController::class, 'markAsReceived'])->name('ordenes.supplies.receive');
     Route::get('ordenes/compras/{id_order?}/{id?}', [OrdenController::class, 'purchaseOrder'])->name('ordenes.compra');
     Route::post('/compras/actualizar-precio', [OrdenController::class,'actualizarPrecio'])
     ->name('compras.actualizar_precio');
+
+// Guardado masivo de trabajos desde el modal
+Route::post('/ordenes/{id}/addTrabajosMasivo', [OrdenController::class, 'addTrabajosMasivo'])->name('ordenes.addTrabajosMasivo');
     // Asegúrate de que el nombre del método coincida con el controlador
     Route::post('usuarios/{id}/update-single-permission', [UserController::class, 'updateSinglePermission'])
     ->name('usuarios.update_single_permission');
@@ -393,6 +395,7 @@ Route::get('/reporte/vehiculos-disponibilidad', [VehiculoController::class, 'rep
         Route::post('/ordenes/{orden}/reactivar', [OrdenController::class, 'reactivarOrden'])->name('ordenes.reactivar');
         Route::get('ordenes/search-supplies', [OrdenController::class, 'searchSupplies'])->name('ordenes.search-supplies');
         Route::post('/ordenes/supplies/receive/{supply}', [OrdenController::class, 'markAsReceived'])->name('ordenes.supplies.receive');
+        Route::post('/ordenes/compras/receive/{supply}', [OrdenController::class, 'markRequestReceived'])->name('ordenes.compras.receive');
         Route::get('ordenes/compras/{id_order?}/{id?}', [OrdenController::class, 'purchaseOrder'])->name('ordenes.compra');
         Route::post('/compras/actualizar-precio', [OrdenController::class,'actualizarPrecio'])->name('compras.actualizar_precio');
         Route::post('/compras/cambiar-estatus', [OrdenController::class,'cambiarEstatus'])->name('compras.cambiar_estatus');

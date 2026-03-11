@@ -102,7 +102,7 @@
                                             : (($horas >= 24 && $orden->estatus != 'CERRADA') ? 'warning' : $estatusInfo->css);
                                     @endphp
                                     <span class="badge bg-{{ $css }} p-2 w-100" style="max-width: 130px;" title="{{ $estatusInfo->descripcion }}">
-                                        <i class="me-1 {{ $estatusInfo->icon_orden }}"></i>
+                                        <i class="me-1 fa {{ $estatusInfo->icon_orden }}"></i>
                                         {{ strtoupper($estatusInfo->orden) }}
                                     </span>
                                 @else

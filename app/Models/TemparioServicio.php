@@ -35,7 +35,7 @@ class TemparioServicio extends Model
     // Relaciones
     public function categoria()
     {
-        return $this->belongsTo(TemparioCategoria::class, 'id_tempario_categoria', 'id');
+        return $this->belongsTo(TemparioCategoria::class, 'id_tempario_categoria', 'id_tempario_categoria');
     }
     
     public function trabajos()
