@@ -32,6 +32,7 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Models\TemparioCategoria;
 use App\Models\Trabajos;
 use App\Models\TemparioServicio;
+use Illuminate\Support\Facades\DB;
 
 
 class OrdenController extends BaseController
@@ -368,14 +369,16 @@ class OrdenController extends BaseController
     {
         // En una app real, se obtendrían de la base de datos
         $vehiculo =NULL;
-        $vehiculos = Vehiculo::all();
-        $personal = Personal::all();
+        $vehiculos = Vehiculo::orderBy('flota')->orderBy('placa')->get();
+        $personal = Personal::with('persona')->where('cargo', 'Mecánico')->get(); // Cargar relación con Persona para obtener nombres completos
+        
         $tipos = TipoOrden::all();
         $tipo_falla= TipoFalla::all();
         $nro_orden = $this->generateOrdenCode();
-        $categorias_tempario = TemparioCategoria::all();
-        $servicios_tempario = TemparioServicio::all();
-        $suministros = Inventario::all();
+        $categorias_tempario = TemparioCategoria::orderBy('categoria')->get();
+        $servicios_tempario = TemparioServicio::orderBy('servicio')->get();
+        $suministros = Inventario::orderBy('descripcion')->get();
+
         $estatusOpciones = EstatusData::all()->keyBy('id_estatus');        
         if(!is_null($vehiculo_id)){
             $vehiculo = Vehiculo::findOrFail($vehiculo_id); 
@@ -390,28 +393,183 @@ class OrdenController extends BaseController
      */
     public function show($id)
     {
+        
         try {
             // Asumiendo que se puede obtener la orden con sus relaciones
-            $orden = $this->model->findOrFail($id);
+            $orden = $this->model->where('id', $id)->with(['vehiculoBelong'])->first();
+            $trabajos = Trabajos::where('id_orden', $id)->with(['categoria', 'servicio'])->get();
 
-            // Datos de prueba para la hoja técnica
-            // $insumos_usados = [
-            //     (object)['nombre' => 'Aceite de motor', 'cantidad' => 5, 'unidad' => 'Litros'],
-            //     (object)['nombre' => 'Filtro de aceite', 'cantidad' => 1, 'unidad' => 'Unidad'],
-            //     (object)['nombre' => 'Pastillas de freno', 'cantidad' => 1, 'unidad' => 'Juego'],
-            // ];
-            $insumos_usados = InventarioSuministro::with('inventario')->where('id_orden', $id)->get();
-            
+            // 1. Extraemos los IDs asegurando que no haya nulos y limpiando el array
+            $todosLosIds = $trabajos->pluck('id_mecanico')
+                ->flatten()
+                ->filter()
+                ->unique();
+
+            // 2. Pedimos el Personal e INCLUIMOS la relación 'persona' aquí (Eager Loading)
+            $personalRelacionado = Personal::with('persona')
+                ->whereIn('id_personal', $todosLosIds)
+                ->get()
+                ->keyBy('id_personal'); // Esto nos permite buscar por ID rápidamente
+
+            // 3. Asignamos los datos a cada trabajo usando los datos ya cargados en memoria
+            $trabajos->each(function ($trabajo) use ($personalRelacionado) {
+                // Normalizamos los IDs (por si vienen como string "1,2" o array [1,2])
+                $ids = is_array($trabajo->id_mecanico) 
+                    ? $trabajo->id_mecanico 
+                    : explode(',', (string)$trabajo->id_mecanico);
+
+                // Filtramos la colección que ya tenemos en memoria (sin ir a la base de datos otra vez)
+                $trabajo->mecanicos_lista = $personalRelacionado->whereIn('id_personal', $ids)->values();
+            });
+            //dd($trabajos);            
             $requerimientos = SuministroCompra::where('orden_id', $id)->with('detalles')->get();
-            $estatusData = EstatusData::all()->keyBy('id_estatus');
+            $estatusData = EstatusData::find($orden->estatus);
             $fotos= OrdenFoto::where('orden_id',$id)->get();
+            $personal = Personal::with('persona')->where('cargo', 'Mecánico')->get(); // Cargar relación con Persona para obtener nombres completos
+            $inventario = Inventario::all()->keyBy('id_inventario');
+            $categorias_tempario = TemparioCategoria::orderBy('categoria')->get();
+            
 
-            return view('orden.show', compact('orden', 'insumos_usados','requerimientos', 'estatusData','fotos'));
+            return view('orden.show', compact('orden', 'requerimientos', 'estatusData','fotos', 'trabajos', 'personal', 'inventario','categorias_tempario'));
         } catch (ModelNotFoundException $e) {
             Session::flash('error', 'La orden de trabajo no fue encontrada.');
             return Redirect::route('orden.list');
         }
     }
+
+    public function anular(Request $request, $id)
+    {
+        return DB::transaction(function () use ($id, $request) {
+            $orden = Orden::findOrFail($id);
+
+            // 1. Reversión de Inventario (Solo insumos entregados)
+            foreach ($orden->suministros as $item) {
+                // Si el estatus es 'ENTREGADO' (ej: id 2), devolvemos al stock
+                if ($item->estatus == 2) { 
+                    $producto = Inventario::find($item->id_inventario);
+                    if ($producto) {
+                        $producto->increment('stock', $item->cantidad);
+                    }
+                }
+                // Opcional: Marcar el suministro como anulado
+                $item->update(['estatus' => 0]); 
+            }
+
+            $vehiculo = $orden->id_vehiculo ? Vehiculo::find($orden->id_vehiculo) : null;
+            $vehiculo->update(['estatus' => 1]); // 1 = Disponible
+
+            // Enviar notificación a Telegram
+                $mensajeTelegram = "Orden #{$orden->nro_orden} ha sido ANULADA.\n";
+                $mensajeTelegram .= "Motivo: {$request->anulacion}\n";
+                if ($vehiculo) {
+                    $mensajeTelegram .= "Vehículo: {$vehiculo->flota} ({$vehiculo->placa})\n";
+                }
+                $this->telegramService->sendMessage($mensajeTelegram);
+
+
+            // 2. Actualizar Orden
+            $orden->update([
+                'estatus' => 0, // ANULADA
+                'motivo_anulacion' => $request->anulacion,
+                'fecha_cierre' => now()
+            ]);
+
+            return response()->json(['success' => true]);
+        });
+    }
+
+
+    public function reactivar($id)
+    {
+        $orden = Orden::findOrFail($id);
+        $orden->update(['estatus' => 'ABIERTA', 'fecha_cierre' => null]);
+        $vehiculo = $orden->id_vehiculo ? Vehiculo::find($orden->id_vehiculo) : null;
+        if ($vehiculo) {
+            $vehiculo->update(['estatus' => 2]); // 2 = En Mantenimiento
+        }
+
+         // Enviar notificación a Telegram
+         $mensajeTelegram = "Orden #{$orden->nro_orden} ha sido REACTIVADA.\n";
+         if ($vehiculo) {
+             $mensajeTelegram .= "Vehículo: {$vehiculo->flota} ({$vehiculo->placa})\n";
+         }
+         $this->telegramService->sendMessage($mensajeTelegram);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Agregar Trabajo (Desde el Modal)
+     */
+    public function addTrabajo(Request $request, $id)
+    {
+        // Tu estándar de creación de trabajos
+        Trabajos::create([
+            'id_orden' => $id,
+            'descripcion' => $request->descripcion,
+            'id_mecanico' => json_encode($request->mecanicos), // Varchar/Array
+            'costo' => $request->costo,
+            'id_tempario' => $request->id_tempario
+        ]);
+
+        return back()->with('success', 'Trabajo agregado correctamente.');
+    }
+
+    public function addInsumo(Request $request, $id)
+    {
+        // Lógica para agregar insumo a la orden
+        // Esto podría incluir validación, creación de registros en tablas pivot, etc.
+
+        // Ejemplo básico:
+        $orden = Orden::findOrFail($id);
+        $orden->suministros()->create([
+            'id_inventario' => $request->id_inventario,
+            'cantidad' => $request->cantidad,
+            'precio_unitario' => Inventario::find($request->id_inventario)->costo_div ?? 0,
+            'id_orden' => $orden->id,
+            'id_auto' => $orden->id_vehiculo,
+            'id_usuario' => Auth::id(),
+            'id_emisor' => Auth::id(),
+            'estatus' => 2, // 2 = Solicitado/En Uso
+        ]);
+
+        return back()->with('success', 'Insumo agregado correctamente.');
+    }
+
+    public function removeInsumo($id)
+    {
+        // Lógica para eliminar un insumo de la orden
+        $suministro = InventarioSuministro::findOrFail($id);
+        
+        // Solo permitir eliminación si el suministro no ha sido entregado (estatus 2)
+        if ($suministro->estatus == 2) {
+            $suministro->delete();
+            return back()->with('success', 'Insumo eliminado correctamente.');
+        }
+
+        return back()->with('error', 'No se puede eliminar un insumo que ya ha sido entregado.');
+    }   
+
+    public function removeTrabajo($id)
+    {
+        // Lógica para eliminar un trabajo de la orden
+        $trabajo = Trabajos::findOrFail($id);
+        $trabajo->delete();
+        return back()->with('success', 'Trabajo eliminado correctamente.');
+    }
+
+    /**
+     * Eliminar definitivamente (Solo si está anulada)
+     */
+    public function destroy($id)
+    {
+        $orden = Orden::findOrFail($id);
+        if($orden->estatus != 0) return response()->json(['success' => false, 'message' => 'Solo órdenes anuladas']);
+
+        $orden->delete(); // Gracias a OnDelete Cascade en DB, borra trabajos y suministros
+        return response()->json(['success' => true]);
+    }
+
 
     /**
      * Sobrescribimos el método `store` para manejar la lógica específica.
@@ -422,179 +580,219 @@ class OrdenController extends BaseController
     public function store(Request $request)
     {
 
-        $userVentas=User::where('name','ventas')->first();
-        $mensajeTelegramC=null;
-        $telegramMessage=null;
         // Lógica de validación aquí
 
         // Lógica para crear la orden, asignar insumos, etc.
+        
+        // Almacena en la DB
+        
+        return DB::transaction(function () use ($request) {
+        $suministros = json_decode($request->supplies_json, true) ?? [];
+        $trabajos = json_decode($request->trabajos_json, true) ?? []; 
+                
+
+        $userVentas=User::where('name','ventas')->first();
+        $mensajeTelegramC=null;
+        $telegramMessage=null;
+
         // Obtener el ID del usuario autenticado
             $userId = Auth::id();
-        // Almacena en la DB
-        $orden=Orden::create($request->all());
-        $vehiculo= null;
-        if(!is_null($request->id_vehiculo)){
-            $vehiculo= Vehiculo::find($request->id_vehiculo);
-        }
-         // 4. Procesar y guardar los suministros solicitados
-            $suministros = json_decode($request->supplies_json, true) ?? [];
-        
-        // Contenedores para agrupar ítems
-        $usoInventario = [];
-        $solicitudCompra = [];
-        
-        foreach ($suministros as $item) {
-            // El tipo se definió en el frontend: 'USO' o 'COMPRA'
-            if ( str_contains($item['id'],'MANUAL')) {
-                $solicitudCompra[] = $item;
-            } else {
-                $usoInventario[] = $item;
+            $orden=Orden::create($request->all());
+            $vehiculo= null;
+            if(!is_null($request->id_vehiculo)){
+                $vehiculo= Vehiculo::find($request->id_vehiculo);
             }
-        }
-        
-        // 2. Procesar Suministros de USO (Descuento de Inventario)
-        if (!empty($usoInventario)) {
-            // Lógica para registrar el uso: 
-            // - Crear registros en tu tabla de pivote (ej: 'orden_suministro_uso')
-            // - Descontar la cantidad de la tabla 'inventarios'
-            foreach ($usoInventario as $usoItem) {
-                // Aquí debes asegurar que la lógica de descuento sea atómica (con el inventario)
-                // Por simplicidad, se omite el descuento real del Inventario aquí, 
-                // pero DEBE ser implementado.
-                
-                // Ejemplo de registro de uso (asumiendo tabla 'orden_suministros'):
-                /*
-                $orden->suministros()->create([ 
-                    'inventario_id' => $usoItem['id'],
-                    'cantidad_usada' => $usoItem['cantidad'],
-                    'costo_unitario' => Inventario::find($usoItem['id'])->costo_promedio,
-                    'tipo' => 'USO',
-                ]);
-                */
-            }
-        }
-        
-        // 3. Procesar Suministros de COMPRA (Generar Solicitud/OC)
-        if (count($solicitudCompra)>0) {
-            // Crear la cabecera de la Solicitud de Compra (OC)
+            // 4. Procesar y guardar los suministros solicitados
             
-            $compra = SuministroCompra::create([
-                'orden_id' => $orden->id,
-                'observacion' => $request->supplies_observations,
-                'usuario_solicitante_id' => Auth::id(),
-                'estatus' => 1, // 1: Solicitada (Pendiente de Aprobación Admin)
-            ]);
-            $compraId=str_pad($compra->id, 7, '0', STR_PAD_LEFT);
-            $flota=!is_null($vehiculo)?$vehiculo->flota:null;
-            $destino= $flota ?? $orden->responsable;
+            // Contenedores para agrupar ítems
+            $usoInventario = [];
+            $solicitudCompra = [];
             
-             $mensajeTelegramC="Requerimiento de suministros #{$compraId} para orden {$orden->nro_orden} a {$destino}\n";
-
-            // Crear los detalles de los ítems solicitados
-            foreach ($solicitudCompra as $solicitudItem) {
-                // El campo 'id' será el ID del Inventario o el temporal 'MANUAL_X'
-                $inventarioId = is_numeric($solicitudItem['id']) ? $solicitudItem['id'] : null;
-                $mensajeTelegramC.="- {$solicitudItem['cantidad']} {$solicitudItem['descripcion']}\n";
-
-                $compra->detalles()->create([
-                    'inventario_id' => $inventarioId,
-                    'descripcion' => $solicitudItem['descripcion'],
-                    'cantidad_solicitada' => $solicitudItem['cantidad'],
-                    // Otros campos como costo_unitario_aprobado se llenan en la Aprobación
-                ]);
+            foreach ($suministros as $item) {
+                // El tipo se definió en el frontend: 'USO' o 'COMPRA'
+                if ( str_contains($item['id'],'MANUAL')) {
+                    $solicitudCompra[] = $item;
+                } else {
+                    $usoInventario[] = $item;
+                }
             }
-        }
-        $hasFoto=false;
-
-            // 2. Manejar la subida de MÚLTIPLES FOTOS
-            if ($request->hasFile('fotos_orden')) {
-                $hasFoto=true;
-                Log::debug("Controlador Orden: Se detectaron " . count($request->file('fotos_orden')) . " archivos para subir.");
-                
-                foreach ($request->file('fotos_orden') as $file) {
+            
+            // 2. Procesar Suministros de USO (Descuento de Inventario)
+            if (!empty($usoInventario)) {
+                // Lógica para registrar el uso: 
+                // - Crear registros en tu tabla de pivote (ej: 'orden_suministro_uso')
+                // - Descontar la cantidad de la tabla 'inventarios'
+                foreach ($usoInventario as $usoItem) {
+                    // Aquí debes asegurar que la lógica de descuento sea atómica (con el inventario)
+                    // Por simplicidad, se omite el descuento real del Inventario aquí, 
+                    // pero DEBE ser implementado.
                     
-                    // Almacenar el archivo y obtener la ruta. 
-                    // Se usa el disco 'public' y se guarda en la carpeta 'ordenes_fotos'.
-                    $path = Storage::disk('public')->put('ordenes_fotos', $file);
+                    // Ejemplo de registro de uso (asumiendo tabla 'orden_suministros'):
                     
-                    // Crear el registro en la tabla orden_fotos
-                    $orden->fotos()->create([
-                        'ruta_archivo' => $path,
-                        // Aquí podrías generar una descripción si fuera necesario
-                        'descripcion' => "Foto de evidencia inicial para Orden #{$orden->id}",
+                    $orden->suministros()->create([ 
+                        'id_inventario' => $usoItem['id'],
+                        'cantidad' => $usoItem['cantidad'],
+                        'precio_unitario' => Inventario::find($usoItem['id'])->costo_div ?? 0, // Obtener el costo del inventario
+                        'id_orden' => $orden->id,
+                        'id_auto' => $orden->id_vehiculo,
+                        'id_usuario' => $userId, // Usuario que registra el uso
+                        'id_emisor' => $userId,
+                        'estatus' => 2, // 2 = 'solicitado' o 'en uso', dependiendo de tu lógica de negocio
                     ]);
                     
-                    Log::debug("Controlador Orden: Foto guardada: {$path}");
+                }
+            }
+            
+            // 3. Procesar Suministros de COMPRA (Generar Solicitud/OC)
+            if (count($solicitudCompra)>0) {
+                // Crear la cabecera de la Solicitud de Compra (OC)
+                
+                $compra = SuministroCompra::create([
+                    'orden_id' => $orden->id,
+                    'observacion' => $request->supplies_observations,
+                    'usuario_solicitante_id' => Auth::id(),
+                    'estatus' => 2, // 2: Solicitada (Pendiente de Aprobación Admin)
+                ]);
+                $compraId=str_pad($compra->id, 7, '0', STR_PAD_LEFT);
+                $flota=!is_null($vehiculo)?$vehiculo->flota:null;
+                $destino= $flota ?? $orden->responsable;
+                
+                $mensajeTelegramC="Requerimiento de suministros #{$compraId} para orden {$orden->nro_orden} a {$destino}\n";
+
+                // Crear los detalles de los ítems solicitados
+                foreach ($solicitudCompra as $solicitudItem) {
+                    // El campo 'id' será el ID del Inventario o el temporal 'MANUAL_X'
+                    $inventarioId = is_numeric($solicitudItem['id']) ? $solicitudItem['id'] : null;
+                    $mensajeTelegramC.="- {$solicitudItem['cantidad']} {$solicitudItem['descripcion']}\n";
+
+                    $compra->detalles()->create([
+                        'inventario_id' => $inventarioId,
+                        'descripcion' => $solicitudItem['descripcion'],
+                        'cantidad_solicitada' => $solicitudItem['cantidad'],
+                        // Otros campos como costo_unitario_aprobado se llenan en la Aprobación
+                    ]);
                 }
             }
 
-        if(!is_null($request->id_vehiculo)){
-            $vehiculo = Vehiculo::find($request->id_vehiculo);
+            // --- SECCIÓN NUEVA: PROCESAR TRABAJOS Y MECÁNICOS ---
+            $detalleTrabajosTelegram = "\n🛠 TRABAJOS ASIGNADOS:\n";
             
-             $kmRecorridos = is_numeric($request->kilometraje) ? (int)$request->kilometraje : 0;
-            $kmVehiculo = $vehiculo ? $vehiculo->kilometraje : 0;
-                        // Actualizar el kilometraje del vehículo si es mayor al actual
-            if(is_numeric($kmRecorridos) && $kmRecorridos >0){
-                $km=$kmRecorridos - $kmVehiculo;
-                $vehiculo->kilometraje = $kmRecorridos;
-                $vehiculo->km_contador += $km;
-                $vehiculo->km_mantt += $km;
-            }
-            if($orden->tipo=='Mantenimiento'|| $orden->tipo=='Preventivo'){
-                $vehiculo->estatus = 3;
-            }else{
-                $vehiculo->estatus = 5;
-            }
-            $vehiculo->save();
-        }
-        $this->createAlert([
-            'id_usuario' => $userId, // ID del usuario responsable de la orden.
-            'id_rel' => $orden->id, // ID de la orden.
-            'observacion' => 'Se te ha asignado una nueva orden de trabajo: ' . $orden->nro_orden.' a '.$orden->resposable,
-            'accion' => route('ordenes.show', $orden->id), // Ruta para ver la orden.
-            'dias' => 0,
-        ]);
+            foreach ($trabajos as $t) {
+                // Guardar el trabajo asociado a la orden
+                $categorias = TemparioCategoria::where('id_tempario_categoria', $t['id_categoria'])->first();
+                $servicios = TemparioServicio::where('id_tempario_servicio', $t['id_tempario'])->first();
+                $t['concepto'] = ($categorias ? $categorias->categoria : '') . ' - ' . ($servicios ? $servicios->servicio : '');
+                $nuevoTrabajo = $orden->trabajos()->create([// Asumiendo que tu tabla tiene 'descripcion'
+                    'id_orden' => $orden->id,
+                    'id_tempario_servicio' => $t['id_tempario'],
+                    'descripcion' => $t['concepto'],
+                    'id_categoria' => $t['id_categoria'],
+                    'costo' => $servicios ? $servicios->costo : $categorias->costo,
+                    'id_mecanico' => !empty($t['mecanicos']) ? $t['mecanicos'][0] : null, // Asignamos el primer mecánico como referencia
+                    'fecha_inicio' => Carbon::now(), // Puedes ajustar esto según tu lógica
+                ]);
 
-        $data=[
-            'id_usuario' => $userId, // ID del usuario responsable de la orden.
-            'id_rel' => $orden->id, // ID de la orden.
-            'observacion' => 'Se te ha asignado una nueva orden de trabajo: ' . $orden->nro_orden.' a '.$orden->resposable,
-            'accion' => route('ordenes.show', $orden->id), // Ruta para ver la orden.
-            'dias' => 0,
-        ];
-        
-            $flota=!is_null($vehiculo)?$vehiculo->flota:null;
-                $destino= $flota ?? $orden->responsable;
-                 FcmNotificationService::enviarNotification(
-                        "Se abrio orden de Trabajo a {$orden->nro_orden} {$destino}",  
-                        "Creada orden de Trabajo {$orden->nro_orden} por {$orden->descripcion_1}. Responsable {$orden->responsable}",
-                        $data
-                    );
-        $telegramMessage="Creada orden de Trabajo {$orden->nro_orden} a {$destino} por {$orden->descripcion_1}. Responsable {$orden->responsable}";
-        $this->telegramService->sendMessage($telegramMessage); 
+                    
+                $detalleTrabajosTelegram .= "- {$t['concepto']} (Mec: {$t['mecanicos_nombres']})\n";
+            }
+            // ---------------------------------------------------
+            $hasFoto=false;
 
-        if(isset($mensajeTelegramC)&&!is_null($mensajeTelegramC)){
-            $this->telegramService->sendMessage($mensajeTelegramC);
-            if(!is_null($userVentas) && !is_null($userVentas->telegram_id)){
-                $this->telegramService->sendMessage($mensajeTelegramC, $userVentas->telegram_id);
+                // 2. Manejar la subida de MÚLTIPLES FOTOS
+                if ($request->hasFile('fotos_orden')) {
+                    $hasFoto=true;
+                    Log::debug("Controlador Orden: Se detectaron " . count($request->file('fotos_orden')) . " archivos para subir.");
+                    
+                    foreach ($request->file('fotos_orden') as $file) {
+                        
+                        // Almacenar el archivo y obtener la ruta. 
+                        // Se usa el disco 'public' y se guarda en la carpeta 'ordenes_fotos'.
+                        $path = Storage::disk('public')->put('ordenes_fotos', $file);
+                        
+                        // Crear el registro en la tabla orden_fotos
+                        $orden->fotos()->create([
+                            'ruta_archivo' => $path,
+                            // Aquí podrías generar una descripción si fuera necesario
+                            'descripcion' => "Foto de evidencia inicial para Orden #{$orden->id}",
+                        ]);
+                        
+                        Log::debug("Controlador Orden: Foto guardada: {$path}");
+                    }
+                }
+
+            if(!is_null($request->id_vehiculo)){
+                $vehiculo = Vehiculo::find($request->id_vehiculo);
+                
+                $kmRecorridos = is_numeric($request->kilometraje) ? (int)$request->kilometraje : 0;
+                $kmVehiculo = $vehiculo ? $vehiculo->kilometraje : 0;
+                            // Actualizar el kilometraje del vehículo si es mayor al actual
+                if(is_numeric($kmRecorridos) && $kmRecorridos >0){
+                    $km=$kmRecorridos - $kmVehiculo;
+                    $vehiculo->kilometraje = $kmRecorridos;
+                    $vehiculo->km_contador += $km;
+                    $vehiculo->km_mantt += $km;
+                }
+                if($orden->tipo=='Mantenimiento'|| $orden->tipo=='Preventivo'){
+                    $vehiculo->estatus = 3;
+                }else{
+                    $vehiculo->estatus = 5;
+                }
+                $vehiculo->save();
             }
-        }
-        if($hasFoto){
-            $i=1;
-           foreach ($request->file('fotos_orden') as $file) {
-                $caption =
-                $this->telegramService->sendPhotoOrden($file,"Registro Fotografico Orden #{$orden->nro_orden}  {$i}" );
-                $i++;
-            }
-        }
+            $this->createAlert([
+                'id_usuario' => $userId, // ID del usuario responsable de la orden.
+                'id_rel' => $orden->id, // ID de la orden.
+                'observacion' => 'Se te ha asignado una nueva orden de trabajo: ' . $orden->nro_orden.' a '.$orden->resposable,
+                'accion' => route('ordenes.show', $orden->id), // Ruta para ver la orden.
+                'dias' => 0,
+            ]);
+
+            $data=[
+                'id_usuario' => $userId, // ID del usuario responsable de la orden.
+                'id_rel' => $orden->id, // ID de la orden.
+                'observacion' => 'Se te ha asignado una nueva orden de trabajo: ' . $orden->nro_orden.' a '.$orden->resposable,
+                'accion' => route('ordenes.show', $orden->id), // Ruta para ver la orden.
+                'dias' => 0,
+            ];
+            
+                $flota=!is_null($vehiculo)?$vehiculo->flota:null;
+                    $destino= $flota ?? $orden->responsable;
+                    FcmNotificationService::enviarNotification(
+                            "Se abrio orden de Trabajo a {$orden->nro_orden} {$destino}",  
+                            "Creada orden de Trabajo {$orden->nro_orden} por {$orden->descripcion_1}. Responsable {$orden->responsable}",
+                            $data
+                        );
+            $telegramMessage = "📝 *Nueva Orden de Trabajo {$orden->nro_orden}*\n" .
+                            "Vehículo: {$flota}\n" .
+                            "Falla: {$orden->descripcion_1}\n" .
+                            "Responsable: {$orden->responsable}" . 
+                            $detalleTrabajosTelegram; // Agregamos los trabajos al mensaje
         
-        // Mensaje de éxito
-        Session::flash('success', 'Orden de trabajo creada exitosamente.');
-        if (count($solicitudCompra)>0) {
-            return Redirect::route('ordenes.compra',['id_order'=>$orden->id,'id'=>$compra->id]);
-        }
-        // Redirige al listado
-        return Redirect::route('ordenes.list');
+            $this->telegramService->sendMessage($telegramMessage); 
+
+            if(isset($mensajeTelegramC)&&!is_null($mensajeTelegramC)){
+                $this->telegramService->sendMessage($mensajeTelegramC);
+                if(!is_null($userVentas) && !is_null($userVentas->telegram_id)){
+                    $this->telegramService->sendMessage($mensajeTelegramC, $userVentas->telegram_id);
+                }
+            }
+            if($hasFoto){
+                $i=1;
+            foreach ($request->file('fotos_orden') as $file) {
+                    $caption =
+                    $this->telegramService->sendPhotoOrden($file,"Registro Fotografico Orden #{$orden->nro_orden}  {$i}" );
+                    $i++;
+                }
+            }
+            
+            // Mensaje de éxito
+            Session::flash('success', 'Orden de trabajo creada exitosamente.');
+            if (count($solicitudCompra)>0) {
+                return Redirect::route('ordenes.compra',['id_order'=>$orden->id,'id'=>$compra->id]);
+            }
+            // Redirige al listado
+            return Redirect::route('ordenes.list');
+        });
     }
 
 
@@ -620,6 +818,7 @@ class OrdenController extends BaseController
                 'id_orden' => $orden->id,
                 'id_inventario' => $request->id_inventario,
                 'cantidad' => $request->cantidad,
+                'precio_unitario' => Inventario::find($request->id_inventario)->costo_div ?? 0, // Obtener el costo del inventario
                 'id_usuario' => $userId, // Usuario que registra el suministro
                 'id_auto' => $orden->id_vehiculo,
                 'id_emisor' => $userId,

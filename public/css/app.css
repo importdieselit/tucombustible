@@ -12027,3 +12027,76 @@ textarea.form-control-lg {
             border-radius: 4px !important;
             font-size: 0.8rem !important;
         }
+
+         /* Ajustes de Tabs para coincidir con el diseño */
+        .nav-tabs .nav-link {
+            color: #6c757d;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            border: none;
+            padding: 12px 20px;
+        }
+        .nav-tabs .nav-link.active {
+            color: #FF6B00;
+            border-bottom: 3px solid #FF6B00;
+            background: none;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #FF6B00;
+            box-shadow: 0 0 0 0.25rem rgba(255, 107, 0, 0.1);
+        }
+
+          @media print {
+        .no-print, .btn, .main-footer, .sidebar, .navbar, .modal { display: none !important; }
+        .container-fluid { width: 100% !important; padding: 0 !important; }
+        .card { border: 1px solid #ddd !important; box-shadow: none !important; margin-bottom: 10px !important; }
+        body { background-color: white !important; font-size: 12px; }
+        .card-step { border-top: 3px solid #4C474F !important; }
+    }
+    .table-summary td { vertical-align: middle; }
+    .total-row { background-color: #f8f9fa; font-weight: bold; font-size: 1.1rem; }
+    .signature-box { border-top: 1px solid #4C474F; width: 200px; margin-top: 50px; text-align: center; padding-top: 5px; font-size: 0.8rem; }
+    .select2-container { z-index: 2050 !important; } 
+    .table-supply thead { background-color: #4C474F; color: white; }
+    .form-label { font-weight: 700; font-size: 0.85rem; text-transform: uppercase; color: #4C474F; }
+    /* Estándar Impordiesel: Estructura Base */
+    .card-kpi { 
+        border: none; 
+        border-bottom: 4px solid #4C474F; /* Gris Corporativo por defecto */
+        border-left: 0px solid transparent; /* Para evitar que el borde izquierdo afecte el diseño */
+        transition: all 0.3s ease; 
+        border-radius: 8px; /* Bordes ligeramente redondeados para suavizar el diseño */
+    }
+
+    .card-kpi:hover { 
+        transform: translateY(-5px); 
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important; 
+    }
+
+    /* Variaciones de Color del Estándar Impordiesel */
+    .card-kpi.border-b-orange { border-bottom-color: #f2A435 !important; }
+    .card-kpi.border-b-corporate { border-left: 0px; border-bottom-color: #4C474F !important; }
+    
+    /* Nuevos Estilos Solicitados (Success, Warning, Danger) */
+    .card-kpi.border-b-success { border-bottom-color: #1cc88a !important; } /* Verde para Eficiencia/Disponibilidad */
+    .card-kpi.border-b-warning { border-bottom-color: #f6c23e !important; } /* Amarillo para Alertas Próximas */
+    .card-kpi.border-b-danger { border-bottom-color: #e74a3b !important; }  /* Rojo para Fallas o Vencimientos */
+
+    /* Auxiliares de Texto */
+    .text-corporate { color: #f2A435 !important; }
+    .bg-corporate { background-color: #4C474F !important; color: white; }
+    .timeline-list .list-group-item {
+        border-left: 3px solid #f2A435; /* Naranja Impordiesel por defecto */
+        margin-bottom: 8px;
+        border-radius: 4px !important;
+        background: #fdfdfd;
+        transition: background 0.2s;
+    }
+    .timeline-list .list-group-item:hover { background: #f8f9fc; }
+    
+    /* Variaciones de borde según criticidad */
+    .border-timeline-danger { border-left-color: #e74a3b !important; }
+    .border-timeline-success { border-left-color: #1cc88a !important; }
+    .border-timeline-warning { border-left-color: #f6c23e !important; }
+    .border-timeline-primary { border-left-color: #4C474F !important; } /* Gris Corporativo */

@@ -2,48 +2,50 @@
 @section('title', 'Dashboard de Vehículos')
 
 @section('content')
-<div class="row mb-4 align-items-center">
-    <div class="col">
-        <h1 class="h3 mb-0 text-gray-800">Dashboard de Vehículos</h1>
-        <p class="text-muted small">Estado operativo de la flota en tiempo real.</p>
-    </div>
-    <div class="col-auto">
-            <a class="btn btn-sm btn-primary shadow-sm" href="{{ route('vehiculos.create') }}" >
-                <i class="fa fa-plus fa-sm"></i> Nuevo Vehiculo
+<div class="row mb-4">
+    <div class="col-12 d-flex justify-content-between align-items-center bg-white p-3 shadow-sm rounded">
+        <div>
+            {{-- Título en mayúsculas y negrita según el estándar --}}
+            <h4 class="fw-bold mb-0 text-uppercase">Control de Flota | Dashboard</h4>
+            <small class="text-muted">Estado operativo de la flota en tiempo real</small>
+        </div>
+        <div class="btn-group shadow-sm">
+            <a href="{{ route('vehiculos.list') }}" class="btn btn-sm btn-outline-dark">
+                <i class="fas fa-list me-2"></i> Listado Completo
             </a>
-            <a class="btn btn-sm btn-secondary shadow-sm" href="{{ route('vehiculos.list') }}" >
-                <i class="fa fa-list fa-sm"></i> Listado Completo
+            <a href="{{ route('vehiculos.reporte.disponibilidad') }}" class="btn btn-sm btn-dark">
+                <i class="fas fa-file-excel me-2"></i> Reporte de Disponibilidad
             </a>
-            <a class="btn btn-sm btn-info shadow-sm" href="{{ route('vehiculos.reporte.disponibilidad') }}" >
-                <i class="fa fa-file-excel fa-sm"></i> Reporte Disponibilidad
+            <a href="{{ route('mantenimiento.planificacion.index') }}" class="btn btn-sm btn-dark">
+                <i class="fas fa-wrench me-2"></i> Planificar
             </a>
-            <a class="btn btn-sm btn-warning shadow-sm" href="{{ route('mantenimiento.planificacion.index') }}" >
-                <i class="fa fa-wrench fa-sm"></i> Planificar Mantenimiento
+            <a href="{{ route('vehiculos.create') }}" class="btn btn-sm text-white" style="background-color: #f2A435;">
+                <i class="fas fa-plus me-2"></i> Nuevo Vehículo
             </a>
+        </div>
     </div>
 </div>
-
 <div class="row g-3 mb-4">
     @php
         $stats = [
             [
                 'label' => 'Eficiencia Flota',
-                'val' => $eficienciaActual.'%',
-                'sub' => "$unidades_disponibles de $total_flota operativas",
+                'val' => ($eficienciaActual ?? 0).'%',
+                'sub' => ($unidades_disponibles ?? 0)." de ".($total_flota ?? 0)." operativas",
                 'icon' => 'fa-chart-line',
-                'color' => 'success',
+                'color' => 'success', // Mantiene el verde para éxito
                 'details' => [
-                    'Camiones y Chutos' => $m_dis+$ch_dis.' / '.$m_tot ,
-                    'Cisternas' => $c_dis.' / '.$t_tot
-                ], // KPI General
+                    'Chutos/Camiones' => ($m_dis ?? 0) + ($ch_dis ?? 0) . ' / ' . ($m_tot ?? 0),
+                    'Cisternas' => ($c_dis ?? 0) . ' / ' . ($t_tot ?? 0)
+                ],
                 'link' => '#'
             ],
             [
                 'label' => 'Disponibles',
-                'val' => $unidades_disponibles,
+                'val' => $unidades_disponibles ?? 0,
                 'sub' => 'Listos para ruta',
                 'icon' => 'fa-check-circle',
-                'color' => 'success',
+                'color' => 'orange', // Aplicamos el color corporativo naranja
                 'details' => [
                     'Camiones' => $m_dis ?? 0,
                     'Chutos' => $ch_dis ?? 0,
@@ -53,105 +55,119 @@
             ],
             [
                 'label' => 'No Disponibles',
-                'val' => $total_flota - $unidades_disponibles,
+                'val' => ($total_flota ?? 0) - ($unidades_disponibles ?? 0),
                 'sub' => 'Fuera de operación',
                 'icon' => 'fa-ban',
-                'color' => 'danger',
+                'color' => 'corporate-emphasis', // Aplicamos el gris oscuro corporativo
                 'details' => [
-                    'En Ruta' => $unidades_en_servicio,
+                    'En Ruta' => $unidades_en_servicio ?? 0,
                     'Con Falla' => $unidades_con_falla ?? 0,
-                    'En Taller' => $unidades_en_mantenimiento
+                    'En Taller' => $unidades_en_mantenimiento ?? 0
                 ],
                 'link' => route('vehiculos.list', ['filter' => 'no_disponibles'])
             ],
             [
                 'label' => 'Alertas Doc.',
-                'val' => $unidades_con_alerta,
+                'val' => $unidades_con_alerta ?? 0,
                 'sub' => 'Vencimientos próximos',
                 'icon' => 'fa-triangle-exclamation',
-                'color' => 'warning',
+                'color' => 'danger',
                 'details' => [],
                 'link' => route('vehiculos.list', ['filter' => 'documentos_alerta'])
             ]
         ];
     @endphp
 
-   <div class="row g-3 mb-4">
     @foreach($stats as $s)
     <div class="col-xl-3 col-md-6">
         <a href="{{ $s['link'] }}" class="text-decoration-none">
-            <div class="card  border-{{ $s['color'] }} shadow-sm h-100">
+            {{-- Aplicación de card-kpi y border dinámico según el estándar --}}
+            <div class="card card-kpi border-b-{{ $s['color'] }} shadow-sm h-100">
                 <div class="card-body">
                     <div class="row align-items-center">
-                        <div class="col-12 text-xs font-weight-bold text-{{ $s['color'] }} text-uppercase mb-1" >
-                                {{ $s['label'] }} <i class="fa {{ $s['icon'] }} text-gray-200"></i>
-                            </div>
+                        {{-- Cabecera del KPI: Texto en mayúsculas pequeñas --}}
+                        <div class="col-12 text-xs font-weight-bold text-uppercase mb-1" style="color: {{ $s['color'] == 'orange' ? '#f2A435' : ($s['color'] == 'corporate' ? '#4C474F' : '') }};">
+                            {{ $s['label'] }} 
+                            <i class="fa {{ $s['icon'] }} text-{{ $s['color'] }} float-end text-gray-300"></i>
+                        </div>
+                        
                         <div class="col">
-                            
                             <div class="h4 mb-0 font-weight-bold text-gray-800">{{ $s['val'] }}</div>
                         </div>
-                         @if(!empty($s['details']))
-                            @php $cont=count($s['details'])>2?6:12; @endphp
+
+                        @if(!empty($s['details']))
+                            @php $cont = count($s['details']) > 2 ? 6 : 12; @endphp
                             <div class="col-8 row p-0">
                                 @foreach($s['details'] as $name => $count)
-                                    
-                                    <div class="col-{{ $cont }} rounded" style="min-width: 30%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                            <span class="text-dark fw-bold">{{ $count }}</span>
-                                            <span class="text-muted" style="font-size: 0.7rem;">{{ $name }}</span>
-                                        </div>
+                                    <div class="col-{{ $cont }} rounded text-truncate" title="{{ $name }}">
+                                        <span class="text-dark fw-bold small">{{ $count }}</span>
+                                        <span class="text-muted" style="font-size: 0.65rem;">{{ $name }}</span>
+                                    </div>
                                 @endforeach
                             </div>
                         @endif
-                       
                     </div>
                     
-                    <div class="">
-                        <div class="text-muted small">{{ $s['sub'] }}</div>
-                        
-                       
+                    <div class="mt-2 pt-2 border-top">
+                        <div class="text-muted small" style="font-size: 0.75rem;">{{ $s['sub'] }}</div>
                     </div>
                 </div>
             </div>
         </a>
     </div>
     @endforeach
-
 </div>
 
 <div class="row g-4 mb-4">
     <!-- Acciones rápidas -->
     <div class="col-lg-4">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white border-0">
-                <h5 class="mb-0">Distribución por Estatus</h5>
-            </div>
-            <div style="position: relative; margin: auto; height: 500px; width: 350px;">
-                <canvas id="vehiculosEstatusChart"></canvas>
-            </div>
+    <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-white py-3 border-0">
+            <h6 class="m-0 fw-bold text-dark text-uppercase small">Distribución por Estatus</h6>
+        </div>
+        <div class="card-body">
+            {{-- Contenedor para Highcharts adaptado al estándar --}}
+            <div id="vehiculos-estatus-chart" style="width:100%; height: 320px; margin: 0 auto;"></div>
         </div>
     </div>
+</div>
     <!-- Gráfica de vehículos por estatus -->
 
      
         <!-- Gráfico 1: Histórico de Eficiencia de Flota (NUEVO GRÁFICO DE LÍNEA) -->
-        <div class="col-xl-8 col-lg-8 mb-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                    <h6 class="m-0 font-weight-bold text-primary">Histórico de Eficiencia de Flota (15 Días)</h6>
+        <div class="col-lg-8 mb-1">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-3 border-0 d-flex align-items-center justify-content-between">
+                    <h6 class="m-0 fw-bold text-dark text-uppercase small">Histórico de Eficiencia (Últimos 15 Días)</h6>
                 </div>
                 <div class="card-body">
-                    <div class="chart-area">
-                        <canvas id="eficienciaHistoricoChart" style="height: 200px; "></canvas>
-                    </div>
+                    {{-- Div específico para Highcharts --}}
+                    <div id="eficienciaHistoricoChart" style="width:100%; height: 320px;"></div>
                 </div>
             </div>
+        </div>
     <!--  Claficiación por tipo -->
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title text-uppercase">Distribución de Flota por Tipo</h5>
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-3 border-0">
+                    <h6 class="m-0 fw-bold text-dark text-uppercase small">Distribución de Flota por Tipo</h6>
                 </div>
                 <div class="card-body">
-                    <div id="grafico-grupo" style="width:100%; height:300px;"></div>
+                    <div id="grafico-grupo" style="width:100%; height:320px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-3 border-0">
+                    <h6 class="m-0 fw-bold text-dark text-uppercase small">Índice de Reportes de Falla</h6>
+                </div>
+                <div class="card-body">
+                    {{-- Contenedor para Highcharts --}}
+                    <div id="fallasChartContainer" style="width:100%; height:300px;"></div>
+                    <div class="mt-2">
+                        <small class="text-muted"><i class="fa fa-info-circle me-1"></i> Cantidad de reportes de falla registrados por mes.</small>
+                    </div>
                 </div>
             </div>
         </div>
@@ -200,129 +216,142 @@
         </div>
     </div>
     <!-- Próximos mantenimientos -->
-    <div class="col-md-6">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white border-0">
-                <h5 class="mb-0">Próximos Mantenimientos</h5>
-            </div>
-            <div class="card-body">
-                 @if($mantenimientos->count() === 0)
-                <p class="text-muted">No hay mantenimientos programados.</p>
+    <div class="col-md-4 mb-4">
+    <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 fw-bold text-dark text-uppercase small">Próximos Mantenimientos</h6>
+            <span class="badge bg-corporate px-3">{{ $mantenimientos->count() }} Pendientes</span>
+        </div>
+        <div class="card-body">
+            @if($mantenimientos->count() === 0)
+                <div class="text-center py-4">
+                    <i class="fa-solid fa-calendar-check fa-3x text-light mb-2"></i>
+                    <p class="text-muted italic">No hay mantenimientos programados.</p>
+                </div>
             @else
-                <ul class="list-group list-group-flush">
+                <ul class="list-group list-group-flush timeline-list">
                     @foreach($mantenimientos as $item)
                         @php
-                            $hecho = $item->fecha->isPast() ? 0 : 1;
+                            $atrasado = $item->fecha->isPast() && $item->estatus != '3';
+                            
+                            // Definir clase de borde según estatus
+                            $borderClass = 'border-timeline-primary';
+                            if($atrasado) $borderClass = 'border-timeline-danger';
+                            elseif($item->estatus == '1') $borderClass = 'border-timeline-warning';
+                            elseif($item->estatus == '3') $borderClass = 'border-timeline-success';
                         @endphp
 
-                        <li class="list-group-item">
-                        <div class="d-flex align-items-center justify-content-between flex-wrap">
-                            <div class="d-flex align-items-center me-auto">
-                                <i class="fa-solid fa-wrench text-warning me-2"></i>
-                                <strong class="me-3">{{ $item->vehiculo->placa ?? 'Sin placa' }}</strong>
-                            </div>
+                        <li class="list-group-item shadow-sm {{ $borderClass }}">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-light rounded-circle p-2 me-3 text-center" style="width: 40px;">
+                                        <i class="fa-solid fa-wrench {{ $atrasado ? 'text-danger' : 'text-corporate' }}"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-bold text-dark">{{ $item->vehiculo->placa ?? 'Sin placa' }}</h6>
+                                        <small class="text-secondary">{{ Str::limit($item->descripcion, 40) }}</small>
+                                    </div>
+                                </div>
 
-                            <div class="d-flex align-items-center gap-3">
-                                <small class="text-muted d-flex align-items-center">
-                                    <i class="fa-solid fa-calendar me-1"></i>
-                                    {{ $item->fecha->format('d/m/Y') }}
-                                </small>
-
-                                @if($item->km)
-                                    <small class="text-muted d-flex align-items-center">
-                                        <i class="fa-solid fa-gauge-high me-1"></i>
-                                        {{ number_format($item->km) }} km
+                                <div class="text-end">
+                                    <div class="mb-1">
+                                        @if($atrasado)
+                                            <span class="badge bg-danger">Atrasado</span>
+                                        @else
+                                            @switch($item->estatus)
+                                                @case('1') <span class="badge bg-warning text-dark">Pendiente</span> @break
+                                                @case('2') <span class="badge bg-info text-white">Programado</span> @break
+                                                @case('3') <span class="badge bg-success">Realizado</span> @break
+                                            @endswitch
+                                        @endif
+                                    </div>
+                                    <small class="text-muted fw-bold d-block">
+                                        <i class="fa-solid fa-calendar-day me-1"></i>
+                                        {{ $item->fecha->format('d M, Y') }}
                                     </small>
-                                @endif
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="mt-1 d-flex justify-content-between align-items-center">
-                            <small class="text-secondary italic">
-                                {{ $item->descripcion }}
-                            </small>
-                            
-                            <div>
-                                @if($hecho == 0)
-                                    <span class="badge bg-danger">Atrasado</span>
-                                @else
-                                    @switch($item->estatus)
-                                        @case('1')
-                                            <span class="badge bg-warning text-dark">Pendiente</span>
-                                            @break
-                                        @case('2')
-                                            <span class="badge bg-primary">Programado</span>
-                                            @break
-                                        @case('3')
-                                            <span class="badge bg-success">Realizado</span>
-                                            @break
-                                    @endswitch
-                                @endif
-                            </div>
-                        </div>
-                    </li>
+                            @if($item->km)
+                                <div class="mt-2 pt-2 border-top d-flex justify-content-start">
+                                    <small class="text-muted small">
+                                        <i class="fa-solid fa-gauge-high me-1"></i>
+                                        Estimado: <strong>{{ number_format($item->km) }} km</strong>
+                                    </small>
+                                </div>
+                            @endif
+                        </li>
                     @endforeach
                 </ul>
             @endif
-            </div>
         </div>
     </div>
-    <!-- Índice de reportes de falla mensuales -->
-    <div class="col-md-6">
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white border-0">
-                <h5 class="mb-0">Índice de Reportes de Falla</h5>
-            </div>
-            <div class="card-body">
-                <canvas id="fallasChart" height="80"></canvas>
-                <small class="text-muted">Cantidad de reportes de falla por mes.</small>
-            </div>
-        </div>
+</div>
     
     <!-- Camiones en ruta o servicio -->
-        <div class="card shadow-sm border-0">
-            <div class="card-header bg-white border-0">
-                <h5 class="mb-0">Camiones en Ruta/Servicio  (Demo)</h5>
-            </div>
-            <div class="card-body p-0">
-                <table class="table table-hover mb-0">
-                    <thead>
+<div class="col-md-8 mb-4">
+    <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-white py-3 border-0 d-flex align-items-center justify-content-between">
+            <h6 class="m-0 fw-bold text-dark text-uppercase small">Camiones en Ruta / Servicio</h6>
+            <span class="badge bg-success rounded-pill px-3">En Vivo</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size: 0.875rem;">
+                    <thead class="bg-light text-dark">
                         <tr>
-                            <th>Placa</th>
-                            <th>Modelo</th>
-                            <th>Marca</th>
-                            <th>Ruta</th>
-                            <th>Kilometraje</th>
-                            <th>Carga Total (Lts)</th>
-                            <th>Cliente Destino</th>
+                            <th class="ps-4 py-3 border-0 text-uppercase small" style="width: 120px;">Placa</th>
+                            <th class="py-3 border-0 text-uppercase small">Vehículo</th>
+                            <th class="py-3 border-0 text-uppercase small text-center">Ruta</th>
+                            <th class="py-3 border-0 text-uppercase small text-center">Kilometraje</th>
+                            <th class="py-3 border-0 text-uppercase small text-center">Carga (Lts)</th>
+                            <th class="pe-4 py-3 border-0 text-uppercase small text-end">Cliente Destino</th>
                         </tr>
                     </thead>
                     <tbody>
-                        
-                       @forelse($viajesActivos as $v)
+                        @forelse($viajesActivos as $v)
                         <tr>
-                            <td>{{ $v['placa'] }}</td>
-                            <td>{{ $v['modelo'] }}</td>
-                            <td>{{ $v['marca'] }}</td>
-                            <td>{{ $v['ruta'] }}</td>
-                            <td>{{ $v['km'] }} km</td>
-                            <td>{{ $v['carga_total'] }}</td>
-                            <td>
-                                {{ $v['cliente_destino'] }}
+                            <td class="ps-4 py-3">
+                                <span class="badge bg-corporate px-2 py-2 w-100 fw-bold shadow-sm" style="letter-spacing: 1px;">
+                                    {{ $v['placa'] }}
+                                </span>
+                            </td>
+                            <td class="py-3">
+                                <div class="d-flex flex-column">
+                                    <span class="fw-bold text-dark">{{ $v['modelo'] }}</span>
+                                    <small class="text-muted">{{ $v['marca'] }}</small>
+                                </div>
+                            </td>
+                            <td class="py-3 text-center">
+                                <span class="text-secondary"><i class="fa-solid fa-route me-1 text-corporate"></i> {{ $v['ruta'] }}</span>
+                            </td>
+                            <td class="py-3 text-center fw-bold">
+                                {{ number_format($v['km']) }} <small class="text-muted">km</small>
+                            </td>
+                            <td class="py-3 text-center">
+                                <div class="d-inline-flex align-items-center bg-light px-2 py-1 rounded border">
+                                    <i class="fa-solid fa-droplet text-primary me-2" style="font-size: 0.7rem;"></i>
+                                    <span class="fw-bold text-primary">{{ number_format($v['carga_total']) }}</span>
+                                </div>
+                            </td>
+                            <td class="pe-4 py-3 text-end">
+                                <span class="fw-bold text-dark"><i class="fa-solid fa-location-dot text-danger me-1"></i> {{ $v['cliente_destino'] }}</span>
                             </td>
                         </tr>
-                    @empty
+                        @empty
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-3">
-                                No hay vehículos en ruta actualmente.
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="fa-solid fa-truck-fast fa-3x mb-3 text-light"></i>
+                                <p class="italic mb-0">No hay vehículos en ruta actualmente.</p>
                             </td>
                         </tr>
-                    @endforelse
+                        @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
+</div>
    
 </div>
 
@@ -400,147 +429,145 @@
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+
+
+// Definición de colores estándar Impordiesel
+    const corpoColors = ['#1cc88a', '#f2A435', '#4C474F', '#e74a3b'];
+
+    Highcharts.chart('vehiculos-estatus-chart', {
+        chart: { 
+            type: 'pie', 
+            backgroundColor: 'transparent',
+            style: { fontFamily: "'Helvetica Neue', 'Arial', sans-serif" }
+        },
+        title: { text: null },
+        tooltip: {
+            headerFormat: '<span style="font-size: 12px; font-weight: bold;">{point.key}</span><br/>',
+            pointFormat: 'Cantidad: <b>{point.y}</b> (<b>{point.percentage:.1f}%</b>)'
+        },
+        plotOptions: {
+            pie: { 
+                innerSize: '70%', // Efecto de anillo moderno
+                borderWidth: 0,
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: { 
+                    enabled: true, 
+                    format: '<b>{point.y}</b>', 
+                    distance: -25, // Coloca el número dentro del anillo
+                    style: { color: '#ffffff', textOutline: 'none', fontSize: '14px' }
+                },
+                showInLegend: true
+            }
+        },
+        legend: {
+            itemStyle: { color: '#333', fontWeight: 'bold', fontSize: '12px' },
+            position: 'bottom'
+        },
+        series: [{
+            name: 'Vehículos',
+            colorByPoint: true,
+            data: [
+                { name: 'Disponible', y: {{ $unidades_disponibles }}, color: corpoColors[0] },
+                { name: 'En servicio', y: {{ $unidades_en_servicio }}, color: corpoColors[1] },
+                { name: 'En Mantenimiento', y: {{ $unidades_en_mantenimiento }}, color: corpoColors[2] },
+                { name: 'Fuera de Servicio', y: {{ $unidades_con_orden_abierta - $unidades_en_mantenimiento }}, color: corpoColors[3] }
+            ]
+        }],
+        credits: { enabled: false }
+    });
+
     // =======================================================  
     // GRÁFICO 1: Histórico de Eficiencia (Línea)
     // =======================================================
-    var ctxEficiencia = document.getElementById('eficienciaHistoricoChart').getContext('2d');
+    // 1. Procesamiento de Data (Garantiza que Highcharts reciba números)
+    const rawLabels = @json($chartLabels ?? []);
+    const rawData = @json($chartDataCierre ?? []);
     
-    // Datos inyectados desde PHP
-    const chartLabels = @json($chartLabels);
-    const chartDataCierre = @json($chartDataCierre);
-    // 3. Registrar el plugin antes de inicializar el gráfico
-    Chart.register(ChartDataLabels);
+    // Convertimos a float y limpiamos índices para evitar el error de "no muestra data"
+    const cleanData = Object.values(rawData).map(val => parseFloat(val) || 0);
 
-    new Chart(ctxEficiencia, {
-        type: 'line',
-        data: {
-            labels: chartLabels,
-            datasets: [
-                {
-                    label: 'Cierre del Día',
-                    data: chartDataCierre,
-                    borderColor: '#10b981', // Verde
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 3,
-                    pointBackgroundColor: '#10b981',
-                }
-            ]
+    // 2. Inicialización de Highcharts
+    Highcharts.chart('eficienciaHistoricoChart', {
+        chart: {
+            type: 'areaspline',
+            backgroundColor: 'transparent',
+            style: { fontFamily: "'Helvetica Neue', 'Arial', sans-serif" },
+            spacingTop: 30 // Espacio para las etiquetas superiores
         },
-        options: {
-            maintainAspectRatio: false,
-            responsive: true,
-            scales: {
-                x: {
-                    //offset: true,
-                    title: {
-                        display: true,
-                        text: 'Fecha'
-                    }
+        title: { text: null },
+        xAxis: {
+            categories: rawLabels,
+            // Ajuste estricto al inicio y fin de la data
+            min: 0.5,
+            max: cleanData.length - 1.5,
+            boundaryGap: false, 
+            tickmarkPlacement: 'on',
+            gridLineWidth: 0,
+            lineColor: '#e3e6f0',
+            labels: { 
+                style: { color: '#858796', fontSize: '10px' },
+                y: 15
+            }
+        },
+        yAxis: {
+            min: 0,
+            max: 100,
+            title: { text: null },
+            gridLineColor: '#f8f9fc',
+            labels: { 
+                format: '{value}%',
+                style: { color: '#858796', fontSize: '11px' }
+            }
+        },
+        tooltip: {
+            shared: true,
+            backgroundColor: '#4C474F',
+            style: { color: '#ffffff' },
+            borderRadius: 8,
+            borderWidth: 0,
+            headerFormat: '<span style="font-size: 10px; color: #f2A435; font-weight: bold;">{point.key}</span><br/>',
+            pointFormat: 'Eficiencia: <b>{point.y:.1f}%</b>'
+        },
+        plotOptions: {
+            areaspline: {
+                fillColor: {
+                    linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+                    stops: [
+                        [0, 'rgba(28, 200, 138, 0.25)'], // Verde Impordiesel suave
+                        [1, 'rgba(28, 200, 138, 0)']
+                    ]
                 },
-                y: {
-                    title: {
-                        display: true,
-                        text: 'Eficiencia (%)'
+                marker: {
+                    enabled: true,
+                    radius: 4,
+                    fillColor: '#ffffff',
+                    lineWidth: 2,
+                    lineColor: '#1cc88a'
+                },
+                lineWidth: 3,
+                color: '#1cc88a',
+                dataLabels: {
+                    enabled: true,
+                    format: '{y:.1f}%',
+                    style: { 
+                        fontSize: '11px', 
+                        color: '#4C474F', 
+                        fontWeight: 'bold',
+                        textOutline: 'none' 
                     },
-                    beginAtZero: false,
-                    // Asegurar que el eje Y termine en 100%
-                    suggestedMax: 100, 
-                    ticks: {
-                        callback: function(value, index, ticks) {
-                            return value + '%';
-                        }
-                    }
-                }
-            },
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top'
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            let label = context.dataset.label || '';
-                            if (label) {
-                                label += ': ';
-                            }
-                            if (context.parsed.y !== null) {
-                                label += new Intl.NumberFormat('es-ES', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(context.parsed.y / 100);
-                            }
-                            return label;
-                        }
-                    }
-                },
-                datalabels: {
-                    align: 'end', // Posiciona la etiqueta al final del punto (arriba)
-                    anchor: 'end', // Similar a align, asegura que se mueva hacia afuera
-                    offset: 8, // Separación del punto
-                    color: '#333333', // Color del texto de la etiqueta
-                    font: {
-                        weight: 'bold',
-                        size: 12,
-                    },
-                     formatter: function(value, context) {
-                        const numericValue = parseFloat(value);
-                        if (isNaN(numericValue)) {
-                            return 'N/A'; 
-                        }
-                        return numericValue.toFixed(1) + '%';
-                    }
+                    y: -10 // Posiciona la etiqueta arriba del punto
                 }
             }
-        }
-    });
-
-
-
-    var ctx = document.getElementById('vehiculosEstatusChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'pie',
-        data: {
-            labels: ['Disponible', 'En servicio', 'En Mantenimiento', 'Fuera Servicio'],
-            datasets: [{
-                data: [
-                    {{ $unidades_disponibles }}, 
-                    {{ $unidades_en_servicio }}, 
-                    {{ $unidades_en_mantenimiento }}, 
-                    {{ $unidades_con_orden_abierta - $unidades_en_mantenimiento }}
-                ],
-                backgroundColor: ['#28a745', '#ffc107', '#007bff', '#dc3545'],
-                borderWidth: 2,
-                borderColor: '#ffffff'
-            }]
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false, // Permite que respete el tamaño del DIV padre
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'bottom',
-                    labels: {
-                        padding: 10,
-                        color: '#333', // Color de fuente oscuro para legibilidad
-                        font: {
-                            size: 16, // Tamaño de letra más grande
-                            family: "'Helvetica Neue', 'Helvetica', 'Arial', sans-serif",
-                            weight: 'bold'
-                        }
-                    }
-                },
-                tooltip: {
-                    bodyFont: { size: 18 },
-                    titleFont: { size: 20 }
-                }
-            },
-            // Animación para que no sea tan brusco el cambio de tamaño
-            animation: {
-                duration: 1000
-            }
-        }
+        series: [{
+            name: 'Eficiencia Flota',
+            data: cleanData,
+            showInLegend: false
+        }],
+        credits: { enabled: false }
     });
+
 
     // Relación Kilometraje / Consumo
     var ctx2 = document.getElementById('kmConsumoChart').getContext('2d');
@@ -587,71 +614,129 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Índice de reportes de falla mensuales
 
-     const falla_labels = @json($fallas_labels);
-    const falla_values = @json($fallas_values);
-    var ctx3 = document.getElementById('fallasChart').getContext('2d');
-    new Chart(ctx3, {
-        type: 'bar',
-        data: {
-            labels: falla_labels,
-            datasets: [{
-                label: 'Reportes de Falla',
-                data: falla_values,
-                backgroundColor: '#dc3545',
-            }]
-        },
-        options: {
-            plugins: {
-                legend: { display: false }
-            }
-        }
-    });
+   const labelsFalla = @json($fallas_labels ?? []);
+    const valuesFalla = @json($fallas_values ?? []);
+    const cleanValuesFalla = Object.values(valuesFalla).map(val => parseFloat(val) || 0);
 
-    Highcharts.chart('grafico-grupo', {
-        chart: { type: 'column' },
+    Highcharts.chart('fallasChartContainer', {
+        chart: {
+            type: 'column',
+            backgroundColor: 'transparent',
+            style: { fontFamily: "'Helvetica Neue', 'Arial', sans-serif" }
+        },
         title: { text: null },
         xAxis: {
-            categories: @json($chartCategorias),
-            crosshair: true
+            categories: labelsFalla,
+            gridLineWidth: 0,
+            lineColor: '#e3e6f0',
+            labels: { style: { color: '#858796', fontSize: '11px' } }
         },
         yAxis: {
             min: 0,
-            title: { text: 'Cantidad de Unidades' },
-            stackLabels: {
-                enabled: true,
-                style: { fontWeight: 'bold', color: '#555' }
+            title: { text: null },
+            gridLineColor: '#f8f9fc',
+            labels: { 
+                style: { color: '#858796', fontSize: '11px' }
             }
         },
+        tooltip: {
+            backgroundColor: '#4C474F',
+            style: { color: '#ffffff' },
+            borderRadius: 8,
+            borderWidth: 0,
+            headerFormat: '<span style="font-size: 10px; color: #f2A435; font-weight: bold;">{point.key}</span><br/>',
+            pointFormat: 'Reportes: <b>{point.y}</b>'
+        },
+        plotOptions: {
+            column: {
+                borderRadius: 5, // Bordes redondeados para un look moderno
+                color: '#e74a3b', // Rojo Alerta Corporativo
+                borderWidth: 0,
+                dataLabels: {
+                    enabled: true,
+                    format: '{y}',
+                    style: { 
+                        fontSize: '11px', 
+                        color: '#4C474F', 
+                        fontWeight: 'bold',
+                        textOutline: 'none'
+                    }
+                },
+                groupPadding: 0.2,
+                pointPadding: 0.1
+            }
+        },
+        series: [{
+            name: 'Reportes de Falla',
+            data: cleanValuesFalla,
+            showInLegend: false
+        }],
+        credits: { enabled: false }
+    });
+
+   Highcharts.chart('grafico-grupo', {
+        chart: { 
+            type: 'column',
+            backgroundColor: 'transparent',
+            style: { fontFamily: "'Helvetica Neue', 'Arial', sans-serif" }
+        },
+        title: { text: null },
+        colors: corpoColors,
+        xAxis: {
+            categories: @json($chartCategorias),
+            gridLineWidth: 0,
+            lineColor: '#e3e6f0',
+            labels: { style: { color: '#858796', fontSize: '11px' } }
+        },
+        yAxis: {
+            min: 0,
+            title: { text: null }, // Limpieza visual
+            gridLineColor: '#f8f9fc',
+            stackLabels: {
+                enabled: true,
+                style: { fontWeight: 'bold', color: '#4C474F', textOutline: 'none' }
+            },
+            labels: { style: { color: '#858796', fontSize: '11px' } }
+        },
         legend: {
-            align: 'right',
-            verticalAlign: 'top',
-            y: 25,
-            floating: false,
-            backgroundColor: 'white',
-            shadow: false
+            align: 'center',
+            verticalAlign: 'bottom',
+            itemStyle: { color: '#333', fontWeight: 'bold', fontSize: '12px' }
         },
         tooltip: {
-            headerFormat: '<b>{point.x}</b><br/>',
-            pointFormat: '{series.name}: {point.y}<br/>Total: {point.stackTotal}'
+            backgroundColor: '#4C474F',
+            style: { color: '#ffffff' },
+            borderRadius: 8,
+            borderWidth: 0,
+            headerFormat: '<span style="font-size: 10px; color: #f2A435; font-weight: bold;">{point.x}</span><br/>',
+            pointFormat: '{series.name}: <b>{point.y}</b><br/>Total: <b>{point.stackTotal}</b>',
+            shared: false
         },
         plotOptions: {
             column: {
                 stacking: 'normal',
-                dataLabels: { enabled: true }
+                borderRadius: 4, // Esquinas suavizadas
+                borderWidth: 0,
+                dataLabels: { 
+                    enabled: true,
+                    style: { textOutline: 'none', color: '#ffffff', fontSize: '10px' }
+                }
             },
             series: {
                 cursor: 'pointer',
                 point: {
                     events: {
                         click: function () {
-                            // Redirección dinámica usando la URL enviada desde el controlador
-                            window.location.href = this.series.options.url;
+                            if (this.series.options.url) {
+                                window.location.href = this.series.options.url;
+                            }
                         }
                     }
                 }
             }
         },
-        series: @json($chartSeries)
+        series: @json($chartSeries),
+        credits: { enabled: false }
     });
 
 

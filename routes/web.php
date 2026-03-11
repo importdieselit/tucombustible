@@ -78,13 +78,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/password/change', [UserController::class, 'showChangePassword'])->name('password.change');
     Route::post('/password/change', [UserController::class, 'updatePassword'])->name('password.update_change');
 
-    Route::post('/ordenes/{orden}/cerrar', [OrdenController::class, 'cerrarOrden'])->name('ordenes.cerrar');
-    Route::post('/ordenes/{orden}/anular', [OrdenController::class, 'anularOrden'])->name('ordenes.anular');
-    Route::post('/ordenes/{orden}/reactivar', [OrdenController::class, 'reactivarOrden'])->name('ordenes.reactivar');
 
     Route::get('clientes/import', [ClienteController::class, 'import'])->name('clientes.import');
     Route::post('clientes/handle', [ClienteController::class, 'handleImport'])->name('clientes.handleImport');
-
     Route::get('/usuarios/importar', [UserController::class, 'import'])->name('usuarios.importar');
     Route::post('/usuarios/importarP', [UserController::class, 'handleImport'])->name('usuarios.importarprocess');
     Route::put('/depositos', [DepositoController::class, 'index'])->name('depositos');
@@ -401,7 +397,9 @@ Route::get('/reporte/vehiculos-disponibilidad', [VehiculoController::class, 'rep
         Route::post('/compras/actualizar-precio', [OrdenController::class,'actualizarPrecio'])->name('compras.actualizar_precio');
         Route::post('/compras/cambiar-estatus', [OrdenController::class,'cambiarEstatus'])->name('compras.cambiar_estatus');
         Route::post('/get-tempario-servicios', [OrdenController::class, 'getTemparioServicios'])->name('get.tempario_servicios');
-
+        Route::post('/ordenes/{id}/trabajos/add', [OrdenController::class, 'addTrabajo'])->name('ordenes.addTrabajo');
+        Route::post('/ordenes/{id}/insumos/add', [OrdenController::class, 'addInsumo'])->name('ordenes.addInsumo');
+        
         // Permisos y Perfiles
         Route::get('/permisos', [AccesoController::class, 'index'])->name('permisos.index');
         Route::get('usuarios/{usuario}/permissions', [UserController::class, 'editPermissions'])->name('usuarios.edit_permissions');

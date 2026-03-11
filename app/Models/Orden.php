@@ -96,13 +96,13 @@ class Orden extends Model
     public function vehiculoBelong(): BelongsTo
 {
     // Asegúrate de que el método devuelva la relación BelongsTo
-    return $this->belongsTo(Vehiculo::class, 'id_vehiculo');
+    return $this->belongsTo(Vehiculo::class, 'id_vehiculo', 'id');
 }
-
-    public function tipo()
-    {
-        return $this->belongsTo(TipoOrden::class, 'tipo', 'id_tipo_orden')->first();
-    }
+ 
+    // public function tipoOrden()
+    // {
+    //     return $this->belongsTo(TipoOrden::class, 'tipo', 'id_tipo_orden');
+    // }   
 
     public function usuarioInicio()
     {
@@ -138,6 +138,11 @@ class Orden extends Model
     public function trabajos()
     {
         return $this->hasMany(Trabajos::class, 'id_orden', 'id');
+    }
+
+    public function suministros()
+    {
+        return $this->hasMany(InventarioSuministro::class, 'id_orden', 'id');
     }
 
 

@@ -49,6 +49,7 @@ class InventarioSuministro extends Model
         'anulacion',
         'id_emisor',
         'cantidad',
+        'precio_unitario',
     ];
 
     

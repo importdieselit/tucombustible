@@ -150,4 +150,22 @@ footer.footer {
             border-radius: 4px !important;
             font-size: 0.8rem !important;
         }
+         /* Ajustes de Tabs para coincidir con el diseño */
+        .nav-tabs .nav-link {
+            color: #6c757d;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            border: none;
+            padding: 12px 20px;
+        }
+        .nav-tabs .nav-link.active {
+            color: #FF6B00;
+            border-bottom: 3px solid #FF6B00;
+            background: none;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #FF6B00;
+            box-shadow: 0 0 0 0.25rem rgba(255, 107, 0, 0.1);
+        }
      

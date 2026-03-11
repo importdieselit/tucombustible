@@ -2,20 +2,6 @@
 
 @section('title', 'Crear Nueva Orden de Trabajo')
 
-@push('styles')
-<style>
-    /* Estándar Impordiesel */
-    .card-step { border: none; border-top: 5px solid #4C474F; }
-    .card-step.border-orange { border-top-color: #f2A435; }
-    .bg-corporate { background-color: #4C474F !important; color: white; }
-    .text-orange { color: #f2A435 !important; }
-    .btn-orange { background-color: #f2A435; color: white; }
-    .btn-orange:hover { background-color: #d9922e; color: white; }
-    .table-supply thead { background-color: #4C474F; color: white; }
-    .form-label { font-weight: 700; font-size: 0.85rem; text-transform: uppercase; color: #4C474F; }
-</style>
-@endpush
-
 @section('content')
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 shadow-sm rounded">
@@ -34,6 +20,7 @@
         <input type="hidden" name="fecha_in" value="{{ date('Y-m-d') }}">
         <input type="hidden" name="nro_orden" value="{{$nro_orden}}">
         <input type="hidden" name="supplies_json" id="supplies_json">
+        <input type="hidden" name="trabajos_json" id="trabajos_json">
 
         <div class="row g-4">
             <div class="col-lg-6">
@@ -126,7 +113,7 @@
                             <div class="col-md-4">
                                 <label class="small fw-bold">Categoría</label>
                               
-                                <select id="select-categoria" class="form-select form-select-sm s2">
+                                <select id="select-categoria" name="id_categoria" class="form-select form-select-sm select2 s2">
                                     <option value="">Seleccione...</option>
                                     @foreach ($categorias_tempario as $cat)
 
@@ -137,14 +124,17 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="small fw-bold">Servicio / Trabajo</label>
-                                <select id="select-servicio" class="form-select form-select-sm s2">
+                                <select id="select-servicio" name="id_servicio" class="form-select form-select-sm select2 s2">
                                     <option value="">Seleccione categoría primero</option>
                                 </select>
                             </div>
                             <div class="col-md-4">
                                 <label class="small fw-bold">Mecánico(s)</label>
-                                <select id="select-mecanicos" class="form-select form-select-sm s2" multiple>
-                                                                   </select>
+                                <select id="select-mecanicos" name="mecanicos[]" class="form-select form-select-sm s2" multiple>
+                                    @foreach ($personal as $p)
+                                        <option value="{{ $p->id_personal }}">{{ $p->persona->nombre }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="col-12 text-end mt-2">
                                 <button type="button" class="btn btn-orange btn-sm px-4 fw-bold" id="btn-agregar-trabajo">
@@ -171,7 +161,7 @@
 
                 <div class="card card-step shadow-sm h-100">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-                        <h5 class="m-0 fw-bold text-uppercase small" style="letter-spacing: 1px;">Lista de Repuestos e Insumos</h5>
+                        <h5 class="m-0 fw-bold text-uppercase small" style="letter-spacing: 1px;"><i class="fas fa-box-open text-orange me-2"></i>Lista de Repuestos e Insumos</h5>
                         <div class="btn-group shadow-sm">
                             <button type="button" class="btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#searchSupplyModal">
                                 <i class="fas fa-search me-1"></i> Inventario
@@ -431,6 +421,7 @@
         // 2. AGREGAR TRABAJO A LA LISTA
         $('#btn-agregar-trabajo').on('click', function() {
             const servicioId = $('#select-servicio').val();
+            const categoriaId = $('#select-categoria').val();
             const servicioTexto = $('#select-servicio option:selected').text();
             const mecanicosIds = $('#select-mecanicos').val();
             const mecanicosNombres = $('#select-mecanicos option:selected').map(function(){ return $(this).text(); }).get();
@@ -442,6 +433,7 @@
 
             const nuevoTrabajo = {
                 id_tempario: servicioId,
+                id_categoria: categoriaId,
                 concepto: servicioTexto,
                 mecanicos: mecanicosIds,
                 mecanicos_nombres: mecanicosNombres.join(', ')
