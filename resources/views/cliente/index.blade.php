@@ -1,284 +1,135 @@
 @extends('layouts.app')
 @section('title', 'TuCombustible - '.Auth::user()->name)
 
-@push('styles')
-<style>
-    :root {
-        --bg-light: #f4f6f8;
-        --bg-card: #ffffff;
-        --text-dark: #333333;
-        --text-muted: #6c757d;
-        --primary-color: #3b82f6;
-        --primary-dark: #2563eb;
-        --secondary-color: #10b981;
-        --secondary-dark: #059669;
-    }
-
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        background-color: var(--bg-light);
-        color: var(--text-dark);
-    }
-
-    .card {
-        z-index: 1;
-        background-color: var(--bg-card);
-        border: none;
-        border-radius: 1rem;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-    }
-
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-    }
-
-    .btn-primary-custom { background-color: var(--primary-color); border-color: var(--primary-color); }
-    .btn-secondary-custom { background-color: var(--secondary-color); border-color: var(--secondary-color); }
-    .progress-bar-custom { background-color: var(--primary-color); }
-    .progress-bar-danger { background-color: #ef4444; }
-
-    .main-hero-card {
-        background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
-        color: var(--text-dark);
-    }
-
-    .hidden { display: none !important; }
-
-    .sucursal-card-container {
-        cursor: pointer;
-        transition: transform 0.2s ease-in-out;
-    }
-
-    .modal-backdrop.show { opacity: 0.1; }
-</style>
-@endpush
-
 @section('content')
-    <div class="container-fluid">
-        <h1 class="display-8 fw-bold mb-5 text-center text-black">{{ ucwords(Auth::user()->name)}}</h1>
-
-        <div class="card p-4 mb-5 main-hero-card">
-            @php
-                /**
-                 * CORRECCIÓN DE SEGURIDAD:
-                 * Se valida la existencia de $cliente para evitar errores de objeto nulo.
-                 */
-                $isParent = isset($cliente) && $cliente->parent == 0;
-                $currentUserRole = $isParent ? 'principal' : 'sucursal';
-                $currentUserBranchId = Auth::user()->cliente_id;
-
-                // Asegurar que las colecciones existan aunque vengan vacías del controlador
-                $pedidos = $pedidosDashboard ?? [];
-                $solicitudes = $solicitudes ?? [['id' => 's1', 'estado' => 'Pendiente']];
-                $notificaciones = $notificaciones ?? [['id' => 'n1', 'leido' => false]];
-                $sucursales = $sucursales ?? [];
-
-                $totalCapacity = $cliente->cupo ?? 0;
-                $totalCurrent = $cliente->disponible ?? 0;
-                $percentage = $totalCapacity > 0 ? ($totalCurrent / $totalCapacity) * 100 : 0;
-                $isAlert = $totalCurrent <= ($totalCapacity * 0.1);
-
-                // Datos para el gráfico de Highcharts
-                $chartData = [];
-                if ($isParent) {
-                    foreach ($sucursales as $sucursal) {
-                        $chartData[] = [
-                            'name' => $sucursal['nombre'] ?? 'S/N',
-                            'cupo' => $sucursal['cupo'] ?? 0,
-                            'id'   => $sucursal['id'] ?? 0,
-                            'disponible' => $sucursal['disponible'] ?? 0,
-                            'consumido'  => ($sucursal['cupo'] ?? 0) - ($sucursal['disponible'] ?? 0)
-                        ];
-                    }
-                } else {
-                     // CORRECCIÓN: Uso de operador null-safe para evitar "offset on null"
-                     $sucursalActual = collect($sucursales)->firstWhere('id', $currentUserBranchId);
-                     $chartData[] = [
-                        'name'       => $sucursalActual['nombre'] ?? 'Mi Sucursal',
-                        'cupo'       => $sucursalActual['cupo'] ?? ($cliente->cupo ?? 0),
-                        'id'         => $sucursalActual['id'] ?? $currentUserBranchId,
-                        'disponible' => $sucursalActual['disponible'] ?? ($cliente->disponible ?? 0),
-                        'consumido'  => ($sucursalActual['cupo'] ?? 0) - ($sucursalActual['disponible'] ?? 0)
-                    ];
-                }
-            @endphp
-
-            <div class="d-flex align-items-center">
-                <i class="fas fa-money-bill-wave text-info me-3" style="font-size: 3rem;"></i>
-                <div>
-                    <h2 class="h4 fw-bold text-black mb-0">Estado de Cupo {{ $isParent ? 'General' : 'Actual' }}</h2>
-                    <p class="text-sm text-muted mb-0">{{ $isParent ? 'Resumen de todas las sucursales' : 'Detalle de sucursal' }}</p>
-                </div>
+<div class="container mx-auto py-6 px-4" id="dashboard-main-view">
+    {{-- Header del Dashboard --}}
+    <div class="flex flex-col md:flex-row justify-between items-center mb-8 bg-white p-6 rounded-xl shadow-sm border-t-4 border-orange-impordiesel">
+        <div class="flex items-center mb-4 md:mb-0">
+            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center text-orange-impordiesel mr-4 shadow-inner">
+                <i class="fas fa-user-tie fa-lg"></i>
             </div>
-
-            <div class="mt-4">
-                <p class="fw-bold mb-2">Total Disponible / Cupo</p>
-                <div class="d-flex align-items-center mb-2">
-                    <h3 class="fw-bold mb-0 me-2">{{ number_format($totalCurrent, 2) }} L</h3>
-                    <p class="text-muted mb-0">/ {{ number_format($totalCapacity, 2) }} L</p>
-                </div>
-                <div class="progress" style="height: 10px;">
-                    <div class="progress-bar {{ $isAlert ? 'progress-bar-danger' : 'progress-bar-custom' }}"
-                         role="progressbar"
-                         style="width: {{ $percentage }}%;"
-                         aria-valuenow="{{ $percentage }}"
-                         aria-valuemin="0"
-                         aria-valuemax="100"></div>
-                </div>
+            <div>
+                <h1 class="text-xl font-bold text-gray-800 uppercase tracking-tight">{{ Auth::user()->name }}</h1>
+                <p class="text-gray-500 text-xs font-bold uppercase tracking-widest">Portal de Autogestión — ImporDiesel</p>
             </div>
         </div>
+        <div class="flex space-x-2">
+            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-tighter border border-green-200">
+                <i class="fas fa-check-circle mr-1"></i> Cliente Operativo
+            </span>
+        </div>
+    </div>
 
-        <div class="row g-4 mb-5">
-            <div class="col-12 col-md-6 col-lg-3">
-                <div class="card h-100 p-4 text-center" onclick="showDetails('pedidos-details')" style="cursor:pointer">
-                    <i class="fas fa-truck-ramp-box mb-2 text-warning fs-2"></i>
-                    <h5 class="fw-bold mb-1">Pedidos</h5>
-                    <p class="text-muted mb-0">{{ count(array_filter($pedidos, fn($p) => isset($p['estado']) && ($p['estado'] == 'En proceso' || $p['estado'] == 'Pendiente'))) }} en proceso</p>
-                </div>
+    {{-- KPIs - Grid de indicadores (Cambiado de $kpis a $stats según el Service) --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        
+        <div class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow border-b-4 border-blue-500">
+            <div class="flex items-center justify-between mb-4 text-blue-500">
+                <span class="text-xs font-bold uppercase tracking-widest">Cupo Asignado</span>
+                <i class="fas fa-gas-pump fa-lg"></i>
             </div>
-            <div class="col-12 col-md-6 col-lg-3">
-                <div class="card h-100 p-4 text-center" onclick="showDetails('solicitudes-details')" style="cursor:pointer">
-                    <i class="fas fa-clipboard-list mb-2 text-primary fs-2"></i>
-                    <h5 class="fw-bold mb-1">Solicitudes</h5>
-                    <p class="text-muted mb-0">{{ count(array_filter($solicitudes, fn($s) => $s['estado'] == 'Pendiente')) }} pendientes</p>
-                </div>
+            {{-- Ajustado a los índices que devuelve tu DashboardService --}}
+            <div class="text-2xl font-black text-gray-800">{{ number_format($stats['cupo_total'] ?? 0, 0, ',', '.') }} L</div>
+            <div class="text-xs text-gray-400 mt-2">Capacidad total mensual</div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow border-b-4 border-green-500">
+            <div class="flex items-center justify-between mb-4 text-green-500">
+                <span class="text-xs font-bold uppercase tracking-widest">Disponible</span>
+                <i class="fas fa-check-double fa-lg"></i>
             </div>
-            <div class="col-12 col-md-6 col-lg-3">
-                <div class="card h-100 p-4 text-center" onclick="showDetails('notificaciones-details')" style="cursor:pointer">
-                    <i class="fas fa-bell mb-2 text-danger fs-2"></i>
-                    <h5 class="fw-bold mb-1">Notificaciones</h5>
-                    <p class="text-muted mb-0">{{ count(array_filter($notificaciones, fn($n) => !$n['leido'])) }} nuevas</p>
-                </div>
+            <div class="text-2xl font-black text-gray-800">{{ number_format($stats['disponible'] ?? 0, 0, ',', '.') }} L</div>
+            <div class="text-xs text-green-600 mt-2 font-bold">{{ number_format($stats['porcentaje_disponible'] ?? 0, 1) }}% restante</div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow border-b-4 border-orange-impordiesel">
+            <div class="flex items-center justify-between mb-4 text-orange-impordiesel">
+                <span class="text-xs font-bold uppercase tracking-widest">Consumido</span>
+                <i class="fas fa-chart-line fa-lg"></i>
             </div>
-            @if ($isParent)
-                <div class="col-12 col-md-6 col-lg-3">
-                    <div class="card h-100 p-4 text-center sucursal-card-container" id="sucursales-card">
-                        <i class="fas fa-sitemap mb-2 text-success fs-2"></i>
-                        <h5 class="fw-bold mb-1">Ver Sucursales</h5>
-                        <p class="text-muted mb-0">{{ count($sucursales) }} activas</p>
+            <div class="text-2xl font-black text-gray-800">{{ number_format($stats['consumo_mes'] ?? 0, 0, ',', '.') }} L</div>
+            <div class="text-xs text-gray-400 mt-2">Acumulado del mes actual</div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow border-b-4 border-red-500">
+            <div class="flex items-center justify-between mb-4 text-red-500">
+                <span class="text-xs font-bold uppercase tracking-widest">Pendientes</span>
+                <i class="fas fa-file-invoice-dollar fa-lg"></i>
+            </div>
+            <div class="text-2xl font-black text-gray-800">{{ $stats['pedidos_activos'] ?? 0 }}</div>
+            <div class="text-xs text-red-600 mt-2 font-bold">Por favor, regularice sus pagos</div>
+        </div>
+    </div>
+
+    {{-- Sección de Gráfico y Detalles --}}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border-t-4 border-gray-industrial">
+            <h5 class="text-sm font-bold text-gray-700 uppercase mb-6 tracking-widest flex items-center">
+                <i class="fas fa-chart-bar mr-2 text-orange-impordiesel"></i> Comparativa de Consumo por Sucursal
+            </h5>
+            <div id="chart-container" class="w-full h-80"></div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-gray-industrial">
+            <h5 class="text-sm font-bold text-gray-700 uppercase mb-6 tracking-widest flex items-center">
+                <i class="fas fa-history mr-2 text-orange-impordiesel"></i> Últimas Operaciones
+            </h5>
+            <div class="space-y-4">
+                @foreach($recentActivity ?? [] as $activity)
+                <div class="flex items-center p-3 hover:bg-gray-50 rounded-lg border-l-4 border-orange-impordiesel transition-colors">
+                    <div class="flex-grow">
+                        <div class="text-sm font-bold text-gray-800">{{ $activity->descripcion }}</div>
+                        <div class="text-xs text-gray-400">{{ $activity->fecha }}</div>
                     </div>
+                    <div class="text-sm font-black text-gray-700">{{ number_format($activity->monto, 0) }} L</div>
                 </div>
-            @endif
-        </div>
-
-        <div class="text-center my-5">
-            <button class="btn btn-primary-custom btn-lg rounded-pill px-5 py-3 shadow-lg fs-5" data-bs-toggle="modal" data-bs-target="#hacerPedidoModal">
-                <i class="fas fa-plus-circle me-2"></i> Hacer Pedido
+                @endforeach
+            </div>
+            <button class="w-full mt-6 py-2 text-xs font-bold text-gray-500 uppercase tracking-widest border border-gray-200 rounded hover:bg-gray-50 transition-colors">
+                Ver todo el historial
             </button>
         </div>
-
-        <div id="content-sections">
-            @if ($isParent)
-                <div id="sucursales-list-container" class="hidden">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="fw-bold mb-0">Mis Sucursales</h4>
-                        <button class="btn btn-outline-secondary" onclick="location.reload()">
-                            <i class="fas fa-arrow-left me-1"></i> Volver
-                        </button>
-                    </div>
-                    <div class="row g-4">
-                        @foreach ($sucursales as $sucursal)
-                        <div class="col-12 col-md-6 col-lg-4">
-                            <div class="card h-100 p-4">
-                                <h5 class="fw-bold mb-1">{{ $sucursal['nombre'] }}</h5>
-                                <div class="mt-3">
-                                    <p class="fw-bold mb-1">Disponible: <span class="text-success">{{ number_format($sucursal['disponible'], 0) }} L</span></p>
-                                    <p class="fw-bold mb-0">Cupo: <span class="text-muted">{{ number_format($sucursal['cupo'], 0) }} L</span></p>
-                                </div>
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-                </div>
-
-                <div id="dashboard-main-view">
-                    <div class="card p-4 mb-4">
-                        <h4 class="fw-bold mb-3">Gráfico de Consumo por Sucursal</h4>
-                        <div id="chart-container" style="width:100%; height:400px;"></div>
-                    </div>
-                </div>
-            @endif
-        </div>
     </div>
+</div>
 
-    <div class="modal fade" id="hacerPedidoModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Realizar Pedido</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="hacerPedidoForm">
-                        @csrf
-                        @if ($isParent)
-                            <div class="mb-3">
-                                <label class="form-label">Seleccionar Sucursal</label>
-                                <select class="form-select" name="cliente_id" required>
-                                    @foreach ($sucursales as $sucursal)
-                                        <option value="{{ $sucursal['id'] }}">{{ $sucursal['nombre'] }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        @else
-                             <input type="hidden" name="cliente_id" value="{{ $currentUserBranchId }}">
-                             <p class="alert alert-info">Pedido para: <strong>{{ Auth::user()->name }}</strong></p>
-                        @endif
-                        <div class="mb-3">
-                            <label class="form-label">Cantidad (Litros)</label>
-                            <input type="number" class="form-control" name="cantidad_solicitada" required min="1">
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="button" class="btn btn-primary btn-primary-custom">Enviar Pedido</button>
-                </div>
-            </div>
-        </div>
+{{-- VISTA SUCURSALES (Hidden por defecto) --}}
+<div id="sucursales-list-container" class="container mx-auto py-6 px-4 hidden">
+    <div class="mb-4">
+        <button onclick="location.reload()" class="text-orange-impordiesel font-bold uppercase text-xs">
+            <i class="fas fa-arrow-left mr-1"></i> Volver al Dashboard
+        </button>
     </div>
+    <div class="bg-white rounded-xl shadow-sm p-6 border-t-4 border-orange-impordiesel">
+        <h2 class="text-xl font-bold uppercase text-gray-800 mb-6">Listado de Sucursales y Activos</h2>
+        {{-- Aquí iría la lógica de sucursales --}}
+    </div>
+</div>
 @endsection
 
 @push('scripts')
 <script src="https://code.highcharts.com/highcharts.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const chartData = {!! json_encode($chartData) !!};
-        const currentUserRole = '{{ $currentUserRole }}';
-
-        if (currentUserRole === 'principal' && chartData.length > 0) {
+        const chartData = {!! json_encode($chartData ?? []) !!};
+        if (chartData.length > 0) {
             Highcharts.chart('chart-container', {
-                chart: { type: 'column' },
+                chart: { type: 'column', style: { fontFamily: 'inherit' } },
                 title: { text: '' },
-                xAxis: { categories: chartData.map(d => d.name) },
-                yAxis: { title: { text: 'Litros' }, stacking: 'normal' },
-                plotOptions: { column: { stacking: 'normal', dataLabels: { enabled: true } } },
+                xAxis: { categories: chartData.map(d => d.name), labels: { style: { fontWeight: 'bold', fontSize: '10px' } } },
+                yAxis: { title: { text: 'Litros (L)' }, stacking: 'normal' },
+                plotOptions: { column: { stacking: 'normal', borderRadius: 4, borderWidth: 0 } },
                 series: [{
                     name: 'Consumido',
                     data: chartData.map(d => d.consumido),
-                    color: '#ef4444'
+                    color: '#FF6B00'
                 }, {
                     name: 'Disponible',
                     data: chartData.map(d => d.disponible),
-                    color: '#10b981'
+                    color: '#4C474F'
                 }]
             });
         }
-
-        // Lógica simple para mostrar sucursales
-        const sucursalesCard = document.getElementById('sucursales-card');
-        if(sucursalesCard) {
-            sucursalesCard.addEventListener('click', function() {
-                document.getElementById('dashboard-main-view').classList.add('hidden');
-                document.getElementById('sucursales-list-container').classList.remove('hidden');
-            });
-        }
     });
-
-    function showDetails(sectionId) {
-        alert('Funcionalidad de detalles para: ' + sectionId);
-    }
 </script>
 @endpush

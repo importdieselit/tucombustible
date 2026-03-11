@@ -1,130 +1,99 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid">
-    {{-- Cards de Resumen --}}
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card bg-info text-white shadow-sm border-0">
-                <div class="card-body text-center">
-                    <h6>Clientes en Registro (Pasos 1-9)</h6>
-                    <h2 class="font-weight-bold">{{ $stats['total_en_registro'] }}</h2>
-                </div>
-            </div>
+<div class="container mx-auto py-6 px-4">
+    {{-- CARDS DE RESUMEN: Colores sólidos de la marca --}}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-xl shadow-sm p-6 border-l-8 border-blue-600 border border-gray-200">
+            <h6 class="text-xs font-black uppercase tracking-widest text-gray-500 mb-2">En Registro</h6>
+            <h2 class="text-3xl font-black text-gray-800">{{ $stats['total_en_registro'] }}</h2>
         </div>
-        <div class="col-md-4">
-            <div class="card bg-warning text-dark shadow-sm border-0">
-                <div class="card-body text-center">
-                    <h6>Clientes Pendientes (Paso 3)</h6>
-                    <h2 class="font-weight-bold">{{ $stats['en_espera_revision'] }}</h2>
-                </div>
-            </div>
+
+        <div class="bg-white rounded-xl shadow-sm p-6 border-l-8 border-orange-impordiesel border border-gray-200">
+            <h6 class="text-xs font-black uppercase tracking-widest text-gray-500 mb-2">Pendientes Revisión</h6>
+            <h2 class="text-3xl font-black text-gray-800">{{ $stats['en_espera_revision'] }}</h2>
         </div>
-        <div class="col-md-4">
-            <div class="card bg-success text-white shadow-sm border-0">
-                <div class="card-body text-center">
-                    <h6>Clientes Activos (Paso 10)</h6>
-                    <h2 class="font-weight-bold">{{ $stats['activos'] }}</h2>
-                </div>
-            </div>
+
+        <div class="bg-white rounded-xl shadow-sm p-6 border-l-8 border-green-600 border border-gray-200">
+            <h6 class="text-xs font-black uppercase tracking-widest text-gray-500 mb-2">Activos</h6>
+            <h2 class="text-3xl font-black text-gray-800">{{ $stats['activos'] }}</h2>
         </div>
     </div>
 
-    <div class="card shadow border-0">
-        <div class="card-header bg-white py-3">
-            <div class="row align-items-center">
-                <div class="col-md-4">
-                    <h5 class="mb-0 text-primary font-weight-bold">
-                        <i class="fas fa-users-cog mr-2"></i> Control de Clientes
+    <div class="bg-white rounded-lg shadow-sm border border-gray-300 overflow-hidden">
+        <div class="p-6 border-b border-gray-200 bg-gray-50">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex items-center">
+                    <h5 class="text-lg font-black uppercase tracking-tight text-gray-800 italic">
+                        <span class="text-orange-impordiesel">|</span> Listado de Clientes
                     </h5>
                 </div>
-                <div class="col-md-8">
-                    <form action="{{ route('clientes.index') }}" method="GET" class="form-inline justify-content-end">
-                        {{-- Filtro de Estatus Rápido --}}
-                        <select name="status_filtro" class="form-control form-control-sm mr-2" onchange="this.form.submit()">
-                            <option value="">Todos los estatus</option>
-                            <option value="proceso" {{ request('status_filtro') == 'proceso' ? 'selected' : '' }}>Solo en Registro</option>
-                            <option value="activos" {{ request('status_filtro') == 'activos' ? 'selected' : '' }}>Solo Activos</option>
-                        </select>
-
-                        {{-- Buscador con Botón --}}
-                        <div class="input-group input-group-sm">
-                            <input type="text" name="search" class="form-control" 
-                                   placeholder="Buscar RIF o Razón Social..." 
-                                   value="{{ request('search') }}">
-                            <div class="input-group-append">
-                                <button class="btn btn-primary" type="submit">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                                @if(request('search') || request('status_filtro'))
-                                    <a href="{{ route('clientes.index') }}" class="btn btn-secondary" title="Limpiar filtros">
-                                        <i class="fas fa-times"></i>
-                                    </a>
-                                @endif
-                            </div>
-                        </div>
-                    </form>
-                </div>
+                
+                {{-- BUSCADOR: Botón de búsqueda corregido a color sólido --}}
+                <form action="{{ route('clientes.index') }}" method="GET" class="flex items-center gap-0 w-full md:w-auto">
+                    <input type="text" name="search" value="{{ request('search') }}" 
+                           class="w-full md:w-64 px-4 py-2 text-sm border-2 border-gray-300 rounded-l focus:border-orange-impordiesel outline-none uppercase font-bold text-gray-700" 
+                           placeholder="RIF O NOMBRE...">
+                    {{-- BOTÓN BÚSQUEDA: Gris Industrial sólido --}}
+                    <button type="submit" class="bg-gray-industrial text-white px-6 py-2.5 text-sm font-black uppercase hover:bg-black transition border-y-2 border-r-2 border-gray-industrial">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    @if(request('search'))
+                        <a href="{{ route('clientes.index') }}" class="bg-red-700 text-white px-4 py-2.5 text-sm font-black uppercase hover:bg-red-900 transition rounded-r border-y-2 border-r-2 border-red-700">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    @endif
+                </form>
             </div>
         </div>
 
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="thead-light">
-                        <tr>
-                            <th class="border-0">Cliente / RIF</th>
-                            <th class="border-0 text-center">Estatus / Progreso</th>
-                            <th class="border-0 text-center">Última Actualización</th>
-                            <th class="border-0 text-right">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($clientes as $c)
-                        <tr>
-                            <td class="align-middle">
-                                <div class="font-weight-bold text-dark">{{ $c->nombre }}</div>
-                                <small class="text-muted">{{ $c->rif }}</small>
-                            </td>
-                            <td class="align-middle" style="width: 35%;">
-                                <div class="d-flex align-items-center mb-1">
-                                    <div class="progress flex-grow-1" style="height: 8px; border-radius: 10px;">
-                                        <div class="progress-bar {{ $c->registro_paso == 10 ? 'bg-success' : 'bg-primary' }}" 
-                                             role="progressbar" 
-                                             style="width: {{ $c->registro_paso * 10 }}%">
-                                        </div>
-                                    </div>
-                                    <span class="ml-3 badge badge-pill {{ $c->registro_paso == 10 ? 'badge-success' : 'badge-primary' }}">
-                                        Paso {{ $c->registro_paso }}
-                                    </span>
-                                </div>
-                                <small class="{{ $c->registro_paso == 10 ? 'text-success' : 'text-info' }} font-italic font-weight-bold">
-                                    {{ $c->registro_paso == 10 ? 'CLIENTE ACTIVO / OPERATIVO' : $c->nombre_paso_actual }}
-                                </small>
-                            </td>
-                            <td class="align-middle text-center text-muted small">
-                                {{ $c->updated_at->format('d/m/Y h:i A') }}<br>
-                                ({{ $c->updated_at->diffForHumans() }})
-                            </td>
-                            <td class="align-middle text-right">
-                                <a href="{{ route('clientes.show', $c->id) }}" class="btn btn-sm btn-primary shadow-sm px-3">
-                                    <i class="fas fa-folder-open mr-1"></i> {{ $c->registro_paso == 10 ? 'Ver Expediente' : 'Gestionar Registro' }}
-                                </a>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="4" class="text-center py-5 text-muted">
-                                <i class="fas fa-search fa-2x mb-3"></i><br>
-                                No se encontraron clientes con los criterios de búsqueda.
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-industrial text-white text-xs font-black uppercase tracking-widest">
+                        <th class="px-6 py-4">Cliente / Identificación</th>
+                        <th class="px-6 py-4 text-center">Estatus actual</th>
+                        <th class="px-6 py-4 text-center">Última Modificación</th>
+                        <th class="px-6 py-4 text-right">Acción</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    @forelse($clientes as $c)
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div class="font-black text-gray-800 uppercase text-sm leading-tight">{{ $c->nombre }}</div>
+                            <div class="text-xs font-bold text-gray-500 mt-1">RIF: {{ $c->rif }}</div>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            @php
+                                $statusColor = $c->registro_paso == 10 ? 'bg-green-600' : ($c->registro_paso == 3 ? 'bg-orange-impordiesel' : 'bg-gray-500');
+                            @endphp
+                            <span class="{{ $statusColor }} text-white px-3 py-1 rounded text-[10px] font-black uppercase tracking-tighter shadow-sm">
+                                {{ $c->registro_paso == 10 ? 'ACTIVO' : 'PASO '.$c->registro_paso }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="text-xs font-bold text-gray-700 uppercase">{{ $c->updated_at->format('d/m/Y') }}</div>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            {{-- BOTÓN GESTIONAR: Naranja sólido con sombra para resaltar --}}
+                            <a href="{{ route('clientes.show', $c->id) }}" class="inline-block bg-orange-impordiesel text-white px-6 py-2.5 rounded text-xs font-black uppercase hover:bg-orange-700 transition shadow-md border-b-2 border-orange-900">
+                                <i class="fas fa-folder-open mr-2"></i>
+                                {{ $c->registro_paso == 10 ? 'VER EXPEDIENTE' : 'GESTIONAR' }}
+                            </a>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center text-gray-400 font-black uppercase text-xs tracking-widest">
+                            No se encontraron registros
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
-        <div class="card-footer bg-white border-0">
+        <div class="p-4 bg-gray-50 border-t">
             {{ $clientes->appends(request()->query())->links() }}
         </div>
     </div>

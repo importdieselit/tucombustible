@@ -1,89 +1,74 @@
 @extends('layouts.app')
 
-@section('title', 'Editar Cliente')
-
 @section('content')
-<div class="row mb-4">
-    <div class="col-12">
-        <h1 class="mb-2">Editar Cliente: {{ $cliente->nombre }}</h1>
-    </div>
-</div>
-
-<div class="card shadow-sm mb-4">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-        <h5 class="card-title m-0">Modificar Datos</h5>
-        <a href="{{ route('clientes.index') }}" class="btn btn-secondary btn-sm">Volver</a>
-    </div>
-    <div class="card-body">
-        <form action="{{ route('clientes.update', $cliente->id) }}" method="POST">
-        @csrf
-        @method('PUT')
-    
-        <div class="row">
-            <div class="col-md-12 mb-3">
-                <label class="form-label">Razón Social <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" name="nombre" value="{{ old('nombre', $cliente->nombre) }}" required>
+<div class="container mx-auto py-8 px-4">
+    <div class="max-w-4xl mx-auto">
+        {{-- ENCABEZADO --}}
+        <div class="mb-6 flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-black text-gray-800 uppercase tracking-tight italic">Editar: {{ $cliente->nombre }}</h1>
+                <p class="text-gray-500 text-xs font-bold uppercase tracking-widest mt-1">Modificación de expediente técnico</p>
             </div>
-        
-            <div class="col-md-6 mb-3">
-                <label class="form-label">RIF <span class="text-danger">*</span></label>
-                <div class="input-group">
-                    @php 
-                        $rif_parts = explode('-', $cliente->rif);
-                        $tipo = $rif_parts[0] ?? 'J';
-                        $numero = $rif_parts[1] ?? '';
-                    @endphp
-                    <select class="form-select" name="rif_tipo" style="max-width: 80px;">
-                        @foreach(['J','G','V','E'] as $t)
-                            <option value="{{ $t }}" {{ old('rif_tipo', $tipo) == $t ? 'selected' : '' }}>{{ $t }}</option>
-                        @endforeach
-                    </select>
-                    <input type="text" name="rif_num" class="form-control" value="{{ old('rif_num', $numero) }}" required onkeypress="return isNumber(event)">
+            <div class="flex gap-2">
+                <a href="{{ route('clientes.show', $cliente->id) }}" class="bg-gray-100 text-gray-600 px-4 py-2 rounded text-[10px] font-black uppercase hover:bg-gray-200 transition">
+                    Cancelar
+                </a>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border-t-4 border-gray-industrial overflow-hidden">
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                <span class="text-xs font-black text-gray-700 uppercase tracking-widest">Actualizar Datos Generales</span>
+                <span class="text-[10px] font-bold text-orange-impordiesel uppercase italic">RIF: {{ $cliente->rif }}</span>
+            </div>
+            
+            <form action="{{ route('clientes.update', $cliente->id) }}" method="POST" class="p-8">
+                @csrf
+                @method('PUT')
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {{-- RAZÓN SOCIAL --}}
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-2">Razón Social / Nombre <span class="text-red-500">*</span></label>
+                        <input type="text" name="nombre" value="{{ old('nombre', $cliente->nombre) }}" required
+                               class="w-full text-xs font-bold border-gray-300 rounded focus:border-orange-impordiesel focus:ring-1 focus:ring-orange-impordiesel uppercase p-3">
+                    </div>
+
+                    {{-- RIF --}}
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-2">RIF / Identificación <span class="text-red-500">*</span></label>
+                        <input type="text" name="rif" value="{{ old('rif', $cliente->rif) }}" required
+                               class="w-full text-xs font-bold border-gray-300 rounded focus:border-orange-impordiesel focus:ring-1 focus:ring-orange-impordiesel p-3">
+                    </div>
+
+                    {{-- EMAIL --}}
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-2">Correo Electrónico <span class="text-red-500">*</span></label>
+                        <input type="email" name="email" value="{{ old('email', $cliente->email) }}" required
+                               class="w-full text-xs font-bold border-gray-300 rounded focus:border-orange-impordiesel focus:ring-1 focus:ring-orange-impordiesel p-3">
+                    </div>
+
+                    {{-- DIRECCIONES --}}
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-2">Dirección Fiscal</label>
+                        <textarea name="direccion" rows="2"
+                                  class="w-full text-xs font-bold border-gray-300 rounded focus:border-orange-impordiesel focus:ring-1 focus:ring-orange-impordiesel uppercase p-3">{{ old('direccion', $cliente->direccion) }}</textarea>
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-2 text-orange-impordiesel font-black">Dirección Operativa (Obligatorio) <span class="text-red-500">*</span></label>
+                        <textarea name="direccion_operativa" rows="2" required
+                                  class="w-full border-orange-200 text-xs font-bold border rounded focus:border-orange-impordiesel focus:ring-1 focus:ring-orange-impordiesel uppercase p-3">{{ old('direccion_operativa', $cliente->direccion_operativa) }}</textarea>
+                    </div>
                 </div>
-            </div>
 
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Persona de Contacto <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" name="contacto" value="{{ old('contacto', $cliente->contacto) }}" required>
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Teléfono <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" name="telefono" value="{{ old('telefono', $cliente->telefono) }}" required onkeypress="return isNumber(event)">
-            </div>
-
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Email</label>
-                <input type="email" class="form-control" name="email" value="{{ old('email', $cliente->email) }}">
-            </div>
-
-            <div class="col-md-12 mb-3">
-                <label class="form-label">Dirección Fiscal</label>
-                <textarea class="form-control" name="direccion" rows="2">{{ old('direccion', $cliente->direccion) }}</textarea>
-            </div>
-
-            <div class="col-md-12 mb-3">
-                <label class="form-label fw-bold text-primary">Dirección Operativa <span class="text-danger">*</span></label>
-                <textarea class="form-control border-primary" name="direccion_operativa" rows="2" required>{{ old('direccion_operativa', $cliente->direccion_operativa) }}</textarea>
-                <small class="text-muted">Indique la dirección donde se realizan las operaciones de despacho.</small>
-            </div>
+                <div class="mt-8 flex justify-end">
+                    <button type="submit" class="w-full md:w-auto bg-gray-industrial hover:bg-black text-white font-black py-4 px-12 rounded shadow-lg transition-all uppercase text-xs tracking-widest">
+                        <i class="fas fa-sync-alt mr-2"></i> Actualizar Información
+                    </button>
+                </div>
+            </form>
         </div>
-
-        <div class="d-flex justify-content-between align-items-center mt-4">
-            <a href="{{ route('clientes.show', $cliente->id) }}" class="btn btn-secondary">Cancelar</a>
-            <button type="submit" class="btn btn-success">Actualizar Cliente</button>
-        </div>
-    </form>
     </div>
 </div>
 @endsection
-
-@push('scripts')
-<script>
-    function isNumber(evt) {
-        evt = (evt) ? evt : window.event;
-        var charCode = (evt.which) ? evt.which : evt.keyCode;
-        return !(charCode > 31 && (charCode < 48 || charCode > 57)) ? true : false;
-    }
-</script>
-@endpush

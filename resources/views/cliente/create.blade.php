@@ -1,100 +1,73 @@
 @extends('layouts.app')
 
-@section('title', 'Crear Cliente')
-
 @section('content')
-<div class="row mb-4">
-    <div class="col-12">
-        <h1 class="mb-2">Crear Cliente</h1>
-        <p class="text-muted">Introduce los datos del nuevo cliente. Los campos con <span class="text-danger">*</span> son obligatorios.</p>
-    </div>
-</div>
+<div class="container mx-auto py-8 px-4">
+    <div class="max-w-4xl mx-auto">
+        {{-- ENCABEZADO --}}
+        <div class="mb-6 flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-black text-gray-800 uppercase tracking-tight">Crear Nuevo Cliente</h1>
+                <p class="text-gray-500 text-xs font-bold uppercase tracking-widest mt-1">Apertura de expediente técnico en base de datos</p>
+            </div>
+            <a href="{{ route('clientes.index') }}" class="bg-gray-100 text-gray-600 px-4 py-2 rounded text-[10px] font-black uppercase hover:bg-gray-200 transition">
+                <i class="fas fa-list mr-1"></i> Volver al Listado
+            </a>
+        </div>
 
-<div class="card shadow-sm mb-4">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
-        <h5 class="card-title m-0">Formulario de Registro de Cliente</h5>
-        <a href="{{ route('clientes.index') }}" class="btn btn-secondary btn-sm">
-            <i class="bi bi-list me-1"></i> Volver al Listado
-        </a>
-    </div>
-    <div class="card-body">
-        <form action="{{ route('clientes.store') }}" method="POST">
-            @csrf
+        <div class="bg-white rounded-xl shadow-sm border-t-4 border-orange-impordiesel overflow-hidden">
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-100">
+                <span class="text-xs font-black text-gray-700 uppercase tracking-widest">Formulario de Registro de Cliente</span>
+            </div>
             
-            <div class="row">
-                <div class="col-md-12 mb-3">
-                    <label for="nombre" class="form-label">Razón Social / Nombre <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control @error('nombre') is-invalid @enderror" 
-                           id="nombre" name="nombre" value="{{ old('nombre') }}" placeholder="Ej: Distribuidora Gasolín C.A." required>
-                    @error('nombre') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-                
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">RIF <span class="text-danger">*</span></label>
-                    <div class="input-group">
-                        <select class="form-select @error('rif_tipo') is-invalid @enderror" name="rif_tipo" style="max-width: 80px;">
-                            <option value="J" {{ old('rif_tipo') == 'J' ? 'selected' : '' }}>J</option>
-                            <option value="G" {{ old('rif_tipo') == 'G' ? 'selected' : '' }}>G</option>
-                            <option value="V" {{ old('rif_tipo') == 'V' ? 'selected' : '' }}>V</option>
-                            <option value="E" {{ old('rif_tipo') == 'E' ? 'selected' : '' }}>E</option>
-                        </select>
-                        <input type="text" name="rif_num" class="form-control @error('rif_num') is-invalid @enderror" 
-                               value="{{ old('rif_num') }}" placeholder="Ej: 123456789" required onkeypress="return isNumber(event)">
-                        @error('rif_num') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+            <form action="{{ route('clientes.store') }}" method="POST" class="p-8">
+                @csrf
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {{-- RAZÓN SOCIAL --}}
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-2">Razón Social / Nombre <span class="text-red-500">*</span></label>
+                        <input type="text" name="nombre" value="{{ old('nombre') }}" required placeholder="EJ: DISTRIBUIDORA GASOLÍN C.A."
+                               class="w-full text-xs font-bold border-gray-300 rounded focus:border-orange-impordiesel focus:ring-1 focus:ring-orange-impordiesel uppercase p-3">
+                        @error('nombre') <p class="text-red-500 text-[10px] mt-1 font-bold italic uppercase">{{ $message }}</p> @enderror
+                    </div>
+
+                    {{-- RIF --}}
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-2">RIF <span class="text-red-500">*</span></label>
+                        <input type="text" name="rif" value="{{ old('rif') }}" required placeholder="J-12345678-9"
+                               class="w-full text-xs font-bold border-gray-300 rounded focus:border-orange-impordiesel focus:ring-1 focus:ring-orange-impordiesel p-3">
+                        @error('rif') <p class="text-red-500 text-[10px] mt-1 font-bold italic uppercase">{{ $message }}</p> @enderror
+                    </div>
+
+                    {{-- EMAIL --}}
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-2">Correo Electrónico <span class="text-red-500">*</span></label>
+                        <input type="email" name="email" value="{{ old('email') }}" required placeholder="cliente@ejemplo.com"
+                               class="w-full text-xs font-bold border-gray-300 rounded focus:border-orange-impordiesel focus:ring-1 focus:ring-orange-impordiesel p-3">
+                        @error('email') <p class="text-red-500 text-[10px] mt-1 font-bold italic uppercase">{{ $message }}</p> @enderror
+                    </div>
+
+                    {{-- DIRECCIONES --}}
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-2">Dirección Fiscal <span class="text-red-500">*</span></label>
+                        <textarea name="direccion" rows="2" required placeholder="DIRECCIÓN SEGÚN RIF..."
+                                  class="w-full text-xs font-bold border-gray-300 rounded focus:border-orange-impordiesel focus:ring-1 focus:ring-orange-impordiesel uppercase p-3">{{ old('direccion') }}</textarea>
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-2 text-orange-impordiesel">Dirección Operativa (Lugar de Despacho) <span class="text-red-500">*</span></label>
+                        <textarea name="direccion_operativa" rows="2" required placeholder="LUGAR DONDE SE REALIZA LA ACTIVIDAD..."
+                                  class="w-full border-orange-200 text-xs font-bold border rounded focus:border-orange-impordiesel focus:ring-1 focus:ring-orange-impordiesel uppercase p-3">{{ old('direccion_operativa') }}</textarea>
                     </div>
                 </div>
 
-                <div class="col-md-6 mb-3">
-                    <label for="contacto" class="form-label">Persona de Contacto <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control @error('contacto') is-invalid @enderror" 
-                           id="contacto" name="contacto" value="{{ old('contacto') }}" required>
-                    @error('contacto') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <div class="mt-8 flex justify-end">
+                    <button type="submit" class="w-full md:w-auto bg-orange-impordiesel hover:bg-orange-600 text-white font-black py-4 px-12 rounded shadow-lg transition-all uppercase text-xs tracking-widest">
+                        <i class="fas fa-save mr-2"></i> Guardar Nuevo Cliente
+                    </button>
                 </div>
-                
-                <div class="col-md-6 mb-3">
-                    <label for="telefono" class="form-label">Teléfono <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control @error('telefono') is-invalid @enderror" 
-                           id="telefono" name="telefono" value="{{ old('telefono') }}" 
-                           placeholder="Ej: 02125556677" required onkeypress="return isNumber(event)">
-                    <small class="text-muted">Solo números, sin espacios ni guiones.</small>
-                    @error('telefono') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label for="email" class="form-label">Email</label>
-                    <input type="email" class="form-control @error('email') is-invalid @enderror" 
-                           id="email" name="email" value="{{ old('email') }}">
-                    @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-                
-                <div class="col-md-12 mb-3">
-                    <label for="direccion" class="form-label">Dirección <span class="text-danger">*</span></label>
-                    <textarea class="form-control @error('direccion') is-invalid @enderror" 
-                              id="direccion" name="direccion" rows="2" required>{{ old('direccion') }}</textarea>
-                    @error('direccion') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-            </div>
-            
-            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                <button type="submit" class="btn btn-primary px-5">
-                    <i class="bi bi-save me-2"></i>Guardar Cliente
-                </button>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
 @endsection
-
-@push('scripts')
-<script>
-    // Función para permitir solo números en el teclado
-    function isNumber(evt) {
-        evt = (evt) ? evt : window.event;
-        var charCode = (evt.which) ? evt.which : evt.keyCode;
-        if (charCode > 31 && (charCode < 48 || charCode > 57)) {
-            return false;
-        }
-        return true;
-    }
-</script>
-@endpush

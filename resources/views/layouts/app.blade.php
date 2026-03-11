@@ -13,6 +13,31 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 
+    <style>
+        /* FIX CRÍTICO: Evitar que Tailwind resetee los botones de la marca */
+        .bg-orange-impordiesel {
+            background-color: #FF6B00 !important;
+            color: white !important;
+        }
+        .bg-gray-industrial {
+            background-color: #4C474F !important;
+            color: white !important;
+        }
+        /* Asegurar que los botones tipo enlace se vean como botones */
+        .btn-orange, .btn-dark {
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            border: none !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+        
+        {{-- Estilos para simetría con el compañero --}}
+        .text-orange-impordiesel { color: #FF6B00 !important; }
+        .border-orange-impordiesel { border-color: #FF6B00 !important; }
+    </style>
+
     @livewireStyles
     @stack('styles')
 </head>
@@ -29,7 +54,7 @@
 
             <main class="flex-grow p-4">
                 @yield('content')
-                {{ $slot ?? '' }} {{-- Para componentes Livewire que usen layouts --}}
+                {{ $slot ?? '' }}
             </main>
 
             @include('layouts.footer')
@@ -40,12 +65,13 @@
         </main>
     @endif
 
+    {{-- Sistema de Notificaciones Toast --}}
     <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
         @foreach (['success', 'error', 'warning', 'info'] as $msg)
             @if(session($msg))
                 <div class="toast align-items-center text-bg-{{ $msg == 'error' ? 'danger' : $msg }} border-0 show" role="alert">
                     <div class="d-flex">
-                        <div class="toast-body">{{ session($msg) }}</div>
+                        <div class="toast-body font-bold text-uppercase small">{{ session($msg) }}</div>
                         <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
                     </div>
                 </div>
@@ -61,7 +87,6 @@
     @stack('scripts')
 
     <script>
-        // Inicializar Toasts
         document.addEventListener('DOMContentLoaded', function () {
             const toastElList = [].slice.call(document.querySelectorAll('.toast'))
             toastElList.map(function (toastEl) {
@@ -69,13 +94,12 @@
             })
         });
 
-        // FUNCIÓN GLOBAL PARA RECHAZAR DOCUMENTOS
         function rechazarDocumento(id) {
             Swal.fire({
                 title: '¿Rechazar documento?',
                 text: "Indica el motivo para que el cliente pueda corregirlo:",
                 input: 'textarea',
-                inputPlaceholder: 'Ej: El documento no es legible o está vencido...',
+                inputPlaceholder: 'Ej: El documento no es legible...',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
@@ -84,7 +108,6 @@
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed && result.value) {
-                    // Aquí envías el formulario de rechazo (puedes crear un form oculto o usar fetch)
                     document.getElementById('form-rechazo-' + id).submit();
                 } else if (result.isConfirmed && !result.value) {
                     Swal.fire('Error', 'Debes indicar un motivo', 'error');
