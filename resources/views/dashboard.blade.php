@@ -1,393 +1,57 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard')
-
-@php
-    // IDs de Módulos (referencia de tu tabla)
-    $MODULO_VEHICULOS = 1;
-    $MODULO_ORDENES = 2;
-    $MODULO_INVENTARIO = 30;
-    $MODULO_COMBUSTIBLE = 4;
-    $MODULO_DESPACHOS = 42;
-    $MODULO_USUARIOS = 51;
-    $MODULO_ADMINISTRAR = 5;
-    $MODULO_CHECKLIST = 6;
-    $MODULO_REPORTES = 7;
-    $MODULO_VIAJES = 8;
-    $MODULO_CLIENTES = 52;
-@endphp
+@section('title', 'Panel de Control Administrativo')
 
 @section('content')
-{{-- Se realizan las consultas a la base de datos directamente en la vista --}}
-<?php
-use App\Models\Vehiculo;
-use App\Models\Orden;
-use App\Models\Deposito;
-use App\Models\User;
-use App\Models\Alerta;
-use App\Models\Mantenimiento;
-use App\Models\ResumenDiario;
-use App\Models\Inventario;
-use App\Models\Viaje;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Carbon;
-
-// KPI: Vehículos en operación
-$totalVehiculos = Vehiculo::where('es_flota',true)->count();
-
-// KPI: Órdenes activas (ejemplo: estatus 1 = activo/en proceso, 2 = pendiente)
-$ordenesActivas = Orden::whereIn('estatus', [2])->count();
-
-// KPI: Depósitos operativos (ejemplo: estatus 1 = operativo)
-$depositosOperativos = Deposito::count();
-
-// KPI: Usuarios activos (ejemplo: estatus 1 = activo)
-$usuariosActivos = User::where('status', 1)->count();
-
-// KPI: Alertas críticas
-//$alertasCriticas = Alerta::where('prioridad', 'critica')->count();
-
-// KPI: Mantenimientos pendientes
-$mantenimientosPendientes = 4; //Mantenimiento::where('estatus', 'pendiente')->count();
-
-// KPI: Inventario bajo (existencia < existencia_minima)
-$inventarioBajo = Inventario::whereColumn('existencia', '<', 'existencia_minima')->count();
-
-// Fórmula de Eficiencia: (Unidades Disponibles / Total Unidades) * 100
-$eficienciaActual = $totalVehiculos > 0 
-    ? ($unidades_disponibles / $totalVehiculos) * 100 
-    : 0; 
-$eficienciaFlota = round($eficienciaActual, 0);
-// Tabla de órdenes recientes
-$ordenesRecientes = Orden::orderBy('created_at', 'desc')->limit(3)->get();
-$alertasRecientes = Alerta::orderBy('id_alerta', 'desc')->limit(5)->get();
-
-// Datos para el gráfico de órdenes por estatus
-$ordenesPorEstatus = Orden::select('estatus', DB::raw('count(*) as total'))
-                         ->groupBy('estatus')
-                         ->pluck('total', 'estatus')
-                         ->toArray();
-$labels = ['Completada', 'Pendiente', 'En Proceso'];
-$data = [
-    $ordenesPorEstatus[3] ?? 0, // Suponiendo 3 es completada
-    $ordenesPorEstatus[2] ?? 0, // Suponiendo 2 es pendiente
-    $ordenesPorEstatus[1] ?? 0  // Suponiendo 1 es en proceso
-];
-
-
-
-$historicoReal = ResumenDiario::where('fecha', '>=', Carbon::today()->subDays(6))
-    ->orderBy('fecha', 'asc')
-    ->get();
-
-// Preparar datos para Chart.js
-$chartLabels = $historicoReal->map(function($item) {
-    return Carbon::parse($item->fecha)->format('d/M');
-})->toArray();
-
-// Usamos el campo 'disponibilidad' (eficiencia)
-$chartDataCierre = $historicoReal->pluck('disponibilidad')->toArray();
-
-// Para simular el valor de 'Inicio del Día' para el gráfico,
-// usamos el valor de cierre del día anterior (o 0 si es el primer día).
-$chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal) {
-    if ($key === 0) {
-        return 0; // O un valor inicial de referencia
-    }
-    return $historicoReal[$key - 1]->disponibilidad;
-})->toArray();
-
-    $cards = [
-        [
-            'modulo' => $MODULO_VEHICULOS,
-            'permiso' => 'read',
-            'route' => route('vehiculos.index'),
-            'icon' => 'fa-truck',
-            'title' => 'Vehículos',
-            'color' => 'bg-info',
-            'target' => '_self'
-        ],
-        [
-            'modulo' => null, // Sin permiso requerido
-            'route' => route('mantenimiento.planificacion.index'),
-            'icon' => 'fa-calendar',
-            'title' => 'Planificación Mantenimiento',
-            'color' => 'bg-warning',
-            'target' => '_blank'
-        ],
-        [
-            'modulo' => $MODULO_ORDENES,
-            'permiso' => 'read',
-            'route' => route('ordenes.list'),
-            'icon' => 'fa-screwdriver-wrench',
-            'title' => 'Mantenimiento',
-            'color' => 'bg-warning',
-            'target' => '_self'
-        ],
-        [
-            'modulo' => $MODULO_INVENTARIO,
-            'permiso' => 'read',
-            'route' => route('inventario.index'),
-            'icon' => 'fa-box-open',
-            'title' => 'Inventario',
-            'color' => 'bg-success',
-            'target' => '_self'
-        ],
-        [
-            'modulo' => $MODULO_COMBUSTIBLE,
-            'permiso' => 'read',
-            'route' => route('combustible.index'),
-            'icon' => 'fa-gas-pump',
-            'title' => 'Combustible',
-            'color' => 'bg-secondary',
-            'target' => '_self'
-        ],
-        [
-            'modulo' => $MODULO_CHECKLIST,
-            'permiso' => 'create',
-            'route' => route('inspeccion.index'),
-            'icon' => 'fa-list',
-            'title' => 'Checklist',
-            'color' => 'bg-primary',
-            'target' => '_self'
-        ],
-        [
-            'modulo' => $MODULO_DESPACHOS,
-            'permiso' => 'create',
-            'route' => route('combustible.createDespachoIndustrial'),
-            'icon' => 'fa-truck-fast',
-            'title' => 'Surtir Combustible',
-            'color' => 'bg-primary',
-            'target' => '_self'
-        ],
-        [
-            'modulo' => $MODULO_CLIENTES,
-            'permiso' => 'create',
-            'route' => route('captacion.index'),
-            'icon' => 'fa-address-book',
-            'title' => 'Clientes',
-            'color' => 'bg-primary',
-            'target' => '_self'
-        ],
-        [
-            'modulo' => $MODULO_REPORTES,
-            'permiso' => 'create',
-            'route' => route('reports.index'),
-            'icon' => 'fa-list',
-            'title' => 'Reportes',
-            'color' => 'bg-primary',
-            'target' => '_self'
-        ],
-        [
-            'modulo' => $MODULO_VIAJES,
-            'permiso' => 'create',
-            'route' => route('viajes.index'),
-            'icon' => 'fa-route',
-            'title' => 'Cargas / Despachos',
-            'color' => 'bg-primary',
-            'target' => '_self'
-        ],
-        [
-            'modulo' => null,
-            'route' => route('viajes.calendario'),
-            'icon' => 'fa-calendar',
-            'title' => 'Planificación Combustible',
-            'color' => 'bg-warning',
-            'target' => '_blank'
-        ],
-        [
-            'modulo' => null,
-            'route' => route('choferes.list'),
-            'icon' => 'fa-user',
-            'title' => 'Choferes',
-            'color' => 'bg-warning',
-            'target' => '_self'
-        ],
-    ];
-
-
-?>
-
-<div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h1 class="mb-2">Panel de Control</h1>
-            <p class="text-muted">Bienvenido, {{ Auth::user()->name ?? 'Usuario' }}. Visualiza el estado actual de la operación logística y toma decisiones informadas.</p>
-        </div>
+<div class="container mx-auto">
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-800">Panel de Control</h1>
+        <p class="text-gray-500 text-sm">Bienvenido, {{ Auth::user()->name }}. Resumen operativo del sistema.</p>
     </div>
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0">
-                <a href="{{route('vehiculos.list', ['filter' => 'disponibles'])}}" target="_blank">
-                    
-                    <div class="card-body d-flex align-items-center">
-                        <div class="me-3">
-                            <span class="bg-primary text-white rounded-circle p-3">
-                                <i class="bi bi-truck" style="font-size:2rem;"></i>
-                            </span>
-                        </div>
-                        <div>
-                            <h5 class="card-title mb-0">Vehículos</h5>
-                            <h2 class="fw-bold">{{ $unidades_disponibles }}</h2>
-                            <small class="text-muted">En operación</small>
-                        </div>
-                    </div>
-                </a>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0">
-                <a href="{{route('ordenes.list', ['filter' => 'abiertas'])}}" target="_blank">
 
-                <div class="card-body d-flex align-items-center">
-                    <div class="me-3">
-                        <span class="bg-success text-white rounded-circle p-3">
-                            <i class="bi bi-clipboard-check" style="font-size:2rem;"></i>
-                        </span>
-                    </div>
-                    <div>
-                        <h5 class="card-title mb-0">Órdenes</h5>
-                        <h2 class="fw-bold">{{ $ordenesActivas }}</h2>
-                        <small class="text-muted">Activas</small>
-                    </div>
-                </div>
-                </a>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center">
+            <div class="p-3 rounded-lg bg-blue-50 text-blue-600 mr-4">
+                <i class="fas fa-truck text-2xl"></i>
             </div>
-        </div>
-        @if(in_array($user->id_perfil,[1,2,18]))
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0">
-                <a href="{{route('ordenes.compra')}}" target="_blank">
-
-                <div class="card-body d-flex align-items-center">
-                    <div class="me-3">
-                        <span class="bg-success text-white rounded-circle p-3">
-                            <i class="bi bi-clipboard-check" style="font-size:2rem;"></i>
-                        </span>
-                    </div>
-                    <div>
-                        <h5 class="card-title mb-0">Requerimientos de Suministros</h5>
-                        <h2 class="fw-bold">{{ $suministros_compra }}</h2>
-                        <small class="text-muted">Activas</small>
-                    </div>
-                </div>
-                </a>
-            </div>
-        </div>
-        @endif
-        {{-- <div class="col-md-3">
-            <div class="card shadow-sm border-0">
-                <div class="card-body d-flex align-items-center">
-                    <div class="me-3">
-                        <span class="bg-warning text-white rounded-circle p-3">
-                            <i class="bi bi-fuel-pump" style="font-size:2rem;"></i>
-                        </span>
-                    </div>
-                    <div>
-                        <h5 class="card-title mb-0">Depositos</h5>
-                        <h2 class="fw-bold">{{ $depositosOperativos }}</h2>
-                        <small class="text-muted">Operativos</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0">
-                <div class="card-body d-flex align-items-center">
-                    <div class="me-3">
-                        <span class="bg-info text-white rounded-circle p-3">
-                            <i class="bi bi-people" style="font-size:2rem;"></i>
-                        </span>
-                    </div>
-                    <div>
-                        <h5 class="card-title mb-0">Usuarios</h5>
-                        <h2 class="fw-bold">{{ $usuariosActivos }}</h2>
-                        <small class="text-muted">Activos</small>
-                    </div>
-                </div>
-            </div>
-        </div> --}}
-        {{-- <div class="col-md-3">
-                <a href="{{route('alertas.index')}}" target="_blank">
-
-            <div class="card shadow-sm border-0">
-                <div class="card-body d-flex align-items-center">
-                    <div class="me-3">
-                        <span class="bg-danger text-white rounded-circle p-3">
-                            <i class="bi bi-exclamation-triangle" style="font-size:2rem;"></i>
-                        </span>
-                    </div>
-                    <div>
-                        <h5 class="card-title mb-0">Alertas Críticas</h5>
-                        <h2 class="fw-bold">{{ $alertasCriticas }}</h2>
-                        <small class="text-muted">Sin resolver</small>
-                    </div>
-                </div>
-            </div>
-                </a>
-        </div> --}}
-        {{-- <div class="col-md-3">
-            <div class="card shadow-sm border-0">
-                <div class="card-body d-flex align-items-center">
-                    <div class="me-3">
-                        <span class="bg-secondary text-white rounded-circle p-3">
-                            <i class="bi bi-tools" style="font-size:2rem;"></i>
-                        </span>
-                    </div>
-                    <div>
-                        <h5 class="card-title mb-0">Mantenimientos</h5>
-                        <h2 class="fw-bold">{{ $mantenimientosPendientes }}</h2>
-                        <small class="text-muted">Pendientes</small>
-                    </div>
-                </div>
-            </div>
-        </div> --}}
-        <div class="col-md-3">
-                <a href="{{route('inventario.list')}}" target="_blank">
-
-            <div class="card shadow-sm border-0">
-                <div class="card-body d-flex align-items-center">
-                    <div class="me-3">
-                        <span class="bg-dark text-white rounded-circle p-3">
-                            <i class="bi bi-box-seam" style="font-size:2rem;"></i>
-                        </span>
-                    </div>
-                    <div>
-                        <h5 class="card-title mb-0">Inventario Bajo</h5>
-                        <h2 class="fw-bold">{{ $inventarioBajo }}</h2>
-                        <small class="text-muted">Productos críticos</small>
-                    </div>
-                </div>
-            </div>
-                </a>
-        </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0">
-                <div class="card-body d-flex align-items-center">
-                    <div class="me-3">
-                        <span class="bg-primary text-white rounded-circle p-3">
-                            <i class="bi bi-graph-up-arrow" style="font-size:2rem;"></i>
-                        </span>
-                    </div>
-                    <div>
-                        <h5 class="card-title mb-0">Eficiencia Flota</h5>
-                        <h2 class="fw-bold">{{ $eficienciaFlota }}%</h2>
-                        <small class="text-muted">Último mes</small>
-                    </div>
-                </div>
+            <div>
+                <p class="text-sm text-gray-500 font-medium">Vehículos</p>
+                <h3 class="text-2xl font-bold text-gray-800">{{ $stats['unidades_disponibles'] }}</h3>
+                <p class="text-xs text-green-500 font-semibold">Operativos</p>
             </div>
         </div>
 
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0">
-                <div class="card-body d-flex align-items-center">
-                    <div>
-                        <h5 class="card-title mb-0">Mantenimientos Programados</h5>
-                        <h2 class="fw-bold">{{ $programados }}</h2>
-                        <h2 class="fw-bold text-danger">{{ $programadosHoy }} hoy</h2>
-                        <small class="text-muted">Último mes</small>
-                    </div>
-                </div>
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center">
+            <div class="p-3 rounded-lg bg-yellow-50 text-yellow-600 mr-4">
+                <i class="fas fa-clipboard-list text-2xl"></i>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500 font-medium">Mantenimiento</p>
+                <h3 class="text-2xl font-bold text-gray-800">{{ $stats['totalOrdenesAbiertas'] }}</h3>
+                <p class="text-xs text-yellow-600 font-semibold">Órdenes activas</p>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center">
+            <div class="p-3 rounded-lg bg-green-50 text-green-600 mr-4">
+                <i class="fas fa-boxes text-2xl"></i>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500 font-medium">Suministros</p>
+                <h3 class="text-2xl font-bold text-gray-800">{{ $stats['suministros_compra'] }}</h3>
+                <p class="text-xs text-gray-400 font-semibold">Pendientes de compra</p>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center">
+            <div class="p-3 rounded-lg bg-indigo-50 text-indigo-600 mr-4">
+                <i class="fas fa-chart-line text-2xl"></i>
+            </div>
+            <div>
+                <p class="text-sm text-gray-500 font-medium">Estatus Hoy</p>
+                <h3 class="text-2xl font-bold text-gray-800">{{ $stats['programadosHoy'] }}</h3>
+                <p class="text-xs text-indigo-500 font-semibold">Prog. Mantenimiento</p>
             </div>
         </div>
     </div>
@@ -499,31 +163,15 @@ $chartDataInicio = $historicoReal->map(function($item, $key) use ($historicoReal
                     </table>
                 </div>
             </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-80 flex flex-col items-center justify-center text-gray-400">
+            <i class="fas fa-chart-pie text-4xl mb-4 opacity-20"></i>
+            <p>Área reservada para Gráficos de Operación</p>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 h-80 flex flex-col items-center justify-center text-gray-400">
+            <i class="fas fa-chart-bar text-4xl mb-4 opacity-20"></i>
+            <p>Área reservada para KPIs Financieros (Profit)</p>
         </div>
     </div>
 </div>
-
-@push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    var ctx = document.getElementById('ordenesEstadoChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: @json($labels),
-            datasets: [{
-                data: @json($data),
-                backgroundColor: ['#4e73df', '#f6c23e', '#e74a3b'],
-            }]
-        },
-        options: {
-            plugins: {
-                legend: { display: true, position: 'bottom' }
-            }
-        }
-    });
-});
-</script>
-@endpush
 @endsection

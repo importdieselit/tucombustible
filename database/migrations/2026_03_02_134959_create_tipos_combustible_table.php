@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class UpdateStatusEnumInCaptacionClientes extends Migration
+class CreateTiposCombustibleTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,8 +13,10 @@ class UpdateStatusEnumInCaptacionClientes extends Migration
      */
     public function up()
     {
-        Schema::table('captacion_clientes', function (Blueprint $table) {
-            $table->string('estatus_captacion')->default('prospecto')->change();
+        Schema::create('tipos_combustible', function (Blueprint $table) {
+            $table->id();
+            $table->string('nombre', 20);
+            $table->timestamps();
         });
     }
 
@@ -25,8 +27,6 @@ class UpdateStatusEnumInCaptacionClientes extends Migration
      */
     public function down()
     {
-        Schema::table('captacion_clientes', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('tipos_combustible');
     }
 }

@@ -16,50 +16,64 @@
     </div>
     <div class="card-body">
         <form action="{{ route('clientes.update', $cliente->id) }}" method="POST">
-            @csrf
-            @method('PUT')
-            
-            <div class="row">
-                <div class="col-md-12 mb-3">
-                    <label class="form-label">Razón Social <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" name="nombre" value="{{ old('nombre', $cliente->nombre) }}" required>
-                </div>
-                
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">RIF <span class="text-danger">*</span></label>
-                    <div class="input-group">
-                        @php 
-                            // Separamos el RIF (Letra y Número) para el formulario
-                            $rif_parts = explode('-', $cliente->rif);
-                            $tipo = $rif_parts[0] ?? 'J';
-                            $numero = $rif_parts[1] ?? '';
-                        @endphp
-                        <select class="form-select" name="rif_tipo" style="max-width: 80px;">
-                            @foreach(['J','G','V','E'] as $t)
-                                <option value="{{ $t }}" {{ old('rif_tipo', $tipo) == $t ? 'selected' : '' }}>{{ $t }}</option>
-                            @endforeach
-                        </select>
-                        <input type="text" name="rif_num" class="form-control" value="{{ old('rif_num', $numero) }}" required onkeypress="return isNumber(event)">
-                    </div>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Persona de Contacto <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" name="contacto" value="{{ old('contacto', $cliente->contacto) }}" required>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Teléfono <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" name="telefono" value="{{ old('telefono', $cliente->telefono) }}" required onkeypress="return isNumber(event)">
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Email</label>
-                    <input type="email" class="form-control" name="email" value="{{ old('email', $cliente->email) }}">
+        @csrf
+        @method('PUT')
+    
+        <div class="row">
+            <div class="col-md-12 mb-3">
+                <label class="form-label">Razón Social <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="nombre" value="{{ old('nombre', $cliente->nombre) }}" required>
+            </div>
+        
+            <div class="col-md-6 mb-3">
+                <label class="form-label">RIF <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    @php 
+                        $rif_parts = explode('-', $cliente->rif);
+                        $tipo = $rif_parts[0] ?? 'J';
+                        $numero = $rif_parts[1] ?? '';
+                    @endphp
+                    <select class="form-select" name="rif_tipo" style="max-width: 80px;">
+                        @foreach(['J','G','V','E'] as $t)
+                            <option value="{{ $t }}" {{ old('rif_tipo', $tipo) == $t ? 'selected' : '' }}>{{ $t }}</option>
+                        @endforeach
+                    </select>
+                    <input type="text" name="rif_num" class="form-control" value="{{ old('rif_num', $numero) }}" required onkeypress="return isNumber(event)">
                 </div>
             </div>
-            <button type="submit" class="btn btn-success mt-3">Actualizar Cliente</button>
-        </form>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Persona de Contacto <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="contacto" value="{{ old('contacto', $cliente->contacto) }}" required>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Teléfono <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="telefono" value="{{ old('telefono', $cliente->telefono) }}" required onkeypress="return isNumber(event)">
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control" name="email" value="{{ old('email', $cliente->email) }}">
+            </div>
+
+            <div class="col-md-12 mb-3">
+                <label class="form-label">Dirección Fiscal</label>
+                <textarea class="form-control" name="direccion" rows="2">{{ old('direccion', $cliente->direccion) }}</textarea>
+            </div>
+
+            <div class="col-md-12 mb-3">
+                <label class="form-label fw-bold text-primary">Dirección Operativa <span class="text-danger">*</span></label>
+                <textarea class="form-control border-primary" name="direccion_operativa" rows="2" required>{{ old('direccion_operativa', $cliente->direccion_operativa) }}</textarea>
+                <small class="text-muted">Indique la dirección donde se realizan las operaciones de despacho.</small>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-4">
+            <a href="{{ route('clientes.show', $cliente->id) }}" class="btn btn-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-success">Actualizar Cliente</button>
+        </div>
+    </form>
     </div>
 </div>
 @endsection

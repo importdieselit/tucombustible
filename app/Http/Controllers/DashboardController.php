@@ -2,60 +2,46 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Vehiculo;
-use App\Models\User;
-use App\Models\Orden;
-use App\Models\Tanque;
-use App\Models\MantenimientoProgramado;
-use App\Models\Cliente;
-use App\Models\Pedido;
-use App\Models\MovimientoCombustible;
-use Illuminate\Http\Request;
+use App\Services\DashboardService;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Carbon;
-use App\Models\SuministroCompra;
+
 class DashboardController extends Controller
 {
+    /**
+     * Quitamos el constructor que pedía el DashboardService.
+     * Esto evita que Laravel intente cargar todos los repositorios al inicio.
+     */
+
     public function index()
     {
-        $user = Auth::user(); // Simplificado: ya tienes el objeto user
+        $user = Auth::user();
 
-        if ($user->id_perfil == 1) {
-            return redirect()->route('captacion.index');
+        // 1. DASHBOARD PRINCIPAL (Admin / SuperUser)
+        // Redirigimos antes de tocar cualquier Servicio
+        if (in_array($user->id_perfil, [1, 2])) {
+            return redirect()->route('admin.dashboard_principal_provisional');
         }
 
-        if ($user->id_perfil == 3) {
-            return redirect()->route('clientes.dashboard');
+        /**
+         * 2. DASHBOARDS DEL MÓDULO CLIENTES (Perfil 3)
+         * Cargamos el servicio manualmente solo aquí. 
+         * Si falla por falta de repositorios, solo le fallará al Cliente.
+         */
+        $dashboardService = app(DashboardService::class);
+        $data = $dashboardService->getDashboardData($user);
+
+        if ($data['perfil'] === 'cliente_proceso') {
+            return view('cliente.en_proceso', $data);
         }
 
-         
-        $totalVehiculos = Vehiculo::count();
-        $totalUsuarios = User::count();
-        $totalOrdenesAbiertas = Orden::where('estatus', 'Abierta')->count(); // Asumiendo que 'estatus' tiene este valor
-        $totalTanques = Tanque::count();
-        $unidades_con_orden_abierta = Vehiculo::VehiculosConOrdenAbierta()->count();
-        $unidades_en_mantenimiento = Vehiculo::countVehiculosEnMantenimiento();
-        $unidades_disponibles = Vehiculo::where('es_flota',true)->where('estatus',1)->count();
-        $programados=MantenimientoProgramado::whereDate('fecha','>=',now())->count();
-        $programadosHoy=MantenimientoProgramado::whereDate('fecha',now())->count();
-        $suministros_compra = SuministroCompra::where('estatus', 1)->count();
+        if ($data['perfil'] === 'cliente_padre') {
+            return view('cliente.index', $data);
+        }
 
-        // Puedes añadir más información, como las últimas 5 órdenes
-        $ultimasOrdenes = Orden::orderBy('id', 'desc')->take(5)->get();
+        if ($data['perfil'] === 'cliente_sucursal') {
+            return view('cliente.index_sucursal', $data);
+        }
 
-        return view('dashboard', compact(
-            'totalVehiculos',
-            'totalUsuarios',
-            'totalOrdenesAbiertas',
-            'totalTanques',
-            'ultimasOrdenes',
-            'unidades_con_orden_abierta',
-            'unidades_en_mantenimiento',
-            'unidades_disponibles',
-            'programados',
-            'programadosHoy',
-            'suministros_compra',
-            'user'
-        ));
+        return abort(403, 'Perfil de usuario no reconocido.');
     }
 }

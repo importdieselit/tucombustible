@@ -9,11 +9,6 @@
     <link rel="manifest" href="{{ asset('manifest.json') }}">
     {{-- <link rel="apple-touch-icon" href="{{ asset('img/icon-192x192.png') }}"> --}}
     <title>@yield('title', 'Dashboard - TuCombustible')</title>
-<!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    
-    <!-- Font Awesome CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" xintegrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2C22gB7Fz2i4M8c9tU8vQ+I6bLwK6z+a6D+Q==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <!-- CSS de DataTables -->
@@ -74,43 +69,51 @@
 }
 </style>
 
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+    @livewireStyles
     @stack('styles')
 </head>
-<body>
-    @include('layouts.header')
+<body class="bg-gray-50">
 
-    <div class="container-fluid">
-           @if (!Request::routeIs(['login', 'logout', 'register', 'password.*']))
-            <div class="container-fluid">
-                <div class="row">
-                    @php($user = Auth::user())
-                    @include('layouts.sidebar')
-                    <main class="col ms-sm-auto col-lg-12 px-md-4 py-4 z-1">
-                        @yield('content')
-                    </main>
-                </div>
-            </div>
-            @else 
+    @php($isAuthPage = Request::routeIs(['login', 'logout', 'register', 'password.*']))
 
-                <!-- Si la ruta es login, logout, etc., solo se muestra el contenido principal -->
-                <main class="container-fluid py-4 z-1">
-                    @yield('content')
-                </main>
-             @endif 
-    </div>
-<!-- TOAST CONTAINER -->
-<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
-    @if(session('success'))
-        <div class="toast align-items-center text-bg-success border-0 show" role="alert">
-            <div class="d-flex">
-                <div class="toast-body">
-                    {{ session('success') }}
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto"
-                        data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
+    @if (!$isAuthPage && Auth::check())
+        <x-layouts.sidebar />
+
+        <div class="md:ml-64 flex flex-col min-h-screen">
+            
+            @include('layouts.header')
+
+            <main class="flex-grow p-4">
+                @yield('content')
+                {{ $slot ?? '' }} {{-- Para componentes Livewire que usen layouts --}}
+            </main>
+
+            @include('layouts.footer')
         </div>
+    @else
+        <main class="container-fluid py-4">
+            @yield('content')
+        </main>
     @endif
+
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+        @foreach (['success', 'error', 'warning', 'info'] as $msg)
+            @if(session($msg))
+                <div class="toast align-items-center text-bg-{{ $msg == 'error' ? 'danger' : $msg }} border-0 show" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">{{ session($msg) }}</div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            @endif
+        @endforeach
+    </div>
 
     @if(session('error'))
         <div class="toast align-items-center text-bg-danger border-0 show" role="alert">
@@ -186,8 +189,19 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
     
+    @livewireScripts
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     @stack('scripts')
+
     <script>
+        // Inicializar Toasts
+        document.addEventListener('DOMContentLoaded', function () {
+            const toastElList = [].slice.call(document.querySelectorAll('.toast'))
+            toastElList.map(function (toastEl) {
+                new bootstrap.Toast(toastEl, { delay: 4500 }).show()
+            })
+        });
 
     /**
      * Motor de Inicialización Universal Impordiesel
@@ -513,5 +527,28 @@
             });
     }
 </script>
+        // FUNCIÓN GLOBAL PARA RECHAZAR DOCUMENTOS
+        function rechazarDocumento(id) {
+            Swal.fire({
+                title: '¿Rechazar documento?',
+                text: "Indica el motivo para que el cliente pueda corregirlo:",
+                input: 'textarea',
+                inputPlaceholder: 'Ej: El documento no es legible o está vencido...',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, rechazar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    // Aquí envías el formulario de rechazo (puedes crear un form oculto o usar fetch)
+                    document.getElementById('form-rechazo-' + id).submit();
+                } else if (result.isConfirmed && !result.value) {
+                    Swal.fire('Error', 'Debes indicar un motivo', 'error');
+                }
+            })
+        }
+    </script>
 </body>
 </html>

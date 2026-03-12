@@ -97,15 +97,30 @@
     </div>
     
     @if ($item)
-    <div class="row">
-        <div class="col-12 d-flex justify-content-end mb-4">
-            <a href="#" class="btn btn-warning me-2 d-flex align-items-center">
+    <div class="col-12 d-flex justify-content-end mb-4 gap-2">
+        @if(auth()->user()->id_perfil == 1) {{-- Validación para Perfil Administrativo --}}
+            <a href="{{ route('clientes.edit', $item->id) }}" class="btn btn-warning d-flex align-items-center">
                 <i class="fas fa-edit me-2"></i> Editar
             </a>
-            <a href="{{ route('clientes.list')}}" class="btn btn-secondary d-flex align-items-center">
-                <i class="fas fa-list me-2"></i> Volver al listado
-            </a>
-        </div>
+
+            <form action="{{ route('clientes.toggleStatus', $item->id) }}" method="POST" id="status-form">
+                @csrf
+                @method('PATCH')
+                @if($item->status == 1)
+                    <button type="submit" class="btn btn-danger d-flex align-items-center" onclick="return confirm('¿Está seguro de inhabilitar este cliente?')">
+                        <i class="fas fa-user-slash me-2"></i> Inhabilitar
+                    </button>
+                @else
+                    <button type="submit" class="btn btn-success d-flex align-items-center" onclick="return confirm('¿Desea habilitar nuevamente a este cliente?')">
+                        <i class="fas fa-user-check me-2"></i> Habilitar
+                    </button>
+                @endif
+            </form>
+        @endif
+
+        <a href="{{ route('clientes.list')}}" class="btn btn-secondary d-flex align-items-center">
+            <i class="fas fa-list me-2"></i> Volver al listado
+        </a>
     </div>
     
     <div class="row">
@@ -121,6 +136,7 @@
                         <div class="col-sm-12 mb-3"><span class="info-label">Teléfono:</span> <span class="info-value">{{ $item->telefono ?? 'N/A' }}</span></div>
                         <div class="col-sm-12 mb-3"><span class="info-label">Email:</span> <span class="info-value">{{ $item->email ?? 'N/A' }}</span></div>
                         <div class="col-sm-12 mb-3"><span class="info-label">Dirección:</span> <span class="info-value">{{ $item->direccion ?? 'N/A' }}</span></div>
+                        <div class="col-sm-12 mb-3"><span class="info-label">Dirección Operativa:</span> <span class="info-value text-info fw-bold">{{ $item->direccion_operativa ?? 'No registrada' }}</span></div>
                     </div>
                 </div>
             </div>

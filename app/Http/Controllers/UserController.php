@@ -2,75 +2,53 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use App\Models\Perfil; 
-use App\Models\Persona;
-use App\Models\Cliente;
+use App\Services\UserService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule;
-use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
-use Maatwebsite\Excel\Concerns\ToCollection;
-use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Redirect;
+use App\Models\User;
+use App\Models\Perfil;
+use App\Models\Cliente;
+use App\Models\Persona;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Validator;
 
 
-class UserController extends BaseController
+
+class UserController extends Controller
 {
+    protected $userService;
 
-    private $moduloIdUsuarios = 51; // ID del módulo 'Usuarios'
-    private $perfilClienteName = 'cliente'; // Nombre del perfil que requiere id_cliente
-    private $defaultClienteId = 0; // ID para perfiles que no son de cliente
-
-
-    public function __construct()
+    public function __construct(UserService $userService)
     {
-        $this->model = new User();
-        parent::__construct();
+        $this->userService = $userService;
+        $this->middleware('auth');
     }
 
-    /**
-     * Prepara los datos del formulario (create/edit)
-     */
-    protected function prepareData(Request $request, ?User $item = null): array
+    public function index(Request $request)
     {
-        $data = $request->except(['password', 'password_confirmation']);
-        $currentProfile = $request->input('perfil', $item ? $item->perfil : null);
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
 
-        // 1. Manejo de Contraseña (Solo si se envía o si es nuevo)
-        if ($request->filled('password')) {
-            $data['password'] = Hash::make($request->input('password'));
-        } elseif (!$item) {
-            // Si es un nuevo registro y no hay contraseña (debería fallar la validación, pero por seguridad)
-            // Se asume que el frontend tiene validación
-        } else {
-            unset($data['password']);
+        if (!$user->canAccess('read', 51)) {
+            abort(403, 'No tiene permisos para acceder a este módulo.');
         }
 
-        // 2. Lógica de Asignación de id_cliente
-        if ($currentProfile === $this->perfilClienteName) {
-            // Perfil 'cliente': mantiene el id_cliente enviado por el formulario
-            // Si no se envía (y es requerido), la validación debe fallar.
-        } else {
-            $data['id_cliente'] = $this->defaultClienteId;
-        }
+        $clienteId = $user->cliente_id;
+        $stats = $this->userService->obtenerDashboardData($clienteId);
+        $usuarios = $this->userService->obtenerListaFiltrada($request->all(), $clienteId);
 
-        return $data;
+        return view('usuarios.index', array_merge($stats, ['usuarios' => $usuarios]));
     }
 
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index_adm()
     {
         // 1. Verificación de Permiso
         if (!auth()->user()->canAccess('read', $this->moduloIdUsuarios)) {
@@ -393,13 +371,7 @@ class UserController extends BaseController
         return response()->json(['status' => 'ok']);
     }
     
-    /**
-    * Muestra la vista para que el prospecto cambie su contraseña inicial.
-    */
-    public function showChangePassword()
-    {
-        return view('auth.passwords.change');     
-    }
+    
 
     /**
     * Procesa el cambio de contraseña.
@@ -407,19 +379,32 @@ class UserController extends BaseController
     public function updatePassword(Request $request)
     {
         $request->validate([
-            'password' => 'required|string|min:6|confirmed',
+            'password' => 'required|min:8|confirmed',
         ], [
             'password.confirmed' => 'Las contraseñas no coinciden.',
-            'password.min' => 'La clave debe tener al menos 6 caracteres.'
+            'password.min' => 'La contraseña debe tener al menos 8 caracteres.'
         ]);
 
         $user = Auth::user();
-        $user->password = bcrypt($request->password);
-        $user->must_change_password = 0; // Aquí le quitamos el candado
-        $user->save();
 
-        // Lo mandamos directo a que empiece a subir sus papeles
-        return redirect()->route('captacion.completar')
-                     ->with('success', 'Contraseña actualizada. Ahora puede completar su expediente.');
+        // 1. Actualizamos la contraseña y removemos el flag de cambio obligatorio
+        $this->userService->actualizarPasswordObligatorio($user->id, $request->password);
+
+        // 2. AUTOMATIZACIÓN PASO 1 -> 2
+        // Si el usuario es un cliente y está en el paso inicial de registro, lo movemos a carga de documentos
+        if ($user->id_perfil == 3 && $user->cliente && $user->cliente->registro_paso == 1) {
+            $user->cliente->update(['registro_paso' => 2]);
+        }
+
+        return redirect()->route('dashboard')->with('success', 'Contraseña actualizada correctamente. Acceso concedido.');
+    }
+
+    public function showChangePassword()
+    {
+        if (Auth::user()->must_change_password != 1) {
+            return redirect()->route('dashboard');
+        }
+
+        return view('auth.passwords.change');
     }
 }
