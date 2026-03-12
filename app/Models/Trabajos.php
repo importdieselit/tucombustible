@@ -9,7 +9,7 @@ class Trabajos extends Model
 {
     use HasFactory;
     protected $table = 'trabajos';
-    protected $primaryKey = 'id';
+    protected $primaryKey = 'id_trabajo';
     protected $fillable = [
         'id_orden',
         'id_categoria',

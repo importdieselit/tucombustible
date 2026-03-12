@@ -267,9 +267,9 @@ class OrdenController extends BaseController
 
      protected function applyBusinessFilters(Builder $query): Builder
     {
-        $filterKey = request()->get('filter'); // Usamos el helper global 'request()'
+        $filterKey = request()->get('filter');
         $vehiculoId = request()->get('vehiculo_id'); 
-        $startDate = request()->get('start_date'); // <-- Capturamos la fecha de inicio
+        $startDate = request()->get('start_date'); 
         $endDate = request()->get('end_date');  
 
         if ($vehiculoId && is_numeric($vehiculoId)) {
@@ -315,7 +315,36 @@ class OrdenController extends BaseController
         return $query; // Devolvemos el Query Builder modificado
     }
 
-    
+    public function finalizarTrabajo($id)
+    {
+        try {
+            $trabajo = Trabajos::findOrFail($id);
+            
+            if ($trabajo->finalizado) {
+                return response()->json(['success' => false, 'message' => 'Este trabajo ya fue cerrado.']);
+            }
+
+            $fechaInicio = $trabajo->fecha_inicio ? Carbon::parse($trabajo->fecha_inicio) : Carbon::parse($trabajo->created_at);
+            $fechaFin = now();
+            
+            // Calcular diferencia en formato humano o minutos
+            $minutos = $fechaInicio->diffInMinutes($fechaFin);
+            $horas = floor($minutos / 60);
+            $minRestantes = $minutos % 60;
+            $tiempoTexto = ($horas > 0) ? "{$horas}h {$minRestantes}m" : "{$minRestantes}min";
+
+            $trabajo->fecha_fin = $fechaFin;
+           // $trabajo->tiempo_ejecucion = $tiempoTexto; // Guardamos el string calculado
+            $trabajo->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Trabajo finalizado en: $tiempoTexto"
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
 
     /**
      * Muestra el listado de órdenes de trabajo.
@@ -430,8 +459,18 @@ class OrdenController extends BaseController
                 $ids = is_array($trabajo->id_mecanico) 
                     ? $trabajo->id_mecanico 
                     : explode(',', (string)$trabajo->id_mecanico);
-
+                if($trabajo->fecha_fin){
+                    $fechaInicio = Carbon::parse($trabajo->created_at);
+                    $fechaFin = Carbon::parse($trabajo->fecha_fin);
+                    $minutos = $fechaInicio->diffInMinutes($fechaFin);
+                    $horas = floor($minutos / 60);
+                    $minRestantes = $minutos % 60;
+                    $tiempoTexto = ($horas > 0) ? "{$horas}h {$minRestantes}m" : "{$minRestantes}min";
+                    $trabajo->tiempo_ejecucion = $tiempoTexto;
                 // Filtramos la colección que ya tenemos en memoria (sin ir a la base de datos otra vez)
+                }else{
+                    $trabajo->tiempo_ejecucion = null;
+                }
                 $trabajo->mecanicos_lista = $personalRelacionado->whereIn('id_personal', $ids)->values();
             });
             //dd($trabajos);            

@@ -401,6 +401,7 @@ Route::get('/reporte/vehiculos-disponibilidad', [VehiculoController::class, 'rep
         Route::post('/compras/cambiar-estatus', [OrdenController::class,'cambiarEstatus'])->name('compras.cambiar_estatus');
         Route::post('/get-tempario-servicios', [OrdenController::class, 'getTemparioServicios'])->name('get.tempario_servicios');
         Route::post('/ordenes/{id}/trabajos/add', [OrdenController::class, 'addTrabajo'])->name('ordenes.addTrabajo');
+        Route::post('/ordenes/trabajo/{id}/finalizar', [OrdenController::class, 'finalizarTrabajo'])->name('ordenes.trabajo.finalizar');
         Route::post('/ordenes/{id}/insumos/add', [OrdenController::class, 'addInsumo'])->name('ordenes.addInsumo');
         
         // Permisos y Perfiles

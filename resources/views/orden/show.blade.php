@@ -119,6 +119,15 @@
                                 <td class="ps-3">
                                     <div class="fw-bold">{{ $trabajo->descripcion }}</div>
                                     <div class="text-muted x-small text-uppercase">{{ $trabajo->tempario->categoria->categoria ?? 'General' }}</div>
+                                    @if(!is_null($trabajo->fecha_fin))
+                                        <span class="badge bg-success x-small">
+                                            <i class="fas fa-clock"></i> Terminado en: {{ $trabajo->tiempo_ejecucion }}
+                                        </span>
+                                    @else
+                                        <span class="badge bg-warning text-dark x-small animate__animated animate__flash animate__infinite">
+                                            En proceso...
+                                        </span>
+                                    @endif
                                 </td>
                                 <td>
                                     @foreach($trabajo->mecanicos_lista as $mec)
@@ -128,7 +137,12 @@
                                 <td>${{ number_format($trabajo->costo, 2) }}</td>
                                 <td class="text-end pe-3 no-print">
                                     @if($orden->estatus == 2 || $orden->estatus == 'ABIERTA')
-                                        <button class="btn btn-sm btn-link text-danger p-0 delete-item" data-type="trabajo" data-id="{{ $trabajo->id }}">
+                                            @if(is_null($trabajo->fecha_fin))
+                                                <button class="btn btn-sm btn-outline-success finish-work" data-id="{{ $trabajo->id_trabajo }}" title="Finalizar Trabajo">
+                                                    <i class="fas fa-check-circle"></i>
+                                                </button>
+                                            @endif
+                                        <button class="btn btn-sm btn-link text-danger p-0 delete-item" data-type="trabajo" data-id="{{ $trabajo->id_trabajo }}">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     @endif
@@ -590,6 +604,25 @@
         }).then((result) => {
             if (result.isConfirmed) {
                 apiCall(`/ordenes/supplies/receive/${insumoId}`, 'POST');
+            }
+        });
+    });
+
+    // Dentro de tu sección de scripts
+    $(document).on('click', '.finish-work', function() {
+        const trabajoId = $(this).data('id');
+        
+        Swal.fire({
+            title: '¿Finalizar este trabajo?',
+            text: "Se registrará el tiempo transcurrido desde la apertura.",
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#198754',
+            confirmButtonText: 'Sí, terminar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Usamos la ruta que definiremos en web.php
+                apiCall(`/ordenes/trabajo/${trabajoId}/finalizar`, 'POST');
             }
         });
     });
