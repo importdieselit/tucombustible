@@ -24,7 +24,6 @@ class ClienteRepository
     {
         $query = Cliente::query();
 
-        // Filtro de Búsqueda (RIF o Nombre)
         if (!empty($filtros['search'])) {
             $query->where(function($q) use ($filtros) {
                 $q->where('nombre', 'like', "%{$filtros['search']}%")
@@ -32,7 +31,6 @@ class ClienteRepository
             });
         }
 
-        // Filtro por Estatus (Opcional, si quieres ver solo Activos o solo en Proceso)
         if (!empty($filtros['status_filtro'])) {
             if ($filtros['status_filtro'] == 'activos') {
                 $query->where('registro_paso', 10);
@@ -56,16 +54,37 @@ class ClienteRepository
 
     public function avanzarPaso($clienteId, $nuevoPaso, array $extra = [])
     {
-        $cliente = Cliente::findOrFail($clienteId);
+        return DB::transaction(function () use ($clienteId, $nuevoPaso, $extra) {
+            $cliente = Cliente::findOrFail($clienteId);
 
-        if ($nuevoPaso == 10) {
-            $cliente->status = 1;
-        }
+            if ($nuevoPaso == 10) {
+                $cliente->status = 1;
+            }
 
-        $cliente->registro_paso = $nuevoPaso;
-        $cliente->save();
+            // SOLO actualizamos columnas que existen en la tabla 'clientes' según el DDL
+            if (isset($extra['cupo'])) {
+                $cliente->cupo = $extra['cupo'];
+                $cliente->disponible = $extra['disponible'] ?? $extra['cupo'];
+                
+                $tipoId = $extra['tipo_combustible_id'] ?? 1;
 
-        return $cliente;
+                // El tipo de combustible se maneja EXCLUSIVAMENTE en la tabla cliente_cupos
+                ClienteCupo::where('cliente_id', $clienteId)->delete();
+
+                ClienteCupo::create([
+                    'cliente_id'          => $clienteId,
+                    'tipo_combustible_id' => $tipoId,
+                    'litros_aprobados'    => $extra['cupo'],
+                    'litros_solicitados'  => $extra['cupo'],
+                    'disponible'          => $extra['disponible'] ?? $extra['cupo']
+                ]);
+            }
+
+            $cliente->registro_paso = $nuevoPaso;
+            $cliente->save();
+
+            return $cliente;
+        });
     }
 
     public function guardarDocumento(array $data)

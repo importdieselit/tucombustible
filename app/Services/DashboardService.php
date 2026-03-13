@@ -9,6 +9,11 @@ use App\Repositories\UserRepository;
 use App\Repositories\TankRepository;
 use App\Repositories\MaintenanceRepository;
 use App\Repositories\PurchaseRepository;
+use App\Models\Pedido;
+use App\Models\Cliente;
+use App\Models\ClienteCupo;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class DashboardService
 {
@@ -35,7 +40,7 @@ class DashboardService
     public function getDashboardData($user)
     {
         if ($user->id_perfil == 3) {
-            $cliente = $user->cliente;
+            $cliente = Cliente::find($user->cliente_id);
 
             if (!$cliente) {
                 return [
@@ -56,19 +61,66 @@ class DashboardService
                 ];
             }
 
-            $esPadre = ($cliente->parent == 0);
-            $sucursales = $esPadre ? $this->clientRepo->getSucursales($cliente->id) : collect();
+            // --- LÓGICA DE JERARQUÍA (FASE 3) ---
+            // Un cliente es padre si su columna 'parent' es 0 o NULL
+            $esPadre = ($cliente->parent == 0 || is_null($cliente->parent));
+            
+            // Si es padre, traemos sus sucursales con información de su progreso de registro
+            $sucursales = $esPadre 
+                ? Cliente::where('parent', $cliente->id)
+                    ->withCount('documentos')
+                    ->orderBy('nombre', 'asc')
+                    ->get() 
+                : collect();
+            
+            // Los IDs para el historial incluyen al padre y a todas sus sucursales vinculadas
+            $idsClientesParaHistorial = $esPadre 
+                ? $sucursales->pluck('id')->push($cliente->id)->toArray() 
+                : [$cliente->id];
+
+            // --- OBTENER PEDIDOS ---
+            $pedidos = Pedido::whereIn('cliente_id', $idsClientesParaHistorial)
+                ->with('cliente')
+                ->orderBy('created_at', 'desc')
+                ->paginate(10);
+
+            // --- LÓGICA DE KPIs CORREGIDA SEGÚN DDL ---
+            // Sumamos 'cantidad_solicitada' porque 'cantidad_aprobada' NO existe en pedidos
+            $consumidoTotal = (float) Pedido::whereIn('cliente_id', $idsClientesParaHistorial)
+                ->where('estado', 'completado')
+                ->sum('cantidad_solicitada');
+            
+            // Obtenemos el cupo real de la tabla cliente_cupos para mayor precisión
+            $cupoData = ClienteCupo::where('cliente_id', $cliente->id)->first();
+            $cupoAsignado = $cupoData ? (float)$cupoData->litros_aprobados : 0;
+            
+            // El disponible es el cupo total menos lo consumido en el mes (lógica dinámica)
+            $consumidoMesActual = Pedido::where('cliente_id', $cliente->id)
+                ->whereIn('estado', ['pendiente', 'aprobado', 'en_proceso', 'completado'])
+                ->whereMonth('created_at', Carbon::now()->month)
+                ->whereYear('created_at', Carbon::now()->year)
+                ->sum('cantidad_solicitada');
+
+            $disponible = $cupoAsignado - $consumidoMesActual;
+
+            $pedidosActivos = Pedido::whereIn('cliente_id', $idsClientesParaHistorial)
+                ->whereIn('estado', ['pendiente', 'aprobado', 'en_proceso'])
+                ->count();
 
             return [
                 'perfil'   => $esPadre ? 'cliente_padre' : 'cliente_sucursal',
                 'cliente'  => $cliente,
                 'es_padre' => $esPadre,
                 'sucursales' => $sucursales,
+                'pedidos'  => $pedidos,
                 'stats'    => [
-                    'consumo_mes' => 0, 
-                    'pedidos_activos' => 0,
+                    'cupo'            => $cupoAsignado,
+                    'disponible'      => $disponible < 0 ? 0 : $disponible,
+                    'consumido'       => $consumidoTotal,
+                    'pedidos_activos' => $pedidosActivos,
                     'sucursales_vinculadas' => $sucursales->count()
-                ]
+                ],
+                'chartData' => $this->getChartData($cliente->id)
             ];
         }
 
@@ -87,8 +139,30 @@ class DashboardService
         ];
     }
 
+    private function getChartData($clienteId)
+    {
+        $cupos = ClienteCupo::where('cliente_id', $clienteId)->get();
+        $data = [];
+        
+        foreach($cupos as $c) {
+            // CORRECCIÓN: 'deposito_id' en lugar de 'tipo_combustible_id' para match con tabla pedidos
+            $consumidoPorTipo = (float) Pedido::where('cliente_id', $clienteId)
+                ->where('estado', 'completado')
+                ->where('deposito_id', $c->tipo_combustible_id) 
+                ->sum('cantidad_solicitada');
+
+            $data[] = [
+                'name' => $c->tipo_combustible_id == 1 ? 'DIESEL' : 'MGO',
+                'consumido' => $consumidoPorTipo,
+                'disponible' => (float)($c->litros_aprobados - $consumidoPorTipo)
+            ];
+        }
+        return $data;
+    }
+
     public function getNombrePaso($paso)
     {
+        // Se accede a la constante del modelo Cliente
         return \App\Models\Cliente::PASOS_REGISTRO[$paso] ?? 'Estatus Pendiente';
     }
 }

@@ -3,7 +3,8 @@
 namespace App\Services;
 
 use App\Repositories\ClienteRepository;
-use Illuminate\Support\Facades\{DB, Hash, Storage};
+use App\Models\Cliente;
+use Illuminate\Support\Facades\{DB, Hash, Storage, Log};
 use Illuminate\Support\Str;
 
 class ClienteService
@@ -26,6 +27,19 @@ class ClienteService
             if (!empty($data['litros_mgo']) && $data['litros_mgo'] > 0) $servicios[] = 'MGO';
             $tipoServicioTexto = implode(' y ', $servicios);
 
+            // Determinar el parent_id basándose en el token_registro proporcionado
+            $parentId = 0;
+            if (isset($data['tipo_cliente']) && $data['tipo_cliente'] === 'sucursal' && !empty($data['token_padre'])) {
+                // Buscamos al padre usando la columna token_registro
+                $padre = Cliente::where('token_registro', strtoupper($data['token_padre']))->first();
+                
+                if (!$padre) {
+                    throw new \Exception("El código de empresa principal (Token) no es válido o no existe.");
+                }
+                $parentId = $padre->id;
+            }
+
+            // Crear el cliente con el parent_id (0 si es padre, ID del padre si es sucursal)
             $cliente = $this->repository->create([
                 'nombre'              => strtoupper($data['nombre']), 
                 'rif'                 => $rifOficial,
@@ -38,9 +52,11 @@ class ClienteService
                 'tipo_servicio'       => $tipoServicioTexto,
                 'registro_paso'       => 1,
                 'status'              => 0,
-                'token_registro'      => Str::random(40),
+                'parent'              => $parentId,
+                'token_registro'      => strtoupper(Str::random(10)), // Genera su propio token para futuras sucursales propias
             ]);
 
+            // Crear usuario asociado
             $this->repository->crearUsuario([
                 'name'                 => strtoupper($data['contacto']),
                 'email'                => $data['email'],
@@ -51,25 +67,30 @@ class ClienteService
                 'must_change_password' => 1
             ]);
 
-            if (!empty($data['litros_diesel']) && $data['litros_diesel'] > 0) {
-                $this->repository->registrarCupo([
-                    'cliente_id'          => $cliente->id,
-                    'tipo_combustible_id' => 1,
-                    'litros_solicitados'  => $data['litros_diesel'],
-                    'litros_aprobados'    => 0,
-                ]);
-            }
-
-            if (!empty($data['litros_mgo']) && $data['litros_mgo'] > 0) {
-                $this->repository->registrarCupo([
-                    'cliente_id'          => $cliente->id,
-                    'tipo_combustible_id' => 2,
-                    'litros_solicitados'  => $data['litros_mgo'],
-                    'litros_aprobados'    => 0,
-                ]);
-            }
-
             return $cliente;
+        });
+    }
+
+    public function registrarActivosAprobados($clienteId, array $placas, array $choferes)
+    {
+        return DB::transaction(function () use ($clienteId, $placas, $choferes) {
+            foreach ($placas as $placa) {
+                if (!empty($placa)) {
+                    DB::table('placas_vehiculos')->updateOrInsert(
+                        ['cliente_id' => $clienteId, 'placa' => strtoupper(str_replace(' ', '', $placa))],
+                        ['activo' => 1, 'updated_at' => now()]
+                    );
+                }
+            }
+
+            foreach ($choferes as $chofer) {
+                if (!empty($chofer['cedula']) && !empty($chofer['nombre'])) {
+                    DB::table('choferes_clientes')->updateOrInsert(
+                        ['cliente_id' => $clienteId, 'cedula' => $chofer['cedula']],
+                        ['nombre_completo' => strtoupper($chofer['nombre']), 'activo' => 1, 'updated_at' => now()]
+                    );
+                }
+            }
         });
     }
 
@@ -80,7 +101,6 @@ class ClienteService
             $fileName = "{$tipoDocumento}_" . time() . "." . $extension;
             $ruta = $file->storeAs("expedientes/{$clienteId}", $fileName, 'public');
 
-            // Solo guardamos el documento. NO avanzamos el paso aquí.
             return $this->repository->guardarDocumento([
                 'cliente_id'       => $clienteId,
                 'tipo_documento'   => $tipoDocumento,
@@ -94,17 +114,14 @@ class ClienteService
     public function enviarExpedienteARevision($clienteId)
     {
         return DB::transaction(function () use ($clienteId) {
-            // Contamos documentos distintos
             $conteo = \App\Models\Documento::where('cliente_id', $clienteId)
                         ->distinct('nombre_documento')
                         ->count();
 
-            // Validamos que estén los 12
             if ($conteo < 12) {
                 throw new \Exception("Expediente incompleto. Debe cargar los 12 documentos obligatorios antes de enviar a revisión.");
             }
 
-            // AHORA SÍ: El paso cambia a 3 SOLO cuando el cliente decide enviar
             return $this->repository->avanzarPaso($clienteId, 3);
         });
     }

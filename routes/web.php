@@ -5,7 +5,9 @@ use Illuminate\Support\Facades\Auth;
 
 // IMPORTACIÓN DE CONTROLADORES
 use App\Http\Controllers\Admin\ClienteController as AdminClienteController;
+use App\Http\Controllers\Admin\PedidoAdminController; 
 use App\Http\Controllers\ClienteController as PortalClienteController;
+use App\Http\Controllers\SucursalController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\{
     DashboardController, VehiculoController, MarcaController, ModeloController,
@@ -23,7 +25,7 @@ Auth::routes();
 Route::get('/', function () { return redirect()->route('login'); });
 
 /**
- * RECUPERACIÓN DE CONTRASEÑA (Flujo Directo reutilizando Cambio Obligatorio)
+ * RECUPERACIÓN DE CONTRASEÑA
  */
 Route::get('/password/reset', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
 Route::post('/password/reset/validar', [ForgotPasswordController::class, 'checkEmail'])->name('password.email.check');
@@ -40,21 +42,24 @@ Route::middleware(['auth'])->group(function () {
 
     /**
      * PASO 2: SEGURIDAD INICIAL (Cambio de Contraseña Obligatorio)
-     * Esta zona es accesible incluso si check.password está activo, 
-     * ya que es el destino del middleware.
      */
     Route::get('/password/change', [UserController::class, 'showChangePassword'])->name('password.change');
     Route::post('/password/update', [UserController::class, 'updatePassword'])->name('password.update');
 
     /**
-     * ACCESO CONTROLADO: Requiere haber cambiado la clave (must_change_password = 0)
+     * ACCESO CONTROLADO: Requiere haber cambiado la clave
      */
     Route::middleware(['check.password'])->group(function () {
 
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         /**
-         * MÓDULOS DE ADMINISTRACIÓN (Perfiles 1 y 2: Admin y Super)
+         * GESTIÓN DE ACTIVOS (PLACAS Y CHOFERES)
+         */
+        Route::post('/activos/asignar', [ClienteActivosController::class, 'asignarActivos'])->name('cliente.activos.asignar');
+
+        /**
+         * MÓDULOS DE ADMINISTRACIÓN (Perfiles 1: Superusuario y 2: Administrador)
          */
         Route::middleware(['role:1,2'])->group(function () {
             
@@ -63,10 +68,14 @@ Route::middleware(['auth'])->group(function () {
                 Route::get('/{id}/expediente', [AdminClienteController::class, 'show'])->name('show');
                 Route::post('/{id}/avanzar', [AdminClienteController::class, 'updatePaso'])->name('avanzar'); 
                 Route::post('/{id}/toggle-status', [AdminClienteController::class, 'toggleStatus'])->name('toggleStatus');
-                Route::post('/asignar-activos', [ClienteActivosController::class, 'asignarActivos'])->name('activos.asignar');
             });
 
-            // CRUDs MAESTROS Y RECURSOS
+            Route::prefix('admin-pedidos')->name('admin.pedidos.')->group(function () {
+                Route::get('/', [PedidoAdminController::class, 'index'])->name('index');
+                Route::post('/{id}/actualizar-estado', [PedidoAdminController::class, 'updateEstado'])->name('updateEstado');
+            });
+
+            // CRUDs MAESTROS
             $resourceControllers = [
                 'vehiculos'                   => VehiculoController::class,
                 'marcas'                      => MarcaController::class,
@@ -90,7 +99,6 @@ Route::middleware(['auth'])->group(function () {
                 Route::resource($prefix, $controller)->names($name);
             }
 
-            // Reportes y Herramientas Admin
             Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
             Route::get('/aforos', [AforoController::class, 'index'])->name('aforos.index');
             Route::get('/search', [SearchController::class, 'query'])->name('search');
@@ -104,16 +112,19 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/subir-documento', [PortalClienteController::class, 'uploadDoc'])->name('upload.doc');
             Route::post('/finalizar-carga', [PortalClienteController::class, 'finalizarCargaDocs'])->name('finalizar.paso2');
             Route::get('/mi-perfil', [PortalClienteController::class, 'perfil'])->name('perfil');
-            
-            // RUTA PARA DESCARGA DE PLANILLAS EN ZIP
             Route::get('/descargar-formatos', [PortalClienteController::class, 'descargarFormatos'])->name('descargar.formatos');
+            Route::post('/nueva-solicitud', [PedidoController::class, 'store'])->name('pedidos.store');
+
+            // RUTAS DE GESTIÓN DE SUCURSALES (FASE 3)
+            Route::prefix('sucursales')->name('sucursales.')->group(function () {
+                Route::post('/{id}/toggle', [SucursalController::class, 'toggleStatus'])->name('toggle');
+                Route::get('/{id}/expediente', [SucursalController::class, 'showExpediente'])->name('show');
+            });
         });
     });
 });
 
-/* |--------------------------------------------------------------------------
-| RUTAS PROVISIONALES - DESARROLLO LOCAL
-|-------------------------------------------------------------------------- */
+/* Rutas de Desarrollo */
 Route::middleware(['auth', 'check.password', 'role:1,2'])->group(function () {
     Route::get('/admin/principal-provisional', function() {
         return view('admin.dashboard_principal_provisional'); 

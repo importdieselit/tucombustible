@@ -40,10 +40,6 @@ class Cliente extends Model
     public function documentos() { return $this->hasMany(Documento::class, 'cliente_id'); }
     public function estado() { return $this->belongsTo(Estado::class, 'estado_id'); }
     public function ciudad() { return $this->belongsTo(Ciudad::class, 'ciudad_id'); }
-    
-    // Relación para obtener las sucursales vinculadas
     public function sucursales() { return $this->hasMany(Cliente::class, 'parent', 'id'); }
-    
-    // Relación para obtener el cliente principal (Padre)
     public function padre() { return $this->belongsTo(Cliente::class, 'parent', 'id'); }
 }

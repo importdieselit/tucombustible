@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Services\{ClienteService, DashboardService};
-use App\Models\{Estado, Ciudad};
+use App\Models\{Estado, Ciudad, Cliente};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Auth, File, Log};
 use ZipArchive;
@@ -31,7 +31,8 @@ class ClienteController extends Controller
         $rifCompleto = strtoupper($request->rif_tipo . '-' . $request->rif_numero);
         $request->merge(['rif' => $rifCompleto]);
 
-        $request->validate([
+        // Reglas de validación base
+        $rules = [
             'rif'                 => 'required|max:15|unique:clientes,rif', 
             'razon_social'        => 'required|string|max:255',
             'email'               => 'required|email|unique:users,email',
@@ -42,6 +43,17 @@ class ClienteController extends Controller
             'direccion_operativa' => 'required|string',
             'litros_diesel'       => 'nullable|numeric|min:0',
             'litros_mgo'          => 'nullable|numeric|min:0',
+        ];
+
+        // Validación condicional si es sucursal
+        if ($request->tipo_cliente === 'sucursal') {
+            $rules['token_padre'] = 'required|exists:clientes,token_registro';
+        }
+
+        $request->validate($rules, [
+            'token_padre.exists' => 'El Código de Empresa Principal (Token) ingresado no es válido.',
+            'token_padre.required' => 'Debe ingresar el Token de la empresa principal para vincular la sucursal.',
+            'rif.unique' => 'Este RIF ya se encuentra registrado en nuestro sistema.'
         ]);
 
         if ((!$request->litros_diesel || $request->litros_diesel <= 0) && 
@@ -52,7 +64,10 @@ class ClienteController extends Controller
         try {
             $datos = $request->all();
             $datos['nombre'] = $request->razon_social;
+            
+            // Pasamos los datos al Service que ya maneja la lógica de parentesco
             $this->clienteService->registrarCliente($datos);
+            
             return redirect()->route('login')->with('success', 'Registro exitoso. Ingrese con su RIF sin guiones.');
         } catch (\Exception $e) {
             return back()->withInput()->with('error', 'Error: ' . $e->getMessage());
@@ -74,14 +89,12 @@ class ClienteController extends Controller
             return view('cliente.en_proceso', compact('cliente'));
         }
 
+        // Se obtienen los datos procesados del DashboardService
         $data = $this->dashboardService->getDashboardData($user);
+        
         return view('cliente.index', $data);
     }
 
-    /**
-     * Genera y descarga un archivo ZIP con las planillas base.
-     * MEJORA: Escanea la carpeta completa para evitar errores por nombres de archivo específicos.
-     */
     public function descargarFormatos()
     {
         $zip = new ZipArchive;
@@ -95,20 +108,14 @@ class ClienteController extends Controller
         }
 
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
-            
-            // Obtenemos todos los archivos dentro de la carpeta sin importar el nombre
             $files = File::files($pathPlanillas);
-
             if (empty($files)) {
                 $zip->close();
                 return back()->with('error', 'No hay archivos disponibles para descargar en este momento.');
             }
-
             foreach ($files as $file) {
-                // Añadimos cada archivo usando su nombre real en el disco
                 $zip->addFile($file->getRealPath(), $file->getFilename());
             }
-            
             $zip->close();
         }
 
