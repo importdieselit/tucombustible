@@ -19,7 +19,7 @@ use App\Http\Controllers\{
 };
 
 /* --- Rutas Públicas y Auth --- */
-Auth::routes();
+Auth::routes(['reset' => false]);
 Route::get('/', function () { return redirect()->route('login'); });
 
 /**
@@ -63,6 +63,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/documentacion/vehiculos/', [VehiculoController::class, 'controlDocumentacion'])->name('vehiculos.documentacion');
     Route::post('vehiculos/acoplar', [VehiculoController::class, 'acoplar'])->name('vehiculos.acoplar');
     Route::get('/vehiculos/desacoplar/{id}', [VehiculoController::class, 'desacoplar'])->name('vehiculos.desacoplar');
+    Route::get('/inpeccion/index', [InspeccionController::class, 'index'])->name('inspeccion.index');
 
     Route::get('search/global', [SearchController::class, 'globalSearch'])->name('search.global');
 
@@ -172,12 +173,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/viajes/calendario', [ViajesController::class, 'calendar'])->name('viajes.calendario');
         Route::get('/viajes/mgo', [ViajesController::class, 'createMGO'])->name('viajes.mgo');
         Route::get('viajes/dashboard', [ViajesController::class, 'dashboard'])->name('viajes.dashboard');
-        Route::get('viaje/list', [ViajesController::class, 'list'])->name('viajes.list');
         Route::get('/viajes/{id}/assign', [ViajesController::class, 'assign'])->name('viajes.assign');
         Route::put('/viajes/{id}/assign', [ViajesController::class, 'processAssignment'])->name('viajes.processAssignment');    
         Route::get('viajes/{viaje}/viaticos/edit', [ViajesController::class, 'editViaticos'])->name('viajes.viaticos.edit');
         Route::put('viajes/{viaje}/viaticos', [ViajesController::class, 'updateViaticos'])->name('viajes.viaticos.update');
-        Route::delete('/viajes/{id}', [ViajesController::class, 'destroy'])->name('viajes.destroy');
+        Route::delete('/viajes/{id}', [ViajesController::class, 'destroy'])->name('viaje.destroy');
         Route::get('/viajes/{id}/edit', [ViajesController::class, 'edit'])->name('viaje.edit');
         Route::post('/viajes/mgo-store', [ViajesController::class, 'storeMGO'])->name('mgo.store');
         Route::put('/viajes/{id}/update-field', [ViajesController::class, 'updateField'])->name('viaje.update.field');
@@ -279,14 +279,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/descargar-formatos', [PortalClienteController::class, 'descargarFormatos'])->name('descargar.formatos');
         });
 
-        /* |--------------------------------------------------------------------------
-        | RUTAS PROVISIONALES - DESARROLLO LOCAL
-        |-------------------------------------------------------------------------- */
-        Route::middleware(['auth', 'check.password', 'role:1,2'])->group(function () {
-            Route::get('/admin/principal-provisional', function() {
-                return view('admin.dashboard_principal_provisional'); 
-            })->name('admin.dashboard_principal_provisional');
-        });
+       
     });
 });
 

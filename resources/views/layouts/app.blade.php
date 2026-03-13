@@ -80,28 +80,34 @@
 </head>
 <body class="bg-gray-50">
 
+    <div class="container-fluid">
     @php($isAuthPage = Request::routeIs(['login', 'logout', 'register', 'password.*']))
 
     @if (!$isAuthPage && Auth::check())
-        <x-layouts.sidebar />
-
-        <div class="md:ml-64 flex flex-col min-h-screen">
-            
+            <div class="container-fluid">
+                <div class="row">
+                    @php($user = Auth::user())
+                    @include('layouts.sidebar')
             @include('layouts.header')
 
-            <main class="flex-grow p-4">
-                @yield('content')
-                {{ $slot ?? '' }} {{-- Para componentes Livewire que usen layouts --}}
-            </main>
+                    <main class="col ms-sm-auto col-lg-12 px-md-4 py-4 z-1">
+                        @yield('content')
+                       {{ $slot ?? '' }} {{-- Para componentes Livewire que usen layouts --}}
+         
+                    </main>
+                </div>
+            </div>
+            @else 
 
-            @include('layouts.footer')
-        </div>
-    @else
-        <main class="container-fluid py-4">
-            @yield('content')
-        </main>
-    @endif
+                <!-- Si la ruta es login, logout, etc., solo se muestra el contenido principal -->
+                <main class="container-fluid py-4 z-1">
+                    @yield('content')
+                    {{ $slot ?? '' }} {{-- Para componentes Livewire que usen layouts --}}
+                </main>
+             @endif 
 
+
+   
     <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
         @foreach (['success', 'error', 'warning', 'info'] as $msg)
             @if(session($msg))
@@ -189,8 +195,7 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
     
-    @livewireScripts
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    @livewireScripts    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     @stack('scripts')
 
@@ -526,7 +531,6 @@
                 renderizarVehiculos(data);
             });
     }
-</script>
         // FUNCIÓN GLOBAL PARA RECHAZAR DOCUMENTOS
         function rechazarDocumento(id) {
             Swal.fire({

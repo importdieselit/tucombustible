@@ -19,7 +19,7 @@ class DashboardController extends Controller
         // 1. DASHBOARD PRINCIPAL (Admin / SuperUser)
         // Redirigimos antes de tocar cualquier Servicio
         if (in_array($user->id_perfil, [1, 2])) {
-            return redirect()->route('admin.dashboard_principal_provisional');
+            return redirect()->route('vehiculos.index');
         }
 
         /**

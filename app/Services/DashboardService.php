@@ -91,4 +91,5 @@ class DashboardService
     {
         return \App\Models\Cliente::PASOS_REGISTRO[$paso] ?? 'Estatus Pendiente';
     }
+    
 }

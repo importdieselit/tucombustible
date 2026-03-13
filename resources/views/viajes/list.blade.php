@@ -99,7 +99,7 @@
                                 <i class="fa fa-journal-text"></i> Resumen
                             </a>
                         @endif
-                        <form action="{{ route('viajes.destroy', $viaje->id) }}" method="POST" class="d-inline" id="delete-form-list-{{ $viaje->id }}">
+                        <form action="{{ route('viaje.destroy', $viaje->id) }}" method="POST" class="d-inline" id="delete-form-list-{{ $viaje->id }}">
                             @csrf
                             @method('DELETE')
                             <button type="button" class="btn btn-sm btn-danger" title="Eliminar Viaje" 
