@@ -29,13 +29,11 @@
                 <div class="row align-items-center">
                     <div class="col-md-6">
                         <label class="form-label fw-bold text-orange"><i class="fas fa-list-ul me-2"></i>Tipo de Requerimiento</label>
-                        <select name="tipo_orden_maestro" id="tipo_orden_maestro" class="form-select form-select-lg fw-bold border-orange">
-                            <option value="vehiculo" selected>🚜 REPARACIÓN / MANTT VEHÍCULO (INTERNO)</option>
-                            <option value="auxilio_vial">🚨 AUXILIO VIAL (RESCATE)</option>
-                            <option value="taller_externo">🛠️ ORDEN DE TALLER EXTERNO</option>
-                            <option value="servicios_generales">🏢 SERVICIOS GENERALES (SEDES/INFRA)</option>
-                            <option value="servicios_terceros">🔌 TRABAJOS A TERCEROS / EQUIPOS EXTERNOS</option>
-                        </select>
+                        <select name="id_tipo_req" id="id_tipo_req" class="form-select form-select-lg fw-bold border-orange">
+                           @foreach($tipo_req as $tipo)
+                                <option value="{{$tipo->id}}" >{{$tipo->tipo}}</option>
+                           @endforeach
+                          </select>
                     </div>
                     <div class="col-md-6 section-dinamica" id="group-sede" style="display:none;">
                         <label class="form-label fw-bold">Sede / Ubicación Administrativa</label>
@@ -62,7 +60,7 @@
                         {{-- BLOQUE VEHÍCULO (Condicional) --}}
                         <div class="section-dinamica mb-3" id="group-vehiculo">
                             <label for="id_vehiculo" class="form-label fw-bold">Vehículo / Unidad</label>
-                            <select class="form-select select2" id="id_vehiculo" name="id_vehiculo">
+                            <select class="form-select select2 h-100" style="height: 100px" id="id_vehiculo" name="id_vehiculo">
                                 <option value="">Buscar unidad...</option>
                                 @foreach ($vehiculos as $v)
                                     <option value="{{ $v->id }}" data-km="{{ $v->kilometraje }}">[{{ $v->flota }}] {{ $v->placa }}</option>
@@ -83,7 +81,10 @@
                                 <div class="input-group">
                                     <select name="id_taller_externo" class="form-select">
                                         <option value="">Seleccione Taller...</option>
-                                        {{-- Carga dinámica de talleres --}}
+                                        @foreach ($talleres as $t)
+                                            <option value="{{ $t->id }}">{{ $t->nombre }}</option>
+                                                                                    
+                                        @endforeach
                                     </select>
                                     <button type="button" class="btn btn-outline-dark"><i class="fas fa-plus"></i></button>
                                 </div>
@@ -337,38 +338,43 @@
 
 
 // --- 1. LÓGICA DEL ORQUESTADOR DINÁMICO ---
-    const $tipoMaestro = $('#tipo_orden_maestro');
+    const $tipoMaestro = $('#id_tipo_req');
     
     function adaptarFormulario() {
         const tipo = $tipoMaestro.val();
-        
+       
         // Reset inicial
         $('.section-dinamica, #subgroup-taller-ext').hide();
         $('#group-km').fadeIn(); // Mostrar por defecto, ocultar solo en infraestructura
         
         switch(tipo) {
-            case 'vehiculo':
+            case '1':
+                console.log('Tipo 1 seleccionado');
                 $('#group-vehiculo').fadeIn();
                 break;
                 
-            case 'auxilio_vial':
+            case '2':
+                console.log('Tipo 2 seleccionado');
                 $('#group-vehiculo, #group-ubicacion-externa').fadeIn();
                 $('#label-ubicacion').text('Ubicación del Auxilio (Punto de Falla)');
                 break;
                 
-            case 'taller_externo':
+            case '3':
+                console.log('Tipo 3 seleccionado');
                 $('#group-vehiculo, #group-ubicacion-externa, #subgroup-taller-ext').fadeIn();
                 $('#label-ubicacion').text('Datos del Taller Externo');
                 break;
                 
-            case 'servicios_generales':
+            case '4':
+                console.log('Tipo 4 seleccionado');
                 $('#group-sede, #group-ubicacion-externa, #group-km').toggle(); // Ocultamos KM en infra
                 $('#group-sede, #group-ubicacion-externa').fadeIn();
                 $('#label-ubicacion').text('Área / Oficina específica');
                 $('#group-km').hide();
                 break;
                 
-            case 'servicios_terceros':
+            case '5':
+                console.log('Tipo 5 seleccionado');
                 $('#group-ubicacion-externa').fadeIn();
                 $('#label-ubicacion').text('Ubicación / Cliente Final');
                 $('#group-km').hide();
@@ -385,7 +391,7 @@
         
         // Mapeo simple: vehiculo, auxilio y taller externo usan contexto 'vehiculo'
         // servicios_generales usa 'infraestructura', etc.
-        const contextoBuscado = (tipoMaestro === 'servicios_generales') ? 'infraestructura' : 'vehiculo';
+        const contextoBuscado = (tipoMaestro === 4) ? 2 : 1;
 
         $('#select-categoria option').each(function() {
             const optContext = $(this).data('context');

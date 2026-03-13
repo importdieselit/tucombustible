@@ -32,7 +32,9 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Models\TemparioCategoria;
 use App\Models\Trabajos;
 use App\Models\TemparioServicio;
+use App\Models\TipoRequerimiento;
 use Illuminate\Support\Facades\DB;
+use App\Models\Proveedor;
 
 
 class OrdenController extends BaseController
@@ -420,12 +422,14 @@ class OrdenController extends BaseController
         $categorias_tempario = TemparioCategoria::orderBy('categoria')->get();
         $servicios_tempario = TemparioServicio::orderBy('servicio')->get();
         $suministros = Inventario::orderBy('descripcion')->get();
+        $tipo_req= TipoRequerimiento::orderBy('tipo')->get();
+        $talleres = Proveedor::where('id_tipo_proveedor', 2)->orderBy('nombre')->get();
 
         $estatusOpciones = EstatusData::all()->keyBy('id_estatus');        
         if(!is_null($vehiculo_id)){
             $vehiculo = Vehiculo::findOrFail($vehiculo_id); 
         }
-        return view('orden.create', compact('vehiculo','vehiculos', 'personal','tipos', 'nro_orden','suministros','estatusOpciones', 'tipo_falla','categorias_tempario','servicios_tempario'));
+        return view('orden.create', compact('vehiculo', 'tipo_req','talleres', 'vehiculos', 'personal','tipos', 'nro_orden','suministros','estatusOpciones', 'tipo_falla','categorias_tempario','servicios_tempario'));
     }
 
     /**

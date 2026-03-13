@@ -15,6 +15,7 @@ class CreateTipoFalla extends Migration
     {
         Schema::create('tipo_falla', function (Blueprint $table) {
             $table->id();
+            $table->string('tipo_falla');
             $table->timestamps();
         });
     }

@@ -52,7 +52,9 @@ class Orden extends Model
         'responsable',
         'parent',
         'id_vehiculo',
-        'id_inspeccion'
+        'id_inspeccion',
+        'id_tipo_falla',
+        'id_tipo_req'
     ];
 
     protected $casts = [
@@ -143,6 +145,11 @@ class Orden extends Model
     public function suministros()
     {
         return $this->hasMany(InventarioSuministro::class, 'id_orden', 'id');
+    }
+
+    public function tipoRequerimiento()
+    {
+        return $this->belongsTo(TipoRequerimiento::class, 'tipo', 'id_tipo_req');
     }
 
 

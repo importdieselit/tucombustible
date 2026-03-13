@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddCategoriaToOrdenes extends Migration
+class CreateTipoProveedor extends Migration
 {
     /**
      * Run the migrations.
@@ -13,8 +13,10 @@ class AddCategoriaToOrdenes extends Migration
      */
     public function up()
     {
-        Schema::table('ordenes', function (Blueprint $table) {
-            $table->unsignedBigInteger('id_tipo_req')->nullable()->after('id_cliente');
+        Schema::create('tipo_proveedor', function (Blueprint $table) {
+            $table->id();
+            $table->string('tipo')->unique();
+            $table->timestamps();
         });
     }
 
@@ -25,8 +27,6 @@ class AddCategoriaToOrdenes extends Migration
      */
     public function down()
     {
-        Schema::table('ordenes', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('tipo_proveedor');
     }
 }
