@@ -367,8 +367,8 @@ class VehiculoController extends BaseController
         if ($filterKey) {
             switch ($filterKey) {
                 
-                case 'mantenimiento':
-                    $query->VehiculosEnMantenimiento();
+                case 'en_servicio':
+                    $query->enServicio();
                     break;
 
                 case 'documentos_alerta':
@@ -379,6 +379,10 @@ class VehiculoController extends BaseController
                     // Filtro genérico que solo aplica si Vehiculo tiene columna 'estatus'
                     $query->disponibles();
                     break;
+                case 'no_disponibles':
+                    $query->noDisponibles();
+                    break;
+                
                 case 'con_orden_abierta':
                     $query->VehiculosConOrdenAbierta();
                     break;

@@ -31,7 +31,7 @@
                         <label class="form-label fw-bold text-orange"><i class="fas fa-list-ul me-2"></i>Tipo de Requerimiento</label>
                         <select name="id_tipo_req" id="id_tipo_req" class="form-select form-select-lg fw-bold border-orange">
                            @foreach($tipo_req as $tipo)
-                                <option value="{{$tipo->id}}" >{{$tipo->tipo}}</option>
+                                <option value="{{$tipo->id}}" @if($tipo->id==1) selected @endif>{{$tipo->tipo}}</option>
                            @endforeach
                           </select>
                     </div>
