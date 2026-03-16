@@ -35,10 +35,10 @@
                            @endforeach
                           </select>
                     </div>
-                    <div class="col-md-6 section-dinamica" id="group-sede" style="display:none;">
+                    <div class="col-md-6" id="group-sede" >
                         <label class="form-label fw-bold">Sede / Ubicación Administrativa</label>
                         <select name="id_sede" class="form-select border-2">
-                            <option value="">Seleccione Sede...</option>
+                            <option value="1" selected>Principal - Boleita</option>
                             @foreach($sedes ?? [] as $sede)
                                 <option value="{{ $sede->id }}">{{ $sede->nombre }}</option>
                             @endforeach
@@ -73,7 +73,7 @@
                             <label class="form-label fw-bold" id="label-ubicacion">Ubicación del Trabajo</label>
                             <div class="input-group mb-2">
                                 <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
-                                <input type="text" name="ubicacion_detalle" class="form-control" placeholder="Ej: Carretera Nacional / Planta Cliente">
+                                <input type="text" name="descripcion_2" class="form-control" placeholder="Ej: Carretera Nacional / Planta Cliente">
                             </div>
                             
                             <div id="subgroup-taller-ext" style="display:none;">
@@ -152,7 +152,7 @@
                                     <option value="">Seleccione...</option>
                                     @foreach ($categorias_tempario as $cat)
                                         {{-- El backend debe proveer un 'contexto' para filtrar: vehiculo, infraestructura, etc --}}
-                                        <option value="{{ $cat->id_tempario_categoria }}" data-context="{{ $cat->contexto ?? 'vehiculo' }}">
+                                        <option value="{{ $cat->id_tempario_categoria }}" data-context="{{ $cat->id_tipo_req }}">
                                             [{{ $cat->codigo }}] {{ $cat->categoria }}
                                         </option>
                                     @endforeach
@@ -367,8 +367,8 @@
                 
             case '4':
                 console.log('Tipo 4 seleccionado');
-                $('#group-sede, #group-ubicacion-externa, #group-km').toggle(); // Ocultamos KM en infra
-                $('#group-sede, #group-ubicacion-externa').fadeIn();
+                $('#group-ubicacion-externa, #group-km').toggle(); // Ocultamos KM en infra
+                $('#group-ubicacion-externa').fadeIn();
                 $('#label-ubicacion').text('Área / Oficina específica');
                 $('#group-km').hide();
                 break;
@@ -388,18 +388,19 @@
     function filterTempario(tipoMaestro) {
         const $catSelect = $('#select-categoria');
         $catSelect.val(null).trigger('change');
-        
+        console.log('tipo maestro: '+ tipoMaestro);
         // Mapeo simple: vehiculo, auxilio y taller externo usan contexto 'vehiculo'
         // servicios_generales usa 'infraestructura', etc.
         const contextoBuscado = (tipoMaestro === 4) ? 2 : 1;
 
         $('#select-categoria option').each(function() {
             const optContext = $(this).data('context');
-            if (!optContext || optContext === contextoBuscado) {
-                $(this).prop('disabled', false);
-            } else {
-                $(this).prop('disabled', true);
-            }
+            console.log('context: '+ optContext);
+            // if (!optContext || optContext === contextoBuscado) {
+            //     $(this).prop('disabled', false);
+            // } else {
+            //     $(this).prop('disabled', true);
+            // }
         });
         if (typeof $.fn.select2 !== 'undefined') {
             $catSelect.select2(); 

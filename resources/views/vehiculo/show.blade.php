@@ -227,7 +227,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalKm" tabindex="-1">
+<div class="modal fade" id="modalKm" data-bs-backdrop="false" tabindex="-1">
     <div class="modal-dialog">
         <form action="#" method="POST" class="modal-content">
             @csrf @method('PATCH')
@@ -241,7 +241,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalAcoplar" tabindex="-1">
+<div class="modal fade" id="modalAcoplar" data-bs-backdrop="false" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content text-center p-4">
             <i class="fa-solid fa-link fa-3x text-info mb-3"></i>
