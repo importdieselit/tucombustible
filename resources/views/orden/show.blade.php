@@ -4,6 +4,7 @@
 
 @push('styles')
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 @endpush
 
 @section('content')
@@ -290,6 +291,24 @@
         </div>
     </div>
 </div>
+{{-- Sección de Ubicación Geográfica (Solo si hay coordenadas) --}}
+@if($orden->latitud && $orden->longitud)
+    <div class="card shadow-sm mb-4 no-print border-orange">
+        <div class="card-header bg-white py-2">
+            <h6 class="mb-0 text-uppercase fw-bold text-orange">
+                <i class="fas fa-map-marked-alt me-2"></i>Ubicación del Servicio
+            </h6>
+        </div>
+        <div class="card-body p-0">
+            <div id="map-show" style="height: 250px; width: 100%;"></div>
+            <div class="p-2 bg-light border-top">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i> Punto georeferenciado al momento de la creación.
+                </small>
+            </div>
+        </div>
+    </div>
+@endif
     {{-- FIRMAS --}}
     <div class="row mt-5 justify-content-around">
         <div class="col-auto">
@@ -421,6 +440,7 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
      $.ajaxSetup({
         headers: {
@@ -682,6 +702,38 @@
                 apiCall(`/ordenes/trabajo/${trabajoId}/finalizar`, 'POST');
             }
         });
+    });
+
+    $(document).ready(function() {
+        @if($orden->latitud && $orden->longitud)
+            const lat = {{ $orden->latitud }};
+            const lng = {{ $orden->longitud }};
+
+            // Inicialización con todas las interacciones desactivadas
+            const mapShow = L.map('map-show', {
+                center: [lat, lng],
+                zoom: 40,
+                dragging: false,        // No se puede arrastrar el mapa
+                zoomControl: true,     // No hay botones de zoom
+                scrollWheelZoom: true, // No zoom con el mouse
+                doubleClickZoom: false, // No zoom con doble click
+                boxZoom: false,
+                touchZoom: false,
+                attributionControl: false // Limpieza visual (tu marca corporativa)
+            });
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapShow);
+
+            // Marcador Naranja Corporativo (Estático)
+            const orangeIcon = L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41]
+            });
+
+            L.marker([lat, lng], { icon: orangeIcon }).addTo(mapShow);
+        @endif
     });
 </script>
 @endpush

@@ -55,7 +55,9 @@ class Orden extends Model
         'id_inspeccion',
         'id_tipo_falla',
         'id_tipo_req',
-        'id_sede'
+        'id_sede',
+        'latitud',
+        'longitud'
     ];
 
     protected $casts = [

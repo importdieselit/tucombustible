@@ -1,7 +1,9 @@
 @extends('layouts.app')
 
 @section('title', 'Crear Nueva Orden de Trabajo')
-
+@push('styles')
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+@endpush
 @section('content')
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 shadow-sm rounded">
@@ -73,8 +75,15 @@
                             <label class="form-label fw-bold" id="label-ubicacion">Ubicación del Trabajo</label>
                             <div class="input-group mb-2">
                                 <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
-                                <input type="text" name="descripcion_2" class="form-control" placeholder="Ej: Carretera Nacional / Planta Cliente">
+                                <input type="text" name="descripcion_2" id="input-direccion" class="form-control" placeholder="Ej: Carretera Nacional / Planta Cliente">
                             </div>
+                            {{-- Contenedor del Mapa --}}
+                            <div id="map"></div>
+                            <small class="text-muted">Puedes mover el marcador naranja para precisar la ubicación exacta.</small>
+
+                            {{-- Coordenadas ocultas --}}
+                            <input type="hidden" name="latitud" id="latitud">
+                            <input type="hidden" name="longitud" id="longitud">
                             
                             <div id="subgroup-taller-ext" style="display:none;">
                                 <label class="form-label small fw-bold mt-2">Taller Externo Responsable</label>
@@ -292,8 +301,9 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-
+    let map, marker;
     $.ajaxSetup({
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -310,9 +320,9 @@
                 theme: 'bootstrap-5',
                 
             });
-            console.log("Select2 cargado y listo");
+          //  console.log("Select2 cargado y listo");
         }else{                                                                                                                                                                                                                          
-            console.log("Esperando a que Select2 esté disponible...");
+            //console.log("Esperando a que Select2 esté disponible...");
         }
     }, 100); //
 
@@ -349,24 +359,20 @@
         
         switch(tipo) {
             case '1':
-                console.log('Tipo 1 seleccionado');
                 $('#group-vehiculo').fadeIn();
                 break;
                 
             case '2':
-                console.log('Tipo 2 seleccionado');
                 $('#group-vehiculo, #group-ubicacion-externa').fadeIn();
                 $('#label-ubicacion').text('Ubicación del Auxilio (Punto de Falla)');
                 break;
                 
             case '3':
-                console.log('Tipo 3 seleccionado');
                 $('#group-vehiculo, #group-ubicacion-externa, #subgroup-taller-ext').fadeIn();
                 $('#label-ubicacion').text('Datos del Taller Externo');
                 break;
                 
             case '4':
-                console.log('Tipo 4 seleccionado');
                 $('#group-ubicacion-externa, #group-km').toggle(); // Ocultamos KM en infra
                 $('#group-ubicacion-externa').fadeIn();
                 $('#label-ubicacion').text('Área / Oficina específica');
@@ -375,7 +381,6 @@
                 break;
                 
             case '5':
-                console.log('Tipo 5 seleccionado');
                 $('#group-ubicacion-externa').fadeIn();
                 $('#label-ubicacion').text('Ubicación / Cliente Final');
                 $('#group-km').hide().find('input').val(0);
@@ -384,20 +389,25 @@
         }
 
         filterTempario(tipo);
+
+        if (['2', '3', '5'].includes(tipo)) {
+                setTimeout(() => {
+                    initMap();
+                    map.invalidateSize(); // Forzar renderizado correcto si estaba oculto
+                }, 300);
+            }
     }
 
     // Filtrado de categorías basado en el contexto
     function filterTempario(tipoMaestro) {
         const $catSelect = $('#select-categoria');
         $catSelect.val(null).trigger('change');
-        console.log('tipo maestro: '+ tipoMaestro);
         // Mapeo simple: vehiculo, auxilio y taller externo usan contexto 'vehiculo'
         // servicios_generales usa 'infraestructura', etc.
         const contextoBuscado = (tipoMaestro === 4) ? 2 : 1;
 
         $('#select-categoria option').each(function() {
             const optContext = $(this).data('context');
-            console.log('context: '+ optContext);
             // if (!optContext || optContext === contextoBuscado) {
             //     $(this).prop('disabled', false);
             // } else {
@@ -648,6 +658,119 @@
                 }
             });
         });
+
+        function initMap() {
+            if (map) return; // Evitar reinicialización
+
+            // Coordenadas iniciales (puedes ajustarlas a tu sede principal)
+            const initialLat = 10.487836; 
+            const initialLng = -66.823308;
+
+            // Definimos los límites aproximados del país (Sur, Oeste, Norte, Este)
+            const southWest = L.latLng(0.5, -73.5);
+            const northEast = L.latLng(13.0, -59.5);
+            const bounds = L.latLngBounds(southWest, northEast);
+
+            map = L.map('map',
+                {
+                    attributionControl: false,
+                    maxBounds: bounds,         // El usuario no puede salirse de Venezuela
+                    maxBoundsViscosity: 1.0
+                }).setView([initialLat, initialLng], 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+               // attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Icono Personalizado (Naranja Corporativo)
+            const orangeIcon = L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            });
+
+            marker = L.marker([initialLat, initialLng], {
+                draggable: true,
+                icon: orangeIcon,
+                autoPan: true,           
+                autoPanPadding: [50, 50], 
+                autoPanSpeed: 10
+            }).addTo(map);
+
+            // --- OPCIÓN 1: CLICK COLOCA EL MARCADOR ---
+            map.on('click', function(e) {
+                const { lat, lng } = e.latlng;
+                marker.setLatLng([lat, lng]);
+                map.panTo([lat, lng]);
+                updateCoords(lat, lng);
+                obtenerDireccion(lat, lng);
+            });
+
+            // --- OPCIÓN 2: ARRASTRAR EL MARCADOR ---
+            marker.on('dragend', function(e) {
+                const position = marker.getLatLng();
+                map.panTo(position);
+                updateCoords(position.lat, position.lng);
+                obtenerDireccion(position.lat, position.lng);
+            });
+        }
+
+        function updateCoords(lat, lng) {
+            $('#latitud').val(lat);
+            $('#longitud').val(lng);
+        }
+
+        // Buscador simple integrado al input de dirección
+        $('#input-direccion').on('change', function() {
+            const $input = $(this);
+            const $icon = $input.siblings('.input-group-text').find('i');   
+            const query = $input.val();
+            $icon.removeClass('fa-map-marker-alt').addClass('fa-spinner fa-spin');
+            if (query.length < 5) return;
+
+            $.getJSON(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&countrycodes=ve`, function(data) {
+                if (data && data.length > 0) {
+                    const lat = data[0].lat;
+                    const lon = data[0].lon;
+                    
+                    map.flyTo([lat, lon], 16);
+                    marker.setLatLng([lat, lon]);
+                    $icon.removeClass('fa-spinner fa-spin').addClass('fa-map-marker-alt');
+                    updateCoords(lat, lon);
+                } else {
+                    // --- VENTANA DE NO RESULTADOS (Imagen Corporativa) ---
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'info',
+                        title: 'Ubicación no encontrada',
+                        text: 'Intente con términos más generales (Ej: Calle, Ciudad)',
+                        showConfirmButton: false,
+                        timer: 4000,
+                        timerProgressBar: true,
+                        didOpen: (toast) => {
+                            toast.addEventListener('mouseenter', Swal.stopTimer)
+                            toast.addEventListener('mouseleave', Swal.resumeTimer)
+                        }
+                    });
+
+                    // Devolver el focus y limpiar/seleccionar el texto para reintentar
+                    $input.focus().select();
+                }
+            });
+        });
+
+        function obtenerDireccion(lat, lon) {
+            $.getJSON(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`, function(data) {
+                if (data && data.display_name) {
+                    $('#input-direccion').val(data.display_name);
+                }
+            });
+        }
+       
     });
 </script>
 @endpush    
