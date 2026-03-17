@@ -16,6 +16,7 @@ class AddIdOrdenToTrabajos extends Migration
         Schema::table('trabajos', function (Blueprint $table) {
             $table->integer('id_orden')->nullable();
             $table->integer('id_tempario_servicio')->nullable();
+            $table->integer('id_categoria')->nullable();
         });
     }
 
@@ -29,6 +30,7 @@ class AddIdOrdenToTrabajos extends Migration
         Schema::table('trabajos', function (Blueprint $table) {
             $table->dropColumn('id_orden');
             $table->dropColumn('id_tempario_servicio');
+            $table->dropColumn('id_categoria');
         });
     }
 }
