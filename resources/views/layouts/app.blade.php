@@ -91,8 +91,6 @@
 
                     <main class="col ms-sm-auto col-lg-12 px-md-4 py-4 z-1">
                         @yield('content')
-                       {{ $slot ?? '' }} {{-- Para componentes Livewire que usen layouts --}}
-         
                     </main>
                 </div>
             </div>
@@ -101,7 +99,6 @@
                 <!-- Si la ruta es login, logout, etc., solo se muestra el contenido principal -->
                 <main class="container-fluid py-4 z-1">
                     @yield('content')
-                    {{ $slot ?? '' }} {{-- Para componentes Livewire que usen layouts --}}
                 </main>
              @endif 
 

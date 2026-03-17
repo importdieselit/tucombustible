@@ -8,7 +8,17 @@
 
 @section('content')
 <div class="container-fluid py-3">
-    
+    {{-- Alerta de Habilitación Especial --}}
+@if($orden->estatus == 2 && $orden->vehiculoBelong->estatus == 1)
+    <div class="alert alert-warning border-orange shadow-sm d-flex align-items-center animate__animated animate__fadeIn" role="alert">
+        <i class="fas fa-exclamation-triangle fs-4 me-3 text-orange"></i>
+        <div>
+            <strong class="text-uppercase">Unidad en Habilitación Especial:</strong> 
+            Esta unidad ha sido marcada como <b>DISPONIBLE</b> para operaciones, pero mantiene esta Orden de Trabajo abierta por tareas no críticas.
+            <br><small class="text-muted">Motivo: {{ $orden->ultimo_motivo_habilitacion ?? 'No especificado' }}</small>
+        </div>
+    </div>
+@endif
     {{-- BARRA DE HERRAMIENTAS DINÁMICA --}}
     <div class="d-flex justify-content-between align-items-center mb-4 no-print bg-white p-3 rounded shadow-sm">
         <div>
@@ -32,6 +42,9 @@
                 </a>
                 <button id="cerrar-orden" class="btn btn-sm btn-success fw-bold">
                     <i class="fas fa-check-double"></i> CERRAR
+                </button>
+                <button id="habilitar-unidad" class="btn btn-sm btn-outline-warning fw-bold">
+                    <i class="fas fa-truck-loading"></i> HABILITAR UNIDAD
                 </button>
                 <button id="anular-orden" class="btn btn-sm btn-danger">
                     <i class="fas fa-times-circle"></i> CANCELAR
@@ -142,6 +155,7 @@
                                                     <i class="fas fa-check-circle"></i>
                                                 </button>
                                             @endif
+                                            
                                         <button class="btn btn-sm btn-link text-danger p-0 delete-item" data-type="trabajo" data-id="{{ $trabajo->id_trabajo }}">
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -448,15 +462,58 @@
         }
 
         // Eventos de Botones de Estado
+        // --- VALIDACIÓN PARA CERRAR ORDEN ---
         if(document.getElementById('cerrar-orden')){
             document.getElementById('cerrar-orden').addEventListener('click', () => {
+                // Contamos trabajos que NO tienen fecha_fin (usando el badge de 'En proceso' como referencia)
+                const trabajosPendientes = document.querySelectorAll('.badge.bg-warning.animate__flash').length;
+
+                if (trabajosPendientes > 0) {
+                    Swal.fire({
+                        title: '<span style="color: #d33;">TRABAJOS PENDIENTES</span>',
+                        html: `No puedes cerrar la orden porque aún hay <b>${trabajosPendientes}</b> tarea(s) en proceso.<br><br>Finaliza todos los trabajos antes de proceder.`,
+                        icon: 'error',
+                        confirmButtonColor: '#e67e22',
+                        confirmButtonText: 'ENTENDIDO'
+                    });
+                    return;
+                }
+
+                // Si no hay pendientes, procede al cierre normal
                 Swal.fire({
-                    title: '¿Cerrar Orden?',
-                    text: "Se generará la hoja técnica final.",
+                    title: '¿Confirmar Cierre Técnico?',
+                    text: "Se generará el histórico y la unidad quedará disponible.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#198754',
+                    cancelButtonColor: '#343a40',
+                    confirmButtonText: 'SÍ, CERRAR ORDEN'
+                }).then((r) => r.isConfirmed && apiCall(`/ordenes/${orderId}/cerrar`));
+            });
+        }
+
+        // --- LÓGICA DE HABILITACIÓN ESPECIAL ---
+        if(document.getElementById('habilitar-unidad')){
+            document.getElementById('habilitar-unidad').addEventListener('click', () => {
+                Swal.fire({
+                    title: '<span style="color: #e67e22;">HABILITACIÓN ESPECIAL</span>',
+                    html: `Esta acción permite que el vehículo <b>{{ $orden->vehiculoBelong->flota }}</b> pueda ser asignado a rutas aunque esta orden siga abierta.`,
+                    input: 'textarea',
+                    inputPlaceholder: 'Indique el motivo de la habilitación (ej: Repuesto en camino, trabajo no crítico)...',
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonText: 'Sí, cerrar'
-                }).then((r) => r.isConfirmed && apiCall(`/ordenes/${orderId}/cerrar`));
+                    confirmButtonColor: '#e67e22',
+                    cancelButtonColor: '#343a40',
+                    confirmButtonText: 'CONFIRMAR HABILITACIÓN',
+                    cancelButtonText: 'CANCELAR',
+                    inputValidator: (value) => {
+                        if (!value) return '¡Es obligatorio indicar un motivo!';
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        apiCall(`/ordenes/${orderId}/habilitar-unidad`, 'POST', { motivo: result.value });
+                    }
+                });
             });
         }
 

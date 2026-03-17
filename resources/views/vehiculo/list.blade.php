@@ -132,7 +132,6 @@
                 <tbody>
                     @foreach ($data as $index => $vehiculo)
                      @php $orden=false; @endphp
-                     @if($vehiculo->estatus==3 || $vehiculo->estatus ==5)
                         @php
 
                             $orden=App\Models\Orden::where('id_vehiculo',$vehiculo->id)->where('estatus',2)->get()->first();
@@ -141,7 +140,6 @@
                                 $duracionDias = Illuminate\Support\Carbon::parse($fecha)->diffInDays(Illuminate\Support\Carbon::parse(now()));
                             }
                             @endphp
-                        @endif
                     <tr class="clickable-row" @if($orden && $duracionDias>3) style="border: none red !important; font-weight: bold;" @endif  data-id="{{ $vehiculo->id }}">
                         <td>{{ $index + 1 }}</td>
                         <td>{{ $vehiculo->flota ?? 'N/A' }}</td>
@@ -194,12 +192,23 @@
                                 @if($orden)
                                  <a href="/ordenes/{{$orden->id}} " style="decoration:none; cursor: pointer;" target="_blank" >   
                                 @endif
-                                <span class="badge bg-{{ $estatusInfo->css }}" title="{{ $estatusInfo->descripcion }}">
-                                    <i class="mr-1 fa-solid {{ $estatusInfo->icon_auto }}"></i>
-                                    {{ $estatusInfo->auto }}
-                                </span>
+                                    @php
+                                        // Lógica para determinar si mostrar el badge dual
+                                        $isHabilitadoAbierto = ($vehiculo->estatus == 1 && $orden);
+                                    @endphp
+                                    @if($isHabilitadoAbierto)
+                                        <span class="badge badge-dual-status" title="Unidad Habilitada con Tareas Pendientes">
+                                            <i class="fa-solid fa-truck-fast"></i>
+                                            DISPONIBLE / PENDIENTE
+                                        </span>
+                                    @else
+                                        <span class="badge bg-{{ $estatusInfo->css }}" title="{{ $estatusInfo->descripcion }}">
+                                            <i class="mr-1 fa-solid {{ $estatusInfo->icon_auto }}"></i>
+                                            {{ $estatusInfo->auto }}
+                                        </span>
+                                    @endif
                                 @if($orden)
-                                </a> 
+                                    </a> 
                                 @endif
                             @else
                                 <span class="badge bg-gray">Desconocido</span>

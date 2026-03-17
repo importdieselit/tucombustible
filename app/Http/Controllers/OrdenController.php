@@ -968,6 +968,40 @@ class OrdenController extends BaseController
         return response($output);
     }
 
+    public function verificarOrdenAbierta($id)
+    {
+        // Buscamos una orden que no esté cerrada ni anulada para ese vehículo
+        $orden = Orden::where('id_vehiculo', $id)
+                    ->whereIn('estatus', [2, 3]) // Ajusta según tus IDs de estatus
+                    ->first();
+
+        if ($orden) {
+            return response()->json([
+                'existe' => true,
+                'url' => route('ordenes.show', $orden->id),
+                'nro_orden' => $orden->nro_orden
+            ]);
+        }
+
+        return response()->json(['existe' => false]);
+    }
+
+    public function habilitarUnidad(Request $request, $id)
+    {
+        $orden = Orden::findOrFail($id);
+        
+        // Cambiamos el estatus del VEHÍCULO a disponible, pero la ORDEN sigue abierta (estatus 2)
+        $vehiculo = $orden->vehiculoBelong;
+        $vehiculo->estatus = 1; // Disponible O el ID/texto que uses para disponibilidad
+        $vehiculo->save();
+
+        // Registramos el motivo en las observaciones de la orden
+        $orden->descripcion .= "\n\n[UNIDAD HABILITADA SIN CERRAR ORDEN - Motivo: " . $request->motivo . "]";
+        $orden->save();
+
+        return response()->json(['success' => true, 'message' => 'La unidad ha sido marcada como DISPONIBLE.']);
+    }
+
      public function reactivarOrden(Request $request, $id)
     {
         try {

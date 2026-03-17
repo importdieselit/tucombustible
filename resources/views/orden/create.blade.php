@@ -370,14 +370,16 @@
                 $('#group-ubicacion-externa, #group-km').toggle(); // Ocultamos KM en infra
                 $('#group-ubicacion-externa').fadeIn();
                 $('#label-ubicacion').text('Área / Oficina específica');
-                $('#group-km').hide();
+                $('#group-km').hide().find('input').val(0);
+                $('#id_vehiculo').val(null).trigger('change');
                 break;
                 
             case '5':
                 console.log('Tipo 5 seleccionado');
                 $('#group-ubicacion-externa').fadeIn();
                 $('#label-ubicacion').text('Ubicación / Cliente Final');
-                $('#group-km').hide();
+                $('#group-km').hide().find('input').val(0);
+                $('#id_vehiculo').val(null).trigger('change');
                 break;
         }
 
@@ -596,6 +598,55 @@
                 trabajosAsignados = [];
                 renderTrabajos();
             }
+        });
+
+        // --- VALIDACIÓN DE ORDEN ABIERTA AL SELECCIONAR VEHÍCULO ---
+        $('#id_vehiculo').on('change', function() {
+            const vehiculoId = $(this).val();
+            const kmVehiculo = $(this).find(':selected').data('km');
+
+            if (!vehiculoId) return;
+
+            // Sincronizar el kilometraje automáticamente (ya que lo tienes en el data-km)
+            if(kmVehiculo) {
+                $('#kilometraje').val(kmVehiculo);
+            }
+
+            // Consultar si tiene órdenes abiertas
+            $.ajax({
+                url: `/vehiculos/${vehiculoId}/orden-abierta`,
+                method: 'GET',
+                success: function(response) {
+                    if (response.existe) {
+                        Swal.fire({
+                            title: '<span style="color: #e67e22;">¡ATENCIÓN: ORDEN ACTIVA!</span>',
+                            html: `
+                                <div class="text-start p-3 border rounded bg-light">
+                                    <p class="mb-2">La unidad ya posee una orden de trabajo sin cerrar:</p>
+                                    <ul class="small mb-0">
+                                        <li><b>Nro. Orden:</b> ${response.nro_orden}</li>
+                                        <li><b>Fecha Apertura:</b> ${response.fecha}</li>
+                                    </ul>
+                                </div>
+                                <p class="mt-3 small text-muted">¿Desea gestionar la orden existente o crear una nueva de todos modos?</p>`,
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#e67e22', // Tu Naranja Corporativo
+                            cancelButtonColor: '#343a40',  // Gris Oscuro (Corporate)
+                            confirmButtonText: '<i class="fas fa-external-link-alt me-2"></i> IR A LA ORDEN',
+                            cancelButtonText: '<i class="fas fa-plus me-2"></i> CREAR OTRA',
+                            reverseButtons: true
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = response.url;
+                            }
+                        });
+                    }
+                },
+                error: function() {
+                    console.error("Error al verificar estado del vehículo");
+                }
+            });
         });
     });
 </script>
