@@ -55,15 +55,15 @@ Route::middleware(['auth'])->group(function () {
     
      // Inspecciones y Vehículos
     Route::get('/marcas/get-modelos', [MarcaController::class, 'getModelos'])->name('marcas.getModelos');
-    Route::get('/vehiculos/inspeccion/{vehiculo_id}/{tipo}', [InspeccionController::class, 'create'])->name('inspeccion.create');
+    Route::get('/vehiculos/inspeccion/{vehiculo_id}/{tipo}', [InspeccionController::class, 'create'])->name('inspecciones.create');
     Route::put('vehiculos/updatev/{id}', [VehiculoController::class, 'updatev'])->name('vehiculos.updatev');
-    Route::get('/inspecciones/{inspeccion_id}/pdf', [InspeccionController::class, 'exportPdf'])->name('inspeccion.pdf');
+    Route::get('/inspecciones/{inspeccion_id}/pdf', [InspeccionController::class, 'exportPdf'])->name('inspecciones.pdf');
     Route::get('/reporte/vehiculos-disponibilidad', [VehiculoController::class, 'reporteDisponibilidad'])->name('vehiculos.reporte.disponibilidad');
     Route::get('/vehiculos/report/pdf', [VehiculoController::class, 'reportPdf'])->name('vehiculos.report.pdf');
     Route::get('/documentacion/vehiculos/', [VehiculoController::class, 'controlDocumentacion'])->name('vehiculos.documentacion');
     Route::post('vehiculos/acoplar', [VehiculoController::class, 'acoplar'])->name('vehiculos.acoplar');
     Route::get('/vehiculos/desacoplar/{id}', [VehiculoController::class, 'desacoplar'])->name('vehiculos.desacoplar');
-    Route::get('/inpeccion/index', [InspeccionController::class, 'index'])->name('inspeccion.index');
+    Route::get('/inpeccion/index', [InspeccionController::class, 'index'])->name('inspecciones.index');
 
     Route::get('search/global', [SearchController::class, 'globalSearch'])->name('search.global');
 

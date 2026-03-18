@@ -218,7 +218,7 @@
         submitBtn.textContent = 'Guardando...';
 
         try {
-            const response = await fetch('{{ route('inspeccion.store') }}', {
+            const response = await fetch('{{ route('inspecciones.store') }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -336,7 +336,7 @@ class ModulosTableSeeder extends Seeder
                 'id_padre' => 0,
                 'modulo' => 'Cheklist',
                 'orden' => 0,
-                'ruta' => 'inspeccion.index',
+                'ruta' => 'inspecciones.index',
                 'updated_at' => NULL,
                 'url_directa' => 1,
                 'visible' => 1,
