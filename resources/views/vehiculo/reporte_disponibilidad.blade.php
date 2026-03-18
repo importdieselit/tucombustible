@@ -62,10 +62,12 @@
                             </div>
                             <div>
                                 <div class="fw-bold">{{ $c->flota }}</div>
+                                @if($c->tipo==3)
                                 @if($c->acoplado_id)
                                 <div class="small text-primary fw-bold">Acoplado: {{ $c->cisternaAcoplada->flota }}</div>
                                 @else
                                 <div class="small text-muted italic">Sin cisterna</div>
+                                @endif
                                 @endif
                             </div>
                         </div>
