@@ -71,6 +71,7 @@ class Personal extends Model
         'estatus' => 'integer',
         'dependencia' => 'integer',
         'jefe_taller' => 'integer',
+        'id_persona' => 'integer'
     ];
 
     /**

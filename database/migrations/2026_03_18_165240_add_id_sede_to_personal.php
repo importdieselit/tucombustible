@@ -15,6 +15,7 @@ class AddIdSedeToPersonal extends Migration
     {
         Schema::table('personal', function (Blueprint $table) {
             $table->integer('id_sede')->nullable();
+            $table->integer('id_persona')->nullable();
         });
     }
 
@@ -27,6 +28,7 @@ class AddIdSedeToPersonal extends Migration
     {
         Schema::table('personal', function (Blueprint $table) {
             $table->dropColumn('id_sede');
+            $table->dropColumn('id_persona');
         });
     }
 }
