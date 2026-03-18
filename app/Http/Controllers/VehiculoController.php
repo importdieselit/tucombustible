@@ -579,7 +579,7 @@ class VehiculoController extends BaseController
     $porcentajeDisponibilidad = $total > 0 ? round(($operativosCount / $total) * 100) : 0;
     $ligero=Vehiculo::misVehiculos()->with(['tipoVehiculo', 'ordenActiva'])->where('tipo', 6)->get();
     // Clasificación para el cuerpo del reporte
-    $chutosOperativos = $data->where('tipoVehiculo.tipo', 'CHUTO')->where('estatus', 1);
+    $chutosOperativos = $data->whereIn('tipoVehiculo.tipo', ['CHUTO', 'CAMION'])->where('estatus', 1);
     $chutosFalla = $data->where('tipoVehiculo.tipo', 'CHUTO')->where('estatus', '!=', 1);
     $cisternasFalla = $data->whereIn('tipoVehiculo.tipo', ['CISTERNA', 'CAMION CISTERNA'])->where('estatus', '!=', 1);
     $camionesFalla = $data->where('tipoVehiculo.tipo', 'CAMION')->where('estatus', '!=', 1);
