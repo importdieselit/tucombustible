@@ -55,7 +55,7 @@
             ],
             [
                 'label' => 'No Disponibles',
-                'val' => ($total_flota ?? 0) - ($unidades_disponibles ?? 0),
+                'val' => $unidades_no_disponibles ?? 0,
                 'sub' => 'Fuera de operación',
                 'icon' => 'fa-ban',
                 'color' => 'corporate-emphasis', // Aplicamos el gris oscuro corporativo

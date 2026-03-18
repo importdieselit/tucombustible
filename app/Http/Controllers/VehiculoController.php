@@ -176,6 +176,7 @@ class VehiculoController extends BaseController
         $unidades_con_orden_abierta = Vehiculo::VehiculosConOrdenAbierta()->count();
         $unidades_en_mantenimiento = Vehiculo::countVehiculosEnMantenimiento();
         $unidades_disponibles = Vehiculo::Disponibles()->count();
+        $unidades_no_disponibles = Vehiculo::NoDisponibles()->count();
         $unidades_en_servicio = Vehiculo::EnServicio()->count();
         $historicoEficiencia = ResumenDiario::where('fecha', '>=', now()->subDays(15))->orderBy('fecha')->get()->toArray();
         $mantenimientos = MantenimientoProgramado::with('vehiculo')
@@ -303,6 +304,7 @@ class VehiculoController extends BaseController
             'unidades_en_mantenimiento'    => $unidades_en_mantenimiento,
             'unidades_disponibles'         => $unidades_disponibles,
             'unidades_en_servicio'         => $unidades_en_servicio,
+            'unidades_no_disponibles'      => $unidades_no_disponibles,
             'historicoEficiencia' => $historicoEficiencia,
             'mantenimientos'      => $mantenimientos,
             'eficienciaActual'    => $eficienciaActual,

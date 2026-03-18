@@ -62,7 +62,7 @@ class Personal extends Model
     /**
      * Los atributos que deben ser convertidos a tipos nativos.
      *
-     * @var array
+     * @var array   
      */
     protected $casts = [
         // 'fecha_in' => 'date', // Laravel puede manejar la conversión si el formato es estándar
