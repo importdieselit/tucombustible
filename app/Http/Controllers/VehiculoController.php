@@ -571,7 +571,7 @@ class VehiculoController extends BaseController
     public function reporteDisponibilidad()
 {
     $today = now();
-    $data = Vehiculo::with(['tipoVehiculo', 'cisternaAcoplada', 'ordenActiva'])->get();
+    $data = Vehiculo::misVehiculos()->with(['tipoVehiculo', 'cisternaAcoplada', 'ordenActiva'])->get();
 
     $total = $data->count();
     $operativosCount = $data->where('estatus', 1)->count();
