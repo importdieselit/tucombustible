@@ -12119,6 +12119,8 @@ textarea.form-control-lg {
     border-radius: 0.375rem !important;
 }
 
+.border-orange { border-top: 3px solid #f2A435 !important; }
+
 /* Forzar que el buscador siempre sea visible y el menú baje */
 .select2-dropdown {
     z-index: 9999 !important;

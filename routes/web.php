@@ -86,6 +86,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/inventario/solicitudes/{id}/dispatch', [InventarioController::class, 'dispatch'])->name('inventario.requests.dispatch');
     Route::post('/inventario/import/excel', [InventarioController::class, 'import'])->name('inventario.import');
     Route::get('/inventario/export/excel', [InventarioController::class, 'export'])->name('inventario.export');
+    Route::get('/ventas/create', [InventarioController::class, 'ventaCreate'])->name('ventas.create');
+    Route::post('/ventas/store', [InventarioController::class, 'ventaStore'])->name('ventas.store');
+    Route::post('/clientes/store-ajax', [ClienteController::class, 'storeAjax'])->name('clientes.storeAjax');  
+    Route::get('/ventas/list', [InventarioController::class, 'ventaList'])->name('ventas.list'); 
+    Route::get('/ventas/show/{id}', [InventarioController::class, 'ventaShow'])->name('ventas.show'); 
 
     // Importaciones
     Route::get('choferes/importar', [ChoferController::class, 'showImportForm'])->name('choferes.show-import-form');
