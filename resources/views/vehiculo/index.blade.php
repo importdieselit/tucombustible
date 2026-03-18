@@ -331,7 +331,7 @@
                             <td class="py-3 text-center">
                                 <div class="d-inline-flex align-items-center bg-light px-2 py-1 rounded border">
                                     <i class="fa-solid fa-droplet text-primary me-2" style="font-size: 0.7rem;"></i>
-                                    <span class="fw-bold text-primary">{{ number_format($v['carga_total']) }}</span>
+                                    <span class="fw-bold text-primary">{{ number_format(floatval($v['carga_total'])) }}</span>
                                 </div>
                             </td>
                             <td class="pe-4 py-3 text-end">
