@@ -571,20 +571,20 @@ class VehiculoController extends BaseController
     public function reporteDisponibilidad()
 {
     $today = now();
-    $data = Vehiculo::misVehiculos()->with(['tipoVehiculo', 'cisternaAcoplada', 'ordenActiva'])->get();
+    $data = Vehiculo::miFlota()->with(['tipoVehiculo', 'cisternaAcoplada', 'ordenActiva'])->get();
 
     $total = $data->count();
     $operativosCount = $data->where('estatus', 1)->count();
     $fallaCount = $data->where('estatus', '!=', 1)->count();
     $porcentajeDisponibilidad = $total > 0 ? round(($operativosCount / $total) * 100) : 0;
-
+    $ligero=Vehiculo::misVehiculos()->with(['tipoVehiculo', 'ordenActiva'])->where('tipo', 6)->get();
     // Clasificación para el cuerpo del reporte
     $chutosOperativos = $data->where('tipoVehiculo.tipo', 'CHUTO')->where('estatus', 1);
     $chutosFalla = $data->where('tipoVehiculo.tipo', 'CHUTO')->where('estatus', '!=', 1);
-    $cisternasFalla = $data->whereIn('tipoVehiculo.tipo', ['CISTERNA', 'TANQUE'])->where('estatus', '!=', 1);
+    $cisternasFalla = $data->whereIn('tipoVehiculo.tipo', ['CISTERNA', 'CAMION CISTERNA'])->where('estatus', '!=', 1);
     $camionesFalla = $data->where('tipoVehiculo.tipo', 'CAMION')->where('estatus', '!=', 1);
-    $camionetasFalla = $data->whereIn('tipoVehiculo.tipo', ['CAMIONETA', 'PICKUP'])->where('estatus', '!=', 1);
-    $camionetasOperativas = $data->whereIn('tipoVehiculo.tipo', ['CAMIONETA', 'PICKUP'])->where('estatus', 1);
+    $camionetasFalla = $ligero->where('estatus', '!=', 1);
+    $camionetasOperativas = $ligero->where('estatus', 1);
     $camionesOperativos = $data->where('tipoVehiculo.tipo', 'CAMION')->where('estatus', 1);
 
     return view('vehiculo.reporte_disponibilidad', compact(
