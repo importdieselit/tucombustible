@@ -63,7 +63,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/documentacion/vehiculos/', [VehiculoController::class, 'controlDocumentacion'])->name('vehiculos.documentacion');
     Route::post('vehiculos/acoplar', [VehiculoController::class, 'acoplar'])->name('vehiculos.acoplar');
     Route::get('/vehiculos/desacoplar/{id}', [VehiculoController::class, 'desacoplar'])->name('vehiculos.desacoplar');
-    Route::get('/inpeccion/index', [InspeccionController::class, 'index'])->name('inspecciones.index');
+    
 
     Route::get('search/global', [SearchController::class, 'globalSearch'])->name('search.global');
 
