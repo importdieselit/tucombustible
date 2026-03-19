@@ -268,4 +268,18 @@ class ClienteService
             ]);
         });
     }
+
+    // -------------------------------------------------------
+    // RANKINGS DE CUPO (agregar al final de ClienteService)
+    // -------------------------------------------------------
+
+    public function getRankingCuposMayores(int $limit = 5)
+    {
+        return $this->repository->getTopCuposMayores($limit);
+    }
+
+    public function getRankingCuposMenores(int $limit = 5)
+    {
+        return $this->repository->getTopCuposMenores($limit);
+    }
 }

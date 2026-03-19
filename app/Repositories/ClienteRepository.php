@@ -284,4 +284,32 @@ class ClienteRepository
             })
             ->exists();
     }
+
+    // -------------------------------------------------------
+    // RANKINGS DE CUPO (agregar al final de ClienteRepository)
+    // -------------------------------------------------------
+
+    /**
+     * Los 5 clientes aprobados con el cupo más alto.
+     * Se toma el cupo máximo entre todos sus tipos de combustible.
+     */
+    public function getTopCuposMayores(int $limit = 5)
+    {
+        return Cliente::aprobados()
+            ->whereHas('cupos')
+            ->withMax('cupos', 'litros_aprobados')
+            ->orderByDesc('cupos_max_litros_aprobados')
+            ->limit($limit)
+            ->get();
+    }
+
+    public function getTopCuposMenores(int $limit = 5)
+    {
+        return Cliente::aprobados()
+            ->whereHas('cupos')
+            ->withMax('cupos', 'litros_aprobados')
+            ->orderBy('cupos_max_litros_aprobados')
+            ->limit($limit)
+            ->get();
+    }
 }

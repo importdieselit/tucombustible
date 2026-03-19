@@ -25,7 +25,7 @@
     </div>
 
     {{-- LISTADO --}}
-    <div class="bg-white rounded-lg shadow-sm border border-gray-300 overflow-hidden">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-300 overflow-hidden mb-8">
         <div class="p-6 border-b border-gray-200 bg-gray-50">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h5 class="text-lg font-black uppercase tracking-tight text-gray-800 italic">
@@ -86,7 +86,6 @@
                     @forelse($clientes as $c)
                     <tr class="hover:bg-gray-50 {{ !$c->es_padre ? 'bg-gray-50' : '' }}">
                         <td class="px-6 py-4">
-                            {{-- Indentación visual para sucursales --}}
                             @if(!$c->es_padre)
                                 <div class="flex items-start">
                                     <span class="text-gray-300 mr-2 mt-1 text-xs">└</span>
@@ -154,12 +153,100 @@
         </div>
     </div>
 
+    {{-- RANKINGS DE CUPOS --}}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+        {{-- TOP 5 CUPOS MÁS GRANDES --}}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="bg-gray-industrial px-6 py-4 flex items-center justify-between">
+                <h5 class="text-xs font-black uppercase text-white tracking-widest">
+                    <i class="fas fa-trophy mr-2 text-orange-impordiesel"></i> Top 5 — Cupos Más Grandes
+                </h5>
+                <span class="bg-orange-impordiesel text-white text-[9px] px-2 py-1 rounded-full font-black uppercase">
+                    Litros / mes
+                </span>
+            </div>
+            <div class="divide-y divide-gray-100">
+                @forelse($rankingMayores as $index => $cliente)
+                <div class="flex items-center justify-between px-6 py-4 hover:bg-gray-50">
+                    <div class="flex items-center gap-4">
+                        <span class="w-8 h-8 rounded-full flex items-center justify-center font-black text-sm
+                            {{ $index === 0 ? 'bg-yellow-400 text-white' : ($index === 1 ? 'bg-gray-300 text-gray-700' : ($index === 2 ? 'bg-orange-300 text-white' : 'bg-gray-100 text-gray-500')) }}">
+                            {{ $index + 1 }}
+                        </span>
+                        <div>
+                            <p class="text-xs font-black text-gray-800 uppercase leading-tight">{{ $cliente->nombre }}</p>
+                            <p class="text-[9px] font-bold text-gray-400 mt-0.5">{{ $cliente->rif }}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-lg font-black text-orange-impordiesel">
+                            {{ number_format($cliente->cupos_max_litros_aprobados, 0, ',', '.') }}
+                            <small class="text-[9px] text-gray-400 font-bold uppercase">L</small>
+                        </p>
+                        <a href="{{ route('clientes.show', $cliente->id) }}"
+                           class="text-[9px] font-black uppercase text-gray-400 hover:text-orange-impordiesel transition">
+                            Ver expediente →
+                        </a>
+                    </div>
+                </div>
+                @empty
+                <div class="px-6 py-10 text-center text-gray-400 font-black uppercase text-xs">
+                    No hay clientes aprobados con cupo asignado.
+                </div>
+                @endforelse
+            </div>
+        </div>
+
+        {{-- TOP 5 CUPOS MÁS PEQUEÑOS --}}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="bg-gray-industrial px-6 py-4 flex items-center justify-between">
+                <h5 class="text-xs font-black uppercase text-white tracking-widest">
+                    <i class="fas fa-arrow-down mr-2 text-blue-400"></i> Top 5 — Cupos Más Pequeños
+                </h5>
+                <span class="bg-blue-600 text-white text-[9px] px-2 py-1 rounded-full font-black uppercase">
+                    Litros / mes
+                </span>
+            </div>
+            <div class="divide-y divide-gray-100">
+                @forelse($rankingMenores as $index => $cliente)
+                <div class="flex items-center justify-between px-6 py-4 hover:bg-gray-50">
+                    <div class="flex items-center gap-4">
+                        <span class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-black text-sm text-gray-500">
+                            {{ $index + 1 }}
+                        </span>
+                        <div>
+                            <p class="text-xs font-black text-gray-800 uppercase leading-tight">{{ $cliente->nombre }}</p>
+                            <p class="text-[9px] font-bold text-gray-400 mt-0.5">{{ $cliente->rif }}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-lg font-black text-blue-600">
+                            {{ number_format($cliente->cupos_max, 0, ',', '.') }}
+                            <small class="text-[9px] text-gray-400 font-bold uppercase">L</small>
+                        </p>
+                        <a href="{{ route('clientes.show', $cliente->id) }}"
+                           class="text-[9px] font-black uppercase text-gray-400 hover:text-orange-impordiesel transition">
+                            Ver expediente →
+                        </a>
+                    </div>
+                </div>
+                @empty
+                <div class="px-6 py-10 text-center text-gray-400 font-black uppercase text-xs">
+                    No hay clientes aprobados con cupo asignado.
+                </div>
+                @endforelse
+            </div>
+        </div>
+    </div>
+
     {{-- ENLACE A CLIENTES LUBRICANTES --}}
-    <div class="mt-6 text-right">
+    <div class="text-right">
         <a href="{{ route('clientes.lubricantes.index') }}"
            class="text-xs font-black uppercase text-gray-500 hover:text-orange-impordiesel transition">
             <i class="fas fa-oil-can mr-1"></i> Ver Clientes de Lubricantes →
         </a>
     </div>
+
 </div>
 @endsection

@@ -182,6 +182,28 @@
         {{-- COLUMNA DERECHA — PANEL DE CONTROL --}}
         <div class="space-y-6">
 
+            {{-- TOKEN PARA SUCURSALES (SOLO CLIENTE PADRE) --}}
+            @if($cliente->es_padre)
+            <div class="bg-white rounded border-2 border-orange-200 p-5 shadow-md">
+                <h5 class="text-xs font-black uppercase text-gray-800 mb-4 border-b-2 border-orange-impordiesel pb-2">
+                    <i class="fas fa-key mr-2 text-orange-impordiesel"></i> Token para Sucursales
+                </h5>
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+                    Este código permite vincular Clientes Sucursales a esta empresa.
+                </p>
+                <div class="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
+                    <span id="tokenAdmin" class="text-lg font-black text-gray-800 tracking-widest">
+                        {{ $cliente->token_registro ?? 'SIN TOKEN' }}
+                    </span>
+                    <button onclick="copyTokenAdmin()"
+                            class="text-orange-impordiesel hover:text-orange-800 p-2 transition"
+                            title="Copiar token">
+                        <i class="fas fa-copy fa-lg"></i>
+                    </button>
+                </div>
+            </div>
+            @endif
+
             {{-- AVANZAR PASO --}}
             @if($cliente->status == \App\Models\Cliente::STATUS_EN_REGISTRO)
             <div class="bg-white rounded border-2 border-gray-300 p-5 shadow-md">
@@ -283,7 +305,7 @@
             </div>
             @endif
 
-            {{-- INACTIVAR / REACTIVAR --}}
+            {{-- INACTIVAR --}}
             @if($cliente->status == \App\Models\Cliente::STATUS_APROBADO)
             <div class="bg-white rounded border-2 border-gray-300 p-5 shadow-md">
                 <h5 class="text-xs font-black uppercase text-gray-800 mb-4 border-b-2 border-gray-400 pb-2">
@@ -300,6 +322,7 @@
             </div>
             @endif
 
+            {{-- REACTIVAR --}}
             @if($cliente->status == \App\Models\Cliente::STATUS_INACTIVO)
             <div class="bg-white rounded border-2 border-gray-300 p-5 shadow-md">
                 <h5 class="text-xs font-black uppercase text-gray-800 mb-4 border-b-2 border-green-400 pb-2">
@@ -376,6 +399,11 @@
         for (let i = 0; i < items.length; i++) {
             items[i].style.display = (items[i].textContent || items[i].innerText).toUpperCase().includes(filtro) ? '' : 'none';
         }
+    }
+
+    function copyTokenAdmin() {
+        const t = document.getElementById('tokenAdmin').innerText.trim();
+        navigator.clipboard.writeText(t).then(() => alert('¡Token copiado al portapapeles!'));
     }
 </script>
 @endsection
