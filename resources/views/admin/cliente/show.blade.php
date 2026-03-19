@@ -10,7 +10,7 @@
            class="bg-gray-industrial text-white px-5 py-2.5 rounded text-xs font-black uppercase hover:bg-black transition flex items-center shadow-md">
             <i class="fas fa-chevron-left mr-2 text-orange-impordiesel"></i> Volver al Listado
         </a>
-        <a href="{{ route('admin-cliente.editar', $cliente->id) }}) }}"
+        <a href="{{ route('clientes.edit', $cliente->id) }}) }}"
            class="bg-corporate text-white px-5 py-2.5 rounded text-xs font-black uppercase hover:bg-black transition flex items-center shadow-md">
             <i class="fas fa-pencil mr-2 text-orange-impordiesel"></i> Editar
         </a>
