@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\AdminActivosRequest;
 use App\Services\ClienteService;
-use Exception;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\{Auth, Log};
 
-class ClienteActivosController extends BaseController // Usamos BaseController por consistencia con tus otros controladores
+class ClienteActivosController extends Controller
 {
-    protected $clienteService;
+    protected ClienteService $clienteService;
 
     public function __construct(ClienteService $clienteService)
     {
@@ -17,30 +16,70 @@ class ClienteActivosController extends BaseController // Usamos BaseController p
     }
 
     /**
-     * Guarda las placas y chóferes que el Administrador ha validado.
+     * Registra una placa para un cliente.
+     * Solo accesible por Superusuario (1) y Administrador (2).
      */
-    public function asignarActivos(AdminActivosRequest $request)
+    public function registrarPlaca(Request $request)
     {
+        $request->validate([
+            'cliente_id' => 'required|exists:clientes,id',
+            'placa'      => 'required|string|max:8',
+        ]);
+
         try {
-            // El FormRequest ya validó perfil 1 o 2, y los formatos de datos
-            $this->clienteService->registrarActivosAprobados(
+            $this->clienteService->registrarPlaca(
                 $request->cliente_id,
-                $request->input('placas', []),
-                $request->input('choferes', [])
+                $request->placa
             );
 
-            return response()->json([
-                'status'  => 'success',
-                'message' => 'Patrimonio de activos del cliente actualizado correctamente.'
-            ], 201);
+            if ($request->ajax()) {
+                return response()->json(['status' => 'success', 'message' => 'Placa registrada correctamente.'], 201);
+            }
 
-        } catch (Exception $e) {
-            Log::error("Error en carga de activos - Cliente ID {$request->cliente_id}: " . $e->getMessage());
+            return back()->with('success', 'Placa registrada correctamente.');
+        } catch (\Exception $e) {
+            Log::error('Error al registrar placa: ' . $e->getMessage());
 
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Error interno al procesar los activos.'
-            ], 500);
+            if ($request->ajax()) {
+                return response()->json(['status' => 'error', 'message' => $e->getMessage()], 422);
+            }
+
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Registra un chofer para un cliente.
+     * Solo accesible por Superusuario (1) y Administrador (2).
+     */
+    public function registrarChofer(Request $request)
+    {
+        $request->validate([
+            'cliente_id'      => 'required|exists:clientes,id',
+            'nombre_completo' => 'required|string|max:255',
+            'cedula'          => 'required|string|max:15',
+        ]);
+
+        try {
+            $this->clienteService->registrarChofer(
+                $request->cliente_id,
+                $request->nombre_completo,
+                $request->cedula
+            );
+
+            if ($request->ajax()) {
+                return response()->json(['status' => 'success', 'message' => 'Chofer registrado correctamente.'], 201);
+            }
+
+            return back()->with('success', 'Chofer registrado correctamente.');
+        } catch (\Exception $e) {
+            Log::error('Error al registrar chofer: ' . $e->getMessage());
+
+            if ($request->ajax()) {
+                return response()->json(['status' => 'error', 'message' => $e->getMessage()], 422);
+            }
+
+            return back()->with('error', $e->getMessage());
         }
     }
 }

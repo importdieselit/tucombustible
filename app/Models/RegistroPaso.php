@@ -2,16 +2,18 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ChoferCliente extends Model
+class RegistroPaso extends Model
 {
-    protected $table = 'choferes_clientes';
+    use HasFactory;
+
+    protected $table = 'registro_pasos';
 
     protected $fillable = [
-        'cliente_id',
-        'nombre_completo',
-        'cedula',
+        'nombre',
+        'orden',
         'activo',
     ];
 
@@ -20,19 +22,22 @@ class ChoferCliente extends Model
     // -------------------------------------------------------
 
     /**
-     * El chofer pertenece a un Cliente.
+     * Un paso puede estar asignado a muchos clientes.
      */
-    public function cliente()
+    public function clientes()
     {
-        return $this->belongsTo(Cliente::class, 'cliente_id');
+        return $this->hasMany(Cliente::class, 'registro_paso');
     }
 
     // -------------------------------------------------------
     // SCOPES
     // -------------------------------------------------------
 
+    /**
+     * Solo pasos activos, ordenados por su campo 'orden'.
+     */
     public function scopeActivos($query)
     {
-        return $query->where('activo', 1);
+        return $query->where('activo', 1)->orderBy('orden');
     }
 }

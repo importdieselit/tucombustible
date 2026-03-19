@@ -66,13 +66,6 @@
                                     Iniciar Sesión
                                 </button>
 
-                                <div class="mt-4 text-center">
-                                    <p class="mb-0 text-muted">¿Eres un nuevo cliente?</p>
-                                    <a href="{{ route('cliente.register') }}" class="btn mt-2"
-                                    style="background-color: #ff8000; color: white; border-radius: 5px; font-weight: bold;">
-                                        <i class="fas fa-user-plus"></i> Iniciar Registro de Cliente
-                                    </a>
-                                </div>
 
                                 @if (Route::has('password.request'))
                                     <a class="btn btn-link" href="{{ route('password.request') }}">

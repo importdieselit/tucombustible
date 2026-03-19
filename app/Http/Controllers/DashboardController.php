@@ -7,10 +7,12 @@ use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
-    /**
-     * Quitamos el constructor que pedía el DashboardService.
-     * Esto evita que Laravel intente cargar todos los repositorios al inicio.
-     */
+    protected DashboardService $dashboardService;
+
+    public function __construct(DashboardService $dashboardService)
+    {
+        $this->dashboardService = $dashboardService;
+    }
 
     public function index()
     {
@@ -22,26 +24,16 @@ class DashboardController extends Controller
             return redirect()->route('vehiculos.index');
         }
 
-        /**
-         * 2. DASHBOARDS DEL MÓDULO CLIENTES (Perfil 3)
-         * Cargamos el servicio manualmente solo aquí. 
-         * Si falla por falta de repositorios, solo le fallará al Cliente.
-         */
-        $dashboardService = app(DashboardService::class);
-        $data = $dashboardService->getDashboardData($user);
+        // Cliente (perfil 3)
+        $data = $this->dashboardService->getDashboardData($user);
 
-        if ($data['perfil'] === 'cliente_proceso') {
-            return view('cliente.en_proceso', $data);
-        }
-
-        if ($data['perfil'] === 'cliente_padre') {
-            return view('cliente.index', $data);
-        }
-
-        if ($data['perfil'] === 'cliente_sucursal') {
-            return view('cliente.index_sucursal', $data);
-        }
-
-        return abort(403, 'Perfil de usuario no reconocido.');
+        return match ($data['perfil']) {
+            'cliente_en_registro' => view('cliente.en_proceso', $data),
+            'cliente_rechazado'   => view('cliente.rechazado', $data),
+            'cliente_inactivo'    => view('cliente.inactivo', $data),
+            'cliente_padre',
+            'cliente_sucursal'    => view('cliente.index', $data),
+            default               => abort(403, 'Perfil de usuario no reconocido o expediente no vinculado.'),
+        };
     }
 }

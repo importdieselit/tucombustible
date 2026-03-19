@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
-    protected $userService;
+    protected UserService $userService;
 
     public function __construct(UserService $userService)
     {
@@ -39,8 +39,8 @@ class UserController extends Controller
         }
 
         $clienteId = $user->cliente_id;
-        $stats = $this->userService->obtenerDashboardData($clienteId);
-        $usuarios = $this->userService->obtenerListaFiltrada($request->all(), $clienteId);
+        $stats     = $this->userService->obtenerDashboardData($clienteId);
+        $usuarios  = $this->userService->obtenerListaFiltrada($request->all(), $clienteId);
 
         return view('usuarios.index', array_merge($stats, ['usuarios' => $usuarios]));
     }

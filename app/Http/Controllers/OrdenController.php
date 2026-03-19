@@ -40,8 +40,7 @@ use App\Models\Proveedor;
 class OrdenController extends BaseController
 {
 
-
-     use GenerateAlerts;
+    use GenerateAlerts;
 
     protected $fcmService;
     protected $telegramService;

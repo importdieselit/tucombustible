@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Auth;
 
 // IMPORTACIÓN DE CONTROLADORES
 use App\Http\Controllers\Admin\ClienteController as AdminClienteController;
+use App\Http\Controllers\Admin\PedidoAdminController;
 use App\Http\Controllers\ClienteController as PortalClienteController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\{
@@ -23,13 +24,13 @@ Auth::routes(['reset' => false]);
 Route::get('/', function () { return redirect()->route('login'); });
 
 /**
- * RECUPERACIÓN DE CONTRASEÑA (Flujo Directo reutilizando Cambio Obligatorio)
+ * RECUPERACIÓN DE CONTRASEÑA
  */
 Route::get('/password/reset', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
 Route::post('/password/reset/validar', [ForgotPasswordController::class, 'checkEmail'])->name('password.email.check');
 
 /**
- * PASO 1: REGISTRO PÚBLICO
+ * REGISTRO PÚBLICO DE CLIENTES
  */
 Route::get('/registro-cliente', [PortalClienteController::class, 'showRegistrationForm'])->name('cliente.register');
 Route::post('/registro-cliente', [PortalClienteController::class, 'store'])->name('cliente.register.store');
@@ -220,9 +221,6 @@ Route::middleware(['auth'])->group(function () {
         // Telegram
         Route::post('/send-telegram-photo', [TelegramController::class, 'sendPhoto'])->name('telegram.send.photo');
         Route::post('/send-telegram-message', [TelegramController::class, 'sendMessage'])->name('telegram.send.message');
-  
-    
-    Route::middleware(['check.password'])->group(function () {
 
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -273,20 +271,12 @@ Route::middleware(['auth'])->group(function () {
         });
 
 
+
         /**
          * ZONA CLIENTES (Solo Perfil 3)
          */
         Route::middleware(['role:3'])->prefix('mi-cuenta')->name('portal.clientes.')->group(function () {
-            Route::get('/resumen', [PortalClienteController::class, 'index'])->name('index');
-            Route::post('/subir-documento', [PortalClienteController::class, 'uploadDoc'])->name('upload.doc');
-            Route::post('/finalizar-carga', [PortalClienteController::class, 'finalizarCargaDocs'])->name('finalizar.paso2');
+            Route::get('/resumen',   [PortalClienteController::class, 'index'])->name('index');
             Route::get('/mi-perfil', [PortalClienteController::class, 'perfil'])->name('perfil');
-            
-            // RUTA PARA DESCARGA DE PLANILLAS EN ZIP
-            Route::get('/descargar-formatos', [PortalClienteController::class, 'descargarFormatos'])->name('descargar.formatos');
         });
-
-       
-    });
 });
-

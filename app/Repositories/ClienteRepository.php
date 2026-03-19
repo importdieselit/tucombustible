@@ -2,118 +2,314 @@
 
 namespace App\Repositories;
 
-use App\Models\{User, Cliente, ClienteCupo, Documento};
+use App\Models\Cliente;
+use App\Models\ClienteCupo;
+use App\Models\ChoferCliente;
+use App\Models\PlacaVehiculo;
+use App\Models\RegistroPaso;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class ClienteRepository
 {
+    // -------------------------------------------------------
+    // CONSULTAS GENERALES
+    // -------------------------------------------------------
+
     public function find($id)
     {
-        return Cliente::with(['user', 'documentos'])->findOrFail($id);
+        return Cliente::with([
+            'registroPaso',
+            'cupos.tipoCombustible',
+            'placas',
+            'choferes',
+            'estado',
+            'ciudad',
+            'sucursales.registroPaso',
+        ])->findOrFail($id);
     }
 
-    public function countByPaso($operador, $paso = null)
+    public function getClientesCombustible(array $filtros)
     {
-        if ($paso === null) {
-            return Cliente::where('registro_paso', $operador)->count();
-        }
-        return Cliente::where('registro_paso', $operador, $paso)->count();
-    }
+        $query = Cliente::with(['registroPaso','padre']);
 
-    public function getClientesEnRegistro($filtros)
-    {
-        $query = Cliente::query();
-
-        // Filtro de Búsqueda (RIF o Nombre)
         if (!empty($filtros['search'])) {
-            $query->where(function($q) use ($filtros) {
+            $query->where(function ($q) use ($filtros) {
                 $q->where('nombre', 'like', "%{$filtros['search']}%")
                   ->orWhere('rif', 'like', "%{$filtros['search']}%");
             });
         }
 
-        // Filtro por Estatus (Opcional, si quieres ver solo Activos o solo en Proceso)
-        if (!empty($filtros['status_filtro'])) {
-            if ($filtros['status_filtro'] == 'activos') {
-                $query->where('registro_paso', 10);
-            } elseif ($filtros['status_filtro'] == 'proceso') {
-                $query->where('registro_paso', '<', 10);
-            }
+        if (isset($filtros['status']) && $filtros['status'] !== '') {
+            $query->where('status', $filtros['status']);
+        }
+
+        if (!empty($filtros['tipo'])) {
+            if ($filtros['tipo'] === 'padre') {
+            $query->where('parent', 0);
+        } elseif ($filtros['tipo'] === 'sucursal') {
+            $query->where('parent', '>', 0);
+        }
         }
 
         return $query->orderBy('updated_at', 'desc')->paginate(15);
     }
 
-    public function getStatsGlobales()
+    public function getStatsGlobales(): array
     {
         return [
-            'total_clientes'      => Cliente::count(),
-            'total_en_registro'   => $this->countByPaso('<', 10),
-            'en_espera_revision'  => $this->countByPaso(3),
-            'activos'             => $this->countByPaso(10),
+            'total_clientes'    => Cliente::count(),
+            'en_registro'       => Cliente::enRegistro()->count(),
+            'aprobados'         => Cliente::aprobados()->count(),
+            'rechazados'        => Cliente::rechazados()->count(),
+            'inactivos'         => Cliente::inactivos()->count(),
         ];
     }
 
-    public function avanzarPaso($clienteId, $nuevoPaso, array $extra = [])
+    public function getPasos()
     {
-        $cliente = Cliente::findOrFail($clienteId);
+        return RegistroPaso::activos()->get();
+    }
 
-        if ($nuevoPaso == 10) {
-            $cliente->status = 1;
-        }
+    // -------------------------------------------------------
+    // CREACIÓN
+    // -------------------------------------------------------
 
-        $cliente->registro_paso = $nuevoPaso;
-        $cliente->save();
+    public function create(array $data): Cliente
+    {
+        return Cliente::create($data);
+    }
 
+    public function crearUsuario(array $data): User
+    {
+        return User::create($data);
+    }
+
+    public function registrarCupo(array $data): ClienteCupo
+    {
+        return ClienteCupo::create($data);
+    }
+
+    // -------------------------------------------------------
+    // ACTUALIZACIÓN DE DATOS
+    // -------------------------------------------------------
+
+    public function update($id, array $data): Cliente
+    {
+        $cliente = Cliente::findOrFail($id);
+        $cliente->update($data);
         return $cliente;
     }
 
+    // -------------------------------------------------------
+    // FLUJO DE REGISTRO (PASOS)
+    // -------------------------------------------------------
+
+    public function avanzarPaso($clienteId, int $nuevoPaso): Cliente
+    {
+        return DB::transaction(function () use ($clienteId, $nuevoPaso) {
+            $cliente = Cliente::findOrFail($clienteId);
+            $cliente->registro_paso = $nuevoPaso;
+            $cliente->save();
+            return $cliente;
+        });
+    }
+
+    // -------------------------------------------------------
+    // GESTIÓN DE STATUS
+    // -------------------------------------------------------
+
+    public function aprobar($clienteId): Cliente
+    {
+        return DB::transaction(function () use ($clienteId) {
+            $cliente = Cliente::findOrFail($clienteId);
+            $cliente->status         = Cliente::STATUS_APROBADO;
+            $cliente->registro_paso  = 5;
+            $cliente->fecha_aprobacion = now();
+            $cliente->save();
+            return $cliente;
+        });
+    }
+
+    public function rechazar($clienteId): Cliente
+    {
+        return DB::transaction(function () use ($clienteId) {
+            $cliente = Cliente::findOrFail($clienteId);
+            $cliente->status        = Cliente::STATUS_RECHAZADO;
+            $cliente->registro_paso = 5;
+            $cliente->save();
+            return $cliente;
+        });
+    }
+
+    public function inactivar($clienteId): Cliente
+    {
+        return DB::transaction(function () use ($clienteId) {
+            $cliente = Cliente::findOrFail($clienteId);
+            $cliente->status = Cliente::STATUS_INACTIVO;
+            $cliente->save();
+
+            // Si es Padre, inactiva todas sus sucursales en cascada
+            if ($cliente->es_padre) {
+                Cliente::where('parent', $clienteId)
+                    ->update(['status' => Cliente::STATUS_INACTIVO]);
+            }
+
+            return $cliente;
+        });
+    }
+
+    public function reactivar($clienteId): Cliente
+    {
+        $cliente = Cliente::findOrFail($clienteId);
+        $cliente->status = Cliente::STATUS_APROBADO;
+        $cliente->save();
+        return $cliente;
+    }
+
+    // -------------------------------------------------------
+    // GESTIÓN DE CUPOS
+    // -------------------------------------------------------
+
+    public function ajustarCupo($clienteId, int $tipoCombustibleId, float $litros): ClienteCupo
+    {
+        return DB::transaction(function () use ($clienteId, $tipoCombustibleId, $litros) {
+            // Actualiza solo el cupo del tipo de combustible indicado
+            // Si no existe, lo crea (caso de primer registro de cupo)
+            $cupo = ClienteCupo::updateOrCreate(
+                [
+                    'cliente_id'          => $clienteId,
+                    'tipo_combustible_id' => $tipoCombustibleId,
+                ],
+                [
+                    'litros_aprobados'   => $litros,
+                    'litros_solicitados' => $litros,
+                ]
+            );
+
+            // Sincroniza el campo cupo en la tabla clientes (referencia rápida)
+            Cliente::where('id', $clienteId)->update(['cupo' => $litros, 'disponible' => $litros]);
+
+            return $cupo;
+        });
+    }
+
+    // -------------------------------------------------------
+    // GESTIÓN DE PLACAS
+    // -------------------------------------------------------
+
+    public function registrarPlaca($clienteId, string $placa): PlacaVehiculo
+    {
+        return PlacaVehiculo::updateOrCreate(
+            ['cliente_id' => $clienteId, 'placa' => strtoupper(str_replace(' ', '', $placa))],
+            ['activo' => 1, 'updated_at' => now()]
+        );
+    }
+
+    public function inactivarPlaca($placaId): PlacaVehiculo
+    {
+        $placa = PlacaVehiculo::findOrFail($placaId);
+        $placa->activo = 0;
+        $placa->save();
+        return $placa;
+    }
+
+    public function getPlacas($clienteId)
+    {
+        return PlacaVehiculo::where('cliente_id', $clienteId)->activas()->get();
+    }
+
+    // -------------------------------------------------------
+    // GESTIÓN DE CHOFERES
+    // -------------------------------------------------------
+
+    public function registrarChofer($clienteId, string $nombreCompleto, string $cedula): ChoferCliente
+    {
+        return ChoferCliente::updateOrCreate(
+            ['cliente_id' => $clienteId, 'cedula' => $cedula],
+            ['nombre_completo' => strtoupper($nombreCompleto), 'activo' => 1, 'updated_at' => now()]
+        );
+    }
+
+    public function inactivarChofer($choferId): ChoferCliente
+    {
+        $chofer = ChoferCliente::findOrFail($choferId);
+        $chofer->activo = 0;
+        $chofer->save();
+        return $chofer;
+    }
+
+    public function getChoferes($clienteId)
+    {
+        return ChoferCliente::where('cliente_id', $clienteId)->activos()->get();
+    }
+
+    // -------------------------------------------------------
+    // DOCUMENTOS (Lógica interna — no expuesta en vistas)
+    // -------------------------------------------------------
+
     public function guardarDocumento(array $data)
     {
-        $mapaRequisitos = [
-            'planilla_solicitud'        => 1,
-            'declaracion_jurada'        => 2,
-            'carta_ministerio'          => 3,
-            'registro_mercantil'        => 4,
-            'acta_constitutiva'         => 5,
-            'rif_legalizado'            => 6,
-            'dni_contacto'              => 7,
-            'rif_contacto'              => 8,
-            'islr'                      => 9,
-            'permiso_bomberos'          => 10,
-            'maquinaria_tanques'        => 11,
-            'croquis_ubicacion'         => 12,
-        ];
-
-        return Documento::updateOrCreate(
+        return \App\Models\Documento::updateOrCreate(
             [
                 'cliente_id'       => $data['cliente_id'],
-                'nombre_documento' => $data['tipo_documento'] 
+                'nombre_documento' => $data['tipo_documento'],
             ],
             [
-                'requisito_id'     => $mapaRequisitos[$data['tipo_documento']] ?? 0,
+                'requisito_id'     => $data['requisito_id'] ?? 0,
                 'tipo_anexo'       => $data['tipo_anexo'],
-                'nombre_documento' => $data['tipo_documento'], 
+                'nombre_documento' => $data['tipo_documento'],
                 'ruta'             => $data['ruta'],
-                'validado'         => 0
+                'validado'         => 0,
             ]
         );
     }
 
-    public function create(array $data) { return Cliente::create($data); }
-    public function crearUsuario(array $data) { return User::create($data); }
-    public function registrarCupo(array $data) { return ClienteCupo::create($data); }
-
-    public function toggleStatus($id)
-    {
-        $cliente = Cliente::findOrFail($id);
-        $cliente->status = !$cliente->status;
-        $cliente->save();
-        return $cliente;
-    }
+    // -------------------------------------------------------
+    // SUCURSALES
+    // -------------------------------------------------------
 
     public function getSucursales($parentId)
     {
-        return Cliente::where('parent', $parentId)->get();
+        return Cliente::with(['registroPaso', 'cupos.tipoCombustible'])
+            ->where('parent', $parentId)
+            ->get();
+    }
+
+    public function existeClienteConTipoCombustible(string $rif, int $tipoCombustibleId): bool
+    {
+        return Cliente::where('rif', strtoupper($rif))
+            ->whereHas('cupos', function ($q) use ($tipoCombustibleId) {
+                $q->where('tipo_combustible_id', $tipoCombustibleId);
+            })
+            ->exists();
+    }
+
+    // -------------------------------------------------------
+    // RANKINGS DE CUPO (agregar al final de ClienteRepository)
+    // -------------------------------------------------------
+
+    /**
+     * Los 5 clientes aprobados con el cupo más alto.
+     * Se toma el cupo máximo entre todos sus tipos de combustible.
+     */
+    public function getTopCuposMayores(int $limit = 5)
+    {
+        return Cliente::aprobados()
+            ->whereHas('cupos')
+            ->withMax('cupos', 'litros_aprobados')
+            ->orderByDesc('cupos_max_litros_aprobados')
+            ->limit($limit)
+            ->get();
+    }
+
+    public function getTopCuposMenores(int $limit = 5)
+    {
+        return Cliente::aprobados()
+            ->whereHas('cupos')
+            ->withMax('cupos', 'litros_aprobados')
+            ->orderBy('cupos_max_litros_aprobados')
+            ->limit($limit)
+            ->get();
     }
 }

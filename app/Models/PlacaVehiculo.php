@@ -17,20 +17,24 @@ class PlacaVehiculo extends Model
         'activo',
     ];
 
+    // -------------------------------------------------------
+    // RELACIONES
+    // -------------------------------------------------------
+
     /**
-     * Relación: La placa pertenece a un Cliente (Sede de registro)
+     * La placa pertenece a un Cliente.
      */
     public function cliente()
     {
         return $this->belongsTo(Cliente::class, 'cliente_id');
     }
 
-    /**
-     * Scope para filtrar solo placas activas rápidamente
-     * Uso: PlacaVehiculo::activa()->get();
-     */
-    public function scopeActiva($query)
+    // -------------------------------------------------------
+    // SCOPES
+    // -------------------------------------------------------
+
+    public function scopeActivas($query)
     {
-        return $query->where('activo', true);
+        return $query->where('activo', 1);
     }
 }

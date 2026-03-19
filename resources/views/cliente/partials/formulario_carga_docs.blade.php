@@ -13,72 +13,66 @@
         'maquinaria_tanques'    => 'Maquinaria (Equipos y Tanques)',
         'croquis_ubicacion'     => 'Croquis de Ubicación'
     ];
-    
-    // Obtenemos los nombres técnicos de los documentos ya cargados
     $docsSubidos = $cliente->documentos->pluck('nombre_documento')->toArray();
 @endphp
 
-<div class="card shadow-sm border-0">
-    <div class="card-header bg-white font-weight-bold">
-        <i class="fas fa-file-upload mr-2 text-primary"></i> Carga de Expediente Digital (12 Requisitos)
+<div class="bg-white rounded-lg shadow-sm border-t-4 border-orange-impordiesel overflow-hidden">
+    <div class="bg-gray-50 px-6 py-4 border-b border-gray-100 flex items-center">
+        <i class="fas fa-file-upload mr-2 text-orange-impordiesel"></i>
+        <span class="text-sm font-bold text-gray-700 uppercase tracking-wider">Carga de Expediente Digital (12 Requisitos)</span>
     </div>
-    <div class="card-body">
-        <p class="text-muted small mb-4">
-            Suba los documentos en formato <strong>PDF, DOC, DOCX u ODT</strong>. 
-            Al completar los 12, se habilitará el botón de envío.
-        </p>
+    
+    <div class="p-6">
+        <p class="text-xs text-gray-500 mb-6 uppercase tracking-tighter">Formatos admitidos: <strong>PDF, DOC, DOCX u ODT</strong> (Máx 10MB por archivo).</p>
 
-        <ul class="list-group list-group-flush">
-            @foreach($docsRequeridos as $slug => $label)
-            @php $estaSubido = in_array($slug, $docsSubidos); @endphp
-            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                <div class="d-flex align-items-center">
-                    @if($estaSubido)
-                        <i class="fas fa-check-circle text-success fa-lg mr-2"></i>
-                    @else
-                        <i class="far fa-circle text-muted fa-lg mr-2"></i>
-                    @endif
-                    <span class="{{ $estaSubido ? 'font-weight-bold text-dark' : 'text-muted' }}">
-                        {{ $label }}
-                    </span>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+            @foreach($docsRequeridos as $key => $label)
+                @php $yaSubido = in_array($key, $docsSubidos); @endphp
+                <div class="flex flex-col p-3 rounded-lg border {{ $yaSubido ? 'border-green-100 bg-green-50' : 'border-gray-100 bg-white shadow-sm' }}">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-xs font-bold uppercase {{ $yaSubido ? 'text-green-700' : 'text-gray-600' }}">
+                            {{ $label }}
+                        </label>
+                        @if($yaSubido)
+                            <span class="text-green-600 text-xs font-bold"><i class="fas fa-check-circle"></i> CARGADO</span>
+                        @endif
+                    </div>
+
+                    <form action="{{ route('portal.clientes.upload.doc') }}" method="POST" enctype="multipart/form-data" class="flex gap-2">
+                        @csrf
+                        <input type="hidden" name="tipo_documento" value="{{ $key }}">
+                        <input type="file" name="archivo" required 
+                               class="block w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-gray-200 file:text-gray-700 hover:file:bg-gray-300 focus:outline-none">
+                        <button type="submit" class="bg-gray-industrial hover:bg-black text-white px-3 py-1 rounded text-xs transition duration-200 uppercase font-bold">
+                            Subir
+                        </button>
+                    </form>
                 </div>
-
-                {{-- Formulario de carga individual --}}
-                <form action="{{ route('portal.clientes.upload.doc') }}" method="POST" enctype="multipart/form-data" class="m-0">
-                    @csrf
-                    <input type="hidden" name="tipo_documento" value="{{ $slug }}">
-                    <input type="file" name="archivo" id="file_{{ $slug }}" class="d-none" accept=".pdf,.doc,.docx,.odt" onchange="this.form.submit()">
-                    
-                    <button type="button" class="btn btn-sm {{ $estaSubido ? 'btn-success' : 'btn-outline-primary' }}" 
-                            onclick="document.getElementById('file_{{ $slug }}').click()">
-                        <i class="fas {{ $estaSubido ? 'fa-sync-alt' : 'fa-upload' }} mr-1"></i>
-                        {{ $estaSubido ? 'Reemplazar' : 'Subir' }}
-                    </button>
-                </form>
-            </li>
             @endforeach
-        </ul>
+        </div>
 
-        {{-- Botón final: Solo se habilita si el conteo es exactamente 12 --}}
-        <div class="mt-5 p-4 border {{ count($docsSubidos) >= 12 ? 'border-success bg-light' : 'border-light bg-light' }} rounded text-center shadow-sm">
+        {{-- PIE DE FORMULARIO: ENVIAR A REVISIÓN --}}
+        <div class="mt-8 p-6 rounded-lg text-center transition-all duration-300 {{ count($docsSubidos) >= 12 ? 'bg-orange-50 border-2 border-orange-impordiesel' : 'bg-gray-100 border-2 border-dashed border-gray-300' }}">
             @if(count($docsSubidos) >= 12)
-                <h5 class="text-success font-weight-bold"><i class="fas fa-check-double"></i> ¡Expediente Completo!</h5>
-                <p class="small text-muted">Haga clic abajo para enviar su solicitud a revisión administrativa.</p>
+                <h5 class="text-orange-impordiesel font-bold uppercase mb-2"><i class="fas fa-check-double mr-2"></i>¡Expediente Completo!</h5>
+                <p class="text-sm text-gray-600 mb-4">Ya puede enviar su solicitud para la validación de nuestros analistas.</p>
                 <form action="{{ route('portal.clientes.finalizar.paso2') }}" method="POST">
                     @csrf
-                    <button type="submit" class="btn btn-success btn-lg btn-block shadow-sm font-weight-bold py-3">
-                        <i class="fas fa-paper-plane mr-2"></i> ENVIAR EXPEDIENTE A REVISIÓN
+                    <button type="submit" class="w-full md:w-auto bg-orange-impordiesel hover:bg-orange-600 text-white font-bold py-4 px-12 rounded shadow-lg transition duration-300 uppercase tracking-widest text-sm">
+                        <i class="fas fa-paper-plane mr-2"></i> Enviar Expediente a Revisión
                     </button>
                 </form>
             @else
-                <h5 class="text-muted font-weight-bold">Progreso: {{ count($docsSubidos) }} de 12</h5>
-                <div class="progress mb-3" style="height: 10px;">
-                    @php $porcentajeDocs = (count($docsSubidos) / 12) * 100; @endphp
-                    <div class="progress-bar bg-primary" style="width: {{ $porcentajeDocs }}%"></div>
+                <div class="max-w-md mx-auto">
+                    <h5 class="text-gray-500 font-bold uppercase text-sm mb-3">Progreso de Carga: {{ count($docsSubidos) }} de 12</h5>
+                    <div class="w-full bg-gray-300 rounded-full h-2 mb-4">
+                        @php $porcentajeDocs = (count($docsSubidos) / 12) * 100; @endphp
+                        <div class="bg-gray-industrial h-2 rounded-full transition-all duration-500" style="width: {{ $porcentajeDocs }}%"></div>
+                    </div>
+                    <button class="w-full bg-gray-300 text-gray-500 font-bold py-3 px-8 rounded cursor-not-allowed uppercase text-xs tracking-widest" disabled>
+                        Faltan Documentos por cargar
+                    </button>
                 </div>
-                <button class="btn btn-secondary btn-lg btn-block py-3 shadow-sm" disabled>
-                    <i class="fas fa-lock mr-2"></i> FALTAN DOCUMENTOS
-                </button>
             @endif
         </div>
     </div>

@@ -80,6 +80,7 @@ class VehiculoController extends BaseController
             $gastoCombustible = $consumoTotalLitros * $precioLitroCombustible;
             $kmTotales = $historialMensual->sum('km');
             $costoPorKm = $kmTotales > 0 ? $gastoCombustible / $kmTotales : 0;
+            $planes=
    
             // 1. Foto Principal
             $foto = VehiculoFoto::where('vehiculo_id', $item->id)
