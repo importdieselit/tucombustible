@@ -7,33 +7,32 @@ use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
-    /**
-     * El servicio se carga vía Service Container dentro del método index.
-     */
+    protected DashboardService $dashboardService;
+
+    public function __construct(DashboardService $dashboardService)
+    {
+        $this->dashboardService = $dashboardService;
+    }
+
     public function index()
     {
         $user = Auth::user();
 
-        // 1. DASHBOARD PRINCIPAL (Admin / SuperUser)
+        // Superusuario y Administrador — redirigen al panel provisional
         if (in_array($user->id_perfil, [1, 2])) {
             return redirect()->route('admin.dashboard_principal_provisional');
         }
 
-        // 2. DASHBOARDS DEL MÓDULO CLIENTES (Perfil 3)
-        $dashboardService = app(DashboardService::class);
-        $data = $dashboardService->getDashboardData($user);
+        // Cliente (perfil 3)
+        $data = $this->dashboardService->getDashboardData($user);
 
-        // Caso: Cliente que aún no completa el registro
-        if ($data['perfil'] === 'cliente_proceso') {
-            return view('cliente.en_proceso', $data);
-        }
-
-        // Caso: Cliente Activo (Sea Padre o Sucursal)
-        // Usamos la misma vista unificada 'cliente.index'
-        if (in_array($data['perfil'], ['cliente_padre', 'cliente_sucursal'])) {
-            return view('cliente.index', $data);
-        }
-
-        return abort(403, 'Perfil de usuario no reconocido o expediente no vinculado.');
+        return match ($data['perfil']) {
+            'cliente_en_registro' => view('cliente.en_proceso', $data),
+            'cliente_rechazado'   => view('cliente.rechazado', $data),
+            'cliente_inactivo'    => view('cliente.inactivo', $data),
+            'cliente_padre',
+            'cliente_sucursal'    => view('cliente.index', $data),
+            default               => abort(403, 'Perfil de usuario no reconocido o expediente no vinculado.'),
+        };
     }
 }

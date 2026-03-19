@@ -7,34 +7,33 @@ use Illuminate\Support\Facades\Hash;
 
 class UserService
 {
-    protected $repository;
+    protected UserRepository $repository;
 
     public function __construct(UserRepository $repository)
     {
         $this->repository = $repository;
     }
 
-    // Método que faltaba para el index del controlador
-    public function obtenerListaFiltrada(array $filtros, $clienteId = 0)
+    public function obtenerListaFiltrada(array $filtros, int $clienteId = 0)
     {
         return $this->repository->getFiltrados($filtros, $clienteId);
     }
 
-    public function obtenerDashboardData($clienteId)
+    public function obtenerDashboardData(int $clienteId): array
     {
         $stats = $this->repository->getStatsPorPerfil($clienteId);
         return [
             'perfilesConteo' => $stats,
-            'totalGeneral'   => $stats->sum('total')
+            'totalGeneral'   => $stats->sum('total'),
         ];
     }
 
-    public function actualizarPasswordObligatorio($userId, $newPassword)
+    public function actualizarPasswordObligatorio($userId, string $newPassword): void
     {
-        return $this->repository->update($userId, [
-            'password' => Hash::make($newPassword), // Laravel 10+ usa hashed por defecto en el cast, pero Hash::make es más seguro aquí
+        $this->repository->update($userId, [
+            'password'             => Hash::make($newPassword),
             'must_change_password' => 0,
-            'status_usuario' => 'activo'
+            'status_usuario'       => 'activo',
         ]);
     }
 

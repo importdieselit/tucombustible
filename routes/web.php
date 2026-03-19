@@ -5,9 +5,8 @@ use Illuminate\Support\Facades\Auth;
 
 // IMPORTACIÓN DE CONTROLADORES
 use App\Http\Controllers\Admin\ClienteController as AdminClienteController;
-use App\Http\Controllers\Admin\PedidoAdminController; 
+use App\Http\Controllers\Admin\PedidoAdminController;
 use App\Http\Controllers\ClienteController as PortalClienteController;
-use App\Http\Controllers\SucursalController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\{
     DashboardController, VehiculoController, MarcaController, ModeloController,
@@ -31,7 +30,7 @@ Route::get('/password/reset', [ForgotPasswordController::class, 'showLinkRequest
 Route::post('/password/reset/validar', [ForgotPasswordController::class, 'checkEmail'])->name('password.email.check');
 
 /**
- * PASO 1: REGISTRO PÚBLICO
+ * REGISTRO PÚBLICO DE CLIENTES
  */
 Route::get('/registro-cliente', [PortalClienteController::class, 'showRegistrationForm'])->name('cliente.register');
 Route::post('/registro-cliente', [PortalClienteController::class, 'store'])->name('cliente.register.store');
@@ -40,93 +39,88 @@ Route::get('/obtener-ciudades/{estado_id}', [PortalClienteController::class, 'ge
 /* --- Rutas Protegidas --- */
 Route::middleware(['auth'])->group(function () {
 
-    /**
-     * PASO 2: SEGURIDAD INICIAL (Cambio de Contraseña Obligatorio)
-     */
-    Route::get('/password/change', [UserController::class, 'showChangePassword'])->name('password.change');
-    Route::post('/password/update', [UserController::class, 'updatePassword'])->name('password.update');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     /**
-     * ACCESO CONTROLADO: Requiere haber cambiado la clave
+     * MÓDULOS DE ADMINISTRACIÓN (Perfiles 1: Superusuario y 2: Administrador)
      */
-    Route::middleware(['check.password'])->group(function () {
+    Route::middleware(['role:1,2'])->group(function () {
 
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        // --- MÓDULO CLIENTES COMBUSTIBLE ---
+        Route::prefix('admin-clientes')->name('clientes.')->group(function () {
+            Route::get('/',                    [AdminClienteController::class, 'index'])->name('index');
+            Route::get('/crear',               [AdminClienteController::class, 'create'])->name('create');
+            Route::post('/',                   [AdminClienteController::class, 'store'])->name('store');
+            Route::get('/{id}/expediente',     [AdminClienteController::class, 'show'])->name('show');
+            Route::get('/{id}/editar',         [AdminClienteController::class, 'edit'])->name('edit');
+            Route::put('/{id}',                [AdminClienteController::class, 'update'])->name('update');
 
-        /**
-         * GESTIÓN DE ACTIVOS (PLACAS Y CHOFERES)
-         */
-        Route::post('/activos/asignar', [ClienteActivosController::class, 'asignarActivos'])->name('cliente.activos.asignar');
+            // Flujo de registro
+            Route::post('/{id}/avanzar-paso',  [AdminClienteController::class, 'avanzarPaso'])->name('avanzarPaso');
 
-        /**
-         * MÓDULOS DE ADMINISTRACIÓN (Perfiles 1: Superusuario y 2: Administrador)
-         */
-        Route::middleware(['role:1,2'])->group(function () {
-            
-            Route::prefix('admin-clientes')->name('clientes.')->group(function () {
-                Route::get('/panel-control', [AdminClienteController::class, 'index'])->name('index'); 
-                Route::get('/{id}/expediente', [AdminClienteController::class, 'show'])->name('show');
-                Route::post('/{id}/avanzar', [AdminClienteController::class, 'updatePaso'])->name('avanzar'); 
-                Route::post('/{id}/toggle-status', [AdminClienteController::class, 'toggleStatus'])->name('toggleStatus');
-            });
+            // Gestión de status
+            Route::post('/{id}/aprobar',       [AdminClienteController::class, 'aprobar'])->name('aprobar');
+            Route::post('/{id}/rechazar',      [AdminClienteController::class, 'rechazar'])->name('rechazar');
+            Route::post('/{id}/inactivar',     [AdminClienteController::class, 'inactivar'])->name('inactivar');
+            Route::post('/{id}/reactivar',     [AdminClienteController::class, 'reactivar'])->name('reactivar');
 
-            Route::prefix('admin-pedidos')->name('admin.pedidos.')->group(function () {
-                Route::get('/', [PedidoAdminController::class, 'index'])->name('index');
-                Route::post('/{id}/actualizar-estado', [PedidoAdminController::class, 'updateEstado'])->name('updateEstado');
-            });
+            // Cupos
+            Route::post('/{id}/ajustar-cupo',  [AdminClienteController::class, 'ajustarCupo'])->name('ajustarCupo');
 
-            // CRUDs MAESTROS
-            $resourceControllers = [
-                'vehiculos'                   => VehiculoController::class,
-                'marcas'                      => MarcaController::class,
-                'modelos'                     => ModeloController::class,
-                'choferes'                    => ChoferController::class,
-                'ordenes'                     => OrdenController::class,
-                'tanques'                     => TanqueController::class,
-                'depositos'                   => DepositoController::class,
-                'almacenes'                   => AlmacenController::class,
-                'inventario'                  => InventarioController::class,
-                'proveedores'                 => ProveedorController::class,
-                'usuarios'                    => UserController::class,
-                'inspecciones'                => InspeccionController::class,
-                'pedidos'                     => PedidoController::class,
-                'movimientos-combustible'     => MovimientoCombustibleController::class,
-                'planificacion-mantenimiento' => PlanificacionMantenimientoController::class,
-            ];
+            // Placas
+            Route::post('/{id}/placas',                    [AdminClienteController::class, 'registrarPlaca'])->name('placas.store');
+            Route::post('/placas/{placaId}/inactivar',     [AdminClienteController::class, 'inactivarPlaca'])->name('placas.inactivar');
 
-            foreach ($resourceControllers as $prefix => $controller) {
-                $name = str_replace('-', '', $prefix);
-                Route::resource($prefix, $controller)->names($name);
-            }
-
-            Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
-            Route::get('/aforos', [AforoController::class, 'index'])->name('aforos.index');
-            Route::get('/search', [SearchController::class, 'query'])->name('search');
+            // Choferes
+            Route::post('/{id}/choferes',                  [AdminClienteController::class, 'registrarChofer'])->name('choferes.store');
+            Route::post('/choferes/{choferId}/inactivar',  [AdminClienteController::class, 'inactivarChofer'])->name('choferes.inactivar');
         });
 
-        /**
-         * ZONA CLIENTES (Solo Perfil 3)
-         */
-        Route::middleware(['role:3'])->prefix('mi-cuenta')->name('portal.clientes.')->group(function () {
-            Route::get('/resumen', [PortalClienteController::class, 'index'])->name('index');
-            Route::post('/subir-documento', [PortalClienteController::class, 'uploadDoc'])->name('upload.doc');
-            Route::post('/finalizar-carga', [PortalClienteController::class, 'finalizarCargaDocs'])->name('finalizar.paso2');
-            Route::get('/mi-perfil', [PortalClienteController::class, 'perfil'])->name('perfil');
-            Route::get('/descargar-formatos', [PortalClienteController::class, 'descargarFormatos'])->name('descargar.formatos');
-            Route::post('/nueva-solicitud', [PedidoController::class, 'store'])->name('pedidos.store');
-
-            // RUTAS DE GESTIÓN DE SUCURSALES (FASE 3)
-            Route::prefix('sucursales')->name('sucursales.')->group(function () {
-                Route::post('/{id}/toggle', [SucursalController::class, 'toggleStatus'])->name('toggle');
-                Route::get('/{id}/expediente', [SucursalController::class, 'showExpediente'])->name('show');
-            });
+        // --- MÓDULO CLIENTES LUBRICANTES ---
+        Route::prefix('admin-clientes-lubricantes')->name('clientes.lubricantes.')->group(function () {
+            Route::get('/',         [AdminClienteController::class, 'indexLubricantes'])->name('index');
+            Route::post('/',        [AdminClienteController::class, 'storeLubricante'])->name('store');
+            Route::delete('/{id}',  [AdminClienteController::class, 'destroyLubricante'])->name('destroy');
         });
+
+        // --- CRUDs MAESTROS ---
+        $resourceControllers = [
+            'vehiculos'                   => VehiculoController::class,
+            'marcas'                      => MarcaController::class,
+            'modelos'                     => ModeloController::class,
+            'choferes'                    => ChoferController::class,
+            'ordenes'                     => OrdenController::class,
+            'tanques'                     => TanqueController::class,
+            'depositos'                   => DepositoController::class,
+            'almacenes'                   => AlmacenController::class,
+            'inventario'                  => InventarioController::class,
+            'proveedores'                 => ProveedorController::class,
+            'usuarios'                    => UserController::class,
+            'inspecciones'                => InspeccionController::class,
+            'movimientos-combustible'     => MovimientoCombustibleController::class,
+            'planificacion-mantenimiento' => PlanificacionMantenimientoController::class,
+        ];
+
+        foreach ($resourceControllers as $prefix => $controller) {
+            $name = str_replace('-', '', $prefix);
+            Route::resource($prefix, $controller)->names($name);
+        }
+
+        Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
+        Route::get('/aforos',   [AforoController::class, 'index'])->name('aforos.index');
+        Route::get('/search',   [SearchController::class, 'query'])->name('search');
+
+        // Dashboard provisional de desarrollo
+        Route::get('/admin/principal-provisional', function () {
+            return view('admin.dashboard_principal_provisional');
+        })->name('admin.dashboard_principal_provisional');
     });
-});
 
-/* Rutas de Desarrollo */
-Route::middleware(['auth', 'check.password', 'role:1,2'])->group(function () {
-    Route::get('/admin/principal-provisional', function() {
-        return view('admin.dashboard_principal_provisional'); 
-    })->name('admin.dashboard_principal_provisional');
+    /**
+     * ZONA CLIENTES (Solo Perfil 3)
+     */
+    Route::middleware(['role:3'])->prefix('mi-cuenta')->name('portal.clientes.')->group(function () {
+        Route::get('/resumen',   [PortalClienteController::class, 'index'])->name('index');
+        Route::get('/mi-perfil', [PortalClienteController::class, 'perfil'])->name('perfil');
+    });
 });

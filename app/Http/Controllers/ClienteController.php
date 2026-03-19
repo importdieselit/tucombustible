@@ -4,26 +4,32 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Services\{ClienteService, DashboardService};
-use App\Models\{Estado, Ciudad, Cliente};
+use App\Models\{Estado, Ciudad};
+use App\Models\TipoCombustible;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\{Auth, File, Log};
-use ZipArchive;
+use Illuminate\Support\Facades\{Auth, Log};
 
 class ClienteController extends Controller
 {
-    protected $clienteService;
-    protected $dashboardService;
+    protected ClienteService $clienteService;
+    protected DashboardService $dashboardService;
 
     public function __construct(ClienteService $clienteService, DashboardService $dashboardService)
     {
-        $this->clienteService = $clienteService;
+        $this->clienteService   = $clienteService;
         $this->dashboardService = $dashboardService;
     }
 
+    // -------------------------------------------------------
+    // REGISTRO PÚBLICO DE CLIENTES
+    // -------------------------------------------------------
+
     public function showRegistrationForm()
     {
-        $estados = Estado::orderBy('nombre', 'asc')->get();
-        return view('auth.register_cliente', compact('estados'));
+        $estados          = Estado::orderBy('nombre', 'asc')->get();
+        $tiposCombustible = TipoCombustible::all();
+
+        return view('auth.register_cliente', compact('estados', 'tiposCombustible'));
     }
 
     public function store(Request $request)
@@ -31,138 +37,95 @@ class ClienteController extends Controller
         $rifCompleto = strtoupper($request->rif_tipo . '-' . $request->rif_numero);
         $request->merge(['rif' => $rifCompleto]);
 
-        // Reglas de validación base
         $rules = [
-            'rif'                 => 'required|max:15|unique:clientes,rif', 
-            'razon_social'        => 'required|string|max:255',
+            'rif'                 => 'required|string|max:20',
+            'nombre'              => 'required|string|max:255',
             'email'               => 'required|email|unique:users,email',
             'contacto'            => 'required|string|max:255',
-            'telefono'            => 'required|numeric|digits:11',
+            'telefono'            => 'required|string|max:20',
             'estado_id'           => 'required|exists:estados,id',
             'ciudad_id'           => 'required|exists:ciudades,id',
+            'direccion'           => 'nullable|string',
             'direccion_operativa' => 'required|string',
-            'litros_diesel'       => 'nullable|numeric|min:0',
-            'litros_mgo'          => 'nullable|numeric|min:0',
+            'tipo_combustible_id' => 'required|exists:tipos_combustible,id',
+            'litros_solicitados'  => 'required|numeric|min:1',
         ];
 
-        // Validación condicional si es sucursal
         if ($request->tipo_cliente === 'sucursal') {
             $rules['token_padre'] = 'required|exists:clientes,token_registro';
         }
 
         $request->validate($rules, [
-            'token_padre.exists' => 'El Código de Empresa Principal (Token) ingresado no es válido.',
-            'token_padre.required' => 'Debe ingresar el Token de la empresa principal para vincular la sucursal.',
-            'rif.unique' => 'Este RIF ya se encuentra registrado en nuestro sistema.'
+            'token_padre.exists'         => 'El Código de Empresa Principal (Token) ingresado no es válido.',
+            'token_padre.required'       => 'Debe ingresar el Token de la empresa principal para vincular la sucursal.',
+            'tipo_combustible_id.exists' => 'Debe seleccionar un tipo de combustible válido.',
+            'litros_solicitados.min'     => 'Debe solicitar al menos 1 litro.',
         ]);
 
-        if ((!$request->litros_diesel || $request->litros_diesel <= 0) && 
-            (!$request->litros_mgo || $request->litros_mgo <= 0)) {
-            return back()->withInput()->with('error', 'Debe solicitar al menos un combustible.');
-        }
-
         try {
-            $datos = $request->all();
-            $datos['nombre'] = $request->razon_social;
-            
-            // Pasamos los datos al Service que ya maneja la lógica de parentesco
-            $this->clienteService->registrarCliente($datos);
-            
-            return redirect()->route('login')->with('success', 'Registro exitoso. Ingrese con su RIF sin guiones.');
+            $this->clienteService->registrarCliente($request->all());
+            return redirect()->route('login')
+                ->with('success', 'Registro exitoso. Ingrese con su RIF sin guiones como contraseña.');
         } catch (\Exception $e) {
-            return back()->withInput()->with('error', 'Error: ' . $e->getMessage());
+            Log::error('Error en registro de cliente: ' . $e->getMessage());
+            return back()->withInput()->with('error', $e->getMessage());
         }
     }
+
+    // -------------------------------------------------------
+    // DASHBOARD DEL CLIENTE
+    // -------------------------------------------------------
 
     public function index()
     {
-        $user = Auth::user();
-        $cliente = $user->cliente; 
+        $user    = Auth::user();
+        $cliente = $user->cliente;
 
         if (!$cliente) {
             Auth::logout();
-            return redirect()->route('login')->with('error', 'No tiene un expediente asociado.');
+            return redirect()->route('login')
+                ->with('error', 'No tiene un expediente asociado a su cuenta.');
         }
 
-        if ($cliente->registro_paso < 10) {
-            $cliente->load('documentos');
-            return view('cliente.en_proceso', compact('cliente'));
-        }
-
-        // Se obtienen los datos procesados del DashboardService
         $data = $this->dashboardService->getDashboardData($user);
-        
+
+        // Cliente en proceso de registro
+        if ($data['perfil'] === 'cliente_en_registro') {
+            return view('cliente.en_proceso', $data);
+        }
+
+        // Cliente rechazado
+        if ($data['perfil'] === 'cliente_rechazado') {
+            return view('cliente.rechazado', $data);
+        }
+
+        // Cliente inactivo
+        if ($data['perfil'] === 'cliente_inactivo') {
+            return view('cliente.inactivo', $data);
+        }
+
+        // Cliente aprobado (padre o sucursal)
         return view('cliente.index', $data);
     }
 
-    public function descargarFormatos()
-    {
-        $zip = new ZipArchive;
-        $fileName = 'Formatos_Registro_TuCombustible.zip';
-        $pathPlanillas = storage_path('app/public/planillas');
-        $zipPath = public_path($fileName);
-
-        if (!File::isDirectory($pathPlanillas)) {
-            Log::error("La carpeta de planillas no existe: " . $pathPlanillas);
-            return back()->with('error', 'El directorio de formatos no está disponible.');
-        }
-
-        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
-            $files = File::files($pathPlanillas);
-            if (empty($files)) {
-                $zip->close();
-                return back()->with('error', 'No hay archivos disponibles para descargar en este momento.');
-            }
-            foreach ($files as $file) {
-                $zip->addFile($file->getRealPath(), $file->getFilename());
-            }
-            $zip->close();
-        }
-
-        if (!File::exists($zipPath)) {
-            return back()->with('error', 'No se pudo generar el archivo de descarga.');
-        }
-
-        return response()->download($zipPath)->deleteFileAfterSend(true);
-    }
-
-    public function uploadDoc(Request $request)
-    {
-        $request->validate([
-            'tipo_documento' => 'required|string',
-            'archivo'        => 'required|file|mimes:pdf,doc,docx,odt|max:10240', 
-        ]);
-
-        try {
-            $this->clienteService->subirDocumentoExpediente(
-                Auth::user()->cliente_id, 
-                $request->file('archivo'), 
-                $request->tipo_documento
-            );
-            return back()->with('success', 'Documento cargado correctamente.');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Error: ' . $e->getMessage());
-        }
-    }
-
-    public function finalizarCargaDocs()
-    {
-        try {
-            $this->clienteService->enviarExpedienteARevision(Auth::user()->cliente_id);
-            return redirect()->route('portal.clientes.index')->with('success', '¡Perfecto! Tu expediente ha sido enviado a revisión exitosamente.');
-        } catch (\Exception $e) {
-            return back()->with('error', $e->getMessage());
-        }
-    }
-
-    public function getCiudades($estado_id)
-    {
-        return Ciudad::where('estado_id', $estado_id)->orderBy('nombre', 'asc')->get();
-    }
+    // -------------------------------------------------------
+    // PERFIL DEL CLIENTE
+    // -------------------------------------------------------
 
     public function perfil()
     {
         $cliente = $this->clienteService->obtenerExpediente(Auth::user()->cliente_id);
         return view('cliente.perfil', compact('cliente'));
+    }
+
+    // -------------------------------------------------------
+    // AUXILIARES
+    // -------------------------------------------------------
+
+    public function getCiudades($estado_id)
+    {
+        return Ciudad::where('estado_id', $estado_id)
+            ->orderBy('nombre', 'asc')
+            ->get();
     }
 }

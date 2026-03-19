@@ -18,8 +18,12 @@ class ClienteCupo extends Model
         'litros_aprobados',
     ];
 
+    // -------------------------------------------------------
+    // RELACIONES
+    // -------------------------------------------------------
+
     /**
-     * Relación: El cupo pertenece a un Cliente (Padre o Sucursal)
+     * El cupo pertenece a un Cliente (Padre o Sucursal).
      */
     public function cliente()
     {
@@ -27,7 +31,7 @@ class ClienteCupo extends Model
     }
 
     /**
-     * Relación: El cupo define un Tipo de Combustible específico
+     * El cupo está asociado a un tipo de combustible específico.
      */
     public function tipoCombustible()
     {

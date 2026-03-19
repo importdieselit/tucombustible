@@ -35,7 +35,7 @@ class VenezuelaMapSeeder extends Seeder
             'Guárico' => ['San Juan de los Morros', 'Valle de la Pascua', 'Calabozo', 'Zaraza', 'Altagracia de Orituco'],
             'Lara' => ['Barquisimeto', 'Carora', 'Cabudare', 'El Tocuyo', 'Duaca', 'Quíbor'],
             'Mérida' => ['Mérida', 'El Vigía', 'Ejido', 'Tovar', 'Mucuchíes'],
-            'Miranda' => ['Los Teques', 'Guarenas', 'Guatire', 'Charallave', 'Santa Teresa del Tuy', 'Ocumare del Tuy', 'Higuerote', 'Río Chico', 'San Antonio de los Altos'],
+            'Miranda' => ['Los Teques', 'Guarenas', 'Guatire', 'Charallave', 'Santa Teresa del Tuy', 'Ocumare del Tuy', 'Higuerote', 'Río Chico', 'San Antonio de los Altos', 'Santa Lucía del Tuy', 'Chacao', 'El Hatillo', 'Baruta', 'Sucre'],
             'Monagas' => ['Maturín', 'Punta de Mata', 'Caripe', 'Caripito', 'Temblador'],
             'Nueva Esparta' => ['La Asunción', 'Porlamar', 'Pampatar', 'Juan Griego', 'Punta de Piedras'],
             'Portuguesa' => ['Guanare', 'Acarigua', 'Araure', 'Turén', 'Boconó'],

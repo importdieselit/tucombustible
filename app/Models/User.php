@@ -24,9 +24,7 @@ class User extends Authenticatable
         'cliente_id',
         'fcm_token',
         'id_master',
-        'status',
-        'status_usuario',      
-        'must_change_password',
+        'status',      
         'telegram_id',
         'telegram_username',
         'ultimo_login'
