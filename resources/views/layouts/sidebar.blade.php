@@ -1,5 +1,5 @@
 @php
-    use App\Models\Acceso;
+    use App\Models\PermisoPerfil;
     use Illuminate\Support\Facades\Auth;
     use App\Models\Modulo;
 
@@ -12,7 +12,7 @@
             ->orderBy('orden')
             ->get();
     } else {
-        $modulosPermitidosIds = Acceso::where('id_usuario', Auth::id())
+        $modulosPermitidosIds = PermisoPerfil::where('id_perfil', $user->id_perfil)
             ->where('read', 1)
             ->pluck('id_modulo');
 

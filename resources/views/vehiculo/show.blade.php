@@ -24,10 +24,10 @@
         <button class="btn btn-outline-dark shadow-sm" data-bs-toggle="modal" data-bs-target="#modalAcoplar">
             <i class="fa-solid fa-link me-1"></i> Acoplar Cisterna
         </button>
-    @elseif($esCisterna)
+    {{-- @elseif($esCisterna)
         <button class="btn btn-outline-dark shadow-sm" data-bs-toggle="modal" data-bs-target="#modalAsignarChuto">
             <i class="fa-solid fa-truck-front me-1"></i> Asignar Chuto
-        </button>
+        </button> --}}
     @endif
 
     <a type="button" class="btn btn-danger" href="{{ route('ot.create', $item->id) }}">
@@ -52,7 +52,7 @@
                     <h3 class="mb-0">{{ $item->placa }} </h3>
                     <p class="text-muted mb-0">{{ $item->marca()->marca }} {{ $item->modelo()->modelo }} | {{ $item->anno }}</p>
                     <span class="badge bg-{{ $estatus->css }}">
-                        {{ $estatus->auto  }} 
+                        {{ $estatus->auto  }}
                     </span>
                 </div>
                 @if($esChuto || $esCisterna)
@@ -65,7 +65,7 @@
                                         <i class="fa fa-link"></i> {{ $item->cisternaAcoplada->placa }}
                                     </span>
                                     <button type="button" class="btn btn-link text-danger p-0 ms-1 d-inline" style="font-size: 0.6rem;"
-                                            onclick="event.stopPropagation(); desacoplar({{ $item->id }})" 
+                                            onclick="event.stopPropagation(); desacoplar({{ $item->id }})"
                                             title="Desacoplar">
                                         <i class="fa fa-times-circle" style="font-size: 0.6rem;"></i>
                                     </button>
@@ -75,9 +75,9 @@
                             </div>
                         @else
                             @if($item->chutoAsignado)
-                                
+
                                     <i class="fa fa-truck"></i>: {{ $item->chutoAsignado->placa }}
-                                
+
                             @else
                                 (Disponible)
                             @endif
@@ -116,10 +116,10 @@
                 </li>
             </ul>
         </div>
-        
+
         <div class="card-body bg-white">
             <div class="tab-content" id="vehiculoTabContent">
-                
+
                 <div class="tab-pane fade show active" id="resumen" role="tabpanel">
                     <div class="row">
                         <h6 class="mb-3">Historial de Kilometraje y Consumo Mensual <span class="text-danger">(MODO DEMO)</span></h6>
@@ -172,7 +172,7 @@
                                     </tr>
                                 @empty
                                 <tr class="text-center"><td colspan="4">No hay mantenimientos registrados</td></tr>
-                                    
+
                                 @endforelse
                             </tbody>
                         </table>
@@ -195,7 +195,7 @@
                             </thead>
                             <tbody>
                                 @forelse($viajes as $viaje)
-                              
+
                                     <tr>
                                         <td>{{ $viaje["fecha"] }}</td>
                                         <td> Sede Principal</td>
@@ -273,7 +273,7 @@
     document.addEventListener('DOMContentLoaded', function () {
 
 
-      
+
 
         // Datos de PHP pasados a JavaScript
         const historialMensual = @json($historialMensual);
@@ -348,7 +348,7 @@
             }],
             credits: false
         });
-     
+
     });
 
             function desacoplar(id) {

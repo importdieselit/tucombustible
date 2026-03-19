@@ -209,8 +209,8 @@
                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
                         <h5 class="m-0 fw-bold text-uppercase small"><i class="fas fa-box-open text-orange me-2"></i>Repuestos e Insumos</h5>
                         <div class="btn-group">
-                            <button type="button" class="btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#searchSupplyModal"><i class="fas fa-search"></i></button>
-                            <button type="button" class="btn btn-outline-dark btn-sm" data-bs-toggle="modal" data-bs-target="#manualSupplyModal"><i class="fas fa-plus"></i></button>
+                            <button type="button" class="btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#searchSupplyModal"><i class="fas fa-search"></i> Solicitar de Almacen</button>
+                            <button type="button" class="btn btn-outline-dark btn-sm" data-bs-toggle="modal" data-bs-target="#manualSupplyModal"><i class="fas fa-plus"></i> Solicitar Compra</button>
                         </div>
                     </div>
                     <div class="card-body p-0">

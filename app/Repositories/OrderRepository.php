@@ -13,6 +13,6 @@ class OrderRepository
 
     public function getUltimas($cantidad = 5)
     {
-        return Orden::with('vehiculo')->orderBy('id', 'desc')->take($cantidad)->get();
+        return Orden::with('vehiculoBelong')->orderBy('id', 'desc')->take($cantidad)->get();
     }
 }
