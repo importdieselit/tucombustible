@@ -20,7 +20,7 @@
 </div>
 
 {{-- Modal con Estilo Impordiesel --}}
-<div class="modal fade" id="planificarModal" tabindex="-1">
+<div class="modal fade" id="planificarModal" data-bs-backdrop="false" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-corporate text-white">

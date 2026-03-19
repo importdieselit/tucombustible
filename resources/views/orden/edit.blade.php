@@ -118,7 +118,7 @@
     </div>
 
 {{-- Modal para Suministro Manual (Permite múltiples adiciones) --}}
-<div class="modal fade" id="manualSupplyModal" tabindex="-1" aria-labelledby="manualSupplyModalLabel" aria-hidden="true">
+<div class="modal fade" id="manualSupplyModal" data-bs-backdrop="false" tabindex="-1" aria-labelledby="manualSupplyModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-secondary text-white">
@@ -147,7 +147,7 @@
 </div>
 
 {{-- Modal para buscar suministros --}}
-<div class="modal fade" id="searchSupplyModal" tabindex="-1" aria-labelledby="searchSupplyModalLabel" aria-hidden="true">
+<div class="modal fade" id="searchSupplyModal" data-bs-backdrop="false" tabindex="-1" aria-labelledby="searchSupplyModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">

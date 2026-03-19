@@ -642,7 +642,7 @@
 
 
     <!-- Modal para Ajuste de Nivel -->
-    <div class="modal fade" id="ajustarNivelModal" tabindex="-1" aria-labelledby="ajustarNivelModalLabel" aria-hidden="true">
+    <div class="modal fade" id="ajustarNivelModal" tabindex="-1" data-bs-backdrop="false" aria-labelledby="ajustarNivelModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered text-dark">
             <div class="modal-content bg-custom-dark rounded-3 shadow-lg">
                 <div class="modal-header border-bottom-0">
@@ -672,7 +672,7 @@
     </div>
 
     <!-- Modal para Ajuste de Nivel -->
-    <div class="modal fade" id="ajustarResguardoModal" tabindex="-1" aria-labelledby="ajustarResguardoModalLabel" aria-hidden="true">
+    <div class="modal fade" id="ajustarResguardoModal" data-bs-backdrop="false" tabindex="-1" aria-labelledby="ajustarResguardoModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered text-dark">
             <div class="modal-content bg-custom-dark rounded-3 shadow-lg">
                 <div class="modal-header border-bottom-0">
@@ -703,7 +703,7 @@
     
 
     <!-- Modal para Hacer Pedido -->
-    <div class="modal fade" id="hacerPedidoModal" tabindex="-1" aria-labelledby="hacerPedidoModalLabel" aria-hidden="true">
+    <div class="modal fade" id="hacerPedidoModal" data-bs-backdrop="false" tabindex="-1" aria-labelledby="hacerPedidoModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-card text-dark rounded-3 shadow-lg">
                 <div class="modal-header border-bottom-0">
@@ -740,7 +740,7 @@
     </div>
 
     <!-- Modal para Editar Sucursal -->
-    <div class="modal fade" id="editarSucursalModal" tabindex="-1" aria-labelledby="editarSucursalModalLabel" aria-hidden="true">
+    <div class="modal fade" id="editarSucursalModal" data-bs-backdrop="false" tabindex="-1" aria-labelledby="editarSucursalModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-card text-dark rounded-3 shadow-lg">
                 <div class="modal-header border-bottom-0">

@@ -241,7 +241,7 @@
 </div>
 <
 
-<div class="modal fade" id="searchSupplyModal" tabindex="-1">
+<div class="modal fade" id="searchSupplyModal" data-bs-backdrop="false" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-corporate text-white">
@@ -274,7 +274,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="manualSupplyModal" tabindex="-1">
+<div class="modal fade" id="manualSupplyModal" data-bs-backdrop="false" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-secondary text-white">

@@ -17,7 +17,7 @@
             </button>
         </div>
 
-        <div class="modal fade" id="modalTraspaso" tabindex="-1">
+        <div class="modal fade" id="modalTraspaso" data-bs-backdrop="false" tabindex="-1">
             <div class="modal-dialog">
                 <form action="{{ route('combustible.storeTraspaso') }}" method="POST" class="modal-content">
                     @csrf

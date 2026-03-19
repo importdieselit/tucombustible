@@ -163,7 +163,7 @@
 
 
     <!-- Modal para Ajuste de Nivel -->
-    <div class="modal fade" id="ajustarNivelModal" tabindex="-1" aria-labelledby="ajustarNivelModalLabel" aria-hidden="true">
+    <div class="modal fade" id="ajustarNivelModal" tabindex="-1" data-bs-backdrop="false" aria-labelledby="ajustarNivelModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-custom-dark text-white rounded-3 shadow-lg">
                 <div class="modal-header border-bottom-0">

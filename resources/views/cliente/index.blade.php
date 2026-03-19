@@ -203,7 +203,7 @@
         </div>
     </div>
 
-    <div class="modal fade" id="hacerPedidoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="hacerPedidoModal" data-bs-backdrop="false" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">

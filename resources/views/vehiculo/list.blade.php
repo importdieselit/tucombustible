@@ -265,7 +265,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalAcoplar" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalAcoplar" data-bs-backdrop="false" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
             <div class="modal-header">

@@ -109,7 +109,7 @@
 </div>
 
 <!-- Modal de Permisos -->
-<div class="modal fade" id="permissionsModal" tabindex="-1" aria-labelledby="permissionsModalLabel" aria-hidden="true">
+<div class="modal fade" id="permissionsModal" tabindex="-1" data-bs-backdrop="false" aria-labelledby="permissionsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">

@@ -334,7 +334,7 @@
 
 {{-- MODALES --}}
 
-<div class="modal fade" id="modalTrabajo" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalTrabajo" data-bs-backdrop="false" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <form action="{{ route('ordenes.addTrabajo', $orden->id) }}" method="POST">
             @csrf
@@ -387,7 +387,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalInsumo" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalInsumo" data-bs-backdrop="false" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <form action="{{ route('ordenes.addInsumo', $orden->id) }}" method="POST">
             @csrf

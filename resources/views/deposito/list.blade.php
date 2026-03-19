@@ -101,7 +101,7 @@
 </div>
 
 <!-- Modal para Crear/Editar Depósito -->
-<div class="modal fade" id="depositoModal" tabindex="-1" aria-labelledby="depositoModalLabel" aria-hidden="true">
+<div class="modal fade" id="depositoModal" data-bs-backdrop="false" tabindex="-1" aria-labelledby="depositoModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">

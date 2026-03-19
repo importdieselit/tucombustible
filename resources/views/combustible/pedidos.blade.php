@@ -98,7 +98,7 @@
 </div>
 
 <!-- Modal para Crear Pedido -->
-<div class="modal fade" id="crearPedidoModal" tabindex="-1" aria-labelledby="crearPedidoModalLabel" aria-hidden="true">
+<div class="modal fade" id="crearPedidoModal" data-bs-backdrop="false" tabindex="-1" aria-labelledby="crearPedidoModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
