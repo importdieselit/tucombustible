@@ -193,7 +193,7 @@
     </div>
     
     <!-- Modal de confirmación -->
-    <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal fade" id="confirmModal" data-bs-backdrop="false" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content bg-custom-lighter-dark text-white rounded-3 shadow-lg">
                 <div class="modal-header border-bottom-0">

@@ -19,7 +19,9 @@
     <button class="btn btn-outline-corporate shadow-sm" data-bs-toggle="modal" data-bs-target="#modalChofer">
         <i class="fa-solid fa-user-tie me-1"></i> Chofer
     </button>
-
+    <button class="btn btn-warning shadow-sm" data-bs-toggle="modal" data-bs-target="#modalPlanificar">
+        <i class="fa-solid fa-calendar-check me-1"></i> Planificar Mantt.
+    </button>
     @if($esChuto)
         <button class="btn btn-outline-dark shadow-sm" data-bs-toggle="modal" data-bs-target="#modalAcoplar">
             <i class="fa-solid fa-link me-1"></i> Acoplar Cisterna
@@ -159,6 +161,7 @@
                                     <th>Descripción</th>
                                     <th>Responsable</th>
                                     <th>Estatus</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -169,6 +172,13 @@
                                         <td>{{ $m->tipo }} - {{ $m->descripcion }}</td>
                                         <td>{{ $m->responsable }}</td>
                                         <td><span class="badge bg-{{ $m->estatus() ? $m->estatus()->css : 'secondary' }}">{{ $m->estatus() ? $m->estatus()->orden : 'Sin Estatus' }}</span></td>
+                                        <td class="text-center">
+                                            <a href="{{ route('ordenes.show', $m->id) }}" 
+                                            class="btn btn-sm btn-outline-dark shadow-sm" 
+                                            title="Ver detalle de la Orden">
+                                                <i class="fa-solid fa-eye"></i>
+                                            </a>
+                                        </td>
                                     </tr>
                                 @empty
                                 <tr class="text-center"><td colspan="4">No hay mantenimientos registrados</td></tr>
@@ -241,6 +251,62 @@
     </div>
 </div>
 
+<div class="modal fade" id="modalPlanificar" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-orange">
+            <form id="formPlanificarMantenimiento" class="modal-content border-orange">
+                @csrf
+                <input type="hidden" name="vehiculo_id" value="{{ $item->id }}">
+                
+                <div class="modal-header bg-corporate text-white">
+                    <h5 class="modal-title"><i class="fas fa-tools me-2"></i>Planificar Rutina Preventiva</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="alert alert-light border mb-3">
+                        <small class="text-muted d-block text-uppercase fw-bold small">Contadores Actuales:</small>
+                        <div class="d-flex justify-content-between mt-1">
+                            <span><strong>KM:</strong> {{ number_format($item->km_contador) }} / 50.000</span>
+                            <span><strong>HRS:</strong> {{ number_format($item->hrs_contador) }} / 2.000</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Fecha Programada</label>
+                        <input type="date" name="fecha_programada" id="fecha_programada" class="form-control" min="{{ date('Y-m-d') }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Rutina a Ejecutar</label>
+                        {{-- El name debe ser tipo_mantenimiento para el validate del controlador --}}
+                        <label class="form-label fw-bold">Rutina Recomendada</label>
+                        <select name="tipo_mantenimiento" id="selectRutina" class="form-select border-primary fw-bold" required>
+                            <option value="1" data-short="M1">M1 Basica     (5000/200)</option>
+                            <option value="2" data-short="M2">M2 Intermedia (10000/400)</option>
+                            <option value="3" data-short="M3">M3 Mayor      (20000/800)</option>
+                            <option value="4" data-short="M4">M4 General / Overhaul</option>
+                        </select>
+                        <div id="rutinaSugeridaMsg" class="form-text text-primary fw-bold mt-2"></div>
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label small">Notas Adicionales</label>
+                        <textarea name="titulo" class="form-control" rows="2" placeholder="Información adicional para la descripción..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" id="btnEnviarPlan" class="btn btn-warning fw-bold">
+                        <i class="fas fa-save me-1"></i> Generar Planificación
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="modalAcoplar" data-bs-backdrop="false" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content text-center p-4">
@@ -272,6 +338,37 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
 
+// Lógica de recomendación de rutina
+    const kmAcumulado = {{ $item->km_contador ?? 0 }};
+    const hrsAcumuladas = {{ $item->hrs_contador ?? 0 }};
+    const select = document.getElementById('selectRutina');
+    const msg = document.getElementById('rutinaSugeridaMsg');
+
+    function calcularSugerencia() {
+        let sugerencia = "M1";
+        
+        // Lógica de ciclos según tu requerimiento:
+        // M4 a los 50k km o 2000 hrs
+        if (kmAcumulado >= 45000 || hrsAcumuladas >= 1800) {
+            sugerencia = "M4";
+        } 
+        // M3 a los 20k, 40k km o 800, 1600 hrs
+        else if ((kmAcumulado >= 15000 && kmAcumulado < 25000) || (kmAcumulado >= 35000 && kmAcumulado < 45000) || 
+                 (hrsAcumuladas >= 700 && hrsAcumuladas < 900) || (hrsAcumuladas >= 1500 && hrsAcumuladas < 1700)) {
+            sugerencia = "M3";
+        }
+        // M2 a los 10k, 30k km o 400, 1200 hrs
+        else if ((kmAcumulado >= 5000 && kmAcumulado < 15000) || (kmAcumulado >= 25000 && kmAcumulado < 35000) ||
+                 (hrsAcumuladas >= 300 && hrsAcumuladas < 500) || (hrsAcumuladas >= 1100 && hrsAcumuladas < 1300)) {
+            sugerencia = "M2";
+        }
+
+        select.value = sugerencia;
+        msg.innerHTML = `<i class="fas fa-info-circle"></i> Sugerencia basada en uso: <strong>${sugerencia}</strong>`;
+    }
+
+    // Ejecutar al abrir el modal
+    document.getElementById('modalPlanificar').addEventListener('show.bs.modal', calcularSugerencia);
 
 
 
@@ -349,6 +446,38 @@
             credits: false
         });
 
+
+        // 2. Envío de datos al Controlador (Store)
+        $('#formPlanificarMantenimiento').on('submit', function(e) {
+            e.preventDefault();
+            
+            const btn = $('#btnEnviarPlan');
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Procesando...');
+
+            $.ajax({
+                url: "{{ route('mantenimiento.planificacion.store') }}", // Asegúrate que esta ruta apunte a tu función store
+                method: "POST",
+                data: $(this).serialize(),
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Planificado!',
+                            text: response.message,
+                            confirmButtonColor: '#e67e22'
+                        }).then(() => {
+                            location.reload(); // Recargamos para ver la nueva OT en el historial
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    btn.prop('disabled', false).text('Generar Planificación');
+                    const errorMsg = xhr.responseJSON ? xhr.responseJSON.message : 'Error desconocido';
+                    Swal.fire('Error', errorMsg, 'error');
+                }
+            });
+        });
+
     });
 
             function desacoplar(id) {
@@ -367,6 +496,7 @@
                     }
                 });
             }
+
 
 </script>
 @endsection
