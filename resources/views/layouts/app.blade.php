@@ -55,8 +55,31 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     align-items: center;
     gap: 10px;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
 }
+    /* FIX CRÍTICO: Evitar que Tailwind resetee los botones de la marca */
+        .bg-orange-impordiesel {
+            background-color: #FF6B00 !important;
+            color: white !important;
+        }
+        .bg-gray-industrial {
+            background-color: #4C474F !important;
+            color: white !important;
+        }
+        /* Asegurar que los botones tipo enlace se vean como botones */
+        .btn-orange, .btn-dark {
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            border: none !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+        
+        {{-- Estilos para simetría con el compañero --}}
+        .text-orange-impordiesel { color: #FF6B00 !important; }
+        .border-orange-impordiesel { border-color: #FF6B00 !important; }
+    
 
 #offline-toast.show {
     display: flex;
@@ -75,6 +98,9 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 
+
+
+    
     @stack('styles')
 </head>
 <body class="bg-gray-50">

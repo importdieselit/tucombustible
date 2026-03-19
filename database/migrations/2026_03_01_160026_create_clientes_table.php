@@ -37,8 +37,7 @@ return new class extends Migration
  
             $table->unsignedBigInteger('registro_paso')->default(1)->comment('FK hacia registro_pasos.id');
             $table->integer('status')->default(1)->comment('0=Inactivo, 1=En registro, 2=Aprobado, 3=Rechazado');
-            $table->timestamp('fecha_aprobacion')->nullable()->comment('Fecha en que el cliente fue aprobado o rechazado');
- 
+            
             $table->string('telegram_id', 100)->nullable();
  
             $table->timestamps();

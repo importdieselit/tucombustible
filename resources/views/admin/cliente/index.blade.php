@@ -85,7 +85,7 @@
                 <tbody class="divide-y divide-gray-200">
                     @forelse($clientes as $c)
                     <tr class="hover:bg-gray-50 {{ !$c->es_padre ? 'bg-gray-50' : '' }}">
-                        <td class="px-6 py-4">
+                        <td class="px-3 py-1">
                             @if(!$c->es_padre)
                                 <div class="flex items-start">
                                     <span class="text-gray-300 mr-2 mt-1 text-xs">└</span>
@@ -104,7 +104,7 @@
                                 <div class="text-xs font-bold text-gray-500 mt-1">RIF: {{ $c->rif }}</div>
                             @endif
                         </td>
-                        <td class="px-6 py-4 text-center">
+                        <td class="px-1 py-1 text-center">
                             @if($c->es_padre)
                                 <span class="bg-gray-industrial text-white px-2 py-1 rounded text-[9px] font-black uppercase">
                                     Padre
@@ -115,25 +115,25 @@
                                 </span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 text-center">
+                        <td class="px-1 py-1 text-center">
                             <span class="{{ $c->color_status }} text-white px-3 py-1 rounded text-[10px] font-black uppercase tracking-tighter shadow-sm">
                                 {{ $c->label_status }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-center">
+                        <td class="px-1 py-1 text-center">
                             <div class="text-xs font-bold text-gray-700">
                                 {{ $c->created_at?->format('d/m/Y') ?? 'N/A' }}
                             </div>
                         </td>
-                        <td class="px-6 py-4 text-center">
+                        <td class="px-1 py-1 text-center">
                             <div class="text-xs font-bold text-gray-700">
                                 {{ $c->fecha_aprobacion?->format('d/m/Y') ?? '—' }}
                             </div>
                         </td>
-                        <td class="px-6 py-4 text-right">
+                        <td class="px-1 py-1 text-right">
                             <a href="{{ route('clientes.show', $c->id) }}"
-                               class="inline-block bg-orange-impordiesel text-white px-5 py-2 rounded text-xs font-black uppercase hover:bg-orange-700 transition shadow-md border-b-2 border-orange-900">
-                                <i class="fas fa-folder-open mr-1"></i> Expediente
+                               class="inline-flex bg-orange-impordiesel text-white px-3 py-2 rounded text-xs font-black uppercase hover:bg-orange-700 transition shadow-md border-b-2 border-orange-900">
+                                <i class="fas fa-folder-open mr-1 "></i> Expediente
                             </a>
                         </td>
                     </tr>
@@ -222,7 +222,7 @@
                     </div>
                     <div class="text-right">
                         <p class="text-lg font-black text-blue-600">
-                            {{ number_format($cliente->cupos_max, 0, ',', '.') }}
+                            {{ number_format($cliente->cupos_max_litros_aprobados, 0, ',', '.') }}
                             <small class="text-[9px] text-gray-400 font-bold uppercase">L</small>
                         </p>
                         <a href="{{ route('clientes.show', $cliente->id) }}"
