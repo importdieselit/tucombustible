@@ -10,6 +10,10 @@
            class="bg-gray-industrial text-white px-5 py-2.5 rounded text-xs font-black uppercase hover:bg-black transition flex items-center shadow-md">
             <i class="fas fa-chevron-left mr-2 text-orange-impordiesel"></i> Volver al Listado
         </a>
+        <a href="{{ route('admin-cliente.editar', $cliente->id) }}) }}"
+           class="bg-corporate text-white px-5 py-2.5 rounded text-xs font-black uppercase hover:bg-black transition flex items-center shadow-md">
+            <i class="fas fa-pencil mr-2 text-orange-impordiesel"></i> Editar
+        </a>
         <button onclick="window.print()"
                 class="bg-white border-2 border-gray-800 text-gray-800 px-5 py-2 rounded text-xs font-black uppercase hover:bg-gray-800 hover:text-white transition shadow-sm">
             <i class="fas fa-print mr-2"></i> Imprimir
