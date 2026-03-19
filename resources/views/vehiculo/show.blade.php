@@ -169,7 +169,16 @@
                                     <tr>
                                         <td><a href="{{ route('ordenes.show', $m->id) }}" class="text-decoration-none">#{{ $m->nro_orden }}</a></td>
                                         <td>{{ $m->fecha_in }}</td>
-                                        <td>{{ $m->tipo }} - {{ $m->descripcion }}</td>
+                                        <td class="descripcion-celda" style="cursor: pointer;" onclick="toggleDescripcion(this)">
+                                            <div class="fw-bold small text-orange">{{ $m->tipo }}</div>
+                                            {{-- Contenedor con clase para truncar --}}
+                                            <div class="contenido-descripcion text-muted small mt-1 collapsed-text">
+                                                {!! $m->descripcion !!}
+                                            </div>
+                                            <small class="text-primary x-small btn-leer-mas">
+                                                <i class="fas fa-chevron-down me-1"></i>Ver más
+                                            </small>
+                                        </td>
                                         <td>{{ $m->responsable }}</td>
                                         <td><span class="badge bg-{{ $m->estatus() ? $m->estatus()->css : 'secondary' }}">{{ $m->estatus() ? $m->estatus()->orden : 'Sin Estatus' }}</span></td>
                                         <td class="text-center">
@@ -495,6 +504,21 @@
                         window.location.href = `/vehiculos/desacoplar/${id}`;
                     }
                 });
+            }
+
+            function toggleDescripcion(elemento) {
+                const contenedor = $(elemento).find('.contenido-descripcion');
+                const btn = $(elemento).find('.btn-leer-mas');
+
+                if (contenedor.hasClass('collapsed-text')) {
+                    // Expandir
+                    contenedor.removeClass('collapsed-text').addClass('expanded-text');
+                    btn.html('<i class="fas fa-chevron-up me-1"></i>Ver menos');
+                } else {
+                    // Contraer
+                    contenedor.removeClass('expanded-text').addClass('collapsed-text');
+                    btn.html('<i class="fas fa-chevron-down me-1"></i>Ver más');
+                }
             }
 
 

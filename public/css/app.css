@@ -12153,3 +12153,25 @@ textarea.form-control-lg {
         border: 2px solid #e67e22; /* Tu naranja corporativo */
         margin-top: 10px;
     }
+
+    /* Limita a una sola línea y oculta el resto */
+    .collapsed-text {
+        display: -webkit-box;
+        -webkit-line-clamp: 1; /* Número de líneas visibles */
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    /* Clase que se aplicará al expandir */
+    .expanded-text {
+        display: block;
+        overflow: visible;
+        -webkit-line-clamp: unset;
+    }
+
+    .descripcion-celda:hover {
+        background-color: rgba(230, 126, 34, 0.03);
+    }
+    
+    .x-small { font-size: 0.7rem; }

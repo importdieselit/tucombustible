@@ -181,7 +181,7 @@
                 <div class="card-body">
                     <label class="form-label-corp fw-bold text-uppercase small">Observaciones Técnicas:</label>
                     <p class="mt-2 p-3 bg-light rounded border" style="min-height: 100px;">
-                        {{ $orden->descripcion ?: 'Sin observaciones adicionales.' }}
+                        {!! $orden->descripcion ?: 'Sin observaciones adicionales.' !!}
                     </p>
                 </div>
             </div>
