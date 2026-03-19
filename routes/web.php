@@ -16,7 +16,7 @@ use App\Http\Controllers\{
     AlertaController, AccesoController, InspeccionController, PedidoController,
     ReporteController, AforoController, SearchController, DataDeletionController,
     ViajesController, TelegramController, PlanificacionMantenimientoController,
-    ReportController, ClienteActivosController,ClienteController
+    ReportController, ClienteActivosController
 };
 
 /* --- Rutas Públicas y Auth --- */
@@ -89,7 +89,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/inventario/export/excel', [InventarioController::class, 'export'])->name('inventario.export');
     Route::get('/ventas/create', [InventarioController::class, 'ventaCreate'])->name('ventas.create');
     Route::post('/ventas/store', [InventarioController::class, 'ventaStore'])->name('ventas.store');
-    Route::post('/clientes/store-ajax', [ClienteController::class, 'storeAjax'])->name('clientes.storeAjax');  
+    Route::post('/clientes/store-ajax', [PortalClienteController::class, 'storeAjax'])->name('clientes.storeAjax');  
     Route::get('/ventas/list', [InventarioController::class, 'ventaList'])->name('ventas.list'); 
     Route::get('/ventas/show/{id}', [InventarioController::class, 'ventaShow'])->name('ventas.show'); 
 
@@ -98,8 +98,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('choferes/importar', [ChoferController::class, 'importar'])->name('choferes.importar');
     Route::get('/vehiculos/import', [VehiculoController::class, 'importForm'])->name('vehiculos.import');
     Route::post('/vehiculos/import', [VehiculoController::class, 'importSave'])->name('vehiculos.import.save');
-    Route::get('clientes/import', [ClienteController::class, 'import'])->name('clientes.import');
-    Route::post('clientes/handle', [ClienteController::class, 'handleImport'])->name('clientes.handleImport');
+    Route::get('clientes/import', [PortalClienteController::class, 'import'])->name('clientes.import');
+    Route::post('clientes/handle', [PortalClienteController::class, 'handleImport'])->name('clientes.handleImport');
     Route::get('/usuarios/importar', [UserController::class, 'import'])->name('usuarios.importar');
     Route::post('/usuarios/importarP', [UserController::class, 'handleImport'])->name('usuarios.importarprocess');
 
@@ -230,14 +230,7 @@ Route::middleware(['auth'])->group(function () {
          */
         Route::middleware(['role:1,2,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18'])->group(function () {
             
-            Route::prefix('admin-clientes')->name('clientes.')->group(function () {
-                Route::get('/panel-control', [AdminClienteController::class, 'index'])->name('index'); 
-                Route::get('/{id}/expediente', [AdminClienteController::class, 'show'])->name('show');
-                Route::post('/{id}/avanzar', [AdminClienteController::class, 'updatePaso'])->name('avanzar'); 
-                Route::post('/{id}/toggle-status', [AdminClienteController::class, 'toggleStatus'])->name('toggleStatus');
-                Route::post('/asignar-activos', [ClienteActivosController::class, 'asignarActivos'])->name('activos.asignar');
-            });
-
+            
             // CRUDs MAESTROS Y RECURSOS
             $resourceControllers = [
                 'vehiculos'                   => VehiculoController::class,
@@ -272,6 +265,42 @@ Route::middleware(['auth'])->group(function () {
         });
 
 
+        // --- MÓDULO CLIENTES COMBUSTIBLE ---
+        Route::prefix('admin-clientes')->name('clientes.')->group(function () {
+            Route::get('/',                    [AdminClienteController::class, 'index'])->name('index');
+            Route::get('/crear',               [AdminClienteController::class, 'create'])->name('create');
+            Route::post('/',                   [AdminClienteController::class, 'store'])->name('store');
+            Route::get('/{id}/expediente',     [AdminClienteController::class, 'show'])->name('show');
+            Route::get('/{id}/editar',         [AdminClienteController::class, 'edit'])->name('edit');
+            Route::put('/{id}',                [AdminClienteController::class, 'update'])->name('update');
+
+            // Flujo de registro
+            Route::post('/{id}/avanzar-paso',  [AdminClienteController::class, 'avanzarPaso'])->name('avanzarPaso');
+
+            // Gestión de status
+            Route::post('/{id}/aprobar',       [AdminClienteController::class, 'aprobar'])->name('aprobar');
+            Route::post('/{id}/rechazar',      [AdminClienteController::class, 'rechazar'])->name('rechazar');
+            Route::post('/{id}/inactivar',     [AdminClienteController::class, 'inactivar'])->name('inactivar');
+            Route::post('/{id}/reactivar',     [AdminClienteController::class, 'reactivar'])->name('reactivar');
+
+            // Cupos
+            Route::post('/{id}/ajustar-cupo',  [AdminClienteController::class, 'ajustarCupo'])->name('ajustarCupo');
+
+            // Placas
+            Route::post('/{id}/placas',                    [AdminClienteController::class, 'registrarPlaca'])->name('placas.store');
+            Route::post('/placas/{placaId}/inactivar',     [AdminClienteController::class, 'inactivarPlaca'])->name('placas.inactivar');
+
+            // Choferes
+            Route::post('/{id}/choferes',                  [AdminClienteController::class, 'registrarChofer'])->name('choferes.store');
+            Route::post('/choferes/{choferId}/inactivar',  [AdminClienteController::class, 'inactivarChofer'])->name('choferes.inactivar');
+        });
+
+        // --- MÓDULO CLIENTES LUBRICANTES ---
+        Route::prefix('admin-clientes-lubricantes')->name('clientes.lubricantes.')->group(function () {
+            Route::get('/',         [AdminClienteController::class, 'indexLubricantes'])->name('index');
+            Route::post('/',        [AdminClienteController::class, 'storeLubricante'])->name('store');
+            Route::delete('/{id}',  [AdminClienteController::class, 'destroyLubricante'])->name('destroy');
+        });
 
         /**
          * ZONA CLIENTES (Solo Perfil 3)
