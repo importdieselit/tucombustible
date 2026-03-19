@@ -221,6 +221,7 @@ Route::middleware(['auth'])->group(function () {
         // Telegram
         Route::post('/send-telegram-photo', [TelegramController::class, 'sendPhoto'])->name('telegram.send.photo');
         Route::post('/send-telegram-message', [TelegramController::class, 'sendMessage'])->name('telegram.send.message');
+  
 
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
