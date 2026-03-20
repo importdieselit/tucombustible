@@ -92,7 +92,7 @@
                                         <select name="id_tipo" id="tipo" class="form-select select2-simple" required>
                                             <option value="">Seleccione...</option>
                                             @foreach($tiposVehiculo as $key => $value)
-                                                <option value="{{ $key }}" {{ (isset($item) && $item->id_tipo == $key) ? 'selected' : '' }}>
+                                                <option value="{{ $key }}" {{ (isset($item) && $item->tipo == $key) ? 'selected' : '' }}>
                                                     {{ $value }}
                                                 </option>
                                             @endforeach
@@ -106,7 +106,7 @@
                                             
                                             @foreach($marcas as $key => $value)
 
-                                                <option value="{{ $key }}" {{ (isset($item) && $item->id_marca == $key) ? 'selected' : '' }}>
+                                                <option value="{{ $key }}" {{ (isset($item) && $item->marca == $key) ? 'selected' : '' }}>
                                                     {{ $value }}
                                                 </option>
                                             @endforeach
@@ -116,6 +116,11 @@
                                         <label class="form-label">Modelo</label>
                                         <select name="id_modelo" id="modelo" class="form-select select2-simple" required>
                                             <option value="">Seleccione marca primero...</option>
+                                            @foreach($modelos as $key => $value)
+                                                <option value="{{ $key }}" {{ (isset($item) && $item->modelo == $key) ? 'selected' : '' }}>
+                                                    {{ $value }}
+                                                </option>
+                                            @endforeach
                                         </select>
                                     </div>
                                     <div class="col-md-3">
