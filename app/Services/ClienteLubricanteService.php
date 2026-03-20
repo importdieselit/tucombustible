@@ -25,6 +25,7 @@ class ClienteLubricanteService
             'razon_social' => strtoupper($data['razon_social']),
             'rif'          => strtoupper($data['rif']),
             'email'        => strtolower($data['email']),
+            'telefono'     => $data['telefono'] ?? null,
         ]);
     }
 
@@ -34,6 +35,7 @@ class ClienteLubricanteService
             'razon_social' => strtoupper($data['razon_social']),
             'rif'          => strtoupper($data['rif']),
             'email'        => strtolower($data['email']),
+            'telefono'     => $data['telefono'] ?? null,
         ]);
     }
 

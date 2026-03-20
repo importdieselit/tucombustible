@@ -80,6 +80,8 @@ class ClienteController extends Controller
             'email'               => 'required|email:rfc,dns|max:255',
             'contacto'            => 'required|string|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u|max:255',
             'telefono'            => 'nullable|digits_between:10,11',
+            'contacto_alt'        => 'nullable|string|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u|max:255',
+            'telefono_alt'        => 'nullable|digits_between:10,11',
             'estado_id'           => 'required|exists:estados,id',
             'ciudad_id'           => 'required|exists:ciudades,id',
             'direccion'           => 'nullable|string',
@@ -88,9 +90,11 @@ class ClienteController extends Controller
             'tipo_cliente'        => 'nullable|in:padre,sucursal',
             'token_padre'         => 'nullable|string|exists:clientes,token_registro',
         ], [
-            'contacto.regex'             => 'El nombre de contacto solo debe contener letras.',
-            'telefono.digits_between'    => 'El teléfono debe tener entre 10 y 11 dígitos.',
-            'token_padre.exists'         => 'El Token de la empresa principal no es válido.',
+            'contacto.regex'          => 'El nombre de contacto solo debe contener letras.',
+            'contacto_alt.regex'      => 'El nombre de contacto alternativo solo debe contener letras.',
+            'telefono.digits_between' => 'El teléfono debe tener entre 10 y 11 dígitos.',
+            'telefono_alt.digits_between' => 'El teléfono alternativo debe tener entre 10 y 11 dígitos.',
+            'token_padre.exists'      => 'El Token de la empresa principal no es válido.',
             'tipo_combustible_id.exists' => 'El tipo de combustible seleccionado no es válido.',
         ]);
 
@@ -129,15 +133,20 @@ class ClienteController extends Controller
             'rif'                 => 'required|string|max:15|unique:clientes,rif,' . $id,
             'email'               => 'required|email:rfc,dns|max:255',
             'contacto'            => 'required|string|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u|max:255',
-            'telefono'            => 'nullable|numeric',
+            'telefono'            => 'nullable|digits_between:10,11',
+            'contacto_alt'        => 'nullable|string|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u|max:255',
+            'telefono_alt'        => 'nullable|digits_between:10,11',
             'estado_id'           => 'nullable|exists:estados,id',
             'ciudad_id'           => 'nullable|exists:ciudades,id',
             'direccion'           => 'nullable|string',
             'direccion_operativa' => 'nullable|string',
         ], [
-            'contacto.regex' => 'El campo Persona de Contacto solo debe contener letras.',
-            'email.email'    => 'El correo electrónico debe ser una dirección válida con @.',
-            'rif.unique'     => 'Este RIF ya se encuentra registrado en otro cliente.',
+            'contacto.regex'              => 'El campo Persona de Contacto solo debe contener letras.',
+            'contacto_alt.regex'          => 'El campo Contacto Alternativo solo debe contener letras.',
+            'email.email'                 => 'El correo electrónico debe ser una dirección válida con @.',
+            'rif.unique'                  => 'Este RIF ya se encuentra registrado en otro cliente.',
+            'telefono.digits_between'     => 'El teléfono debe tener entre 10 y 11 dígitos.',
+            'telefono_alt.digits_between' => 'El teléfono alternativo debe tener entre 10 y 11 dígitos.',
         ]);
 
         try {
@@ -145,6 +154,7 @@ class ClienteController extends Controller
 
             app(\App\Repositories\ClienteRepository::class)->update($id, $request->only([
                 'nombre', 'rif', 'email', 'contacto', 'telefono',
+                'contacto_alt', 'telefono_alt',
                 'estado_id', 'ciudad_id', 'direccion', 'direccion_operativa',
             ]));
 
@@ -277,9 +287,7 @@ class ClienteController extends Controller
 
     public function registrarPlaca(Request $request, $id)
     {
-        $request->validate([
-            'placa' => 'required|string|max:8',
-        ]);
+        $request->validate(['placa' => 'required|string|max:8']);
 
         try {
             $this->clienteService->registrarPlaca($id, $request->placa);
@@ -352,12 +360,14 @@ class ClienteController extends Controller
             'razon_social' => 'required|string|max:255',
             'rif'          => 'required|string|max:20|unique:clientes_lubricantes,rif',
             'email'        => 'required|email|max:255',
+            'telefono'     => 'nullable|digits_between:10,11',
         ], [
-            'razon_social.required' => 'La razón social es obligatoria.',
-            'rif.required'          => 'El RIF es obligatorio.',
-            'rif.unique'            => 'Ya existe un cliente lubricante registrado con este RIF.',
-            'email.required'        => 'El correo electrónico es obligatorio.',
-            'email.email'           => 'El correo electrónico debe ser válido.',
+            'razon_social.required'   => 'La razón social es obligatoria.',
+            'rif.required'            => 'El RIF es obligatorio.',
+            'rif.unique'              => 'Ya existe un cliente lubricante registrado con este RIF.',
+            'email.required'          => 'El correo electrónico es obligatorio.',
+            'email.email'             => 'El correo electrónico debe ser válido.',
+            'telefono.digits_between' => 'El teléfono debe tener entre 10 y 11 dígitos.',
         ]);
 
         try {

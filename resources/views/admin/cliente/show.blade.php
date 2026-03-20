@@ -10,6 +10,10 @@
            class="bg-gray-industrial text-white px-5 py-2.5 rounded text-xs font-black uppercase hover:bg-black transition flex items-center shadow-md">
             <i class="fas fa-chevron-left mr-2 text-orange-impordiesel"></i> Volver al Listado
         </a>
+        <a href="{{ route('clientes.edit', ['id' => $cliente->id]) }}"
+           class="bg-gray-industrial text-white px-5 py-2.5 rounded text-xs font-black uppercase hover:bg-black transition flex items-center shadow-md">
+            <i class="fas fa-chevron-left mr-2 text-orange-impordiesel"></i> Editar Cliente
+        </a>
         <button onclick="window.print()"
                 class="bg-white border-2 border-gray-800 text-gray-800 px-5 py-2 rounded text-xs font-black uppercase hover:bg-gray-800 hover:text-white transition shadow-sm">
             <i class="fas fa-print mr-2"></i> Imprimir
@@ -68,14 +72,27 @@
                     </p>
                 </div>
                 <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+
+                    {{-- CONTACTO PRINCIPAL --}}
                     <div>
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Contacto</p>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Contacto Principal</p>
                         <p class="font-black text-gray-700 uppercase mt-1">{{ $cliente->contacto ?? 'N/A' }}</p>
                     </div>
                     <div>
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Teléfono</p>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Teléfono Principal</p>
                         <p class="font-black text-gray-700 mt-1">{{ $cliente->telefono ?? 'N/A' }}</p>
                     </div>
+
+                    {{-- CONTACTO ALTERNATIVO --}}
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Contacto Alternativo</p>
+                        <p class="font-black text-gray-700 uppercase mt-1">{{ $cliente->contacto_alt ?? '—' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Teléfono Alternativo</p>
+                        <p class="font-black text-gray-700 mt-1">{{ $cliente->telefono_alt ?? '—' }}</p>
+                    </div>
+
                     <div>
                         <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Correo</p>
                         <p class="font-black text-gray-700 mt-1">{{ $cliente->email ?? 'N/A' }}</p>
@@ -273,7 +290,7 @@
                     @csrf
                     <button type="submit"
                             class="w-full bg-red-600 text-white font-black py-3 rounded text-xs uppercase hover:bg-red-700 transition shadow-lg border-b-4 border-red-900 tracking-widest"
-                            onclick="return confirm('¿Confirmar rechazo del cliente? Esta acción no se puede deshacer fácilmente.')">
+                            onclick="return confirm('¿Confirmar rechazo del cliente?')">
                         <i class="fas fa-times mr-1"></i> Marcar como Rechazado
                     </button>
                 </form>
