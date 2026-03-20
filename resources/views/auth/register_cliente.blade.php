@@ -188,7 +188,7 @@
         ciudadSelect.innerHTML = '<option value="">Cargando ciudades...</option>';
 
         if (estadoId) {
-            fetch(`{{ route('ciudades.get') }}/${estadoId}`)
+            fetch(`{{ route('ciudades.get',${estadoId}) }}`)
                 .then(response => response.json())
                 .then(data => {
                     ciudadSelect.innerHTML = '<option value="">Seleccione Ciudad</option>';
