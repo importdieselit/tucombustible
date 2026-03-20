@@ -221,7 +221,7 @@
             return;
         }
 
-        fetch(`/obtener-ciudades/${estadoId}`)
+        fetch(`{{ route('ciudades.get') }}/${estadoId}`)
             .then(r => r.json())
             .then(ciudades => {
                 select.innerHTML = '<option value="">Seleccione una ciudad...</option>';
