@@ -1,618 +1,424 @@
 @extends('layouts.app')
 
-@section('title', 'Editar Orden de Trabajo')
+@section('title', 'Editar Orden de Trabajo #' . $item->nro_orden)
+
+@push('styles')
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        .border-orange { border-top: 3px solid #e67e22 !important; }
+        .text-orange { color: #e67e22 !important; }
+        .bg-corporate { background-color: #2c3e50 !important; color: white; }
+        .btn-corporate { background-color: #e67e22; color: white; font-weight: bold; }
+        #map { height: 300px; width: 100%; border-radius: 8px; border: 2px solid #ddd; }
+        .select2-container--bootstrap-5 .select2-selection { border-radius: 0.375rem; }
+    </style>
+@endpush
 
 @section('content')
-<div class="row mb-4">
-    <div class="col-12">
-        <h1 class="mb-2">Editar Orden de Trabajo #{{ $item->nro_orden }}</h1>
-        <p class="text-muted">Modifica los detalles de la orden de reparación o mantenimiento.</p>
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 shadow-sm rounded">
+        <div>
+            <h3 class="fw-bold mb-0 text-uppercase">
+                <i class="fas fa-file-signature text-orange me-2"></i>Editar Orden de Trabajo
+            </h3>
+            <p class="text-muted mb-0 small">Modificación de registros, diagnósticos y repuestos asignados.</p>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-corporate p-2 fs-6">ORDEN NRO: {{ $item->nro_orden }}</span>
+        </div>
     </div>
-</div>
 
-<div class="card shadow-sm mb-4">
-    <div class="card-header bg-white">
-        <h5 class="card-title m-0">Datos de la Orden</h5>
-    </div>
-    <div class="card-body bg-white">
-        <form action="{{ route('ordenes.update', $item->id) }}" method="POST">
-            @csrf
-            @method('PUT')
+    <form action="{{ route('ordenes.update', $item->id) }}" method="POST" id="orden-form" enctype="multipart/form-data">
+        @csrf
+        @method('PUT')
+        
+        <input type="hidden" name="latitud" id="latitud" value="{{ $item->latitud }}">
+        <input type="hidden" name="longitud" id="longitud" value="{{ $item->longitud }}">
 
-            {{-- Datos de la Orden --}}
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="vehiculo_id" class="form-label">Vehículo</label>
-                     {{ $item->vehiculo()->flota }}    <strong>{{ $item->vehiculo()->placa }}</strong> - {{ $item->vehiculo()->marca()->marca }} {{ $item->vehiculo()->modelo()->modelo }}
-                    
+        <div class="row g-4">
+            {{-- SECCIÓN 1: DATOS DE LA UNIDAD --}}
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm border-orange">
+                    <div class="card-header bg-white fw-bold"><i class="fas fa-truck me-2 text-orange"></i>Datos de la Unidad</div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Vehículo / Equipo</label>
+                            <select name="id_vehiculo" class="form-select select2-vehiculos" required>
+                                <option value="{{ $item->id_vehiculo }}" selected>
+                                    {{ $item->vehiculo()->flota }} - {{ $item->vehiculo()->placa }} ({{ $item->vehiculo()->marca()->marca }})
+                                </option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Kilometraje al Ingreso</label>
+                            <input type="number" name="kilometraje" class="form-control" value="{{ $item->kilometraje }}" required>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label small fw-bold">Prioridad</label>
+                            <select name="prioridad" class="form-select">
+                                <option value="Baja" {{ $item->prioridad == 'Baja' ? 'selected' : '' }}>Baja</option>
+                                <option value="Media" {{ $item->prioridad == 'Media' ? 'selected' : '' }}>Media</option>
+                                <option value="Alta" {{ $item->prioridad == 'Alta' ? 'selected' : '' }}>Alta</option>
+                                <option value="Crítica" {{ $item->prioridad == 'Crítica' ? 'selected' : '' }}>Crítica</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label for="kilometraje" class="form-label">Kilometraje</label>
-                    <input type="number" class="form-control" id="kilometraje" name="kilometraje" value="{{ $item->kilometraje }}" required>
+            </div>
+
+            {{-- SECCIÓN 2: UBICACIÓN --}}
+            <div class="col-md-8">
+                <div class="card h-100 shadow-sm border-orange">
+                    <div class="card-header bg-white fw-bold"><i class="fas fa-map-marker-alt me-2 text-orange"></i>Ubicación del Servicio</div>
+                    <div class="card-body">
+                        <div class="input-group mb-3">
+                            <input type="text" id="search-input" class="form-control" placeholder="Buscar dirección o lugar..." value="{{ $item->direccion }}">
+                            <button class="btn btn-corporate" type="button" id="search-btn"><i class="fas fa-search"></i></button>
+                        </div>
+                        <div id="map"></div>
+                        <input type="hidden" name="direccion" id="input-direccion" value="{{ $item->direccion }}">
+                    </div>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label for="responsable" class="form-label">Responsable Asignado</label>
-                    {{ $item->responsable}}                 
+            </div>
+
+            {{-- SECCIÓN 3: DETALLES --}}
+            <div class="col-md-12">
+                <div class="card shadow-sm border-orange">
+                    <div class="card-header bg-white fw-bold"><i class="fas fa-tools me-2 text-orange"></i>Detalles Técnicos y Diagnóstico</div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label small fw-bold">Tipo de Servicio</label>
+                                <input type="text" name="tipo" class="form-control" value="{{ $item->tipo }}" placeholder="Ej: Preventivo, Correctivo...">
+                            </div>
+                            <div class="col-md-8 mb-3">
+                                <label class="form-label small fw-bold">Título / Resumen</label>
+                                <input type="text" name="descripcion_1" class="form-control" value="{{ $item->descripcion_1 }}" required>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label small fw-bold">Observaciones / Informe Detallado</label>
+                                <textarea name="descripcion" class="form-control" rows="4">{{ $item->descripcion }}</textarea>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            
-                <div class="col-md-6 mb-3">
-                    <label for="estatus" class="form-label">Estatus</label>
-                        <span class="badge bg-{{ $item->estatus()->css }}" title="{{ $item->estatus()->descripcion }}">
-                            <i class="mr-1 fa-solid {{ $item->estatus()->icon_orden }}"></i>
-                           {{ $item->estatus()->orden }}
-                        </span>
-                </div>
-                {{-- <div class="col-md-6 mb-3">
-                    <label for="tipo_orden" class="form-label">Tipo de Orden</label>
-                    <select class="form-select" id="tipo_orden" name="id_tipo_orden" required>
-                        <option value="">Seleccione un tipo</option>
-                        @foreach ($tipos_orden as $tipo)
-                            <option value="{{ $tipo->id }}" {{ $item->id_tipo_orden == $tipo->id ? 'selected' : '' }}>
-                                {{ $tipo->tipo }}
+            </div>
+
+     {{-- SECCIÓN: TRABAJOS Y TAREAS REALIZADAS --}}
+<div class="col-md-12">
+    <div class="card shadow-sm border-orange">
+        <div class="card-header bg-white fw-bold">
+            <i class="fas fa-wrench me-2 text-orange"></i>Asignación de Trabajos y Personal
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="small fw-bold">Categoría de Servicio</label>
+                    <select id="select-categoria" class="form-select form-select-sm select2">
+                        <option value="">Seleccione...</option>
+                        @foreach ($categorias_tempario as $cat)
+                            <option value="{{ $cat->id_tempario_categoria }}" data-context="{{ $cat->id_tipo_req }}">
+                                [{{ $cat->codigo }}] {{ $cat->categoria }}
                             </option>
                         @endforeach
                     </select>
-                </div> --}}
-            </div>
-
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="fecha_in" class="form-label">Fecha de Apertura</label>
-                    <input type="date" class="form-control" id="fecha_in" name="fecha_in" value="{{ \Carbon\Carbon::parse($item->fecha_in)->format('Y-m-d') }}" required>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label for="hora_in" class="form-label">Hora de Apertura</label>
-                    <input type="time" class="form-control" id="hora_in" name="hora_in" value="{{ $item->hora_in }}" required>
+                <div class="col-md-4">
+                    <label class="small fw-bold">Tarea / Trabajo Específico</label>
+                    <select id="select-servicio" class="form-select form-select-sm select2" disabled>
+                        <option value="">Seleccione categoría primero</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="small fw-bold">Personal Asignado</label>
+                    <select id="select-mecanicos" class="form-select form-select-sm select2" multiple>
+                        @foreach ($personal as $p)
+                            <option value="{{ $p->id_personal }}">{{ $p->persona->nombre }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-12 text-end">
+                    <button type="button" class="btn btn-corporate btn-sm fw-bold px-4" id="btn-agregar-trabajo">
+                        <i class="fas fa-plus me-1"></i> ASIGNAR TAREA
+                    </button>
                 </div>
             </div>
 
-            <div class="mb-3">
-                <label for="descripcion_1" class="form-label">Descripción del Problema/Tarea</label>
-                <textarea class="form-control" id="descripcion_1" name="descripcion_1" rows="4" required>{{ $item->descripcion_1 }}</textarea>
-            </div>
+            <hr class="my-4">
 
-            <div class="mb-3">
-                <label for="observacion" class="form-label">Observaciones</label>
-                <textarea class="form-control" id="observacion" name="observacion" rows="3">{{ $item->observacion }}</textarea>
-            </div>
-{{-- Sección de Suministros --}}
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="m-0">Suministros Solicitados</h5>
-                <div class="d-flex gap-2 mb-3">
-                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#searchSupplyModal">
-                    <i class="bi bi-search me-1"></i> Buscar en Inventario
-                </button>
-                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#manualSupplyModal">
-                    <i class="bi bi-plus-circle me-1"></i> Agregar Suministro Manual
-                </button>
-            </div>
-            </div>
-            
             <div class="table-responsive">
-                <table class="table table-bordered table-striped" id="selectedSuppliesTable">
-                    <thead>
-                        <tr>
-                            <th>Código</th>
-                            <th>Descripción</th>
-                            <th>Cantidad</th>
-                            <th>Costo</th>
-                            <th>Estatus</th>
-                            <th>Acciones</th>
+                <table class="table table-bordered align-middle" id="tabla-trabajos-asignados">
+                    <thead class="bg-light">
+                        <tr class="small text-uppercase">
+                            <th>Categoría / Tarea</th>
+                            <th>Personal Asignado</th>
+                            <th width="80" class="text-center">Acción</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {{-- Los suministros seleccionados se renderizarán aquí con JS --}}
+                        {{-- Se llena con JS --}}
                     </tbody>
                 </table>
             </div>
-
-            {{-- Aquí se añadirán inputs ocultos para los suministros seleccionados --}}
-            <div id="hidden-inputs-container"></div>
-
-            <div class="d-flex justify-content-between">
-                <a href="{{ route('ordenes.list') }}" class="btn btn-secondary">Cancelar</a>
-                <button type="submit" class="btn btn-primary">Actualizar Orden</button>
-            </div>
-        </form>
-    </div>
-    </div>
-
-{{-- Modal para Suministro Manual (Permite múltiples adiciones) --}}
-<div class="modal fade" id="manualSupplyModal" data-bs-backdrop="false" tabindex="-1" aria-labelledby="manualSupplyModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-secondary text-white">
-                <h5 class="modal-title" id="manualSupplyModalLabel"><i class="bi bi-plus-circle me-1"></i> Agregar Suministro Manual</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p class="text-muted">Utilice esta opción para artículos que no están en inventario o que se comprarán aparte.</p>
-                <div class="mb-3">
-                    <label for="manual-descripcion" class="form-label">Descripción del Artículo:</label>
-                    <input type="text" class="form-control" id="manual-descripcion" required placeholder="Ej: Aceite 20w50 (Comprado en Ferretería)">
-                </div>
-                <div class="mb-3">
-                    <label for="manual-cantidad" class="form-label">Cantidad Requerida:</label>
-                    <input type="number" class="form-control text-end" id="manual-cantidad" value="1" min="1" required>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Terminar y Cerrar</button>
-                <button type="button" class="btn btn-success" id="addManualSupplyBtn">
-                    <i class="bi bi-check-lg me-1"></i> Agregar a la Orden
-                </button>
-            </div>
         </div>
     </div>
 </div>
 
-{{-- Modal para buscar suministros --}}
-<div class="modal fade" id="searchSupplyModal" data-bs-backdrop="false" tabindex="-1" aria-labelledby="searchSupplyModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="searchSupplyModalLabel">Buscar Suministro</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <input type="text" class="form-control" id="supplySearchInput" placeholder="Buscar por código o descripción...">
+            {{-- SECCIÓN 4: INSUMOS DINÁMICOS --}}
+            <div class="col-md-12">
+                <div class="card shadow-sm border-orange">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold"><i class="fas fa-boxes me-2 text-orange"></i>Repuestos e Insumos</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-9">
+                                <select id="supply-search" class="form-select select2-supplies">
+                                    <option value="">Buscar repuesto por código o nombre...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" id="add-supply-btn" class="btn btn-corporate w-100">
+                                    <i class="fas fa-plus me-1"></i> Agregar
+                                </button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle" id="selected-supplies-table">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Descripción</th>
+                                        <th width="120">Cantidad</th>
+                                        <th width="150">P. Unitario</th>
+                                        <th width="150">Subtotal</th>
+                                        <th width="50"></th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                                <tfoot>
+                                    <tr class="table-dark">
+                                        <td colspan="4" class="text-end fw-bold text-uppercase">Total Insumos:</td>
+                                        <td colspan="2" class="fw-bold" id="total-amount">$ 0.00</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead>
-                            <tr>
-                                <th>Código</th>
-                                <th>Descripción</th>
-                                <th>Existencia</th>
-                                <th>Cantidad</th>
-                                <th>Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody id="searchResultsTable">
-                            {{-- Los resultados de la búsqueda se mostrarán aquí --}}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
-    </div>
+
+        <div class="mt-4 text-end">
+            <a href="{{ route('ordenes.index') }}" class="btn btn-outline-secondary px-4 me-2">Cancelar</a>
+            <button type="submit" class="btn btn-corporate px-5 shadow-sm">
+                <i class="fas fa-save me-2"></i> ACTUALIZAR ORDEN DE TRABAJO
+            </button>
+        </div>
+    </form>
 </div>
-@php 
-use App\Models\InventarioSuministro;
-use App\Models\SuministroCompra;
- $insumos = InventarioSuministro::with('inventario')->where('id_orden', $item->id)->get();
- $requerimientos = SuministroCompra::where('orden_id', $item->id)->with('detalles')->get();
- //dd($requerimientos->detalles);
-@endphp
+@endsection
+
 @push('scripts')
-    <!-- Script de jQuery -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <!-- Script de Bootstrap 5 -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-
-
-         let selectedSupplies = {};
-         let manualSupplyCounter = 0;
-
-            // Cargar los suministros existentes
-            const existingSupplies = @json($insumos);
-            console.log(existingSupplies);
-            existingSupplies.forEach(supply => {
-                selectedSupplies[supply.id_inventario_suministro] = {
-                    id: supply.id_inventario_suministro,
-                    db_id: supply.id_inventario_suministro, // Guardar el ID de la tabla pivote
-                    codigo: supply.inventario.codigo,
-                    estatus: supply.estatus,
-                    descripcion: supply.inventario.descripcion,
-                    existencia: supply.inventario.existencia_actual,
-                    cantidad: supply.cantidad,
-                    costo_unitario: supply.inventario.costo,
-                };
-            });
-               const requiredSupplies = @json($requerimientos);
-            console.log(requiredSupplies);
-            requiredSupplies.forEach(supply => {
-                supply.detalles.forEach(detail => {
-
-                    selectedSupplies[detail.id] = {
-                        id: detail.id,
-                        estatus: supply.estatus,
-                        descripcion: detail.descripcion,
-                        cantidad: detail.cantidad_solicitada,
-                        costo_unitario: detail.costo,
-                    };
-                });
-            });
-            console.log(selectedSupplies);
+        // --- LÓGICA DEL MAPA (IDENTICA AL CREATE) ---
+        const initialLat = {{ $item->latitud ?? 10.6447 }};
+        const initialLon = {{ $item->longitud ?? -71.6105 }};
         
-        const searchResultsTable = document.getElementById('searchResultsTable');
-        const suppliesTableBody = document.querySelector('#selectedSuppliesTable tbody');
-        const form = document.getElementById('orden-form');
+        const map = L.map('map').setView([initialLat, initialLon], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
+        let marker = L.marker([initialLat, initialLon], { draggable: true }).addTo(map);
 
-        // Función para renderizar la tabla de insumos seleccionados
-         function renderSuppliesTable() {
-            suppliesTableBody.innerHTML = ''; 
-            let html = '';
-            const supplyIds = Object.keys(selectedSupplies);
-            let totalCosto = 0;
-            if (supplyIds.length > 0) {
-                supplyIds.forEach(id => {
-                    const supply = selectedSupplies[id];
-                    let estatusText;
-                    let estatusBadgeClass;
-                    let costo = supply.costo_unitario * supply.cantidad;
-                    totalCosto += costo;
-                    switch (supply.estatus) {
-                        case 1:
-                            estatusText = 'Solicitado';
-                            estatusBadgeClass = 'bg-primary';
-                            break;
-                        case 2:
-                            estatusText = 'Aprobado';
-                            estatusBadgeClass = 'bg-success';
-                            break;
-                        case 3:
-                            estatusText = 'Despachado';
-                            estatusBadgeClass = 'bg-info';
-                            break;
-                        case 4:
-                            estatusText = 'Rechazado';
-                            estatusBadgeClass = 'bg-danger';
-                            break;
-                        default:
-                            estatusText = 'Desconocido';
-                            estatusBadgeClass = 'bg-secondary';
-                            break;
-                    }
-                     const isEditable = supply.estatus !== 2 && supply.estatus !== 3;
-
-                    let actionHtml = '';
-                    if (supply.estatus === 2) {
-                        // SI ESTÁ APROBADO, mostrar botón de RECIBIDO
-                        actionHtml = `
-                            <button type="button" class="btn btn-sm btn-success receive-supply" data-db-id="${supply.id}" title="Marcar como Recibido/Despachado">
-                                <i class="bi bi-check-lg"></i> Recibido
-                            </button>
-                        `;
-                    } else if (isEditable && supply.estatus !== 3 && supply.estatus !== 2) {
-                         // Si es editable y no está en proceso, mostramos Eliminar
-                         actionHtml = `
-                            <button type="button" class="btn btn-sm btn-danger delete-supply" data-db-id="${supply.id}">
-                                <i class="bi bi-trash"></i> Eliminar
-                            </button>
-                        `;
-                    }
-
-                    // El campo de cantidad solo se muestra como input si es editable
-                    const quantityInputHtml = isEditable ?
-                                    `<input type="number" class="form-control form-control-sm supply-quantity" value="${supply.cantidad}" min="1" max="${supply.existencia}" data-db-id="${supply.id}">` :
-                                    supply.cantidad;
-                    
-                    html += `
-                        <tr data-supply-id="${supply.id}">
-                            <td>${supply.codigo || 'N/A'}</td>
-                            <td>${supply.descripcion}</td>
-                            <td>
-                                ${quantityInputHtml}
-                            </td>
-                            <td>$ ${costo.toFixed(2)} </td>
-                            <td><span class="badge ${estatusBadgeClass}">${estatusText}</span></td>
-                            <td>
-                                ${actionHtml}
-                            </td>
-                        </tr>
-                    `;
-                
-                });
-                html += `
-                    <tr>
-                        <td colspan="3" class="text-end"><strong>Total Costo:</strong></td>
-                        <td colspan="3"><strong>$ ${totalCosto.toFixed(2)}</strong></td>
-                    </tr>
-                `;
-            } else {
-                html = `<tr><td colspan="5" class="text-center">No hay insumos asignados.</td></tr>`;
-            }
-            suppliesTableBody.innerHTML = html;
+        function updateCoords(lat, lon) {
+            document.getElementById('latitud').value = lat;
+            document.getElementById('longitud').value = lon;
+            marker.setLatLng([lat, lon]);
+            map.panTo([lat, lon]);
         }
 
-        // 2. Añadir Suministro Manual (del modal manual)
-        addManualSupplyBtn.addEventListener('click', function(e) {
-            const descripcionInput = document.getElementById('manual-descripcion');
-            const cantidadInput = document.getElementById('manual-cantidad');
-            
-            const descripcion = descripcionInput.value.trim();
-            const cantidad = parseInt(cantidadInput.value, 10);
-
-            if (!descripcion || cantidad <= 0 || isNaN(cantidad)) {
-                 Swal.fire('Error', 'Debe ingresar una descripción y una cantidad válida.', 'error');
-                 return;
-            }
-
-            // Generar un ID temporal único
-            manualSupplyCounter++;
-            const manualId = 'MANUAL_' + manualSupplyCounter;
-
-            const itemData = {
-                id: manualId,
-                codigo: 'N/A', // No tiene código de inventario
-                descripcion: descripcion,
-                estatus : 1,
-                tipo: 'COMPRA',
-                existencia: 0, // 0 existencia fuerza la compra (si aplica tu lógica de negocio)
-                cantidad: cantidad
-            };
-
-            selectedSupplies[manualId] = itemData;
-
-            console.log(selectedSupplies);
-            renderSuppliesTable();
-
-            // Limpiar el formulario manual para permitir una nueva adición
-            descripcionInput.value = '';
-            cantidadInput.value = 1;
-
-            // Retroalimentación visual
-            Swal.fire({
-                toast: true,
-                position: 'top-end',
-                icon: 'success',
-                title: `Agregado Manual: ${itemData.descripcion} (x${cantidad})`,
-                showConfirmButton: false,
-                timer: 2000
-            });
-            
-            // NOTA: El modal manual permanece abierto para seguir agregando si el usuario lo desea.
+        marker.on('dragend', function(e) {
+            const pos = e.target.getLatLng();
+            updateCoords(pos.lat, pos.lng);
         });
 
-        // Manejar el evento de búsqueda con un pequeño retraso (debounce)
-        let timeout = null;
+        // --- BÚSQUEDA DE UBICACIÓN ---
+        $('#search-btn').click(function() {
+            const query = $('#search-input').val();
+            if (query.length < 3) return;
+            
+            $.getJSON(`https://nominatim.openstreetmap.org/search?format=json&q=${query}`, function(data) {
+                if (data && data.length > 0) {
+                    const res = data[0];
+                    updateCoords(res.lat, res.lon);
+                    $('#input-direccion').val(res.display_name);
+                }
+            });
+        });
+
+        // --- GESTIÓN DE INSUMOS (CARGA INICIAL) ---
+        let selectedSupplies = {};
+
+        // Precargar insumos existentes
+        @foreach($insumos as $insumo)
+            selectedSupplies["{{ $insumo->id_inventario }}"] = {
+                id: "{{ $insumo->id_inventario }}",
+                codigo: "{{ $insumo->inventario->codigo }}",
+                descripcion: "{{ $insumo->inventario->descripcion }}",
+                cantidad: {{ $insumo->cantidad }},
+                precio: {{ $insumo->precio_unitario ?? 0 }},
+                subtotal: {{ $insumo->subtotal }}
+            };
+        @endforeach
+        @foreach($requerimientos as $requerimiento)
+            @foreach($requerimiento->detalles as $detalle)
+                selectedSupplies["C-{{ $detalle->id }}"] = {
+                id: "{{ $detalle->id     }}",
+                codigo: "",
+                descripcion: "{{ $detalle->descripcion }}",
+                cantidad: {{ $detalle->cantidad_aprobada ?? $detalle->cantidad_solicitada }},
+                precio: {{ $detalle->costo_unitario_aprobado ?? 0 }},
+                subtotal: {{ ($detalle->cantidad_aprobada ?? $detalle->cantidad_solicitada) * ($detalle->costo_unitario_aprobado)}}
+                };
+            @endforeach
+        @endforeach
+                
+
+        function renderSuppliesTable() {
+            console.log(selectedSupplies);
+            console.log(Object.values(selectedSupplies));
+            const tbody = document.querySelector('#selected-supplies-table tbody');
+            tbody.innerHTML = '';
+            let total = 0;
+
+            Object.values(selectedSupplies).forEach(item => {
+                total += item.subtotal;
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="small fw-bold text-orange">${item.codigo}</td>
+                        <td class="small">${item.descripcion}</td>
+                        <td>
+                            <input type="number" class="form-control form-control-sm qty-input" 
+                                   data-id="${item.id}" value="${item.cantidad}" min="1">
+                        </td>
+                        <td><input type="number" step="0.01" class="form-control form-control-sm price-input" 
+                                   data-id="${item.id}" value="${item.precio}"></td>
+                        <td class="fw-bold">$ ${item.subtotal.toFixed(2)}</td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-supply" data-id="${item.id}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <input type="hidden" name="supplies[${item.id}][id]" value="${item.id}">
+                            <input type="hidden" name="supplies[${item.id}][cantidad]" value="${item.cantidad}">
+                            <input type="hidden" name="supplies[${item.id}][precio]" value="${item.precio}">
+                        </td>
+                    </tr>
+                `;
+            });
+            document.getElementById('total-amount').innerText = `$ ${total.toFixed(2)}`;
+        }
+
         renderSuppliesTable();
 
- 
-        const supplySearchInput = document.getElementById('supplySearchInput');
-        const selectedSuppliesTable = document.getElementById('selectedSuppliesTable').querySelector('tbody');
-        const hiddenInputsContainer = document.getElementById('hidden-inputs-container');
-
-        // Función para buscar suministros
-        const searchSupplies = (query) => {
-            if (query.length < 2) {
-                searchResultsTable.innerHTML = '';
-                return;
+        // (Resto de la lógica de agregar/quitar insumos idéntica a tu create...)
+        $('#add-supply-btn').click(function() {
+            const data = $('#supply-search').select2('data')[0];
+            if (!data) return;
+            
+            const id = data.id;
+            if (selectedSupplies[id]) {
+                selectedSupplies[id].cantidad++;
+            } else {
+                selectedSupplies[id] = {
+                    id: id,
+                    codigo: data.codigo,
+                    descripcion: data.text,
+                    cantidad: 1,
+                    precio: data.precio || 0,
+                    subtotal: data.precio || 0
+                };
             }
-            fetch(`{{ route('ordenes.search-supplies') }}?query=${query}`)
-                .then(response => response.json())
-                .then(data => {
-                    renderSearchResults(data);
-                });
-        };
-
-
-        supplySearchInput.addEventListener('keyup', function() {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => {
-                searchSupplies(this.value);
-            }, 300);
+            selectedSupplies[id].subtotal = selectedSupplies[id].cantidad * selectedSupplies[id].precio;
+            renderSuppliesTable();
         });
 
-        // Renderiza los resultados de la búsqueda
-        const renderSearchResults = (data) => {
-            let html = '';
-            if (data.length > 0) {
-                data.forEach(item => {
-                    if(item.existencia <= 0) {
-                        return; // Saltar insumos sin existencia
-                    }
-                    html += `
+        $(document).on('click', '.remove-supply', function() {
+            delete selectedSupplies[$(this).data('id')];
+            renderSuppliesTable();
+        });
+
+        // --- GESTIÓN DE TRABAJOS REALIZADOS ---
+        let performedTasks = [];
+
+        // 1. Precargar trabajos existentes de la base de datos
+        @if(isset($trabajos) && $trabajos->count() > 0)
+            @foreach($trabajos as $trabajo)
+                performedTasks.push("{{ $trabajo->descripcion }}");
+            @endforeach
+        @endif
+
+        function renderTasksTable() {
+            const container = document.getElementById('tasks-container');
+            const noTasksMsg = document.getElementById('no-tasks-msg');
+            container.innerHTML = '';
+
+            if (performedTasks.length === 0) {
+                noTasksMsg.classList.remove('d-none');
+            } else {
+                noTasksMsg.classList.add('d-none');
+                performedTasks.forEach((task, index) => {
+                    container.innerHTML += `
                         <tr>
-                            <td>${item.codigo}</td>
-                            <td>${item.descripcion}</td>
-                            <td>${item.existencia}</td>
-                            <td><input type="number" class="form-control search-quantity" value="1" min="1" max="${item.existencia}"></td>
+                            <td class="text-center fw-bold text-muted small">${index + 1}</td>
                             <td>
-                                <button type="button" class="btn btn-success btn-sm add-supply" data-item-id="${item.id}">
-                                    Añadir
+                                <span class="text-dark">${task}</span>
+                                <input type="hidden" name="trabajos[]" value="${task}">
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="removeTask(${index})">
+                                    <i class="fas fa-trash-can"></i>
                                 </button>
                             </td>
                         </tr>
                     `;
                 });
-            } else {
-                html = `<tr><td colspan="5" class="text-center">No se encontraron resultados.</td></tr>`;
             }
-            searchResultsTable.innerHTML = html;
+        }
+
+        // Inicializar tabla al cargar
+        renderTasksTable();
+
+        // Agregar nueva tarea
+        $('#add-task-btn').click(function() {
+            const taskInput = $('#task-input');
+            const taskValue = taskInput.val().trim();
+
+            if (taskValue === "") {
+                taskInput.addClass('is-invalid').focus();
+                return;
+            }
+
+            taskInput.removeClass('is-invalid');
+            performedTasks.push(taskValue);
+            taskInput.val(''); // Limpiar input
+            renderTasksTable();
+        });
+
+        // Función global para eliminar tarea
+        window.removeTask = function(index) {
+            performedTasks.splice(index, 1);
+            renderTasksTable();
         };
-        
-        // Manejar el evento de agregar un suministro desde el modal
-        searchResultsTable.addEventListener('click', async function(e) {
-            if (e.target.classList.contains('add-supply')) {
-                const itemId = e.target.dataset.itemId;
-                const row = e.target.closest('tr');
-                const quantityInput = row.querySelector('.search-quantity');
-                const quantity = parseInt(quantityInput.value, 10);
-                const orderId = '{{ $item->id }}';
 
-                if (!orderId ) {
-                    alert('Por favor, complete los campos "Número de Orden" y "Vehículo" primero.');
-                    return;
-                }
-
-                // Deshabilitar el botón para evitar múltiples clics
-                e.target.disabled = true;
-
-                try {
-                    const response = await fetch('{{ route("ordenes.supplies.store") }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: JSON.stringify({
-                            id_orden: orderId,
-                            id_inventario: itemId,
-                            cantidad: quantity
-                        })
-                    });
-                    
-                    const result = await response.json();
-                    console.log(result);
-                    if (result.success) {
-                        const itemData = {
-                            id: result.supply.id_inventario_suministro,
-                            db_id: result.supply.id_inventario_suministro, // ID del registro en la DB
-                            codigo: row.cells[0].textContent,
-                            descripcion: row.cells[1].textContent,
-                            costo: result.supply.inventario.costo,
-                            estatus: 1, // Nuevo insumo siempre comienza como 'Solicitado'
-                            existencia: parseInt(row.cells[2].textContent, 10),
-                            cantidad: result.supply.cantidad
-                        };
-                        selectedSupplies[itemData.id] = itemData;
-                        renderSuppliesTable();
-
-                          // ** FIX: Usar getOrCreateInstance para asegurar que el objeto no es nulo **
-                        const modalElement = document.getElementById('searchSupplyModal');
-                        
-                        const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
-                        modal.hide()
-                    } else {
-                        alert('Error al guardar el insumo: ' + result.message);
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    console.log('Error:', error);
-                    alert('Error de conexión. Intente de nuevo.');
-                } finally {
-                    e.target.disabled = false;
-                }
-            }
-        });
-
-        // Manejar el evento de eliminar un suministro de la tabla
-        suppliesTableBody.addEventListener('click', async function(e) {
-            if (e.target.closest('.delete-supply')) {
-                const button = e.target.closest('.delete-supply');
-                const dbId = button.dataset.dbId;
-
-                if (confirm('¿Está seguro de que desea eliminar este insumo?')) {
-                    try {
-                        const response = await fetch(`/ordenes/supplies/${dbId}`, {
-                            method: 'DELETE',
-                            headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            }
-                        });
-                        const result = await response.json();
-                        console.log(result);
-                        if (result.success) {
-                            delete selectedSupplies[dbId];
-                            renderSuppliesTable();
-                        } else {
-                            alert('Error al eliminar el insumo: ' + result.message);
-                        }
-                    } catch (error) {
-                        console.error('Error:', error);
-                        alert('Error de conexión. Intente de nuevo.');
-                    }
-                }
-            } else if (e.target.closest('.receive-supply')) {
-                const button = e.target.closest('.receive-supply');
-                const dbId = button.dataset.dbId;
-
-                button.disabled = true; // Deshabilitar el botón
-                button.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Procesando...';
-                
-                try {
-                    // Endpoint: /ordenes/supplies/receive/{dbId} (Esta ruta debe ser creada)
-                    const response = await fetch(`/ordenes/supplies/receive/${dbId}`, { 
-                        method: 'POST', // Usar POST/PUT para la acción
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        }
-                    });
-                    
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        // 1. Actualizar el estado en el objeto JS (3 = Despachado/Recibido)
-                        selectedSupplies[dbId].estatus = 3; 
-                        
-                        // 2. Re-renderizar la tabla SIN recargar la página
-                        renderSuppliesTable(); 
-                        
-                        // 3. Notificación de éxito
-                        Swal.fire({
-                            toast: true,
-                            position: 'top-end',
-                            icon: 'success',
-                            title: 'Suministro marcado como Recibido',
-                            showConfirmButton: false,
-                            timer: 2000
-                        });
-                        
-                    } else {
-                         Swal.fire('Error', 'Error al marcar como recibido: ' + result.message, 'error');
-                         button.disabled = false;
-                         button.innerHTML = '<i class="bi bi-check-lg"></i> Recibido';
-                    }
-                } catch (error) {
-                    console.error('Error de Conexión:', error);
-                    Swal.fire('Error de conexión', 'No se pudo contactar al servidor.', 'error');
-                    button.disabled = false;
-                    button.innerHTML = '<i class="bi bi-check-lg"></i> Recibido';
-                }
-            }
-        
-        });
-
-        // Manejar el evento de cambio de cantidad en tiempo real
-        suppliesTableBody.addEventListener('change', async function(e) {
-            if (e.target.classList.contains('supply-quantity')) {
-                const input = e.target;
-                const dbId = input.dataset.dbId;
-                const newQuantity = parseInt(input.value, 10);
-                
-                if (newQuantity <= 0 || newQuantity > parseInt(input.max, 10)) {
-                    alert(`La cantidad debe ser entre 1 y ${input.max}.`);
-                    input.value = selectedSupplies[dbId].cantidad;
-                    return;
-                }
-
-                try {
-                    const response = await fetch(`/ordenes/supplies/${dbId}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        body: JSON.stringify({ cantidad: newQuantity })
-                    });
-                    const result = await response.json();
-
-                    if (result.success) {
-                        selectedSupplies[dbId].cantidad = newQuantity;
-                        renderSuppliesTable();
-                    } else {
-                        alert('Error al actualizar la cantidad: ' + result.message);
-                        // Revertir el valor si falla la actualización
-                        input.value = selectedSupplies[dbId].cantidad;
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert('Error de conexión. Intente de nuevo.');
-                    input.value = selectedSupplies[dbId].cantidad;
-                }
+        // Permitir agregar con la tecla Enter
+        $('#task-input').keypress(function(e) {
+            if(e.which == 13) {
+                e.preventDefault();
+                $('#add-task-btn').click();
             }
         });
     });
 </script>
 @endpush
-@endsection

@@ -223,7 +223,14 @@ abstract class BaseController extends Controller
     {
         try {
             $item = $this->model->findOrFail($id);
-            return view($this->getModelNameLowerCase() . '.edit', compact('item'));
+             $additionalDetails = $this->getDetailsForView($item);
+            // Combinamos los datos base con los adicionales
+            $viewData = array_merge([
+                'item' => $item,
+                'modelName' => class_basename($this->model)
+            ], $additionalDetails);
+
+            return view($this->getModelNameLowerCase() . '.edit', $viewData);
         } catch (ModelNotFoundException $e) {
             Session::flash('error', 'El registro no fue encontrado.');
             return Redirect::route($this->getPluralModelNameLowerCase() . '.list');

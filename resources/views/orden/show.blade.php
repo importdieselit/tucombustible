@@ -38,6 +38,9 @@
                 <button class="btn btn-sm btn-info text-white" data-bs-toggle="modal" data-bs-target="#modalInsumo">
                     <i class="fas fa-box"></i> + Insumo
                 </button>
+                <button type="button" class="btn btn-sm btn-corporate ms-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#manualSupplyModal">
+                    <i class="fa-solid fa-cart-plus me-1"></i> Solicitar a Compras
+                </button>
                 <a href="{{ route('ordenes.edit', $orden->id) }}" class="btn btn-sm btn-outline-primary">
                     <i class="fas fa-edit"></i> Editar
                 </a>
@@ -229,6 +232,16 @@
                             @empty
                             <tr><td colspan="4" class="text-center py-3 text-muted">Sin insumos cargados.</td></tr>
                             @endforelse
+                            @foreach ($requerimientos as $req )
+                                @foreach ($req->detalles as $detalle)
+                                    <tr>
+                                        <td class="ps-3 text-center">{{ $detalle->cantidad }}</td>
+                                        <td>{{ $detalle->descripcion }}</td>
+                                        <td class="text-end">${{ number_format($detalle->costo_unitario_aprobado ?? 0, 2) }}</td>
+                                        <td class="text-end pe-3 fw-bold">${{ number_format(($detalle->costo_unitario_aprobado ?? 0) * $detalle->cantidad, 2) }}</td>
+                                    </tr>
+                                @endforeach
+                            @endforeach
                         </tbody>
                         <tfoot>
                             <tr class="total-row">
@@ -384,6 +397,30 @@
                 </div>
             </div>
         </form>
+    </div>
+</div>
+
+<div class="modal fade" id="manualSupplyModal" data-bs-backdrop="false" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-secondary text-white">
+                <h5 class="modal-title fw-bold">SUMINISTRO NO CATALOGADO</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body bg-light">
+                <div class="mb-3">
+                    <label class="form-label">Descripción del Repuesto</label>
+                    <input type="text" class="form-control" id="manual-descripcion" placeholder="Ej: Tornillo grado 8 1/2 pulgada">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Cantidad Requerida</label>
+                    <input type="number" class="form-control text-end fw-bold" id="manual-cantidad" value="1" min="1">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success w-100 fw-bold" id="addManualSupplyBtn">AÑADIR A LA LISTA</button>
+            </div>
+        </div>
     </div>
 </div>
 

@@ -266,6 +266,32 @@ class OrdenController extends BaseController
         return $this->list($query); 
     }
 
+    protected function getDetailsForView($item){
+
+        $insumos= InventarioSuministro::where('id_orden', $item->id)->get();
+        $trabajos= Trabajos::where('id_orden', $item->id)->get();
+        $fotos= OrdenFoto::where('orden_id',$item->id)->get();
+        $requerimientos = SuministroCompra::where('orden_id', $item->id)->with('detalles')->get();
+        $estatusData = EstatusData::find($item->estatus);
+        $categorias_tempario = TemparioCategoria::orderBy('categoria')->get();
+        $personal = Personal::with('persona')->where('cargo', 'Mecánico')->get(); // Cargar relación con Persona para obtener nombres completos
+        $inventario = Inventario::all()->keyBy('id_inventario');
+
+
+        
+        return  [
+            'insumos' => $insumos,
+            'trabajos' => $trabajos,
+            'fotos' => $fotos,
+            'requerimientos' => $requerimientos,
+            'estatusData' => $estatusData,
+            'categorias_tempario' => $categorias_tempario,
+            'personal' => $personal,
+            'inventario' => $inventario
+        ];  
+
+    }
+
      protected function applyBusinessFilters(Builder $query): Builder
     {
         $filterKey = request()->get('filter');

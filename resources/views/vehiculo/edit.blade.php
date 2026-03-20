@@ -135,8 +135,8 @@
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Serial de Carrocería (VIN)</label>
-                                        <input type="text" name="vin" class="form-control" 
-                                               value="{{ old('vin', $item->vin ?? '') }}">
+                                        <input type="text" name="serial_carroceria" class="form-control" 
+                                               value="{{ old('serial_carroceria', $item->serial_carroceria ?? '') }}">
                                     </div>
                                 </div>
                             </div>
