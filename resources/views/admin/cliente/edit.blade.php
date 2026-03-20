@@ -171,7 +171,11 @@
             return;
         }
 
-        fetch(`{{ route('ciudades.get',${estadoId}) }}`)
+        let urlBase = "{{ route('ciudades.get', ':id') }}";
+
+        let urlFinal = urlBase.replace(':id', estadoId);
+
+        fetch(urlFinal)
             .then(r => r.json())
             .then(ciudades => {
                 select.innerHTML = '<option value="">Seleccione una ciudad...</option>';
