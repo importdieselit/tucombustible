@@ -470,23 +470,23 @@ class VehiculoController extends BaseController
     {
         $vehiculo=Vehiculo::findOrFail($request->id);
         
-        app(VehiculoStoreRequest::class);
+        //app(VehiculoStoreRequest::class);
         DB::beginTransaction();
         try {
             // 1. Actualizar datos del vehículo
-            $vehiculo->update($request->validated());
+            $vehiculo->update($request->all());
 
-            // 2. Manejar la carga de imágenes (nuevas imágenes)
-            $this->handleFotoUpload($request, $vehiculo);
+             // 2. Manejar la carga de imágenes (nuevas imágenes)
+             $this->handleFotoUpload($request, $vehiculo);
             
-            // 3. Manejar eliminación de fotos si se enviaron IDs a eliminar
-            if ($request->has('fotos_a_eliminar')) {
-                $idsParaEliminar = explode(',', $request->input('fotos_a_eliminar'));
-                VehiculoFoto::whereIn('id', $idsParaEliminar)
-                            ->where('vehiculo_id', $vehiculo->id)
-                            ->delete();
-                // Opcionalmente, eliminar los archivos físicos del disco aquí
-            }
+             // 3. Manejar eliminación de fotos si se enviaron IDs a eliminar
+             if ($request->has('fotos_a_eliminar')) {
+                 $idsParaEliminar = explode(',', $request->input('fotos_a_eliminar'));
+                 VehiculoFoto::whereIn('id', $idsParaEliminar)
+                             ->where('vehiculo_id', $vehiculo->id)
+                             ->delete();
+                 // Opcionalmente, eliminar los archivos físicos del disco aquí
+             }
 
             DB::commit();
             Session::flash('success', 'Vehículo actualizado exitosamente!');

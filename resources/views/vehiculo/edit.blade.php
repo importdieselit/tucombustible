@@ -89,7 +89,7 @@
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label">Tipo de Vehículo</label>
-                                        <select name="id_tipo" id="tipo" class="form-select select2-simple" required>
+                                        <select name="tipo" id="tipo" class="form-select select2-simple" required>
                                             <option value="">Seleccione...</option>
                                             @foreach($tiposVehiculo as $key => $value)
                                                 <option value="{{ $key }}" {{ (isset($item) && $item->tipo == $key) ? 'selected' : '' }}>
@@ -101,7 +101,7 @@
                                     <div class="col-md-3">
                                         <label class="form-label">Marca</label>
                                         
-                                        <select name="id_marca" id="marca" class="form-select select2-simple" required>
+                                        <select name="marca" id="marca" class="form-select select2-simple" required>
                                             <option value="">Seleccione...</option>
                                             
                                             @foreach($marcas as $key => $value)
@@ -114,7 +114,7 @@
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label">Modelo</label>
-                                        <select name="id_modelo" id="modelo" class="form-select select2-simple" required>
+                                        <select name="modelo" id="modelo" class="form-select select2-simple" required>
                                             <option value="">Seleccione marca primero...</option>
                                             @foreach($modelos as $key => $value)
                                                 <option value="{{ $key }}" {{ (isset($item) && $item->modelo == $key) ? 'selected' : '' }}>
@@ -125,8 +125,8 @@
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label">Año</label>
-                                        <input type="number" name="anio" class="form-control" 
-                                               value="{{ old('anio', $item->anio ?? '') }}" placeholder="2023">
+                                        <input type="number" name="anno" class="form-control" 
+                                               value="{{ old('anio', $item->anno ?? '') }}" placeholder="2023">
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label">Color</label>

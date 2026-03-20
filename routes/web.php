@@ -57,7 +57,7 @@ Route::middleware(['auth'])->group(function () {
      // Inspecciones y Vehículos
     Route::get('/marcas/get-modelos', [MarcaController::class, 'getModelos'])->name('marcas.getModelos');
     Route::get('/vehiculos/inspeccion/{vehiculo_id}/{tipo}', [InspeccionController::class, 'create'])->name('inspeccion.create');
-    Route::put('vehiculos/updatev/{id}', [VehiculoController::class, 'updatev'])->name('vehiculos.updatev');
+    Route::put('vehiculos/updatev/{id}', [VehiculoController::class, 'updateV'])->name('vehiculos.updatev');
     Route::get('/inspecciones/{inspeccion_id}/pdf', [InspeccionController::class, 'exportPdf'])->name('inspecciones.pdf');
     Route::get('/reporte/vehiculos-disponibilidad', [VehiculoController::class, 'reporteDisponibilidad'])->name('vehiculos.reporte.disponibilidad');
     Route::get('/vehiculos/report/pdf', [VehiculoController::class, 'reportPdf'])->name('vehiculos.report.pdf');
