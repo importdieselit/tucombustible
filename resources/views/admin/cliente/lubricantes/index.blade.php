@@ -30,13 +30,15 @@
                 </div>
                 <form action="{{ route('clientes.lubricantes.store') }}" method="POST" class="p-6 space-y-4">
                     @csrf
+
                     <div>
                         <label class="block text-[10px] font-black text-gray-400 uppercase mb-2">Razón Social <span class="text-red-500">*</span></label>
                         <input type="text" name="razon_social" value="{{ old('razon_social') }}" required
                                placeholder="EMPRESA C.A."
-                               class="w-full text-xs font-bold border-gray-300 rounded focus:border-orange-impordiesel focus:ring-1 focus:ring-orange-impordiesel p-3">
+                               class="w-full text-xs font-bold border-gray-300 rounded focus:border-orange-impordiesel focus:ring-1 focus:ring-orange-impordiesel p-3 uppercase">
                         @error('razon_social') <p class="text-red-500 text-[10px] mt-1 font-bold italic uppercase">{{ $message }}</p> @enderror
                     </div>
+
                     <div>
                         <label class="block text-[10px] font-black text-gray-400 uppercase mb-2">RIF <span class="text-red-500">*</span></label>
                         <div class="flex gap-2">
@@ -52,12 +54,22 @@
                         </div>
                         @error('rif') <p class="text-red-500 text-[10px] mt-1 font-bold italic uppercase">{{ $message }}</p> @enderror
                     </div>
+
                     <div>
                         <label class="block text-[10px] font-black text-gray-400 uppercase mb-2">Correo Electrónico <span class="text-red-500">*</span></label>
                         <input type="email" name="email" value="{{ old('email') }}" required
                                placeholder="cliente@ejemplo.com"
                                class="w-full text-xs font-bold border-gray-300 rounded focus:border-orange-impordiesel focus:ring-1 focus:ring-orange-impordiesel p-3">
                         @error('email') <p class="text-red-500 text-[10px] mt-1 font-bold italic uppercase">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-2">Teléfono</label>
+                        <input type="text" name="telefono" value="{{ old('telefono') }}"
+                               placeholder="04XXXXXXXXX" maxlength="11"
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                               class="w-full text-xs font-bold border-gray-300 rounded focus:border-orange-impordiesel focus:ring-1 focus:ring-orange-impordiesel p-3">
+                        @error('telefono') <p class="text-red-500 text-[10px] mt-1 font-bold italic uppercase">{{ $message }}</p> @enderror
                     </div>
 
                     @if ($errors->any())
@@ -96,6 +108,7 @@
                             <tr class="bg-gray-industrial text-white text-xs font-black uppercase tracking-widest">
                                 <th class="px-6 py-3">Razón Social / RIF</th>
                                 <th class="px-6 py-3">Correo</th>
+                                <th class="px-6 py-3">Teléfono</th>
                                 <th class="px-6 py-3 text-center">Fecha</th>
                                 <th class="px-6 py-3 text-right">Acción</th>
                             </tr>
@@ -108,6 +121,7 @@
                                     <div class="text-[10px] font-bold text-gray-500 mt-0.5">{{ $cl->rif }}</div>
                                 </td>
                                 <td class="px-6 py-3 text-xs font-bold text-gray-600">{{ $cl->email }}</td>
+                                <td class="px-6 py-3 text-xs font-bold text-gray-600">{{ $cl->telefono ?? '—' }}</td>
                                 <td class="px-6 py-3 text-center text-xs font-bold text-gray-500">
                                     {{ $cl->created_at?->format('d/m/Y') ?? 'N/A' }}
                                 </td>
@@ -125,7 +139,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="4" class="px-6 py-12 text-center text-gray-400 font-black uppercase text-xs tracking-widest">
+                                <td colspan="5" class="px-6 py-12 text-center text-gray-400 font-black uppercase text-xs tracking-widest">
                                     No hay clientes lubricantes registrados aún.
                                 </td>
                             </tr>

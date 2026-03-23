@@ -22,7 +22,6 @@ class ClienteService
 
     public function registrarCliente(array $data): Cliente
     {
-        // Validar unicidad rif + tipo_combustible
         $tipoCombustibleId = $data['tipo_combustible_id'] ?? null;
 
         if (!$tipoCombustibleId) {
@@ -41,7 +40,6 @@ class ClienteService
             $rifOficial = strtoupper($data['rif']);
             $rifLimpio  = str_replace(['-', ' '], '', $rifOficial);
 
-            // Determinar si es Sucursal y resolver el parent_id
             $parentId = 0;
             if (isset($data['tipo_cliente']) && $data['tipo_cliente'] === 'sucursal' && !empty($data['token_padre'])) {
                 $padre = Cliente::where('token_registro', strtoupper($data['token_padre']))->first();
@@ -50,7 +48,6 @@ class ClienteService
                     throw new \Exception('El código de empresa principal (Token) no es válido o no existe.');
                 }
 
-                // Solo se puede registrar una sucursal bajo un Cliente Padre activo (aprobado)
                 if ($padre->status !== Cliente::STATUS_APROBADO) {
                     throw new \Exception('La empresa principal no está activa. No es posible registrar una sucursal.');
                 }
@@ -62,8 +59,10 @@ class ClienteService
                 'nombre'              => strtoupper($data['nombre']),
                 'rif'                 => $rifOficial,
                 'contacto'            => strtoupper($data['contacto'] ?? ''),
-                'email'               => $data['email'],
                 'telefono'            => $data['telefono'] ?? null,
+                'contacto_alt'        => !empty($data['contacto_alt']) ? strtoupper($data['contacto_alt']) : null,
+                'telefono_alt'        => $data['telefono_alt'] ?? null,
+                'email'               => $data['email'],
                 'estado_id'           => $data['estado_id'] ?? null,
                 'ciudad_id'           => $data['ciudad_id'] ?? null,
                 'direccion'           => strtoupper($data['direccion'] ?? ''),
@@ -76,21 +75,20 @@ class ClienteService
                 'token_registro'      => strtoupper(Str::random(10)),
             ]);
 
-            // Crear usuario asociado — contraseña inicial es el RIF sin guiones
             $this->repository->crearUsuario([
-                'name'                 => strtoupper($data['contacto'] ?? $data['nombre']),
-                'email'                => $data['email'],
-                'password'             => Hash::make($rifLimpio),
-                'id_perfil'            => 3,
-                'cliente_id'           => $cliente->id,
-                'status_usuario'       => 'en_registro'
+                'name'           => strtoupper($data['contacto'] ?? $data['nombre']),
+                'email'          => $data['email'],
+                'password'       => Hash::make($rifLimpio),
+                'id_perfil'      => 3,
+                'cliente_id'     => $cliente->id,
+                'status_usuario' => 'en_registro',
             ]);
-            
+
             $this->repository->registrarCupo([
-            'cliente_id'          => $cliente->id,
-            'tipo_combustible_id' => $tipoCombustibleId,
-            'litros_solicitados'  => $data['litros_solicitados'] ?? 0,
-            'litros_aprobados'    => 0, // Se aprueba después cuando el Admin aprueba al cliente
+                'cliente_id'          => $cliente->id,
+                'tipo_combustible_id' => $tipoCombustibleId,
+                'litros_solicitados'  => $data['litros_solicitados'] ?? 0,
+                'litros_aprobados'    => 0,
             ]);
 
             return $cliente;
@@ -121,7 +119,6 @@ class ClienteService
 
     public function avanzarPaso($clienteId, int $nuevoPaso): Cliente
     {
-        // Validar que el paso existe y está activo
         $pasoValido = $this->repository->getPasos()->firstWhere('id', $nuevoPaso);
 
         if (!$pasoValido) {
@@ -165,7 +162,6 @@ class ClienteService
             throw new \Exception('El cliente ya se encuentra inactivo.');
         }
 
-        // Solo se pueden inactivar clientes aprobados
         if ($cliente->status !== Cliente::STATUS_APROBADO) {
             throw new \Exception('Solo se pueden inactivar clientes aprobados.');
         }
@@ -192,13 +188,10 @@ class ClienteService
     {
         $cliente = Cliente::findOrFail($clienteId);
 
-        // Solo se ajusta el cupo de clientes aprobados
         if ($cliente->status !== Cliente::STATUS_APROBADO) {
             throw new \Exception('Solo se puede ajustar el cupo de clientes aprobados.');
         }
 
-        // Verificar que el tipo de combustible coincida con el cupo existente
-        // Si el cliente ya tiene cupo de un tipo, no puede agregar otro — debe crear un registro nuevo
         $cupoExistente = $cliente->cupos()
             ->where('tipo_combustible_id', '!=', $tipoCombustibleId)
             ->first();
@@ -270,7 +263,7 @@ class ClienteService
     }
 
     // -------------------------------------------------------
-    // RANKINGS DE CUPO (agregar al final de ClienteService)
+    // RANKINGS DE CUPO
     // -------------------------------------------------------
 
     public function getRankingCuposMayores(int $limit = 5)

@@ -15,5 +15,6 @@ class ClienteLubricante extends Model
         'razon_social',
         'rif',
         'email',
+        'telefono',
     ];
 }
