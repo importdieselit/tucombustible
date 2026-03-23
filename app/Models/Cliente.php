@@ -235,4 +235,9 @@ class Cliente extends Model
     {
         return $query->where('parent', '>', 0);
     }
+
+    public function movimientosCombustible()
+    {
+        return $this->hasMany(MovimientoCombustible::class, 'cliente_id','id');
+    }
 }
