@@ -64,9 +64,9 @@ class OrdenController extends BaseController
 
         // Simulación de reportes de falla (timeline)
         $reportes_falla = [
-            (object)['fecha' => '2024-05-15', 'descripcion' => 'Falla en el sistema de frenos del Vehículo 003.'],
-            (object)['fecha' => '2024-05-12', 'descripcion' => 'Motor sobrecalentado en el Vehículo 005.'],
-            (object)['fecha' => '2024-05-10', 'descripcion' => 'Problema eléctrico en luces delanteras del Vehículo 012.'],
+            // (object)['fecha' => '2024-05-15', 'descripcion' => 'Falla en el sistema de frenos del Vehículo 003.'],
+            // (object)['fecha' => '2024-05-12', 'descripcion' => 'Motor sobrecalentado en el Vehículo 005.'],
+            // (object)['fecha' => '2024-05-10', 'descripcion' => 'Problema eléctrico en luces delanteras del Vehículo 012.'],
         ];
         $ordenes_abiertas = Orden::where('estatus', 2)->count();
 
@@ -89,9 +89,9 @@ class OrdenController extends BaseController
 
         
         $gasto_mensual = collect([
-            (object)['name' => 'Diciembre', 'y' => 2500],
-            (object)['name' => 'Enero', 'y' => 3100],
-            (object)['name' => 'Febrero', 'y' => 2200],
+            // (object)['name' => 'Diciembre', 'y' => 2500],
+            // (object)['name' => 'Enero', 'y' => 3100],
+            // (object)['name' => 'Febrero', 'y' => 2200],
             
         ]);
 
