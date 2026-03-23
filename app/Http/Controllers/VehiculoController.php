@@ -59,19 +59,19 @@ class VehiculoController extends BaseController
 
      // NOTA: En una aplicación real, estos datos vendrían de la base de datos.
             $rutas = collect([
-                ['fecha' => '2024-05-15', 'origen' => 'Caracas', 'destino' => 'Valencia', 'km' => 170, 'conductor' => 'Pedro Pérez'],
-                ['fecha' => '2024-05-12', 'origen' => 'Valencia', 'destino' => 'Maracay', 'km' => 60, 'conductor' => 'Ana López'],
-                ['fecha' => '2024-05-10', 'origen' => 'Maracay', 'destino' => 'Caracas', 'km' => 120, 'conductor' => 'Juan Rivas'],
-                ['fecha' => '2024-05-08', 'origen' => 'Caracas', 'destino' => 'La Guaira', 'km' => 40, 'conductor' => 'Pedro Pérez'],
-                ['fecha' => '2024-05-05', 'origen' => 'La Guaira', 'destino' => 'Caracas', 'km' => 45, 'conductor' => 'Ana López'],
+                // ['fecha' => '2024-05-15', 'origen' => 'Caracas', 'destino' => 'Valencia', 'km' => 170, 'conductor' => 'Pedro Pérez'],
+                // ['fecha' => '2024-05-12', 'origen' => 'Valencia', 'destino' => 'Maracay', 'km' => 60, 'conductor' => 'Ana López'],
+                // ['fecha' => '2024-05-10', 'origen' => 'Maracay', 'destino' => 'Caracas', 'km' => 120, 'conductor' => 'Juan Rivas'],
+                // ['fecha' => '2024-05-08', 'origen' => 'Caracas', 'destino' => 'La Guaira', 'km' => 40, 'conductor' => 'Pedro Pérez'],
+                // ['fecha' => '2024-05-05', 'origen' => 'La Guaira', 'destino' => 'Caracas', 'km' => 45, 'conductor' => 'Ana López'],
             ]);
 
             $historialMensual = collect([
-                ['mes' => 'Mayo 2024', 'km' => 1500, 'consumo' => 120.5],
-                ['mes' => 'Abril 2024', 'km' => 1800, 'consumo' => 145.7],
-                ['mes' => 'Marzo 2024', 'km' => 2100, 'consumo' => 170.3],
-                ['mes' => 'Febrero 2024', 'km' => 1950, 'consumo' => 155.0],
-                ['mes' => 'Enero 2024', 'km' => 1750, 'consumo' => 135.2],
+                // ['mes' => 'Mayo 2024', 'km' => 1500, 'consumo' => 120.5],
+                // ['mes' => 'Abril 2024', 'km' => 1800, 'consumo' => 145.7],
+                // ['mes' => 'Marzo 2024', 'km' => 2100, 'consumo' => 170.3],
+                // ['mes' => 'Febrero 2024', 'km' => 1950, 'consumo' => 155.0],
+                // ['mes' => 'Enero 2024', 'km' => 1750, 'consumo' => 135.2],
             ]);
 
             // Cálculo de indicadores económicos (con datos simulados)
@@ -325,7 +325,7 @@ class VehiculoController extends BaseController
             'chartCategorias' => $categorias,
             'chartSeries'     => $series,   
             
-            'promsem' => ResumenDiario::where('fecha', '>=', now()->subDays(7))
+            'promsem' => ResumenDiario::where('fecha', '>=', now()->limit(15))
                             ->orderBy('fecha', 'asc')
                             ->get(),       
             'status_distribucion' => Vehiculo::select('estatus', DB::raw('count(*) as total'))
