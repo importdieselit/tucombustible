@@ -5,147 +5,167 @@
 <div class="container mx-auto py-6 px-4">
 
     {{-- CARDS DE RESUMEN --}}
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white rounded-xl shadow-sm p-6 border-l-8 border-blue-600 border border-gray-200">
-            <h6 class="text-xs font-black uppercase tracking-widest text-gray-500 mb-2">En Registro</h6>
-            <h2 class="text-3xl font-black text-gray-800">{{ $stats['en_registro'] }}</h2>
-        </div>
-        <div class="bg-white rounded-xl shadow-sm p-6 border-l-8 border-green-600 border border-gray-200">
-            <h6 class="text-xs font-black uppercase tracking-widest text-gray-500 mb-2">Aprobados</h6>
-            <h2 class="text-3xl font-black text-gray-800">{{ $stats['aprobados'] }}</h2>
-        </div>
-        <div class="bg-white rounded-xl shadow-sm p-6 border-l-8 border-red-600 border border-gray-200">
-            <h6 class="text-xs font-black uppercase tracking-widest text-gray-500 mb-2">Rechazados</h6>
-            <h2 class="text-3xl font-black text-gray-800">{{ $stats['rechazados'] }}</h2>
-        </div>
-        <div class="bg-white rounded-xl shadow-sm p-6 border-l-8 border-gray-400 border border-gray-200">
-            <h6 class="text-xs font-black uppercase tracking-widest text-gray-500 mb-2">Inactivos</h6>
-            <h2 class="text-3xl font-black text-gray-800">{{ $stats['inactivos'] }}</h2>
-        </div>
-    </div>
-
-    {{-- LISTADO --}}
-    <div class="bg-white rounded-lg shadow-sm border border-gray-300 overflow-hidden mb-8">
-        <div class="p-6 border-b border-gray-200 bg-gray-50">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <h5 class="text-lg font-black uppercase tracking-tight text-gray-800 italic">
-                    <span class="text-orange-impordiesel">|</span> Listado de Clientes — Combustible
-                </h5>
-                <div class="flex items-center gap-2 flex-wrap">
-
-                    {{-- Buscador --}}
-                    <form action="{{ route('clientes.index') }}" method="GET" class="flex items-center gap-0">
-                        <input type="text" name="search" value="{{ request('search') }}"
-                               class="w-full md:w-56 px-4 py-2 text-sm border-2 border-gray-300 rounded-l focus:border-orange-impordiesel outline-none uppercase font-bold text-gray-700"
-                               placeholder="RIF o nombre...">
-                        <button type="submit"
-                                class="bg-gray-industrial text-white px-5 py-2.5 text-sm font-black uppercase hover:bg-black transition border-y-2 border-r-2 border-gray-industrial">
-                            <i class="fas fa-search"></i>
-                        </button>
-                        @if(request('search'))
-                            <a href="{{ route('clientes.index') }}"
-                               class="bg-red-700 text-white px-4 py-2.5 text-sm font-black uppercase hover:bg-red-900 transition rounded-r border-y-2 border-r-2 border-red-700">
-                                <i class="fas fa-times"></i>
-                            </a>
-                        @endif
-                    </form>
-
-                    {{-- Filtro por status --}}
-                    <form action="{{ route('clientes.index') }}" method="GET">
-                        <select name="status" onchange="this.form.submit()"
-                                class="text-xs font-black border-2 border-gray-300 rounded p-2.5 outline-none focus:border-orange-impordiesel bg-white uppercase">
-                            <option value="">Todos los status</option>
-                            <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>En Registro</option>
-                            <option value="2" {{ request('status') == '2' ? 'selected' : '' }}>Aprobados</option>
-                            <option value="3" {{ request('status') == '3' ? 'selected' : '' }}>Rechazados</option>
-                            <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Inactivos</option>
-                        </select>
-                    </form>
-
-                    <a href="{{ route('clientes.create') }}"
-                       class="bg-orange-impordiesel text-white px-5 py-2.5 rounded text-xs font-black uppercase hover:bg-orange-700 transition shadow-md border-b-2 border-orange-900">
-                        <i class="fas fa-plus mr-1"></i> Nuevo Cliente
-                    </a>
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card card-kpi border-b-orange shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-uppercase fw-bold text-muted small mb-2" style="letter-spacing: 1px;">En Registro</h6>
+                    <h2 class="fw-black text-dark mb-0">{{ $stats['en_registro'] }}</h2>
                 </div>
             </div>
         </div>
+        <div class="col-md-3">
+            <div class="card card-kpi border-b-success shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-uppercase fw-bold text-muted small mb-2" style="letter-spacing: 1px;">Aprobados</h6>
+                    <h2 class="fw-black text-dark mb-0">{{ $stats['aprobados'] }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card card-kpi border-b-danger shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-uppercase fw-bold text-muted small mb-2" style="letter-spacing: 1px;">Rechazados</h6>
+                    <h2 class="fw-black text-dark mb-0">{{ $stats['rechazados'] }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card card-kpi border-b-corporate shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-uppercase fw-bold text-muted small mb-2" style="letter-spacing: 1px;">Inactivos</h6>
+                    <h2 class="fw-black text-dark mb-0">{{ $stats['inactivos'] }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    {{-- LISTADO --}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-300 overflow-hidden mb-8">
+        <div class="card-header bg-white border-bottom py-3">
+    <div class="d-flex flex-column md-flex-row align-items-md-center justify-content-between gap-3">
+        {{-- Título con estilo corporativo --}}
+        <h5 class="mb-0 fw-black text-uppercase italic tracking-tighter text-dark">
+            <span class="text-orange">|</span> Listado de Clientes — Combustible
+        </h5>
+
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+
+            {{-- Buscador --}}
+            <form action="{{ route('clientes.index') }}" method="GET" class="d-flex align-items-center mb-0">
+                <input type="text" name="search" value="{{ request('search') }}"
+                       class="form-control form-control-sm fw-bold text-uppercase border-2 border-end-0 rounded-0 rounded-start border-light-gray shadow-none"
+                       style="width: 220px; outline: none;"
+                       placeholder="RIF o nombre...">
+                <button type="submit" 
+                        class="btn btn-corporate btn-sm rounded-0 fw-black text-uppercase px-3 border-2 border-dark rounded-end ">
+                    <i class="fas fa-search"></i>
+                </button>
+                @if(request('search'))
+                    <a href="{{ route('clientes.index') }}" 
+                       class="btn-danger btn-sm rounded-0 rounded-end fw-black text-uppercase px-3 border-2 border-danger">
+                        <i class="fas fa-times"></i>
+                    </a>
+                @endif
+            </form>
+
+            {{-- Filtro por status --}}
+            <form action="{{ route('clientes.index') }}" method="GET" class="mb-0">
+                <select name="status" onchange="this.form.submit()"
+                        class="form-select form-select-sm fw-black text-uppercase border-2 border-light-gray shadow-none cursor-pointer">
+                    <option value="">Todos los status</option>
+                    <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>En Registro</option>
+                    <option value="2" {{ request('status') == '2' ? 'selected' : '' }}>Aprobados</option>
+                    <option value="3" {{ request('status') == '3' ? 'selected' : '' }}>Rechazados</option>
+                    <option value="0" {{ request('status') == '0' ? 'selected' : '' }}>Inactivos</option>
+                </select>
+            </form>
+
+            {{-- Botón Nuevo Cliente --}}
+            <a href="{{ route('clientes.create') }}" 
+               class="btn-orange text-white btn-sm fw-black text-uppercase px-3 shadow-sm border-bottom border-dark border-1 rounded">
+                <i class="fas fa-plus me-1"></i> Nuevo Cliente
+            </a>
+        </div>
+    </div>
+</div>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-gray-industrial text-white text-xs font-black uppercase tracking-widest">
-                        <th class="px-6 py-4">Cliente / Identificación</th>
-                        <th class="px-6 py-4 text-center">Tipo</th>
-                        <th class="px-6 py-4 text-center">Estatus</th>
-                        <th class="px-6 py-4 text-center">Fecha Registro</th>
-                        <th class="px-6 py-4 text-center">Fecha Aprobación</th>
-                        <th class="px-6 py-4 text-right">Acción</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    @forelse($clientes as $c)
-                    <tr class="hover:bg-gray-50 {{ !$c->es_padre ? 'bg-gray-50' : '' }}">
-                        <td class="px-3 py-1">
-                            @if(!$c->es_padre)
-                                <div class="flex items-start">
-                                    <span class="text-gray-300 mr-2 mt-1 text-xs">└</span>
-                                    <div>
-                                        <div class="font-black text-gray-700 uppercase text-sm leading-tight">{{ $c->nombre }}</div>
-                                        <div class="text-xs font-bold text-gray-400 mt-1">RIF: {{ $c->rif }}</div>
-                                        @if($c->padre)
-                                            <div class="text-[9px] font-bold text-orange-impordiesel uppercase mt-0.5">
-                                                <i class="fas fa-sitemap mr-1"></i> {{ $c->padre->nombre }}
-                                            </div>
-                                        @endif
+            <div class="table-responsive">
+    <table class="table table-hover align-middle border-collapse mb-0">
+        <thead class="bg-dark text-white">
+            <tr class="text-uppercase fw-black small" style="letter-spacing: 1px;">
+                <th class="px-4 py-3 border-0">Cliente / Identificación</th>
+                <th class="px-3 py-3 text-center border-0">Tipo</th>
+                <th class="px-3 py-3 text-center border-0">Estatus</th>
+                <th class="px-3 py-3 text-center border-0">Registro</th>
+                <th class="px-3 py-3 text-center border-0">Aprobación</th>
+                <th class="px-4 py-3 text-end border-0">Acción</th>
+            </tr>
+        </thead>
+        <tbody class="border-top-0">
+            @forelse($clientes as $c)
+            <tr class="{{ !$c->es_padre ? 'bg-light bg-opacity-50' : '' }} transition-all">
+                <td class="px-4 py-3">
+                    @if(!$c->es_padre)
+                        <div class="d-flex align-items-start">
+                            <span class="text-muted me-2 mt-1 fw-bold" style="font-size: 14px;">└</span>
+                            <div>
+                                <div class="fw-black text-dark text-uppercase small lh-sm">{{ $c->nombre }}</div>
+                                <div class="fw-bold text-muted mt-1" style="font-size: 10px;">RIF: {{ $c->rif }}</div>
+                                @if($c->padre)
+                                    <div class="fw-bold text-orange text-uppercase mt-1" style="font-size: 9px;">
+                                        <i class="fas fa-sitemap me-1"></i> {{ $c->padre->nombre }}
                                     </div>
-                                </div>
-                            @else
-                                <div class="font-black text-gray-800 uppercase text-sm leading-tight">{{ $c->nombre }}</div>
-                                <div class="text-xs font-bold text-gray-500 mt-1">RIF: {{ $c->rif }}</div>
-                            @endif
-                        </td>
-                        <td class="px-1 py-1 text-center">
-                            @if($c->es_padre)
-                                <span class="bg-gray-industrial text-white px-2 py-1 rounded text-[9px] font-black uppercase">
-                                    Padre
-                                </span>
-                            @else
-                                <span class="bg-orange-100 text-orange-impordiesel px-2 py-1 rounded text-[9px] font-black uppercase border border-orange-200">
-                                    Sucursal
-                                </span>
-                            @endif
-                        </td>
-                        <td class="px-1 py-1 text-center">
-                            <span class="{{ $c->color_status }} text-white px-3 py-1 rounded text-[10px] font-black uppercase tracking-tighter shadow-sm">
-                                {{ $c->label_status }}
-                            </span>
-                        </td>
-                        <td class="px-1 py-1 text-center">
-                            <div class="text-xs font-bold text-gray-700">
-                                {{ $c->created_at?->format('d/m/Y') ?? 'N/A' }}
+                                @endif
                             </div>
-                        </td>
-                        <td class="px-1 py-1 text-center">
-                            <div class="text-xs font-bold text-gray-700">
-                                {{ $c->fecha_aprobacion?->format('d/m/Y') ?? '—' }}
-                            </div>
-                        </td>
-                        <td class="px-1 py-1 text-right">
-                            <a href="{{ route('clientes.show', $c->id) }}"
-                               class="inline-flex bg-orange-impordiesel text-white px-3 py-2 rounded text-xs font-black uppercase hover:bg-orange-700 transition shadow-md border-b-2 border-orange-900">
-                                <i class="fas fa-folder-open mr-1 "></i> Expediente
-                            </a>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="6" class="px-6 py-12 text-center text-gray-400 font-black uppercase text-xs tracking-widest">
-                            No se encontraron registros.
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                        </div>
+                    @else
+                        <div class="fw-black text-dark text-uppercase small lh-sm">{{ $c->nombre }}</div>
+                        <div class="fw-bold text-muted mt-1" style="font-size: 10px;">RIF: {{ $c->rif }}</div>
+                    @endif
+                </td>
+                <td class="px-3 py-3 text-center">
+                    @if($c->es_padre)
+                        <span class="badge bg-dark text-white text-uppercase px-2 py-1" style="font-size: 9px;">Padre</span>
+                    @else
+                        <span class="badge bg-orange-light text-orange border border-orange-subtle text-uppercase px-2 py-1" style="font-size: 9px;">Sucursal</span>
+                    @endif
+                </td>
+                <td class="px-3 py-3 text-center">
+                    {{-- Usamos la clase dinámica que ya tienes, asegurando que sea un badge de bootstrap --}}
+                    <span class="badge {{ $c->color_status }} text-white text-uppercase shadow-sm px-3 py-1" style="font-size: 10px; letter-spacing: -0.3px;">
+                        {{ $c->label_status }}
+                    </span>
+                </td>
+                <td class="px-3 py-3 text-center">
+                    <div class="fw-bold text-dark small">
+                        {{ $c->created_at?->format('d/m/Y') ?? 'N/A' }}
+                    </div>
+                </td>
+                <td class="px-3 py-3 text-center">
+                    <div class="fw-bold text-dark small">
+                        {{ $c->fecha_aprobacion?->format('d/m/Y') ?? '—' }}
+                    </div>
+                </td>
+                <td class="px-4 py-3 text-end">
+                    <a href="{{ route('clientes.show', $c->id) }}"
+                       class="btn-orange btn-sm text-white fw-black text-uppercase shadow-sm border-bottom border-dark border-2 px-3 rounded">
+                        <i class="fas fa-folder-open me-1"></i> Expediente
+                    </a>
+                </td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="6" class="px-6 py-5 text-center text-muted fw-black text-uppercase small tracking-widest">
+                    No se encontraron registros en la base de datos.
+                </td>
+            </tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
         </div>
 
         <div class="p-4 bg-gray-50 border-t">
@@ -153,86 +173,48 @@
         </div>
     </div>
 
-    {{-- RANKINGS DE CUPOS --}}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+   {{-- RANKINGS DE CUPOS --}}
+<div class="row g-4 mb-4">
 
-        {{-- TOP 5 CUPOS MÁS GRANDES --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="bg-gray-industrial px-6 py-4 flex items-center justify-between">
-                <h5 class="text-xs font-black uppercase text-white tracking-widest">
-                    <i class="fas fa-trophy mr-2 text-orange-impordiesel"></i> Top 5 — Cupos Más Grandes
-                </h5>
-                <span class="bg-orange-impordiesel text-white text-[9px] px-2 py-1 rounded-full font-black uppercase">
+    {{-- TOP 5 CUPOS MÁS GRANDES --}}
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100 overflow-hidden">
+            <div class="card-header bg-dark px-4 py-3 d-flex align-items-center justify-content-between">
+                <h6 class="text-uppercase fw-black text-white small mb-0" style="letter-spacing: 1px;">
+                    <i class="fas fa-trophy me-2 text-orange"></i> Top 5 — Cupos Más Grandes
+                </h6>
+                <span class="badge bg-orange text-white text-uppercase fw-black" style="font-size: 9px;">
                     Litros / mes
                 </span>
             </div>
-            <div class="divide-y divide-gray-100">
+            <div class="list-group list-group-flush">
                 @forelse($rankingMayores as $index => $cliente)
-                <div class="flex items-center justify-between px-6 py-4 hover:bg-gray-50">
-                    <div class="flex items-center gap-4">
-                        <span class="w-8 h-8 rounded-full flex items-center justify-center font-black text-sm
-                            {{ $index === 0 ? 'bg-yellow-400 text-white' : ($index === 1 ? 'bg-gray-300 text-gray-700' : ($index === 2 ? 'bg-orange-300 text-white' : 'bg-gray-100 text-gray-500')) }}">
-                            {{ $index + 1 }}
-                        </span>
-                        <div>
-                            <p class="text-xs font-black text-gray-800 uppercase leading-tight">{{ $cliente->nombre }}</p>
-                            <p class="text-[9px] font-bold text-gray-400 mt-0.5">{{ $cliente->rif }}</p>
+                <div class="list-group-item px-4 py-3 list-hover border-0 border-bottom">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <span class="rank-number me-3 flex-shrink-0 
+                                {{ $index === 0 ? 'rank-1' : ($index === 1 ? 'rank-2' : ($index === 2 ? 'rank-3' : 'rank-other')) }}">
+                                {{ $index + 1 }}
+                            </span>
+                            <div>
+                                <p class="fw-black text-dark text-uppercase small mb-0 lh-1">{{ $cliente->nombre }}</p>
+                                <small class="fw-bold text-muted" style="font-size: 10px;">RIF: {{ $cliente->rif }}</small>
+                            </div>
                         </div>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-lg font-black text-orange-impordiesel">
-                            {{ number_format($cliente->cupos_max_litros_aprobados, 0, ',', '.') }}
-                            <small class="text-[9px] text-gray-400 font-bold uppercase">L</small>
-                        </p>
-                        <a href="{{ route('clientes.show', $cliente->id) }}"
-                           class="text-[9px] font-black uppercase text-gray-400 hover:text-orange-impordiesel transition">
-                            Ver expediente →
-                        </a>
+                        <div class="text-end">
+                            <p class="h5 fw-black text-orange mb-0">
+                                {{ number_format($cliente->cupos_max_litros_aprobados, 0, ',', '.') }}
+                                <small class="text-muted fw-bold" style="font-size: 9px;">L</small>
+                            </p>
+                            <a href="{{ route('clientes.show', $cliente->id) }}"
+                               class="text-decoration-none fw-black text-uppercase text-muted hover-orange" style="font-size: 9px;">
+                                Ver expediente <i class="fas fa-chevron-right ms-1"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
                 @empty
-                <div class="px-6 py-10 text-center text-gray-400 font-black uppercase text-xs">
-                    No hay clientes aprobados con cupo asignado.
-                </div>
-                @endforelse
-            </div>
-        </div>
-
-        {{-- TOP 5 CUPOS MÁS PEQUEÑOS --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="bg-gray-industrial px-6 py-4 flex items-center justify-between">
-                <h5 class="text-xs font-black uppercase text-white tracking-widest">
-                    <i class="fas fa-arrow-down mr-2 text-blue-400"></i> Top 5 — Cupos Más Pequeños
-                </h5>
-                <span class="bg-blue-600 text-white text-[9px] px-2 py-1 rounded-full font-black uppercase">
-                    Litros / mes
-                </span>
-            </div>
-            <div class="divide-y divide-gray-100">
-                @forelse($rankingMenores as $index => $cliente)
-                <div class="flex items-center justify-between px-6 py-4 hover:bg-gray-50">
-                    <div class="flex items-center gap-4">
-                        <span class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center font-black text-sm text-gray-500">
-                            {{ $index + 1 }}
-                        </span>
-                        <div>
-                            <p class="text-xs font-black text-gray-800 uppercase leading-tight">{{ $cliente->nombre }}</p>
-                            <p class="text-[9px] font-bold text-gray-400 mt-0.5">{{ $cliente->rif }}</p>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-lg font-black text-blue-600">
-                            {{ number_format($cliente->cupos_max_litros_aprobados, 0, ',', '.') }}
-                            <small class="text-[9px] text-gray-400 font-bold uppercase">L</small>
-                        </p>
-                        <a href="{{ route('clientes.show', $cliente->id) }}"
-                           class="text-[9px] font-black uppercase text-gray-400 hover:text-orange-impordiesel transition">
-                            Ver expediente →
-                        </a>
-                    </div>
-                </div>
-                @empty
-                <div class="px-6 py-10 text-center text-gray-400 font-black uppercase text-xs">
+                <div class="p-5 text-center text-muted fw-black text-uppercase small">
                     No hay clientes aprobados con cupo asignado.
                 </div>
                 @endforelse
@@ -240,6 +222,53 @@
         </div>
     </div>
 
+    {{-- TOP 5 CUPOS MÁS PEQUEÑOS --}}
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100 overflow-hidden">
+            <div class="card-header bg-dark px-4 py-3 d-flex align-items-center justify-content-between">
+                <h6 class="text-uppercase fw-black text-white small mb-0" style="letter-spacing: 1px;">
+                    <i class="fas fa-arrow-down me-2 text-info"></i> Top 5 — Cupos Más Pequeños
+                </h6>
+                <span class="badge bg-info text-white text-uppercase fw-black" style="font-size: 9px;">
+                    Litros / mes
+                </span>
+            </div>
+            <div class="list-group list-group-flush">
+                @forelse($rankingMenores as $index => $cliente)
+                <div class="list-group-item px-4 py-3 list-hover border-0 border-bottom">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <span class="rank-number me-3 flex-shrink-0 
+                                {{ $index === 0 ? 'rank-1' : ($index === 1 ? 'rank-2' : ($index === 2 ? 'rank-3' : 'rank-other')) }}">
+                                {{ $index + 1 }}
+                            </span>
+                            <div>
+                                <p class="fw-black text-dark text-uppercase small mb-0 lh-1">{{ $cliente->nombre }}</p>
+                                <small class="fw-bold text-muted" style="font-size: 10px;">RIF: {{ $cliente->rif }}</small>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <p class="h5 fw-black text-info mb-0">
+                                {{ number_format($cliente->cupos_max_litros_aprobados, 0, ',', '.') }}
+                                <small class="text-muted fw-bold" style="font-size: 9px;">L</small>
+                            </p>
+                            <a href="{{ route('clientes.show', $cliente->id) }}"
+                               class="text-decoration-none fw-black text-uppercase text-muted hover-orange" style="font-size: 9px;">
+                                Ver expediente <i class="fas fa-chevron-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                @empty
+                <div class="p-5 text-center text-muted fw-black text-uppercase small">
+                    No hay clientes aprobados con cupo asignado.
+                </div>
+                @endforelse
+            </div>
+        </div>
+    </div>
+
+</div>
     {{-- ENLACE A CLIENTES LUBRICANTES --}}
     <div class="text-right">
         <a href="{{ route('clientes.lubricantes.index') }}"
@@ -249,4 +278,5 @@
     </div>
 
 </div>
+
 @endsection

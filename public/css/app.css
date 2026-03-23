@@ -12175,3 +12175,28 @@ textarea.form-control-lg {
     }
     
     .x-small { font-size: 0.7rem; }
+
+    .bg-orange { background-color: #ff6600 !important; }
+
+    .fw-black { font-weight: 900; }
+    
+    .list-hover { transition: background 0.2s; }
+    .list-hover:hover { background-color: #f8f9fa; }
+    
+    .hover-orange:hover { color: #e67e22 !important; }
+
+    /* Estilos para los números del Ranking */
+    .rank-number {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        font-size: 0.85rem;
+    }
+    .rank-1 { background-color: #FFD700; color: white; box-shadow: 0 2px 4px rgba(255,215,0,0.3); }
+    .rank-2 { background-color: #C0C0C0; color: white; }
+    .rank-3 { background-color: #CD7F32; color: white; }
+    .rank-other { background-color: #f1f3f5; color: #6c757d; }
