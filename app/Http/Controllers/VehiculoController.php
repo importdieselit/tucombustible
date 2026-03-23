@@ -325,9 +325,7 @@ class VehiculoController extends BaseController
             'chartCategorias' => $categorias,
             'chartSeries'     => $series,   
             
-            'promsem' => ResumenDiario::where('fecha', '>=', now()->limit(15))
-                            ->orderBy('fecha', 'asc')
-                            ->get(),       
+            'promsem' => ResumenDiario::orderBy('fecha', 'desc')->limit(15)->get()->sortBy('fecha'),       
             'status_distribucion' => Vehiculo::select('estatus', DB::raw('count(*) as total'))
                                         ->groupBy('estatus')
                                         ->get(),
