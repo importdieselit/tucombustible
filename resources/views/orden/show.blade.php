@@ -5,6 +5,28 @@
 @push('styles')
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    .table-success-light {
+        background-color: rgba(40, 167, 69, 0.08) !important;
+        transition: all 0.3s ease;
+    }
+    
+    .x-small {
+        font-size: 0.65rem !important;
+        letter-spacing: 0.5px;
+        padding: 0.35em 0.6em !important;
+    }
+
+    .text-done {
+        text-decoration: line-through;
+        color: #6c757d !important;
+    }
+
+    .table .form-control-sm {
+        padding: 0.2rem 0.4rem;
+        font-size: 0.85rem;
+    }
+</style>
 @endpush
 
 @section('content')
@@ -110,10 +132,9 @@
             </div>
         </div>
     </div>
-
     <div class="row">
         {{-- COLUMNA TRABAJOS --}}
-        <div class="col-md-7">
+        <div class="col-md-6">
             <div class="card card-step shadow-sm mb-4">
                 <div class="card-header bg-white py-3">
                     <h6 class="m-0 fw-bold text-uppercase small"><i class="fas fa-tools text-orange me-2"></i>Trabajos Ejecutados</h6>
@@ -131,6 +152,7 @@
                         <tbody>
                             @php($totalManoObra = 0)
                             @forelse($trabajos as $trabajo)
+
                             @php($totalManoObra += $trabajo->costo)
                             <tr>
                                 <td class="ps-3">
@@ -191,62 +213,128 @@
         </div>
 
         {{-- COLUMNA INSUMOS --}}
-        <div class="col-md-5">
+        <div class="col-md-6">
             <div class="card card-step shadow-sm mb-4">
                 <div class="card-header bg-white py-3">
                     <h6 class="m-0 fw-bold text-uppercase small"><i class="fas fa-box-open text-orange me-2"></i>Insumos y Repuestos</h6>
                 </div>
+                
                 <div class="table-responsive">
-                    <table class="table table-sm table-hover mb-0">
-                        <thead class="bg-light small text-uppercase">
-                            <tr>
-                                <th class="ps-3">Cant</th>
+                    <table class="table table-bordered align-middle" id="selected-supplies-table">
+                        <thead class="bg-light">
+                            <tr class="small text-uppercase">
+                                <th width="80" class="text-center">Cant.</th>
                                 <th>Descripción</th>
-                                <th class="text-end">Precio Unitario</th>
-                                <th class="text-end pe-3">Total</th>
+                                <th width="120" class="text-end">P. Unit</th>
+                                <th width="120" class="text-end">Subtotal</th>
+                                <th width="100" class="text-center no-print">Estado</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @php($totalInsumos=0)
-                            @forelse($orden->suministros as $item)
-                            @php($subtotal = $item->cantidad * $item->precio_unitario)
-                            @php($totalInsumos += $subtotal)
-                            <tr class="small {{ $item->recibido ? 'table-success' : '' }}">
-                                <td class="ps-3 text-center">{{ $item->cantidad }}</td>
-                                <td>
-                                    {{ $item->inventario->descripcion }} {{ $item->estatus }}
-                                    @if($item->estatus == 1)
-                                        <span class="badge bg-success small ms-2"><i class="fas fa-check"></i> Recibido</span>
-                                    @endif
-                                </td>
-                                <td class="text-end">${{ number_format($item->precio_unitario, 2) }}</td>
-                                <td class="text-end pe-3 fw-bold">
-                                    @if($item->estatus != 1 && ($orden->estatus == 2 || $orden->estatus == 'ABIERTA'))
-                                        <button class="btn btn-sm btn-outline-success mark-recibido no-print" data-id="{{ $item->id_inventario_suministro }}">
-                                            <i class="fas fa-check"></i>
-                                        </button>
-                                    @endif
-                                    ${{ number_format($subtotal, 2) }}
-                                </td>
-                            </tr>
-                            @empty
-                            <tr><td colspan="4" class="text-center py-3 text-muted">Sin insumos cargados.</td></tr>
-                            @endforelse
-                            @foreach ($requerimientos as $req )
+                            @php($totalGeneral = 0)
+                            @php($hasItems = false)
+
+                            {{-- --- BLOQUE 1: SUMINISTROS DE INVENTARIO --- --}}
+                            @foreach($suministros as $item)
+                                @php($hasItems = true)
+                                @php($subtotal = $item->cantidad * $item->precio_unitario)
+                                @php($totalGeneral += $subtotal)
+                                @php($isRecibido = $item->estatus == 1)
+
+                                <tr class="small {{ $isRecibido ? 'table-success-light' : '' }}">
+                                    <td class="text-center fw-bold">{{ $item->cantidad }}</td>
+                                    <td>
+                                        <div class="fw-bold text-orange">Inventario</div>
+                                        {{ $item->inventario->descripcion }}
+                                        @if($isRecibido)
+                                            <span class="badge bg-success x-small ms-2"><i class="fas fa-check"></i> RECIBIDO</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-end text-muted">${{ number_format($item->precio_unitario, 2) }}</td>
+                                    <td class="text-end fw-bold">${{ number_format($subtotal, 2) }}</td>
+                                    <td class="text-center no-print">
+                                        @if(!$isRecibido && ($orden->estatus == 2 || $orden->estatus == 'ABIERTA'))
+                                            <button type="button" class="btn btn-sm btn-outline-success mark-recibido" 
+                                                    data-id="{{ $item->id_inventario_suministro }}" data-type="supplies">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        @else
+                                            <i class="fas fa-check-circle text-success fs-5"></i>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+
+                            {{-- --- BLOQUE 2: REQUERIMIENTOS / COMPRAS --- --}}
+                            @foreach ($requerimientos as $req)
                                 @foreach ($req->detalles as $detalle)
-                                    <tr>
-                                        <td class="ps-3 text-center">{{ $detalle->cantidad }}</td>
-                                        <td>{{ $detalle->descripcion }}</td>
-                                        <td class="text-end">${{ number_format($detalle->costo_unitario_aprobado ?? 0, 2) }}</td>
-                                        <td class="text-end pe-3 fw-bold">${{ number_format(($detalle->costo_unitario_aprobado ?? 0) * $detalle->cantidad, 2) }}</td>
+                                    @php($hasItems = true)
+                                    @php($subtotalDetalle = $detalle->cantidad_solicitada * ($detalle->costo_unitario_aprobado ?? 0))
+                                    @php($totalGeneral += $subtotalDetalle)
+                                    {{-- Asumiendo que el detalle tiene un estatus de recepción, si no, usa el del requerimiento --}}
+                                    @php($isRecibidoReq = $detalle->estatus == 1 || $req->estatus == 'RECIBIDO')
+                                    @php($isSolicitadoReq = $detalle->estatus == 2 || $req->estatus == 'SOLICITADO')
+                                    @php($isAprobadoReq = $detalle->estatus == 3 || $req->estatus == 'APROBADO')
+
+                                    <tr class="small {{ $isRecibidoReq ? 'table-success-light' : ($isAprobadoReq ? 'table-info-light' : '') }}">
+                                        <td class="text-center fw-bold">{{ $detalle->cantidad_solicitada }}</td>
+                                        <td>
+                                            <div class="fw-bold text-info">Req: #{{ $req->nro_requerimiento }}</div>
+                                            {{ $detalle->descripcion }}
+                                            
+                                           
+                                        </td>
+                                        <td class="text-end text-muted">${{ number_format($detalle->costo_unitario_aprobado ?? 0, 2) }}</td>
+                                        <td class="text-end fw-bold">${{ number_format($subtotalDetalle, 2) }}</td>
+                                        
+                                        <td class="text-center no-print">
+                                            @if($isRecibidoReq)
+                                                {{-- ESTADO 1: Ya recibido --}}
+                                                <i class="fas fa-check-circle text-success fs-5" title="Recibido"></i>
+                                            
+                                            @elseif($isAprobadoReq)
+                                                {{-- ESTADO 3: Aprobado (Listo para marcar como recibido) --}}
+                                                <button type="button" class="btn btn-sm btn-outline-success mark-recibido" 
+                                                        data-id="{{ $detalle->id }}" data-type="compras" title="Marcar como Recibido">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                
+                                            @elseif($isSolicitadoReq)
+                                                {{-- ESTADO 2: Solo solicitado (En espera de aprobación) --}}
+                                                <i class="fas fa-clock text-warning fs-5" title="Pendiente de aprobación/compra"></i>
+                                                
+                                            @else
+                                                {{-- Cualquier otro estado --}}
+                                                <span class="text-muted small">Pte.</span>
+                                            @endif
+                                             {{-- Badge dinámico de estado --}}
+                                            {{-- @if($isRecibidoReq)
+                                                <span class="badge bg-success x-small ms-2"><i class="fas fa-check"></i> RECIBIDO</span>
+                                            @elseif($isSolicitadoReq)
+                                                <span class="badge bg-warning text-dark x-small ms-2"><i class="fas fa-clock"></i> SOLICITADO</span>
+                                            @elseif($isAprobadoReq)
+                                                <span class="badge bg-info x-small ms-2"><i class="fas fa-thumbs-up"></i> APROBADO</span>
+                                            @endif --}}
+                                        </td> 
                                     </tr>
                                 @endforeach
                             @endforeach
+
+                            {{-- --- MENSAJE DE TABLA VACÍA --- --}}
+                            @if(!$hasItems)
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">
+                                        <i class="fas fa-box-open d-block mb-2 fs-4"></i>
+                                        Sin insumos ni compras asignadas a esta orden.
+                                    </td>
+                                </tr>
+                            @endif
                         </tbody>
                         <tfoot>
-                            <tr class="total-row">
-                                <td colspan="3" class="text-end ps-3">TOTAL INSUMOS</td>
-                                <td class="text-end pe-3 text-orange">${{ number_format($totalInsumos, 2) }}</td>
+                            <tr class="bg-light">
+                                <td colspan="3" class="text-end fw-bold text-uppercase">Total General (Insumos + Compras)</td>
+                                <td class="text-end pe-3 fw-bold text-orange fs-5">${{ number_format($totalGeneral, 2) }}</td>
+                                <td class="no-print"></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -261,12 +349,12 @@
                     </div>
                     <div class="d-flex justify-content-between mb-2 small">
                         <span>SUBTOTAL REPUESTOS:</span>
-                        <span>${{ number_format($totalInsumos, 2) }}</span>
+                        <span>${{ number_format($totalGeneral, 2) }}</span>
                     </div>
                     <hr class="bg-white my-2">
                     <div class="d-flex justify-content-between align-items-center">
                         <span class="fw-bold text-uppercase">TOTAL GENERAL:</span>
-                        <span class="fs-3 fw-bold text-orange">${{ number_format($totalManoObra + $totalInsumos, 2) }}</span>
+                        <span class="fs-3 fw-bold text-orange">${{ number_format($totalManoObra + $totalGeneral, 2) }}</span>
                     </div>
                 </div>
             </div>
@@ -487,10 +575,23 @@
     document.addEventListener('DOMContentLoaded', function () {
         const orderId = '{{ $orden->id }}';
 
-        
+        let trabajosAsignados = {};
+
+        @if(isset($item->trabajos))
+            @foreach($item->trabajos as $trabajo)
+                trabajosAsignados["{{ $trabajo->id_tempario_servicio }}"] = {
+                    id_servicio: "{{ $trabajo->id_tempario_servicio }}",
+                    servicio_texto: "{{ $trabajo->servicio->descripcion }}",
+                    categoria_texto: "{{ $trabajo->servicio->categoria->categoria }}",
+                    estatus: {{ $trabajo->estatus ?? 1 }},
+                    personal: @json($trabajo->personal_ids ?? []), // Ajustar según tu relación
+                    personal_nombres: @json($trabajo->personal_nombres ?? [])
+                };
+            @endforeach
+        @endif
 
         // Ahora la variable se renderiza sin conflictos
-        let trabajosAsignados = {!! $dataTrabajos->toJson() !!};
+        trabajosAsignados = {!! $dataTrabajos->toJson() !!};
 
         // Inicializar Select2
         $('.select2-insumos').select2({ dropdownParent: $('#modalInsumo') });
@@ -674,6 +775,61 @@
                 renderTrabajos();
             }
         });
+
+
+        function renderSuppliesTable() {
+            const tbody = document.querySelector('#selected-supplies-table tbody');
+            tbody.innerHTML = '';
+            let total = 0;
+
+            Object.values(selectedSupplies).forEach(item => {
+                total += item.subtotal;
+                const isRecibido = item.estatus == 2;
+                
+                tbody.innerHTML += `
+                    <tr class="${isRecibido ? 'table-success-light' : ''}">
+                        <td class="small fw-bold text-orange">${item.codigo}</td>
+                        <td class="small">
+                            ${item.descripcion}
+                            <br>
+                            <span class="badge ${isRecibido ? 'bg-success' : 'bg-warning text-dark'} x-small">
+                                ${isRecibido ? '<i class="fas fa-check-circle me-1"></i>RECIBIDO' : '<i class="fas fa-clock me-1"></i>SOLICITADO'}
+                            </span>
+                        </td>
+                        <td>
+                            <input type="number" class="form-control form-control-sm qty-input" 
+                                data-id="${item.id}" value="${item.cantidad}" min="1" ${isRecibido ? 'readonly' : ''}>
+                        </td>
+                        <td><input type="number" step="0.01" class="form-control form-control-sm price-input" 
+                                data-id="${item.id}" value="${item.precio}" ${isRecibido ? 'readonly' : ''}></td>
+                        <td class="fw-bold">$ ${item.subtotal.toFixed(2)}</td>
+                        <td class="text-center">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-sm ${isRecibido ? 'btn-success' : 'btn-outline-success'}" 
+                                        onclick="toggleStatusInsumo('${item.id}')" title="Marcar como recibido">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger remove-supply" data-id="${item.id}">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <input type="hidden" name="supplies[${item.id}][id]" value="${item.id}">
+                            <input type="hidden" name="supplies[${item.id}][cantidad]" value="${item.cantidad}">
+                            <input type="hidden" name="supplies[${item.id}][precio]" value="${item.precio}">
+                            <input type="hidden" name="supplies[${item.id}][estatus]" value="${item.estatus}">
+                        </td>
+                    </tr>
+                `;
+            });
+            document.getElementById('total-amount').innerText = `$ ${total.toFixed(2)}`;
+        }
+
+        window.toggleStatusInsumo = function(id) {
+            selectedSupplies[id].estatus = (selectedSupplies[id].estatus == 1) ? 2 : 1;
+            renderSuppliesTable();
+        };
+
+        
     });
 
     async function apiCall(url, method = 'POST', body = null) {
@@ -707,36 +863,77 @@
         }
     }
 
-    $(document).on('click', '.mark-recibido', function() {
-        const insumoId = $(this).data('id');
-        Swal.fire({
-            title: '¿Confirmar recepción?',
-            text: "El insumo se marcará como entregado al mecánico.",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, recibido'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                apiCall(`/ordenes/supplies/receive/${insumoId}`, 'POST');
-            }
-        });
-    });
+    
 
     // Dentro de tu sección de scripts
-    $(document).on('click', '.finish-work', function() {
-        const trabajoId = $(this).data('id');
+    $(document).on('click', '.mark-recibido', function() {
+        const btn = $(this);
+        const id = btn.data('id');
+        const tipo = btn.data('type'); 
+        const $fila = btn.closest('tr'); 
+        const $celdaAccion = btn.closest('td'); 
         
+        const routes = {
+            'supplies': "{{ route('ordenes.supplies.receive', ':id') }}",
+            'compras': "{{ route('ordenes.compras.receive', ':id') }}"
+        };
+
+        const url = routes[tipo].replace(':id', id);
+        console.log(id);
         Swal.fire({
-            title: '¿Finalizar este trabajo?',
-            text: "Se registrará el tiempo transcurrido desde la apertura.",
-            icon: 'info',
+            title: '¿Confirmar recepción?',
+            text: "Se marcará este ítem como entregado a la orden.",
+            icon: 'question',
             showCancelButton: true,
-            confirmButtonColor: '#198754',
-            confirmButtonText: 'Sí, terminar'
+            confirmButtonColor: '#28a745',
+            confirmButtonText: 'Sí, recibir',
+            cancelButtonText: 'Cancelar'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Usamos la ruta que definiremos en web.php
-                apiCall(`/ordenes/trabajo/${trabajoId}/finalizar`, 'POST');
+                // Deshabilitar botón para evitar doble click
+                btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+
+                $.ajax({
+                    url:url,
+                    method: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        id: id,
+                        tipo: tipo
+                    },
+                    success: function(response) {
+                        if(response.success) {
+                            // 1. Notificación de éxito
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Recibido!',
+                                text: response.message,
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+
+                            // 2. Actualización visual de la fila
+                            $fila.addClass('table-success-light');
+                            
+                            // 3. Reemplazar el botón por el icono de check estático
+                            $celdaAccion.html('<i class="fas fa-check-circle text-success fs-5 animate__animated animate__bounceIn"></i>');
+                            
+                            // 4. Opcional: Añadir el badge de "RECIBIDO" en la descripción si no existe
+                            if ($fila.find('.badge-recibido-dinamico').length === 0) {
+                                $fila.find('td:nth-child(2)').append('<span class="badge bg-success x-small ms-2 badge-recibido-dinamico"><i class="fas fa-check"></i> RECIBIDO</span>');
+                            }
+                        } else {
+                            // Error controlado desde el servidor
+                            Swal.fire('Error', response.message || 'No se pudo procesar la recepción.', 'error');
+                            btn.prop('disabled', false).html('<i class="fas fa-check"></i>');
+                        }
+                    },
+                    error: function(xhr) {
+                        // Error de conexión o 500
+                        Swal.fire('Error de sistema', 'Hubo un problema de conexión con el servidor.', 'error');
+                        btn.prop('disabled', false).html('<i class="fas fa-check"></i>');
+                    }
+                });
             }
         });
     });

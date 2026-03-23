@@ -182,9 +182,11 @@ class OrdenController extends BaseController
         }
     }
 
-    public function markRequestReceived(SuministroCompra $supply)
+    public function markRequestReceived(Request $request)
     {
         try {
+            $supply = SuministroCompraDetalle::find($request->id);
+            
             // Actualizar el estatus del suministro a 1 (Despachado/Recibido)
             $supply->estatus = 1; 
             $supply->save();
@@ -502,16 +504,17 @@ class OrdenController extends BaseController
                 }
                 $trabajo->mecanicos_lista = $personalRelacionado->whereIn('id_personal', $ids)->values();
             });
-            //dd($trabajos);            
             $requerimientos = SuministroCompra::where('orden_id', $id)->with('detalles')->get();
             $estatusData = EstatusData::find($orden->estatus);
             $fotos= OrdenFoto::where('orden_id',$id)->get();
             $personal = Personal::with('persona')->where('cargo', 'Mecánico')->get(); // Cargar relación con Persona para obtener nombres completos
             $inventario = Inventario::all()->keyBy('id_inventario');
+            $suministros= InventarioSuministro::where('id_orden', $id)->with('inventario')->get();
+        
             $categorias_tempario = TemparioCategoria::orderBy('categoria')->get();
             
 
-            return view('orden.show', compact('orden', 'requerimientos', 'estatusData','fotos', 'trabajos', 'personal', 'inventario','categorias_tempario'));
+            return view('orden.show', compact('orden', 'requerimientos', 'suministros','trabajos','estatusData','fotos', 'trabajos', 'personal', 'inventario','categorias_tempario'));
         } catch (ModelNotFoundException $e) {
             Session::flash('error', 'La orden de trabajo no fue encontrada.');
             return Redirect::route('orden.list');
