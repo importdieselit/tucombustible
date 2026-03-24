@@ -42,7 +42,7 @@ class InspeccionController extends Controller
                          ->first();
 
         // Obtener datos del vehículo (para pre-rellenar el formulario)
-        $vehiculo = Vehiculo::findOrFail($vehiculo_id);
+        $vehiculo = Vehiculo::with(['tipoVehiculo', 'isMarca', 'isModelo'])->findOrFail($vehiculo_id);
         if($inspeccion){
             $tipo='entrada';
             $checklist=json_decode($inspeccion->respuesta_json);

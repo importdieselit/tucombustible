@@ -52,7 +52,7 @@
 
         <div class="p-4">
             <div class="mb-5">
-                <h5 class="fw-bold mb-3 border-start border-4 border-primary ps-2">A.- CHUTOS Y CISTERNAS OPERATIVAS</h5>
+                <h5 class="fw-bold mb-3 border-start border-4 border-primary ps-2">A.- CHUTOS Y TANQUES OPERATIVAS</h5>
                 <div class="row row-cols-1 row-cols-md-3 g-3">
                     @foreach($chutosOperativos as $c)
                     <div class="col">
@@ -72,6 +72,30 @@
                             </div>
                         </div>
                     </div>
+                    @endforeach
+                    @foreach($cisternasOperativas as $c)
+                    <div class="col">
+                        <div class="p-2 border rounded bg-light d-flex align-items-center">
+                            <div class="bg-primary text-white rounded p-2 me-3">
+                                <i class="bi bi-truck"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold">{{ $c->flota }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                    @foreach($camionesOperativos as $c)
+                        <div class="col">
+                            <div class="p-2 border rounded bg-light d-flex align-items-center">
+                                <div class="bg-primary text-white rounded p-2 me-3">
+                                    <i class="bi bi-truck"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold">{{ $c->flota }}</div>
+                                </div>
+                            </div>
+                        </div>
                     @endforeach
                 </div>
             </div>
