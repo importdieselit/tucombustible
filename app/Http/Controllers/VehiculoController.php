@@ -669,11 +669,8 @@ class VehiculoController extends BaseController
                     continue;
                 }
 
-
                 $rotc_venc=null;
                 $rowData = array_combine($header, $row);
-//                $vard=var_dump($rowData);
-                    dd($rowData);
 
                 // // Lógica de búsqueda y creación de marca y modelo
                 $marcaNombre = $rowData['marca'] ?? null;
