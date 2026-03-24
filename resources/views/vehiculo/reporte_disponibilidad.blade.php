@@ -52,7 +52,7 @@
 
         <div class="p-4">
             <div class="mb-5">
-                <h5 class="fw-bold mb-3 border-start border-4 border-primary ps-2">A.- CHUTOS Y TANQUES OPERATIVAS</h5>
+                <h5 class="fw-bold mb-3 border-start border-4 border-primary ps-2">A.- CAMIONES OPERATIVOS</h5>
                 <div class="row row-cols-1 row-cols-md-3 g-3">
                     @foreach($chutosOperativos as $c)
                     <div class="col">
@@ -73,18 +73,6 @@
                         </div>
                     </div>
                     @endforeach
-                    @foreach($cisternasOperativas as $c)
-                    <div class="col">
-                        <div class="p-2 border rounded bg-light d-flex align-items-center">
-                            <div class="bg-primary text-white rounded p-2 me-3">
-                                <i class="bi bi-truck"></i>
-                            </div>
-                            <div>
-                                <div class="fw-bold">{{ $c->flota }}</div>
-                            </div>
-                        </div>
-                    </div>
-                    @endforeach
                     @foreach($camionesOperativos as $c)
                         <div class="col">
                             <div class="p-2 border rounded bg-light d-flex align-items-center">
@@ -99,10 +87,44 @@
                     @endforeach
                 </div>
             </div>
-
+            <div class="mb-5">
+                <h5 class="fw-bold mb-3 border-start border-4 border-primary ps-2">B.- TANQUES OPERATIVOS</h5>
+                <div class="row row-cols-1 row-cols-md-3 g-3">
+                    @foreach($cisternasOperativas as $c)
+                    <div class="col">
+                        <div class="p-2 border rounded bg-light d-flex align-items-center">
+                            <div class="bg-primary text-white rounded p-2 me-3">
+                                <i class="bi bi-truck"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold">{{ $c->flota }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+            
+                </div>
+            </div>
+            <div class="mb-5">
+                <h5 class="fw-bold mb-3 border-start border-4 border-primary ps-2">C.- FLOTA LIVIANA OPERATIVA</h5>
+                <div class="row row-cols-1 row-cols-md-3 g-3">
+                    @foreach($camionetasOperativas as $c)
+                        <div class="col">
+                            <div class="p-2 border rounded bg-light d-flex align-items-center">
+                                <div class="bg-primary text-white rounded p-2 me-3">
+                                    <i class="bi bi-truck"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold">{{ $c->flota }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
             <div class="row mb-5">
                 <div class="col-12">
-                    <h5 class="fw-bold mb-3 border-start border-4 border-danger ps-2">UNIDADES FUERA DE SERVICIO (FALLAS)</h5>
+                    <h5 class="fw-bold mb-3 border-start border-4 border-danger ps-2">D.- UNIDADES FUERA DE SERVICIO (FALLAS)</h5>
                 </div>
                 <div class="col-md-6 mb-3">
                     <div class="card border-danger h-100">
@@ -131,7 +153,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-md-12 mb-3">
                     <div class="card border-danger h-100">
                         <div class="card-header bg-danger text-white py-1">C.- Cisternas en Falla</div>
                         <div class="card-body p-2">
@@ -160,24 +182,6 @@
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-md-6">
-                    <h6 class="fw-bold text-muted mb-3">E.- CAMIONETAS OPERATIVAS</h6>
-                    <div class="d-flex flex-wrap gap-2">
-                        @foreach($camionetasOperativas as $c)
-                        <span class="badge bg-outline-dark border text-dark p-2">{{ $c->flota }} - {{ $c->modelo }}</span>
-                        @endforeach
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <h6 class="fw-bold text-muted mb-3">G.- CAMIONES OPERATIVOS</h6>
-                    <div class="d-flex flex-wrap gap-2">
-                        @foreach($camionesOperativos as $c)
-                        <span class="badge bg-secondary p-2">{{ $c->flota }} ({{ $c->placa }})</span>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
         </div>
 
         <div class="bg-light p-3 text-center border-top">
