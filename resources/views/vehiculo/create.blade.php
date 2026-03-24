@@ -5,7 +5,16 @@
 @push('styles')
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <style>
+        input[type="text"], textarea {
+        text-transform: uppercase;
+    }
     
+    /* Opcional: si quieres que el placeholder también sea mayúscula */
+    input[type="text"]::placeholder {
+        text-transform: uppercase;
+    }
+    </style>
 @endpush
 
 @section('content')
@@ -333,6 +342,19 @@
             @if(isset($item) && $item->marca)
                 $('#marca').trigger('change');
             @endif
+
+            $(document).on('input', 'input[type="text"], textarea', function() {
+                // Convertir el valor a mayúsculas físicamente
+                this.value = this.value.toUpperCase();
+            });
+
+            // Por seguridad, procesar todos los campos antes de enviar el formulario
+            $('form').on('submit', function() {
+                $(this).find('input[type="text"], textarea').each(function() {
+                    this.value = this.value.toUpperCase();
+                });
+            });
+
         });
     </script>
 @endpush
