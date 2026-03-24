@@ -223,6 +223,26 @@ class ChoferController extends BaseController
     }
 }
 
+public function updateCargo(Request $request, $id)
+{
+    try {
+        $chofer = Chofer::findOrFail($id);
+        
+        // El switch enviará un booleano o el string directamente
+        $nuevoCargo = $request->cargo === 'CHOFER' ? 'CHOFER' : 'AYUDANTE DE CHOFER';
+        
+        $chofer->update(['cargo' => $nuevoCargo]);
+
+        return response()->json([
+            'success' => true, 
+            'message' => 'Cargo actualizado a: ' . $nuevoCargo,
+            'nuevo_cargo' => $nuevoCargo
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+    }
+}
+
     /**
      * Muestra el formulario para editar un chofer existente.
      *

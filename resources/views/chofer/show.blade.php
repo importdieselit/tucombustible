@@ -1,7 +1,20 @@
 @extends('layouts.app')
 
 @section('title', 'Detalle de Chofer')
-
+@push('styles')
+<style>
+    .form-check-input.custom-switch:checked {
+        background-color: #0d6efd; /* Color para CHOFER */
+        border-color: #0d6efd;
+    }
+    .form-check-input.custom-switch {
+        background-color: #f2A435; /* Color para AYUDANTE */
+        border-color: #f2A435;
+    }
+    .fw-black { font-weight: 900 !important; }
+    .text-orange { color: #f2A435 !important; }
+</style>
+@endpush
 @section('content')
 <div class="container-fluid mt-4">
     <div class="row page-titles">
@@ -40,6 +53,21 @@
                     </div>
                     <hr>
                     <div class="row">
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-light rounded border">
+                            <div>
+                                <span class="fw-black text-uppercase small text-muted d-block" style="font-size: 10px;">Cargo Actual</span>
+                                <h6 id="cargo-label" class="mb-0 fw-bold {{ $chofer->cargo == 'CHOFER' ? 'text-primary' : 'text-orange' }}">
+                                    {{ $chofer->cargo }}
+                                </h6>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input custom-switch" type="checkbox" role="switch" 
+                                    id="switchCargo" 
+                                    {{ $chofer->cargo == 'CHOFER' ? 'checked' : '' }}
+                                    data-id="{{ $chofer->id }}"
+                                    style="cursor: pointer; width: 3em; height: 1.5em;">
+                            </div>
+                        </div>
                         <div class="col-md-6">
                             <h6 class="text-muted">Licencia No.</h6>
                             <p class="font-weight-bold">{{ $chofer->licencia_numero }}</p>
@@ -292,6 +320,56 @@
             filtrarYSumar(e.target.value);
         });
     });
+
+    $(document).ready(function() {
+    $('#switchCargo').on('change', function() {
+        const isChecked = $(this).is(':checked');
+        const cargoValue = isChecked ? 'CHOFER' : 'AYUDANTE DE CHOFER';
+        const choferId = $(this).data('id');
+        const $label = $('#cargo-label');
+
+        // Bloqueamos visualmente el switch mientras procesa
+        $(this).prop('disabled', true);
+
+        $.ajax({
+            url: `{{ route('choferes.update-cargo', '') }}/${choferId}`,
+            method: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}',
+                cargo: cargoValue
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Actualizar interfaz
+                    $label.text(response.nuevo_cargo);
+                    if (response.nuevo_cargo === 'CHOFER') {
+                        $label.removeClass('text-orange').addClass('text-primary');
+                    } else {
+                        $label.removeClass('text-primary').addClass('text-orange');
+                    }
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Actualizado!',
+                        text: response.message,
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                }
+            },
+            error: function() {
+                Swal.fire('Error', 'No se pudo actualizar el cargo', 'error');
+                // Revertir el switch si falla
+                $('#switchCargo').prop('checked', !isChecked);
+            },
+            complete: function() {
+                $('#switchCargo').prop('disabled', false);
+            }
+        });
+    });
+});
 </script>
 @endpush
 @endsection
