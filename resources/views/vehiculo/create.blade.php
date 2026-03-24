@@ -158,6 +158,8 @@
                             </div>
 
                             <div class="tab-pane fade" id="legal" role="tabpanel">
+                                {{-- SECCIÓN: DOCUMENTACIÓN DEL VEHÍCULO --}}
+
                                 <div class="row g-3">
                                     <div class="col-md-4">
                                         <label class="form-label-corp">Número de Póliza</label>
@@ -204,6 +206,33 @@
                                         </div>
                                     </div>
                                 </div>
+                                                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card border-start border-4 border-orange shadow-sm">
+                                    <div class="card-header bg-dark py-3">
+                                        <h6 class="text-white mb-0 fw-bold text-uppercase small">
+                                            <i class="fas fa-file-pdf me-2 text-orange"></i> Documentación Digital (PDF / Imágenes)
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-3">
+                                            @foreach($documentosRequeridos as $doc)
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-black text-uppercase small text-muted">
+                                                        {{ $doc->nombre }} ({{ $doc->abreviatura }})
+                                                    </label>
+                                                    <input type="file" 
+                                                        name="documentos[{{ $doc->id }}]" 
+                                                        class="form-control form-control-sm border-2" 
+                                                        accept=".pdf,.jpg,.png">
+                                                    <div class="form-text" style="font-size: 9px;">Formatos permitidos: PDF, JPG, PNG</div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                             </div>
 
                             <div class="tab-pane fade" id="extra" role="tabpanel">

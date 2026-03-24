@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Str; // Es necesario para la función Str::plural()
 use Illuminate\Support\Facades\DB;
+use App\Models\TipoDocumento;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Schema;
 use App\Traits\GenerateAlerts;
@@ -403,9 +404,10 @@ class VehiculoController extends BaseController
         $modelos = Modelo::pluck('modelo', 'id');
         $clientes = Cliente::pluck('nombre', 'id');
         $tiposVehiculo = TipoVehiculo::pluck('tipo', 'id');
+        $documentosRequeridos = TipoDocumento::where('tipo', 'V')->get();
         
         // La lógica de la vista se hereda del BaseController, pero con los datos adicionales.
-        return view($this->getModelNameLowerCase() . '.create', compact('marcas', 'modelos', 'clientes', 'tiposVehiculo'));
+        return view($this->getModelNameLowerCase() . '.create', compact('marcas', 'modelos', 'clientes', 'tiposVehiculo','documentosRequeridos'));
     }
 
     /**
