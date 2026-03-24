@@ -659,7 +659,7 @@ class VehiculoController extends BaseController
         ]);
         
         try {
-            $rows = Excel::toArray(null, $request->file('file'))[0];
+            $rows = Excel::toArray(null, $request->file('file'))[1];
             $header = array_map('trim', array_change_key_case($rows[0], CASE_LOWER));
             $dataRows = array_slice($rows, 1);
             var_dump($header);
