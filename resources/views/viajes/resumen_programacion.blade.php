@@ -158,9 +158,6 @@
                 useCORS: true // Necesario si hay imágenes o recursos externos
             });
 
-            // Opcional: Mostrar el canvas generado en el DOM
-           // outputContainer.appendChild(canvas);
-
             // 3. Convertir el Canvas a un Blob (formato de datos binarios)
             const imageBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
             
