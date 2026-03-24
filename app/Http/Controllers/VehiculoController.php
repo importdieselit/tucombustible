@@ -769,7 +769,7 @@ class VehiculoController extends BaseController
                        // 'anno' => $rowData['AÑO'],
                         'agencia' => $rowData['EMPRESA'],
                         'carga_max' => $rowData['ALMACENAMIENTO'],
-                        'consumo' => $rowData['AUTONOMIA'],
+                        //'consumo' => $rowData['AUTONOMIA'],
                         'marca'=> $marcaId,
                         'semcamer' => $rowData['semcamer'],
                         'homologacion_intt'=> $rowData['homologacion_intt'],
