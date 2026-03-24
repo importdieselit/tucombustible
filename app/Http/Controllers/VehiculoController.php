@@ -662,6 +662,8 @@ class VehiculoController extends BaseController
             $rows = Excel::toArray(null, $request->file('file'))[0];
             $header = array_map('trim', array_change_key_case($rows[0], CASE_LOWER));
             $dataRows = array_slice($rows, 1);
+            var_dump($header);
+            dd($dataRows);
 
             foreach ($dataRows as $row) {
                 // Si la fila está vacía, la ignoramos para evitar errores
