@@ -677,7 +677,7 @@ class VehiculoController extends BaseController
                 $modeloNombre = $rowData['modelo'] ?? null;
                 $marcaId = null;
                 $modeloId = null;
-                $flota = explode(' ', $rowData['flota']);
+                $flota = $rowData['flota'];
 
                 if ($marcaNombre) {
                     $marca = Marca::firstOrCreate(
@@ -726,7 +726,7 @@ class VehiculoController extends BaseController
                // if(is_null($tiposVehiculo)){ dd( $rowData['tipo']);}
                 $vehiculo=Vehiculo::where('placa', $rowData['placa'])->first();
                 if($vehiculo){
-                    $vehiculo->flota = $flota[1].' '.$flota[2];
+                    $vehiculo->flota = $flota;
                     $vehiculo->color = $rowData['color'] ?? $vehiculo->color;
                     $vehiculo->tipo = $tiposVehiculo->id ?? $vehiculo->tipo;
                     //$vehiculo->kilometraje = $rowData['KILOMETRAJE'] ?? $vehiculo->kilometraje;
