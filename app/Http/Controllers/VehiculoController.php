@@ -727,6 +727,7 @@ class VehiculoController extends BaseController
                 $vehiculo=Vehiculo::where('placa', $rowData['placa'])->first();
                 if($vehiculo){
                     $vehiculo->flota = $flota;
+                    $vehiculo->placa = $rowData['placa'];
                     $vehiculo->color = $rowData['color'] ?? $vehiculo->color;
                     $vehiculo->tipo = $tiposVehiculo->id ?? $vehiculo->tipo;
                     //$vehiculo->kilometraje = $rowData['KILOMETRAJE'] ?? $vehiculo->kilometraje;
@@ -754,8 +755,9 @@ class VehiculoController extends BaseController
 
                    // // Preparar los datos del vehículo
                     $vehiculoData = [
-                        'flota' =>$flota[1].' '.$flota[2],
+                        'flota' =>$flota,
                         'color' => $rowData['color'],
+                        'placa' => $rowData['placa'],
                         //'kilometraje' => $rowData['KILOMETRAJE'],
                         'observacion' => $rowData['OBSERVACION'].' - '.$rowData['DETALLES'],
                         'serial_motor' => $rowData['serial_motor'],
