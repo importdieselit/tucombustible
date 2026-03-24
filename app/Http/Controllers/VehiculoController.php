@@ -642,7 +642,8 @@ class VehiculoController extends BaseController
     return view('vehiculo.reporte_disponibilidad', compact(
         'today', 'chutosOperativos', 'chutosFalla', 'cisternasFalla', 
         'camionesFalla', 'camionetasFalla', 'camionetasOperativas', 
-        'camionesOperativos', 'total', 'operativosCount', 'fallaCount', 'porcentajeDisponibilidad'
+        'camionesOperativos', 'total', 'operativosCount', 'fallaCount', 'porcentajeDisponibilidad','cisternasOperativas'
+
     ));
 }
 
