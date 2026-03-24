@@ -155,7 +155,7 @@
                 </div>
                 <div class="col-md-12 mb-3">
                     <div class="card border-danger h-100">
-                        <div class="card-header bg-danger text-white py-1">C.- Cisternas en Falla</div>
+                        <div class="card-header bg-danger text-white py-1">E.- Cisternas en Falla</div>
                         <div class="card-body p-2">
                             @forelse($cisternasFalla as $f)
                             <div class="d-flex justify-content-between align-items-center border-bottom py-2">
