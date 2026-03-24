@@ -32,6 +32,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\Viaje;
 use App\Models\EstatusData;
+use Illuminate\Support\Facades\Storage;
 
 
 class VehiculoController extends BaseController
@@ -148,6 +149,8 @@ class VehiculoController extends BaseController
                 $acoples = Vehiculo::where('es_flota', true)->whereIn('tipo', [2,5])->whereNull('acoplado_id')->get();
             
             }
+
+            $docsV = TipoDocumento::where('tipo', 'V')->get();
         return [
             'foto'   => $foto,
             'viajes' => $viajes,
@@ -163,7 +166,8 @@ class VehiculoController extends BaseController
             'esCisterna' => $esCisterna,
             'tipo' => $tipo,
             'acoples' => $acoples,
-             'mantenimientos' => $mantenimientos
+             'mantenimientos' => $mantenimientos,
+             'docsV' => $docsV
         ];
     }
 
@@ -424,9 +428,10 @@ class VehiculoController extends BaseController
         $modelos = Modelo::pluck('modelo', 'id');
         $clientes = Cliente::pluck('nombre', 'id');
         $tiposVehiculo = TipoVehiculo::pluck('tipo', 'id');
+        $documentosRequeridos = TipoDocumento::where('tipo', 'V')->get();
 
         // Se pasa el vehículo y los datos adicionales a la vista.
-        return view($this->getModelNameLowerCase() . '.edit', compact('item', 'marcas', 'modelos', 'clientes', 'tiposVehiculo'));
+        return view($this->getModelNameLowerCase() . '.edit', compact('item', 'marcas', 'modelos', 'clientes', 'tiposVehiculo','documentosRequeridos'));
     }
 
 
@@ -450,8 +455,33 @@ class VehiculoController extends BaseController
                 ]);
                 $request->modelo = $nuevoModelo->id;
             }
+            
+            if(is_null($request->cliente_id)){ $request->cliente_id=348;}
+            
 
             $vehiculo=Vehiculo::create($request->all());
+
+            // 2. Manejo de Documentos
+        if ($request->has('documentos')) {
+            foreach ($request->file('documentos') as $tipoId => $file) {
+                // Buscamos el tipo para obtener la abreviatura
+                $tipoDoc = TipoDocumento::find($tipoId);
+                
+                if ($tipoDoc && $file->isValid()) {
+                    $extension = $file->getClientOriginalExtension();
+                    // Nombre estandarizado: CR_25.pdf
+                    $nombreArchivo = "{$tipoDoc->abreviatura}_{$vehiculo->id}.{$extension}";
+                    
+                    // Ruta: public/vehiculos/25/documentos/CR_25.pdf
+                    $rutaDestino = "vehiculos/{$vehiculo->id}/documentos";
+                    
+                    $file->storeAs("public/{$rutaDestino}", $nombreArchivo);
+                    
+                    // Opcional: Guardar referencia en una tabla pivote si quieres auditoría, 
+                    // aunque tu planteamiento es consultarlo por ruta estática.
+                }
+            }
+        }
 
             $this->handleFotoUpload($request, $vehiculo);
 
@@ -487,6 +517,26 @@ class VehiculoController extends BaseController
                              ->delete();
                  // Opcionalmente, eliminar los archivos físicos del disco aquí
              }
+
+             if ($request->has('documentos')) {
+                foreach ($request->file('documentos') as $tipoId => $file) {
+                    $tipoDoc = TipoDocumento::find($tipoId);
+                    if ($tipoDoc && $file->isValid()) {
+                        $extension = $file->getClientOriginalExtension();
+                        $nombreArchivo = "{$tipoDoc->abreviatura}_{$vehiculo->id}.{$extension}";
+                        $rutaDestino = "vehiculos/{$vehiculo->id}/documentos";
+
+                        // Opcional: Limpiar archivos viejos con diferentes extensiones para evitar duplicados
+                        $formatos = ['pdf', 'jpg', 'jpeg', 'png'];
+                        foreach ($formatos as $f) {
+                            $viejo = "public/{$rutaDestino}/{$tipoDoc->abreviatura}_{$vehiculo->id}.{$f}";
+                            if (Storage::exists($viejo)) Storage::delete($viejo);
+                        }
+
+                        $file->storeAs("public/{$rutaDestino}", $nombreArchivo);
+                    }
+                }
+            }
 
             DB::commit();
             Session::flash('success', 'Vehículo actualizado exitosamente!');

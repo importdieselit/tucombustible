@@ -64,6 +64,11 @@
                         </button>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" id="docs-tab" data-bs-toggle="tab" href="#docs" role="tab">
+                            <i class="fas fa-file-pdf me-1"></i> Documentación
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <button class="nav-link" id="fotos-tab" data-bs-toggle="tab" data-bs-target="#fotos" type="button">
                             <i class="fa-solid fa-camera me-1"></i> Galería y Fotos
                         </button>
@@ -165,6 +170,70 @@
                                         <label class="form-label">Observaciones Técnicas</label>
                                         <textarea name="observaciones" class="form-control" rows="3">{{ old('observaciones', $item->observaciones ?? '') }}</textarea>
                                     </div>
+                                </div>
+                            </div>
+
+                            {{-- TAB: DOCUMENTACIÓN --}}
+                            <div class="tab-pane fade" id="docs" role="tabpanel">
+                                <div class="row g-4 p-3">
+                                    <div class="col-12">
+                                        <div class="alert alert-info border-0 shadow-sm mb-4">
+                                            <i class="fas fa-info-circle me-2"></i> 
+                                            Si subes un archivo nuevo, <strong>reemplazará</strong> al documento actual.
+                                        </div>
+                                    </div>
+
+                                    @foreach($documentosRequeridos as $doc)
+                                        @php
+                                            // Verificamos existencia para mostrar preview
+                                            $pathBase = "storage/vehiculos/{$item->id}/documentos/{$doc->abreviatura}_{$item->id}";
+                                            $extensiones = ['pdf', 'jpg', 'png', 'jpeg'];
+                                            $archivoActual = null;
+                                            foreach($extensiones as $ext) {
+                                                if(file_exists(public_path("{$pathBase}.{$ext}"))) {
+                                                    $archivoActual = asset("{$pathBase}.{$ext}");
+                                                    break;
+                                                }
+                                            }
+                                        @endphp
+                                        
+                                        <div class="col-md-6 col-lg-4">
+                                            <div class="card h-100 border shadow-sm">
+                                                <div class="card-body">
+                                                    <label class="form-label d-block fw-black text-uppercase small mb-3">
+                                                        {{ $doc->nombre }}
+                                                    </label>
+                                                    
+                                                    {{-- Indicador de estado --}}
+                                                    <div class="d-flex align-items-center mb-3">
+                                                        @if($archivoActual)
+                                                            <span class="badge bg-success-subtle text-success border border-success-subtle me-2">
+                                                                <i class="fas fa-check me-1"></i> CARGADO
+                                                            </span>
+                                                            <a href="{{ $archivoActual }}" target="_blank" class="btn btn-link btn-sm p-0 fw-bold text-decoration-none text-orange">
+                                                                Ver actual <i class="fas fa-external-link-alt ms-1"></i>
+                                                            </a>
+                                                        @else
+                                                            <span class="badge bg-light text-muted border me-2">
+                                                                <i class="fas fa-times me-1"></i> PENDIENTE
+                                                            </span>
+                                                        @endif
+                                                    </div>
+
+                                                    {{-- Input para cargar/reemplazar --}}
+                                                    <div class="input-group input-group-sm">
+                                                        <span class="input-group-text bg-light"><i class="fas fa-upload"></i></span>
+                                                        <input type="file" name="documentos[{{ $doc->id }}]" 
+                                                            class="form-control" 
+                                                            accept=".pdf,.jpg,.png,.jpeg">
+                                                    </div>
+                                                    <div class="form-text mt-2" style="font-size: 10px;">
+                                                        Soporta: PDF, JPG, PNG.
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
                                 </div>
                             </div>
 

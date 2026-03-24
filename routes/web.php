@@ -96,6 +96,7 @@ Route::middleware(['auth'])->group(function () {
     // Importaciones
     Route::get('choferes/importar', [ChoferController::class, 'showImportForm'])->name('choferes.show-import-form');
     Route::post('choferes/importar', [ChoferController::class, 'importar'])->name('choferes.importar');
+    Route::post('choferes/upload/doc/{id}',[ChoferController::class, 'uploadDocumento'])->name('choferes.upload.doc');
     Route::get('/vehiculos/import', [VehiculoController::class, 'importForm'])->name('vehiculos.import');
     Route::post('/vehiculos/import', [VehiculoController::class, 'importSave'])->name('vehiculos.import.save');
     Route::get('clientes/import', [PortalClienteController::class, 'import'])->name('clientes.import');

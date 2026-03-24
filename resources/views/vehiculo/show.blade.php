@@ -146,10 +146,79 @@
                 </div>
 
                 <div class="tab-pane fade" id="docs" role="tabpanel">
-                    <div class="alert alert-info d-flex align-items-center">
-                        <i class="fa-solid fa-circle-info me-2"></i> Módulo de Documentos: <strong>En Construcción</strong>
-                    </div>
-                    </div>
+                   <div class="card-header bg-dark py-3 d-flex justify-content-between align-items-center">
+        <h6 class="text-white mb-0 fw-black text-uppercase small">
+            <i class="fas fa-file-signature me-2 text-orange"></i> Visor de Documentación Digital
+        </h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="row g-0">
+            {{-- Listado de Pestañas Lateral --}}
+            <div class="col-md-3 border-end bg-light">
+                <div class="nav flex-column nav-pills p-2" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                    @foreach($docsV as $index => $doc)
+                        @php
+                            // Buscamos si existe el archivo (probamos con pdf y jpg)
+                            $pathPdf = "storage/vehiculos/{$item->id}/documentos/{$doc->abreviatura}_{$item->id}.pdf";
+                            $pathJpg = "storage/vehiculos/{$item->id}/documentos/{$doc->abreviatura}_{$item->id}.jpg";
+                            $pathPng = "storage/vehiculos/{$item->id}/documentos/{$doc->abreviatura}_{$item->id}.png";
+                            
+                            $finalPath = null;
+                            if(file_exists(public_path($pathPdf))) $finalPath = asset($pathPdf);
+                            elseif(file_exists(public_path($pathJpg))) $finalPath = asset($pathJpg);
+                            elseif(file_exists(public_path($pathPng))) $finalPath = asset($pathPng);
+                        @endphp
+
+                        <button class="nav-link {{ $index === 0 ? 'active' : '' }} d-flex justify-content-between align-items-center text-uppercase fw-bold mb-1 py-2 px-3 small shadow-sm" 
+                                id="tab-{{ $doc->abreviatura }}" 
+                                data-bs-toggle="pill" 
+                                data-bs-target="#content-{{ $doc->abreviatura }}" 
+                                type="button" role="tab" style="font-size: 11px;">
+                            <span>{{ $doc->nombre }}</span>
+                            @if($finalPath)
+                                <i class="fas fa-check-circle text-success"></i>
+                            @else
+                                <i class="fas fa-times-circle text-muted"></i>
+                            @endif
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Visor del Documento --}}
+            <div class="col-md-9 bg-secondary bg-opacity-10" style="min-height: 500px;">
+                <div class="tab-content p-3 h-100" id="v-pills-tabContent">
+                    @foreach($docsV as $index => $doc)
+                        @php
+                            $pathPdf = "storage/vehiculos/{$item->id}/documentos/{$doc->abreviatura}_{$item->id}.pdf";
+                            $pathImgJ = "storage/vehiculos/{$item->id}/documentos/{$doc->abreviatura}_{$item->id}.jpg";
+                            $pathImgP = "storage/vehiculos/{$item->id}/documentos/{$doc->abreviatura}_{$item->id}.png";
+                        @endphp
+
+                        <div class="tab-pane fade {{ $index === 0 ? 'show active' : '' }} h-100" 
+                             id="content-{{ $doc->abreviatura }}" role="tabpanel">
+                            
+                            @if(file_exists(public_path($pathPdf)))
+                                <iframe src="{{ asset($pathPdf) }}#toolbar=0" width="100%" height="600px" class="rounded shadow-sm border-0"></iframe>
+                            @elseif(file_exists(public_path($pathImgJ)) || file_exists(public_path($pathImgP)))
+                                @php $img = file_exists(public_path($pathImgJ)) ? $pathImgJ : $pathImgP; @endphp
+                                <div class="text-center bg-white p-2 rounded shadow-sm">
+                                    <img src="{{ asset($img) }}" class="img-fluid rounded">
+                                </div>
+                            @else
+                                <div class="d-flex flex-column align-items-center justify-content-center h-100 py-5 text-muted">
+                                    <i class="fas fa-file-upload fa-3x mb-3 opacity-20"></i>
+                                    <h6 class="fw-black text-uppercase small">Documento no cargado</h6>
+                                    <p class="small mb-0">No se encontró el archivo: {{ $doc->abreviatura }}_{{ $item->id }}</p>
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+                </div>
 
                 <div class="tab-pane fade" id="mantenimiento" role="tabpanel">
                     <div class="table-responsive">

@@ -7,6 +7,11 @@ use App\Models\Vehiculo;
 use App\Models\Persona;
 use App\Models\User;
 use App\Models\ViaticoViaje;
+use App\Models\TipoDocumento;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Redirect;
@@ -173,6 +178,8 @@ class ChoferController extends BaseController
         // Cargar las relaciones 'persona' y 'vehiculo'
         $chofer->load('persona', 'vehiculo');
 
+         $documentosRequeridos = TipoDocumento::where('tipo', 'CH')->get();
+
         // Datos de ejemplo para el historial y rendimiento del chofer (simulados)
         $historialViajes = $chofer->viajes()->select('destino_ciudad as ruta','fecha_salida as fecha','viajes.id as viaje_id')->orderBy('fecha_salida', 'desc')->limit(10)->get()->toArray();
 
@@ -181,8 +188,40 @@ class ChoferController extends BaseController
             'data' => [4.5, 4.8, 4.2, 5.0],
         ];
 
-        return view('chofer.show', compact('chofer', 'historialViajes', 'graficaRendimiento'));
+        return view('chofer.show', compact('chofer', 'historialViajes', 'graficaRendimiento', 'documentosRequeridos'));
     }
+
+    public function uploadDocumento(Request $request, $id)
+{
+    $request->validate([
+        'documento' => 'required|file|mimes:pdf,jpg,png,jpeg|max:2048',
+        'tipo_id' => 'required|exists:tipo_documento,id'
+    ]);
+
+    try {
+        $chofer = Chofer::findOrFail($id);
+        $tipoDoc =TipoDocumento::findOrFail($request->tipo_id);
+        
+        $file = $request->file('documento');
+        $extension = $file->getClientOriginalExtension();
+        $nombreArchivo = "{$tipoDoc->abreviatura}_{$chofer->id}.{$extension}";
+        
+        // Ruta: public/choferes/1/documentos/CI_1.pdf
+        $rutaDestino = "choferes/{$chofer->id}/documentos";
+
+        // Limpieza de archivos previos para evitar duplicidad de extensiones
+        foreach (['pdf', 'jpg', 'png', 'jpeg'] as $ext) {
+            $viejo = "public/{$rutaDestino}/{$tipoDoc->abreviatura}_{$chofer->id}.{$ext}";
+            if (Storage::exists($viejo)) Storage::delete($viejo);
+        }
+
+        $file->storeAs("public/{$rutaDestino}", $nombreArchivo);
+
+        return back()->with('success', 'Documento actualizado correctamente.');
+    } catch (\Exception $e) {
+        return back()->with('error', 'Error al subir: ' . $e->getMessage());
+    }
+}
 
     /**
      * Muestra el formulario para editar un chofer existente.
