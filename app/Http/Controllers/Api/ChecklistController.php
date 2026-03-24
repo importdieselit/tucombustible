@@ -537,6 +537,13 @@ class ChecklistController extends Controller
                     'v.consumo',
                     'v.created_at',
                     'v.updated_at',
+                    'v.kilometraje',
+                    'v.horas_trabajo',
+                    'v.hrs_mantt',
+                    'v.hrs_contador',
+                    'v.km_mantt',
+                    'v.km_contador',
+                    'v.color',
                 ])
                 ->where('v.id', $id)
                 //->where('v.estatus', 1)
@@ -574,6 +581,13 @@ class ChecklistController extends Controller
                 'consumo' => $vehiculo->consumo,
                 'created_at' => $vehiculo->created_at,
                 'updated_at' => $vehiculo->updated_at,
+                'kilometraje' => $vehiculo->kilometraje,
+                'horas_trabajo' => $vehiculo->horas_trabajo,
+                'hrs_mantt' => $vehiculo->hrs_mantt,
+                'hrs_contador' => $vehiculo->hrs_contador,
+                'km_mantt' => $vehiculo->km_mantt,
+                'km_contador' => $vehiculo->km_contador,
+                'color' => $vehiculo->color
             ];
 
             return response()->json([

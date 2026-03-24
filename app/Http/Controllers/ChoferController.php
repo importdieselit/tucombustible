@@ -31,8 +31,8 @@ class ChoferController extends BaseController
     {
         // Datos de ejemplo para el dashboard (simulados)
         $totalChoferes = Chofer::where('cargo','CHOFER')->count();
-        $choferesDisponibles = Chofer::whereNull('vehiculo_id')->count();
-        $choferesEnRuta = Chofer::whereNotNull('vehiculo_id')->count();
+        $choferesDisponibles = Chofer::where('cargo','CHOFER')->whereNull('vehiculo_id')->count();
+        $choferesEnRuta = Chofer::where('cargo','CHOFER')->whereNotNull('vehiculo_id')->count();
 
         // Datos para la gráfica de rendimiento (simulados)
         $rendimiento = [
