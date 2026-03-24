@@ -110,8 +110,11 @@
                     @foreach($camionetasOperativas as $c)
                         <div class="col">
                             <div class="p-2 border rounded bg-light d-flex align-items-center">
-                                <div class="fw-bold text-white rounded p-2 me-3">
-                                    <i class="bg-primary fa fa-truck"></i> {{ $c->flota }} [{{ $c->placa }}]
+                                <div class="bg-primary text-white rounded p-2 me-3">
+                                    <i class="fa fa-car"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold">{{ $c->flota }} [{{ $c->placa }}]</div>
                                 </div>
                             </div>
                         </div>
