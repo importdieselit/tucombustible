@@ -1,4 +1,55 @@
 @extends('layouts.app')
+@push('styles')
+<style>
+
+@media print {
+    /* Configuración de la página */
+    @page {
+        size: letter;
+        margin: 1cm;
+    }
+
+    /* Evitar que el contenedor principal tenga sombras o fondos grises de la web */
+    .printableArea {
+        box-shadow: none !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* EVITAR CORTES EN BLOQUES CRÍTICOS */
+    .card, .row, tr, .highcharts-container, .mt-3 {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    /* FORZAR SALTO DE PÁGINA ANTES DE UN ELEMENTO SI ES NECESARIO */
+    .page-break {
+        page-break-before: always !important;
+        break-before: always !important;
+    }
+
+    /* Ocultar elementos innecesarios como botones */
+    .no-print, .btn, #statusMessage {
+        display: none !important;
+    }
+    /* Este estilo solo afecta a la captura, no a la vista web normal */
+    .is-capturing {
+        width: 1000px !important; /* Forzamos el ancho para consistencia */
+        margin: 0 !important;
+        padding: 20px !important;
+        background: #ffffff !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    /* Aseguramos que las tablas no se corten visualmente en el canvas */
+    .is-capturing .table {
+        background: white !important;
+    }
+}
+</style>
+@endpush
 
 @section('content')
 <div class="container-fluid py-4" style="background-color: #f4f6f9; min-height: 100vh;">
@@ -15,8 +66,8 @@
          <button id="captureButton" class="btn btn-primary shadow-sm">
             <i class="fa fa-camera me-2"></i> Capturar a portapapeles
         </button>
-        <button onclick="window.print()" class="btn btn-primary shadow-sm px-4">
-            <i class="bi bi-printer-fill me-2"></i>Exportar Reporte
+        <button id="exportButton" class="btn btn-primary shadow-sm px-4">
+            <i class="fa fa-printer-fill me-2"></i>Exportar Reporte
         </button>
     </div>
     <div id="statusMessage" class="text-center p-3 rounded-lg bg-yellow-100 text-yellow-800 hidden mb-4">
@@ -287,10 +338,6 @@
 <script>
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-
-
-
-
 document.addEventListener('DOMContentLoaded', function() {
     
     // 1. Gráfica de Disponibilidad (Donut)
@@ -355,7 +402,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }],
     credits: { enabled: false }
 });
-
     
     const printableArea = $("div.printableArea")[0]; 
     const sendTelegramButton = document.querySelector('#sendTelegramButton');
@@ -363,6 +409,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const captureButton = document.getElementById('captureButton');
     const statusMessage = document.getElementById('statusMessage');
     const outputContainer = document.getElementById('outputContainer');
+    const exportButton = document.getElementById('exportButton');
 
     if (!printableArea || !captureButton || !statusMessage) {
         console.error("Faltan elementos DOM críticos (printableArea, captureButton, statusMessage, o outputContainer).");
@@ -480,8 +527,64 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    async function exportarEImprimir() {
+
+        // 1. Estado visual
+        statusMessage.textContent = 'Procesando reporte gerencial...';
+        statusMessage.classList.remove('hidden', 'bg-red-100', 'bg-green-100');
+        statusMessage.classList.add('bg-yellow-100', 'text-yellow-800');
+        exportButton.disabled = true;
+
+        printableArea.classList.add('is-capturing');
+
+        try {
+            // 2. Captura del área con escala 2 para alta definición
+            const canvas = await html2canvas(printableArea, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff',
+                windowWidth: 1000 // Mantenemos el estándar de ancho del Master Card
+            });
+
+            // 3. Convertir a URL de datos (Data URL)
+            const image = canvas.toDataURL("image/png");
+
+            // 4. Crear link de descarga dinámico
+            const link = document.createElement('a');
+            
+            // Formateamos el nombre del archivo: reporte_disponibilidad_25_03_2026.png
+            const fecha = new Date().toLocaleDateString().replace(/\//g, '_');
+            link.download = `reporte_disponibilidad_${fecha}.png`;
+            
+            link.href = image;
+            
+            // 5. Disparar la descarga
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // 6. Éxito
+            statusMessage.textContent = '¡Reporte descargado con éxito!';
+            statusMessage.classList.replace('bg-yellow-100', 'bg-green-100');
+            statusMessage.classList.replace('text-yellow-800', 'text-green-800');
+
+        } catch (error) {
+            console.error('Error al descargar:', error);
+            statusMessage.textContent = 'Error al generar la descarga: ' + error.message;
+            statusMessage.classList.replace('bg-yellow-100', 'bg-red-100');
+        } finally {
+            // 7. Limpieza
+            printableArea.classList.remove('is-capturing');
+            downloadButton.disabled = false;
+            setTimeout(() => statusMessage.classList.add('hidden'), 5000);
+        }
+    }
+
     // 8. Asignar el evento al botón
     captureButton.addEventListener('click', captureAndCopyToClipboard);
+    exportButton.addEventListener('click', exportarEImprimir);
+
 
     // 7. Asignar evento al nuevo botón
     if (sendTelegramButton) {
