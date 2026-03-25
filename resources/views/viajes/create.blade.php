@@ -87,8 +87,8 @@
                         @enderror
                     </div>
                     <div class="col-md-4">
-                            <label for="chofer">Cisterna</label>
-                            <select name="cisterna_id" id="cisterna_id" class="form-select">
+                            <label for="cisterna">Cisterna</label>
+                            <select name="cisterna" id="cisterna" class="form-select">
                                 <option value="">Seleccione una cisterna</option>
                                 @foreach($cisternas as $cisterna)
                                         <option value="{{ $cisterna->id }}">{{ $cisterna->flota }} {{ $cisterna->placa }}</option>
