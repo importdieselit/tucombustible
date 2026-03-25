@@ -65,7 +65,17 @@
                         <td class="ps-4 fw-bold">#{{ $viaje->id }}</td>
                         <td>
                             <div class="fw-bold text-dark">{{ str_ireplace(['FLETE', '->'], ['', '»'], $viaje->destino_ciudad) }}</div>
-                            <small class="text-muted">{{ $viaje->cliente->nombre ?? $viaje->otro_cliente ?? 'N/A' }}</small>
+                           @if($viaje->despachos->isNotEmpty())
+                                {{-- Caso: Múltiples Clientes en Despachos --}}
+                                <div class="d-flex flex-wrap gap-1 mt-1">
+                                    @foreach($viaje->despachos->unique('cliente_id') as $despacho)
+                                        <span class="badge bg-light text-navy border" style="font-size: 0.7rem;">
+                                            <i class="bi bi-person-fill me-1"></i>
+                                            {{ $despacho->cliente->alias ?? $despacho->cliente->nombre ?? $despacho->otro_cliente }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            @endif
                         </td>
                         <td>
                             <div class="small fw-bold">{{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y') }}</div>

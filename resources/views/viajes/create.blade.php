@@ -71,18 +71,33 @@
                         </div>
                     </div>
                     {{-- VEHÍCULO --}}
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label for="vehiculo_id" class="form-label fw-bold">Vehículo (Flota)</label>
                         <select name="vehiculo_id" id="vehiculo_id" class="form-select select-or-other" data-other-field="otro_vehiculo">
                             <option value="">Seleccione un Vehículo</option>
                             <!-- Se asume que $vehiculos es un array de objetos Vehiculo -->
                             @foreach($vehiculos as $vehiculo)
-                                <option value="{{ $vehiculo->id }}" @if(old('vehiculo_id') == $vehiculo->id) selected @endif>{{ $vehiculo->flota }} ({{ $vehiculo->placa }})</option>
+                                @if($vehiculo->tipo!==2)
+                                    <option value="{{ $vehiculo->id }}" @if(old('vehiculo_id') == $vehiculo->id) selected @endif>{{ $vehiculo->flota }} ({{ $vehiculo->placa }})</option>
+                                @endif
                             @endforeach
                         </select>
                         @error('vehiculo_id')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
+                    </div>
+                    <div class="col-md-4">
+                            <label for="chofer">Cisterna</label>
+                            <select name="cisterna_id" id="cisterna_id" class="form-select">
+                                <option value="">Seleccione una cisterna</option>
+                                @foreach($vehiculos as $cisterna)
+                                    @if($cisterna->tipo==2)
+                                        <option value="{{ $cisterna->id }}">{{ $cisterna->flota }} {{ $cisterna->placa }}</option>
+                                    @endif
+                                @endforeach 
+                            </select>
+                        <input type="text" name="otro_cisterna" id="otro_cisterna" class="form-control mt-2" style="display:none" placeholder="Nombre cisterna externa">
+
                     </div>
                     <div class="col-md-6" style="display: none">
                         <label for="otro_vehiculo" class="form-label fw-bold">Vehiculo Externo</label>
