@@ -463,7 +463,8 @@ class VehiculoController extends BaseController
             }
             
             if(is_null($request->cliente_id)){ $request->cliente_id=348;}
-            
+            $request->es_flota = true;
+
 
             $vehiculo=Vehiculo::create($request->all());
 
