@@ -61,7 +61,7 @@
                         @enderror   
                     </div>
 {{-- Campo de FLETE --}}
-                    <div class="col-md-3 d-flex align-items-center">
+                    <div class="col-md-4 d-flex align-items-center">
                         <div class="form-check form-switch pt-4">
                             <input class="form-check-input" type="checkbox" id="es_flete" name="es_flete" value="1" 
                                 {{ old('es_flete') ? 'checked' : '' }}>
@@ -72,12 +72,12 @@
                     </div>
                     {{-- VEHÍCULO --}}
                     <div class="col-md-4">
-                        <label for="vehiculo_id" class="form-label fw-bold">Vehículo (Flota)</label>
+                        <label for="vehiculo_id">Vehículo (Flota)</label>
                         <select name="vehiculo_id" id="vehiculo_id" class="form-select select-or-other" data-other-field="otro_vehiculo">
                             <option value="">Seleccione un Vehículo</option>
                             <!-- Se asume que $vehiculos es un array de objetos Vehiculo -->
                             @foreach($vehiculos as $vehiculo)
-                                @if($vehiculo->tipo!==2)
+                                @if($vehiculo->tipo!==2 && $vehiculo->tipo!==6)
                                     <option value="{{ $vehiculo->id }}" @if(old('vehiculo_id') == $vehiculo->id) selected @endif>{{ $vehiculo->flota }} ({{ $vehiculo->placa }})</option>
                                 @endif
                             @endforeach
@@ -90,11 +90,9 @@
                             <label for="chofer">Cisterna</label>
                             <select name="cisterna_id" id="cisterna_id" class="form-select">
                                 <option value="">Seleccione una cisterna</option>
-                                @foreach($vehiculos as $cisterna)
-                                    @if($cisterna->tipo==2)
+                                @foreach($cisternas as $cisterna)
                                         <option value="{{ $cisterna->id }}">{{ $cisterna->flota }} {{ $cisterna->placa }}</option>
-                                    @endif
-                                @endforeach 
+                                                                   @endforeach 
                             </select>
                         <input type="text" name="otro_cisterna" id="otro_cisterna" class="form-control mt-2" style="display:none" placeholder="Nombre cisterna externa">
 
