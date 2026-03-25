@@ -56,136 +56,212 @@
             </div>
         </div>
 
-        <div class="p-4">
-            <div class="mb-5">
-                <h5 class="fw-bold mb-3 border-start border-4 border-primary ps-2">A.- CAMIONES OPERATIVOS</h5>
-                <div class="row row-cols-1 row-cols-md-4 row-cols-lg-3 g-4">
-                    @foreach($chutosOperativos as $c)
-                    <div class="col-3">
-                        <div class="p-2 border rounded bg-light d-flex align-items-center">
-                            <div class="bg-primary text-white rounded p-2 me-3">
-                                <i class="fa fa-truck"></i>
-                            </div>
-                            <div>
-                                <div class="fw-bold">{{ $c->flota }} [{{ $c->placa }}]</div>
-                            </div>
+        {{-- SECCIÓN GERENCIAL --}}
+
+<div class="row mb-4 no-print">
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0" style="border-radius: 15px;">
+            <div id="chart-disponibilidad" style="width:100%; height:300px;"></div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0 h-100" style="border-radius: 15px;">
+            <div class="card-body">
+                <h6 class="fw-black text-uppercase small text-muted mb-4">Análisis de Flota por Segmento</h6>
+                <div id="chart-segmentos" style="width:100%; height:250px;"></div>
+                
+        
+            </div>
+        </div>
+    </div>
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="mt-3 bg-white rounded shadow-sm border-start border-4 border-orange overflow-hidden">
+                {{-- Encabezado del Cuadro --}}
+                    <div class="p-3 bg-light d-flex justify-content-between align-items-center border-bottom">
+                        <div>
+                            <span class="text-uppercase fw-bold mb-0" style="font-size: 11px; color: #666; letter-spacing: 1px;">Unidades Fuera de Servicio</span>
+
                         </div>
                     </div>
-                    @endforeach
-                    @foreach($camionesOperativos as $c)
-                        <div class="col">
-                            <div class="p-2 border rounded bg-light d-flex align-items-center">
-                                <div class="bg-primary text-white rounded p-2 me-3">
-                                    <i class="fa fa-truck"></i>
-                                </div>
-                                <div>
-                                    <div class="fw-bold">{{ $c->flota }} [{{ $c->placa }}]</div>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
+
                 </div>
-            </div>
-            <div class="mb-5">
-                <h5 class="fw-bold mb-3 border-start border-4 border-primary ps-2">B.- TANQUES OPERATIVOS</h5>
-                <div class="row row-cols-1 row-cols-md-3 g-3">
-                    @foreach($cisternasOperativas as $c)
-                    <div class="col">
-                        <div class="p-2 border rounded bg-light d-flex align-items-center">
-                            <div class="bg-primary text-white rounded p-2 me-3">
-                                <i class="fa fa-truck"></i>
-                            </div>
-                            <div>
-                                <div class="fw-bold">{{ $c->flota }} [{{ $c->placa }}]</div>
-                            </div>
-                        </div>
-                    </div>
-                    @endforeach
-            
-                </div>
-            </div>
-            <div class="mb-5">
-                <h5 class="fw-bold mb-3 border-start border-4 border-primary ps-2">C.- FLOTA LIVIANA OPERATIVA</h5>
-                <div class="row row-cols-1 row-cols-md-3 g-3">
-                    @foreach($camionetasOperativas as $c)
-                        <div class="col">
-                            <div class="p-2 border rounded bg-light d-flex align-items-center">
-                                <div class="bg-primary text-white rounded p-2 me-3">
-                                    <i class="fa fa-car"></i>
-                                </div>
-                                <div>
-                                    <div class="fw-bold">{{ $c->flota }} [{{ $c->placa }}]</div>
-                                </div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-            <div class="row mb-5">
-                <div class="col-12">
-                    <h5 class="fw-bold mb-3 border-start border-4 border-danger ps-2">D.- UNIDADES FUERA DE SERVICIO (FALLAS)</h5>
-                </div>
-                <div class="col-md-12 mb-3">
-                    <div class="card border-danger h-100">
-                        <div class="card-header bg-danger text-white py-1">B.- Chutos en Falla</div>
-                        <div class="card-body p-2">
-                           @forelse($chutosFalla as $f)
-                            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
-                                <div>
-                                    <strong class="d-block">{{ $f->flota }} [{{ $c->placa }}]</strong>
-                                    <span class="small text-muted">{{ $f->observacion ?? 'Sin diagnóstico' }}</span>
-                                </div>
-                                <div class="text-end">
-                                    @if($f->ordenActiva)
-                                        <span class="badge {{ $f->dias_fuera_servicio > 7 ? 'bg-danger' : 'bg-warning text-dark' }}" style="font-size: 0.7rem;">
-                                            <i class="bi bi-clock-history"></i> {{ $f->dias_fuera_servicio }} DÍAS
-                                        </span>
-                                        <div style="font-size: 0.65rem;" class="text-muted">Desde: {{ $f->ordenActiva->created_at->format('d/m/Y') }}</div>
-                                    @else
-                                        <span class="badge bg-secondary" style="font-size: 0.7rem;">SIN ORDEN</span>
-                                    @endif
-                                </div>
-                            </div>
+                <div class="table-responsive pt-1">
+                    <table class="table table-hover mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="py-2 px-3 text-uppercase small text-muted" style="width: 100px;">Unidad</th>
+                            <th class="py-2 px-3 text-uppercase small text-muted">Detalles</th>
+                            <th class="py-2 px-3 text-uppercase small text-muted text-end" style="width: 150px;">Tiempo</th>
+                        </tr>
+                    </thead>
+                        <tbody>
+                            @forelse($camionesFalla as $f)
+                               <tr class="viaje-row" style="border-left: 5px solid #e74c3c">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-2">
+                                                <i class="fas fa-truck text-muted"></i>
+                                            </div>
+                                            <div>
+                                                <span class="fw-bold text-dark" style="font-size: 13px;">{{ $f->flota }} - {{ $f->placa }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="small text-muted">{{ $f->observacion ?? 'Sin diagnóstico' }}</span>    
+                                    </td>
+                                    <td class="text-end align-middle px-3 fw-black text-dark">
+                                       @if($f->ordenActiva)
+                                            <span class="badge {{ $f->dias_fuera_servicio > 7 ? 'bg-danger' : 'bg-warning text-dark' }}" style="font-size: 0.7rem;">
+                                                <i class="bi bi-clock-history"></i> {{ $f->dias_fuera_servicio }} DÍAS
+                                            </span>
+                                            <div style="font-size: 0.65rem;" class="text-muted">Desde: {{ $f->ordenActiva->created_at->format('d/m/Y') }}</div>
+                                        @else
+                                            <span class="badge bg-secondary" style="font-size: 0.7rem;">SIN ORDEN</span>
+                                        @endif 
+                                    </td>
+                               </tr>
                             @empty 
-                            <div class="text-muted small">Sin novedades.</div> 
+                               <tr colspan="3" class="text-muted small">Sin Novedades</tr>
                             @endforelse
-                        </div>
-                    </div>
+                            
+                        </tbody>
+                    </table>
                 </div>
-                <div class="col-md-12 mb-3">
-                    <div class="card border-danger h-100">
-                        <div class="card-header bg-danger text-white py-1">E.- Cisternas en Falla</div>
-                        <div class="card-body p-2">
-                            @forelse($cisternasFalla as $f)
-                            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
-                                <div>
-                                    <strong class="d-block">{{ $f->flota }} [{{ $c->placa }}]</strong>
-                                    <span class="small text-muted">{{ $f->observacion ?? 'Sin diagnóstico' }}</span>
-                                </div>
-                                <div class="text-end">
-                                    @if($f->ordenActiva)
-                                        <span class="badge {{ $f->dias_fuera_servicio > 7 ? 'bg-danger' : 'bg-warning text-dark' }}" style="font-size: 0.7rem;">
-                                            <i class="bi bi-clock-history"></i> {{ $f->dias_fuera_servicio }} DÍAS
-                                        </span>
-                                        <div style="font-size: 0.65rem;" class="text-muted">Desde: {{ $f->ordenActiva->created_at->format('d/m/Y') }}</div>
-                                    @else
-                                        <span class="badge bg-secondary" style="font-size: 0.7rem;">SIN ORDEN</span>
-                                    @endif
-                                </div>
-                            </div>
-                            @empty 
-                            <div class="text-muted small">Sin novedades.</div> 
-                             @endforelse
-                        </div>
-                    </div>
+            </div>     
+        </div>
+    </div>
+    <div class="col-12">
+        <div class="card shadow-sm border-0 h-100" style="border-radius: 15px;">
+            <div class="card-body">
+        
+        <div class="mt-3 bg-white rounded shadow-sm border-start border-4 border-orange overflow-hidden">
+            {{-- Encabezado del Cuadro --}}
+            <div class="p-3 bg-light d-flex justify-content-between align-items-center border-bottom">
+                <div>
+                    <span class="text-uppercase fw-bold mb-0" style="font-size: 11px; color: #666; letter-spacing: 1px;">Cargas y Despachos Programados (Hoy)</span>
+                    <h4 class="fw-black mb-0 text-dark">{{ $despachosHoy->count() ?? 0 }} <small class="text-muted small" style="font-size: 14px;">Viajes Totales</small></h4>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-dark text-orange fw-black px-3 py-2" style="border-radius: 20px;">
+                        CAPACIDAD UTILIZADA: {{ $utilizacionFlota ?? 0 }}%
+                    </span>
                 </div>
             </div>
 
-        </div>
+            {{-- Tabla de Movimientos --}}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="py-2 px-3 text-uppercase small text-muted" style="width: 120px;">Tipo</th>
+                            <th class="py-2 px-3 text-uppercase small text-muted" style="width: 240px;">Unidad</th>
+                            <th class="py-2 px-3 text-uppercase small text-muted">Detalle de Operación</th>
+                            <th class="py-2 px-3 text-uppercase small text-muted text-end" style="width: 150px;">Total Litros</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($despachosHoy as $viaje)
+                            @php
+                                $destinoRaw = $viaje->destino_ciudad;
+                                $esFlete = str_contains(strtoupper($destinoRaw), 'FLETE');
+                                
+                                // Limpiamos la palabra "FLETE", las flechas "->" y espacios sobrantes
+                                $destinoLimpio = trim(str_ireplace(['FLETE', ' ->'], ['', ''], $destinoRaw));
+                                
+                                // Si es flete, asignamos colores y estilos únicos (un tono Púrpura o Gris Oscuro)
+                                if ($esFlete) {
+                                    $badgeClass = 'bg-dark text-white'; // O un color que prefieras para fletes
+                                    $lineColor = '#6f42c1'; // Púrpura para fletes
+                                    $tipoEtiqueta = 'Flete';
+                                    $iconClass = 'fa-truck-loading';
+                                } else {
+                                    $esDespacho = is_null($viaje->litros);
+                                    $detallesDespacho = $esDespacho ? $viaje->despachos : null;
+                                
+                                    $totalLitros = $esDespacho 
+                                        ? ($detallesDespacho->sum('litros') ?? 0) 
+                                        : $viaje->litros;
+                                    $lineColor = $esDespacho ? '#28a745' : '#17a2b8';
+                                    $badgeClass = $esDespacho ? 'bg-success' : 'bg-info text-dark';
+                                    $tipoEtiqueta = $esDespacho ? 'Despacho' : 'Carga';
+                                    $iconClass = $esDespacho ? 'fa-arrow-up' : 'fa-arrow-down';
+                                }
+                            @endphp
 
-        <div class="bg-light p-3 text-center border-top">
-            <p class="mb-0 small fw-bold text-muted text-uppercase">Este documento es una declaración oficial de disponibilidad de flota.</p>
+                            <tr class="viaje-row" style="border-left: 5px solid {{ $lineColor }};">
+                                <td class="align-middle px-3">
+                                    <span class="badge {{ $badgeClass }} text-uppercase w-100" style="font-size: 9px; letter-spacing: 0.5px;">
+                                        <i class="fas {{ $iconClass }} me-1"></i>
+                                        {{ $tipoEtiqueta }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-2">
+                                            <i class="fas fa-truck text-muted"></i>
+                                        </div>
+                                        <div>
+                                            <span class="fw-bold text-dark" style="font-size: 13px;">{{ $viaje->vehiculo ? '['.$viaje->vehiculo->flota.'] '.$viaje->vehiculo->placa :$viaje->otro_vehiculo}} 
+                                                @if($viaje->cisterna()->first()) 
+                                                    @php($cisterna=$viaje->cisterna()->first())
+                                                    <br>
+                                                    <i class="fas fa-link text-muted opacity-50" style="font-size"></i>
+                                                    {{  '['.$cisterna->flota.'] '.$cisterna->placa }}
+                                                @endif
+                                            </span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="align-middle px-3">
+                                    {{-- Si es Flete, mostramos el destino limpio --}}
+                                    @if($esFlete)
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-2">
+                                                <i class="fas fa-map-marker-alt text-muted"></i>
+                                            </div>
+                                            <div>
+                                                <span class="fw-bold text-dark" style="font-size: 13px;">{{ $destinoLimpio }}</span>
+                                            </div>
+                                        </div>
+                                    @elseif($esDespacho && $detallesDespacho && $detallesDespacho->count() > 0)
+                                        {{-- (Mantienes tu lógica anterior de desglose de clientes aquí) --}}
+                                        <div class="py-1">
+                                            @foreach($detallesDespacho as $d)
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <span class="text-dark fw-bold" style="font-size: 13px;">{{ $d->cliente->alias?? $d->cliente->nombre ?? $d->otro_cliente }}</span>
+                                                    <span class="badge bg-light text-dark border">{{ number_format($d->litros, 2) }} Lts</span>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        {{-- Caso Carga --}}
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span class="fw-black text-dark" style="font-size: 15px;">{{ $destinoLimpio }}</span>
+                                            </div>
+                                            <i class="fas fa-gas-pump text-muted opacity-50"></i>
+                                        </div>
+                                    @endif
+                                </td>
+                                
+                                <td class="text-end align-middle px-3 fw-black text-dark" style="font-size: 16px;">
+                                    {{ number_format($totalLitros, 2) }} Ltrs
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
+            </div>
+        </div>
+    </div>
+</div>
+
     </div>
      <!-- Área donde se mostrará el canvas generado (opcional, para debug/visualización) -->
         <div id="outputContainer" class="mt-8 pt-4 border-t border-gray-300">
@@ -207,7 +283,77 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
 <script>
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+
+
+
+
 document.addEventListener('DOMContentLoaded', function() {
+    
+    // 1. Gráfica de Disponibilidad (Donut)
+    Highcharts.chart('chart-disponibilidad', {
+        chart: { type: 'pie', backgroundColor: 'transparent' },
+        title: { text: 'Disponibilidad Real', align: 'left', style: { fontWeight: '900', fontSize: '15px', textTransform: 'uppercase', color: '#666' } },
+        plotOptions: {
+            pie: {
+                innerSize: '50%',
+                dataLabels: { enabled: true, format: '{point.name}: {point.y}' }
+            }
+        },
+        series: [{
+            name: 'Unidades',
+            data: [
+                { name: 'Operativos', y: {{ $operativosCount }}, color: '#2c3e50' },
+                { name: 'En Ruta', y: {{ $enRuta }}, color: '#ff6600' },
+                { name: 'Fuera de Servicio', y: {{ $fallaCount }}, color: '#e74c3c' }
+            ]
+        }],
+        credits: { enabled: false }
+    });
+
+    // 2. Gráfica de Segmentos (Columnas con Variación)
+    Highcharts.chart('chart-segmentos', {
+    chart: { type: 'column', backgroundColor: 'transparent' },
+    title: { text: null },
+    xAxis: { 
+        categories: ['Tanques', 'Livianos', 'Motrices'], 
+        crosshair: true,
+        labels: { style: { fontWeight: 'bold', color: '#2c3e50' } }
+    },
+    yAxis: { min: 0, title: { text: 'Cantidad de Unidades' } },
+    tooltip: { shared: true },
+    plotOptions: {
+        column: { 
+            borderRadius: 5, 
+            colorByPoint: true,
+            // --- AJUSTE AQUÍ: ACTIVAR ETIQUETAS ---
+            dataLabels: {
+                enabled: true,
+                // Mostramos cantidad y el nombre de la categoría
+                format: '{point.y} <br/><small style="font-weight: normal; font-size: 9px">{point.category}</small>',
+                style: {
+                    fontSize: '12px',
+                    fontFamily: 'inherit',
+                    textOutline: 'none', // Quita el borde blanco de la letra
+                    textAlign: 'center'
+                },
+                y: -10 // Ajuste para que floten un poco sobre la barra
+            }
+        }
+    },
+    colors: ['#ff6600', '#2c3e50', '#95a5a6'],
+    series: [{
+        name: '',
+        data: [
+            { y: {{ $totalCisternas }}, name: 'Tanques' }, 
+            { y: {{ $totalLivianos }}, name: 'Livianos' }, 
+            { y: {{ $totalMotrices }}, name: 'Motrices' }
+        ]
+    }],
+    credits: { enabled: false }
+});
+
+    
     const printableArea = $("div.printableArea")[0]; 
     const sendTelegramButton = document.querySelector('#sendTelegramButton');
     const elementToCaptureSelector = '.printableArea';
