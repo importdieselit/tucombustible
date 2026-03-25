@@ -229,6 +229,9 @@
                                         </div>
                                     @elseif($esDespacho && $detallesDespacho && $detallesDespacho->count() > 0)
                                         {{-- (Mantienes tu lógica anterior de desglose de clientes aquí) --}}
+                                         <div>
+                                            <span class="fw-black text-dark" style="font-size: 15px;">{{ $destinoLimpio }}</span>
+                                        </div>
                                         <div class="py-1">
                                             @foreach($detallesDespacho as $d)
                                                 <div class="d-flex justify-content-between align-items-center mb-1">
