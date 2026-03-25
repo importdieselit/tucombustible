@@ -639,7 +639,7 @@ class VehiculoController extends BaseController
     
     $cisternasFalla = $cisternas->where('estatus', '!=', 1);
     $cisternasOperativas = $cisternas->where('estatus', 1);
-    $camionesFalla = $data->where('estatus', '!=', 1);
+    $camionesFalla = $data->where('estatus', '>', 2);
     $camionetasFalla = $ligero->where('estatus', '!=', 1);
     $camionetasOperativas = $ligero->where('estatus', 1);
     $camionesOperativos = $motrices->where('tipoVehiculo.tipo', 'CAMION')->where('estatus', 1);
