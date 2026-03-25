@@ -86,7 +86,10 @@
                         <td class="text-end pe-4">
                             <div class="btn-group">
                                 <a href="{{ route('viajes.show', $viaje->id) }}" class="btn btn-sm btn-outline-navy" title="Ver Detalle">
-                                    <i class="fa fa-eye"></i>
+                                    <i class="fa fa-eye"></i> ver
+                                </a>
+                                <a href="{{ route('viajes.resumenProgramacion', $viaje->id) }}" class="btn btn-sm btn-outline-info" title="Resumen de Programación">
+                                    <i class="fa fa-list"></i> Resumen
                                 </a>
                                 <button type="button" class="btn btn-sm btn-outline-danger" 
                                         onclick="confirmarEliminacion('{{ $viaje->id }}', '{{ $viaje->destino_ciudad }}')">
