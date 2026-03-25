@@ -914,36 +914,44 @@ public function updateDespacho(Request $request, $viajeId, $despachoId)
 
 public function destroy($id)
 {
-    $viaje = Viaje::findOrFail($id);
+    $viaje = Viaje::with('despachos.cliente')->findOrFail($id);
 
     try {
-        // Iniciar Transacción
         DB::beginTransaction();
 
-        // 1. Eliminar los despachos relacionados (Requerido por el usuario)
-        // Asume que tu modelo Viaje tiene una relación despachos()
-        $despachos_eliminados = $viaje->despachos()->count();
-        $viaje->despachos()->delete(); 
+        $despachos = $viaje->despachos;
+        $conteo = $despachos->count();
+        $idp=!is_null($viaje->tipo) ? $viaje->tipo: 1;
+        $producto=Producto::find($idp);
+            
+        // 1. REVERSAR SALDOS: Si el despacho afectó cuentas, se devuelve aquí
+        foreach ($despachos as $despacho) {
+            if ($despacho->cliente) {
+                // Ejemplo: Si manejas prepago o cupos por litros
+                 $despacho->cliente->increment('disponible', $despacho->litros);
+                 $producto->increment('stock', $despacho->litros);
+            }
+        }
 
-        // 2. Eliminar el viaje
+        if(!is_null($viaje->litros)){
+            $producto->decrement('stock', $viaje->litros);
+        }
+
+        // 2. Eliminar despachos y luego el viaje
+        $viaje->despachos()->delete(); 
         $viaje->delete();
 
-        // Si todo va bien, confirmar la transacción
         DB::commit();
 
         return redirect()->route('viajes.list')
-                         ->with('success', "✅ El Viaje #{$id} a {$viaje->destino_ciudad} (y {$despachos_eliminados} despachos) ha sido eliminado correctamente.");
+            ->with('success', "Viaje #{$id} eliminado. Se reversaron {$conteo} despachos y sus saldos asociados.");
 
     } catch (\Exception $e) {
-        // Si algo falla, revertir los cambios
         DB::rollBack();
-        
-        Log::error("Error al eliminar el viaje #{$id}: " . $e->getMessage()); 
-        
+        Log::error("Error crítico en eliminación Viaje #{$id}: " . $e->getMessage()); 
         return redirect()->route('viajes.list')
-                         ->with('error', "❌ Error crítico al intentar eliminar el viaje #{$id}. Consulte los logs.");
+            ->with('error', "No se pudo eliminar el viaje. El sistema protegió la integridad de los datos.");
     }
-    
 }
 
 public function showBoleta($id)
