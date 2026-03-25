@@ -303,8 +303,7 @@
                             <th class="ps-4 py-3 border-0 text-uppercase small" style="width: 120px;">Placa</th>
                             <th class="py-3 border-0 text-uppercase small">Vehículo</th>
                             <th class="py-3 border-0 text-uppercase small text-center">Ruta</th>
-                            <th class="py-3 border-0 text-uppercase small text-center">Kilometraje</th>
-                            <th class="py-3 border-0 text-uppercase small text-center">Carga (Lts)</th>
+                            <th class="py-3 border-0 text-uppercase small text-center " width="10%">Carga (Lts)</th>
                             <th class="pe-4 py-3 border-0 text-uppercase small text-end">Cliente Destino</th>
                         </tr>
                     </thead>
@@ -325,13 +324,10 @@
                             <td class="py-3 text-center">
                                 <span class="text-secondary"><i class="fa-solid fa-route me-1 text-corporate"></i> {{ $v['ruta'] }}</span>
                             </td>
-                            <td class="py-3 text-center fw-bold">
-                                {{ number_format($v['km']) }} <small class="text-muted">km</small>
-                            </td>
                             <td class="py-3 text-center">
-                                <div class="d-inline-flex align-items-center bg-light px-2 py-1 rounded border">
+                                <div class="d-inline-flex align-items-center bg-light px-1 py-1 rounded border">
                                     <i class="fa-solid fa-droplet text-primary me-2" style="font-size: 0.7rem;"></i>
-                                    <span class="fw-bold text-primary">{{ number_format(floatval($v['carga_total'])) }}</span>
+                                    <span class="fw-bold text-primary">{{ $v['carga_total'] }}</span>
                                 </div>
                             </td>
                             <td class="pe-4 py-3 text-end">

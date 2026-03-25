@@ -73,7 +73,7 @@
                     {{-- VEHÍCULO --}}
                     <div class="col-md-4">
                         <label for="vehiculo_id">Vehículo (Flota)</label>
-                        <select name="vehiculo_id" id="vehiculo_id" class="form-select select-or-other" data-other-field="otro_vehiculo">
+                        <select name="vehiculo_id" id="vehiculo_id" class="form-select w-100 select-or-other" data-other-field="otro_vehiculo">
                             <option value="">Seleccione un Vehículo</option>
                             <!-- Se asume que $vehiculos es un array de objetos Vehiculo -->
                             @foreach($vehiculos as $vehiculo)
@@ -91,8 +91,8 @@
                             <select name="cisterna" id="cisterna" class="form-select">
                                 <option value="">Seleccione una cisterna</option>
                                 @foreach($cisternas as $cisterna)
-                                        <option value="{{ $cisterna->id }}">{{ $cisterna->flota }} {{ $cisterna->placa }}</option>
-                                                                   @endforeach 
+                                    <option value="{{ $cisterna->id }}">{{ $cisterna->flota }} {{ $cisterna->placa }}</option>
+                                @endforeach 
                             </select>
                         <input type="text" name="otro_cisterna" id="otro_cisterna" class="form-control mt-2" style="display:none" placeholder="Nombre cisterna externa">
 

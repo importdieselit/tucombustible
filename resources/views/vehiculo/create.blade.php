@@ -66,9 +66,19 @@
                             <div class="tab-pane fade show active" id="info" role="tabpanel">
                                 <div class="row g-4">
                                     <div class="col-md-3">
-                                        <label class="form-label-corp">Número de Flota</label>
-                                        <input type="text" class="form-control fw-bold border-orange" name="flota" value="{{ old('flota', $item->flota ?? '') }}" placeholder="Ej. T-01">
-                                    </div>
+                                    <label class="form-label-corp text-orange">Categoría</label>
+                                    <select name="tipo" id="tipo" class="form-select border-orange fw-bold">
+                                        <option value="">Seleccione Tipo...</option>
+                                        @foreach($tiposVehiculo as $id => $tipo)
+                                            <option value="{{ $id }}" {{ old('id_tipo_vehiculo', $item->id_tipo_vehiculo ?? '') == $id ? 'selected' : '' }}>{{ $tipo }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label-corp">Número de Flota</label>
+                                    <input type="text" id="flota" class="form-control fw-bold bg-light" name="flota" value="{{ old('flota', $item->flota ?? '') }}" readonly>
+                                    <small class="text-muted" style="font-size: 10px;">Generado automáticamente</small>
+                                </div>
                                     <div class="col-md-3">
                                         <label class="form-label-corp">Placa / Matrícula</label>
                                         <input type="text" class="form-control fw-bold" name="placa" value="{{ old('placa', $item->placa ?? '') }}" placeholder="AAA000">
@@ -255,21 +265,14 @@
                                             @endforeach
                                         </select>
                                     </div>
-                                    <div class="col-md-4">
-                                        <label class="form-label-corp">Categoría Vehículo</label>
-                                        <select name="id_tipo_vehiculo" class="form-control">
-                                            <option value="">Seleccione...</option>
-                                            @foreach($tiposVehiculo as $id => $tipo)
-                                                <option value="{{ $id }}" {{ old('id_tipo_vehiculo', $item->id_tipo_vehiculo ?? '') == $id ? 'selected' : '' }}>{{ $tipo }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
+                                    
                                     <div class="col-md-4">
                                         <label class="form-label-corp">Estatus Operativo</label>
                                         <select name="estatus" class="form-select border-start border-4 border-info">
                                             <option value="1" {{ old('estatus', $item->estatus ?? '') == '1' ? 'selected' : '' }}>ACTIVO / OPERATIVO</option>
-                                            <option value="2" {{ old('estatus', $item->estatus ?? '') == '2' ? 'selected' : '' }}>EN MANTENIMIENTO</option>
-                                            <option value="3" {{ old('estatus', $item->estatus ?? '') == '3' ? 'selected' : '' }}>INACTIVO / DESINCORPORADO</option>
+                                            <option value="2" {{ old('estatus', $item->estatus ?? '') == '2' ? 'selected' : '' }}>EN RUTA</option>
+                                            <option value="3" {{ old('estatus', $item->estatus ?? '') == '3' ? 'selected' : '' }}>FUERA DE SERVICIO</option>
+                                            <option value="4" {{ old('estatus', $item->estatus ?? '') == '4' ? 'selected' : '' }}>INACTIVO / DESINCORPORADO</option>
                                         </select>
                                     </div>
                                     <div class="col-12">
@@ -353,6 +356,39 @@
                 $(this).find('input[type="text"], textarea').each(function() {
                     this.value = this.value.toUpperCase();
                 });
+            });
+
+            // Traemos los contadores desde PHP a JS
+            const counts = @json($counts);
+
+            $('#tipo').change(function() {
+                const tipoId = $(this).val();
+                let prefijo = "";
+                let nuevoCorrelativo = 0;
+
+                if (!tipoId) {
+                    $('#flota').val('');
+                    return;
+                }
+
+                switch (parseInt(tipoId)) {
+                    case 2: // CISTERNAS / TANQUES
+                        prefijo = "T-";
+                        nuevoCorrelativo = counts.T + 1;
+                        break;
+                    case 6: // LIVIANOS
+                        prefijo = "L-";
+                        nuevoCorrelativo = counts.L + 1;
+                        break;
+                    default: // OTROS (MOTRICES / CARGA)
+                        prefijo = "C-";
+                        nuevoCorrelativo = counts.C + 1;
+                        break;
+                }
+
+                // Formatear con ceros a la izquierda si lo deseas (Ej: T-05)
+                const numeroFormateado = nuevoCorrelativo.toString().padStart(2, '0');
+                $('#flota').val(prefijo + numeroFormateado);
             });
 
         });

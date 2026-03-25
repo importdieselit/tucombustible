@@ -276,7 +276,7 @@ class VehiculoController extends BaseController
                     $km = $vehiculo->km ?? 0;
                   //  $consumo = $vehiculo->consumo_promedio ?? null;
                   // Calculamos la carga total sumando los litros de todos los despachos asociados
-                $cargaTotal = $v->despachos->sum('litros');
+                $cargaTotal = $v->litros ?? $v->despachos->sum('litros');
 
                 // Obtenemos los nombres de los clientes/destinos de forma única
                 $destinos = $v->despachos->map(function($d) {
@@ -285,12 +285,12 @@ class VehiculoController extends BaseController
                 })->unique()->implode(', ');
 
                     return [
-                        'placa'     => $vehiculo->placa ?? 'N/D',
-                        'modelo'    => $vehiculo->modelo()->modelo ?? 'N/D',
-                        'marca'     => $vehiculo->marca()->marca ?? 'N/D',
+                        'placa'     => $vehiculo->placa ?? $v->otro_vehiculo ?? 'N/D',
+                        'modelo'    => is_null($v->otro_vehiculo)?  $vehiculo->isModelo->modelo ?? 'N/D' :'Unidad Externa',
+                        'marca'     => is_null($v->otro_vehiculo)? $vehiculo->isMarca->marca ?? 'N/D': '',
                         'ruta'      => $v->destino_ciudad ?? 'Sin Destino', //$v->despacho->cliente->nombre ?? $v->otro_cliente ??
-                        'km'        => number_format($vehiculo->km_mantt, 0, ',', '.'),
-                        'carga_total' => number_format($cargaTotal, 2, ',', '.') . ' Lts',
+                        'km'        => number_format($vehiculo->km_mantt ?? 0, 0, ',', '.'),
+                        'carga_total' => number_format($cargaTotal, 2, ',', '.'),
                         'cliente_destino' => $destinos,
                         'estatus'   => '',//$v->status
                     ];
@@ -409,9 +409,15 @@ class VehiculoController extends BaseController
         $clientes = Cliente::pluck('nombre', 'id');
         $tiposVehiculo = TipoVehiculo::pluck('tipo', 'id');
         $documentosRequeridos = TipoDocumento::where('tipo', 'V')->get();
+
+        $counts = [
+            'T' => Vehiculo::where('tipo', 2)->count(), // Tipo 2: Tanques
+            'L' => Vehiculo::where('tipo', 6)->count(), // Tipo 6: Livianos
+            'C' => Vehiculo::whereNotIn('tipo', [2, 6])->count(),
+        ];
         
         // La lógica de la vista se hereda del BaseController, pero con los datos adicionales.
-        return view($this->getModelNameLowerCase() . '.create', compact('marcas', 'modelos', 'clientes', 'tiposVehiculo','documentosRequeridos'));
+        return view($this->getModelNameLowerCase() . '.create', compact('marcas', 'modelos', 'clientes', 'tiposVehiculo','documentosRequeridos', 'counts'));
     }
 
     /**
