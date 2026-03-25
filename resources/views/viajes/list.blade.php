@@ -72,8 +72,8 @@
                             <div class="text-muted small">{{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('g:i A') }}</div>
                         </td>
                         <td>
-                            <div class="small"><i class="fa fa-user-circle me-1"></i> {{ $viaje->chofer_nombre ?? 'Sin asignar' }}</div>
-                            <div class="small fw-bold"><i class="fa fa-truck me-1"></i> {{ $viaje->vehiculo_placa ?? 'N/A' }}</div>
+                            <div class="small"><i class="fa fa-user-circle me-1"></i> {{ $viaje->chofer->persona->nombre ?? $viaje->otro_chofer }}</div>
+                            <div class="small fw-bold"><i class="fa fa-truck me-1"></i> {{ $viaje->vehiculo->placa ?? $viaje->otro_vehiculo }}</div>
                         </td>
                         <td>
                             <span class="badge rounded-pill px-3 
