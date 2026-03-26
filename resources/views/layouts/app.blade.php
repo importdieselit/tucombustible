@@ -421,7 +421,12 @@
         if ('PushManager' in window) {
             window.addEventListener('load', () => {
                 // Pasamos la llave desde el entorno de Laravel de forma segura
-                const publicKey = "{{ env('VAPID_PUBLIC_KEY') }}";
+                const publicKey = @json(config('webpush.vapid.public_key')); 
+
+                if (!publicKey) {
+                    alert("Error: La llave pública no llegó al navegador. Revisa tu config/webpush.php");
+                    return;
+                }
                 if(publicKey) {
                     // Podemos llamar a la suscripción automáticamente 
                     // o después de una interacción del usuario

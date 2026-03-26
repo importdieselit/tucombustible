@@ -267,7 +267,12 @@ document.addEventListener('DOMContentLoaded', function () {
             btnText.innerText = 'Procesando...';
 
             const registration = await navigator.serviceWorker.ready;
-            const publicKey = "{{ env('VAPID_PUBLIC_KEY') }}";
+            const publicKey = @json(config('webpush.vapid.public_key')); 
+
+            if (!publicKey) {
+                alert("Error: La llave pública no llegó al navegador. Revisa tu config/webpush.php");
+                return;
+            }
 
             const subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
