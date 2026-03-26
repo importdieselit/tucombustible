@@ -42,5 +42,8 @@ class AppServiceProvider extends ServiceProvider
         Cliente::observe(ClienteObserver::class);
         Orden::observe(OrdenObserver::class);
         View::composer('layouts.header', AlertsComposer::class); 
+        if (app()->environment('local')) {
+            error_reporting(E_ALL & ~E_DEPRECATED & ~E_WARNING);
+        }
     }
 }
