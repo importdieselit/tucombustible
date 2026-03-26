@@ -10,6 +10,7 @@ use App\Http\Controllers\ClienteController as PortalClienteController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Notifications\OrdenTrabajoCreada;
 use App\Models\User;
+use App\Models\Orden;
 use App\Http\Controllers\{
     DashboardController, VehiculoController, MarcaController, ModeloController,
     OrdenController, TanqueController, MovimientoCombustibleController,
@@ -26,12 +27,19 @@ Auth::routes(['reset' => false]);
 Route::get('/', function () { return redirect()->route('login'); });
 
 Route::get('/test-push', function () {
-    $user = User::find(1); // Elígete a ti mismo
+    $user = User::find(1); // Tu usuario
     
-    // Esto enviará la notificación al instante a todos tus dispositivos suscritos
-    $user->notify(new OrdenTrabajoCreada()); 
+    // Buscamos la última orden para tener datos reales que mostrar
+    $orden = Orden::latest()->first(); 
+
+    if (!$orden) {
+        return "No hay órdenes en la base de datos para probar.";
+    }
+
+    // Pasamos la $orden al constructor
+    $user->notify(new OrdenTrabajoCreada($orden)); 
     
-    return "Notificación enviada a " . $user->nombre;
+    return "Notificación de prueba enviada a " . $user->nombre . " con la Orden #" . $orden->id;
 });
 
 /**
