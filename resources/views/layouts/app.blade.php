@@ -572,6 +572,15 @@
                 }
             })
         }
+
+        function suscribirANotificaciones() {
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    // Lógica para registrar el dispositivo en tu base de datos Laravel
+                    console.log("TuCombustible: Notificaciones activadas");
+                }
+            });
+        }
     </script>
 </body>
 </html>

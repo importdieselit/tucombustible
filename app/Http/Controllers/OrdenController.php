@@ -54,6 +54,17 @@ class OrdenController extends BaseController
         $this->model = $orden;
     }
 
+
+    protected static function booted()
+    {
+        static::created(function ($orden) {
+            // Buscamos al usuario interesado (ej. el mecánico o el gerente)
+            $usuario = 1;
+            // Disparamos la notificación
+            $usuario->notify(new Orden($orden));
+        });
+    }
+
     /**
      * Muestra el dashboard de órdenes de trabajo.
      * @return \Illuminate\View\View
