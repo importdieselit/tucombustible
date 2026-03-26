@@ -19,7 +19,7 @@
                 </div>
                 <div class="col">
                     <a href="{{ route('vehiculos.reporte.disponibilidad') }}" class="btn btn-sm btn-dark w-100 h-100 d-flex align-items-center justify-content-center text-nowrap">
-                        <i class="fas fa-file-excel me-1 me-md-2"></i> <span class="d-none d-sm-inline">Reporte</span>
+                        <i class="fas fa-file-excel me-1 me-md-2"></i> <span class="d-sm-inline">Reporte</span>
                     </a>
                 </div>
                 <div class="col">
