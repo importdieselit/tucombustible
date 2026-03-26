@@ -292,6 +292,8 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         } catch (error) {
             console.error("Error en suscripción:", error);
+            // AGREGA ESTA LÍNEA PARA VER EL ERROR EN EL CELULAR:
+            alert("Error real: " + error.name + " - " + error.message); 
             actualizarInterfaz('error');
         }
     }
