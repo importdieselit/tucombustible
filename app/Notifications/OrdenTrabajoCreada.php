@@ -43,7 +43,7 @@ class OrdenTrabajoCreada extends Notification
         return (new WebPushMessage)
             ->title('🛠️ Nueva Orden de Trabajo')
             ->icon('/img/icon-192x192.png') // Tu icono corporativo
-            ->body("Se ha generado la Orden #{$this->orden->id} para la unidad {$this->orden->vehiculoBelong->flota}")
+            ->body("Se ha generado la Orden #{$this->orden->nro_orden} para la unidad {$this->orden->vehiculoBelong->flota} {$this->orden->vehiculoBelong->placa}")
             ->data(['url' => url('/ordenes/' . $this->orden->id)])
             ->badge('/img/logomini.png'); // El logo pequeño para la barra superior
     }
