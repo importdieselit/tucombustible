@@ -115,18 +115,18 @@
             <table id="vehiculosTable" class="table table-hover table-striped">
                 <thead>
                     <tr>
-                        <th width="5%">#</th>
+                        <th width="5%"  class="d-none d-md-table-cell">#</th>
                         <th>Flota</th>
                         {{-- <th>Cliente</th> --}}
                         {{-- <th>Clase</th> --}}
-                        <th>Marca/Modelo</th>
-                        <th>Año</th>
+                        <th class="d-none d-md-table-cell">Marca/Modelo</th>
+                        <th class="d-none d-md-table-cell">Año</th>
                         <th width="10%">Placa</th>
-                        <th>Tipo</th>
-                        <th>Kilometraje</th>
+                        <th class="d-none d-md-table-cell">Tipo</th>
+                        <th class="d-none d-md-table-cell">Kilometraje</th>
                         <th>Estatus</th>
-                        <th>Dias Fuera de servicio</th>
-                        <th>Documentos Vencidos</th>
+                        <th class="d-none d-md-table-cell">Dias Fuera de servicio</th>
+                        <th class="d-none d-md-table-cell">Documentos Vencidos</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -141,12 +141,12 @@
                             }
                             @endphp
                     <tr class="clickable-row" @if($orden && $duracionDias>3) style="border: none red !important; font-weight: bold;" @endif  data-id="{{ $vehiculo->id }}">
-                        <td>{{ $index + 1 }}</td>
+                        <td class="d-none d-md-table-cell">{{ $index + 1 }}</td>
                         <td>{{ $vehiculo->flota ?? 'N/A' }}</td>
                         {{-- <td>{{ $vehiculo->cliente->nombre ?? 'N/A' }}</td> --}}
                         {{-- <td>{{ $vehiculo->clase ?? 'N/A' }}</td> --}}
-                        <td>{{ $vehiculo->marca()->marca ?? 'N/A' }} / {{ $vehiculo->modelo()->modelo ?? 'N/A' }}</td>
-                        <td>{{ $vehiculo->anno }}</td>
+                        <td  class="d-none d-md-table-cell">{{ $vehiculo->marca()->marca ?? 'N/A' }} / {{ $vehiculo->modelo()->modelo ?? 'N/A' }}</td>
+                        <td  class="d-none d-md-table-cell">{{ $vehiculo->anno }}</td>
                         <td><div class="d-flex flex-column">
                         <strong>{{ $vehiculo->placa }}</strong>
                         
@@ -182,8 +182,8 @@
                             @endif
                         @endif
                     </div></td>
-                        <td>{{ $vehiculo->tipoVehiculo->tipo ?? 'N/A' }}</td>
-                        <td>{{ number_format($vehiculo->kilometraje ?? 0, 0, ',', '.') }} km</td>
+                        <td  class="d-none d-md-table-cell">{{ $vehiculo->tipoVehiculo->tipo ?? 'N/A' }}</td>
+                        <td class="d-none d-md-table-cell">{{ number_format($vehiculo->kilometraje ?? 0, 0, ',', '.') }} km</td>
                         <td>
                             @php
                                 $estatusInfo = $estatusData->get($vehiculo->estatus);
@@ -198,12 +198,12 @@
                                     @endphp
                                     @if($isHabilitadoAbierto)
                                         <span class="badge badge-dual-status" title="Unidad Habilitada con Tareas Pendientes">
-                                            <i class="fa-solid fa-truck-fast"></i>
-                                            DISPONIBLE / PENDIENTE
+                                            <i class="fa-solid fa-truck-fast d-none d-md-table-cell"></i>
+                                            <span>Operativo con Falla</span>
                                         </span>
                                     @else
-                                        <span class="badge bg-{{ $estatusInfo->css }}" title="{{ $estatusInfo->descripcion }}">
-                                            <i class="mr-1 fa-solid {{ $estatusInfo->icon_auto }}"></i>
+                                        <span class="badge bg-{{ $estatusInfo->css }} " title="{{ $estatusInfo->descripcion }}">
+                                            <i class="mr-1 fa-solid d-none d-md-table-cell {{ $estatusInfo->icon_auto }}"></i>
                                             {{ $estatusInfo->auto }}
                                         </span>
                                     @endif
@@ -214,7 +214,7 @@
                                 <span class="badge bg-gray">Desconocido</span>
                             @endif
                         </td>
-                        <td>
+                        <td  class="d-none d-md-table-cell">
                                 @if($orden)
                                  <a href="/ordenes/{{$orden->id}} " style="decoration:none; cursor: pointer;" target="_blank" >   
                                         {{$duracionDias ?? 0}}
@@ -223,7 +223,7 @@
                                     0
                                 @endif                            
                         </td>
-                        <td class="text-center">
+                        <td class="d-none d-md-table-cell text-center">
                             @php
                                 $alertas = $vehiculo->getDocumentosAlertas();
                             @endphp

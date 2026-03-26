@@ -11,35 +11,33 @@
 
 @section('content')
 <div class="container-fluid">
-<div class="col-md-auto ms-auto d-flex gap-2 flex-wrap pt-2">
-    <button class="btn btn-corporate shadow-sm" data-bs-toggle="modal" data-bs-target="#modalKm">
-        <i class="fa-solid fa-gauge-high me-1"></i> KM
-    </button>
-
-    <button class="btn btn-outline-corporate shadow-sm" data-bs-toggle="modal" data-bs-target="#modalChofer">
-        <i class="fa-solid fa-user-tie me-1"></i> Chofer
-    </button>
-    <button class="btn btn-warning shadow-sm" data-bs-toggle="modal" data-bs-target="#modalPlanificar">
-        <i class="fa-solid fa-calendar-check me-1"></i> Planificar Mantt.
-    </button>
-    @if($esChuto)
-        <button class="btn btn-outline-dark shadow-sm" data-bs-toggle="modal" data-bs-target="#modalAcoplar">
-            <i class="fa-solid fa-link me-1"></i> Acoplar Cisterna
+<div class="col-12 col-md-auto ms-auto pt-2">
+    <div class="d-grid d-md-flex gap-2 flex-wrap" style="grid-template-columns: repeat(2, 1fr);">
+        
+        <button class="btn btn-corporate shadow-sm w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#modalKm">
+            <i class="fa-solid fa-gauge-high me-1"></i> KM
         </button>
-    {{-- @elseif($esCisterna)
-        <button class="btn btn-outline-dark shadow-sm" data-bs-toggle="modal" data-bs-target="#modalAsignarChuto">
-            <i class="fa-solid fa-truck-front me-1"></i> Asignar Chuto
-        </button> --}}
-    @endif
 
-    <a type="button" class="btn btn-danger" href="{{ route('ot.create', $item->id) }}">
-        <i class="fa-solid fa-triangle-exclamation me-1"></i> Crear Orden de Trabajo
-    </a>
+        <button class="btn btn-warning shadow-sm w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#modalPlanificar">
+            <i class="fa-solid fa-calendar-check me-1"></i> <span class="d-inline d-md-none d-lg-inline">Planificar</span>
+        </button>
 
+        @if($esChuto)
+            <button class="btn btn-outline-dark shadow-sm w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#modalAcoplar">
+                <i class="fa-solid fa-link me-1"></i> Acoplar
+            </button>
+        @endif
 
-    <a href="{{ route('vehiculos.edit', $item->id) }}" class="btn btn-dark">
-        <i class="fa-solid fa-pen-to-square"></i>
-    </a>
+        <a class="btn btn-danger shadow-sm g-col-2 w-100 w-md-auto d-flex align-items-center justify-content-center" 
+           href="{{ route('ot.create', $item->id) }}" >
+            <i class="fa-solid fa-triangle-exclamation me-1"></i> 
+            <span class="text-nowrap">Crear Orden</span>
+        </a>
+
+        <a href="{{ route('vehiculos.edit', $item->id) }}" class="btn btn-dark shadow-sm w-100 w-md-auto">
+            <i class="fa-solid fa-pen-to-square me-1 d-md-none"></i> Editar
+        </a>
+    </div>
 </div>
     <div class="card mb-4 border-0 shadow-sm bg-white">
         <div class="card-body">
@@ -102,19 +100,19 @@
         <div class="card-header bg-white p-0">
             <ul class="nav nav-tabs card-header-tabs m-0" id="vehiculoTab" role="tablist">
                 <li class="nav-item">
-                    <a class="nav-link text-corporate-emphasis active" id="resumen-tab" data-bs-toggle="tab" href="#resumen" role="tab"><i class="fa-solid fa-file-invoice me-1"></i> Hoja de Vida</a>
+                    <a class="nav-link text-corporate-emphasis active" id="resumen-tab" data-bs-toggle="tab" href="#resumen" role="tab"><i class="fa-solid fa-file-invoice me-1"></i> <span class="d-none d-sm-inline">Hoja de Vida</span></a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-corporate-emphasis" id="docs-tab" data-bs-toggle="tab" href="#docs" role="tab"><i class="fa-solid fa-folder-open me-1"></i> Documentación</a>
+                    <a class="nav-link text-corporate-emphasis" id="docs-tab" data-bs-toggle="tab" href="#docs" role="tab"><i class="fa-solid fa-folder-open me-1"></i><span class="d-none d-sm-inline"> Documentación</span></a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-corporate-emphasis" id="mantenimiento-tab" data-bs-toggle="tab" href="#mantenimiento" role="tab"><i class="fa-solid fa-screwdriver-wrench me-1"></i> Mantenimientos</a>
+                    <a class="nav-link text-corporate-emphasis" id="mantenimiento-tab" data-bs-toggle="tab" href="#mantenimiento" role="tab"><i class="fa-solid fa-screwdriver-wrench me-1"></i><span class="d-none d-sm-inline"> Mantenimientos</span></a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-corporate-emphasis" id="viajes-tab" data-bs-toggle="tab" href="#viajes" role="tab"><i class="fa-solid fa-route me-1"></i> Viajes</a>
+                    <a class="nav-link text-corporate-emphasis" id="viajes-tab" data-bs-toggle="tab" href="#viajes" role="tab"><i class="fa-solid fa-route me-1"></i><span class="d-none d-sm-inline"> Viajes</span></a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-corporate-emphasis" id="fotos-tab" data-bs-toggle="tab" href="#fotos" role="tab"><i class="fa-solid fa-image me-1"></i> Galería</a>
+                    <a class="nav-link text-corporate-emphasis" id="fotos-tab" data-bs-toggle="tab" href="#fotos" role="tab"><i class="fa-solid fa-image me-1"></i><span class="d-none d-sm-inline"> Galería</span></a>
                 </li>
             </ul>
         </div>
