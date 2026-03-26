@@ -92,21 +92,38 @@ self.addEventListener('fetch', event => {
 });
 
 self.addEventListener('push', function(event) {
-    if (!(self.notificationPermission === 'granted')) return;
+    console.log('[Service Worker] Notificación Push recibida:', event.data.text());
+    
+    // CORRECCIÓN: Usar Notification.permission (con fallback por si no existe en el scope)
+    const permission = self.Notification ? self.Notification.permission : 'default';
+    if (permission !== 'granted') {
+        console.warn('[Service Worker] Permiso de notificaciones no concedido.');
+        return;
+    }
 
-    const data = event.data.json();
+    let data = {};
+    try {
+        data = event.data.json();
+    } catch (e) {
+        data = { title: 'TuCombustible', body: event.data.text(), url: appBase };
+    }
+
     const options = {
-        body: data.body,
-        icon: '/img/icon-192x192.png', // Tu icono ya corregido a 192px
-        badge: '/img/logomini.png',  // Icono pequeño para la barra de estado
+        body: data.body || 'Tienes una nueva actualización.',
+        icon: data.icon || '/img/icon-192x192.png',
+        badge: '/img/logomini.png', 
         vibrate: [100, 50, 100],
-        data: { url: data.url }        // URL para abrir al hacer clic
+        data: { 
+            // Laravel envía la URL a veces dentro de data.data.url o data.url
+            url: (data.data && data.data.url) ? data.data.url : (data.url || appBase) 
+        }
     };
 
     event.waitUntil(
-        self.registration.showNotification(data.title, options)
+        self.registration.showNotification(data.title || 'TuCombustible', options)
     );
 });
+
 
 // Abrir el sistema al tocar la notificación
 self.addEventListener('notificationclick', function(event) {
