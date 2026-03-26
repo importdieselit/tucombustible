@@ -3,25 +3,36 @@
 
 @section('content')
 <div class="row mb-4">
-    <div class="col-12 d-flex justify-content-between align-items-center bg-white p-3 shadow-sm rounded">
-        <div>
-            {{-- Título en mayúsculas y negrita según el estándar --}}
-            <h4 class="fw-bold mb-0 text-uppercase">Control de Flota | Dashboard</h4>
-            <small class="text-muted">Estado operativo de la flota en tiempo real</small>
-        </div>
-        <div class="btn-group shadow-sm">
-            <a href="{{ route('vehiculos.list') }}" class="btn btn-sm btn-outline-dark">
-                <i class="fas fa-list me-2"></i> Listado Completo
-            </a>
-            <a href="{{ route('vehiculos.reporte.disponibilidad') }}" class="btn btn-sm btn-dark">
-                <i class="fas fa-file-excel me-2"></i> Reporte de Disponibilidad
-            </a>
-            <a href="{{ route('mantenimiento.planificacion.index') }}" class="btn btn-sm btn-dark">
-                <i class="fas fa-wrench me-2"></i> Planificar
-            </a>
-            <a href="{{ route('vehiculos.create') }}" class="btn btn-sm text-white" style="background-color: #f2A435;">
-                <i class="fas fa-plus me-2"></i> Nuevo Vehículo
-            </a>
+    <div class="col-12 bg-white p-3 shadow-sm rounded">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+            
+            <div class="mb-3 mb-md-0 text-center text-md-start">
+                <h4 class="fw-bold mb-0 text-uppercase" style="font-size: 1.1rem;">Control de Flota | Dashboard</h4>
+                <small class="text-muted d-block">Estado operativo en tiempo real</small>
+            </div>
+
+            <div class="row g-2 g-md-1 row-cols-2 row-cols-md-auto justify-content-md-end">
+                <div class="col">
+                    <a href="{{ route('vehiculos.list') }}" class="btn btn-sm btn-outline-dark w-100 h-100 d-flex align-items-center justify-content-center">
+                        <i class="fas fa-list me-1 me-md-2"></i> <span class="d-none d-sm-inline">Listado</span>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="{{ route('vehiculos.reporte.disponibilidad') }}" class="btn btn-sm btn-dark w-100 h-100 d-flex align-items-center justify-content-center text-nowrap">
+                        <i class="fas fa-file-excel me-1 me-md-2"></i> <span class="d-none d-sm-inline">Reporte</span>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="{{ route('mantenimiento.planificacion.index') }}" class="btn btn-sm btn-dark w-100 h-100 d-flex align-items-center justify-content-center">
+                        <i class="fas fa-wrench me-1 me-md-2"></i> Planificar
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="{{ route('vehiculos.create') }}" class="btn btn-sm text-white w-100 h-100 d-flex align-items-center justify-content-center" style="background-color: #f2A435;">
+                        <i class="fas fa-plus me-1 me-md-2"></i> Nuevo
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </div>
