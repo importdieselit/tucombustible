@@ -206,8 +206,8 @@
         @endforeach
     </ul>
     <button id="install-button" class="btn btn-orange shadow-sm px-4 text-white fw-bold" style="display: none;">
-    <i class="bi bi-download me-2"></i> INSTALAR APP
-</button>
+            <i class="fa fa-download me-2"></i> INSTALAR APP
+    </button>
 </div>
 
 <script>
@@ -254,6 +254,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     console.log('Usuario instaló TuCombustible');
                 }
                 deferredPrompt = null;
+                $('#install-button').hide(); 
             }
         });
 });
