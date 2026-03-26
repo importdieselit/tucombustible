@@ -6,6 +6,10 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use NotificationChannels\WebPush\WebPushMessage;
+use NotificationChannels\WebPush\WebPushChannel;
+use App\Models\Orden;
+
 
 class OrdenTrabajoCreada extends Notification
 {
@@ -16,9 +20,11 @@ class OrdenTrabajoCreada extends Notification
      *
      * @return void
      */
-    public function __construct()
+    protected $orden;
+
+    public function __construct($orden)
     {
-        //
+        $this->orden = $orden;
     }
 
     /**
@@ -29,9 +35,18 @@ class OrdenTrabajoCreada extends Notification
      */
     public function via($notifiable)
     {
-        return ['mail'];
+        return [WebPushChannel::class]; // Usar canal WebPush
     }
 
+    public function toWebPush($notifiable, $notification)
+    {
+        return (new WebPushMessage)
+            ->title('🛠️ Nueva Orden de Trabajo')
+            ->icon('/img/icon-192x192.png') // Tu icono corporativo
+            ->body("Se ha generado la Orden #{$this->orden->id} para la unidad {$this->orden->vehiculo->flota}")
+            ->data(['url' => url('/ordenes/' . $this->orden->id)])
+            ->badge('/img/icon-badge.png'); // El logo pequeño para la barra superior
+    }
     /**
      * Get the mail representation of the notification.
      *
@@ -46,16 +61,6 @@ class OrdenTrabajoCreada extends Notification
                     ->line('Thank you for using our application!');
     }
 
-    
-    public function toWebPush($notifiable, $notification)
-    {
-        return (new WebPushMessage)
-            ->title('⚠️ Nueva Orden de Trabajo')
-            ->icon('/img/icon-192x192.png') // El icono que ya corregimos
-            ->body("Se ha generado la Orden #{$this->orden->id} para el vehículo {$this->orden->vehiculo->placa}")
-            ->action('Ver Orden', 'view_order')
-            ->data(['url' => route('ordenes.show', $this->orden->id)]);
-    }
     /**
      * Get the array representation of the notification.
      *

@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\ClienteController as AdminClienteController;
 use App\Http\Controllers\Admin\PedidoAdminController;
 use App\Http\Controllers\ClienteController as PortalClienteController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Notifications\OrdenTrabajoCreada;
+use App\Models\User;
 use App\Http\Controllers\{
     DashboardController, VehiculoController, MarcaController, ModeloController,
     OrdenController, TanqueController, MovimientoCombustibleController,
@@ -22,6 +24,15 @@ use App\Http\Controllers\{
 /* --- Rutas Públicas y Auth --- */
 Auth::routes(['reset' => false]);
 Route::get('/', function () { return redirect()->route('login'); });
+
+Route::get('/test-push', function () {
+    $user = User::find(1); // Elígete a ti mismo
+    
+    // Esto enviará la notificación al instante a todos tus dispositivos suscritos
+    $user->notify(new OrdenTrabajoCreada()); 
+    
+    return "Notificación enviada a " . $user->nombre;
+});
 
 /**
  * RECUPERACIÓN DE CONTRASEÑA
