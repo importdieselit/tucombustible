@@ -209,14 +209,19 @@
             <i class="fa fa-download me-2"></i> INSTALAR APP
     </button>
     <div class="card mt-3">
-    <div class="card-body text-center">  
-        <button id="btn-push" class="btn btn-primary shadow-sm px-4">
-            <i class="fa fa-bell"></i> <span id="btn-text">Activar Notificaciones</span>
-        </button>
-        
-        <div id="push-status" class="small mt-2 text-muted"></div>
+    <div class="card-body text-center p-3">
+        <div id="push-container" class="d-flex flex-column align-items-center justify-content-center" style="min-height: 90px;">
+            
+            <h5 id="push-title" class="card-title h6 mb-2">Notificaciones en tiempo real</h5>
+            
+            <button id="btn-push" class="btn btn-primary shadow-sm px-4">
+                <i class="bi bi-bell"></i> <span id="btn-text">Activar Notificaciones</span>
+            </button>
+            
+            <div id="push-status" class="mt-2"></div>
+        </div>
     </div>
-</div>
+    </div>
 </div>
 
 <script>
@@ -306,14 +311,45 @@ document.addEventListener('DOMContentLoaded', function () {
     // 3. Manejo de la interfaz
     function actualizarInterfaz(estado) {
         if (estado === 'suscrito') {
-            btnPush.classList.replace('btn-primary', 'btn-success');
-            btnText.innerText = 'Notificaciones Activas';
-            btnPush.disabled = true;
-            pushStatus.innerHTML = '<span class="text-success">✔ Este dispositivo está vinculado.</span>';
+            const pushTitle = document.getElementById('push-title');
+    const pushContainer = document.getElementById('push-container');
+            // 1. Ocultar el título y el botón original
+            pushTitle.classList.add('d-none');
+            btnPush.classList.add('d-none');
+            
+            // 2. Limpiar cualquier mensaje de error previo
+            pushStatus.innerHTML = '';
+
+            // 3. Crear el indicador visual: Campanita Verde + Check
+            // Usamos Flexbox para centrarlo perfectamente en la pantalla del Redmi
+            pushStatus.innerHTML = `
+                <div class="d-flex align-items-center justify-content-center text-success position-relative" 
+                    style="font-size: 2.5rem; width: 80px; height: 80px;">
+                    
+                    <i class="bi bi-bell-fill"></i>
+                    
+                    <i class="bi bi-check-circle-fill position-absolute bg-white rounded-circle shadow-sm" 
+                    style="font-size: 1.2rem; bottom: 5px; right: 5px; padding: 1px;"></i>
+                </div>
+                <div class="small text-muted mt-1 text-center">Dispositivo Vinculado</div>
+            `;
+            
+            // Ajustamos el contenedor para que el icono quede centrado
+            pushContainer.classList.remove('flex-column');
+            pushContainer.classList.add('justify-content-center');
+
         } else if (estado === 'error') {
+            // En caso de error, mostramos el botón y un mensaje de advertencia
+            pushTitle.classList.remove('d-none');
+            btnPush.classList.remove('d-none');
             btnPush.disabled = false;
-            btnText.innerText = 'Reintentar Activación';
-            pushStatus.innerHTML = '<span class="text-danger">⚠ Error al vincular. Intenta de nuevo.</span>';
+            btnPush.innerText = 'Reintentar';
+            
+            pushStatus.innerHTML = `
+                <div class="text-danger small fw-bold mt-2">
+                    <i class="bi bi-exclamation-triangle"></i> Error al vincular. Intenta de nuevo.
+                </div>
+            `;
         }
     }
 
