@@ -22,18 +22,12 @@ class PedidoService
     /**
      * Lista pedidos según jerarquía (Padre/Sucursal)
      */
-    public function listarPedidosParaUsuario($user)
+    public function listarPedidosParaUsuario($cliente)
     {
-        $cliente = Cliente::find($user->cliente_id);
-        if (!$cliente) return collect();
-
+        // Creamos un array con el ID del cliente actual
         $ids = [$cliente->id];
 
-        if (is_null($cliente->parent)) {
-            $sucursalesIds = Cliente::where('parent', $cliente->id)->pluck('id')->toArray();
-            $ids = array_merge($ids, $sucursalesIds);
-        }
-
+        // LLAMADA AL REPOSITORIO USANDO EL ARRAY DE IDS
         return $this->repository->getPedidosPorClientes($ids);
     }
 

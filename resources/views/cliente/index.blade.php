@@ -2,6 +2,13 @@
 @section('title', 'Mi Portal - ImporDiesel')
 
 @section('content')
+@if($viendoSucursal)
+    <div class="mb-4">
+        <a href="{{ route('portal.clientes.index') }}" class="bg-red-600 text-white px-4 py-2 rounded font-black text-[10px] uppercase shadow-md hover:bg-red-700">
+            <i class="fas fa-arrow-left mr-2"></i> Salir del modo sucursal (Volver a mi perfil)
+        </a>
+    </div>
+@endif
 <div class="container mx-auto py-6 px-4">
 
     {{-- ENCABEZADO --}}
@@ -166,6 +173,13 @@
                             </div>
                             <span class="text-[9px] font-black text-gray-500 block uppercase">Paso {{ $suc->registro_paso }}/5</span>
                         </td>
+                        {{-- Dentro de tu @foreach($sucursales as $suc) --}}
+                        <td class="px-6 py-3 text-center">
+                            <a href="{{ route('portal.clientes.index', ['sucursal_id' => $suc->id]) }}" 
+                            class="bg-orange-impordiesel text-white px-3 py-1 rounded text-[10px] font-black uppercase hover:bg-black transition">
+                                Ver Detalle <i class="fas fa-chevron-right ml-1"></i>
+                            </a>
+                        </td>
                     </tr>
                     @endforeach
                 </tbody>
@@ -173,6 +187,62 @@
         </div>
     </div>
     @endif
+
+    {{-- HISTORIAL DE PEDIDOS --}}
+    <div class="mb-8">
+        <h2 class="text-sm font-black uppercase text-gray-700 tracking-widest mb-4">
+            <span class="text-orange-impordiesel">|</span> Historial de Pedidos Recientes
+        </h2>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="bg-gray-industrial text-white text-[10px] font-black uppercase tracking-widest">
+                        <th class="px-6 py-3">ID Pedido</th>
+                        <th class="px-6 py-3">Tipo de Combustible</th>
+                        <th class="px-6 py-3 text-center">Litros Solicitados</th>
+                        <th class="px-6 py-3 text-center">Estatus</th>
+                        <th class="px-6 py-3 text-center">Fecha</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @forelse($pedidos as $pedido)
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-3 font-black text-gray-700">
+                            #{{ str_pad($pedido->id, 5, '0', STR_PAD_LEFT) }}
+                        </td>
+                        <td class="px-6 py-3 font-bold text-gray-600 uppercase text-[10px]">
+                            Combustible
+                        </td>
+                        <td class="px-6 py-3 text-center font-black text-gray-800">
+                            {{-- CORRECCIÓN: cantidad_solicitada --}}
+                            {{ number_format($pedido->cantidad_solicitada, 0, ',', '.') }} Lts
+                        </td>
+                        <td class="px-6 py-3 text-center">
+                            {{-- CORRECCIÓN: Usar los accessors del modelo Pedido --}}
+                            <span class="px-2 py-1 rounded text-[9px] font-black uppercase border" 
+                                style="background-color: {{ $pedido->estado_color }}20; color: {{ $pedido->estado_color }}; border-color: {{ $pedido->estado_color }}40;">
+                                {{ $pedido->estado_text }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-3 text-center text-gray-500 font-bold">
+                            {{-- CORRECCIÓN: fecha_solicitud --}}
+                            {{ $pedido->fecha_solicitud ? $pedido->fecha_solicitud->format('d/m/Y') : 'N/A' }}
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center">
+                            <i class="fas fa-box-open text-gray-200 fa-3x mb-3"></i>
+                            <p class="text-gray-400 font-black uppercase text-[10px] tracking-widest">
+                                No se encontraron pedidos registrados.
+                            </p>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     <div class="text-center mt-8">
         <small class="text-gray-400 uppercase tracking-widest text-xs font-black">

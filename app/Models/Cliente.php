@@ -109,6 +109,11 @@ class Cliente extends Model
         return $this->hasOne(User::class, 'cliente_id');
     }
 
+    public function pedidos()
+    {
+        return $this->hasMany(Pedido::class, 'cliente_id');
+    }
+
     public function documentos()
     {
         return $this->hasMany(Documento::class, 'cliente_id');

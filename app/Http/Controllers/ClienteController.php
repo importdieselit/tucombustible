@@ -76,35 +76,47 @@ class ClienteController extends Controller
     // DASHBOARD DEL CLIENTE
     // -------------------------------------------------------
 
-    public function index()
+    public function index(Request $request)
     {
-        $user    = Auth::user();
-        $cliente = $user->cliente;
-
-        if (!$cliente) {
+        $user = Auth::user();
+        
+        // Verificación de seguridad básica
+        if (!$user->cliente) {
             Auth::logout();
-            return redirect()->route('login')
-                ->with('error', 'No tiene un expediente asociado a su cuenta.');
+            return redirect()->route('login')->with('error', 'No tiene un expediente asociado.');
         }
 
-        $data = $this->dashboardService->getDashboardData($user);
+        // 1. Capturamos el ID de la sucursal si viene en la URL
+        $sucursalId = $request->query('sucursal_id');
 
-        // Cliente en proceso de registro
+        // 2. Llamamos al servicio (Asegúrate de haber actualizado la firma del método en el DashboardService)
+        $data = $this->dashboardService->getDashboardData($user, $sucursalId);
+
+        // 3. CARGA DE PEDIDOS (Usando el cliente que determinó el servicio: Padre o Hijo)
+        if (isset($data['cliente'])) {
+            // Aquí $data['cliente'] ya es el HIJO si venimos por modo espejo
+            $data['pedidos'] = app(\App\Services\PedidoService::class)
+                                ->listarPedidosParaUsuario($data['cliente']);
+        }
+
+        // 4. SOLUCIÓN AL ERROR: Definimos la variable SIEMPRE
+        // Si hay un sucursal_id en la URL, es true. Si no, es false.
+        $data['viendoSucursal'] = $request->filled('sucursal_id');
+
+        // Manejo de vistas según el perfil retornado por el servicio
         if ($data['perfil'] === 'cliente_en_registro') {
             return view('cliente.en_proceso', $data);
         }
 
-        // Cliente rechazado
         if ($data['perfil'] === 'cliente_rechazado') {
             return view('cliente.rechazado', $data);
         }
 
-        // Cliente inactivo
         if ($data['perfil'] === 'cliente_inactivo') {
             return view('cliente.inactivo', $data);
         }
 
-        // Cliente aprobado (padre o sucursal)
+        // Retornamos la vista principal con todas las variables definidas
         return view('cliente.index', $data);
     }
 

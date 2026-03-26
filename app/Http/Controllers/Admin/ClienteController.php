@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Repositories\PedidoRepository;
 use App\Services\ClienteService;
 use App\Services\ClienteLubricanteService;
 use App\Models\Cliente;
@@ -14,13 +15,16 @@ class ClienteController extends Controller
 {
     protected ClienteService $clienteService;
     protected ClienteLubricanteService $lubricanteService;
+    protected PedidoRepository $repository;
 
     public function __construct(
         ClienteService $clienteService,
-        ClienteLubricanteService $lubricanteService
+        ClienteLubricanteService $lubricanteService,
+        PedidoRepository $repository
     ) {
         $this->clienteService    = $clienteService;
         $this->lubricanteService = $lubricanteService;
+        $this->repository        = $repository;
     }
 
     // -------------------------------------------------------
@@ -32,6 +36,18 @@ class ClienteController extends Controller
         $filtros = $request->only(['search', 'status', 'tipo']);
         $data    = $this->clienteService->obtenerDashboardAdmin($filtros);
 
+        // NUEVO: Filtro para la lista de pedidos
+        $statusPedido = $request->query('status_pedido');
+        
+        $queryPedidos = \App\Models\Pedido::with(['cliente'])
+            ->orderBy('fecha_solicitud', 'desc');
+
+        if ($statusPedido !== null && $statusPedido !== '') {
+            $queryPedidos->where('estado', $statusPedido);
+        }
+
+        $ultimosPedidos = $queryPedidos->get(); // Traemos todos para el scroll o paginate(50)
+
         return view('admin.cliente.index', [
             'clientes'       => $data['clientes'],
             'stats'          => $data['stats'],
@@ -39,6 +55,8 @@ class ClienteController extends Controller
             'filtros'        => $filtros,
             'rankingMayores' => $this->clienteService->getRankingCuposMayores(),
             'rankingMenores' => $this->clienteService->getRankingCuposMenores(),
+            'ultimosPedidos' => $ultimosPedidos,
+            'statusPedido'   => $statusPedido,
         ]);
     }
 
@@ -50,8 +68,21 @@ class ClienteController extends Controller
     {
         $cliente          = $this->clienteService->obtenerExpediente($id);
         $tiposCombustible = TipoCombustible::all();
+        $pedidos = $this->repository->getPedidosPorClientes([$id]);
 
-        return view('admin.cliente.show', compact('cliente', 'tiposCombustible'));
+        return view('admin.cliente.show', compact('cliente', 'tiposCombustible', 'pedidos'));
+    }
+
+    // -------------------------------------------------------
+    // LISTADO GENERAL DE PEDIDOS (ADMIN)
+    // -------------------------------------------------------
+
+    public function listaGeneralPedidos()
+    {
+        // Usamos el método que ya tienes en el repositorio
+        $pedidos = $this->repository->getAllPedidosAdmin(30);
+
+        return view('admin.cliente.pedidos_general', compact('pedidos'));
     }
 
     // -------------------------------------------------------

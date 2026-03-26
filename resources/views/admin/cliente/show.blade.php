@@ -122,6 +122,97 @@
                 </div>
             </div>
 
+            {{-- HISTORIAL DE PEDIDOS --}}
+            <div class="mb-8">
+                <h2 class="text-sm font-black uppercase text-gray-700 tracking-widest mb-4">
+                    <span class="text-orange-impordiesel">|</span> Historial de Pedidos Recientes
+                </h2>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="bg-gray-industrial text-white text-[10px] font-black uppercase tracking-widest">
+                                <th class="px-6 py-3">ID Pedido</th>
+                                <th class="px-6 py-3">Tipo de Combustible</th>
+                                <th class="px-6 py-3 text-center">Litros Solicitados</th>
+                                <th class="px-6 py-3 text-center">Estatus</th>
+                                <th class="px-6 py-3 text-center">Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @forelse($pedidos as $pedido)
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-6 py-3 font-black text-gray-700">
+                                    #{{ str_pad($pedido->id, 5, '0', STR_PAD_LEFT) }}
+                                </td>
+                                <td class="px-6 py-3 font-bold text-gray-600 uppercase text-[10px]">
+                                    Combustible
+                                </td>
+                                <td class="px-6 py-3 text-center font-black text-gray-800">
+                                    {{-- CORRECCIÓN: cantidad_solicitada --}}
+                                    {{ number_format($pedido->cantidad_solicitada, 0, ',', '.') }} Lts
+                                </td>
+                                <td class="px-6 py-3 text-center">
+                                    {{-- CORRECCIÓN: Usar los accessors del modelo Pedido --}}
+                                    <span class="px-2 py-1 rounded text-[9px] font-black uppercase border" 
+                                        style="background-color: {{ $pedido->estado_color }}20; color: {{ $pedido->estado_color }}; border-color: {{ $pedido->estado_color }}40;">
+                                        {{ $pedido->estado_text }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-3 text-center text-gray-500 font-bold">
+                                    {{-- CORRECCIÓN: fecha_solicitud --}}
+                                    {{ $pedido->fecha_solicitud ? $pedido->fecha_solicitud->format('d/m/Y') : 'N/A' }}
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="5" class="px-6 py-12 text-center">
+                                    <i class="fas fa-box-open text-gray-200 fa-3x mb-3"></i>
+                                    <p class="text-gray-400 font-black uppercase text-[10px] tracking-widest">
+                                        No se encontraron pedidos registrados.
+                                    </p>
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {{-- --- INICIO BLOQUE SUCURSALES --- --}}
+            @if($cliente->es_padre)
+            <div class="mt-4 bg-white rounded border-2 border-gray-300 shadow-md overflow-hidden">
+                <div class="bg-gray-800 p-3">
+                    <h5 class="text-[10px] font-black uppercase text-orange-impordiesel italic">
+                        <i class="fas fa-sitemap mr-2"></i> Sucursales Vinculadas
+                    </h5>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-[10px] font-black uppercase">
+                        <thead class="bg-gray-100 border-b border-gray-300">
+                            <tr>
+                                <th class="p-3 text-left">Razón Social</th>
+                                <th class="p-3 text-right">Expediente</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($cliente->sucursales as $sucursal)
+                            <tr class="border-b border-gray-200 hover:bg-orange-50">
+                                <td class="p-3 text-gray-700">{{ $sucursal->nombre }}</td>
+                                <td class="p-3 text-right">
+                                    <a href="{{ route('clientes.show', $sucursal->id) }}" 
+                                    class="bg-gray-industrial text-white px-2 py-1 rounded hover:bg-black transition">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            @endif
+            {{-- --- FIN BLOQUE SUCURSALES --- --}}
+
             {{-- PLACAS Y CHOFERES --}}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 no-print">
 

@@ -14,10 +14,10 @@ class PedidoRepository
      */
     public function getPedidosPorClientes(array $clienteIds, $limit = 15)
     {
+        // Importante: Asegúrate de que 'cliente_id' sea el nombre de la columna en tu tabla pedidos
         return Pedido::whereIn('cliente_id', $clienteIds)
-            ->with(['cliente'])
-            ->orderBy('created_at', 'desc')
-            ->paginate($limit);
+            ->orderBy('fecha_solicitud', 'desc')
+            ->get(); // Cámbialo a get() para probar; si funciona, luego vuelves a paginate()
     }
 
     /**
