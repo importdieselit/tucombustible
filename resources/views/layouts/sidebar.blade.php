@@ -324,14 +324,14 @@ document.addEventListener('DOMContentLoaded', function () {
             // Usamos Flexbox para centrarlo perfectamente en la pantalla del Redmi
             pushStatus.innerHTML = `
                 <div class="d-flex align-items-center justify-content-center text-success position-relative" 
-                    style="font-size: 2.5rem; width: 80px; height: 80px;">
+                    style="font-size: 1.2rem; width: 20px; height: 20px;">
                     
                     <i class="fa fa-bell"></i>
                     
                     <i class="fa fa-check-circle position-absolute bg-white rounded-circle shadow-sm" 
-                    style="font-size: 1.2rem; bottom: 5px; right: 5px; padding: 1px;"></i>
+                    style="font-size: 0.5rem; bottom: 3px; right: 3px; padding: 1px;"></i>
                 </div>
-                <div class="small text-muted mt-1 text-center">Dispositivo Vinculado</div>
+                <div class="small text-muted mt-1 text-center">Notificaciones activas</div>
             `;
             
             // Ajustamos el contenedor para que el icono quede centrado
