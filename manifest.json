@@ -10,7 +10,7 @@
     "icons": [
         {
             "src": "https://tucombustible.com.ve/img/icon-192x192.png",
-            "sizes": "192x192",
+            "sizes": "193×184",
             "type": "image/png",
             "purpose": "any maskable"
         },
@@ -18,7 +18,7 @@
             "src": "https://tucombustible.com.ve/img/icon-512x512.png",
             "sizes": "512x513",
             "type": "image/png",
-            "purpose": "any"
+            "purpose": "any maskable"
         }   
     ]
 }
