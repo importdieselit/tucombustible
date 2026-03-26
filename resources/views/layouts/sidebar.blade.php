@@ -209,8 +209,8 @@
             <i class="fa fa-download me-2"></i> INSTALAR APP
     </button>
     <div class="card mt-3">
-    <div class="card-body text-center p-3">
-        <div id="push-container" class="d-flex flex-column align-items-center justify-content-center" style="min-height: 90px;">
+    <div class="card-body text-center p-2">
+        <div id="push-container" class="d-flex flex-column align-items-center justify-content-center" style="min-height: 20px;">
             
             <h5 id="push-title" class="card-title h6 mb-2">Notificaciones en tiempo real</h5>
             
@@ -323,7 +323,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // 3. Crear el indicador visual: Campanita Verde + Check
             // Usamos Flexbox para centrarlo perfectamente en la pantalla del Redmi
             pushStatus.innerHTML = `
-                <div class="d-flex align-items-center justify-content-center text-success position-relative" 
+                <div class="d-inline align-items-center justify-content-center text-success position-relative" 
                     style="font-size: 1.2rem; width: 20px; height: 20px;">
                     
                     <i class="fa fa-bell"></i>
@@ -331,7 +331,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <i class="fa fa-check-circle position-absolute bg-white rounded-circle shadow-sm" 
                     style="font-size: 0.5rem; bottom: 3px; right: 3px; padding: 1px;"></i>
                 </div>
-                <div class="small text-muted mt-1 text-center">Notificaciones activas</div>
+                <div class="small text-muted mt-1 text-center d-inline"> Notificaciones activas</div>
             `;
             
             // Ajustamos el contenedor para que el icono quede centrado
