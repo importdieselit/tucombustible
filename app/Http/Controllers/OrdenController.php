@@ -41,7 +41,7 @@ use App\Models\Proveedor;
 class OrdenController extends BaseController
 {
 
-    use GenerateAlerts, OrdenTrabajoCreada;
+    use GenerateAlerts;
 
     protected $fcmService;
     protected $telegramService;
@@ -674,6 +674,8 @@ class OrdenController extends BaseController
         ]);
 
         $userId = Auth::id();
+        $user = User::find($userId);
+
         $result = DB::transaction(function () use ($request, $userId) {
             // 2. Carga inicial de datos para evitar consultas repetitivas
             $suministros = json_decode($request->supplies_json, true) ?? [];
@@ -796,6 +798,8 @@ class OrdenController extends BaseController
             // Telegram Principal
             $msg = "📝 *Nueva Orden {$orden->nro_orden}*\nVehículo: {$flota}\nFalla: {$orden->descripcion_1}";
             $this->telegramService->sendMessage($msg);
+
+            $user->notify(new OrdenTrabajoCreada($orden));
 
             // Telegram Compras (Si aplica)
             if ($compra) {

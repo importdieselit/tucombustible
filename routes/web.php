@@ -30,7 +30,10 @@ Route::get('/test-push', function () {
     $user = User::find(1); // Tu usuario
     
     // Buscamos la última orden para tener datos reales que mostrar
-    $orden = Orden::latest()->first(); 
+    $orden = Orden::latest()->first()->with('vehiculo')->first();
+    
+    if (!$orden) {
+); 
 
     if (!$orden) {
         return "No hay órdenes en la base de datos para probar.";
@@ -64,6 +67,7 @@ Route::middleware(['auth'])->group(function () {
      * ya que es el destino del middleware.
      */
     Route::post('/notifications/subscribe', [NotificationController::class, 'subscribe']);
+    Route::get('/notifications/subscribe/get', [NotificationController::class, 'subscribe']);
     Route::get('/password/change', [UserController::class, 'showChangePassword'])->name('password.change');
     Route::post('/password/update', [UserController::class, 'updatePassword'])->name('password.update');
     Route::put('/depositos', [DepositoController::class, 'index'])->name('depositos');
