@@ -30,10 +30,7 @@ Route::get('/test-push', function () {
     $user = User::find(1); // Tu usuario
     
     // Buscamos la última orden para tener datos reales que mostrar
-    $orden = Orden::latest()->first()->with('vehiculo')->first();
-    
-    if (!$orden) {
-); 
+    $orden = Orden::with('vehiculo')->latest()->first(); 
 
     if (!$orden) {
         return "No hay órdenes en la base de datos para probar.";
