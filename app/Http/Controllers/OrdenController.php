@@ -623,6 +623,47 @@ class OrdenController extends BaseController
         return back()->with('success', 'Insumo agregado correctamente.');
     }
 
+    public function addManualSupply(Request $request, $id)
+    {
+        $orden = Orden::findOrFail($id);
+        $hoy = now()->format('Y-m-d');
+
+        // 1. Buscar si ya existe una solicitud de compra hoy para esta orden de trabajo
+        $compra = SuministroCompra::where('orden_id', $id)
+                    ->whereDate('created_at', $hoy)
+                    ->where('estatus', 2) // Solo si sigue abierta/pendiente
+                    ->first();
+
+        // 2. Si no existe, la creamos
+        if (!$compra) {
+            $compra = SuministroCompra::create([
+                'orden_id' => $id,
+                'observacion' => $request->supplies_observations ?? 'Suministro manual vía Dashboard',
+                'usuario_solicitante_id' => auth()->id(),
+                'estatus' => 2,
+                'nro_requerimiento' => 'REQ-' . strtoupper(Str::random(5)), // Generar un nro si es nueva
+            ]);
+        }
+
+        // 3. Crear el detalle
+        $detalle = $compra->detalles()->create([
+            'inventario_id' => null, // Es manual, no catalogado
+            'descripcion' => $request->descripcion,
+            'cantidad_solicitada' => $request->cantidad,
+            'estatus' => 2, // Solicitado
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Suministro añadido al requerimiento #' . $compra->id,
+            'data' => [
+                'id' => $detalle->id,
+                'cantidad' => $detalle->cantidad_solicitada,
+                'descripcion' => $detalle->descripcion
+            ]
+        ]);
+    }
+
     public function removeInsumo($id)
     {
         // Lógica para eliminar un insumo de la orden

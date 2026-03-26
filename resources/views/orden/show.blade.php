@@ -498,15 +498,15 @@
             <div class="modal-body bg-light">
                 <div class="mb-3">
                     <label class="form-label">Descripción del Repuesto</label>
-                    <input type="text" class="form-control" id="manual-descripcion" placeholder="Ej: Tornillo grado 8 1/2 pulgada">
+                    <input type="text" class="form-control" name="descripcion" id="manual-descripcion" placeholder="Ej: Tornillo grado 8 1/2 pulgada">
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Cantidad Requerida</label>
-                    <input type="number" class="form-control text-end fw-bold" id="manual-cantidad" value="1" min="1">
+                    <input type="number" class="form-control text-end fw-bold" name="cantidad" id="manual-cantidad" value="1" min="1">
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-success w-100 fw-bold" id="addManualSupplyBtn">AÑADIR A LA LISTA</button>
+                <button type="button" class="btn btn-success w-100 fw-bold"  id="addManualSupplyBtn">AÑADIR A LA LISTA</button>
             </div>
         </div>
     </div>
@@ -573,7 +573,7 @@
         }
     });
     document.addEventListener('DOMContentLoaded', function () {
-        const orderId = '{{ $orden->id }}';
+        const orderId = '{{ $item->id }}';
 
         let trabajosAsignados = {};
 
@@ -863,7 +863,28 @@
         }
     }
 
-    
+    // --- LÓGICA PARA SOLICITUD MANUAL A COMPRAS ---
+document.getElementById('addManualSupplyBtn').addEventListener('click', function() {
+    const orderId = '{{ $item->id }}';
+    const descripcion = document.getElementById('manual-descripcion').value;
+    const cantidad = document.getElementById('manual-cantidad').value;
+
+    // Validación básica
+    if (!descripcion || descripcion.trim() === "") {
+        Swal.fire('Error', 'Debe ingresar una descripción del repuesto.', 'error');
+        return;
+    }
+
+    if (cantidad <= 0) {
+        Swal.fire('Error', 'La cantidad debe ser mayor a 0.', 'error');
+        return;
+    }
+
+    apiCall(`/ordenes/${orderId}/add-manual-supply`, 'POST', {
+        descripcion: descripcion,
+        cantidad: cantidad
+    });
+});
 
     // Dentro de tu sección de scripts
     $(document).on('click', '.mark-recibido', function() {
