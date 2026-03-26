@@ -421,7 +421,6 @@
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://code.highcharts.com/highcharts.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -737,18 +736,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     // Simulación de datos de los 10 camiones con mayor consumo
-    const topVehiculos = [
-        { placa: 'XYZ-789', km: 120000, consumo: 32 },
-        { placa: 'JKL-321', km: 98000, consumo: 31 },
-        { placa: 'LMN-654', km: 110500, consumo: 30 },
-        { placa: 'QRS-987', km: 105000, consumo: 29 },
-        { placa: 'TUV-654', km: 99000, consumo: 29 },
-        { placa: 'DEF-456', km: 112000, consumo: 28 },
-        { placa: 'GHI-321', km: 101000, consumo: 28 },
-        { placa: 'MNO-852', km: 95000, consumo: 27 },
-        { placa: 'PQR-741', km: 97000, consumo: 27 },
-        { placa: 'STU-963', km: 93000, consumo: 26 }
-    ];
+    const topVehiculos = [];
 
     // Define el umbral de consumo excesivo
     const consumoExcesivo = 29;
