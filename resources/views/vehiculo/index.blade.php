@@ -312,7 +312,7 @@
                     <thead class="bg-light text-dark">
                         <tr>
                             <th class="ps-4 py-3 border-0 text-uppercase small" style="width: 120px;">Placa</th>
-                            <th class="py-3 border-0 text-uppercase small">Vehículo</th>
+                            <th class="py-3 border-0 text-uppercase small d-none d-sm-table-cell">Vehículo</th>
                             <th class="py-3 border-0 text-uppercase small text-center">Ruta</th>
                             <th class="py-3 border-0 text-uppercase small text-center " width="10%">Carga (Lts)</th>
                             <th class="pe-4 py-3 border-0 text-uppercase small text-end d-none d-sm-table-cell">Cliente Destino</th>
@@ -326,7 +326,7 @@
                                     {{ $v['placa'] }}
                                 </span>
                             </td>
-                            <td class="py-3">
+                            <td class="py-3 d-none d-sm-table-cell">
                                 <div class="d-flex flex-column">
                                     <span class="fw-bold text-dark">{{ $v['modelo'] }}</span>
                                     <small class="text-muted">{{ $v['marca'] }}</small>
