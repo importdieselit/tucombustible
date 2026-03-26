@@ -208,6 +208,15 @@
     <button id="install-button" class="btn btn-orange shadow-sm px-4 text-white fw-bold" style="display:none;">
             <i class="fa fa-download me-2"></i> INSTALAR APP
     </button>
+    <div class="card mt-3">
+    <div class="card-body text-center">  
+        <button id="btn-push" class="btn btn-primary shadow-sm px-4">
+            <i class="fa fa-bell"></i> <span id="btn-text">Activar Notificaciones</span>
+        </button>
+        
+        <div id="push-status" class="small mt-2 text-muted"></div>
+    </div>
+</div>
 </div>
 
 <script>
@@ -237,6 +246,81 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     });
+
+
+    const btnPush = document.getElementById('btn-push');
+    const btnText = document.getElementById('btn-text');
+    const pushStatus = document.getElementById('push-status');
+
+    // 1. Función para convertir la llave VAPID (Tu estándar de código reutilizable)
+    const urlBase64ToUint8Array = (base64String) => {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
+    };
+
+    // 2. Función principal de suscripción
+    async function suscribirDispositivo() {
+        try {
+            btnPush.disabled = true;
+            btnText.innerText = 'Procesando...';
+
+            const registration = await navigator.serviceWorker.ready;
+            const publicKey = "{{ env('VAPID_PUBLIC_KEY') }}";
+
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(publicKey)
+            });
+
+            // Enviar a Laravel (Usando Fetch para evitar líos con Axios)
+            const response = await fetch('/notifications/subscribe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(subscription)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                actualizarInterfaz('suscrito');
+            }
+        } catch (error) {
+            console.error("Error en suscripción:", error);
+            actualizarInterfaz('error');
+        }
+    }
+
+    // 3. Manejo de la interfaz
+    function actualizarInterfaz(estado) {
+        if (estado === 'suscrito') {
+            btnPush.classList.replace('btn-primary', 'btn-success');
+            btnText.innerText = 'Notificaciones Activas';
+            btnPush.disabled = true;
+            pushStatus.innerHTML = '<span class="text-success">✔ Este dispositivo está vinculado.</span>';
+        } else if (estado === 'error') {
+            btnPush.disabled = false;
+            btnText.innerText = 'Reintentar Activación';
+            pushStatus.innerHTML = '<span class="text-danger">⚠ Error al vincular. Intenta de nuevo.</span>';
+        }
+    }
+
+    // Evento del botón
+    btnPush.addEventListener('click', suscribirDispositivo);
+
+    // 4. Check inicial: ¿Ya está suscrito en este navegador?
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(reg => {
+            reg.pushManager.getSubscription().then(sub => {
+                if (sub) actualizarInterfaz('suscrito');
+            });
+        });
+    }
 
     
 });

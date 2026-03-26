@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Traits\HasPushSubscriptions;
+use App\Notifications\BienvenidaPush;
+use App\Models\User;
+
 
 
 class NotificationController extends Controller
@@ -25,9 +28,11 @@ class NotificationController extends Controller
         $key      = $request->keys['p256dh'];
         $token    = $request->keys['auth'];
 
-        // 2. Usar el método mágico del Trait HasPushSubscriptions
-        // Esto inserta o actualiza en la tabla 'push_subscriptions'
-        Auth::user()->updatePushSubscription($endpoint, $key, $token);
+        $user = auth()->user();
+        $user->updatePushSubscription($endpoint, $key, $token);
+
+        // 2. Enviar la bienvenida de inmediato
+        $user->notify(new BienvenidaPush());
 
         return response()->json([
             'success' => true,

@@ -113,6 +113,8 @@ self.addEventListener('push', function(event) {
         icon: data.icon || '/img/icon-192x192.png',
         badge: '/img/logomini.png', 
         vibrate: [100, 50, 100],
+        tag: 'orden-notificacion', // <--- Agrupa notificaciones
+        renotify: true,
         data: { 
             // Laravel envía la URL a veces dentro de data.data.url o data.url
             url: (data.data && data.data.url) ? data.data.url : (data.url || appBase) 
