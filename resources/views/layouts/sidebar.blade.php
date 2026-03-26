@@ -326,9 +326,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="d-flex align-items-center justify-content-center text-success position-relative" 
                     style="font-size: 2.5rem; width: 80px; height: 80px;">
                     
-                    <i class="bi bi-bell-fill"></i>
+                    <i class="fa fa-bell"></i>
                     
-                    <i class="bi bi-check-circle-fill position-absolute bg-white rounded-circle shadow-sm" 
+                    <i class="fa fa-check-circle position-absolute bg-white rounded-circle shadow-sm" 
                     style="font-size: 1.2rem; bottom: 5px; right: 5px; padding: 1px;"></i>
                 </div>
                 <div class="small text-muted mt-1 text-center">Dispositivo Vinculado</div>
