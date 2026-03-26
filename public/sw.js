@@ -81,3 +81,30 @@ self.addEventListener('fetch', event => {
             })
     );
 });
+
+
+self.addEventListener('push', function(event) {
+    console.log('[Service Worker] Notificación Push recibida:', event.data.text());
+   
+    if (!(self.notificationPermission === 'granted')) return;
+
+    const data = event.data.json();
+    const options = {
+        body: data.body,
+        icon: '/img/icon-192x192.png', // Tu icono ya corregido a 192px
+        badge: '/img/logomini.png',  // Icono pequeño para la barra de estado
+        vibrate: [100, 50, 100],
+        data: { url: data.url }        // URL para abrir al hacer clic
+    };
+
+    event.waitUntil(
+        self.registration.showNotification(data.title, options)
+    );
+});
+
+
+// Abrir el sistema al tocar la notificación
+self.addEventListener('notificationclick', function(event) {
+    event.notification.close();
+    event.waitUntil(clients.openWindow(event.notification.data.url));
+});
