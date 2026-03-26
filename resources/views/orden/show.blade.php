@@ -573,7 +573,7 @@
         }
     });
     document.addEventListener('DOMContentLoaded', function () {
-        const orderId = '{{ $item->id }}';
+        const orderId = '{{ $orden->id }}';
 
         let trabajosAsignados = {};
 
@@ -865,7 +865,7 @@
 
     // --- LÓGICA PARA SOLICITUD MANUAL A COMPRAS ---
 document.getElementById('addManualSupplyBtn').addEventListener('click', function() {
-    const orderId = '{{ $item->id }}';
+    const orderId = '{{ $orden->id }}';
     const descripcion = document.getElementById('manual-descripcion').value;
     const cantidad = document.getElementById('manual-cantidad').value;
 
