@@ -315,7 +315,7 @@
                             <th class="py-3 border-0 text-uppercase small">Vehículo</th>
                             <th class="py-3 border-0 text-uppercase small text-center">Ruta</th>
                             <th class="py-3 border-0 text-uppercase small text-center " width="10%">Carga (Lts)</th>
-                            <th class="pe-4 py-3 border-0 text-uppercase small text-end">Cliente Destino</th>
+                            <th class="pe-4 py-3 border-0 text-uppercase small text-end d-none d-sm-table-cell">Cliente Destino</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -341,7 +341,7 @@
                                     <span class="fw-bold text-primary">{{ $v['carga_total'] }}</span>
                                 </div>
                             </td>
-                            <td class="pe-4 py-3 text-end">
+                            <td class="pe-4 py-3 text-end d-none d-sm-table-cell">
                                 <span class="fw-bold text-dark"><i class="fa-solid fa-location-dot text-danger me-1"></i> {{ $v['cliente_destino'] }}</span>
                             </td>
                         </tr>
