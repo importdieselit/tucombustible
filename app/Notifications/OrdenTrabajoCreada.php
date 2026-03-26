@@ -44,8 +44,8 @@ class OrdenTrabajoCreada extends Notification
             ->title('🛠️ Nueva Orden de Trabajo')
             ->icon('/img/icon-192x192.png') // Tu icono corporativo
             ->body("Se ha generado la Orden #{$this->orden->id} para la unidad {$this->orden->vehiculoBelong->flota}")
-            ->data(['url' => url('/ordenes/' . $this->orden->id)])
-            ->badge('/img/icon-badge.png'); // El logo pequeño para la barra superior
+            ->data(['url' => url('/ordenes/show/' . $this->orden->id)])
+            ->badge('/img/logomini.png'); // El logo pequeño para la barra superior
     }
     /**
      * Get the mail representation of the notification.
