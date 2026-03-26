@@ -239,23 +239,43 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            // Mostrar un botón de "Instalar App" en tu interfaz
-            $('#install-button').show(); 
-        });
+    const installButton = document.getElementById('install-button');
 
-        $('#install-button').click(async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    console.log('Usuario instaló TuCombustible');
-                }
-                deferredPrompt = null;
-                $('#install-button').hide(); 
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // 1. Prevenir que el navegador muestre su propio aviso automático
+        e.preventDefault();
+        
+        // 2. Guardar el evento para dispararlo luego
+        deferredPrompt = e;
+        
+        // 3. Mostrar tu botón personalizado con estilo corporativo
+        installButton.style.display = 'inline-block';
+        
+        console.log('TuCombustible: Modo PWA detectado y listo para instalar.');
+    });
+
+    installButton.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            // 4. Mostrar el prompt de instalación nativo
+            deferredPrompt.prompt();
+            
+            // 5. Esperar la respuesta del usuario
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`Usuario respondió a la instalación: ${outcome}`);
+            
+            // 6. Limpiar y ocultar el botón si aceptó
+            if (outcome === 'accepted') {
+                installButton.style.display = 'none';
             }
-        });
+            
+            deferredPrompt = null;
+        }
+    });
+
+    // Opcional: Detectar si ya está instalada
+    window.addEventListener('appinstalled', (evt) => {
+        console.log('TuCombustible: Aplicación instalada con éxito.');
+        installButton.style.display = 'none';
+    });
 });
 </script>
