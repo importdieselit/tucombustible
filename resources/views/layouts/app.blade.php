@@ -200,6 +200,7 @@
     <script src="{{ asset('js/app.js') }}"></script>
     <script src="{{ asset('js/alerts.js') }}" defer></script>
     <script src="{{ asset('js/jquery.PrintArea.js') }}"></script>
+    <script src="{{ asset('js/pwa-notifications.js') }}"></script>
     <!-- Popper.js para dropdowns y tooltips de Bootstrap -->
 
 {{-- Scripts para Highcharts --}}
@@ -417,6 +418,17 @@
                 })
                 .catch(error => console.error('SW Error:', error));
         });
+        if ('PushManager' in window) {
+            window.addEventListener('load', () => {
+                // Pasamos la llave desde el entorno de Laravel de forma segura
+                const publicKey = "{{ env('VAPID_PUBLIC_KEY') }}";
+                if(publicKey) {
+                    // Podemos llamar a la suscripción automáticamente 
+                    // o después de una interacción del usuario
+                    suscribirUsuario(publicKey);
+                }
+            });
+        }
     }
 
     function persistirDataOffline(key, data) {
@@ -581,6 +593,7 @@
                 }
             });
         }
+        
 
         
 let deferredPrompt;

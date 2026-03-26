@@ -16,7 +16,7 @@ use App\Http\Controllers\{
     AlertaController, AccesoController, InspeccionController, PedidoController,
     ReporteController, AforoController, SearchController, DataDeletionController,
     ViajesController, TelegramController, PlanificacionMantenimientoController,
-    ReportController, ClienteActivosController
+    ReportController, ClienteActivosController,NotificationController
 };
 
 /* --- Rutas Públicas y Auth --- */
@@ -44,6 +44,7 @@ Route::middleware(['auth'])->group(function () {
      * Esta zona es accesible incluso si check.password está activo, 
      * ya que es el destino del middleware.
      */
+    Route::post('/notifications/subscribe', [NotificationController::class, 'subscribe']);
     Route::get('/password/change', [UserController::class, 'showChangePassword'])->name('password.change');
     Route::post('/password/update', [UserController::class, 'updatePassword'])->name('password.update');
     Route::put('/depositos', [DepositoController::class, 'index'])->name('depositos');

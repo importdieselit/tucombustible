@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use App\Models\SuministroCompra;
 use App\Models\SuministroCompraDetalle;
+use App\Notifications\OrdenTrabajoCreada;
 use App\Services\TelegramNotificationService;
 use App\Models\MantenimientoProgramado;
 use App\Models\OrdenFoto;
@@ -40,7 +41,7 @@ use App\Models\Proveedor;
 class OrdenController extends BaseController
 {
 
-    use GenerateAlerts;
+    use GenerateAlerts, OrdenTrabajoCreada;
 
     protected $fcmService;
     protected $telegramService;
@@ -54,16 +55,6 @@ class OrdenController extends BaseController
         $this->model = $orden;
     }
 
-
-    protected static function booted()
-    {
-        static::created(function ($orden) {
-            // Buscamos al usuario interesado (ej. el mecánico o el gerente)
-            $usuario = 1;
-            // Disparamos la notificación
-            $usuario->notify(new Orden($orden));
-        });
-    }
 
     /**
      * Muestra el dashboard de órdenes de trabajo.

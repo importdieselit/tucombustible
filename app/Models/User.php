@@ -8,12 +8,13 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Facades\DB;
+use NotificationChannels\WebPush\HasPushSubscriptions;
 use App\Models\Perfil;
 use App\Models\Persona;
 use App\Models\PermisoUsuario;
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasApiTokens;
+    use HasFactory, Notifiable, HasApiTokens, HasPushSubscriptions;
 
     protected $fillable = [
         'name',
