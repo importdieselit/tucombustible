@@ -631,7 +631,7 @@ class VehiculoController extends BaseController
     $today = now();
     $data = Vehiculo::miFlota()->with(['tipoVehiculo', 'cisternaAcoplada', 'ordenActiva'])->get();
 
-    $vehiculosEnRuta = Vehiculo::miFlota()->where('estatus', 2)->with(['viajes','viajes.cisternaAcoplada'])->get();
+    $vehiculosEnRuta = Vehiculo::miFlota()->where('estatus', 2)->where('tipo','!=', 2)->with(['viajes','viajes.cisternaAcoplada'])->get();
     $enRuta = $vehiculosEnRuta->count();
 
     $total = $data->count();
