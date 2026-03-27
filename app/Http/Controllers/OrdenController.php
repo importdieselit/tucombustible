@@ -625,13 +625,24 @@ class OrdenController extends BaseController
 
     public function addManualSupply(Request $request, $id)
     {
+        $user=Auth::user();
+        
         $orden = Orden::findOrFail($id);
         $hoy = now()->format('Y-m-d');
-
+        if($user->id_perfil==4){
+            $stat=2;
+            $cantidad_aprobada=0;  
+            $costo_aprobado=0;
+        }else{
+            $stat=1;
+            $cantidad_aprobada=$request->cantidad;
+            $costo_aprobado=$request->costo;
+        }
+        
         // 1. Buscar si ya existe una solicitud de compra hoy para esta orden de trabajo
         $compra = SuministroCompra::where('orden_id', $id)
                     ->whereDate('created_at', $hoy)
-                    ->where('estatus', 2) // Solo si sigue abierta/pendiente
+                    ->where('estatus', $stat) // Solo si sigue abierta/pendiente
                     ->first();
 
         // 2. Si no existe, la creamos
@@ -640,7 +651,7 @@ class OrdenController extends BaseController
                 'orden_id' => $id,
                 'observacion' => $request->supplies_observations ?? 'Suministro manual vía Dashboard',
                 'usuario_solicitante_id' => auth()->id(),
-                'estatus' => 2,
+                'estatus' => $stat,
                 'nro_requerimiento' => 'REQ-' . strtoupper(Str::random(5)), // Generar un nro si es nueva
             ]);
         }
@@ -650,7 +661,9 @@ class OrdenController extends BaseController
             'inventario_id' => null, // Es manual, no catalogado
             'descripcion' => $request->descripcion,
             'cantidad_solicitada' => $request->cantidad,
-            'estatus' => 2, // Solicitado
+            'cantidad_aprobada' => $cantidad_aprobada,
+            'costo_unitario_aprobado' => $costo_aprobado,
+            'estatus' => $stat, // Solicitado
         ]);
 
         return response()->json([
