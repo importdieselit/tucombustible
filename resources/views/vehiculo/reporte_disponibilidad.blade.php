@@ -176,7 +176,7 @@
                         <div class="card h-100 shadow-sm  border-chutos border-0 border-top border-4">
                             <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
                                 <span class="fw-bold small text-uppercase"><i class="fas fa-truck-pickup me-1 text-corporate"></i> Chutos</span>
-                                <span class="badge bg-chutos rounded-pill">{{ $chutosOperativos->count() }}</span>
+                                <span class="badge bg-chutos rounded-pill">{{ $chutosOperativos->count() }} de {{ $totalChutos }}</span>
                             </div>
                             <div class="card-body p-2">
                                 <div class="d-flex flex-wrap gap-1">
@@ -196,7 +196,7 @@
                         <div class="card h-100 shadow-sm border-0 border-top border-4 border-camiones">
                             <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
                                 <span class="fw-bold small text-uppercase"><i class="fas fa-truck me-1 text-warning"></i> Camiones</span>
-                                <span class="badge bg-camiones rounded-pill">{{ $camionesOperativos->count() }}</span>
+                                <span class="badge bg-camiones rounded-pill">{{ $camionesOperativos->count() }} de {{ $totalCamiones }}</span>
                             </div>
                             <div class="card-body p-2">
                                 <div class="d-flex flex-wrap gap-1">
@@ -216,7 +216,7 @@
                         <div class="card h-100 shadow-sm border-0 border-top border-4 border-cisternas">
                             <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
                                 <span class="fw-bold small text-uppercase"><i class="fas fa-trailer me-1 text-success"></i> Cisternas</span>
-                                <span class="badge bg-cisternas rounded-pill">{{ $cisternasOperativas->count() }}</span>
+                                <span class="badge bg-cisternas rounded-pill">{{ $cisternasOperativas->count() }} de {{ $totalCisternas }}</span>
                             </div>
                             <div class="card-body p-2">
                                 <div class="d-flex flex-wrap gap-1">
@@ -236,7 +236,7 @@
                         <div class="card h-100 shadow-sm border-0 border-top border-4 border-camionetas">
                             <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
                                 <span class="fw-bold small text-uppercase"><i class="fas fa-car me-1 text-secondary"></i> Livianos</span>
-                                <span class="badge bg-camioneta text-dark rounded-pill">{{ $camionetasOperativas->count() }}</span>
+                                <span class="badge bg-secondary rounded-pill">{{ $camionetasOperativas->count() }} de {{ $totalLivianos }}</span>
                             </div>
                             <div class="card-body p-2">
                                 <div class="d-flex flex-wrap gap-1">
