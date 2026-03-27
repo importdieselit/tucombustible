@@ -223,6 +223,12 @@
 @push('scripts')
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
     document.addEventListener('DOMContentLoaded', function() {
         // --- LÓGICA DEL MAPA (IDENTICA AL CREATE) ---
         const initialLat = {{ $item->latitud ?? 10.6447 }};
