@@ -74,7 +74,7 @@ class Viaje extends Model
         return $this->belongsTo(Vehiculo::class, 'vehiculo_id');
     }
 
-    public function cisterna(): BelongsTo
+    public function cisternaAcoplada(): BelongsTo
     {
         return $this->belongsTo(Vehiculo::class, 'cisterna', 'id');
     }

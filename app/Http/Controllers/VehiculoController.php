@@ -631,12 +631,12 @@ class VehiculoController extends BaseController
     $today = now();
     $data = Vehiculo::miFlota()->with(['tipoVehiculo', 'cisternaAcoplada', 'ordenActiva'])->get();
 
-    $vehiculosEnRuta = $data->where('estatus', 2);
+    $vehiculosEnRuta = Vehiculo::miFlota()->where('estatus', 2)->with(['viajes','viajes.cisternaAcoplada'])->get();
     $enRuta = $vehiculosEnRuta->count();
 
     $total = $data->count();
     $operativosCount = $data->where('estatus', 1)->count();
-    $enRuta = $data->where('estatus', 2)->count();
+    
     $cisternas= $data->where('tipo', 2);
     $totalCisternas= $cisternas->count();
     $camiones = $data->whereIn('tipoVehiculo.tipo', ['CAMION','CAMION CISTERNA']);
@@ -674,6 +674,7 @@ class VehiculoController extends BaseController
         return $v->viajes->first(); // Tomamos el último viaje cargado por el eager loading
     })->filter(); // Eliminamos nulos si algún vehículo no tiene viaje asignado
     // ------------------------------------
+    
 
     return view('vehiculo.reporte_disponibilidad', compact(
         'today', 'cisternasFalla', 'enRuta', 'totalCisternas','camionesFalla', 'despachosHoy', 

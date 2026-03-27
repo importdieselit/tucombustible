@@ -405,14 +405,16 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <div class="d-flex align-items-center">
+                                    <div class="d-flex align-items-center align-middle">
                                         <div class="me-2">
                                             <i class="fas fa-truck text-muted"></i>
                                         </div>
                                         <div>
                                             <span class="fw-bold text-dark" style="font-size: 13px;">{{ $viaje->vehiculo ? '['.$viaje->vehiculo->flota.'] '.$viaje->vehiculo->placa :$viaje->otro_vehiculo}} 
-                                                @if($viaje->cisterna()->first()) 
-                                                    @php($cisterna=$viaje->cisterna()->first())
+                                                @if($viaje->cisternaAcoplada) 
+                                                
+                                                    @php($cisterna=$viaje->cisternaAcoplada)
+                                                   
                                                     <br>
                                                     <i class="fas fa-link text-muted opacity-50" style="font-size"></i>
                                                     [{{ $cisterna->flota}}] <span class="text-success">{{ $cisterna->placa }}</span>
