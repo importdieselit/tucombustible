@@ -159,6 +159,7 @@
                         {{-- Se llena con JS --}}
                     </tbody>
                 </table>
+                <div id="no-tasks-msg" class="text-muted text-center small mt-4 d-none"></div>
             </div>
         </div>
     </div>
