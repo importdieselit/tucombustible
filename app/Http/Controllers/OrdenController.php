@@ -601,6 +601,7 @@ class OrdenController extends BaseController
         return back()->with('success', 'Trabajo agregado correctamente.');
     }
     
+    
 
     public function addInsumo(Request $request, $id)
     {

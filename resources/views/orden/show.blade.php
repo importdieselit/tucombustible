@@ -480,9 +480,6 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">Guardar Trabajo</button>
-                </div>
             </div>
         </form>
     </div>
@@ -738,12 +735,28 @@
                 mecanicos_nombres: mecanicosNombres.join(', ')
             };
 
+
+            const response = await fetch(`/ordenes/${orderId}/trabajos/add`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ trabajos: nuevoTrabajo })
+                    
+                    });
+
+
             trabajosAsignados.push(nuevoTrabajo);
             renderTrabajos();
             
             // Limpiar selectores
             $('#select-mecanicos').val(null).trigger('change');
         });
+
+
+
 
         function renderTrabajos() {
             let html = '';
