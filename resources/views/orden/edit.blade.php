@@ -421,6 +421,16 @@
                 $('#add-task-btn').click();
             }
         });
+
+           // 1. CARGA DINÁMICA DE TEMPARIO
+        $('#select-categoria').on('change', function() {
+            const catId = $(this).val();
+            if (!catId) return;
+
+            $.post('{{ route("get.tempario_servicios") }}', { catemp: catId }, function(data) {
+                $('#select-servicio').html(data);
+            });
+        });
     });
 </script>
 @endpush
