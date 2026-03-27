@@ -504,6 +504,10 @@
                     <label class="form-label">Cantidad Requerida</label>
                     <input type="number" class="form-control text-end fw-bold" name="cantidad" id="manual-cantidad" value="1" min="1">
                 </div>
+                <div class="mb-3">
+                    <label class="form-label">Precio Unitario</label>
+                    <input type="number" class="form-control text-end fw-bold" name="costo" id="manual-costo" value="1" min="0.1">
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-success w-100 fw-bold"  id="addManualSupplyBtn">AÑADIR A LA LISTA</button>
@@ -868,6 +872,8 @@ document.getElementById('addManualSupplyBtn').addEventListener('click', function
     const orderId = '{{ $orden->id }}';
     const descripcion = document.getElementById('manual-descripcion').value;
     const cantidad = document.getElementById('manual-cantidad').value;
+    const costo = document.getElementById('manual-costo').value;
+
 
     // Validación básica
     if (!descripcion || descripcion.trim() === "") {

@@ -362,14 +362,14 @@
         function renderTasksTable() {
             const container = document.getElementById('tasks-container');
             const noTasksMsg = document.getElementById('no-tasks-msg');
-            container.innerHTML = '';
+            const inHTML = '';
 
             if (performedTasks.length === 0) {
                 noTasksMsg.classList.remove('d-none');
             } else {
                 noTasksMsg.classList.add('d-none');
                 performedTasks.forEach((task, index) => {
-                    container.innerHTML += `
+                    inHTML += `
                         <tr>
                             <td class="text-center fw-bold text-muted small">${index + 1}</td>
                             <td>
@@ -385,6 +385,7 @@
                     `;
                 });
             }
+            container.innerHTML = inHTML;
         }
 
         // Inicializar tabla al cargar
