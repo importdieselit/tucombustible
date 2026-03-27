@@ -347,7 +347,7 @@
             {{-- Encabezado del Cuadro --}}
             <div class="p-3 bg-light d-flex justify-content-between align-items-center border-bottom">
                 <div>
-                    <span class="text-uppercase fw-bold mb-0" style="font-size: 11px; color: #666; letter-spacing: 1px;">Cargas y Despachos Programados (Hoy)</span>
+                    <span class="text-uppercase fw-bold mb-0" style="font-size: 11px; color: #666; letter-spacing: 1px;">Unidades En Ruta</span>
                     <h4 class="fw-black mb-0 text-dark">{{ $despachosHoy->count() ?? 0 }} <small class="text-muted small" style="font-size: 14px;">Viajes Totales</small></h4>
                 </div>
                 <div class="text-end">
