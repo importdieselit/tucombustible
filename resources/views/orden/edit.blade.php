@@ -155,7 +155,7 @@
                             <th width="80" class="text-center">Acción</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="tasks-container">
                         {{-- Se llena con JS --}}
                     </tbody>
                 </table>
