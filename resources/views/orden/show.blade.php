@@ -81,7 +81,7 @@
                 </button>
             @endif
             @if($orden->estatus == 'ANULADA' || $orden->estatus == 4)
-                <button id="eliminar-orden" class="btn btn-sm btn-outline-danger fw-bold">
+                <button id="eliminar-orden" class="btn btn-sm btn-outline-danger fw-bold delete-item" data-type="orden" data-id="{{ $orden->id }}"
                     <i class="fas fa-trash"></i> ELIMINAR DEFINITIVAMENTE
                 </button>
             @endif
@@ -258,6 +258,9 @@
                                                     data-id="{{ $item->id_inventario_suministro }}" data-type="supplies">
                                                 <i class="fas fa-check"></i>
                                             </button>
+                                            <button class="btn btn-sm btn-link text-danger p-0 delete-item" data-type="insumo" data-id="{{ $trabajo->id_trabajo }}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
                                         @else
                                             <i class="fas fa-check-circle text-success fs-5"></i>
                                         @endif
@@ -298,14 +301,23 @@
                                                         data-id="{{ $detalle->id }}" data-type="compras" title="Marcar como Recibido">
                                                     <i class="fas fa-check"></i>
                                                 </button>
+                                                <button class="btn btn-sm btn-link text-danger p-0 delete-item" data-type="compra" data-id="{{ $detalle->id }}">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
                                                 
                                             @elseif($isSolicitadoReq)
                                                 {{-- ESTADO 2: Solo solicitado (En espera de aprobación) --}}
                                                 <i class="fas fa-clock text-warning fs-5" title="Pendiente de aprobación/compra"></i>
-                                                
+                                                <button class="btn btn-sm btn-link text-danger p-0 delete-item" data-type="compra" data-id="{{ $detalle->id }}">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
                                             @else
                                                 {{-- Cualquier otro estado --}}
+
                                                 <span class="text-muted small">Pte.</span>
+                                                <button class="btn btn-sm btn-link text-danger p-0 delete-item" data-type="compra" data-id="{{ $detalle->id }}">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
                                             @endif
                                              {{-- Badge dinámico de estado --}}
                                             {{-- @if($isRecibidoReq)
@@ -436,16 +448,14 @@
 {{-- MODALES --}}
 
 <div class="modal fade" id="modalTrabajo" data-bs-backdrop="false" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <form action="{{ route('ordenes.addTrabajo', $orden->id) }}" method="POST">
-            @csrf
-            <div class="modal-content">
-                <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title small text-uppercase">Registrar Trabajo Realizado</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row g-2">
+    <div class="modal-dialog modal-lg"> {{-- Cambiado a lg para mejor visión en móvil --}}
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title small text-uppercase">Registrar Trabajo Realizado</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-2 mb-3">
                             <div class="col-md-4">
                                 <label class="small fw-bold">Categoría</label>
                               
@@ -472,18 +482,19 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-12 text-end mt-2">
-                                <button type="button" class="btn btn-orange btn-sm px-4 fw-bold" id="btn-agregar-trabajo">
-                                    <i class="fas fa-plus me-1"></i> AGREGAR TRABAJO
-                                </button>
-                            </div>
-                        </div>
-                    </div>
                 </div>
+                
             </div>
-        </form>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-success btn-sm fw-bold" id="btn-guardar-todo">
+                    <i class="fas fa-save me-1"></i> GUARDAR CAMBIOS
+                </button>
+            </div>
+        </div>
     </div>
 </div>
+
 
 <div class="modal fade" id="manualSupplyModal" data-bs-backdrop="false" tabindex="-1">
     <div class="modal-dialog">
@@ -549,6 +560,34 @@
     </div>
 </div>
 
+<div class="modal fade" id="modalFoto" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h6 class="modal-title text-uppercase small">Añadir Evidencia Fotográfica</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-fotos" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-muted">Seleccione una o más imágenes</label>
+                        <input type="file" name="fotos_orden[]" id="input-fotos" class="form-control form-control-sm" accept="image/*" multiple>
+                        <div class="form-text x-small">Formatos permitidos: JPG, PNG. Máximo 4MB por foto.</div>
+                    </div>
+                    
+                    <div id="preview-container" class="d-flex flex-wrap gap-2 mb-2"></div>
+                </form>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-orange btn-sm fw-bold" id="btn-subir-evidencia">
+                    <i class="fas fa-upload me-1"></i> SUBIR Y ENVIAR
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 @php(
     
@@ -563,450 +602,257 @@
                 ];
             })
 )
+
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
-     $.ajaxSetup({
+
+    $.ajaxSetup({
         headers: {
             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
         }
     });
-    document.addEventListener('DOMContentLoaded', function () {
-        const orderId = '{{ $orden->id }}';
-
-        let trabajosAsignados = {};
-
-        @if(isset($item->trabajos))
-            @foreach($item->trabajos as $trabajo)
-                trabajosAsignados["{{ $trabajo->id_tempario_servicio }}"] = {
-                    id_servicio: "{{ $trabajo->id_tempario_servicio }}",
-                    servicio_texto: "{{ $trabajo->servicio->descripcion }}",
-                    categoria_texto: "{{ $trabajo->servicio->categoria->categoria }}",
-                    estatus: {{ $trabajo->estatus ?? 1 }},
-                    personal: @json($trabajo->personal_ids ?? []), // Ajustar según tu relación
-                    personal_nombres: @json($trabajo->personal_nombres ?? [])
-                };
-            @endforeach
-        @endif
-
-        // Ahora la variable se renderiza sin conflictos
-        trabajosAsignados = {!! $dataTrabajos->toJson() !!};
-
-        // Inicializar Select2
-        $('.select2-insumos').select2({ dropdownParent: $('#modalInsumo') });
-        $('.select2-mecanicos').select2({ dropdownParent: $('#modalTrabajo') });
-
-        // Función genérica para Fetch
-        async function apiCall(url, method = 'POST', body = null) {
-            try {
-                const response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Content-Type': 'application/json'
-                    },
-                    body: body ? JSON.stringify(body) : null
-                });
-                const data = await response.json();
-                if (data.success) {
-                    Swal.fire('¡Éxito!', 'Operación realizada.', 'success').then(() => window.location.reload());
-                } else {
-                    Swal.fire('Error', data.message || 'Error en el servidor', 'error');
-                }
-            } catch (error) {
-                Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
-            }
-        }
-
-        // Eventos de Botones de Estado
-        // --- VALIDACIÓN PARA CERRAR ORDEN ---
-        if(document.getElementById('cerrar-orden')){
-            document.getElementById('cerrar-orden').addEventListener('click', () => {
-                // Contamos trabajos que NO tienen fecha_fin (usando el badge de 'En proceso' como referencia)
-                const trabajosPendientes = document.querySelectorAll('.badge.bg-warning.animate__flash').length;
-
-                if (trabajosPendientes > 0) {
-                    Swal.fire({
-                        title: '<span style="color: #d33;">TRABAJOS PENDIENTES</span>',
-                        html: `No puedes cerrar la orden porque aún hay <b>${trabajosPendientes}</b> tarea(s) en proceso.<br><br>Finaliza todos los trabajos antes de proceder.`,
-                        icon: 'error',
-                        confirmButtonColor: '#e67e22',
-                        confirmButtonText: 'ENTENDIDO'
-                    });
-                    return;
-                }
-
-                // Si no hay pendientes, procede al cierre normal
-                Swal.fire({
-                    title: '¿Confirmar Cierre Técnico?',
-                    text: "Se generará el histórico y la unidad quedará disponible.",
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonColor: '#198754',
-                    cancelButtonColor: '#343a40',
-                    confirmButtonText: 'SÍ, CERRAR ORDEN'
-                }).then((r) => r.isConfirmed && apiCall(`/ordenes/${orderId}/cerrar`));
-            });
-        }
-
-        // --- LÓGICA DE HABILITACIÓN ESPECIAL ---
-        if(document.getElementById('habilitar-unidad')){
-            document.getElementById('habilitar-unidad').addEventListener('click', () => {
-                Swal.fire({
-                    title: '<span style="color: #e67e22;">HABILITACIÓN ESPECIAL</span>',
-                    html: `Esta acción permite que el vehículo <b>{{ $orden->vehiculoBelong->flota }}</b> pueda ser asignado a rutas aunque esta orden siga abierta.`,
-                    input: 'textarea',
-                    inputPlaceholder: 'Indique el motivo de la habilitación (ej: Repuesto en camino, trabajo no crítico)...',
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#e67e22',
-                    cancelButtonColor: '#343a40',
-                    confirmButtonText: 'CONFIRMAR HABILITACIÓN',
-                    cancelButtonText: 'CANCELAR',
-                    inputValidator: (value) => {
-                        if (!value) return '¡Es obligatorio indicar un motivo!';
-                    }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        apiCall(`/ordenes/${orderId}/habilitar-unidad`, 'POST', { motivo: result.value });
-                    }
-                });
-            });
-        }
-
-        if(document.getElementById('anular-orden')){
-            document.getElementById('anular-orden').addEventListener('click', () => {
-                Swal.fire({
-                    title: 'Anular Orden',
-                    text: 'Escriba el motivo (se devolverán los insumos al stock):',
-                    input: 'text',
-                    showCancelButton: true,
-                    inputValidator: (v) => !v && '¡Motivo obligatorio!'
-                }).then((r) => r.isConfirmed && apiCall(`/ordenes/${orderId}/anular`, 'POST', { anulacion: r.value }));
-            });
-        }
-
-        if(document.getElementById('reactivar-orden')){
-            document.getElementById('reactivar-orden').addEventListener('click', () => {
-                apiCall(`/ordenes/${orderId}/reactivar`);
-            });
-        }
-
-        if(document.getElementById('eliminar-orden')){
-            document.getElementById('eliminar-orden').addEventListener('click', () => {
-                Swal.fire({
-                    title: '¿Eliminar de la DB?',
-                    icon: 'error',
-                    showCancelButton: true
-                }).then((r) => r.isConfirmed && apiCall(`/ordenes/${orderId}/destroy`, 'DELETE'));
-            });
-        }
-
-            // 1. CARGA DINÁMICA DE TEMPARIO
-        $('#select-categoria').on('change', function() {
-            const catId = $(this).val();
-            if (!catId) return;
-
-            $.post('{{ route("get.tempario_servicios") }}', { catemp: catId }, function(data) {
-                $('#select-servicio').html(data);
-            });
-        });
-
-        // 2. AGREGAR TRABAJO A LA LISTA
-        $('#btn-agregar-trabajo').on('click', function() {
-            const servicioId = $('#select-servicio').val();
-            const categoriaId = $('#select-categoria').val();
-            const servicioTexto = $('#select-servicio option:selected').text();
-            const mecanicosIds = $('#select-mecanicos').val();
-            const mecanicosNombres = $('#select-mecanicos option:selected').map(function(){ return $(this).text(); }).get();
-
-            if (!servicioId || mecanicosIds.length === 0) {
-                Swal.fire('Error', 'Debe seleccionar un servicio y al menos un mecánico', 'error');
-                return;
-            }
-
-            const nuevoTrabajo = {
-                id_tempario: servicioId,
-                id_categoria: categoriaId,
-                concepto: servicioTexto,
-                mecanicos: mecanicosIds,
-                mecanicos_nombres: mecanicosNombres.join(', ')
-            };
-
-
-            const response = fetch(`/ordenes/${orderId}/trabajos/add`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({ trabajos: nuevoTrabajo })
-                    
-                    });
-
-
-            trabajosAsignados.push(nuevoTrabajo);
-            renderTrabajos();
-            
-            // Limpiar selectores
-            $('#select-mecanicos').val(null).trigger('change');
-        });
-
-
-
-
-        function renderTrabajos() {
-            let html = '';
-            if (trabajosAsignados.length === 0) {
-                html = '<tr><td colspan="3" class="text-center text-muted py-4 small">No hay trabajos asignados</td></tr>';
-            } else {
-                trabajosAsignados.forEach((t, index) => {
-                    html += `
-                    <tr class="small">
-                        <td class="ps-3 fw-bold">${t.concepto}</td>
-                        <td><span class="text-muted">${t.mecanicos_nombres}</span></td>
-                        <td class="text-center">
-                            <button type="button" class="btn btn-link btn-sm text-danger btn-remove-trabajo" data-index="${index}">
-                                <i class="fas fa-times-circle"></i>
-                            </button>
-                        </td>
-                    </tr>`;
-                });
-            }
-            $('#tabla-trabajos-body').html(html);
-            $('#trabajos_json').val(JSON.stringify(trabajosAsignados));
-        }
-
-        $(document).on('click', '.btn-remove-trabajo', function() {
-            const index = $(this).data('index');
-            trabajosAsignados.splice(index, 1);
-            renderTrabajos();
-        });
-
-        $('#btn-limpiar-trabajos').on('click', function() {
-            if(confirm('¿Desea limpiar todos los trabajos?')) {
-                trabajosAsignados = [];
-                renderTrabajos();
-            }
-        });
-
-
-        function renderSuppliesTable() {
-            const tbody = document.querySelector('#selected-supplies-table tbody');
-            tbody.innerHTML = '';
-            let total = 0;
-
-            Object.values(selectedSupplies).forEach(item => {
-                total += item.subtotal;
-                const isRecibido = item.estatus == 2;
-                
-                tbody.innerHTML += `
-                    <tr class="${isRecibido ? 'table-success-light' : ''}">
-                        <td class="small fw-bold text-orange">${item.codigo}</td>
-                        <td class="small">
-                            ${item.descripcion}
-                            <br>
-                            <span class="badge ${isRecibido ? 'bg-success' : 'bg-warning text-dark'} x-small">
-                                ${isRecibido ? '<i class="fas fa-check-circle me-1"></i>RECIBIDO' : '<i class="fas fa-clock me-1"></i>SOLICITADO'}
-                            </span>
-                        </td>
-                        <td>
-                            <input type="number" class="form-control form-control-sm qty-input" 
-                                data-id="${item.id}" value="${item.cantidad}" min="1" ${isRecibido ? 'readonly' : ''}>
-                        </td>
-                        <td><input type="number" step="0.01" class="form-control form-control-sm price-input" 
-                                data-id="${item.id}" value="${item.precio}" ${isRecibido ? 'readonly' : ''}></td>
-                        <td class="fw-bold">$ ${item.subtotal.toFixed(2)}</td>
-                        <td class="text-center">
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-sm ${isRecibido ? 'btn-success' : 'btn-outline-success'}" 
-                                        onclick="toggleStatusInsumo('${item.id}')" title="Marcar como recibido">
-                                    <i class="fas fa-check"></i>
-                                </button>
-                                <button type="button" class="btn btn-sm btn-outline-danger remove-supply" data-id="${item.id}">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                            <input type="hidden" name="supplies[${item.id}][id]" value="${item.id}">
-                            <input type="hidden" name="supplies[${item.id}][cantidad]" value="${item.cantidad}">
-                            <input type="hidden" name="supplies[${item.id}][precio]" value="${item.precio}">
-                            <input type="hidden" name="supplies[${item.id}][estatus]" value="${item.estatus}">
-                        </td>
-                    </tr>
-                `;
-            });
-            document.getElementById('total-amount').innerText = `$ ${total.toFixed(2)}`;
-        }
-
-        window.toggleStatusInsumo = function(id) {
-            selectedSupplies[id].estatus = (selectedSupplies[id].estatus == 1) ? 2 : 1;
-            renderSuppliesTable();
-        };
-
-        
-    });
-
+    /**
+     * Estandarización de procesos: Función maestra para peticiones AJAX/Fetch
+     */
     async function apiCall(url, method = 'POST', body = null) {
         try {
-            const response = await fetch(url, {
+            const options = {
                 method: method,
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Content-Type': 'application/json',
                     'Accept': 'application/json'
-                },
-                body: body ? JSON.stringify(body) : null
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
+                }
+            };
+
+            if (body) {
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(body);
+            }
+
+            const response = await fetch(url, options);
+            const res = await response.json();
+
+            if (res.success || response.ok) {
                 Swal.fire({
                     icon: 'success',
-                    title: '¡Éxito!',
-                    text: data.message || 'Operación realizada.',
+                    title: '¡Hecho!',
+                    text: res.message || 'Operación exitosa',
                     timer: 1500,
                     showConfirmButton: false
                 }).then(() => window.location.reload());
             } else {
-                Swal.fire('Error', data.message || 'Error en el servidor', 'error');
+                Swal.fire('Error', res.message || 'Error en el servidor', 'error');
             }
         } catch (error) {
-            console.error('Error API:', error);
-            Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
+            console.error(error);
+            Swal.fire('Error', 'No se pudo procesar la solicitud', 'error');
         }
     }
 
-    // --- LÓGICA PARA SOLICITUD MANUAL A COMPRAS ---
-document.getElementById('addManualSupplyBtn').addEventListener('click', function() {
-    const orderId = '{{ $orden->id }}';
-    const descripcion = document.getElementById('manual-descripcion').value;
-    const cantidad = document.getElementById('manual-cantidad').value;
-    const costo = document.getElementById('manual-costo').value;
+    document.addEventListener('DOMContentLoaded', function () {
+        const orderId = '{{ $orden->id }}';
 
+        // --- 1. INICIALIZACIÓN DE COMPONENTES ---
+        $('.select2-insumos').select2({ dropdownParent: $('#modalInsumo'), width: '100%' });
+        $('#select-mecanicos').select2({ dropdownParent: $('#modalTrabajo'), width: '100%', placeholder: "Seleccione..." });
+        $('#select-categoria, #select-servicio').select2({ dropdownParent: $('#modalTrabajo'), width: '100%' });
 
-    // Validación básica
-    if (!descripcion || descripcion.trim() === "") {
-        Swal.fire('Error', 'Debe ingresar una descripción del repuesto.', 'error');
-        return;
-    }
+        // --- 2. GESTIÓN DE TRABAJOS (MODAL) ---
+        $('#select-categoria').on('change', function() {
+            const catId = $(this).val();
+            if (!catId) return;
+            $.post('{{ route("get.tempario_servicios") }}', { catemp: catId }, function(data) {
+                $('#select-servicio').html(data).trigger('change');
+            });
+        });
 
-    if (cantidad <= 0) {
-        Swal.fire('Error', 'La cantidad debe ser mayor a 0.', 'error');
-        return;
-    }
+        // Botón "Guardar" del Modal de Trabajo (Directo a DB)
+        $('#btn-guardar-todo').on('click', function() {
+            const data = {
+                id_tempario: $('#select-servicio').val(),
+                id_categoria: $('#select-categoria').val(),
+                mecanicos: $('#select-mecanicos').val(),
+                descripcion: $('#select-servicio option:selected').text(),
+                costo: 0 // El controlador lo calcula por Eager Loading si lo configuraste
+            };
 
-    apiCall(`/ordenes/${orderId}/add-manual-supply`, 'POST', {
-        descripcion: descripcion,
-        cantidad: cantidad
-    });
-});
+            if (!data.id_tempario || !data.mecanicos || data.mecanicos.length === 0) {
+                return Swal.fire('Atención', 'Seleccione servicio y mecánicos responsables.', 'warning');
+            }
 
-    // Dentro de tu sección de scripts
-    $(document).on('click', '.mark-recibido', function() {
-        const btn = $(this);
-        const id = btn.data('id');
-        const tipo = btn.data('type'); 
-        const $fila = btn.closest('tr'); 
-        const $celdaAccion = btn.closest('td'); 
-        
-        const routes = {
-            'supplies': "{{ route('ordenes.supplies.receive', ':id') }}",
-            'compras': "{{ route('ordenes.compras.receive', ':id') }}"
-        };
+            apiCall(`/ordenes/${orderId}/trabajos/add`, 'POST', data);
+        });
 
-        const url = routes[tipo].replace(':id', id);
-        console.log(id);
-        Swal.fire({
-            title: '¿Confirmar recepción?',
-            text: "Se marcará este ítem como entregado a la orden.",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#28a745',
-            confirmButtonText: 'Sí, recibir',
-            cancelButtonText: 'Cancelar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Deshabilitar botón para evitar doble click
-                btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+        // Finalizar Trabajo (Botón en tabla)
+        $(document).on('click', '.finish-work', function() {
+            const id = $(this).data('id');
+            apiCall(`/ordenes/trabajo/${id}/finalizar`, 'POST');
+        });
 
-                $.ajax({
-                    url:url,
+        // --- 3. GESTIÓN DE INSUMOS Y COMPRAS ---
+        // Solicitar Insumo Manual
+        $('#addManualSupplyBtn').on('click', function() {
+            const data = {
+                descripcion: $('#manual-descripcion').val(),
+                cantidad: $('#manual-cantidad').val(),
+                costo: $('#manual-costo').val()
+            };
+
+            if (!data.descripcion || data.cantidad <= 0) {
+                return Swal.fire('Error', 'Ingrese descripción y cantidad válida.', 'error');
+            }
+
+            apiCall(`/ordenes/${orderId}/add-manual-supply`, 'POST', data);
+        });
+
+        // Marcar como Recibido (Insumos o Compras)
+        $(document).on('click', '.mark-recibido', function() {
+            const id = $(this).data('id');
+            const type = $(this).data('type'); // 'supplies' o 'compras'
+            const url = type === 'supplies' 
+                ? `/ordenes/supplies/receive/${id}` 
+                : `/ordenes/compras/receive/${id}`;
+            
+            apiCall(url, 'POST');
+        });
+
+        // --- 4. ACCIONES DE ELIMINACIÓN ---
+        $(document).on('click', '.delete-item', function() {
+            const id = $(this).data('id');
+            const type = $(this).data('type');
+            let url = '';
+
+            if(type === 'trabajo') url = `/ordenes/trabajos/${id}/delete`;
+            if(type === 'insumo')  url = `/ordenes/supplies/${id}/delete`;
+            if(type === 'compra')  url = `/ordenes/purchase/${id}/delete`;
+            if(type === 'foto')    url = `/ordenes/fotos/${id}/delete`;
+            if(type === 'orden')   url = `/ordenes/${id}`;
+
+            Swal.fire({
+                title: '¿Confirmar eliminación?',
+                text: "Esta acción borrará el registro de la base de datos.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'SÍ, ELIMINAR'
+            }).then((result) => {
+                if (result.isConfirmed) apiCall(url, 'DELETE');
+            });
+        });
+
+        // --- 5. CIERRE Y HABILITACIÓN ---
+        $('#cerrar-orden').on('click', function() {
+            // Validación de trabajos pendientes (opcional si el controlador ya lo hace)
+            const pendientes = $('.badge.bg-warning.animate__flash').length;
+            if (pendientes > 0) {
+                return Swal.fire('Atención', 'No puede cerrar la orden con trabajos pendientes.', 'error');
+            }
+
+            Swal.fire({
+                title: '¿Cerrar Orden Técnica?',
+                text: "Se generará el reporte final y se notificará a gerencia.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'SÍ, CERRAR ORDEN'
+            }).then((res) => {
+                if (res.isConfirmed) apiCall(`/ordenes/${orderId}/cerrar`, 'POST');
+            });
+        });
+
+         $('#reactivar-orden').on('click', function() {
+            // Validación de trabajos pendientes (opcional si el controlador ya lo hace)
+
+            Swal.fire({
+                title: 'Reactivar Orden Técnica?',
+                text: "La Orden se Activara nuevamente y la unidad estara fuera de Servicio",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'SÍ, REACTIVAR ORDEN'
+            }).then((res) => {
+                if (res.isConfirmed) apiCall(`/ordenes/${orderId}/reactivar`, 'POST');
+            });
+        });
+
+        $('#anular-orden').on('click', function() {
+            // Validación de trabajos pendientes (opcional si el controlador ya lo hace)
+
+            Swal.fire({
+                title: 'Anular Orden Técnica?',
+                text: "La Orden se Anulara y la unidad estara Operativa",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'SÍ, ANULAR ORDEN'
+            }).then((res) => {
+                if (res.isConfirmed) apiCall(`/ordenes/${orderId}/anular`, 'POST');
+            });
+        });
+
+        $('#habilitar-unidad').on('click', function() {
+            Swal.fire({
+                title: 'Habilitación de Unidad',
+                text: 'Indique el motivo o condición de salida:',
+                input: 'textarea',
+                showCancelButton: true,
+                confirmButtonText: 'HABILITAR VEHÍCULO',
+                inputValidator: (value) => {
+                    if (!value) return '¡Debe indicar un motivo!';
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    apiCall(`/ordenes/${orderId}/habilitar-unidad`, 'POST', { motivo: result.value });
+                }
+            });
+        });
+
+        // --- Lógica para Subida de Fotos ---
+        $('#btn-subir-evidencia').on('click', async function() {
+            const input = document.getElementById('input-fotos');
+            if (input.files.length === 0) {
+                return Swal.fire('Error', 'Seleccione al menos una imagen.', 'error');
+            }
+
+            const formData = new FormData();
+            for (let i = 0; i < input.files.length; i++) {
+                formData.append('fotos_orden[]', input.files[i]);
+            }
+
+            const btn = $(this);
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Procesando...');
+
+            try {
+                const response = await fetch(`/ordenes/{{ $orden->id }}/fotos/add`, {
                     method: 'POST',
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        id: id,
-                        tipo: tipo
-                    },
-                    success: function(response) {
-                        if(response.success) {
-                            // 1. Notificación de éxito
-                            Swal.fire({
-                                icon: 'success',
-                                title: '¡Recibido!',
-                                text: response.message,
-                                timer: 1500,
-                                showConfirmButton: false
-                            });
-
-                            // 2. Actualización visual de la fila
-                            $fila.addClass('table-success-light');
-                            
-                            // 3. Reemplazar el botón por el icono de check estático
-                            $celdaAccion.html('<i class="fas fa-check-circle text-success fs-5 animate__animated animate__bounceIn"></i>');
-                            
-                            // 4. Opcional: Añadir el badge de "RECIBIDO" en la descripción si no existe
-                            if ($fila.find('.badge-recibido-dinamico').length === 0) {
-                                $fila.find('td:nth-child(2)').append('<span class="badge bg-success x-small ms-2 badge-recibido-dinamico"><i class="fas fa-check"></i> RECIBIDO</span>');
-                            }
-                        } else {
-                            // Error controlado desde el servidor
-                            Swal.fire('Error', response.message || 'No se pudo procesar la recepción.', 'error');
-                            btn.prop('disabled', false).html('<i class="fas fa-check"></i>');
-                        }
-                    },
-                    error: function(xhr) {
-                        // Error de conexión o 500
-                        Swal.fire('Error de sistema', 'Hubo un problema de conexión con el servidor.', 'error');
-                        btn.prop('disabled', false).html('<i class="fas fa-check"></i>');
-                    }
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: formData
                 });
+
+                const res = await response.json();
+                if (res.success) {
+                    Swal.fire('¡Éxito!', res.message, 'success').then(() => window.location.reload());
+                } else {
+                    throw new Error(res.message);
+                }
+            } catch (error) {
+                Swal.fire('Error', error.message, 'error');
+                btn.prop('disabled', false).html('<i class="fas fa-upload me-1"></i> SUBIR Y ENVIAR');
             }
         });
-    });
 
-    $(document).ready(function() {
+        // --- 6. MAPA ---
         @if($orden->latitud && $orden->longitud)
-            const lat = {{ $orden->latitud }};
-            const lng = {{ $orden->longitud }};
-
-            // Inicialización con todas las interacciones desactivadas
             const mapShow = L.map('map-show', {
-                center: [lat, lng],
-                zoom: 40,
-                dragging: false,        // No se puede arrastrar el mapa
-                zoomControl: true,     // No hay botones de zoom
-                scrollWheelZoom: true, // No zoom con el mouse
-                doubleClickZoom: false, // No zoom con doble click
-                boxZoom: false,
-                touchZoom: false,
-                attributionControl: false // Limpieza visual (tu marca corporativa)
+                center: [{{ $orden->latitud }}, {{ $orden->longitud }}],
+                zoom: 16,
+                dragging: false,
+                scrollWheelZoom: false,
+                attributionControl: false
             });
-
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapShow);
-
-            // Marcador Naranja Corporativo (Estático)
-            const orangeIcon = L.icon({
-                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
-                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41]
-            });
-
-            L.marker([lat, lng], { icon: orangeIcon }).addTo(mapShow);
+            L.marker([{{ $orden->latitud }}, {{ $orden->longitud }}]).addTo(mapShow);
         @endif
     });
 </script>

@@ -135,6 +135,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/ordenes/{orden}/cerrar', [OrdenController::class, 'cerrarOrden'])->name('ordenes.cerrar');
         Route::post('/ordenes/{orden}/anular', [OrdenController::class, 'anularOrden'])->name('ordenes.anular');
         Route::post('/ordenes/{orden}/reactivar', [OrdenController::class, 'reactivarOrden'])->name('ordenes.reactivar');
+        Route::delete('/ordenes/{orden}', [OrdenController::class, 'destroyOrden'])->name('ordenes.destroy');
         Route::get('ordenes/search-supplies', [OrdenController::class, 'searchSupplies'])->name('ordenes.search-supplies');
         Route::post('/ordenes/supplies/receive/{supply}', [OrdenController::class, 'markAsReceived'])->name('ordenes.supplies.receive');
         Route::post('/ordenes/compras/receive/{supply}', [OrdenController::class, 'markRequestReceived'])->name('ordenes.compras.receive');
@@ -143,12 +144,17 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/compras/cambiar-estatus', [OrdenController::class,'cambiarEstatus'])->name('compras.cambiar_estatus');
         Route::post('/get-tempario-servicios', [OrdenController::class, 'getTemparioServicios'])->name('get.tempario_servicios');
         Route::post('/ordenes/{id}/trabajos/add', [OrdenController::class, 'addTrabajo'])->name('ordenes.addTrabajo');
+        Route::delete('/ordenes/trabajos/{id}/delete', [OrdenController::class, 'deleteTrabajo'])->name('ordenes.deleteTrabajo');
         Route::post('/ordenes/{id}/addTrabajosMasivo', [OrdenController::class, 'addTrabajosMasivo'])->name('ordenes.addTrabajosMasivo');
         Route::post('/ordenes/trabajo/{id}/finalizar', [OrdenController::class, 'finalizarTrabajo'])->name('ordenes.trabajo.finalizar');
         Route::post('/ordenes/{id}/insumos/add', [OrdenController::class, 'addInsumo'])->name('ordenes.addInsumo');
         Route::get('/vehiculos/{id}/orden-abierta', [OrdenController::class, 'verificarOrdenAbierta'])->name('vehiculos.checkOrden');
-        Route::post('/ordenes/{id}/add-manual-supply', [OrdenController::class, 'addManualSupply'])->name('ordenes.addManualSupply');
+        Route::post('ordenes/{id}/add-manual-supply', [OrdenController::class, 'addManualSupply'])->name('ordenes.addManualSupply');
+        Route::delete('/ordenes/purchase/{id}/delete', [OrdenController::class, 'deleteManualSupply'])->name('ordenes.deleteManualSupply');
         Route::post('/ordenes/{id}/habilitar-unidad', [OrdenController::class, 'habilitarUnidad'])->name('vehiculos.habilitarUnidad');
+        // Rutas para Evidencias Fotográficas
+        Route::post('/ordenes/{id}/fotos/add', [OrdenController::class, 'addFotos'])->name('ordenes.fotos.add');
+        Route::delete('/ordenes/fotos/{id}/delete', [OrdenController::class, 'destroyFoto'])->name('ordenes.fotos.destroy');
     
 
         // Permisos y Perfiles

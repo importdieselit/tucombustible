@@ -171,10 +171,11 @@ class OrdenController extends BaseController
 
     }
 
-    public function markAsReceived(InventarioSuministro $supply)
+    public function markAsReceived($id)
     {
         try {
             // Actualizar el estatus del suministro a 1 (Despachado/Recibido)
+            $supply = SuministroCompraDetalle::find($id);
             $supply->estatus = 1; 
             $supply->save();
 
@@ -184,11 +185,11 @@ class OrdenController extends BaseController
         }
     }
 
-    public function markRequestReceived(Request $request)
+    public function markRequestReceived($id)
     {
+        
         try {
-            $supply = SuministroCompraDetalle::find($request->id);
-            
+            $supply = SuministroCompraDetalle::find($id);
             // Actualizar el estatus del suministro a 1 (Despachado/Recibido)
             $supply->estatus = 1; 
             $supply->save();
@@ -571,7 +572,7 @@ class OrdenController extends BaseController
         $orden->update(['estatus' => 'ABIERTA', 'fecha_cierre' => null]);
         $vehiculo = $orden->id_vehiculo ? Vehiculo::find($orden->id_vehiculo) : null;
         if ($vehiculo) {
-            $vehiculo->update(['estatus' => 2]); // 2 = En Mantenimiento
+            $vehiculo->update(['estatus' =>3]); // 2 = En Mantenimiento
         }
 
          // Enviar notificación a Telegram
@@ -589,17 +590,37 @@ class OrdenController extends BaseController
      */
     public function addTrabajo(Request $request, $id)
     {
+        $mecanicos = $request->mecanicos; // [1] o [1, 2, 5]
+
+        // Procesamos la lógica: Si es array y tiene elementos, los unimos por coma
+        // Si no, lo dejamos nulo o vacío
+        $id_mecanico_formateado = is_array($mecanicos) ? implode(',', $mecanicos) : $mecanicos;
+    
         // Tu estándar de creación de trabajos
-        Trabajos::create([
+        $trabajo=Trabajos::create([
             'id_orden' => $id,
             'descripcion' => $request->descripcion,
-            'id_mecanico' => json_encode($request->mecanicos), // Varchar/Array
+            'id_mecanico' => $id_mecanico_formateado,
+            'id_tempario' => $request->id_tempario,
             'costo' => $request->costo,
             'id_tempario' => $request->id_tempario
         ]);
 
-        return back()->with('success', 'Trabajo agregado correctamente.');
+        return response()->json([
+            'success' => true, 
+            'message' => 'Trabajo agregado',
+            'data' => $trabajo
+        ]);
     }
+
+    public function deleteTrabajo($id)
+    {
+        $trabajo= Trabajos::find($id);
+        $trabajo->delete();
+
+        return response()->json(['success' => true]);
+    }
+
     
     
 
@@ -635,7 +656,7 @@ class OrdenController extends BaseController
             $cantidad_aprobada=0;  
             $costo_aprobado=0;
         }else{
-            $stat=1;
+            $stat=3;
             $cantidad_aprobada=$request->cantidad;
             $costo_aprobado=$request->costo;
         }
@@ -678,27 +699,7 @@ class OrdenController extends BaseController
         ]);
     }
 
-    public function removeInsumo($id)
-    {
-        // Lógica para eliminar un insumo de la orden
-        $suministro = InventarioSuministro::findOrFail($id);
-        
-        // Solo permitir eliminación si el suministro no ha sido entregado (estatus 2)
-        if ($suministro->estatus == 2) {
-            $suministro->delete();
-            return back()->with('success', 'Insumo eliminado correctamente.');
-        }
-
-        return back()->with('error', 'No se puede eliminar un insumo que ya ha sido entregado.');
-    }   
-
-    public function removeTrabajo($id)
-    {
-        // Lógica para eliminar un trabajo de la orden
-        $trabajo = Trabajos::findOrFail($id);
-        $trabajo->delete();
-        return back()->with('success', 'Trabajo eliminado correctamente.');
-    }
+    
 
     /**
      * Eliminar definitivamente (Solo si está anulada)
@@ -706,7 +707,14 @@ class OrdenController extends BaseController
     public function destroy($id)
     {
         $orden = Orden::findOrFail($id);
-        if($orden->estatus != 0) return response()->json(['success' => false, 'message' => 'Solo órdenes anuladas']);
+        $supply = InventarioSuministro::where('orden_id')->delete();
+        $compras = SuministroCompra::where('orden_id')->get();
+        foreach($compras as $compra){
+            $compra->detalles()->delete();
+            $compra->delete();
+        };
+        
+        if($orden->estatus != 4) return response()->json(['success' => false, 'message' => 'Solo órdenes anuladas']);
 
         $orden->delete(); // Gracias a OnDelete Cascade en DB, borra trabajos y suministros
         return response()->json(['success' => true]);
@@ -885,6 +893,59 @@ class OrdenController extends BaseController
             : redirect()->route('ordenes.list');
     }
 
+    public function addFotos(Request $request, $id)
+    {
+        $orden = Orden::findOrFail($id);
+
+        if ($request->hasFile('fotos_orden')) {
+            try {
+                foreach ($request->file('fotos_orden') as $index => $file) {
+                                   
+                // 1. Guardar en Servidor Físico (Storage)
+                    $filename = "orden_{$orden->nro_orden}_" . time() . "_{$index}." . $file->getClientOriginalExtension();
+                    $path = $file->storeAs('ordenes_fotos', $filename, 'public');
+
+                    // 2. Guardar en Base de Datos
+                    // Ajusta el modelo 'OrdenFoto' según el nombre real de tu tabla de fotos
+                    $orden->fotos()->create([
+                        'orden_id' => $orden->id,
+                        'ruta_archivo' => $path,
+                        'descripcion' => "Foto #{$index} Orden #{$orden->nro_orden}"
+                    ]);
+
+                    // 3. Enviar a Telegram (Tu lógica existente)
+                    if (isset($this->telegramService)) {
+                        $this->telegramService->sendPhotoOrden($file, "📸 Evidencia #".($index+1)." \nOrden: {$orden->nro_orden} \nVehículo: {$orden->vehiculoBelong->placa}");
+                    }
+                }
+
+                return response()->json(['success' => true, 'message' => 'Fotos procesadas correctamente.']);
+            } catch (\Exception $e) {
+                return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
+            }
+        }
+
+        return response()->json(['success' => false, 'message' => 'No se recibieron imágenes.']);
+    }
+
+    public function destroyFoto($id)
+    {
+        try {
+            $foto = OrdenFoto::findOrFail($id);
+
+            // Eliminar archivo físico
+            if (Storage::disk('public')->exists($foto->url)) {
+                Storage::disk('public')->delete($foto->url);
+            }
+
+            $foto->delete();
+
+            return response()->json(['success' => true, 'message' => 'Foto eliminada correctamente.']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
     /**
      * Almacena un nuevo suministro para una orden.
      * @param Request $request
@@ -965,20 +1026,22 @@ class OrdenController extends BaseController
      */
     public function deleteSupply($id)
     {
-        try {
             $supply = InventarioSuministro::findOrFail($id);
             $supply->delete();
 
             Session::flash('success', 'Suministro eliminado exitosamente.');
             return response()->json(['success' => true, 'message' => 'Suministro eliminado.']);
-        } catch (ModelNotFoundException $e) {
-            Session::flash('error', 'Suministro no encontrado.');
-            return response()->json(['success' => false, 'message' => 'Suministro no encontrado'], 404);
-        } catch (\Exception $e) {
-            Session::flash('error', 'Error al eliminar el suministro.');
-            return response()->json(['success' => false, 'message' => 'Error al eliminar el suministro.'], 500);
-        }
     }
+
+    public function deleteManualSupply($id)
+    {
+            $compra = SuministroCompraDetalle::findOrFail($id);
+            $compra->delete();
+
+            Session::flash('success', 'Requerimiento eliminado exitosamente.');
+            return response()->json(['success' => true, 'message' => 'Requerimiento eliminado.']);
+    }
+
 
     public function cerrarOrden(Request $request, $id)
     {
