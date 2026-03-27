@@ -135,7 +135,6 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/ordenes/{orden}/cerrar', [OrdenController::class, 'cerrarOrden'])->name('ordenes.cerrar');
         Route::post('/ordenes/{orden}/anular', [OrdenController::class, 'anularOrden'])->name('ordenes.anular');
         Route::post('/ordenes/{orden}/reactivar', [OrdenController::class, 'reactivarOrden'])->name('ordenes.reactivar');
-        Route::delete('/ordenes/{orden}', [OrdenController::class, 'destroyOrden'])->name('ordenes.destroy');
         Route::get('ordenes/search-supplies', [OrdenController::class, 'searchSupplies'])->name('ordenes.search-supplies');
         Route::post('/ordenes/supplies/receive/{supply}', [OrdenController::class, 'markAsReceived'])->name('ordenes.supplies.receive');
         Route::post('/ordenes/compras/receive/{supply}', [OrdenController::class, 'markRequestReceived'])->name('ordenes.compras.receive');
