@@ -1,6 +1,31 @@
 @extends('layouts.app')
 @push('styles')
 <style>
+.bg-chutos {
+        background-color: #ff6600 !important;
+    }
+    .bg-camiones {
+        background-color: #ffc107 !important;
+    }
+    .bg-cisternas {
+        background-color: #198754 !important;
+    }
+    .bg-camionetas {
+        background-color: #2c3e50 !important;
+    }
+
+    .border-chutos {
+        border-color: #ff6600 !important;
+    }
+    .border-camiones {
+        border-color: #ffc107 !important;
+        }
+    .border-cisternas {
+        border-color: #198754 !important;
+    }
+    .border-camionetas {
+        border-color: #2c3e50 !important
+    }
 
 @media print {
     /* Configuración de la página */
@@ -46,6 +71,21 @@
     /* Aseguramos que las tablas no se corten visualmente en el canvas */
     .is-capturing .table {
         background: white !important;
+    }
+
+    /* Colores suaves para los iconos */
+    .bg-primary-light { background-color: rgba(13, 110, 253, 0.1); }
+    .bg-success-light { background-color: rgba(25, 135, 84, 0.1); }
+    .bg-info-light    { background-color: rgba(13, 202, 240, 0.1); }
+    .bg-warning-light { background-color: rgba(255, 193, 7, 0.1); }
+    
+    /* Estilo de los cuadros */
+    .card {
+        border-radius: 10px;
+        transition: transform 0.2s;
+    }
+    .card:hover {
+        transform: translateY(-3px);
     }
 }
 </style>
@@ -129,58 +169,170 @@
     <div class="col-12">
         <div class="card shadow-sm">
             <div class="card-body">
-                <div class="mt-3 bg-white rounded shadow-sm border-start border-4 border-orange overflow-hidden">
-                {{-- Encabezado del Cuadro --}}
-                    <div class="p-3 bg-light d-flex justify-content-between align-items-center border-bottom">
-                        <div>
-                            <span class="text-uppercase fw-bold mb-0" style="font-size: 11px; color: #666; letter-spacing: 1px;">Unidades Fuera de Servicio</span>
 
+                <div class="row g-3 mb-4">
+                    <h3><strong>  UNIDADES OPERATIVAS</strong></h3>
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="card h-100 shadow-sm  border-chutos border-0 border-top border-4">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+                                <span class="fw-bold small text-uppercase"><i class="fas fa-truck-pickup me-1 text-corporate"></i> Chutos</span>
+                                <span class="badge bg-chutos rounded-pill">{{ $chutosOperativos->count() }}</span>
+                            </div>
+                            <div class="card-body p-2">
+                                <div class="d-flex flex-wrap gap-1">
+                                    @forelse($chutosOperativos as $v)
+                                        <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
+                                            <i class="fa-solid fa-truck-pickup text-muted"></i> {{ $v->flota }} <span class="text-muted">|</span> {{ $v->placa }}
+                                        </span>
+                                    @empty
+                                        <span class="text-muted x-small ps-1">Sin unidades operativas</span>
+                                    @endforelse
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                </div>
-                <div class="table-responsive pt-1">
-                    <table class="table table-hover mb-0">
-                    <thead class="bg-light">
-                        <tr>
-                            <th class="py-2 px-3 text-uppercase small text-muted" style="width: 100px;">Unidad</th>
-                            <th class="py-2 px-3 text-uppercase small text-muted">Detalles</th>
-                            <th class="py-2 px-3 text-uppercase small text-muted text-end" style="width: 150px;">Tiempo</th>
-                        </tr>
-                    </thead>
-                        <tbody>
-                            @forelse($camionesFalla as $f)
-                               <tr class="viaje-row" style="border-left: 5px solid #e74c3c">
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="me-2">
-                                                <i class="fas fa-truck text-muted"></i>
-                                            </div>
-                                            <div>
-                                                <span class="fw-bold text-dark" style="font-size: 13px;">{{ $f->flota }} - {{ $f->placa }}</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <span class="small text-muted">{{ $f->observacion ?? 'Sin diagnóstico' }}</span>    
-                                    </td>
-                                    <td class="text-end align-middle px-3 fw-black text-dark">
-                                       @if($f->ordenActiva)
-                                            <span class="badge {{ $f->dias_fuera_servicio > 7 ? 'bg-danger' : 'bg-warning text-dark' }}" style="font-size: 0.7rem;">
-                                                <i class="bi bi-clock-history"></i> {{ $f->dias_fuera_servicio }} DÍAS
-                                            </span>
-                                            <div style="font-size: 0.65rem;" class="text-muted">Desde: {{ $f->ordenActiva->created_at->format('d/m/Y') }}</div>
-                                        @else
-                                            <span class="badge bg-secondary" style="font-size: 0.7rem;">SIN ORDEN</span>
-                                        @endif 
-                                    </td>
-                               </tr>
-                            @empty 
-                               <tr colspan="3" class="text-muted small">Sin Novedades</tr>
-                            @endforelse
-                            
-                        </tbody>
-                    </table>
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="card h-100 shadow-sm border-0 border-top border-4 border-camiones">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+                                <span class="fw-bold small text-uppercase"><i class="fas fa-truck me-1 text-warning"></i> Camiones</span>
+                                <span class="badge bg-camiones rounded-pill">{{ $camionesOperativos->count() }}</span>
+                            </div>
+                            <div class="card-body p-2">
+                                <div class="d-flex flex-wrap gap-1">
+                                    @forelse($camionesOperativos as $v)
+                                        <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
+                                            <i class="fas fa-truck text-muted"></i> {{ $v->flota }} <span class="font-weight-bold text-muted">|</span> {{ $v->placa }}
+                                        </span>
+                                    @empty
+                                        <span class="text-muted x-small ps-1">Sin unidades operativas</span>
+                                    @endforelse
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="card h-100 shadow-sm border-0 border-top border-4 border-cisternas">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+                                <span class="fw-bold small text-uppercase"><i class="fas fa-trailer me-1 text-success"></i> Cisternas</span>
+                                <span class="badge bg-cisternas rounded-pill">{{ $cisternasOperativas->count() }}</span>
+                            </div>
+                            <div class="card-body p-2">
+                                <div class="d-flex flex-wrap gap-1">
+                                    @forelse($cisternasOperativas as $v)
+                                        <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
+                                            <i class="fas fa-trailer text-muted"></i> {{ $v->nro_flota }} <span class="text-muted">|</span> {{ $v->placa }}
+                                        </span>
+                                    @empty
+                                        <span class="text-muted x-small ps-1">Sin unidades operativas</span>
+                                    @endforelse
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="card h-100 shadow-sm border-0 border-top border-4 border-camionetas">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+                                <span class="fw-bold small text-uppercase"><i class="fas fa-car me-1 text-secondary"></i> Livianos</span>
+                                <span class="badge bg-camioneta text-dark rounded-pill">{{ $camionetasOperativas->count() }}</span>
+                            </div>
+                            <div class="card-body p-2">
+                                <div class="d-flex flex-wrap gap-1">
+                                    @forelse($camionetasOperativas as $v)
+                                        <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
+                                            <i class="fas fa-car text-muted"></i>{{ $v->nro_flota }} <span class="text-muted">|</span> {{ $v->placa }}
+                                        </span>
+                                    @empty
+                                        <span class="text-muted x-small ps-1">Sin unidades operativas</span>
+                                    @endforelse
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3><strong>  UNIDADES CON FALLA</strong></h3>
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="card h-100 shadow-sm border-0 border-top border-4 border-chutos">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+                                <span class="fw-bold small text-uppercase"><i class="fas fa-truck-pickup me-1 text-corporate"></i> Chutos</span>
+                                <span class="badge bg-chutos rounded-pill">{{ $chutosFalla->count() }}</span>
+                            </div>
+                            <div class="card-body p-2">
+                                <div class="d-flex flex-wrap gap-1">
+                                    @forelse($chutosFalla as $v)
+                                        <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
+                                            <i class="fa-solid fa-truck-pickup text-muted"></i> {{ $v->flota }} <span class="text-muted">|</span> {{ $v->placa }}
+                                        </span>
+                                    @empty
+                                        <span class="text-muted x-small ps-1">Sin unidades operativas</span>
+                                    @endforelse
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="card h-100 shadow-sm border-0 border-top border-4 border-warning">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+                                <span class="fw-bold small text-uppercase"><i class="fas fa-truck me-1 text-warning"></i> Camiones</span>
+                                <span class="badge bg-warning rounded-pill">{{ $camionesFalla->count() }}</span>
+                            </div>
+                            <div class="card-body p-2">
+                                <div class="d-flex flex-wrap gap-1">
+                                    @forelse($camionesFalla as $v)
+                                        <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
+                                            <i class="fas fa-truck text-muted"></i> {{ $v->flota }} <span class="font-weight-bold text-muted">|</span> {{ $v->placa }}
+                                        </span>
+                                    @empty
+                                        <span class="text-muted x-small ps-1">Sin unidades operativas</span>
+                                    @endforelse
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="card h-100 shadow-sm border-0 border-top border-4 border-success">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+                                <span class="fw-bold small text-uppercase"><i class="fas fa-trailer me-1 text-success"></i> Cisternas</span>
+                                <span class="badge bg-success rounded-pill">{{ $cisternasFalla->count() }}</span>
+                            </div>
+                            <div class="card-body p-2">
+                                <div class="d-flex flex-wrap gap-1">
+                                    @forelse($cisternasFalla as $v)
+                                        <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
+                                            <i class="fas fa-trailer text-muted"></i> {{ $v->nro_flota }} <span class="text-muted">|</span> {{ $v->placa }}
+                                        </span>
+                                    @empty
+                                        <span class="text-muted x-small ps-1">Sin unidades operativas</span>
+                                    @endforelse
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="card h-100 shadow-sm border-0 border-top border-4 border-secondary">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
+                                <span class="fw-bold small text-uppercase"><i class="fas fa-car me-1 text-secondary"></i> Livianos</span>
+                                <span class="badge bg-secondary text-dark rounded-pill">{{ $camionetasFalla->count() }}</span>
+                            </div>
+                            <div class="card-body p-2">
+                                <div class="d-flex flex-wrap gap-1">
+                                    @forelse($camionetasFalla as $v)
+                                        <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
+                                            <i class="fas fa-car text-muted"></i>{{ $v->nro_flota }} <span class="text-muted">|</span> {{ $v->placa }}
+                                        </span>
+                                    @empty
+                                        <span class="text-muted x-small ps-1">Sin unidades operativas</span>
+                                    @endforelse
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>     
         </div>
@@ -261,7 +413,7 @@
                                                     @php($cisterna=$viaje->cisterna()->first())
                                                     <br>
                                                     <i class="fas fa-link text-muted opacity-50" style="font-size"></i>
-                                                    {{  '['.$cisterna->flota.'] '.$cisterna->placa }}
+                                                    [{{ $cisterna->flota}}] <span class="text-success">{{ $cisterna->placa }}</span>
                                                 @endif
                                             </span>
                                         </div>
@@ -366,7 +518,7 @@ document.addEventListener('DOMContentLoaded', function() {
     chart: { type: 'column', backgroundColor: 'transparent' },
     title: { text: null },
     xAxis: { 
-        categories: ['Tanques', 'Livianos', 'Motrices'], 
+        categories: [ 'Chutos', 'Camiones', 'Tanques', 'Livianos'], 
         crosshair: true,
         labels: { style: { fontWeight: 'bold', color: '#2c3e50' } }
     },
@@ -380,7 +532,7 @@ document.addEventListener('DOMContentLoaded', function() {
             dataLabels: {
                 enabled: true,
                 // Mostramos cantidad y el nombre de la categoría
-                format: '{point.y} <br/><small style="font-weight: normal; font-size: 9px">{point.category}</small>',
+                format: '{point.y}',
                 style: {
                     fontSize: '12px',
                     fontFamily: 'inherit',
@@ -391,13 +543,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     },
-    colors: ['#ff6600', '#2c3e50', '#95a5a6'],
+    colors: ['#ff6600', '#ffc107','#198754','#2c3e50'],
     series: [{
         name: '',
         data: [
+            { y: {{ $totalChutos }}, name: 'Chutos' },
+            { y: {{ $totalCamiones }}, name: 'Camiones' },
             { y: {{ $totalCisternas }}, name: 'Tanques' }, 
-            { y: {{ $totalLivianos }}, name: 'Livianos' }, 
-            { y: {{ $totalMotrices }}, name: 'Motrices' }
+            { y: {{ $totalLivianos }}, name: 'Livianos' } 
         ]
     }],
     credits: { enabled: false }

@@ -636,8 +636,10 @@ class VehiculoController extends BaseController
     $enRuta = $data->where('estatus', 2)->count();
     $cisternas= $data->where('tipo', 2);
     $totalCisternas= $cisternas->count();
-    $motrices = $data->whereIn('tipoVehiculo.tipo', ['CHUTO', 'CAMION','CAMION CISTERNA']);
-    $totalMotrices= $motrices->count();
+    $camiones = $data->whereIn('tipoVehiculo.tipo', ['CAMION','CAMION CISTERNA']);
+    $chutos = $data->whereIn('tipoVehiculo.tipo', ['CHUTO']);
+    $totalCamiones= $camiones->count();
+    $totalChutos= $chutos->count();
 
     $fallaCount = $data->whereIn('estatus', [3,4,5])->count();
     $porcentajeDisponibilidad = $total > 0 ? round(($operativosCount / $total) * 100) : 0;
@@ -646,10 +648,12 @@ class VehiculoController extends BaseController
     
     $cisternasFalla = $cisternas->where('estatus', '!=', 1);
     $cisternasOperativas = $cisternas->where('estatus', 1);
-    $camionesFalla = $data->where('estatus', '>', 2);
+    $camionesFalla = $camiones->where('estatus', '>', 2);
+    $chutosFalla = $chutos->where('estatus', '>', 2);
     $camionetasFalla = $ligero->where('estatus', '!=', 1);
     $camionetasOperativas = $ligero->where('estatus', 1);
-    $camionesOperativos = $motrices->where('tipoVehiculo.tipo', 'CAMION')->where('estatus', 1);
+    $camionesOperativos = $camiones->where('estatus', 1);
+    $chutosOperativos = $chutos->where('estatus', 1);
 
    $today = Carbon::parse($today); 
    $vehiculosEnUsoHoy = Viaje::whereDate('fecha_salida', $today)
@@ -667,7 +671,8 @@ class VehiculoController extends BaseController
 
     return view('vehiculo.reporte_disponibilidad', compact(
         'today', 'cisternasFalla', 'enRuta', 'totalCisternas','camionesFalla', 'despachosHoy', 
-        'camionetasFalla', 'camionetasOperativas', 'totalLivianos','totalMotrices','camionesOperativos', 
+        'camionetasFalla', 'camionetasOperativas', 'totalLivianos','totalCamiones', 'totalChutos',
+        'chutosFalla', 'chutosOperativos', 'camionesOperativos', 
         'total', 'operativosCount', 'fallaCount', 'porcentajeDisponibilidad','cisternasOperativas','utilizacionFlota'
 
     ));
