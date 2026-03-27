@@ -202,7 +202,7 @@ class Vehiculo extends Model
 
     public function viajes()
     {
-        return $this->hasMany(Viaje::class, 'id_vehiculo');
+        return $this->hasMany(Viaje::class, 'vehiculo_id');
     }
 
     public function ordenActiva()

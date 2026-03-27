@@ -119,7 +119,9 @@
         <div class="bg-dark p-4 text-white d-flex justify-content-between align-items-center">
             <div>
                 <h3 class="mb-0 fw-bold">TUCOMBUSTIBLE</h3>
-                <span class="badge bg-primary">REPORTE DIARIO DE FLOTA</span>
+            </div>
+            <div>
+                <h1 class="fw-bold">REPORTE DIARIO DE FLOTA</h1>
             </div>
             <div class="text-end">
                 <div class="h4 mb-0">{{ $today->translatedFormat('d M, Y') }}</div>
@@ -171,7 +173,7 @@
             <div class="card-body">
 
                 <div class="row g-3 mb-4">
-                    <h3><strong>  UNIDADES OPERATIVAS</strong></h3>
+                    <h3 class="w-100 text-center"><strong>  UNIDADES OPERATIVAS</strong></h3>
                     <div class="col-12 col-md-6 col-lg-3">
                         <div class="card h-100 shadow-sm  border-chutos border-0 border-top border-4">
                             <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
@@ -252,7 +254,7 @@
                         </div>
                     </div>
 
-                    <h3><strong>  UNIDADES CON FALLA</strong></h3>
+                    <h3 class="w-100 text-center"><strong>  UNIDADES CON FALLA</strong></h3>
                     <div class="col-12 col-md-6 col-lg-3">
                         <div class="card h-100 shadow-sm border-0 border-top border-4 border-chutos">
                             <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
