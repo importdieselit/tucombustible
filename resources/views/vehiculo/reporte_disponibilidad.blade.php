@@ -1,6 +1,28 @@
 @extends('layouts.app')
 @push('styles')
 <style>
+
+    .badge {
+  /* Alineación */
+  display: inline-flex;
+  align-items: center;
+  gap: 3px; /* Espacio entre icono y texto */
+  
+  /* Estilo del fondo y texto */
+  background-color: #007bff;
+  color: white;
+  padding: 5px 5px;
+  border-radius: 20px;
+  font-family: sans-serif;
+  font-size: 12px;
+}
+
+.icon {
+  display: flex;
+  align-items: center;
+  /* Si usas fuentes de iconos como FontAwesome, 
+     esto asegura que no haya desfases */
+}
 .bg-chutos {
         background-color: #ff6600 !important;
     }
@@ -130,15 +152,23 @@
         </div>
 
         <div class="row g-0 border-bottom">
-            <div class="col-md-4 p-4 text-center border-end">
+            <div class="col-md-3 p-4 text-center border-end">
                 <div class="display-5 fw-bold text-primary">{{ $total }}</div>
                 <div class="text-uppercase small fw-bold text-muted">Total Flota</div>
             </div>
-            <div class="col-md-4 p-4 text-center border-end">
+            <div class="col-md-2 p-4 text-center border-end">
                 <div class="display-5 fw-bold text-success">{{ $operativosCount }}</div>
-                <div class="text-uppercase small fw-bold text-muted">Unidades Activas</div>
+                <div class="text-uppercase small fw-bold text-muted">Activas</div>
             </div>
-            <div class="col-md-4 p-4 text-center">
+            <div class="col-md-2 p-4 text-center border-end">
+                <div class="display-5 fw-bold text-danger">{{ $fallaCount }}</div>
+                <div class="text-uppercase small fw-bold text-muted">Inoperativas</div>
+            </div>
+            <div class="col-md-2 p-4 text-center border-end">
+                <div class="display-5 fw-bold text-warning">{{ $enRuta }}</div>
+                <div class="text-uppercase small fw-bold text-muted">En Ruta</div>
+            </div>
+            <div class="col-md-3 p-4 text-center">
                 <div class="h2 mb-1 fw-bold {{ $porcentajeDisponibilidad > 80 ? 'text-success' : 'text-warning' }}">
                     {{ $porcentajeDisponibilidad }}%
                 </div>
@@ -236,9 +266,12 @@
 
                     <div class="col-12 col-md-6 col-lg-3">
                         <div class="card h-100 shadow-sm border-0 border-top border-4 border-camionetas">
-                            <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
-                                <span class="fw-bold small text-uppercase"><i class="fas fa-car me-1 text-secondary"></i> Livianos</span>
-                                <span class="badge bg-secondary rounded-pill">{{ $camionetasOperativas->count() }} de {{ $totalLivianos }}</span>
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center align-middle py-2">
+                                <span class="w-100 fw-bold small text-uppercase align-middle">
+                                    <i class="fas fa-car me-1 text-secondary m-0 p-0"></i> Livianos
+                                </span>
+                                    <span class="badge bg-secondary rounded-pill">{{ $camionetasOperativas->count() }} de {{ $totalLivianos }}</span>
+                                
                             </div>
                             <div class="card-body p-2">
                                 <div class="d-flex flex-wrap gap-1">
@@ -267,6 +300,9 @@
                                         <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
                                             <i class="fa-solid fa-truck-pickup text-muted"></i> {{ $v->flota }} <span class="text-muted">|</span> {{ $v->placa }}
                                         </span>
+                                        <span class="badge {{ $v->dias_fuera_servicio > 7 ? 'bg-danger' : 'bg-warning text-dark' }}" style="font-size: 0.7rem;">
+                                             {{ $v->dias_fuera_servicio }} DÍAS
+                                        </span>
                                     @empty
                                         <span class="text-muted x-small ps-1">Sin unidades operativas</span>
                                     @endforelse
@@ -286,6 +322,9 @@
                                     @forelse($camionesFalla as $v)
                                         <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
                                             <i class="fas fa-truck text-muted"></i> {{ $v->flota }} <span class="font-weight-bold text-muted">|</span> {{ $v->placa }}
+                                        </span>
+                                        <span class="badge {{ $v->dias_fuera_servicio > 7 ? 'bg-danger' : 'bg-warning text-dark' }}" style="font-size: 0.7rem;">
+                                             {{ $v->dias_fuera_servicio }} DÍAS
                                         </span>
                                     @empty
                                         <span class="text-muted x-small ps-1">Sin unidades operativas</span>
@@ -307,6 +346,9 @@
                                         <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
                                             <i class="fas fa-trailer text-muted"></i> {{ $v->nro_flota }} <span class="text-muted">|</span> {{ $v->placa }}
                                         </span>
+                                        <span class="badge {{ $v->dias_fuera_servicio > 7 ? 'bg-danger' : 'bg-warning text-dark' }}" style="font-size: 0.7rem;">
+                                            {{ $v->dias_fuera_servicio }} DÍAS
+                                        </span>
                                     @empty
                                         <span class="text-muted x-small ps-1">Sin unidades operativas</span>
                                     @endforelse
@@ -326,6 +368,9 @@
                                     @forelse($camionetasFalla as $v)
                                         <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
                                             <i class="fas fa-car text-muted"></i>{{ $v->nro_flota }} <span class="text-muted">|</span> {{ $v->placa }}
+                                        </span>
+                                        <span class="badge {{ $v->dias_fuera_servicio > 7 ? 'bg-danger' : 'bg-warning text-dark' }}" style="font-size: 0.7rem;">
+                                            <i class="bi bi-clock-history"></i> {{ $v->dias_fuera_servicio }} DÍAS
                                         </span>
                                     @empty
                                         <span class="text-muted x-small ps-1">Sin unidades operativas</span>
@@ -641,7 +686,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const canvas = await html2canvas(printableArea, {
                 scale: 2, // Aumenta la escala para mejor calidad de imagen
                 logging: false, // Desactiva logs de html2canvas
-                useCORS: true // Necesario si hay imágenes o recursos externos
+                useCORS: true, // Necesario si hay imágenes o recursos externos
+                windowWidth: 1300 // Mantenemos el estándar de ancho del Master Card
+
             });
 
             // Opcional: Mostrar el canvas generado en el DOM
@@ -701,7 +748,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 useCORS: true,
                 logging: false,
                 backgroundColor: '#ffffff',
-                windowWidth: 1000 // Mantenemos el estándar de ancho del Master Card
+                windowWidth: 1300 // Mantenemos el estándar de ancho del Master Card
             });
 
             // 3. Convertir a URL de datos (Data URL)
