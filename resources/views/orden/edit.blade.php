@@ -125,7 +125,7 @@
                 </div>
                 <div class="col-md-4">
                     <label class="small fw-bold">Tarea / Trabajo Específico</label>
-                    <select id="select-servicio" class="form-select form-select-sm select2" disabled>
+                    <select id="select-servicio" class="form-select form-select-sm select2">
                         <option value="">Seleccione categoría primero</option>
                     </select>
                 </div>
