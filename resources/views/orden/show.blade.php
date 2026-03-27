@@ -736,7 +736,7 @@
             };
 
 
-            const response = await fetch(`/ordenes/${orderId}/trabajos/add`, {
+            const response = fetch(`/ordenes/${orderId}/trabajos/add`, {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
