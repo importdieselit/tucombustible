@@ -230,58 +230,7 @@
                     </div>
                 </div>
             </div>
-            {{-- CUADRO TRABAJOS EXTERNOS --}}
-            
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
-                    <h6 class="m-0 fw-bold text-uppercase small text-secondary">
-                        <i class="bi bi-shredder me-2"></i>Servicios Externos y Tercerizados
-                    </h6>
-                    <button type="button" class="btn btn-primary btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#modalTrabajoExterno">
-                        <i class="bi bi-plus-lg me-1"></i>Registrar Servicio
-                    </button>
-                </div>
-            <div class="card-body p-0">
-                <div     class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="bg-light">
-                            <tr>
-                                <th class="x-small border-0">FECHA</th>
-                                <th class="x-small border-0">PROVEEDOR</th>
-                                <th class="x-small border-0">DESCRIPCIÓN DEL TRABAJO</th>
-                                <th class="x-small border-0 text-end">COSTO FACTURADO</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @php $totalExterno = 0; @endphp
-                            @forelse($orden->trabajosExternos as $trabajo)
-                                @php $totalExterno += $trabajo->costo; @endphp
-                                <tr>
-                                    <td class="small text-muted">{{ \Carbon\Carbon::parse($trabajo->fecha)->format('d/m/Y') }}</td>
-                                    <td class="small fw-bold text-dark">{{ $trabajo->proveedor->nombre ?? 'N/A' }}</td>
-                                    <td class="small text-secondary">{{ $trabajo->descripcion }}</td>
-                                    <td class="small fw-bold text-end text-primary font-monospace">${{ number_format($trabajo->costo, 2) }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" class="text-center py-4 text-muted small italic">
-                                        <i class="bi bi-info-circle me-1"></i> No se han registrado servicios externos para esta orden.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                        @if($totalExterno > 0)
-                        <tfoot class="bg-light-primary">
-                            <tr>
-                                <td colspan="3" class="text-end fw-bold x-small text-uppercase">Subtotal Servicios Externos:</td>
-                                <td class="text-end fw-bold text-primary font-monospace">${{ number_format($totalExterno, 2) }}</td>
-                            </tr>
-                        </tfoot>
-                        @endif
-                    </table>
-                </div>
-            </div>
-        </div>
+
             <div class="col-12 mt-4 mb-5">
                 <button type="submit" class="btn btn-orange btn-lg w-100 shadow fw-bold py-3 text-uppercase">
                     <i class="fas fa-save me-2"></i> Procesar Orden de Trabajo
