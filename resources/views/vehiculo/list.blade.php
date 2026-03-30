@@ -141,13 +141,13 @@
                             }
                             @endphp
                     <tr class="clickable-row" @if($orden && $duracionDias>3) style="border: none red !important; font-weight: bold;" @endif  data-id="{{ $vehiculo->id }}">
-                        <td class="d-none d-md-table-cell">{{ $index + 1 }}</td>
-                        <td>{{ $vehiculo->flota ?? 'N/A' }}</td>
+                        <td class="d-none d-md-table-cell clickable-td">{{ $index + 1 }}</td>
+                        <td class="clickable-td">{{ $vehiculo->flota ?? 'N/A' }}</td>
                         {{-- <td>{{ $vehiculo->cliente->nombre ?? 'N/A' }}</td> --}}
                         {{-- <td>{{ $vehiculo->clase ?? 'N/A' }}</td> --}}
-                        <td  class="d-none d-md-table-cell">{{ $vehiculo->marca()->marca ?? 'N/A' }} / {{ $vehiculo->modelo()->modelo ?? 'N/A' }}</td>
-                        <td  class="d-none d-md-table-cell">{{ $vehiculo->anno }}</td>
-                        <td><div class="d-flex flex-column">
+                        <td  class="d-none d-md-table-cell clickable-td">{{ $vehiculo->marca()->marca ?? 'N/A' }} / {{ $vehiculo->modelo()->modelo ?? 'N/A' }}</td>
+                        <td  class="d-none d-md-table-cell clickable-td">{{ $vehiculo->anno }}</td>
+                        <td class="clickable-td"><div class="d-flex flex-column">
                         <strong>{{ $vehiculo->placa }}</strong>
                         
                         {{-- Lógica de Acople --}}
@@ -182,8 +182,8 @@
                             @endif
                         @endif
                     </div></td>
-                        <td  class="d-none d-md-table-cell">{{ $vehiculo->tipoVehiculo->tipo ?? 'N/A' }}</td>
-                        <td class="d-none d-md-table-cell">{{ number_format($vehiculo->kilometraje ?? 0, 0, ',', '.') }} km</td>
+                        <td  class="d-none d-md-table-cell clickable-td">{{ $vehiculo->tipoVehiculo->tipo ?? 'N/A' }}</td>
+                        <td class="d-none d-md-table-cell clickable-td">{{ number_format($vehiculo->kilometraje ?? 0, 0, ',', '.') }} km</td>
                         <td>
                             @php
                                 $estatusInfo = $estatusData->get($vehiculo->estatus);
@@ -215,15 +215,23 @@
                             @endif
                         </td>
                         <td  class="d-none d-md-table-cell">
-                                @if($orden)
-                                 <a href="/ordenes/{{$orden->id}} " style="decoration:none; cursor: pointer;" target="_blank" >   
-                                        {{$duracionDias ?? 0}}
-                                </a> 
-                                @else
-                                    0
-                                @endif                            
+                            @if($vehiculo->ordenActiva)
+                                <span class="badge bg-danger text-white cursor-pointer btn-detalle-orden" 
+                                    style="cursor: pointer;"
+                                    data-nro="{{ $vehiculo->ordenActiva->nro_orden }}"
+                                    data-tipo="{{ $vehiculo->ordenActiva->tipo_orden ?? 'Mantenimiento' }}"
+                                    data-desc="{{ $vehiculo->ordenActiva->descripcion }}"
+                                    data-obs="{{ $vehiculo->ordenActiva->observaciones ?? 'Sin observaciones adicionales' }}"
+                                    data-url="{{ route('ordenes.show', $vehiculo->ordenActiva->id) }}"
+                                    title="Click para ver detalles">
+                                    <i class="fa fa-info-circle"></i>
+                                    {{ $duracionDias ?? 0 }}
+                                </span>
+                            @else
+                                <span class="text-muted small">-</span>
+                            @endif
                         </td>
-                        <td class="d-none d-md-table-cell text-center">
+                        <td class="d-none d-md-table-cell text-center clickable-td">
                             @php
                                 $alertas = $vehiculo->getDocumentosAlertas();
                             @endphp
@@ -288,6 +296,35 @@
                     <button type="submit" class="btn btn-sm btn-primary w-100">Confirmar Acople</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalDetalleOrden" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" id="modalTitulo">Orden #<span id="txt-nro-orden"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="fw-bold small text-muted text-uppercase">Tipo de Orden</label>
+                    <div id="txt-tipo-orden" class="p-2 bg-light rounded border-start border-4 border-primary"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="fw-bold small text-muted text-uppercase">Descripción</label>
+                    <p id="txt-descripcion" class="small mb-0"></p>
+                </div>
+                <div class="mb-0">
+                    <label class="fw-bold small text-muted text-uppercase">Observaciones</label>
+                    <p id="txt-observaciones" class="small mb-0 text-secondary italic"></p>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                <a href="#" id="btn-ir-orden" class="btn btn-primary btn-sm">Ver Hoja Técnica Completa</a>
+            </div>
         </div>
     </div>
 </div>
@@ -358,12 +395,34 @@
             });
 
             // Lógica para redirigir al hacer clic en una fila
-            $('#vehiculosTable tbody').on('click', 'tr', function() {
-                var id = $(this).data('id');
+            $('#vehiculosTable tbody').on('click', 'td.clickable-td', function() {
+                var id = $(this).closest('tr').data('id');
                 if (id) {
                     let url = "{{ route('vehiculos.show', ':id') }}";
                     window.location.href = url.replace(':id', id);
                 }
+            });
+
+            $('.btn-detalle-orden').on('click', function() {
+                console.log('Detalle orden clicked');
+                const btn = $(this);
+                
+                // Extraer datos de los atributos data-
+                const nro = btn.data('nro');
+                const tipo = btn.data('tipo');
+                const desc = btn.data('desc');
+                const obs = btn.data('obs');
+                const url = btn.data('url');
+                console.log({ nro, tipo, desc, obs, url });
+                // Inyectar en el modal
+                $('#txt-nro-orden').text(nro);
+                $('#txt-tipo-orden').text(tipo);
+                $('#txt-descripcion').text(desc);
+                $('#txt-observaciones').text(obs);
+                $('#btn-ir-orden').attr('href', url);
+
+                // Mostrar el modal
+                $('#modalDetalleOrden').modal('show');
             });
         });
        function abrirModalAcoplar(id, placa) {
@@ -402,6 +461,8 @@
                 window.location.href = `/vehiculos/desacoplar/${id}`;
             }
         });
+
+        
     }
     </script>
 @endpush

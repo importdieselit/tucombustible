@@ -14,27 +14,27 @@
 <div class="col-12 col-md-auto ms-auto pt-2">
     <div class="d-grid d-md-flex gap-2 flex-wrap" style="grid-template-columns: repeat(2, 1fr);">
         
-        <button class="btn btn-corporate shadow-sm w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#modalKm">
+        <button class="btn btn-corporate shadow-sm  w-md-auto" data-bs-toggle="modal" data-bs-target="#modalKm">
             <i class="fa-solid fa-gauge-high me-1"></i> KM
         </button>
 
-        <button class="btn btn-warning shadow-sm w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#modalPlanificar">
+        <button class="btn btn-warning shadow-sm w-md-auto" data-bs-toggle="modal" data-bs-target="#modalPlanificar">
             <i class="fa-solid fa-calendar-check me-1"></i> <span class="d-inline d-md-none d-lg-inline">Planificar</span>
         </button>
 
         @if($esChuto)
-            <button class="btn btn-outline-dark shadow-sm w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#modalAcoplar">
+            <button class="btn btn-outline-dark shadow-sm w-md-auto" data-bs-toggle="modal" data-bs-target="#modalAcoplar">
                 <i class="fa-solid fa-link me-1"></i> Acoplar
             </button>
         @endif
 
-        <a class="btn btn-danger shadow-sm g-col-2 w-100 w-md-auto d-flex align-items-center justify-content-center" 
+        <a class="btn btn-danger shadow-sm g-col-2 w-md-auto d-flex align-items-center justify-content-center" 
            href="{{ route('ot.create', $item->id) }}" >
             <i class="fa-solid fa-triangle-exclamation me-1"></i> 
             <span class="text-nowrap">Crear Orden</span>
         </a>
 
-        <a href="{{ route('vehiculos.edit', $item->id) }}" class="btn btn-dark shadow-sm w-100 w-md-auto">
+        <a href="{{ route('vehiculos.edit', $item->id) }}" class="btn btn-dark shadow-sm w-md-auto">
             <i class="fa-solid fa-pen-to-square me-1 d-md-none"></i> Editar
         </a>
     </div>
