@@ -219,6 +219,8 @@
                                 <span class="badge bg-danger text-white cursor-pointer btn-detalle-orden" 
                                     style="cursor: pointer;"
                                     data-nro="{{ $vehiculo->ordenActiva->nro_orden }}"
+                                    data-flota="{{ $vehiculo->flota }}"
+                                    data-placa="{{ $vehiculo->placa }}"
                                     data-tipo="{{ $vehiculo->ordenActiva->tipo_orden ?? 'Mantenimiento' }}"
                                     data-desc="{{ $vehiculo->ordenActiva->descripcion }}"
                                     data-obs="{{ $vehiculo->ordenActiva->observaciones ?? 'Sin observaciones adicionales' }}"
@@ -301,29 +303,70 @@
 </div>
 
 <div class="modal fade" id="modalDetalleOrden" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title" id="modalTitulo">Orden #<span id="txt-nro-orden"></span></h5>
+    <div class="modal-dialog modal-dialog-centered modal-lg"> <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-dark text-white py-3">
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary rounded-circle p-2 me-3">
+                        <i class="bi bi-tools text-white fs-4"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title mb-0 fw-bold text-uppercase tracking-wider">Ficha de Orden de Trabajo</h5>
+                        <small class="text-info opacity-75">Control de Mantenimiento y Disponibilidad</small>
+                    </div>
+                </div>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label class="fw-bold small text-muted text-uppercase">Tipo de Orden</label>
-                    <div id="txt-tipo-orden" class="p-2 bg-light rounded border-start border-4 border-primary"></div>
+
+            <div class="modal-body p-4 bg-light">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body p-3 text-center">
+                                <span class="text-muted small d-block text-uppercase mb-1">Nro. Orden</span>
+                                <span id="txt-nro-orden" class="h5 fw-bold text-dark mb-0">---</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body p-3 text-center">
+                                <span class="text-muted small d-block text-uppercase mb-1">Unidad</span>
+                                <span id="txt-unidad" class="h5 fw-bold text-primary mb-0">---</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body p-3 text-center">
+                                <span class="text-muted small d-block text-uppercase mb-1">Categoría</span>
+                                <div id="txt-tipo-orden" class="mt-1"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="mb-3">
-                    <label class="fw-bold small text-muted text-uppercase">Descripción</label>
-                    <p id="txt-descripcion" class="small mb-0"></p>
-                </div>
-                <div class="mb-0">
-                    <label class="fw-bold small text-muted text-uppercase">Observaciones</label>
-                    <p id="txt-observaciones" class="small mb-0 text-secondary italic"></p>
+
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold border-bottom pb-2 mb-3">
+                            <i class="bi bi-file-text me-2"></i>DESCRIPCIÓN DEL REQUERIMIENTO
+                        </h6>
+                        <p id="txt-descripcion" class="text-dark leading-relaxed mb-4" style="text-align: justify;"></p>
+
+                        <h6 class="fw-bold border-bottom pb-2 mb-3">
+                            <i class="bi bi-chat-dots me-2"></i>OBSERVACIONES DE TALLER
+                        </h6>
+                        <div id="wrapper-obs" class="p-3 bg-white border-start border-4 border-warning rounded">
+                            <p id="txt-observaciones" class="small mb-0 text-secondary italic"></p>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="modal-footer bg-light">
-                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
-                <a href="#" id="btn-ir-orden" class="btn btn-primary btn-sm">Ver Hoja Técnica Completa</a>
+
+            <div class="modal-footer border-0 bg-white p-3">
+                <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Cerrar</button>
+                <a href="#" id="btn-ir-orden" class="btn btn-primary px-4 shadow-sm">
+                    <i class="bi bi-box-arrow-up-right me-2"></i>Gestionar Orden Completa
+                </a>
             </div>
         </div>
     </div>
@@ -410,6 +453,8 @@
                 // Extraer datos de los atributos data-
                 const nro = btn.data('nro');
                 const tipo = btn.data('tipo');
+                const placa = btn.data('placa');
+                const flota = btn.data('flota');
                 const desc = btn.data('desc');
                 const obs = btn.data('obs');
                 const url = btn.data('url');
@@ -417,6 +462,7 @@
                 // Inyectar en el modal
                 $('#txt-nro-orden').text(nro);
                 $('#txt-tipo-orden').text(tipo);
+                $('#txt-unidad').text(flota + ' [' + placa+']');
                 $('#txt-descripcion').text(desc);
                 $('#txt-observaciones').text(obs);
                 $('#btn-ir-orden').attr('href', url);
@@ -425,7 +471,7 @@
                 $('#modalDetalleOrden').modal('show');
             });
         });
-       function abrirModalAcoplar(id, placa) {
+    function abrirModalAcoplar(id, placa) {
         // Limpiar el select por si se abrió antes
         $('#formAcoplar')[0].reset();
         
