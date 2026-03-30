@@ -13,36 +13,23 @@ class Proveedor extends Model
     public $timestamps = true; // Tiene created_at y updated_at
 
     protected $fillable = [
-        'id_usuario',
-        'nombre_proveedor',
-        'contacto',
+        'nombre',
+        'rif',
         'telefono',
         'email',
         'direccion',
-        'tipo',
+        'id_tipo_proveedor',
         'created_by',
         'updated_by',
     ];
 
     protected $casts = [
-        'id_usuario' => 'integer',
-        'created_by' => 'integer',
-        'updated_by' => 'integer',
+        'id_tipo_proveedor' => 'integer',
     ];
 
-    // Relaciones
-    public function usuario()
+    public function tipoProveedor()
     {
-        return $this->belongsTo(User::class, 'id_usuario', 'id');
+        return $this->belongsTo(TipoProveedor::class, 'id_tipo_proveedor');
     }
-
-    public function createdBy()
-    {
-        return $this->belongsTo(User::class, 'created_by', 'id');
-    }
-
-    public function updatedBy()
-    {
-        return $this->belongsTo(User::class, 'updated_by', 'id');
-    }
+    
 }

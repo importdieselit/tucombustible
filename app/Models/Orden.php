@@ -189,4 +189,9 @@ class Orden extends Model
         $query->where('id_vehiculo', $vehiculoId);
     }
 
+    public function TrabajosExternos()
+    {
+        return $this->hasMany(TrabajoExterno::class, 'id_orden', 'id');
+    }
+
 }

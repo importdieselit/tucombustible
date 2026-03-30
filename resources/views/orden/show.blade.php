@@ -54,15 +54,6 @@
         </div>
         <div class="d-flex gap-2">
             @if($orden->estatus == 'ABIERTA' || $orden->estatus == 2)
-                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#modalTrabajo">
-                    <i class="fas fa-tools"></i> + Trabajo
-                </button>
-                <button class="btn btn-sm btn-info text-white" data-bs-toggle="modal" data-bs-target="#modalInsumo">
-                    <i class="fas fa-box"></i> + Insumo
-                </button>
-                <button type="button" class="btn btn-sm btn-corporate ms-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#manualSupplyModal">
-                    <i class="fa-solid fa-cart-plus me-1"></i> Solicitar a Compras
-                </button>
                 <a href="{{ route('ordenes.edit', $orden->id) }}" class="btn btn-sm btn-outline-primary">
                     <i class="fas fa-edit"></i> Editar
                 </a>
@@ -131,13 +122,25 @@
                 </div>
             </div>
         </div>
+        
     </div>
+    <div class="card card-step shadow-sm">
+                <div class="card-body">
+                    <label class="form-label-corp fw-bold text-uppercase small">Observaciones Técnicas:</label>
+                    <p class="mt-2 p-3 bg-light rounded border" style="min-height: 100px;">
+                        {!! $orden->descripcion ?: 'Sin observaciones adicionales.' !!}
+                    </p>
+                </div>
+            </div>
     <div class="row">
         {{-- COLUMNA TRABAJOS --}}
         <div class="col-md-6">
             <div class="card card-step shadow-sm mb-4">
-                <div class="card-header bg-white py-3">
-                    <h6 class="m-0 fw-bold text-uppercase small"><i class="fas fa-tools text-orange me-2"></i>Trabajos Ejecutados</h6>
+                <div class="card-header bg-white py-3 d-inline">
+                    <h6 class="m-0 fw-bold text-uppercase small d-inline"><i class="fas fa-tools text-orange me-2"></i>Trabajos Ejecutados</h6>
+                    <button class="btn btn-sm btn-corporate ms-2 shadow-sm d-inline float-end" data-bs-toggle="modal" data-bs-target="#modalTrabajo">
+                        <i class="fas fa-plus"></i> Agregar
+                    </button>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
@@ -202,21 +205,69 @@
                 </div>
             </div>
 
-            <div class="card card-step shadow-sm">
-                <div class="card-body">
-                    <label class="form-label-corp fw-bold text-uppercase small">Observaciones Técnicas:</label>
-                    <p class="mt-2 p-3 bg-light rounded border" style="min-height: 100px;">
-                        {!! $orden->descripcion ?: 'Sin observaciones adicionales.' !!}
-                    </p>
-                </div>
+            {{-- COLUMNA DE TRABAJOS EXT --}}
+            <div class="card card-step shadow-sm mb-4">
+                    <div class="card-header bg-white py-3 d-inline">
+                        <h6 class="m-0 fw-bold text-uppercase small d-inline"><i class="fas fa-shredder text-orange me-2"></i>Trabajos Externos</h6>
+                        <button type="button" class="btn btn-sm btn-corporate ms-2 shadow-sm d-inline float-end" data-bs-toggle="modal" data-bs-target="#modalTrabajoExterno">
+                            <i class="fa-solid fa-plus me-1"></i> agregar
+                        </button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="x-small border-0">FECHA</th>
+                                    <th class="x-small border-0">PROVEEDOR</th>
+                                    <th class="x-small border-0">DESCRIPCIÓN DEL TRABAJO</th>
+                                    <th class="x-small border-0 text-end">COSTO FACTURADO</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @php($totalExterno = 0)
+                                @forelse($orden->trabajosExternos as $trabajo)
+                                    @php($totalExterno += $trabajo->costo)
+                                    <tr>
+                                        <td class="small text-muted">{{ \Carbon\Carbon::parse($trabajo->fecha)->format('d/m/Y') }}</td>
+                                        <td class="small fw-bold text-dark">{{ $trabajo->proveedor->nombre ?? 'N/A' }}</td>
+                                        <td class="small text-secondary">{{ $trabajo->descripcion }}</td>
+                                        <td class="small fw-bold text-end text-primary font-monospace">${{ number_format($trabajo->costo, 2) }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4 text-muted small italic">
+                                            <i class="bi bi-info-circle me-1"></i> No se han registrado servicios externos para esta orden.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                            @if($totalExterno > 0)
+                            <tfoot class="bg-light-primary">
+                                <tr>
+                                    <td colspan="3" class="text-end fw-bold x-small text-uppercase">Subtotal Servicios Externos:</td>
+                                    <td class="text-end fw-bold text-primary font-monospace">${{ number_format($totalExterno, 2) }}</td>
+                                </tr>
+                            </tfoot>
+                            @endif
+                        </table>
+                    </div>
             </div>
+            
+            
         </div>
 
         {{-- COLUMNA INSUMOS --}}
         <div class="col-md-6">
             <div class="card card-step shadow-sm mb-4">
                 <div class="card-header bg-white py-3">
-                    <h6 class="m-0 fw-bold text-uppercase small"><i class="fas fa-box-open text-orange me-2"></i>Insumos y Repuestos</h6>
+                    <h6 class="m-0 fw-bold text-uppercase small d-inline"><i class="fas fa-box-open text-orange me-2"></i>Insumos y Repuestos</h6>
+                    <button class="btn btn-sm btn-info d-inline float-end text-white" data-bs-toggle="modal" data-bs-target="#modalInsumo">
+                        <i class="fas fa-box"></i> + Insumo
+                    </button>
+                    <button type="button" class="btn btn-sm d-inline float-end btn-corporate ms-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#manualSupplyModal">
+                        <i class="fa-solid fa-cart-plus me-1"></i> Solicitar a Compras
+                    </button>
+                    
                 </div>
                 
                 <div class="table-responsive">
@@ -352,6 +403,7 @@
                     </table>
                 </div>
             </div>
+                      
 
             <div class="card bg-corporate text-white shadow-sm">
                 <div class="card-body">
@@ -360,13 +412,17 @@
                         <span>${{ number_format($totalManoObra, 2) }}</span>
                     </div>
                     <div class="d-flex justify-content-between mb-2 small">
+                        <span>SUBTOTAL TRABAJOS EXTERNOS:</span>
+                        <span>${{ number_format($totalExterno, 2) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2 small">
                         <span>SUBTOTAL REPUESTOS:</span>
                         <span>${{ number_format($totalGeneral, 2) }}</span>
                     </div>
                     <hr class="bg-white my-2">
                     <div class="d-flex justify-content-between align-items-center">
                         <span class="fw-bold text-uppercase">TOTAL GENERAL:</span>
-                        <span class="fs-3 fw-bold text-orange">${{ number_format($totalManoObra + $totalGeneral, 2) }}</span>
+                        <span class="fs-3 fw-bold text-orange">${{ number_format($totalManoObra + $totalExterno + $totalGeneral, 2) }}</span>
                     </div>
                 </div>
             </div>
@@ -584,6 +640,68 @@
                     <i class="fas fa-upload me-1"></i> SUBIR Y ENVIAR
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalTrabajoExterno" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <form id="formTrabajoExterno" action="{{ route('ordenes.addTrabajoExterno', $orden->id) }}" method="POST">
+                @csrf
+                <input type="hidden" name="id_orden" value="{{ $orden->id }}">
+                <input type="hidden" name="id_usuario" value="{{ auth()->id() }}">
+
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fw-bold text-uppercase small">Registrar Gasto Externo</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="fw-bold small text-muted text-uppercase mb-1">Proveedor / Taller Externo</label>
+                        <div class="input-group">
+                            <select class="form-select select2-proveedor" name="id_proveedor" id="select-proveedor" required>
+                                <option value="">Seleccione un proveedor...</option>
+                                @foreach($proveedores as $prov)
+                                    <option value="{{ $prov->id }}">{{ $prov->nombre_proveedor }}</option>
+                                @endforeach
+                            </select>
+                            <button class="btn btn-outline-primary" type="button" id="btn-nuevo-proveedor" title="Agregar nuevo proveedor">
+                                <i class="bi bi-plus-circle-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="wrapper-nuevo-proveedor" class="mb-3 d-none animate__animated animate__fadeIn">
+                        <label class="fw-bold small text-primary text-uppercase mb-1">Nombre del Nuevo Proveedor</label>
+                        <input type="text" name="nuevo_proveedor_nombre" class="form-control form-control-sm border-primary" placeholder="Ej: Rectificadora Caracas C.A.">
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-7">
+                            <label class="fw-bold small text-muted text-uppercase mb-1">Fecha del Servicio</label>
+                            <input type="date" name="fecha" class="form-control form-control-sm" value="{{ date('Y-m-d') }}" required>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="fw-bold small text-muted text-uppercase mb-1">Costo Facturado ($)</label>
+                            <input type="number" name="costo" step="0.01" class="form-control form-control-sm font-monospace fw-bold text-primary" placeholder="0.00" required>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <label class="fw-bold small text-muted text-uppercase mb-1">Descripción del Trabajo Realizado</label>
+                        <textarea name="descripcion" class="form-control form-control-sm" rows="3" placeholder="Detalle el servicio técnico realizado..." required></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm">
+                        <i class="bi bi-save me-1"></i>Guardar Registro
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -842,6 +960,57 @@
             }
         });
 
+        $('#modalTrabajoExterno').on('shown.bs.modal', function () {
+            $('.select2-proveedor').select2({
+                dropdownParent: $('#modalTrabajoExterno'),
+                width: '100%',
+                placeholder: "Buscar proveedor registrado..."
+            });
+        });
+
+        // Toggle para agregar nuevo proveedor
+        $('#btn-nuevo-proveedor').on('click', function() {
+            const wrapper = $('#wrapper-nuevo-proveedor');
+            const select = $('#select-proveedor');
+            
+            if(wrapper.hasClass('d-none')) {
+                wrapper.removeClass('d-none');
+                select.val('').trigger('change').prop('required', false);
+                $(this).removeClass('btn-outline-primary').addClass('btn-primary');
+                wrapper.find('input').prop('required', true).focus();
+            } else {
+                wrapper.addClass('d-none');
+                select.prop('required', true);
+                $(this).removeClass('btn-primary').addClass('btn-outline-primary');
+                wrapper.find('input').prop('required', false).val('');
+            }
+        });
+
+        // Envío del Formulario
+        $('#formTrabajoExterno').on('submit', function(e) {
+            e.preventDefault();
+            const form = $(this);
+            const btn = form.find('button[type=\"submit\"]');
+            
+            btn.prop('disabled', true).html('<i class=\"fas fa-spinner fa-spin\"></i> Guardando...');
+
+            $.ajax({
+                url: form.attr('action'),
+                method: 'POST',
+                data: form.serialize(),
+                success: function(res) {
+                    if(res.success) {
+                        Swal.fire('¡Éxito!', 'El trabajo externo ha sido registrado correctamente.', 'success')
+                            .then(() => window.location.reload());
+                    }
+                },
+                error: function(err) {
+                    Swal.fire('Error', 'No se pudo registrar el trabajo. Verifique los datos.', 'error');
+                    btn.prop('disabled', false).html('<i class=\"bi bi-save me-1\"></i>Guardar Registro');
+                }
+            });
+        });
+
         // --- 6. MAPA ---
         @if($orden->latitud && $orden->longitud)
             const mapShow = L.map('map-show', {
@@ -854,6 +1023,8 @@
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapShow);
             L.marker([{{ $orden->latitud }}, {{ $orden->longitud }}]).addTo(mapShow);
         @endif
+
+
     });
 </script>
 @endpush

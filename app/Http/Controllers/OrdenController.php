@@ -36,6 +36,7 @@ use App\Models\TemparioServicio;
 use App\Models\TipoRequerimiento;
 use Illuminate\Support\Facades\DB;
 use App\Models\Proveedor;
+use App\Models\TrabajoExterno;
 
 
 class OrdenController extends BaseController
@@ -275,6 +276,7 @@ class OrdenController extends BaseController
 
         $insumos= InventarioSuministro::where('id_orden', $item->id)->get();
         $trabajos= Trabajos::where('id_orden', $item->id)->get();
+        $trabajosExternos = TrabajoExterno::where('id_orden', $item->id)->with(['proveedor'])->get();
         $fotos= OrdenFoto::where('orden_id',$item->id)->get();
         $requerimientos = SuministroCompra::where('orden_id', $item->id)->with('detalles')->get();
         $estatusData = EstatusData::find($item->estatus);
@@ -292,7 +294,8 @@ class OrdenController extends BaseController
             'estatusData' => $estatusData,
             'categorias_tempario' => $categorias_tempario,
             'personal' => $personal,
-            'inventario' => $inventario
+            'inventario' => $inventario,
+            'trabajosExternos' => $trabajosExternos
         ];  
 
     }
@@ -474,6 +477,7 @@ class OrdenController extends BaseController
             // Asumiendo que se puede obtener la orden con sus relaciones
             $orden = $this->model->where('id', $id)->with(['vehiculoBelong'])->first();
             $trabajos = Trabajos::where('id_orden', $id)->with(['categoria', 'servicio'])->get();
+            $trabajosExternos = TrabajoExterno::where('id_orden', $id)->with(['proveedor'])->get();
 
             // 1. Extraemos los IDs asegurando que no haya nulos y limpiando el array
             $todosLosIds = $trabajos->pluck('id_mecanico')
@@ -513,14 +517,72 @@ class OrdenController extends BaseController
             $personal = Personal::with('persona')->where('cargo', 'Mecánico')->get(); // Cargar relación con Persona para obtener nombres completos
             $inventario = Inventario::all()->keyBy('id_inventario');
             $suministros= InventarioSuministro::where('id_orden', $id)->with('inventario')->get();
+            $proveedores = Proveedor::whereIn('id_tipo_proveedor', [2])->orderBy('nombre')->get();
         
             $categorias_tempario = TemparioCategoria::orderBy('categoria')->get();
             
 
-            return view('orden.show', compact('orden', 'requerimientos', 'suministros','trabajos','estatusData','fotos', 'trabajos', 'personal', 'inventario','categorias_tempario'));
+            return view('orden.show', compact('orden', 'requerimientos', 'suministros','proveedores','trabajos','estatusData','fotos', 'trabajos', 'personal', 'inventario','categorias_tempario', 'trabajosExternos'));
         } catch (ModelNotFoundException $e) {
             Session::flash('error', 'La orden de trabajo no fue encontrada.');
             return Redirect::route('orden.list');
+        }
+    }
+
+    public function addTrabajoExterno(Request $request)
+    {
+        // 1. Validación estricta
+        $request->validate([
+            'id_orden'    => 'required|exists:ordenes,id',
+            'descripcion' => 'required|string|max:1000',
+            'fecha'       => 'required|date',
+            'costo'       => 'required|numeric|min:0',
+            // id_proveedor es requerido a menos que venga un nombre nuevo
+            'id_proveedor' => 'required_without:nuevo_proveedor_nombre|nullable|exists:proveedores,id',
+            'nuevo_proveedor_nombre' => 'required_without:id_proveedor|nullable|string|max:255',
+        ]);
+
+        try {
+            return DB::transaction(function () use ($request) {
+                
+                // 2. Lógica del Proveedor (Seleccionado vs Nuevo)
+                $idProveedor = $request->id_proveedor;
+
+                if ($request->filled('nuevo_proveedor_nombre')) {
+                    // Usamos firstOrCreate para evitar duplicados por nombre
+                    $proveedor = Proveedor::firstOrCreate(
+                        ['nombre' => trim($request->nuevo_proveedor_nombre)],
+                        
+                    );
+                    $idProveedor = $proveedor->id;
+                }
+
+                // 3. Creación del registro de Trabajo Externo
+                $trabajo = TrabajoExterno::create([
+                    'id_orden'     => $request->id_orden,
+                    'id_proveedor' => $idProveedor,
+                    'id_usuario'   => auth()->id(),
+                    'descripcion'  => $request->descripcion,
+                    'fecha'        => $request->fecha,
+                    'costo'        => $request->costo,
+                ]);
+
+                // 4. Respuesta para el AJAX de SweetAlert2
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Servicio externo registrado con éxito.',
+                    'data'    => $trabajo
+                ]);
+            });
+
+        } catch (\Exception $e) {
+            // Log del error para depuración
+            \Log::error("Error en addTrabajoExterno: " . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al procesar el registro: ' . $e->getMessage()
+            ], 500);
         }
     }
 
