@@ -37,6 +37,7 @@ use App\Models\TipoRequerimiento;
 use Illuminate\Support\Facades\DB;
 use App\Models\Proveedor;
 use App\Models\TrabajoExterno;
+use App\Models\PlanMantenimiento;
 
 
 class OrdenController extends BaseController
@@ -82,7 +83,7 @@ class OrdenController extends BaseController
             ];
         });
 
-        $ordenes_por_tipo = Orden::select('tipo', \DB::raw('count(*) as total'))->where('estatus', 2)
+        $ordenes_por_tipo = Orden::select('tipo', DB::raw('count(*) as total'))->where('estatus', 2)
             ->groupBy('tipo')
             ->get();
          
@@ -100,7 +101,7 @@ class OrdenController extends BaseController
 
         // Simulación de vehículos con más reportes de falla 
 
-        $vehiculos_mas_fallas = Vehiculo::select('flota as name', \DB::raw('count(*) as y'))
+        $vehiculos_mas_fallas = Vehiculo::select('flota as name', DB::raw('count(*) as y'))
             ->join('ordenes', 'vehiculos.id', '=', 'ordenes.id_vehiculo')
             ->where('ordenes.fecha_in', '>=', Carbon::now()->subDays(60))
             ->groupBy('vehiculos.flota')
@@ -577,7 +578,7 @@ class OrdenController extends BaseController
 
         } catch (\Exception $e) {
             // Log del error para depuración
-            \Log::error("Error en addTrabajoExterno: " . $e->getMessage());
+            Log::error("Error en addTrabajoExterno: " . $e->getMessage());
 
             return response()->json([
                 'success' => false,
@@ -1213,6 +1214,25 @@ class OrdenController extends BaseController
         $orden->save();
 
         return response()->json(['success' => true, 'message' => 'La unidad ha sido marcada como DISPONIBLE.']);
+    }
+
+    public function getPlanApi($id)
+    {
+        try {
+            // Buscamos el plan. Si no existe, fallamos silenciosamente para el JS
+            $plan = PlanMantenimiento::findOrFail($id);
+
+            return response()->json([
+                'success' => true,
+                'titulo'  => $plan->titulo,
+                'descripcion' => $plan->descripcion // El campo con el detalle del servicio
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se encontró el plan solicitado'
+            ], 404);
+        }
     }
 
      public function reactivarOrden(Request $request, $id)

@@ -123,7 +123,15 @@
 
                         <div class="mb-3">
                             <label for="descripcion" class="form-label fw-bold">Descripción / Alcance</label>
-                            <textarea class="form-control" id="descripcion" name="descripcion" rows="3" placeholder="Detalles específicos del servicio..." required></textarea>
+                            <div id="render_plan_html" class="p-3 border rounded bg-white shadow-sm d-none" style="min-height: 150px; border-left: 5px solid #0d6efd !important;">
+                            </div>
+
+                            <textarea id="descripcion" name="descripcion" class="form-control" rows="6" placeholder="Describa el trabajo a realizar..."></textarea>
+                            
+                            <small class="text-muted mt-2 d-block" id="instruccion-detalle">
+                                <i class="bi bi-info-circle me-1"></i> 
+                                Si selecciona un plan, el detalle técnico se cargará automáticamente.
+                            </small>
                         </div>
 
                         <div class="row">
@@ -727,6 +735,58 @@
             $('#latitud').val(lat);
             $('#longitud').val(lng);
         }
+
+        
+        $('#select-servicio').on('change', function() {
+            const planId = $(this).val();
+            const $textarea = $('#descripcion');
+            const $titulo = $('#descripcion_1');
+            const $divVisual = $('#render_plan_html');
+            const $instruccion = $('#instruccion-detalle'); 
+
+            
+
+            // Feedback visual al usuario
+            $divVisual.html('<div class="text-center p-4"><i class="fas fa-spinner fa-spin me-2"></i>Cargando detalles técnicos...</div>')
+                  .removeClass('d-none');
+        $textarea.addClass('d-none');
+
+            // Llamada al endpoint que definiremos en el controlador
+            $.get(`/planes-mantenimiento/api/${planId}`, function(response) {
+                if (response.success) {
+
+                    if (!planId) {
+                        $titulo.val('');
+                        $textarea.val('').removeClass('d-none'); // Limpia y muestra textarea
+                        $divVisual.html('').addClass('d-none');   // Limpia y oculta Div HTML
+                        $instruccion.show();
+                        return;
+                    }
+
+                    // 1. Inyectamos el HTML en el DIV para que se vea con estilo
+                    $divVisual.html(response.descripcion);
+                    
+                    $textarea.val(response.descripcion);
+                    
+                    $instruccion.hide();
+                    $titulo.val(response.titulo);
+
+                        
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: 'Plan cargado',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                }
+            }).fail(function() {
+                $textarea.removeClass('d-none');
+                $divVisual.addClass('d-none');
+            });
+        });
+        
 
         // Buscador simple integrado al input de dirección
         $('#input-direccion').on('change', function() {
