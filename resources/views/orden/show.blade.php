@@ -596,8 +596,8 @@
                             <select name="id_inventario" class="form-select select2-insumos" required style="width: 100%">
                                 <option value="">Escriba para buscar...</option>
                                 @foreach($inventario as $item)
-                                    <option value="{{ $item->id }}">
-                                        {{ $item->descripcion }} (Stock: {{ $item->stock }}) - ${{ $item->precio_venta }}
+                                    <option value="{{ $item->id }}" @if($item->existencia <= $item->existencia_minima) class="text-danger" @endif @if($item->existencia == 0) class="text-muted" disabled @endif>
+                                        {{$item->codigo}} - {{ $item->descripcion }} (Stock: {{ $item->existencia }})
                                     </option>
                                 @endforeach
                             </select>
