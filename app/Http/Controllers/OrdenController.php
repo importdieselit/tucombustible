@@ -628,24 +628,6 @@ class OrdenController extends BaseController
     }
 
 
-    public function reactivar($id)
-    {
-        $orden = Orden::findOrFail($id);
-        $orden->update(['estatus' => 'ABIERTA', 'fecha_cierre' => null]);
-        $vehiculo = $orden->id_vehiculo ? Vehiculo::find($orden->id_vehiculo) : null;
-        if ($vehiculo) {
-            $vehiculo->update(['estatus' =>3]); // 2 = En Mantenimiento
-        }
-
-         // Enviar notificación a Telegram
-         $mensajeTelegram = "Orden #{$orden->nro_orden} ha sido REACTIVADA.\n";
-         if ($vehiculo) {
-             $mensajeTelegram .= "Vehículo: {$vehiculo->flota} ({$vehiculo->placa})\n";
-         }
-         $this->telegramService->sendMessage($mensajeTelegram);
-
-        return response()->json(['success' => true]);
-    }
 
     /**
      * Agregar Trabajo (Desde el Modal)
@@ -1237,7 +1219,16 @@ class OrdenController extends BaseController
     {
         try {
             $orden = Orden::findOrFail($id);
+            if($orden->estatus==3){
+                $accion='INICIADA';
+            }else{
+                $accion='REACTIVADA';
+            }
+
             $orden->estatus = 2; // 2 = 'Abierta'
+            if(is_null($orden->nro_orden)){
+                $orden->nro_orden = $this->generateOrdenCode();
+            }
             $orden->fecha_out = null;
             $orden->hora_out = null;
             $orden->id_us_out =null; // Usuario que cierra la orden
@@ -1248,6 +1239,13 @@ class OrdenController extends BaseController
                 $vehiculo->estatus = 3; // En mantenimiento
                 $vehiculo->save();
             }
+
+            // Enviar notificación a Telegram
+         $mensajeTelegram = "Orden #{$orden->nro_orden} ha sido {$accion}.\n";
+         if ($vehiculo) {
+             $mensajeTelegram .= "Vehículo: {$vehiculo->flota} ({$vehiculo->placa})\n";
+         }
+         $this->telegramService->sendMessage($mensajeTelegram);
 
             Session::flash('success', 'Orden de trabajo Reactivada exitosamente.');
             return response()->json(['success' => true, 'message' => 'Orden de trabajo Reactivada exitosamente']);

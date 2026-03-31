@@ -57,6 +57,7 @@
                 <a href="{{ route('ordenes.edit', $orden->id) }}" class="btn btn-sm btn-outline-primary">
                     <i class="fas fa-edit"></i> Editar
                 </a>
+
                 @if($orden->estatus == 2)
                     <button id="cerrar-orden" class="btn btn-sm btn-success fw-bold">
                         <i class="fas fa-check-double"></i> CERRAR
@@ -68,9 +69,11 @@
                 <button id="anular-orden" class="btn btn-sm btn-danger">
                     <i class="fas fa-times-circle"></i> CANCELAR
                 </button>
-            @elseif($orden->estatus == 'CERRADA' || $orden->estatus == 4 || $orden->estatus == 1)
+            @endif
+            @if($orden->estatus == 'CERRADA' || $orden->estatus == 4 || $orden->estatus == 1 || $orden->estatus == 3)
+                @php($texto= $orden->estatus == 3? 'INICIAR' : 'REACTIVAR')
                 <button id="reactivar-orden" class="btn btn-sm btn-warning fw-bold">
-                    <i class="fas fa-undo"></i> REACTIVAR ORDEN
+                    <i class="fas fa-undo"></i> {{ $texto }} ORDEN
                 </button>
             @endif
             @if($orden->estatus == 'ANULADA' || $orden->estatus == 4)
