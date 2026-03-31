@@ -53,16 +53,18 @@
             </button>
         </div>
         <div class="d-flex gap-2">
-            @if($orden->estatus == 'ABIERTA' || $orden->estatus == 2)
+            @if($orden->estatus == 'ABIERTA' || $orden->estatus == 2 || $orden->estatus == 3)
                 <a href="{{ route('ordenes.edit', $orden->id) }}" class="btn btn-sm btn-outline-primary">
                     <i class="fas fa-edit"></i> Editar
                 </a>
-                <button id="cerrar-orden" class="btn btn-sm btn-success fw-bold">
-                    <i class="fas fa-check-double"></i> CERRAR
-                </button>
-                <button id="habilitar-unidad" class="btn btn-sm btn-outline-warning fw-bold">
-                    <i class="fas fa-truck-loading"></i> HABILITAR UNIDAD
-                </button>
+                @if($orden->estatus == 2)
+                    <button id="cerrar-orden" class="btn btn-sm btn-success fw-bold">
+                        <i class="fas fa-check-double"></i> CERRAR
+                    </button>
+                    <button id="habilitar-unidad" class="btn btn-sm btn-outline-warning fw-bold">
+                        <i class="fas fa-truck-loading"></i> HABILITAR UNIDAD
+                    </button>
+                @endif
                 <button id="anular-orden" class="btn btn-sm btn-danger">
                     <i class="fas fa-times-circle"></i> CANCELAR
                 </button>
