@@ -221,7 +221,7 @@
                                     data-nro="{{ $vehiculo->ordenActiva->nro_orden }}"
                                     data-flota="{{ $vehiculo->flota }}"
                                     data-placa="{{ $vehiculo->placa }}"
-                                    data-tipo="{{ $vehiculo->ordenActiva->tipo_orden ?? 'Mantenimiento' }}"
+                                    data-tipo="{{ $vehiculo->ordenActiva->tipo ?? 'Mantenimiento' }}"
                                     data-desc="{{ $vehiculo->ordenActiva->descripcion }}"
                                     data-obs="{{ $vehiculo->ordenActiva->observaciones ?? 'Sin observaciones adicionales' }}"
                                     data-url="{{ route('ordenes.show', $vehiculo->ordenActiva->id) }}"
@@ -338,7 +338,7 @@
                     <div class="col-md-4">
                         <div class="card border-0 shadow-sm h-100">
                             <div class="card-body p-3 text-center">
-                                <span class="text-muted small d-block text-uppercase mb-1">Categoría</span>
+                                <span class="text-muted small d-block text-uppercase mb-1">Tipo de Orden</span>
                                 <div id="txt-tipo-orden" class="mt-1"></div>
                             </div>
                         </div>

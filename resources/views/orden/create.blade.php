@@ -290,6 +290,10 @@
                     <label class="form-label">Cantidad Requerida</label>
                     <input type="number" class="form-control text-end fw-bold" id="manual-cantidad" value="1" min="1">
                 </div>
+                <div class="mb-3">
+                    <label class="form-label">Precio Unitario</label>
+                    <input type="number" class="form-control text-end fw-bold" id="manual-precio" value="0.00" min="0" step="0.01">
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-success w-100 fw-bold" id="addManualSupplyBtn">AÑADIR A LA LISTA</button>
@@ -508,14 +512,15 @@
         addManualSupplyBtn.addEventListener('click', function() {
             const desc = $('#manual-descripcion').val();
             const cant = parseInt($('#manual-cantidad').val());
-            if(!desc || cant <= 0) {
+            const precio = parseFloat($('#manual-precio').val());
+            if(!desc || cant <= 0 || isNaN(precio)) {
                 Swal.fire('Atención', 'Debe ingresar descripción y cantidad válida', 'warning');
                 return;
             }
 
             manualSupplyCounter++;
             const id = 'MANUAL_' + manualSupplyCounter;
-            selectedSupplies[id] = { id: id, codigo: 'MANUAL', descripcion: desc, cantidad: cant, existencia: 0 };
+            selectedSupplies[id] = { id: id, codigo: 'MANUAL', descripcion: desc, cantidad: cant, existencia: 0, precio: precio};
             renderSuppliesTable();
             $('#manual-descripcion').val('');
             $('#manualSupplyModal').modal('hide');

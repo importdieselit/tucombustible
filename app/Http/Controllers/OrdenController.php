@@ -801,7 +801,7 @@ class OrdenController extends BaseController
         $userId = Auth::id();
         $user = User::find($userId);
 
-        $result = DB::transaction(function () use ($request, $userId) {
+        $result = DB::transaction(function () use ($request, $userId, $user) {
             // 2. Carga inicial de datos para evitar consultas repetitivas
             $suministros = json_decode($request->supplies_json, true) ?? [];
             $trabajos = json_decode($request->trabajos_json, true) ?? [];
@@ -834,19 +834,36 @@ class OrdenController extends BaseController
 
             // COMPRA (Generar Solicitud)
             $compra = null;
+        
             if (count($solicitudCompra) > 0) {
+                if($user->id_perfil == 4){
+                    $estatus = 2; // Pendiente 
+                }else{
+                    $estatus = 3; // Aprobada directamente por admin
+                }
+            
                 $compra = SuministroCompra::create([
                     'orden_id' => $orden->id,
                     'observacion' => $request->supplies_observations,
                     'usuario_solicitante_id' => $userId,
-                    'estatus' => 2,
+                    'estatus' => $estatus
                 ]);
 
                 foreach ($solicitudCompra as $solicitudItem) {
+                    if($user->id_perfil == 4){
+                        $cantidad_aprobada = 0;
+                        $costo_aprobado = 0;
+                    }else{
+                        $cantidad_aprobada = $solicitudItem['cantidad'];
+                        $costo_aprobado = $solicitudItem['precio'];
+                    }
                     $compra->detalles()->create([
                         'inventario_id' => is_numeric($solicitudItem['id']) ? $solicitudItem['id'] : null,
                         'descripcion' => $solicitudItem['descripcion'],
                         'cantidad_solicitada' => $solicitudItem['cantidad'],
+                        'cantidad_aprobada' => $cantidad_aprobada,
+                        'costo_unitario_aprobado' => $costo_aprobado,
+                        'estatus' => $estatus,
                     ]);
                 }
             }
