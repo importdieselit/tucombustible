@@ -43,10 +43,11 @@
 
                     <div class="mb-3">
                         <label class="small fw-bold text-uppercase text-muted">Servicio Requerido</label>
-                        <select class="form-select border-0 bg-light" id="tipo_mantenimiento" name="tipo_mantenimiento" required>
-                            @foreach($tiposMantenimiento as $key => $value)
-                                <option value="{{ $key }}">{{ $value }}</option>
-                            @endforeach
+                        <select name="tipo_mantenimiento" id="tipo_mantenimiento" class="form-select border-primary fw-bold" required>
+                            <option value="1" data-short="M1">M1 Basica     (5000/200)</option>
+                            <option value="2" data-short="M2">M2 Intermedia (10000/400)</option>
+                            <option value="3" data-short="M3">M3 Mayor      (20000/800)</option>
+                            <option value="4" data-short="M4">M4 General / Overhaul</option>
                         </select>
                     </div>
 
