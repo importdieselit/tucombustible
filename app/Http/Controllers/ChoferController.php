@@ -130,8 +130,8 @@ class ChoferController extends BaseController
             $user = User::create([
                 'name' => $inicial.'.'.$apellido,
                 'email' => $persona->dni . '@tucombustible.com', // Generar un email ficticio
-                'password' => bcrypt('123456789'), // Contraseña por defecto, cambiar según sea necesario
-                'persona_id' => $persona->id,
+                'password' => bcrypt($request->dni), // Contraseña por defecto, cambiar según sea necesario
+                'id_persona' => $persona->id,
                 'id_perfil' => 4 // Asignar el perfil de chofer
             ]);
 
