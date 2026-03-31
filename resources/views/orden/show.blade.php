@@ -888,13 +888,22 @@
 
          $('#reactivar-orden').on('click', function() {
             // Validación de trabajos pendientes (opcional si el controlador ya lo hace)
+            const texto = '{{ $orden->estatus }}' === '3' 
+                ? "La Orden Trabajo se Iniciará y la unidad estará fuera de servicio." 
+                : "La Orden se Activará nuevamente y la unidad estará fuera de servicio nuevamente.";
+            const titulo = '{{ $orden->estatus }}' === '3' 
+                ? "Iniciar Orden Trabajo" 
+                : "Reactivar Orden Trabajo";
+            const buttonText = '{{ $orden->estatus }}' === '3' 
+                ? "SÍ, INICIAR ORDEN" 
+                : "SÍ, REACTIVAR ORDEN";
 
             Swal.fire({
-                title: 'Reactivar Orden Técnica?',
-                text: "La Orden se Activara nuevamente y la unidad estara fuera de Servicio",
+                title: titulo,
+                text: texto,
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonText: 'SÍ, REACTIVAR ORDEN'
+                confirmButtonText: buttonText
             }).then((res) => {
                 if (res.isConfirmed) apiCall(`/ordenes/${orderId}/reactivar`, 'POST');
             });
