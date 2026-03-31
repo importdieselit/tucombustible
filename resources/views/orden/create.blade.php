@@ -755,7 +755,7 @@
             $.get(`/planes-mantenimiento/api/${planId}`, function(response) {
                 if (response.success) {
 
-                    if (!planId) {
+                    if (!response.descripcion) {
                         $titulo.val('');
                         $textarea.val('').removeClass('d-none'); // Limpia y muestra textarea
                         $divVisual.html('').addClass('d-none');   // Limpia y oculta Div HTML
@@ -782,7 +782,8 @@
                     });
                 }
             }).fail(function() {
-                $textarea.removeClass('d-none');
+                $textarea.removeClass('d-none').val(''); // Mostrar textarea vacío para que el usuario pueda escribir
+                $titulo.val('');
                 $divVisual.addClass('d-none');
             });
         });
