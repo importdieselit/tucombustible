@@ -515,7 +515,7 @@ class OrdenController extends BaseController
             $estatusData = EstatusData::find($orden->estatus);
             $fotos= OrdenFoto::where('orden_id',$id)->get();
             $personal = Personal::with('persona')->where('cargo', 'Mecánico')->get(); // Cargar relación con Persona para obtener nombres completos
-            $inventario = Inventario::where('almacen_id',2)->keyBy('id_inventario');
+            $inventario = Inventario::where('almacen_id',2)->orderBy('descripcion')->get()->keyBy('id_inventario');
             $suministros= InventarioSuministro::where('id_orden', $id)->with('inventario')->get();
             $proveedores = Proveedor::whereIn('id_tipo_proveedor', [2])->orderBy('nombre')->get();
         
