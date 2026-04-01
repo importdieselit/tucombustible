@@ -743,7 +743,7 @@
             const $titulo = $('#descripcion_1');
             const $divVisual = $('#render_plan_html');
             const $instruccion = $('#instruccion-detalle'); 
-
+            const $tipo = $('#tipo');
             
 
             // Feedback visual al usuario
@@ -770,7 +770,7 @@
                     
                     $instruccion.hide();
                     $titulo.val(response.titulo);
-
+                    $tipo.val("Mantenimiento").change(); // Aseguramos que el tipo se establezca en 'mantenimiento'
                         
                     Swal.fire({
                         toast: true,
