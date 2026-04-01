@@ -186,7 +186,7 @@ class VehiculoController extends BaseController
         $unidades_en_servicio = Vehiculo::EnServicio()->count();
         $historicoEficiencia = ResumenDiario::orderBy('fecha', 'desc')->limit(15)->get()->sortBy('fecha')->toArray();
         $mantenimientos = MantenimientoProgramado::with('vehiculo')
-                ->whereIn('estatus', [1, 2])
+                ->whereIn('estatus', [3, 2])
                 ->orderBy('fecha', 'desc') // o por km si lo deseas
                 ->limit(7)
                 ->get();
@@ -264,37 +264,39 @@ class VehiculoController extends BaseController
 
 
 
-        $viajesActivos = Viaje::with(['vehiculo','despachos'])
-                ->whereDate('fecha_salida', now()->format('Y-m-d')) // según tus estados reales
-                ->orderBy('fecha_salida', 'desc')
-                ->get()
-                ->map(function($v){
+        $viajesActivos = Viaje::with(['vehiculo', 'despachos'])
+            // Filtramos solo los viajes que tengan un vehículo relacionado con estatus 2
+            ->whereHas('vehiculo', function($q) {
+                $q->where('estatus', 2);
+            })
+            ->whereDate('fecha_salida', now()->format('Y-m-d'))
+            ->orderBy('fecha_salida', 'desc')
+            ->get()
+            ->map(function($v) {
+                $vehiculo = $v->vehiculo;
 
-                    $vehiculo = $v->vehiculo;
-
-                    // si el vehículo no tiene dato, evitar error
-                    $km = $vehiculo->km ?? 0;
-                  //  $consumo = $vehiculo->consumo_promedio ?? null;
-                  // Calculamos la carga total sumando los litros de todos los despachos asociados
+                // Si el vehículo no tiene dato, evitar error
+                $km = $vehiculo->km ?? 0;
+                
+                // Calculamos la carga total sumando los litros de todos los despachos asociados
                 $cargaTotal = $v->litros ?? $v->despachos->sum('litros');
 
                 // Obtenemos los nombres de los clientes/destinos de forma única
                 $destinos = $v->despachos->map(function($d) {
-                    // Prioridad: 1. Relación Cliente, 2. Campo otro_cliente
                     return $d->cliente->alias ?? $d->cliente->nombre ?? $d->otro_cliente ?? 'Desconocido';
                 })->unique()->implode(', ');
 
-                    return [
-                        'placa'     => $vehiculo->placa ?? $v->otro_vehiculo ?? 'N/D',
-                        'modelo'    => is_null($v->otro_vehiculo)?  $vehiculo->isModelo->modelo ?? 'N/D' :'Unidad Externa',
-                        'marca'     => is_null($v->otro_vehiculo)? $vehiculo->isMarca->marca ?? 'N/D': '',
-                        'ruta'      => $v->destino_ciudad ?? 'Sin Destino', //$v->despacho->cliente->nombre ?? $v->otro_cliente ??
-                        'km'        => number_format($vehiculo->km_mantt ?? 0, 0, ',', '.'),
-                        'carga_total' => number_format($cargaTotal, 2, ',', '.'),
-                        'cliente_destino' => $destinos,
-                        'estatus'   => '',//$v->status
-                    ];
-                });
+                return [
+                    'placa'           => $vehiculo->placa ?? $v->otro_vehiculo ?? 'N/D',
+                    'modelo'          => is_null($v->otro_vehiculo) ? $vehiculo->isModelo->modelo ?? 'N/D' : 'Unidad Externa',
+                    'marca'           => is_null($v->otro_vehiculo) ? $vehiculo->isMarca->marca ?? 'N/D' : '',
+                    'ruta'            => $v->destino_ciudad ?? 'Sin Destino',
+                    'km'              => number_format($vehiculo->km_mantt ?? 0, 0, ',', '.'),
+                    'carga_total'     => number_format($cargaTotal, 2, ',', '.'),
+                    'cliente_destino' => $destinos,
+                    'estatus'         => $v->status ?? '', 
+                ];
+            });
         // Preparar datos para Chart.js
         $chartLabels = array_map(function($date) {
             return  Carbon::parse($date)->format('d/M');

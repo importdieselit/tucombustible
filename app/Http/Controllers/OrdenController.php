@@ -605,6 +605,8 @@ class OrdenController extends BaseController
                 $item->update(['estatus' => 0]); 
             }
 
+           
+
             $vehiculo = $orden->id_vehiculo ? Vehiculo::find($orden->id_vehiculo) : null;
             $vehiculo->update(['estatus' => 1]); // 1 = Disponible
 
@@ -619,10 +621,18 @@ class OrdenController extends BaseController
 
             // 2. Actualizar Orden
             $orden->update([
-                'estatus' => 0, // ANULADA
+                'estatus' => 4, // ANULADA
                 'motivo_anulacion' => $request->anulacion,
                 'fecha_cierre' => now()
             ]);
+
+            if($orden->tipo == 'Mantenimiento' || $orden->tipo == 'Preventivo'){
+                $mantenimiento = MantenimientoProgramado::where('orden_id', $orden->id)->first();
+                if($mantenimiento){
+                    $mantenimiento->estatus = 4; // ANULADA
+                    $mantenimiento->save();
+                }   
+            }
 
             return response()->json(['success' => true]);
         });
@@ -760,6 +770,13 @@ class OrdenController extends BaseController
         };
         
         if($orden->estatus != 4) return response()->json(['success' => false, 'message' => 'Solo órdenes anuladas']);
+
+         if($orden->tipo == 'Mantenimiento' || $orden->tipo == 'Preventivo'){
+                $mantenimiento = MantenimientoProgramado::where('orden_id', $orden->id)->first();
+                if($mantenimiento){
+                    $mantenimiento->delete();
+                }   
+            }
 
         $orden->delete(); // Gracias a OnDelete Cascade en DB, borra trabajos y suministros
         return response()->json(['success' => true]);
@@ -1115,6 +1132,14 @@ class OrdenController extends BaseController
             $orden->id_us_out = Auth::id(); // Usuario que cierra la orden
             $orden->save();
 
+            if($orden->tipo == 'Mantenimiento' || $orden->tipo == 'Preventivo'){
+                $mantenimiento = MantenimientoProgramado::where('orden_id', $orden->id)->first();
+                if($mantenimiento){
+                    $mantenimiento->estatus = 1; // Cerrada
+                    $mantenimiento->save();
+                }   
+            }
+
             $vehiculo = Vehiculo::find($orden->id_vehiculo);
             if($vehiculo){
                 $vehiculo->estatus = 1; // Disponible
@@ -1148,6 +1173,13 @@ class OrdenController extends BaseController
             if($vehiculo){
                 $vehiculo->estatus = 1; // Disponible
                 $vehiculo->save();
+            }
+             if($orden->tipo == 'Mantenimiento' || $orden->tipo == 'Preventivo'){
+                $mantenimiento = MantenimientoProgramado::where('orden_id', $orden->id)->first();
+                if($mantenimiento){
+                    $mantenimiento->estatus = 4; // Anulada
+                    $mantenimiento->save();
+                }   
             }
 
             Session::flash('success', 'Orden de trabajo cerrada exitosamente.');
@@ -1258,6 +1290,14 @@ class OrdenController extends BaseController
             if($vehiculo){
                 $vehiculo->estatus = 3; // En mantenimiento
                 $vehiculo->save();
+            }
+
+            if($orden->tipo == 'Mantenimiento' || $orden->tipo == 'Preventivo'){
+                $mantenimiento = MantenimientoProgramado::where('orden_id', $orden->id)->first();
+                if($mantenimiento){
+                    $mantenimiento->estatus = 2; // Anulada
+                    $mantenimiento->save();
+                }   
             }
 
             // Enviar notificación a Telegram

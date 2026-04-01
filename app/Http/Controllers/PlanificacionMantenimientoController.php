@@ -120,7 +120,7 @@ class PlanificacionMantenimientoController extends Controller
                 'tipo' => $plan->short ?? $request->titulo,
                 'descripcion' => $plan->descripcion ?? null,
                 'km' => $vehiculo->km_mantt ?? null,
-                'estatus' => 1, // Programado
+                'estatus' => 3, // Programado
             ]);
 
             // 2. Generar la Orden de Trabajo (OT) inmediatamente
