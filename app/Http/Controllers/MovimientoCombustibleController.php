@@ -1327,7 +1327,7 @@ public function storeDespachoIndustrial(Request $request)
                                       ->with('persona')
                                       ->get();
 
-        $vehiculos = Vehiculo::where('es_flota', 1)->whereIn('tipo', [3,2])->get();
+        $vehiculos = Vehiculo::where('es_flota', 1)->whereIn('tipo', [3,5,2])->get();
         
 
         return view('combustible.compra', compact('proveedores', 'plantas', 'choferes','vehiculos','ayudantes'));
