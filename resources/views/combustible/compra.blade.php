@@ -84,7 +84,7 @@
                             <select name="vehiculo_id" id="vehiculo_id" class="form-select" required>
                                 <option value="">Seleccione un Vehiculo</option>
                                 @foreach($vehiculos as $vehiculo)
-                                    @if($vehiculo->tipo==3)
+                                    @if($vehiculo->tipo==3||$vehiculo->tipo==5)
                                         <option value="{{ $vehiculo->id }}">{{ $vehiculo->flota }} {{ $vehiculo->placa }}</option>
                                     @endif
                                 @endforeach 
