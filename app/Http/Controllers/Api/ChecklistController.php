@@ -216,6 +216,8 @@ class ChecklistController extends Controller
 
             // 2. AHORA: Procesar lógica de negocio con respuestas ya decodificadas
             $vehiculo = Vehiculo::find($request->vehiculo_id);
+
+
             $old_inspeccion = Inspeccion::where('vehiculo_id', $request->vehiculo_id)->where('checklist_id',1)
                             ->whereNull('respuesta_in')
                             ->orderByDesc('created_at')
@@ -341,11 +343,12 @@ class ChecklistController extends Controller
             }
 
             $alertaAction = "/inspecciones/{$inspeccion->id}";
-
+            $condicion=null;
             // 2. Determinar el NUEVO estado del vehículo y el mensaje base
             if ($isCriticalFailure) {
                 // 🔴 CONDICIÓN CRÍTICA: Prioridad alta, pasa a No Operativo (3)
                 $nuevoEstatus = 5; 
+                
                 $observacionAlerta = "Inspección para vehículo {$vehiculo->placa} con estado **No Operativo**. Requiere revisión.";
                 $notifTitle = "Unidad {$vehiculo->flota} Marcada No Operativa en Inspeccion";
                 $notifBody = "Unidad {$vehiculo->flota} requiere Revisión de Mantenimiento. Fue marcada como no operativa durante la inspección. OBSERVACIONES: {$observaciones}";
@@ -355,6 +358,7 @@ class ChecklistController extends Controller
                 // 🟢 UNIDAD INGRESANDO: Estaba en ruta (2) y pasa a Operativo/Disponible (1)
                 $nuevoEstatus = 1;
                 $nuevoEstatusViaje = 'COMPLETADO';
+                $condicion="EN RUTA";
                 $observacionAlerta = "Ingreso de Unidad {$vehiculo->flota} {$vehiculo->placa} a Patio. Inspección completada.";
                 $notifTitle = "Unidad {$vehiculo->flota} Ingresando a Patio";
                 $notifBody = "Unidad {$vehiculo->flota} ingresando a Patio con {$chofer}.";
@@ -364,6 +368,7 @@ class ChecklistController extends Controller
                 // 🟡 UNIDAD SALIENDO: No está en ruta (probablemente 1 - Operativo) y pasa a En Ruta (2)
                 $nuevoEstatus = 2;
                 $nuevoEstatusViaje = 'EN RUTA';
+                $condicion = "Programado";
                 $observacionAlerta = "Salida de vehículo {$vehiculo->placa}. Inspección completada.";
                 $notifTitle = "Salida de Unidad {$vehiculo->flota} en Inspeccion";
                 $notifBody = "Unidad {$vehiculo->flota} Saliendo a Ruta con {$chofer}.";
@@ -376,13 +381,21 @@ class ChecklistController extends Controller
                 $vehiculo->estatus = $nuevoEstatus;
                 $vehiculo->save();
             }
-
-            $viaje = Viaje::where('id_vehiculo', $vehiculo->id)
-                    ->where('estatus', 'Programado') // En ruta
-                    ->first();
-            if ($viaje) {
-                $viaje->estatus = $nuevoEstatusViaje;
-                $viaje->save();
+            if(!is_null($condicion)){
+                $viaje = Viaje::where('vehiculo_id', $vehiculo->id)
+                        ->whereIn('estatus', $condicion)
+                        ->first();
+                if ($viaje) {
+                    $viaje->estatus = $nuevoEstatusViaje;
+                    $viaje->save();
+                    $cisterna= $viaje->cisterna;
+                    if(!is_null($cisterna)){
+                        $vehiculoCisterna=Vehiculo::find($cisterna->id_vehiculo);
+                        $vehiculoCisterna->estatus=$nuevoEstatus;
+                        $vehiculoCisterna->save();
+                        
+                    }
+                }
             }
 
 
