@@ -157,15 +157,15 @@ class ChecklistController extends Controller
                             }
                             
                             // Caso para campos compuestos (Seguros, Verificación)
-                            if (is_array($item['data_source']) && $item['data_source']['model'] == 'Vehiculo') {
-                                $statusField = $item['data_source']['status_field'];
-                                $dateField = $item['data_source']['date_field'];
+                            // if (is_array($item['data_source']) && $item['data_source']['model'] == 'Vehiculo') {
+                            //     $statusField = $item['data_source']['status_field'];
+                            //     $dateField = $item['data_source']['date_field'];
                                 
-                                $item['value'] = [
-                                    "status" => $vehiculo->$statusField ?? false,
-                                    "vigencia" => $vehiculo->$dateField ?? ""
-                                ];
-                            }
+                            //     $item['value'] = [
+                            //         "status" => $vehiculo->$statusField ?? false,
+                            //         "vigencia" => $vehiculo->$dateField ?? ""
+                            //     ];
+                            // }
                         }
                     }
                 }
