@@ -140,7 +140,6 @@ class ChecklistController extends Controller
                     // --- BLOQUE 2: Auto-completar "Datos del Vehículo" ---
                     foreach ($dataResponse['sections'][1]['items'] as &$item) {
                         if (isset($item['data_source'])) {
-                            Log::info("Procesando item con data_source: " . $item);
                             // Caso para campos simples (Vehiculo.placa, etc)
                             if (is_string($item['data_source'])) {
                                 $campo = str_replace('Vehiculo.', '', $item['data_source']);
