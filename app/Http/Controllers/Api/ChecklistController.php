@@ -107,7 +107,7 @@ class ChecklistController extends Controller
                 if ($vehiculoId) {
                     // Consultar datos completos del vehículo
                     $vehiculo = $this->getVehiculoCompleto($vehiculoId);
-                    $viajes = Viaje::where('id_vehiculo', $vehiculoId)
+                    $viajes = Viaje::where('vehiculo_id', $vehiculoId)
                                 ->whereDate('fecha_salida', '>=', now())
                                 ->get();
 
