@@ -117,18 +117,16 @@ class ChecklistController extends Controller
                     // --- BLOQUE 1: Inyectar Rutas/Viajes en "Información General" ---
                     if ($viajes->count() > 0) {
                         $opcionesViajes = $viajes->map(function($v) {
-                            return [
-                                'label' => "Ruta: " . ($v->destino_ciudad ?? 'Sin Destino'),
-                                'value' => $v->id
-                            ];
+                            // Enviamos un solo string que Flutter pueda leer como List<String>
+                            // Formato: "ID:55 | Ruta: PLANTA GUATIRE"
+                            return "ID:{$v->id} | Ruta: " . ($v->destino_ciudad ?? 'Sin Destino');
                         })->toArray();
 
-                        // Creamos el componente de Radio Button dinámicamente
                         $campoViaje = [
                             "label" => "Seleccione Ruta a Cubrir",
                             "response_type" => "radio",
-                            "options" => $opcionesViajes,
-                            "value" => $viajes->count() == 1 ? $viajes->first()->id : "", // Si hay uno solo, marcarlo por defecto
+                            "options" => $opcionesViajes, // Esto ahora SÍ es una List<String>
+                            "value" => $opcionesViajes[0], // Seleccionamos el primer string por defecto
                             "col_width" => 12,
                             "required" => true
                         ];
