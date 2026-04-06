@@ -88,8 +88,11 @@ class ChecklistController extends Controller
                 ], 404);
             }
 
-                $dataResponse = is_string($checklist->checklist) ? json_decode($checklist->checklist, true) : $checklist->checklist;    
+            $dataResponse = is_array($checklist->checklist) 
+            ? $checklist->checklist 
+            : json_decode($checklist->checklist, true);
 
+            
                 while ($intentos < $maxIntentos) {
                     $vehiculoId = Cache::get($cacheKey);
                     
