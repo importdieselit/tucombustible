@@ -97,9 +97,9 @@
                                 @if ($estatusInfo)
                                     @php
                                         $horas = $orden->created_at->diffInHours(now());
-                                        $css = ($horas >= 48 && $orden->estatus != 'CERRADA') 
+                                        $css = ($horas >= 48 && in_array($orden->estatus, [2, 3])) 
                                             ? 'danger' 
-                                            : (($horas >= 24 && $orden->estatus != 'CERRADA') ? 'warning' : $estatusInfo->css);
+                                            : (($horas >= 24 && in_array($orden->estatus, [2, 3])) ? 'warning' : $estatusInfo->css);
                                     @endphp
                                     <span class="badge bg-{{ $css }} p-2 w-100" style="max-width: 130px;" title="{{ $estatusInfo->descripcion }}">
                                         <i class="me-1 fa {{ $estatusInfo->icon_orden }}"></i>

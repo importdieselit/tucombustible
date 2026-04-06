@@ -227,7 +227,7 @@
                                     data-url="{{ route('ordenes.show', $vehiculo->ordenActiva->id) }}"
                                     title="Click para ver detalles">
                                     <i class="fa fa-info-circle"></i>
-                                    {{ $duracionDias ?? 0 }}
+                                    {{ $duracionDias ?? 0 }} {{ $vehiculo->ordenActiva->tipo }}
                                 </span>
                             @else
                                 <span class="text-muted small">-</span>
