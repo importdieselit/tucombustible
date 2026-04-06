@@ -634,7 +634,7 @@ class VehiculoController extends BaseController
     $today = now();
     $data = Vehiculo::miFlota()->with(['tipoVehiculo', 'cisternaAcoplada', 'ordenActiva'])->get();
 
-    $vehiculosEnRuta = Vehiculo::miFlota()->where('estatus', 2)->where('tipo','!=', 2)->with(['viajes','viajes.cisternaAcoplada'])->get();
+    $vehiculosEnRuta = $data->where('estatus', 2);
     $enRuta = $vehiculosEnRuta->count();
 
     $total = $data->count();
@@ -659,6 +659,10 @@ class VehiculoController extends BaseController
     $camionetasFalla = $ligero->where('estatus', '!=', 1);
     $camionetasOperativas = $ligero->where('estatus', 1);
     $camionesOperativos = $camiones->where('estatus', 1);
+    $chutosEnRuta = $chutos->where('estatus', 2);
+    $camionetasEnRuta = $ligero->where('estatus', 2);
+    $camionesEnRuta = $camiones->where('estatus', 2);
+    $cisternasEnRuta = $cisternas->where('estatus', 2);
     $chutosOperativos = $chutos->where('estatus', 1);
 
    $today = Carbon::parse($today);
@@ -692,7 +696,8 @@ class VehiculoController extends BaseController
         'today', 'cisternasFalla', 'enRuta', 'totalCisternas','camionesFalla', 'despachosHoy', 
         'camionetasFalla', 'camionetasOperativas', 'totalLivianos','totalCamiones', 'totalChutos',
         'chutosFalla', 'chutosOperativos', 'camionesOperativos', 
-        'total', 'operativosCount', 'fallaCount', 'porcentajeDisponibilidad','cisternasOperativas','utilizacionFlota'
+        'total', 'operativosCount', 'fallaCount', 'porcentajeDisponibilidad','cisternasOperativas','utilizacionFlota',
+        'chutosEnRuta', 'camionetasEnRuta', 'camionesEnRuta', 'cisternasEnRuta'
 
     ));
 }
