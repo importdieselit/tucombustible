@@ -418,7 +418,7 @@
                             @php
                                 $destinoRaw = $viaje->destino_ciudad;
                                 $esFlete = str_contains(strtoupper($destinoRaw), 'FLETE');
-                                
+                                $totalLitros = 0;
                                 // Limpiamos la palabra "FLETE", las flechas "->" y espacios sobrantes
                                 $destinoLimpio = trim(str_ireplace(['FLETE', ' ->'], ['', ''], $destinoRaw));
                                 
@@ -485,6 +485,7 @@
                                             <span class="fw-black text-dark" style="font-size: 15px;">{{ $destinoLimpio }}</span>
                                         </div>
                                         <div class="py-1">
+
                                             @foreach($detallesDespacho as $d)
                                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                                     <span class="text-dark fw-bold" style="font-size: 13px;">{{ $d->cliente->alias?? $d->cliente->nombre ?? $d->otro_cliente }}</span>
