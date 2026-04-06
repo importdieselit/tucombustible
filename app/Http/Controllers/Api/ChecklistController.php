@@ -135,7 +135,9 @@ class ChecklistController extends Controller
 
                         // Lo insertamos al final de la primera sección
                         $dataResponse['sections'][0]['items'][] = $campoViaje;
+                        Log::info("Checklist ID {$id}: Se inyectó campo de selección de ruta con " . count($opcionesViajes) . " opciones para Vehículo ID {$vehiculoId}.");
                     }
+                    Log::info("Checklist data ". json_encode($dataResponse) . " para Checklist ID {$id} y Vehículo ID {$vehiculoId} después de inyectar rutas.");
 
                     // --- BLOQUE 2: Auto-completar "Datos del Vehículo" ---
                     foreach ($dataResponse['sections'][1]['items'] as &$item) {
@@ -172,7 +174,7 @@ class ChecklistController extends Controller
                     }
                 }
 
-            Log::info("Checklist ID {$id} solicitado por Usuario ID " . auth()->id() . ". Vehículo ID en cache: " . ($vehiculoId ?? 'No encontrado') . ". Intentos de polling: {$intentos}".var_dump($dataResponse));
+            Log::info("Checklist ID {$id} solicitado por Usuario ID " . auth()->id() . ". Vehículo ID en cache: " . ($vehiculoId ?? 'No encontrado') . ". Intentos de polling: {$intentos}");
 
             return response()->json([
                 'success' => true,
