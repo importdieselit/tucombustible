@@ -661,10 +661,19 @@ class VehiculoController extends BaseController
     $camionesOperativos = $camiones->where('estatus', 1);
     $chutosOperativos = $chutos->where('estatus', 1);
 
-   $today = Carbon::parse($today); 
-   $vehiculosEnUsoHoy = Viaje::whereDate('fecha_salida', $today)
-    ->distinct('vehiculo_id')
-    ->count('vehiculo_id');
+   $today = Carbon::parse($today);
+   $queryViajesHoy = Viaje::whereDate('fecha_salida', now()->format('Y-m-d'));
+
+    // 2. Obtener el conteo de vehículos únicos (usando el nombre real de la columna: id_vehiculo)
+    $vehiculosEnUsoHoy = $queryViajesHoy->distinct()->count('vehiculo_id');
+
+    // 3. Obtener la lista de IDs de esos vehículos
+    // Usamos pluck para obtener un array simple de IDs, que es más ligero que objetos completos
+    $vehiculosIds = $queryViajesHoy->distinct()->pluck('vehiculo_id')->toArray();
+
+    // 4. Si necesitas los OBJETOS Vehiculo con su data:
+    $vehiculosCompletos = Vehiculo::whereIn('id', $vehiculosIds)->get();
+
 
     // 3. Cálculo de la tasa de utilización
     // Evitamos división por cero si no hay flota operativa configurada
@@ -673,7 +682,7 @@ class VehiculoController extends BaseController
         : 0;
 
     // Obtenemos los viajes activos de esos vehículos
-    $despachosHoy = $vehiculosEnRuta->map(function($v) {
+    $despachosHoy = $vehiculosCompletos->map(function($v) {
         return $v->viajes->first(); // Tomamos el último viaje cargado por el eager loading
     })->filter(); // Eliminamos nulos si algún vehículo no tiene viaje asignado
     // ------------------------------------
