@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Services\FcmNotificationService;
 use App\Services\TelegramNotificationService;
 use Illuminate\Support\Facades\Log;
-
+use Illuminate\Support\Facades\Cache;
 
 
 class ChecklistController extends Controller
@@ -42,11 +42,12 @@ class ChecklistController extends Controller
      */
     public function index()
     {
-        try {
+        try {         
+
             $checklists = Checklist::where('activo', true)
                 ->select('id', 'titulo', 'checklist')
                 ->get();
-
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Checklists obtenidos exitosamente',
@@ -67,6 +68,14 @@ class ChecklistController extends Controller
     public function show($id)
     {
         try {
+
+            $cacheKey = "inspeccion_user_" . auth()->id();
+            $vehiculoId = null;
+            
+            // --- LÓGICA DE REINTENTOS (Polling interno) ---
+            $intentos = 0;
+            $maxIntentos = 10; //
+            
             $checklist = Checklist::where('id', $id)
                 ->where('activo', true)
                 ->select('id', 'titulo', 'checklist')
@@ -78,6 +87,90 @@ class ChecklistController extends Controller
                     'message' => 'Checklist no encontrado'
                 ], 404);
             }
+
+                $dataResponse = is_string($checklist->checklist) ? json_decode($checklist->checklist, true) : $checklist->checklist;    
+
+                while ($intentos < $maxIntentos) {
+                    $vehiculoId = Cache::get($cacheKey);
+                    
+                    if ($vehiculoId) {
+                        break; // ¡Lo encontramos! Salimos del bucle
+
+                    }
+
+                    $intentos++;
+                    usleep(500000); // Esperar 0.5 segundos (500,000 microsegundos)
+                }
+
+                // Si después de los reintentos no hay vehículoId, 
+                // puedes decidir si dar error o enviar el checklist vacío de viajes.
+                if ($vehiculoId) {
+                    // Consultar datos completos del vehículo
+                    $vehiculo = $this->getVehiculoCompleto($vehiculoId);
+                    $viajes = Viaje::where('id_vehiculo', $vehiculoId)
+                                ->whereDate('fecha_salida', '>=', now())
+                                ->get();
+
+                    // --- BLOQUE 1: Inyectar Rutas/Viajes en "Información General" ---
+                    if ($viajes->count() > 0) {
+                        $opcionesViajes = $viajes->map(function($v) {
+                            return [
+                                'label' => "Ruta: " . ($v->destino_ciudad ?? 'Sin Destino'),
+                                'value' => $v->id
+                            ];
+                        })->toArray();
+
+                        // Creamos el componente de Radio Button dinámicamente
+                        $campoViaje = [
+                            "label" => "Seleccione Ruta a Cubrir",
+                            "response_type" => "radio",
+                            "options" => $opcionesViajes,
+                            "value" => $viajes->count() == 1 ? $viajes->first()->id : "", // Si hay uno solo, marcarlo por defecto
+                            "col_width" => 12,
+                            "required" => true
+                        ];
+
+                        // Lo insertamos al final de la primera sección
+                        $dataResponse['sections'][0]['items'][] = $campoViaje;
+                    }
+
+                    // --- BLOQUE 2: Auto-completar "Datos del Vehículo" ---
+                    foreach ($dataResponse['sections'][1]['items'] as &$item) {
+                        if (isset($item['data_source'])) {
+                            
+                            // Caso para campos simples (Vehiculo.placa, etc)
+                            if (is_string($item['data_source'])) {
+                                $campo = str_replace('Vehiculo.', '', $item['data_source']);
+                                
+                                // Mapeo manual de nombres si los de la API difieren del JSON
+                                $mapaAtributos = [
+                                    'marca' => 'marca_nombre',
+                                    'modelo' => 'modelo_nombre',
+                                    'tipo_vehiculo' => 'tipo_nombre',
+                                    'version' => 'modelo_nombre', // O el campo que uses para versión
+                                    'serial_motor' => 'serial_motor',
+                                    'serial_carroceria' => 'serial_carroceria'
+                                ];
+
+                                $key = $mapaAtributos[$campo] ?? $campo;
+                                $item['value'] = $vehiculo->$key ?? "";
+                            }
+                            
+                            // Caso para campos compuestos (Seguros, Verificación)
+                            if (is_array($item['data_source']) && $item['data_source']['model'] == 'Vehiculo') {
+                                $statusField = $item['data_source']['status_field'];
+                                $dateField = $item['data_source']['date_field'];
+                                
+                                $item['value'] = [
+                                    "status" => $vehiculo->$statusField ?? false,
+                                    "vigencia" => $vehiculo->$dateField ?? ""
+                                ];
+                            }
+                        }
+                    }
+                }
+
+
 
             return response()->json([
                 'success' => true,
@@ -222,7 +315,7 @@ class ChecklistController extends Controller
                     $vehiculo->horas_trabajo  += $horasDuracion;
                     $vehiculo->hrs_mantt  += $horasDuracion;
                     $vehiculo->hrs_contador   += $horasDuracion;    
-                    $vehiculo->estatus = 2;
+                   // $vehiculo->estatus = 2;
                 }
                 $inspeccion=$old_inspeccion;
             }           
@@ -250,7 +343,7 @@ class ChecklistController extends Controller
             // 2. Determinar el NUEVO estado del vehículo y el mensaje base
             if ($isCriticalFailure) {
                 // 🔴 CONDICIÓN CRÍTICA: Prioridad alta, pasa a No Operativo (3)
-                $nuevoEstatus = 3; 
+                $nuevoEstatus = 5; 
                 $observacionAlerta = "Inspección para vehículo {$vehiculo->placa} con estado **No Operativo**. Requiere revisión.";
                 $notifTitle = "Unidad {$vehiculo->flota} Marcada No Operativa en Inspeccion";
                 $notifBody = "Unidad {$vehiculo->flota} requiere Revisión de Mantenimiento. Fue marcada como no operativa durante la inspección. OBSERVACIONES: {$observaciones}";
@@ -259,14 +352,16 @@ class ChecklistController extends Controller
             } elseif ($tipoCheck == 'IN') {
                 // 🟢 UNIDAD INGRESANDO: Estaba en ruta (2) y pasa a Operativo/Disponible (1)
                 $nuevoEstatus = 1;
+                $nuevoEstatusViaje = 'COMPLETADO';
                 $observacionAlerta = "Ingreso de Unidad {$vehiculo->flota} {$vehiculo->placa} a Patio. Inspección completada.";
                 $notifTitle = "Unidad {$vehiculo->flota} Ingresando a Patio";
                 $notifBody = "Unidad {$vehiculo->flota} ingresando a Patio con {$chofer}.";
                 $telegramMessage = "📥 *INGRESO* - Unidad: **{$vehiculo->placa}** ({$vehiculo->flota}) ingresa a patio. Nuevo Estatus: **Operativo**. Chofer: {$chofer}. Revisar: {$alertaAction}\n OBSERVACIONES: {$observaciones}";
-                
+
             } else {
                 // 🟡 UNIDAD SALIENDO: No está en ruta (probablemente 1 - Operativo) y pasa a En Ruta (2)
                 $nuevoEstatus = 2;
+                $nuevoEstatusViaje = 'EN RUTA';
                 $observacionAlerta = "Salida de vehículo {$vehiculo->placa}. Inspección completada.";
                 $notifTitle = "Salida de Unidad {$vehiculo->flota} en Inspeccion";
                 $notifBody = "Unidad {$vehiculo->flota} Saliendo a Ruta con {$chofer}.";
@@ -279,6 +374,15 @@ class ChecklistController extends Controller
                 $vehiculo->estatus = $nuevoEstatus;
                 $vehiculo->save();
             }
+
+            $viaje = Viaje::where('id_vehiculo', $vehiculo->id)
+                    ->where('estatus', 'Programado') // En ruta
+                    ->first();
+            if ($viaje) {
+                $viaje->estatus = $nuevoEstatusViaje;
+                $viaje->save();
+            }
+
 
 
             if($vehiculo->km_mantt>4800 || $vehiculo->hrs_mantt > 180){
@@ -509,6 +613,10 @@ class ChecklistController extends Controller
     public function getVehiculoCompleto($id)
     {
         try {
+
+            $cacheKey = "inspeccion_user_" . auth()->id();
+            Cache::put($cacheKey, $id, 300);
+            
             $vehiculo = DB::table('vehiculos as v')
                 ->leftJoin('marcas as m', 'v.marca', '=', 'm.id')
                 ->leftJoin('modelos as modelo', 'v.modelo', '=', 'modelo.id')
