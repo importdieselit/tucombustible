@@ -128,8 +128,7 @@ class ChecklistController extends Controller
                             "response_type" => "radio",
                             "options" => $opcionesViajes, // Esto es ["String1", "String2"]
                             "value" => (string)$valorInicial, // Forzamos cast a string
-                            "col_width" => 12,
-                            "required" => true
+                            "col_width" => 12
                         ];
                         // Lo insertamos al final de la primera sección
                         $dataResponse['sections'][0]['items'][] = $campoViaje;
