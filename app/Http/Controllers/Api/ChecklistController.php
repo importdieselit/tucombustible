@@ -172,7 +172,7 @@ class ChecklistController extends Controller
                     }
                 }
 
-
+            Log::info("Checklist ID {$id} solicitado por Usuario ID " . auth()->id() . ". Vehículo ID en cache: " . ($vehiculoId ?? 'No encontrado') . ". Intentos de polling: {$intentos}".var_dump($dataResponse));
 
             return response()->json([
                 'success' => true,
