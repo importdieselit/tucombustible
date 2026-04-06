@@ -138,8 +138,8 @@
                     topStart: {
                         buttons: [
                             { extend: 'excel', text: '<i class="fas fa-file-excel me-1"></i> Excel' },
-                            { extend: 'pdf', text: '<i class="fas fa-file-pdf me-1"></i> PDF' },
-                            { extend: 'print', text: '<i class="fas fa-print me-1"></i> Imprimir' }
+                            { extend: 'pdf', text: '<i class="fas fa-file-pdf me-1"></i> PDF' }
+                           // { extend: 'print', text: '<i class="fas fa-print me-1"></i> Imprimir' }
                         ]
                     }
                 },
