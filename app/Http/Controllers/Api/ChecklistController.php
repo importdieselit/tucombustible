@@ -116,21 +116,21 @@ class ChecklistController extends Controller
 
                     // --- BLOQUE 1: Inyectar Rutas/Viajes en "Información General" ---
                     if ($viajes->count() > 0) {
+                        // IMPORTANTE: Flutter espera List<String>, así que aplanamos a un string simple
                         $opcionesViajes = $viajes->map(function($v) {
-                            // Enviamos un solo string que Flutter pueda leer como List<String>
-                            // Formato: "ID:55 | Ruta: PLANTA GUATIRE"
-                            return "ID:{$v->id} | Ruta: " . ($v->destino_ciudad ?? 'Sin Destino');
+                            return "ID-{$v->id} | Ruta: " . ($v->destino_ciudad ?? 'Sin Destino');
                         })->toArray();
+
+                        $valorInicial = $opcionesViajes[0] ?? "";
 
                         $campoViaje = [
                             "label" => "Seleccione Ruta a Cubrir",
                             "response_type" => "radio",
-                            "options" => $opcionesViajes, // Esto ahora SÍ es una List<String>
-                            "value" => $opcionesViajes[0], // Seleccionamos el primer string por defecto
+                            "options" => $opcionesViajes, // Esto es ["String1", "String2"]
+                            "value" => (string)$valorInicial, // Forzamos cast a string
                             "col_width" => 12,
                             "required" => true
                         ];
-
                         // Lo insertamos al final de la primera sección
                         $dataResponse['sections'][0]['items'][] = $campoViaje;
                         Log::info("Checklist ID {$id}: Se inyectó campo de selección de ruta con " . count($opcionesViajes) . " opciones para Vehículo ID {$vehiculoId}.");
