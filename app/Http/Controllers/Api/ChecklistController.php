@@ -137,7 +137,7 @@ class ChecklistController extends Controller
                     // --- BLOQUE 2: Auto-completar "Datos del Vehículo" ---
                     foreach ($dataResponse['sections'][1]['items'] as &$item) {
                         if (isset($item['data_source'])) {
-                            
+                            Log::info("Procesando item con data_source: " . $item);
                             // Caso para campos simples (Vehiculo.placa, etc)
                             if (is_string($item['data_source'])) {
                                 $campo = str_replace('Vehiculo.', '', $item['data_source']);
@@ -153,7 +153,7 @@ class ChecklistController extends Controller
                                 ];
 
                                 $key = $mapaAtributos[$campo] ?? $campo;
-                        //        $item['value'] = $vehiculo->$key ?? "";
+                                $item['value'] = $vehiculo->$key ?? "";
                             }
                         
                             // Caso para campos compuestos (Seguros, Verificación)
@@ -179,6 +179,7 @@ class ChecklistController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            Log::error('Error al obtener checklist: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener checklist: ' . $e->getMessage()
