@@ -153,9 +153,9 @@ class ChecklistController extends Controller
                                 ];
 
                                 $key = $mapaAtributos[$campo] ?? $campo;
-                                $item['value'] = $vehiculo->$key ?? "";
+                        //        $item['value'] = $vehiculo->$key ?? "";
                             }
-                            
+                        
                             // Caso para campos compuestos (Seguros, Verificación)
                             // if (is_array($item['data_source']) && $item['data_source']['model'] == 'Vehiculo') {
                             //     $statusField = $item['data_source']['status_field'];
