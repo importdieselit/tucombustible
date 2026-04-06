@@ -670,7 +670,7 @@ class VehiculoController extends BaseController
     // 3. Obtener la lista de IDs de esos vehículos
     // Usamos pluck para obtener un array simple de IDs, que es más ligero que objetos completos
     $vehiculosIds = $queryViajesHoy->distinct()->pluck('vehiculo_id')->toArray();
-
+    $viajesId=$queryViajesHoy->distinct()->pluck('id')->toArray();
     // 4. Si necesitas los OBJETOS Vehiculo con su data:
     $vehiculosCompletos = Vehiculo::whereIn('id', $vehiculosIds)->get();
 
@@ -682,8 +682,8 @@ class VehiculoController extends BaseController
         : 0;
 
     // Obtenemos los viajes activos de esos vehículos
-    $despachosHoy = $vehiculosCompletos->map(function($v) {
-        return $v->viajes->first(); // Tomamos el último viaje cargado por el eager loading
+    $despachosHoy = $vehiculosCompletos->map(function($v) use ($viajesId) {
+        return $v->viajes->whereIn('id', $viajesId)->first(); // Tomamos el último viaje cargado por el eager loading
     })->filter(); // Eliminamos nulos si algún vehículo no tiene viaje asignado
     // ------------------------------------
     
