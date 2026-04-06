@@ -336,8 +336,10 @@
                 if ($(this).val() === 'otro') {
                     $('#nuevo_modelo_group').fadeIn();
                     $('#nuevo_modelo').attr('required', 'required');
+                    $(this).removeAttr('required');
                 } else {
                     $('#nuevo_modelo_group').hide();
+                    $(this).attr('required', 'required');
                     $('#nuevo_modelo').removeAttr('required').val('');
                 }
             });

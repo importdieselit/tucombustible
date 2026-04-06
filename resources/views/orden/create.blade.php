@@ -112,7 +112,7 @@
                             </div>
                             <div class="col-md-6 mb-3" id="group-km">
                                 <label for="kilometraje" class="form-label fw-bold">Kilometraje</label>
-                                <input type="number" class="form-control fw-bold border-orange" id="kilometraje" name="kilometraje" placeholder="0">
+                                <input type="number" class="form-control fw-bold border-orange" id="kilometraje" name="kilometraje" placeholder="0" required>
                             </div>
                         </div>
 
@@ -126,7 +126,7 @@
                             <div id="render_plan_html" class="p-3 border rounded bg-white shadow-sm d-none" style="min-height: 150px; border-left: 5px solid #0d6efd !important;">
                             </div>
 
-                            <textarea id="descripcion" name="descripcion" class="form-control" rows="6" placeholder="Describa el trabajo a realizar..."></textarea>
+                            <textarea id="descripcion" name="descripcion" class="form-control" rows="6" placeholder="Describa el trabajo a realizar..." required></textarea>
                             
                             <small class="text-muted mt-2 d-block" id="instruccion-detalle">
                                 <i class="bi bi-info-circle me-1"></i> 
