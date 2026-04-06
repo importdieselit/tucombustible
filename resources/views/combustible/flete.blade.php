@@ -68,19 +68,28 @@
                     </div>
 
                     {{-- VEHÍCULO --}}
-                    <div class="col-md-6">
-                        <label for="vehiculo_id" class="form-label fw-bold">Vehículo (Flota)</label>
-                        <select name="vehiculo_id" id="vehiculo_id" class="form-select select-or-other" data-other-field="otro_vehiculo">
-                            <option value="">Seleccione un Vehículo</option>
-                            <!-- Se asume que $vehiculos es un array de objetos Vehiculo -->
-                            @foreach($vehiculos as $vehiculo)
-                                <option value="{{ $vehiculo->id }}" @if(old('vehiculo_id') == $vehiculo->id) selected @endif>{{ $vehiculo->flota }} ({{ $vehiculo->placa }})</option>
-                            @endforeach
-                        </select>
-                        @error('vehiculo_id')
-                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                        @enderror
-                    </div>
+                     <div class="col-md-6">
+                            <label for="chofer">Unidad</label>
+                            <select name="vehiculo_id" id="vehiculo_id" class="form-select" required>
+                                <option value="">Seleccione un Vehiculo</option>
+                                @foreach($vehiculos as $vehiculo)
+                                    @if($vehiculo->tipo==3||$vehiculo->tipo==5)
+                                        <option value="{{ $vehiculo->id }}">{{ $vehiculo->flota }} {{ $vehiculo->placa }}</option>
+                                    @endif
+                                @endforeach 
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="chofer">Cisterna</label>
+                            <select name="cisterna_id" id="cisterna_id" class="form-select" >
+                                <option value="">Seleccione una cisterna</option>
+                                @foreach($vehiculos as $cisterna)
+                                    @if($cisterna->tipo==2)
+                                        <option value="{{ $cisterna->id }}">{{ $cisterna->flota }} {{ $cisterna->placa }}</option>
+                                    @endif
+                                @endforeach 
+                            </select>
+                        </div>
 
                     {{-- CHOFER --}}
                     <div class="col-md-6">
