@@ -95,10 +95,10 @@ class VehiculoController extends BaseController
                 ->with([
                     'viaje.chofer.persona', 
                     'viaje.ayudante_chofer.persona',
-                    'cliente'
+                    'cliente',
+                    'viaje.vehiculo'
                 ])
                 ->where('viajes.vehiculo_id', $item->id)
-                ->where('viajes.vehiculo.estatus',2)
                 ->orderBy('viajes.fecha_salida', 'desc')
                 ->select('despachos_viajes.*') 
                 ->get()
