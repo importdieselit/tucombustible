@@ -1427,6 +1427,7 @@ public function storeDespachoIndustrial(Request $request)
             ]);
 
             if(is_null($request->cisterna_id)){
+                Vehiculo::where('acoplado_id', $request->cisterna_id)->update(['acoplado_id' => null]);
                 $vehiculo = Vehiculo::find($request->vehiculo_id);
                 $vehiculo->acoplado_id = $request->cisterna_id;
                 $vehiculo->save();  
@@ -1536,6 +1537,7 @@ public function storeDespachoIndustrial(Request $request)
             ]);
 
             if(is_null($request->cisterna_id)){
+                Vehiculo::where('acoplado_id', $request->cisterna_id)->update(['acoplado_id' => null]);
                 $vehiculo = Vehiculo::find($request->vehiculo_id);
                 $vehiculo->acoplado_id = $request->cisterna_id;
                 $vehiculo->save();  

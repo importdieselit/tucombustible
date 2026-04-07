@@ -248,6 +248,7 @@ class ViajesController extends Controller
                 'tipo' => $request->tipo, // Tipo 1 para viajes con múltiples despachos
             ]);
             if(!is_null($request->cisterna)){
+               Vehiculo::where('acoplado_id', $request->cisterna)->update(['acoplado_id' => null]);
                $vehiculo = Vehiculo::find($request->vehiculo_id);
                $vehiculo->acoplado_id = $request->cisterna;
                $vehiculo->save();
@@ -1157,6 +1158,7 @@ public function updateGuiaData(Request $request, $viajeId)
             ]);
 
             if(!is_null($request->cisterna)){
+                Vehiculo::where('acoplado_id', $request->cisterna)->update(['acoplado_id' => null]);
                 $vehiculo=Vehiculo::find($request->vehiculo_id);
                 $vehiculo->acoplado_id = $request->cisterna;
                 $vehiculo->save();
