@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class ProfileController extends Controller
 {
@@ -130,12 +131,10 @@ class ProfileController extends Controller
 
             // Si el usuario tiene un cliente asociado
             if ($user->cliente_id) {
-                \Log::info("Usuario ID: {$user->id}, Cliente ID: {$user->cliente_id}");
                 
                 // Obtener el cliente principal del usuario
                 $mainClient = Cliente::find($user->cliente_id);
                 if ($mainClient) {
-                    \Log::info("Cliente encontrado: ID={$mainClient->id}, Nombre={$mainClient->nombre}, Parent={$mainClient->parent}");
                     
                     $availableClients->push([
                         'id' => $mainClient->id,
@@ -171,8 +170,7 @@ class ProfileController extends Controller
                 }
             }
 
-            \Log::info("Total clientes disponibles: " . $availableClients->count());
-            
+
             return response()->json([
                 'success' => true,
                 'data' => $availableClients->toArray()

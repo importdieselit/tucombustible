@@ -4,439 +4,449 @@
 
 @push('styles')
     <style>
-        .card-header {
-            background-color: #f8f9fa;
-            border-bottom: 1px solid #e9ecef;
-            font-weight: 600;
-            color: #495057;
-        }
-        .info-label {
-            font-weight: 500;
-            color: #6c757d;
-        }
-        .info-value {
-            font-weight: 400;
-            color: #343a40;
-        }
-        .indicator-card {
-            background-color: #e9f5ff;
-            border: 1px solid #cce5ff;
-        }
-        .indicator-label {
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: #007bff;
-        }
-        .indicator-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #007bff;
-        }
-        .text-success {
-            color: #28a745 !important;
-        }
-        .text-info {
-            color: #17a2b8 !important;
-        }
+
     </style>
 @endpush
-@php
-
-$orden=false;
-$insumos_usados=false;
-
-     // NOTA: En una aplicación real, estos datos vendrían de la base de datos.
-            $rutas = collect([
-                ['fecha' => '2024-05-15', 'origen' => 'Caracas', 'destino' => 'Valencia', 'km' => 170, 'conductor' => 'Pedro Pérez'],
-                ['fecha' => '2024-05-12', 'origen' => 'Valencia', 'destino' => 'Maracay', 'km' => 60, 'conductor' => 'Ana López'],
-                ['fecha' => '2024-05-10', 'origen' => 'Maracay', 'destino' => 'Caracas', 'km' => 120, 'conductor' => 'Juan Rivas'],
-                ['fecha' => '2024-05-08', 'origen' => 'Caracas', 'destino' => 'La Guaira', 'km' => 40, 'conductor' => 'Pedro Pérez'],
-                ['fecha' => '2024-05-05', 'origen' => 'La Guaira', 'destino' => 'Caracas', 'km' => 45, 'conductor' => 'Ana López'],
-            ]);
-
-            $historialMensual = collect([
-                ['mes' => 'Mayo 2024', 'km' => 1500, 'consumo' => 120.5],
-                ['mes' => 'Abril 2024', 'km' => 1800, 'consumo' => 145.7],
-                ['mes' => 'Marzo 2024', 'km' => 2100, 'consumo' => 170.3],
-                ['mes' => 'Febrero 2024', 'km' => 1950, 'consumo' => 155.0],
-                ['mes' => 'Enero 2024', 'km' => 1750, 'consumo' => 135.2],
-            ]);
-
-            // Cálculo de indicadores económicos (con datos simulados)
-            $precioLitroCombustible = 0.5; // Precio ficticio por litro en USD
-            $consumoTotalLitros = $historialMensual->sum('consumo');
-            $gastoCombustible = $consumoTotalLitros * $precioLitroCombustible;
-            $kmTotales = $historialMensual->sum('km');
-            $costoPorKm = $kmTotales > 0 ? $gastoCombustible / $kmTotales : 0;
-    $foto= App\Models\VehiculoFoto::where('vehiculo_id',$item->id)->where('es_principal',true)->get()->first();
-
-    
-$viajes = App\Models\DespachoViaje::query()
-    ->join('viajes', 'despachos_viajes.viaje_id', '=', 'viajes.id')
-    ->with([
-        'viaje.chofer.persona', 
-        'viaje.ayudante_chofer.persona',
-        'cliente' // ¡NUEVO! Precargamos el cliente para no consultarlo en el map
-    ])
-    ->where('viajes.vehiculo_id', $item->id)
-    ->orderBy('viajes.fecha_salida', 'desc')
-    ->select('despachos_viajes.*') 
-    ->get()
-    ->map(function ($v) {
-        
-        return [
-            'id'        => $v->id, // ID de DespachoViaje
-            'fecha'     => $v->viaje->fecha_salida ? $v->viaje->fecha_salida->format('d/m/Y H:i') : 'N/D',
-            'destino'   => $v->viaje->destino_ciudad ?? 'Sin datos',
-            'chofer'    => $v->viaje->chofer->persona->nombre ?? 'N/D',
-            'ayudante'  => $v->viaje->ayudante_chofer->persona->nombre ?? 'N/D',        
-            'cliente'   => $v->cliente->nombre ?? $v->otro_cliente ?? 'N/D',
-            'litros'    => $v->litros
-        ];
-    });
-
-@endphp
-
-@if($item->estatus==3 || $item->estatus ==5)
-        @php
-            $orden=App\Models\Orden::where('id_vehiculo',$item->id)->where('estatus',2)->get()->first();
-            if($orden){
-                $fecha=$orden->fecha_in;
-                $duracionDias = Illuminate\Support\Carbon::parse($fecha)->diffInDays(Illuminate\Support\Carbon::parse(now()));
-                $insumos_usados = App\Models\InventarioSuministro::with('inventario')->where('id_orden', $orden->id)->get();
-            
-            }
-        @endphp
-    @endif
 
 
 @section('content')
 <div class="container-fluid">
-    <div class="row page-titles mb-4">
-        <div class="col-12 d-flex justify-content-between align-items-center">
-            <h3 class="text-themecolor mb-0">Hoja de Vida del Vehículo</h3>
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Inicio</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('vehiculos.index') }}">Vehículos</a></li>
-                <li class="breadcrumb-item active">{{ $item->placa }}</li>
-            </ol>
-        </div>
-    </div>
-
-    @if ($item)
-    <div class="row">
-        <div class="col-12 d-flex justify-content-end mb-4">
-            <a href="{{ route('vehiculos.edit', $item->id) }}" class="btn btn-warning me-2 d-flex align-items-center">
-                <i class="fas fa-edit me-2"></i> Editar
-            </a>
-            <a href="{{ route('ot.create', $item->id) }}" target="_blank" class="btn btn-warning btn-lg d-flex align-items-center">
-                <i class="fa-solid fa-wrench me-2"></i> Crear Orden de Trabajo
-            </a>
-            <a href="{{ route('vehiculos.index') }}" class="btn btn-secondary d-flex align-items-center">
-                <i class="fas fa-list me-2"></i> Volver al listado
-            </a>
-        </div>
-    </div>
-    
-    <div class="row">
-        {{-- Tarjeta de Información General --}}
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-header">Información General</div>
-                <div class="card-body">
-                    <div class="row">
-                        @if(!is_null($foto))
-                            <div class="col-sm-6 mb-3">
-                                <img src="{{ asset('storage/vehiculos/' . $foto->ruta) }}" class="img-fluid h-200" alt="" style="border-radius: 5%;border: solid;height: 400px;">
-                            </div>
-                        <div class="col-sm-6 mb-3">
-                        @endif
-                        <div class="col-sm-6 mb-3"><span class="info-label">Flota:</span> <span class="info-value">{{ $item->flota }}</span></div>
-                        <div class="col-sm-6 mb-3"><span class="info-label">Placa:</span> <span class="info-value">{{ $item->placa }}</span></div>
-                        <div class="col-sm-6 mb-3"><span class="info-label">Marca:</span> <span class="info-value">{{ $item->marca_rel->nombre ?? 'N/A' }}</span></div>
-                        <div class="col-sm-6 mb-3"><span class="info-label">Modelo:</span> <span class="info-value">{{ $item->modelo_rel->nombre ?? 'N/A' }}</span></div>
-                        <div class="col-sm-6 mb-3"><span class="info-label">Año:</span> <span class="info-value">{{ $item->anno }}</span></div>
-                        <div class="col-sm-6 mb-3"><span class="info-label">Color:</span> <span class="info-value">{{ $item->color }}</span></div>
-                        
-                        <div class="col-sm-6 mb-3"><span class="info-label">Estatus:</span> <span class="info-value">
-                            @php
-                                $estatusInfo = $estatusData->get($item->estatus);
-                            @endphp
-                            @if ($estatusInfo)
-                                <span class="badge bg-{{ $estatusInfo['css'] }}" title="{{ $estatusInfo['descripcion'] }}">
-                                    <i class="mr-1 fa-solid {{ $estatusInfo['icon'] }}"></i>
-                                    {{ $estatusInfo['auto'] }}
-                                    @if($orden)
-                                        hace {{$duracionDias ?? 0}} dias
-                                    @endif
-                                </span>
-                            @else
-                                <span class="badge bg-secondary">Desconocido</span>
-                            @endif
-
-                        </span></div>
-                        <div class="col-sm-6 mb-3"><span class="info-label">Disponibilidad:</span> <span class="info-value">{{ $item->disp ? 'Sí' : 'No' }}</span></div>
-                        @if(!is_null($foto))
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Tarjeta de Indicadores Clave --}}
-        <div class="col-md-6 mb-4">
-            <div class="card shadow-sm h-100 indicator-card">
-                <div class="card-header bg-primary text-white">Indicadores Clave</div>
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-sm-4 mb-3">
-                            <h5 class="indicator-value">{{ number_format($item->kilometraje, 0, ',', '.') }} km</h5>
-                            <span class="indicator-label">Kilometraje Inicial</span>
-                        </div>
-                        <div class="col-sm-4 mb-3">
-                            <h5 class="indicator-value">{{ number_format($item->km_contador, 0, ',', '.') }} km</h5>
-                            <span class="indicator-label">Kilometraje Actual</span>
-                        </div>
-                        <div class="col-sm-4 mb-3">
-                            <h5 class="indicator-value">{{ number_format($item->km_mantt, 0, ',', '.') }} km</h5>
-                            <span class="indicator-label">Próx. Mantenimiento</span>
-                        </div>
-                    </div>
-                    <hr>
-                    <div class="row text-center">
-                        <div class="col-sm-6 mb-3">
-                            <h5 class="indicator-value">{{ $item->fuel }} L</h5>
-                            <span class="indicator-label">Capacidad de Combustible</span>
-                        </div>
-                        <div class="col-sm-6 mb-3">
-                            <h5 class="indicator-value">{{ $item->consumo }} L/100km</h5>
-                            <span class="indicator-label">Consumo Promedio</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    @if($item->estatus==3 || $item->estatus ==5)
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-white">
-                <h5 class="card-title m-0">Detalles de la Orden</h5>
-            </div>
-            <div class="card-body">
-                <h5>Descripción del Problema/Tarea</h5>
-                <p>{{ $orden->descripcion_1 ?? 'No hay descripción.' }}</p>
-
-                <hr>
-                <h5>Observaciones</h5>
-                <p>{{ $orden->observacion ?? 'No hay observaciones.' }}</p>
-
-                <hr>
-                @if($insumos_usados)
-                <h5>Insumos Utilizados</h5>
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Código</th>
-                            <th>Nombre</th>
-                            <th>Cantidad</th>
-                            <th>Costo</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($insumos_usados as $insumo)
-                            <tr>
-                                <td>{{ $insumo->inventario->codigo ?? 'N/A' }}</td>
-                                <td>{{ $insumo->inventario->descripcion ?? 'N/A' }}</td>
-                                <td>{{ $insumo->cantidad ?? 'N/A' }}</td>
-                                <td>${{ number_format($insumo->inventario->costo * $insumo->cantidad, 2, ',', '.') }}</td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="3" class="text-center">No se han registrado insumos para esta orden.</td>
-                            </tr>
-                        @endforelse
-                        <tr>
-                            <td colspan="3" class="text-end"><strong>Total Costo:</strong></td>
-                            <td><strong>$ @if($insumos_usados) {{ number_format($insumos_usados->sum(fn($insumo) => $insumo->inventario->costo * $insumo->cantidad), 2, ',', '.') }} @endif</strong></td>
-                    </tbody>
-                </table>
-                @endif
-            </div>
-        </div>
-    @endif
-    
-    <div class="row">
-        {{-- Tarjeta de Detalles Técnicos --}}
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-header">Detalles Técnicos</div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3"><span class="info-label">Serial Motor:</span> <span class="info-value">{{ $item->serial_motor }}</span></div>
-                        <div class="col-md-6 mb-3"><span class="info-label">Serial Carrocería:</span> <span class="info-value">{{ $item->serial_carroceria }}</span></div>
-                        <div class="col-md-6 mb-3"><span class="info-label">Transmisión:</span> <span class="info-value">{{ $item->transmision }}</span></div>
-                        <div class="col-md-6 mb-3"><span class="info-label">HP / CC:</span> <span class="info-value">{{ $item->HP }} / {{ $item->CC }}</span></div>
-                        <div class="col-md-6 mb-3"><span class="info-label">Tipo Combustible:</span> <span class="info-value">{{ $item->tipo_combustible }}</span></div>
-                        <div class="col-md-6 mb-3"><span class="info-label">Tipo de Vehículo:</span> <span class="info-value">{{ $item->tipoVehiculo->nombre ?? 'N/A' }}</span></div>
-                        <div class="col-md-6 mb-3"><span class="info-label">Carga Máx:</span> <span class="info-value">{{ $item->carga_max ?? 'N/A' }}</span></div>
-                        <div class="col-md-6 mb-3"><span class="info-label">Aceite:</span> <span class="info-value">{{ $item->oil ?? 'N/A' }}</span></div>
-                        <div class="col-md-6 mb-3"><span class="info-label">Dimensiones (L/An/Al):</span> <span class="info-value">{{ $item->largo }}m / {{ $item->ancho }}m / {{ $item->altura }}m</span></div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<div class="col-12 col-md-auto ms-auto pt-2">
+    <div class="d-grid d-md-flex gap-2 flex-wrap" style="grid-template-columns: repeat(2, 1fr);">
         
-        {{-- Tarjeta de Póliza y Seguros --}}
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-header">Póliza y Seguros</div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3"><span class="info-label">N° de Póliza:</span> <span class="info-value">{{ $item->poliza_numero }}</span></div>
-                        <div class="col-md-6 mb-3"><span class="info-label">Agencia:</span> <span class="info-value">{{ $item->agencia }}</span></div>
-                        <div class="col-md-6 mb-3"><span class="info-label">Fecha de Inicio:</span> <span class="info-value">{{ \Carbon\Carbon::parse($item->poliza_fecha_in)->format('d/m/Y') }}</span></div>
-                        <div class="col-md-6 mb-3"><span class="info-label">Fecha de Fin:</span> <span class="info-value">{{ \Carbon\Carbon::parse($item->poliza_fecha_out)->format('d/m/Y') }}</span></div>
-                        <div class="col-md-6 mb-3"><span class="info-label">Cobertura:</span> <span class="info-value">{{ $item->cobertura }}</span></div>
-                        <div class="col-md-6 mb-3"><span class="info-label">Tipo de Póliza:</span> <span class="info-value">{{ $item->tipo_poliza }}</span></div>
+        <button class="btn btn-corporate shadow-sm  w-md-auto" data-bs-toggle="modal" data-bs-target="#modalKm">
+            <i class="fa-solid fa-gauge-high me-1"></i> KM
+        </button>
+
+        <button class="btn btn-warning shadow-sm w-md-auto" data-bs-toggle="modal" data-bs-target="#modalPlanificar">
+            <i class="fa-solid fa-calendar-check me-1"></i> <span class="d-inline d-md-none d-lg-inline">Planificar</span>
+        </button>
+
+        @if($esChuto)
+            <button class="btn btn-outline-dark shadow-sm w-md-auto" data-bs-toggle="modal" data-bs-target="#modalAcoplar">
+                <i class="fa-solid fa-link me-1"></i> Acoplar
+            </button>
+        @endif
+
+        <a class="btn btn-danger shadow-sm g-col-2 w-md-auto d-flex align-items-center justify-content-center" 
+           href="{{ route('ot.create', $item->id) }}" >
+            <i class="fa-solid fa-triangle-exclamation me-1"></i> 
+            <span class="text-nowrap">Crear Orden</span>
+        </a>
+
+        <a href="{{ route('vehiculos.edit', $item->id) }}" class="btn btn-dark shadow-sm w-md-auto">
+            <i class="fa-solid fa-pen-to-square me-1 d-md-none"></i> Editar
+        </a>
+    </div>
+</div>
+    <div class="card mb-4 border-0 shadow-sm bg-white">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-auto text-center">
+                    <div class="rounded-circle p-3 pb-0  d-block">
+                        <i class="fa-solid fa-truck-moving fa-3x text-corporate"></i>
                     </div>
+                    <small class="text-muted" style="margin-top: -20px">{{ $tipo }}</small>
+                </div>
+                <div class="col-md">
+                    <h3 class="mb-0">{{ $item->placa }} </h3>
+                    <p class="text-muted mb-0">{{ $item->marca()->marca }} {{ $item->modelo()->modelo }} | {{ $item->anno }}</p>
+                    <span class="badge bg-{{ $estatus->css }}">
+                        {{ $estatus->auto  }}
+                    </span>
+                </div>
+                @if($esChuto || $esCisterna)
+                    <div class="col-md-auto border-start d-none d-md-block">
+                       @if($esChuto)
+                            <div class="mt-1">
+                                @if($item->acoplado_id)
+                                   <small class="text-muted d-block">Cisterna Acoplada</small>
+                                    <span class=" text-dark d-inline">
+                                        <i class="fa fa-link"></i> {{ $item->cisternaAcoplada->placa }}
+                                    </span>
+                                    <button type="button" class="btn btn-link text-danger p-0 ms-1 d-inline" style="font-size: 0.6rem;"
+                                            onclick="event.stopPropagation(); desacoplar({{ $item->id }})"
+                                            title="Desacoplar">
+                                        <i class="fa fa-times-circle" style="font-size: 0.6rem;"></i>
+                                    </button>
+                                    @else
+                                    <span class="text-muted">(Sin Cisterna)</span>
+                                @endif
+                            </div>
+                        @else
+                            @if($item->chutoAsignado)
+
+                                    <i class="fa fa-truck"></i>: {{ $item->chutoAsignado->placa }}
+
+                            @else
+                                (Disponible)
+                            @endif
+                        @endif
+                    </div>
+                @endif
+                <div class="col-md-auto border-start d-none d-md-block">
+                    <small class="text-muted d-block">Kilometraje Actual</small>
+                    <h5 class="mb-0">{{ number_format($item->kilometraje) }} km</h5>
+                </div>
+                <div class="col-md-auto border-start d-none d-md-block">
+                    <small class="text-muted d-block">Ubicación Actual</small>
+                    <h5 class="mb-0 text-primary">{{ $ubicacion['nombre'] ?? 'En Patio' }}</h5>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Secciones de historial y consumo --}}
-    <div class="row">
-        {{-- Rutas y Movimientos --}}
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-header">Últimas Rutas y Movimientos <span class="text-danger">(MODO DEMO)</span></div>
-                <div class="card-body">
-                    <table id="historicoViajes" class="table table-striped table-hover datatable">
-                        <thead>
-                            <tr>
-                                <th>Fecha</th>
-                                <th>Ruta</th>
-                                <th>Chofer</th>
-                                <th>Cliente</th>
-                                <th>Litros</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($viajes as $ruta)
-                                <tr>
-                                    <td>{{ $ruta['fecha'] }}</td>
-                                    <td>{{ $ruta['destino'] }}</td>
-                                    <td>{{ $ruta['chofer'] }} </td>
-                                    <td>{{ $ruta['cliente'] }}</td>
-                                    <td>{{ $ruta['litros'] }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4">No hay rutas registradas.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+    <div class="card shadow-sm">
+        <div class="card-header bg-white p-0">
+            <ul class="nav nav-tabs card-header-tabs m-0" id="vehiculoTab" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link text-corporate-emphasis active" id="resumen-tab" data-bs-toggle="tab" href="#resumen" role="tab"><i class="fa-solid fa-file-invoice me-1"></i> <span class="d-none d-sm-inline">Hoja de Vida</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-corporate-emphasis" id="docs-tab" data-bs-toggle="tab" href="#docs" role="tab"><i class="fa-solid fa-folder-open me-1"></i><span class="d-none d-sm-inline"> Documentación</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-corporate-emphasis" id="mantenimiento-tab" data-bs-toggle="tab" href="#mantenimiento" role="tab"><i class="fa-solid fa-screwdriver-wrench me-1"></i><span class="d-none d-sm-inline"> Mantenimientos</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-corporate-emphasis" id="viajes-tab" data-bs-toggle="tab" href="#viajes" role="tab"><i class="fa-solid fa-route me-1"></i><span class="d-none d-sm-inline"> Viajes</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-corporate-emphasis" id="fotos-tab" data-bs-toggle="tab" href="#fotos" role="tab"><i class="fa-solid fa-image me-1"></i><span class="d-none d-sm-inline"> Galería</span></a>
+                </li>
+            </ul>
         </div>
 
-        {{-- Indicadores Económicos --}}
-        <div class="col-lg-6 mb-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-header">Indicadores Económicos <span class="text-danger">(MODO DEMO)</span></div>
-                <div class="card-body">
+        <div class="card-body bg-white">
+            <div class="tab-content" id="vehiculoTabContent">
+
+                <div class="tab-pane fade show active" id="resumen" role="tabpanel">
                     <div class="row">
-                        <div class="col-md-6 mb-3 text-center">
-                            <div class="p-3 border rounded">
-                                <h6 class="text-muted">Gasto Total en Combustible</h6>
-                                <h3 class="text-success">${{ number_format($gastoCombustible, 2, ',', '.') }}</h3>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-3 text-center">
-                            <div class="p-3 border rounded">
-                                <h6 class="text-muted">Costo por Kilómetro</h6>
-                                <h3 class="text-info">${{ number_format($costoPorKm, 2, ',', '.') }}</h3>
-                            </div>
-                        </div>
-                    </div>
-                    <hr>
-                    <h6 class="mb-3">Historial de Kilometraje y Consumo Mensual <span class="text-danger">(MODO DEMO)</span></h6>
+                        <h6 class="mb-3">Historial de Kilometraje y Consumo Mensual <span class="text-danger">(MODO DEMO)</span></h6>
                     {{-- Contenedor del gráfico --}}
-                    <div id="monthly-chart" style="height: 300px; margin-bottom: 20px;"></div>
-                    {{-- Tabla de historial --}}
-                    <table class="table table-striped table-hover">
-                        <thead>
-                            <tr>
-                                <th>Mes</th>
-                                <th>KM Recorridos</th>
-                                <th>Consumo (L)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($historialMensual as $historial)
-                                <tr>
-                                    <td>{{ $historial['mes'] }}</td>
-                                    <td>{{ number_format($historial['km'], 0, ',', '.') }}</td>
-                                    <td>{{ number_format($historial['consumo'], 2, ',', '.') }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="3">No hay historial mensual.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                    <div class="col-md-8" id="monthly-chart" style="height: 300px; margin-bottom: 20px;"></div>
+                        <div class="col-md-4 border-start ps-4 bg-white rounded shadow-sm p-2">
+                            <h6 class="text-uppercase fw-bold border-bottom pb-2">Datos Técnicos</h6>
+                            <table class="table table-white table-sm table-borderless bg-white">
+                                <tr><td class="text-muted">Serial Motor:</td><td>{{ $item->serial_motor }}</td></tr>
+                                <tr><td class="text-muted">Serial Chasis:</td><td>{{ $item->serial_carroceria }}</td></tr>
+                                <tr><td class="text-muted">Carga Máxima:</td><td>{{ number_format($item->carga_max) }} kg</td></tr>
+                                <tr><td class="text-muted">Tipo de Combustible:</td><td>{{ $item->tipo_combustible }}</td></tr>
+                                <tr><td class="text-muted">Capacidad Tanque<td>{{ number_format($item->consumo, 2) }} Ltrs</td></tr>
+                                <tr><td class="text-muted">Kilometraje Recorrido:</td><td>{{ number_format($item->km_mantt) }} km</td></tr>
+                                <tr><td class="text-muted">Proximo Mantenimiento:</td><td class="font-weight-bold text-{{ 5000-$item->km_mantt < 50 ? 'danger' : (5000-$item->km_mantt< 200 ? 'warning' : 'success') }} "><strong>{{ number_format(5000-$item->km_mantt) }} km</strong></td></tr>
+                                <tr><td class="text-muted">Horas de Trabajo:</td><td>{{ number_format($item->hrs_mantt) }} hrs</td></tr>
+                                <tr><td class="text-muted">Próximo Mantenimiento:</td><td class="font-weight-bold text-{{ 200-$item->hrs_mantt <= 15 ? 'danger' : (200-$item->hrs_mantt<= 36 ? 'warning' : 'success') }} "><strong>{{ number_format(200-$item->hrs_mantt) }} hrs</strong></td></tr>
+                                <tr><td class="text-muted">Afecta Disponibilidad:</td><td>{{ $item->es_flota ? 'Sí' : 'No' }}</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="docs" role="tabpanel">
+                   <div class="card-header bg-dark py-3 d-flex justify-content-between align-items-center">
+        <h6 class="text-white mb-0 fw-black text-uppercase small">
+            <i class="fas fa-file-signature me-2 text-orange"></i> Visor de Documentación Digital
+        </h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="row g-0">
+            {{-- Listado de Pestañas Lateral --}}
+            <div class="col-md-3 border-end bg-light">
+                <div class="nav flex-column nav-pills p-2" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                    @foreach($docsV as $index => $doc)
+                        @php
+                            // Buscamos si existe el archivo (probamos con pdf y jpg)
+                            $pathPdf = "storage/vehiculos/{$item->id}/documentos/{$doc->abreviatura}_{$item->id}.pdf";
+                            $pathJpg = "storage/vehiculos/{$item->id}/documentos/{$doc->abreviatura}_{$item->id}.jpg";
+                            $pathPng = "storage/vehiculos/{$item->id}/documentos/{$doc->abreviatura}_{$item->id}.png";
+                            
+                            $finalPath = null;
+                            if(file_exists(public_path($pathPdf))) $finalPath = asset($pathPdf);
+                            elseif(file_exists(public_path($pathJpg))) $finalPath = asset($pathJpg);
+                            elseif(file_exists(public_path($pathPng))) $finalPath = asset($pathPng);
+                        @endphp
+
+                        <button class="nav-link {{ $index === 0 ? 'active' : '' }} d-flex justify-content-between align-items-center text-uppercase fw-bold mb-1 py-2 px-3 small shadow-sm" 
+                                id="tab-{{ $doc->abreviatura }}" 
+                                data-bs-toggle="pill" 
+                                data-bs-target="#content-{{ $doc->abreviatura }}" 
+                                type="button" role="tab" style="font-size: 11px;">
+                            <span>{{ $doc->nombre }}</span>
+                            @if($finalPath)
+                                <i class="fas fa-check-circle text-success"></i>
+                            @else
+                                <i class="fas fa-times-circle text-muted"></i>
+                            @endif
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Visor del Documento --}}
+            <div class="col-md-9 bg-secondary bg-opacity-10" style="min-height: 500px;">
+                <div class="tab-content p-3 h-100" id="v-pills-tabContent">
+                    @foreach($docsV as $index => $doc)
+                        @php
+                            $pathPdf = "storage/vehiculos/{$item->id}/documentos/{$doc->abreviatura}_{$item->id}.pdf";
+                            $pathImgJ = "storage/vehiculos/{$item->id}/documentos/{$doc->abreviatura}_{$item->id}.jpg";
+                            $pathImgP = "storage/vehiculos/{$item->id}/documentos/{$doc->abreviatura}_{$item->id}.png";
+                        @endphp
+
+                        <div class="tab-pane fade {{ $index === 0 ? 'show active' : '' }} h-100" 
+                             id="content-{{ $doc->abreviatura }}" role="tabpanel">
+                            
+                            @if(file_exists(public_path($pathPdf)))
+                                <iframe src="{{ asset($pathPdf) }}#toolbar=0" width="100%" height="600px" class="rounded shadow-sm border-0"></iframe>
+                            @elseif(file_exists(public_path($pathImgJ)) || file_exists(public_path($pathImgP)))
+                                @php $img = file_exists(public_path($pathImgJ)) ? $pathImgJ : $pathImgP; @endphp
+                                <div class="text-center bg-white p-2 rounded shadow-sm">
+                                    <img src="{{ asset($img) }}" class="img-fluid rounded">
+                                </div>
+                            @else
+                                <div class="d-flex flex-column align-items-center justify-content-center h-100 py-5 text-muted">
+                                    <i class="fas fa-file-upload fa-3x mb-3 opacity-20"></i>
+                                    <h6 class="fw-black text-uppercase small">Documento no cargado</h6>
+                                    <p class="small mb-0">No se encontró el archivo: {{ $doc->abreviatura }}_{{ $item->id }}</p>
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
                 </div>
             </div>
         </div>
     </div>
-    
-    @else
-        <div class="alert alert-danger" role="alert">
-            Vehículo no encontrado.
+                </div>
+
+                <div class="tab-pane fade" id="mantenimiento" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Nro Orden</th>
+                                    <th>Fecha</th>
+                                    <th>Descripción</th>
+                                    <th>Responsable</th>
+                                    <th>Estatus</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($mantenimientos as $m)
+                                    <tr>
+                                        <td><a href="{{ route('ordenes.show', $m->id) }}" class="text-decoration-none">#{{ $m->nro_orden }}</a></td>
+                                        <td>{{ $m->fecha_in }}</td>
+                                        <td class="descripcion-celda" style="cursor: pointer;" onclick="toggleDescripcion(this)">
+                                            <div class="fw-bold small text-orange">{{ $m->tipo }}</div>
+                                            {{-- Contenedor con clase para truncar --}}
+                                            <div class="contenido-descripcion text-muted small mt-1 collapsed-text">
+                                                {!! $m->descripcion !!}
+                                            </div>
+                                            <small class="text-primary x-small btn-leer-mas">
+                                                <i class="fas fa-chevron-down me-1"></i>Ver más
+                                            </small>
+                                        </td>
+                                        <td>{{ $m->responsable }}</td>
+                                        <td><span class="badge bg-{{ $m->estatus() ? $m->estatus()->css : 'secondary' }}">{{ $m->estatus() ? $m->estatus()->orden : 'Sin Estatus' }}</span></td>
+                                        <td class="text-center">
+                                            <a href="{{ route('ordenes.show', $m->id) }}" 
+                                            class="btn btn-sm btn-outline-dark shadow-sm" 
+                                            title="Ver detalle de la Orden">
+                                                <i class="fa-solid fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @empty
+                                <tr class="text-center"><td colspan="4">No hay mantenimientos registrados</td></tr>
+
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="viajes" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Origen</th>
+                                    <th>Destino</th>
+                                    <th>Conductor</th>
+                                    <th>Cliente</th>
+                                    <th>Carga Litros</th>
+                                    <th>Kilometraje</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($viajes as $viaje)
+
+                                    <tr>
+                                        <td>{{ $viaje["fecha"] }}</td>
+                                        <td> Sede Principal</td>
+                                        <td>{{ $viaje["destino"] }}</td>
+                                        <td>{{ $viaje["chofer"]}}</td>
+                                        <td>{{ $viaje["cliente"] }}</td>
+                                        <td>{{ $viaje["litros"] }} L</td>
+                                        <td>-- km</td>
+                                    </tr>
+                                @empty
+                                    <tr class="text-center"><td colspan="7">No hay viajes registrados</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="fotos" role="tabpanel">
+                    <div class="row g-3">
+                        <div class="col-12 text-center p-5">
+                            <i class="fa-solid fa-images fa-4x text-light-emphasis mb-3"></i>
+                            <p class="text-muted">Módulo de Galería: <strong>En Construcción</strong></p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
         </div>
-    @endif
+    </div>
 </div>
 
-{{-- Scripts para Highcharts --}}
-<script src="https://code.highcharts.com/highcharts.js"></script>
-<script src="https://cdn.datatables.net/2.0.7/js/dataTables.js"></script>
-    <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>
-    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.html5.min.js"></script>
+<div class="modal fade" id="modalKm" data-bs-backdrop="false" tabindex="-1">
+    <div class="modal-dialog">
+        <form action="#" method="POST" class="modal-content">
+            @csrf @method('PATCH')
+            <div class="modal-header"><h5>Actualizar Kilometraje</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <label>Kilometraje Actual (Placa: {{ $item->placa }})</label>
+                <input type="number" name="km_actual" class="form-control form-control-lg" value="{{ $item->km_actual }}" required>
+            </div>
+            <div class="modal-footer"><button type="submit" class="btn btn-primary w-100">Guardar Cambios</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="modalPlanificar" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content border-orange">
+            <form id="formPlanificarMantenimiento" class="modal-content border-orange">
+                @csrf
+                <input type="hidden" name="vehiculo_id" value="{{ $item->id }}">
+                
+                <div class="modal-header bg-corporate text-white">
+                    <h5 class="modal-title"><i class="fas fa-tools me-2"></i>Planificar Rutina Preventiva</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="alert alert-light border mb-3">
+                        <small class="text-muted d-block text-uppercase fw-bold small">Contadores Actuales:</small>
+                        <div class="d-flex justify-content-between mt-1">
+                            <span><strong>KM:</strong> {{ number_format($item->km_contador) }} / 50.000</span>
+                            <span><strong>HRS:</strong> {{ number_format($item->hrs_contador) }} / 2.000</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Fecha Programada</label>
+                        <input type="date" name="fecha_programada" id="fecha_programada" class="form-control" min="{{ date('Y-m-d') }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Rutina a Ejecutar</label>
+                        {{-- El name debe ser tipo_mantenimiento para el validate del controlador --}}
+                        <label class="form-label fw-bold">Rutina Recomendada</label>
+                        <select name="tipo_mantenimiento" id="selectRutina" class="form-select border-primary fw-bold" required>
+                            <option value="1" data-short="M1">M1 Basica     (5000/200)</option>
+                            <option value="2" data-short="M2">M2 Intermedia (10000/400)</option>
+                            <option value="3" data-short="M3">M3 Mayor      (20000/800)</option>
+                            <option value="4" data-short="M4">M4 General / Overhaul</option>
+                        </select>
+                        <div id="rutinaSugeridaMsg" class="form-text text-primary fw-bold mt-2"></div>
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label small">Notas Adicionales</label>
+                        <textarea name="titulo" class="form-control" rows="2" placeholder="Información adicional para la descripción..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" id="btnEnviarPlan" class="btn btn-warning fw-bold">
+                        <i class="fas fa-save me-1"></i> Generar Planificación
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalAcoplar" data-bs-backdrop="false" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content text-center p-4">
+            <i class="fa-solid fa-link fa-3x text-info mb-3"></i>
+            <div class="modal-header">
+                <h6 class="modal-title">Acoplar a <span id="placaChutoModal"></span></h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="formAcoplar" method="POST" action="{{ route('vehiculos.acoplar') }}">
+                @csrf
+                <div class="modal-body">
+                    <input type="hidden" name="chuto_id" id="chuto_id_input" value="{{ $item->id }}">
+                    <label class="form-label small">Seleccione Unidad</label>
+                    <select name="acoplado_id" class="form-select form-select-sm" required>
+                        <option value="">-- Seleccionar --</option>
+                        @foreach($acoples as $cisterna)
+                            <option value="{{ $cisterna->id }}">{{ $cisterna->flota }} - {{ $cisterna->placa }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-sm btn-primary w-100">Confirmar Acople</button>
+                </div>
+            </
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+    </div>
+</div>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
 
+// Lógica de recomendación de rutina
+    const kmAcumulado = {{ $item->km_contador ?? 0 }};
+    const hrsAcumuladas = {{ $item->hrs_contador ?? 0 }};
+    const select = document.getElementById('selectRutina');
+    const msg = document.getElementById('rutinaSugeridaMsg');
 
-        $('#historicoViajes').DataTable({
-                language: {
-                    "decimal": "",
-                    "emptyTable": "No hay información",
-                    "info": "Mostrando _START_ a _END_ de _TOTAL_ Entradas",
-                    "infoEmpty": "Mostrando 0 a 0 de 0 Entradas",
-                    "infoFiltered": "(Filtrado de _MAX_ total entradas)",
-                    "infoPostFix": "",
-                    "thousands": ",",
-                    "lengthMenu": "Mostrar _MENU_ Entradas",
-                    "loadingRecords": "Cargando...",
-                    "processing": "Procesando...",
-                    "search": "Buscar:",
-                    "zeroRecords": "Sin resultados encontrados",
-                    "paginate": {
-                        "first": "Primero",
-                        "last": "Ultimo",
-                        "next": "Siguiente",
-                        "previous": "Anterior"
-                    }
-                },
-                layout: {
-                    topStart: {
-                        buttons: ['csv', 'excel', 'pdf', 'print']
-                    }
-                }
-            });
+    function calcularSugerencia() {
+        let sugerencia = "M1";
+        
+        // Lógica de ciclos según tu requerimiento:
+        // M4 a los 50k km o 2000 hrs
+        if (kmAcumulado >= 45000 || hrsAcumuladas >= 1800) {
+            sugerencia = "M4";
+        } 
+        // M3 a los 20k, 40k km o 800, 1600 hrs
+        else if ((kmAcumulado >= 15000 && kmAcumulado < 25000) || (kmAcumulado >= 35000 && kmAcumulado < 45000) || 
+                 (hrsAcumuladas >= 700 && hrsAcumuladas < 900) || (hrsAcumuladas >= 1500 && hrsAcumuladas < 1700)) {
+            sugerencia = "M3";
+        }
+        // M2 a los 10k, 30k km o 400, 1200 hrs
+        else if ((kmAcumulado >= 5000 && kmAcumulado < 15000) || (kmAcumulado >= 25000 && kmAcumulado < 35000) ||
+                 (hrsAcumuladas >= 300 && hrsAcumuladas < 500) || (hrsAcumuladas >= 1100 && hrsAcumuladas < 1300)) {
+            sugerencia = "M2";
+        }
+
+        select.value = sugerencia;
+        msg.innerHTML = `<i class="fas fa-info-circle"></i> Sugerencia basada en uso: <strong>${sugerencia}</strong>`;
+    }
+
+    // Ejecutar al abrir el modal
+    document.getElementById('modalPlanificar').addEventListener('show.bs.modal', calcularSugerencia);
+
+
 
         // Datos de PHP pasados a JavaScript
         const historialMensual = @json($historialMensual);
@@ -508,8 +518,76 @@ $viajes = App\Models\DespachoViaje::query()
                 tooltip: {
                     valueSuffix: ' L'
                 }
-            }]
+            }],
+            credits: false
         });
+
+
+        // 2. Envío de datos al Controlador (Store)
+        $('#formPlanificarMantenimiento').on('submit', function(e) {
+            e.preventDefault();
+            
+            const btn = $('#btnEnviarPlan');
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Procesando...');
+
+            $.ajax({
+                url: "{{ route('mantenimiento.planificacion.store') }}", // Asegúrate que esta ruta apunte a tu función store
+                method: "POST",
+                data: $(this).serialize(),
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Planificado!',
+                            text: response.message,
+                            confirmButtonColor: '#e67e22'
+                        }).then(() => {
+                            location.reload(); // Recargamos para ver la nueva OT en el historial
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    btn.prop('disabled', false).text('Generar Planificación');
+                    const errorMsg = xhr.responseJSON ? xhr.responseJSON.message : 'Error desconocido';
+                    Swal.fire('Error', errorMsg, 'error');
+                }
+            });
+        });
+
     });
+
+            function desacoplar(id) {
+                Swal.fire({
+                    title: '¿Desacoplar unidad?',
+                    text: "El chuto y la cisterna figurarán como independientes.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, desacoplar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = `/vehiculos/desacoplar/${id}`;
+                    }
+                });
+            }
+
+            function toggleDescripcion(elemento) {
+                const contenedor = $(elemento).find('.contenido-descripcion');
+                const btn = $(elemento).find('.btn-leer-mas');
+
+                if (contenedor.hasClass('collapsed-text')) {
+                    // Expandir
+                    contenedor.removeClass('collapsed-text').addClass('expanded-text');
+                    btn.html('<i class="fas fa-chevron-up me-1"></i>Ver menos');
+                } else {
+                    // Contraer
+                    contenedor.removeClass('expanded-text').addClass('collapsed-text');
+                    btn.html('<i class="fas fa-chevron-down me-1"></i>Ver más');
+                }
+            }
+
+
 </script>
 @endsection

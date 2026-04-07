@@ -13,7 +13,7 @@
             <i class="bi bi-pencil"></i> Editar Viaje
         </a>
         {{-- Botón de Eliminación --}}
-        <form action="{{ route('viajes.destroy', $viaje->id) }}" method="POST" class="d-inline" id="delete-form-{{ $viaje->id }}">
+        <form action="{{ route('viaje.destroy', $viaje->id) }}" method="POST" class="d-inline" id="delete-form-{{ $viaje->id }}">
             @csrf
             @method('DELETE')
             <button type="button" class="btn btn-danger btn-sm" 

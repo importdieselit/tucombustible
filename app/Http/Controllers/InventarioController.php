@@ -4,12 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Inventario;
 use App\Models\Almacen;
+use App\Models\Cliente;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use App\Models\InventarioSuministro;
+use App\Models\Ventas;
+use App\Models\VentasDetalle;
+
 
 class InventarioController extends BaseController
 {
@@ -156,6 +161,98 @@ class InventarioController extends BaseController
 
     public function adjustment()
     {
+    }
+
+    public function ventaCreate()
+    {
+        $items = Inventario::where('venta',true)->get();
+        $clientes   = Cliente::all();
+        return view('inventario.venta', compact('items', 'clientes'));
+    }
+
+    public function ventaStore(Request $request)
+    {
+        // 1. Validación de entrada
+        $request->validate([
+            'id_cliente' => 'required',
+            'items' => 'required|array|min:1',
+        ]);
+
+        try {
+              $idCliente = $request->id_cliente;
+
+                // 2. Lógica de registro rápido de cliente ("NUEVO" u "OTROS")
+                if ($idCliente === 'NUEVO' || $idCliente === 'OTROS') {
+                    $cliente = Cliente::create([
+                        'rif' => $request->nuevo_rif,
+                        'nombre' => $request->nuevo_nombre,
+                        'correo' => $request->nuevo_correo,
+                        'telefono' => $request->nuevo_telefono,
+                    ]);
+                    $idCliente = $cliente->id;
+                }
+
+                // 3. Crear la cabecera de la venta
+                $venta = Ventas::create([
+                    'nro_venta' => 'V-' . strtoupper(uniqid()), // Genera un correlativo único
+                    'nro_profit' => $request->nro_profit,
+                    'id_cliente' => $idCliente,
+                    'fecha' => now(),
+                    'total_venta' => 0, // Se actualizará al final
+                    'observaciones' => $request->observaciones,
+                ]);
+                Log::info('venta: '.$venta);
+                $totalGeneral = 0;
+                // 4. Procesar los ítems del array items[X]
+                foreach ($request->items as $item) {
+                    // Saltar si por alguna razón el id_inventario viene vacío
+                    if (empty($item['id_inventario'])) continue;
+
+                    $cantidad = floatval($item['cantidad']);
+                    $precio = floatval($item['precio_unitario']);
+                    $subtotal = $cantidad * $precio;
+
+                    // Crear detalle
+                    $ventadet=VentasDetalle::create([
+                        'id_venta' => $venta->id,
+                        'id_inventario' => $item['id_inventario'],
+                        'cantidad' => $cantidad,
+                        'precio_unitario' => $precio,
+                        'subtotal' => $subtotal,
+                    ]);
+                    Log::info('Venta Det '.$ventadet);
+                    // 5. Descontar del inventario real
+                    $producto = Inventario::findOrFail($item['id_inventario']);
+                    $producto->existencia -= $cantidad;
+                    $producto->save();
+
+                    $totalGeneral += $subtotal;
+                }
+
+                // 6. Actualizar el total final en la cabecera
+                $venta->update(['total_venta' => $totalGeneral]);
+
+                return redirect()->route('ventas.list')
+                    ->with('success', "Venta #{$venta->nro_venta} procesada correctamente.");
+
+        } catch (\Exception $e) {
+            Log::info($e->getMessage());
+            return back()->with('error', 'Error al procesar la venta: ' . $e->getMessage())->withInput();
+        }
+    }
+
+    public function ventaList(){
+            $ventas = Ventas::with(['cliente', 'detalles', 'detalles.inventario'])
+            ->orderBy('fecha', 'desc')
+            ->get();
+
+        return view('inventario.ventalist', compact('ventas'));
+    }
+
+    public function ventaShow($id)
+    {
+        $venta = Ventas::with(['cliente', 'detalles.inventario'])->findOrFail($id);
+        return view('inventario.ventashow', compact('venta'));
     }
 
 

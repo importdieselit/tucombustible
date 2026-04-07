@@ -61,10 +61,10 @@
                                     {{ $inspeccion->created_at->format('d/m/Y H:i A') }}
                                 </td>
                                 <td>
-                                    <a href="{{ route('inspeccion.show', $inspeccion->id) }}" class="btn btn-sm btn-outline-info" title="Revisar Detalles">
+                                    <a href="{{ route('inspecciones.show', $inspeccion->id) }}" class="btn btn-sm btn-outline-info" title="Revisar Detalles">
                                         <i class="fa-solid fa-search"></i>
                                     </a>
-                                    <a href="{{ route('inspeccion.pdf', $inspeccion->id) }}" class="btn btn-sm btn-outline-danger" target="_blank" title="Imprimir PDF">
+                                    <a href="{{ route('inspecciones.pdf', $inspeccion->id) }}" class="btn btn-sm btn-outline-danger" target="_blank" title="Imprimir PDF">
                                         <i class="fa-solid fa-file-pdf"></i>
                                     </a>
                                 </td>

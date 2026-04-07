@@ -2,60 +2,57 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Vehiculo;
-use App\Models\User;
-use App\Models\Orden;
-use App\Models\Tanque;
-use App\Models\MantenimientoProgramado;
-use App\Models\Cliente;
-use App\Models\Pedido;
-use App\Models\MovimientoCombustible;
+use App\Services\DashboardService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Carbon;
-use App\Models\SuministroCompra;
+
 class DashboardController extends Controller
 {
-    public function index()
+    protected DashboardService $dashboardService;
+
+    public function __construct(DashboardService $dashboardService)
     {
-        $user = Auth::user(); // Simplificado: ya tienes el objeto user
+        $this->dashboardService = $dashboardService;
+    }
 
-        if ($user->id_perfil == 1) {
-            return redirect()->route('captacion.index');
+    public function index(Request $request)
+    {
+        $user = Auth::user();
+
+        // 1. DASHBOARD PRINCIPAL (Admin / SuperUser)
+        // Redirigimos antes de tocar cualquier Servicio
+        if (in_array($user->id_perfil, [1, 2,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18])) {
+            return redirect()->route('vehiculos.index');
         }
 
-        if ($user->id_perfil == 3) {
-            return redirect()->route('clientes.dashboard');
+        // -------------------------------------------------------
+        // LÓGICA DEL CLIENTE (perfil 3)
+        // -------------------------------------------------------
+        
+        // 1. Capturamos el ID de sucursal si viene en la URL
+        $sucursalId = $request->query('sucursal_id');
+
+        // 2. Pasamos el ID al servicio para el "Modo Espejo"
+        $data = $this->dashboardService->getDashboardData($user, $sucursalId);
+
+        // 3. Cargamos los pedidos usando el cliente correcto (Padre o Sucursal)
+        // Validamos que exista 'cliente' en el array por si el perfil es 'cliente_sin_vincular'
+        if (isset($data['cliente'])) {
+            $data['pedidos'] = app(\App\Services\PedidoService::class)
+                                ->listarPedidosParaUsuario($data['cliente']);
         }
 
-         
-        $totalVehiculos = Vehiculo::count();
-        $totalUsuarios = User::count();
-        $totalOrdenesAbiertas = Orden::where('estatus', 'Abierta')->count(); // Asumiendo que 'estatus' tiene este valor
-        $totalTanques = Tanque::count();
-        $unidades_con_orden_abierta = Vehiculo::VehiculosConOrdenAbierta()->count();
-        $unidades_en_mantenimiento = Vehiculo::countVehiculosEnMantenimiento();
-        $unidades_disponibles = Vehiculo::where('es_flota',true)->where('estatus',1)->count();
-        $programados=MantenimientoProgramado::whereDate('fecha','>=',now())->count();
-        $programadosHoy=MantenimientoProgramado::whereDate('fecha',now())->count();
-        $suministros_compra = SuministroCompra::where('estatus', 1)->count();
+        // 4. Definimos la variable que hacía explotar la vista
+        $data['viendoSucursal'] = $request->filled('sucursal_id');
 
-        // Puedes añadir más información, como las últimas 5 órdenes
-        $ultimasOrdenes = Orden::orderBy('id', 'desc')->take(5)->get();
-
-        return view('dashboard', compact(
-            'totalVehiculos',
-            'totalUsuarios',
-            'totalOrdenesAbiertas',
-            'totalTanques',
-            'ultimasOrdenes',
-            'unidades_con_orden_abierta',
-            'unidades_en_mantenimiento',
-            'unidades_disponibles',
-            'programados',
-            'programadosHoy',
-            'suministros_compra',
-            'user'
-        ));
+        // Retornamos la vista correspondiente
+        return match ($data['perfil']) {
+            'cliente_en_registro' => view('cliente.en_proceso', $data),
+            'cliente_rechazado'   => view('cliente.rechazado', $data),
+            'cliente_inactivo'    => view('cliente.inactivo', $data),
+            'cliente_padre',
+            'cliente_sucursal'    => view('cliente.index', $data),
+            default               => abort(403, 'Perfil de usuario no reconocido o expediente no vinculado.'),
+        };
     }
 }

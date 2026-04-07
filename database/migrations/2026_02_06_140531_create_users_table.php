@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('users', function (Blueprint $table) {
-            $table->unsignedBigInteger('id');
+            $table->id();
             $table->unsignedBigInteger('id_perfil')->nullable();
             $table->unsignedBigInteger('id_persona');
             $table->integer('cliente_id')->nullable();
@@ -30,7 +30,6 @@ return new class extends Migration
             $table->text('fcm_token')->nullable();
             $table->string('telegram_id', 100)->nullable();
             $table->string('telegram_username', 50)->nullable();
-            $table->boolean('must_change_password')->default(true);
         });
     }
 

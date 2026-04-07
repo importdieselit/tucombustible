@@ -8,12 +8,13 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Facades\DB;
+use NotificationChannels\WebPush\HasPushSubscriptions;
 use App\Models\Perfil;
 use App\Models\Persona;
 use App\Models\PermisoUsuario;
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasApiTokens;
+    use HasFactory, Notifiable, HasApiTokens, HasPushSubscriptions;
 
     protected $fillable = [
         'name',
@@ -24,9 +25,7 @@ class User extends Authenticatable
         'cliente_id',
         'fcm_token',
         'id_master',
-        'status',
-        'status_usuario',      
-        'must_change_password',
+        'status',      
         'telegram_id',
         'telegram_username',
         'ultimo_login'
@@ -168,7 +167,7 @@ class User extends Authenticatable
      */
     public function cliente()
     {
-        return $this->belongsTo(Cliente::class, 'cliente_id', 'id');
+        return $this->belongsTo(Cliente::class, 'cliente_id');
     }
 
     /**
@@ -189,7 +188,7 @@ class User extends Authenticatable
         }
     
         // Si es un prospecto o no tiene persona vinculada, usa el nombre de la tabla users
-        return $this->name ?? 'Prospecto Nuevo';
+        return $this->name ?? 'Cliente Nuevo';
     }
 
     /**
@@ -208,38 +207,6 @@ class User extends Authenticatable
                     ->withTimestamps();
     }
 
-    /*public function index()
-    {
-        if (!auth()->user()->canAccess('read', $this->moduloIdUsuarios)) {
-            abort(403, 'No tiene permiso para ver el dashboard de usuarios.');
-        }
-        
-        // Obtener el ID del cliente del usuario autenticado
-        $clienteId = auth()->user()->cliente_id;
-        
-        // 1. Consulta el conteo de usuarios por perfil.
-        // Usamos la tabla 'users' directamente.
-        $perfilesConteo = DB::table('users')
-            ->select('perfil', DB::raw('COUNT(*) as total'))
-            // 2. Aplicar el filtro de seguridad de cliente
-            // Esto asume que tienes la columna 'cliente_id' en tu tabla 'users'
-            ->when($clienteId !== 0, function ($query) use ($clienteId) {
-                // Lógica de seguridad: solo mostrar usuarios del mismo cliente (y sus hijos, si aplica)
-                // (Esta lógica debería coincidir con la de BaseController::list)
-                $query->where('cliente_id', $clienteId); 
-                
-                // NOTA: Si necesitas incluir clientes hijos, la lógica debe ser más compleja, 
-                // pero para el dashboard, un filtro directo por cliente_id es más seguro.
-            })
-            ->groupBy('perfil')
-            ->orderBy('total', 'desc')
-            ->get();
-
-        // 3. Obtener el total general para la card principal.
-        $totalGeneral = $perfilesConteo->sum('total');
-
-        return view('usuarios.index', compact('perfilesConteo', 'totalGeneral'));
-    }*/
 
     public function getPersonaParentAttribute()
     {

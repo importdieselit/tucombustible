@@ -134,9 +134,6 @@ class FcmNotificationService
             // Enviar notificación
             $result = self::sendFcmNotification($chofer->fcm_token, $title, $body, $data);
             
-            if ($result) {
-                Log::info("Notificación enviada al conductor {$chofer->nombre} (ID: {$chofer->id}) por pedido #{$pedido->id}");
-            }
             
             return $result;
 
@@ -298,8 +295,7 @@ class FcmNotificationService
                 ],
             ];
 
-            Log::info("Enviando payload FCM: " . json_encode($payload));
-
+          
             // Enviar notificación
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $accessToken,
@@ -307,7 +303,6 @@ class FcmNotificationService
             ])->post("https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send", $payload);
 
             if ($response->successful()) {
-                Log::info("Notificación FCM enviada exitosamente a token: " . substr($fcmToken, 0, 20) . "...");
                 return true;
             } else {
                 Log::error("Error enviando notificación FCM: " . $response->body());
@@ -353,14 +348,12 @@ class FcmNotificationService
                 if ($admin->fcm_token) {
                     if (self::sendFcmNotification($admin->fcm_token, $title, $body, $data)) {
                         $successCount++;
-                        Log::info("Notificación enviada al administrador: {$admin->email}");
                     }
                 } else {
                     Log::warning("Administrador {$admin->email} no tiene token FCM");
                 }
             }
 
-            Log::info("Notificaciones enviadas: {$successCount}/{$totalAdmins} administradores");
             return $successCount > 0;
 
         } catch (\Exception $e) {
@@ -472,8 +465,6 @@ class FcmNotificationService
                 'sucursal_nombre' => $sucursalNombre ?? '',
             ];
 
-            Log::info("Enviando notificación de bajo disponible al cliente padre {$clientePadre->id}: {$nuevoDisponible}L ({$porcentajeFormateado}%)");
-
             return self::sendFcmNotification($clienteUser->fcm_token, $title, $body, $data);
 
         } catch (\Exception $e) {
@@ -522,14 +513,12 @@ class FcmNotificationService
                 if ($superAdmin->fcm_token) {
                     if (self::sendFcmNotification($superAdmin->fcm_token, $title, $body, $data)) {
                         $successCount++;
-                        Log::info("Notificación de bajo disponible enviada al super admin: {$superAdmin->email}");
                     }
                 } else {
                     Log::warning("Super admin {$superAdmin->email} no tiene token FCM");
                 }
             }
 
-            Log::info("Notificaciones de bajo disponible enviadas: {$successCount}/{$totalSuperAdmins} super admins");
             return $successCount > 0;
 
         } catch (\Exception $e) {
@@ -556,7 +545,6 @@ class FcmNotificationService
             $totalClientes = count($clientesConBajoDisponible);
             
             if ($totalClientes === 0) {
-                Log::info("No hay clientes con bajo disponible para notificar");
                 return true;
             }
 
@@ -587,14 +575,12 @@ class FcmNotificationService
                 if ($superAdmin->fcm_token) {
                     if (self::sendFcmNotification($superAdmin->fcm_token, $title, $body, $data)) {
                         $successCount++;
-                        Log::info("Notificación consolidada de bajo disponible enviada al super admin: {$superAdmin->email}");
                     }
                 } else {
                     Log::warning("Super admin {$superAdmin->email} no tiene token FCM");
                 }
             }
 
-            Log::info("Notificaciones consolidadas de bajo disponible enviadas: {$successCount}/{$totalSuperAdmins} super admins");
             return $successCount > 0;
 
         } catch (\Exception $e) {
@@ -623,7 +609,7 @@ class FcmNotificationService
                                     ->whereNotNull('fcm_token')
                                     ->get();
             if ($usuarios->isEmpty()) {
-                \Log::warning('No se encontraron usuarios con tokens FCM para notificar');
+                Log::warning('No se encontraron usuarios con tokens FCM para notificar');
                 return;
             }
 
@@ -648,17 +634,13 @@ class FcmNotificationService
                     
                     if (self::sendFcmNotification($usuario->fcm_token, $title, $body, $data)) {
                         $successCount++;
-                        Log::info("Notificación enviada a {$usuario->name}");
                     }
                 } else {
                     Log::warning("Usuario {$usuario->email} no tiene token FCM");
                 }
             }
 
-            Log::info("Notificaciones enviadas: {$successCount}/" . $usuarios->count() . " usuarios", [
-                'usuario_ids' => $usuarioIds
-            ]);
-
+            
         } catch (\Exception $e) {
             Log::error('Error enviando notificación: ' . $e->getMessage());
         }

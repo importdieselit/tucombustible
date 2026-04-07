@@ -12,24 +12,25 @@ class CheckUserRole
      * 
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next, $roleId): Response
+    public function handle(Request $request, Closure $next, ...$roles): Response
     {
         if (!Auth::check()) {
             return redirect()->route('login');
         }
 
-        if (Auth::user()->status_usuario === 'prospecto') {
+        $user = Auth::user();
+        if ($user->status_usuario === 'prospecto') {
             if (!$request->routeIs('captacion.completar')) {
                 return redirect()->route('captacion.completar');
             }
             return $next($request);
         }
 
-        if (Auth::user()->id_perfil == 1) {
+        if ($user->id_perfil == 1) {
             return $next($request);
         }
 
-        if (Auth::user()->id_perfil != $roleId) {
+        if (!in_array($user->id_perfil, $roles)) {
             return abort(403, 'Acceso no autorizado.');
         }
 

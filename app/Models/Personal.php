@@ -36,12 +36,9 @@ class Personal extends Model
      * @var array
      */
     protected $fillable = [
-        'id_taller',
+        'id_sede',
         'id_usuario',
         'estatus',
-        'nombre',
-        'apellido',
-        'ci',
         'dependencia',
         'cargo',
         'direccion',
@@ -50,6 +47,7 @@ class Personal extends Model
         'observaciones',
         'fecha_in',
         'jefe_taller',
+        'id_persona'
     ];
 
     /**
@@ -64,24 +62,25 @@ class Personal extends Model
     /**
      * Los atributos que deben ser convertidos a tipos nativos.
      *
-     * @var array
+     * @var array   
      */
     protected $casts = [
         // 'fecha_in' => 'date', // Laravel puede manejar la conversión si el formato es estándar
-        'id_taller' => 'integer',
+        'id_sede' => 'integer',
         'id_usuario' => 'integer',
         'estatus' => 'integer',
         'dependencia' => 'integer',
         'jefe_taller' => 'integer',
+        'id_persona' => 'integer'
     ];
 
     /**
      * Define la relación con el modelo de Taller.
      * Asumiendo que existe un modelo Taller.
      */
-    public function taller()
+    public function sede()
     {
-        return $this->belongsTo(Taller::class, 'id_taller');
+        return $this->belongsTo(Sede::class, 'id_sede');
     }
 
     /**
@@ -92,4 +91,7 @@ class Personal extends Model
     {
         return $this->belongsTo(User::class, 'id_usuario');
     }
+     public function persona(){
+        return $this->belongsTo(Persona::class, 'id_persona', 'id');
+     }
 }

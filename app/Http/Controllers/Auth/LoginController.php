@@ -91,15 +91,17 @@ class LoginController extends Controller
      */
     protected function authenticated(Request $request, $user)
     {
-        // Si el usuario tiene un perfil_id de 3, lo redirigimos a la ruta 'clientes/index'.
-        if ($user->id_perfil == 3) {
-            return redirect()->route('clientes.dashboard');
-        }
-        if ($user->id_perfil == 2) {
-            return redirect()->route('combustible.dashboard');
+        // Perfiles con acceso al Dashboard principal:
+        // 1: Superadmin
+        // 2: Administrador Sistema (Gerencias)
+        // 3: Cliente (El flujo que estamos optimizando)
+    
+        if (in_array($user->id_perfil, [1, 2, 3])) {
+            return redirect()->route('dashboard');
         }
 
-        // Para cualquier otro perfil, se mantiene la redirección por defecto.
+        // Para el resto de perfiles (Conductores, Mecánicos, etc.) 
+        // mantenemos la ruta por defecto o la que definas luego.
         return redirect()->intended($this->redirectPath());
     }
 

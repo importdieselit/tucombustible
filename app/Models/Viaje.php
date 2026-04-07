@@ -39,7 +39,8 @@ class Viaje extends Model
         'otro_vehiculo',
         'otro_chofer',
         'otro_ayudante',
-        'tipo'
+        'tipo',
+        'cisterna'
     ];
 
     protected $casts = [
@@ -72,6 +73,12 @@ class Viaje extends Model
     {
         return $this->belongsTo(Vehiculo::class, 'vehiculo_id');
     }
+
+    public function cisternaAcoplada(): BelongsTo
+    {
+        return $this->belongsTo(Vehiculo::class, 'cisterna', 'id');
+    }
+
     public function cliente(): BelongsTo
     {
         return $this->belongsTo(Cliente::class, 'cliente_id');

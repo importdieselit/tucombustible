@@ -1,7 +1,20 @@
 @extends('layouts.app')
 
 @section('title', 'Detalle de Chofer')
-
+@push('styles')
+<style>
+    .form-check-input.custom-switch:checked {
+        background-color: #0d6efd; /* Color para CHOFER */
+        border-color: #0d6efd;
+    }
+    .form-check-input.custom-switch {
+        background-color: #f2A435; /* Color para AYUDANTE */
+        border-color: #f2A435;
+    }
+    .fw-black { font-weight: 900 !important; }
+    .text-orange { color: #f2A435 !important; }
+</style>
+@endpush
 @section('content')
 <div class="container-fluid mt-4">
     <div class="row page-titles">
@@ -40,6 +53,21 @@
                     </div>
                     <hr>
                     <div class="row">
+                        <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-light rounded border">
+                            <div>
+                                <span class="fw-black text-uppercase small text-muted d-block" style="font-size: 10px;">Cargo Actual</span>
+                                <h6 id="cargo-label" class="mb-0 fw-bold {{ $chofer->cargo == 'CHOFER' ? 'text-primary' : 'text-orange' }}">
+                                    {{ $chofer->cargo }}
+                                </h6>
+                            </div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input custom-switch" type="checkbox" role="switch" 
+                                    id="switchCargo" 
+                                    {{ $chofer->cargo == 'CHOFER' ? 'checked' : '' }}
+                                    data-id="{{ $chofer->id }}"
+                                    style="cursor: pointer; width: 3em; height: 1.5em;">
+                            </div>
+                        </div>
                         <div class="col-md-6">
                             <h6 class="text-muted">Licencia No.</h6>
                             <p class="font-weight-bold">{{ $chofer->licencia_numero }}</p>
@@ -61,65 +89,78 @@
                     <p class="font-weight-bold">{{ $chofer->vehiculo ? $chofer->vehiculo->placa . ' - ' . $chofer->vehiculo->marca : 'No asignado' }}</p>
                 </div>
                 <div class="card-body">
-                    @if(!is_null($chofer->soporte_documento))
+                  {{-- SECCIÓN: DOCUMENTACIÓN DIGITAL --}}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow-sm border-0 border-start border-4 border-orange">
+            <div class="card-header bg-dark d-flex justify-content-between align-items-center py-3">
+                <h6 class="text-white mb-0 fw-black text-uppercase small">
+                    <i class="fas fa-id-card me-2 text-orange"></i> Documentación del Chofer
+                </h6>
+            </div>
+            <div class="card-body bg-light">
+                <div class="row g-4">
+                    @foreach($documentosRequeridos as $doc)
                         @php
-                            $documentos= explode(';',$chofer->soporte_documento);
+                            $pathBase = "storage/choferes/{$chofer->id}/documentos/{$doc->abreviatura}_{$chofer->id}";
+                            $extensiones = ['pdf', 'jpg', 'png', 'jpeg'];
+                            $fileUrl = null;
+                            $isPdf = false;
+
+                            foreach($extensiones as $ext) {
+                                if(file_exists(public_path("{$pathBase}.{$ext}"))) {
+                                    $fileUrl = asset("{$pathBase}.{$ext}");
+                                    $isPdf = ($ext === 'pdf');
+                                    break;
+                                }
+                            }
                         @endphp
-                        @foreach($documentos as $documento)
-                            @php 
-                                // Esto es una forma básica en PHP/Blade de obtener la extensión
-                                $extension = pathinfo(asset('storage/choferes/documentos/'.$documento), PATHINFO_EXTENSION);
-                                $extension = strtolower($extension);
-                                $ruta_soporte = asset('storage/choferes/documentos/' . $documento);
-                            @endphp
-                            @if(in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif']))
-                                <div class="text-center mb-4 border rounded p-3 bg-light">
-                                    <img src="{{ $ruta_soporte }}" 
-                                        alt="Documento de Soporte - Imagen" 
-                                        class="img-fluid rounded shadow-sm"
-                                        style="max-height: 80vh; border: 1px solid #ddd;">
-                                </div>
-                            @elseif($extension === 'pdf')
-                                <div class="mb-4">
-                                    <h5 class="text-danger mb-3"><i class="bi bi-file-pdf-fill me-1"></i> Documento PDF</h5>
-                                    
-                                    {{-- Opción 1: Usar la etiqueta <iframe> para incrustar --}}
-                                    <div class="embed-responsive embed-responsive-16by9" style="height: 600px; width: 100%;">
-                                        <iframe src="{{ $ruta_soporte }}" 
-                                                style="width: 100%; height: 100%; border: none;"
-                                                title="Documento PDF de Soporte"
-                                                loading="lazy">
-                                            <p>Este navegador no soporta iframes. <a href="{{ $ruta_soporte }}" target="_blank">Descargar PDF</a></p>
-                                        </iframe>
-                                    </div>
 
-                                    {{-- Botón de descarga para PDF --}}
-                                    <div class="text-center mt-3">
-                                        <a href="{{ $ruta_soporte }}" target="_blank" class="btn btn-outline-danger">
-                                            <i class="bi bi-cloud-arrow-down-fill me-2"></i> Abrir o Descargar PDF en Pestaña Nueva
-                                        </a>
-                                    </div>
+                        <div class="col-md-12 col-lg-12">
+                            <div class="card h-100 shadow-sm border-0 overflow-hidden">
+                                <div class="card-header bg-white border-bottom py-2">
+                                    <label class="fw-black text-uppercase text-muted mb-0" style="font-size: 10px;">
+                                        {{ $doc->nombre }} ({{ $doc->abreviatura }})
+                                    </label>
+                                </div>
+                                
+                                {{-- Visor en vivo --}}
+                                <div class="ratio ratio-4x3 bg-dark d-flex align-items-center justify-content-center overflow-hidden">
+                                    @if($fileUrl)
+                                        @if($isPdf)
+                                            <iframe src="{{ $fileUrl }}#toolbar=0&navpanes=0" width="100%" height="100%"></iframe>
+                                        @else
+                                            <img src="{{ $fileUrl }}" class="img-fluid object-fit-cover" style="cursor: pointer;" onclick="window.open('{{ $fileUrl }}', '_blank')">
+                                        @endif
+                                    @else
+                                        <div class="text-center text-white-50 p-4">
+                                            <i class="fas fa-file-upload fa-2x mb-2"></i>
+                                            <p class="small fw-bold text-uppercase mb-0" style="font-size: 9px;">Pendiente por cargar</p>
+                                        </div>
+                                    @endif
                                 </div>
 
-                            {{-- Lógica para Otros Tipos de Archivos (Fallback) --}}
-                            @else
-                                <div class="alert alert-warning text-center">
-                                    <p class="mb-2"><i class="bi bi-file-earmark-exclamation me-2"></i> **Tipo de archivo no compatible para previsualización directa ({{ strtoupper($extension) }}).**</p>
-                                    <p class="mb-0">Solo se previsualizan Imágenes y PDF.</p>
+                                {{-- Botón de Carga/Edición --}}
+                                <div class="card-footer bg-white p-2">
+                                    <form action="{{ route('choferes.upload.doc', $chofer->id) }}" method="POST" enctype="multipart/form-data">
+                                        @csrf
+                                        <input type="hidden" name="tipo_id" value="{{ $doc->id }}">
+                                        <div class="input-group input-group-sm">
+                                            <input type="file" name="documento" class="form-control" accept=".pdf,.jpg,.png" onchange="this.form.submit()">
+                                            <span class="input-group-text bg-{{ $fileUrl ? 'orange' : 'secondary' }} text-white border-0">
+                                                <i class="fas fa-{{ $fileUrl ? 'sync-alt' : 'cloud-upload-alt' }}"></i>
+                                            </span>
+                                        </div>
+                                    </form>
                                 </div>
-                                {{-- Botón de descarga general --}}
-                                <div class="text-center mt-3">
-                                    <a href="{{ $ruta_soporte }}" target="_blank" class="btn btn-warning">
-                                        <i class="bi bi-cloud-arrow-down-fill me-2"></i> Descargar Archivo ({{ strtoupper($extension) }})
-                                    </a>
-                                </div>
-                            @endif
-                        @endforeach
-                    @else
-                        <div class="alert alert-info text-center">
-                            <i class="bi bi-info-circle me-2"></i> No hay ningún documento o imagen de soporte asociado.
+                            </div>
                         </div>
-                    @endif
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
                 </div>
             </div>
         </div>
@@ -279,6 +320,56 @@
             filtrarYSumar(e.target.value);
         });
     });
+
+    $(document).ready(function() {
+    $('#switchCargo').on('change', function() {
+        const isChecked = $(this).is(':checked');
+        const cargoValue = isChecked ? 'CHOFER' : 'AYUDANTE DE CHOFER';
+        const choferId = $(this).data('id');
+        const $label = $('#cargo-label');
+
+        // Bloqueamos visualmente el switch mientras procesa
+        $(this).prop('disabled', true);
+
+        $.ajax({
+            url: `{{ route('choferes.update-cargo', '') }}/${choferId}`,
+            method: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}',
+                cargo: cargoValue
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Actualizar interfaz
+                    $label.text(response.nuevo_cargo);
+                    if (response.nuevo_cargo === 'CHOFER') {
+                        $label.removeClass('text-orange').addClass('text-primary');
+                    } else {
+                        $label.removeClass('text-primary').addClass('text-orange');
+                    }
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Actualizado!',
+                        text: response.message,
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000
+                    });
+                }
+            },
+            error: function() {
+                Swal.fire('Error', 'No se pudo actualizar el cargo', 'error');
+                // Revertir el switch si falla
+                $('#switchCargo').prop('checked', !isChecked);
+            },
+            complete: function() {
+                $('#switchCargo').prop('disabled', false);
+            }
+        });
+    });
+});
 </script>
 @endpush
 @endsection

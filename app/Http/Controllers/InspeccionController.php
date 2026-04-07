@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Checklist;
 use App\Models\Inspeccion;
 use App\Models\Vehiculo;
+use App\Models\Viaje;
 use App\Models\Alerta;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -42,7 +43,7 @@ class InspeccionController extends Controller
                          ->first();
 
         // Obtener datos del vehículo (para pre-rellenar el formulario)
-        $vehiculo = Vehiculo::findOrFail($vehiculo_id);
+        $vehiculo = Vehiculo::with(['tipoVehiculo', 'isMarca', 'isModelo'])->findOrFail($vehiculo_id);
         if($inspeccion){
             $tipo='entrada';
             $checklist=json_decode($inspeccion->respuesta_json);
@@ -169,7 +170,7 @@ public function store(Request $request)
                 'respuesta_json' => json_encode($respuestaJson), 
             ]);
             $tipoCheck='OUT';
-            $vehiculo->estatus=1;
+            $vehiculo->estatus=2;
         }else{
             $old_inspeccion->respuesta_in=json_encode($respuestaJson);
             $old_inspeccion->estatus_general=$estatusGeneral;
@@ -181,12 +182,14 @@ public function store(Request $request)
             $vehiculo->horas_trabajo  += $horasDuracion;
             $vehiculo->hrs_mantt  += $horasDuracion;
             $vehiculo->hrs_contador   += $horasDuracion;    
-            $vehiculo->estatus = 2;
+            $vehiculo->estatus = 1;
+
+            $viaje=Viaje::where('id_vehiculo',$vehiculo->id)->where('estatus',2)->first();
         }
 
         if ($isCriticalFailure) {
                 // 🔴 CONDICIÓN CRÍTICA: Prioridad alta, pasa a No Operativo (3)
-            $vehiculo->estatus = 3; 
+            $vehiculo->estatus = 5; 
         }
         $vehiculo->save();
         // 3. Sistema de Alertas y Notificaciones (Si no está OK)

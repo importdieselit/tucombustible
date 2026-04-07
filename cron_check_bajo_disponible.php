@@ -137,14 +137,14 @@ try {
                         logMessage("Notificación enviada a super admins sobre: {$cliente->nombre}", 'success');
                         
                         // Log detallado de la notificación enviada a super admins
-                        Log::info("Notificación de bajo disponible enviada a super admins por cron job", [
-                            'cliente_id' => $cliente->id,
-                            'cliente_nombre' => $cliente->nombre,
-                            'disponible' => $cliente->disponible,
-                            'cupo' => $cliente->cupo,
-                            'porcentaje' => $porcentajeDisponible,
-                            'fecha' => now()->toDateTimeString()
-                        ]);
+                        // Log::info("Notificación de bajo disponible enviada a super admins por cron job", [
+                        //     'cliente_id' => $cliente->id,
+                        //     'cliente_nombre' => $cliente->nombre,
+                        //     'disponible' => $cliente->disponible,
+                        //     'cupo' => $cliente->cupo,
+                        //     'porcentaje' => $porcentajeDisponible,
+                        //     'fecha' => now()->toDateTimeString()
+                        // ]);
                     } else {
                         logMessage("Error enviando notificación a super admins sobre: {$cliente->nombre}", 'warning');
                     }

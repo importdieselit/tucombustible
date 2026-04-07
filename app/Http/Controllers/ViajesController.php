@@ -63,10 +63,11 @@ class ViajesController extends Controller
         // En un escenario real, aquí se cargan dinámicamente:
         $choferes = Chofer::with('persona')->get();
         $vehiculos = Vehiculo::where('es_flota',true)->get(['id', 'placa', 'flota']);
+        $cisternas = Vehiculo::where('es_flota',true)->where('tipo',2)->get(['id', 'placa', 'flota']);
         $destino = TabuladorViatico::orderBy('destino', 'asc')->pluck('destino')->unique();
         $clientes = Cliente::where('status',1)->orderBy('nombre', 'asc')->get(['id','nombre','alias']);
         
-        return view('viajes.create', compact('choferes', 'vehiculos', 'destino', 'clientes'));
+        return view('viajes.create', compact('choferes', 'vehiculos', 'destino', 'clientes', 'cisternas'));
     }
 
      public function assign($id)
@@ -312,7 +313,6 @@ class ViajesController extends Controller
                         $pedido->fresh(['cliente']),
                         $request->chofer_id
                     );
-                    Log::info("Notificación FCM enviada al conductor {$request->chofer_id} por asignación de pedido #{$pedido->id}");
                 } catch (\Exception $e) {
                     Log::error("Error enviando notificación FCM al conductor: " . $e->getMessage());
                     // No fallar la operación principal por error en notificación
@@ -499,7 +499,7 @@ class ViajesController extends Controller
       public function tabuladorIndex()
     {
         // Se carga todo el tabulador para la edición en línea
-        $tabulador = TabuladorViatico::orderBy('id')->get();
+        $tabulador = TabuladorViatico::orderBy('destino')->get();
         $parametros = Parametro::all()->keyBy('nombre')
             ->map(function($item) {
                 return $item->valor;
@@ -915,36 +915,44 @@ public function updateDespacho(Request $request, $viajeId, $despachoId)
 
 public function destroy($id)
 {
-    $viaje = Viaje::findOrFail($id);
+    $viaje = Viaje::with('despachos.cliente')->findOrFail($id);
 
     try {
-        // Iniciar Transacción
         DB::beginTransaction();
 
-        // 1. Eliminar los despachos relacionados (Requerido por el usuario)
-        // Asume que tu modelo Viaje tiene una relación despachos()
-        $despachos_eliminados = $viaje->despachos()->count();
-        $viaje->despachos()->delete(); 
+        $despachos = $viaje->despachos;
+        $conteo = $despachos->count();
+        $idp=!is_null($viaje->tipo) ? $viaje->tipo: 1;
+        $producto=Producto::find($idp);
+            
+        // 1. REVERSAR SALDOS: Si el despacho afectó cuentas, se devuelve aquí
+        foreach ($despachos as $despacho) {
+            if ($despacho->cliente) {
+                // Ejemplo: Si manejas prepago o cupos por litros
+                 $despacho->cliente->increment('disponible', $despacho->litros);
+                 $producto->increment('stock', $despacho->litros);
+            }
+        }
 
-        // 2. Eliminar el viaje
+        if(!is_null($viaje->litros)){
+            $producto->decrement('stock', $viaje->litros);
+        }
+
+        // 2. Eliminar despachos y luego el viaje
+        $viaje->despachos()->delete(); 
         $viaje->delete();
 
-        // Si todo va bien, confirmar la transacción
         DB::commit();
 
         return redirect()->route('viajes.list')
-                         ->with('success', "✅ El Viaje #{$id} a {$viaje->destino_ciudad} (y {$despachos_eliminados} despachos) ha sido eliminado correctamente.");
+            ->with('success', "Viaje #{$id} eliminado. Se reversaron {$conteo} despachos y sus saldos asociados.");
 
     } catch (\Exception $e) {
-        // Si algo falla, revertir los cambios
         DB::rollBack();
-        
-        Log::error("Error al eliminar el viaje #{$id}: " . $e->getMessage()); 
-        
+        Log::error("Error crítico en eliminación Viaje #{$id}: " . $e->getMessage()); 
         return redirect()->route('viajes.list')
-                         ->with('error', "❌ Error crítico al intentar eliminar el viaje #{$id}. Consulte los logs.");
+            ->with('error', "No se pudo eliminar el viaje. El sistema protegió la integridad de los datos.");
     }
-    
 }
 
 public function showBoleta($id)

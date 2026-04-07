@@ -4,136 +4,211 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Carbon\Carbon;
 
 class Cliente extends Model
 {
     use HasFactory;
 
-    protected $casts = [
-        'disponible' => 'float',
-    ];
+    protected $table = 'clientes';
 
     protected $fillable = [
         'nombre',
+        'alias',
         'rif',
         'contacto',
-        'dni',
-        'direccion',
         'telefono',
+        'contacto_alt',
+        'telefono_alt',
+        'dni',
+        'estado_id',
+        'ciudad_id',
         'email',
-        'disponible',
-        'cupo',
+        'direccion',
+        'direccion_operativa',
         'ciiu',
-        'parent',
         'sector',
         'periodo',
-        'status',
+        'parent',
+        'token_registro',
+        'cupo',
+        'disponible',
         'prepagado',
-        'alias'
-
+        'registro_paso',
+        'status',
+        'fecha_aprobacion',
+        'telegram_id',
     ];
 
-    /**
-     * Define los atributos que se añadirán al modelo si se serializa.
-     * Esto permite acceder a los "accesorios" como si fueran columnas de la tabla.
-     *
-     * @var array
-     */
-    protected $appends = [
-        // Comentado temporalmente para evitar que se añadan automáticamente
-        // 'consumo_mensual_promedio',
-        // 'historico_compras',
-        // 'proxima_compra_prediccion',
-        // 'dias_faltantes_proxima_compra'
+    protected $casts = [
+        'fecha_aprobacion' => 'datetime',
     ];
 
-    /**
-     * Accesor para calcular el consumo promedio mensual.
-     * En producción, esta lógica se conectaría a la base de datos.
-     *
-     * @return float
-     */
-    public function getConsumoMensualPromedioAttribute()
+    // -------------------------------------------------------
+    // CONSTANTES DE STATUS
+    // -------------------------------------------------------
+
+    const STATUS_INACTIVO    = 0;
+    const STATUS_EN_REGISTRO = 1;
+    const STATUS_APROBADO    = 2;
+    const STATUS_RECHAZADO   = 3;
+
+    const TOTAL_PASOS = 5;
+
+    // -------------------------------------------------------
+    // ACCESSORS
+    // -------------------------------------------------------
+
+    public function getNombrePasoActualAttribute(): string
     {
-        // --- Lógica de prueba ---
-        // En un futuro, podrías hacer algo como:
-        // return $this->despachos()->sum('litros') / $this->despachos()->distinct('fecha')->count();
-        return 1500;
+        return $this->registroPaso?->nombre ?? 'Paso Desconocido';
     }
 
-    /**
-     * Accesor para obtener el histórico de compras.
-     * En producción, esta lógica se conectaría a la base de datos.
-     *
-     * @return array
-     */
-    public function getHistoricoComprasAttribute()
+    public function getPorcentajeRegistroAttribute(): float
     {
-        // --- Lógica de prueba ---
-        return [
-            ['fecha' => Carbon::now()->subMonths(3), 'litros' => 1200],
-            ['fecha' => Carbon::now()->subMonths(2), 'litros' => 1550],
-            ['fecha' => Carbon::now()->subMonth(), 'litros' => 1480],
-        ];
+        return ($this->registro_paso / self::TOTAL_PASOS) * 100;
     }
 
-    /**
-     * Accesor para predecir la próxima compra.
-     * En producción, se usaría una lógica más robusta.
-     *
-     * @return array
-     */
-    public function getProximaCompraPrediccionAttribute()
+    public function getEsPadreAttribute(): bool
     {
-        // --- Lógica de prueba ---
-        $diasEntreCompras = 32; // Promedio de días
-        $ultimaCompra = Carbon::now()->subMonth(); // Última fecha de compra
-        
-        return [
-            'fecha' => $ultimaCompra->addDays($diasEntreCompras)->toDateString(),
-            'litros_predichos' => $this->getConsumoMensualPromedioAttribute(),
-        ];
+        return $this->parent == 0 || is_null($this->parent);
     }
 
-    /**
-     * Accesor para calcular los días que faltan para la próxima compra predicha.
-     *
-     * @return int
-     */
-    public function getDiasFaltantesProximaCompraAttribute()
+    public function getEsAprobadoAttribute(): bool
     {
-        // --- Lógica de prueba ---
-        $proximaCompra = $this->getProximaCompraPrediccionAttribute();
-        return Carbon::parse($proximaCompra['fecha'])->diffInDays(Carbon::now());
+        return $this->status === self::STATUS_APROBADO;
     }
 
-    /**
-     * Relación con los vehículos del cliente
-     */
-    public function vehiculos()
+    public function getLabelStatusAttribute(): string
     {
-        return $this->hasMany(\App\Models\Vehiculo::class, 'id_cliente');
+        return match ($this->status) {
+            self::STATUS_INACTIVO    => 'Inactivo',
+            self::STATUS_EN_REGISTRO => 'En Registro',
+            self::STATUS_APROBADO    => 'Aprobado',
+            self::STATUS_RECHAZADO   => 'Rechazado',
+            default                  => 'Desconocido',
+        };
     }
 
-    
-    /**
-     * Relación con los movimientos de combustible del cliente
-     */
+    public function getColorStatusAttribute(): string
+    {
+        return match ($this->status) {
+            self::STATUS_INACTIVO    => 'bg-gray-500',
+            self::STATUS_EN_REGISTRO => 'bg-blue-600',
+            self::STATUS_APROBADO    => 'bg-green-600',
+            self::STATUS_RECHAZADO   => 'bg-red-600',
+            default                  => 'bg-gray-400',
+        };
+    }
+
+    // Método para obtener el cupo del mes actual
+    public function cupoGascoActual()
+    {
+        return $this->cuposGasco()
+            ->where('mes', now()->month)
+            ->where('anio', now()->year)
+            ->first();
+    }
+
+    // -------------------------------------------------------
+    // RELACIONES
+    // -------------------------------------------------------
+
+    public function user()
+    {
+        return $this->hasOne(User::class, 'cliente_id');
+    }
+
+    public function pedidos()
+    {
+        return $this->hasMany(Pedido::class, 'cliente_id');
+    }
+
+    public function documentos()
+    {
+        return $this->hasMany(Documento::class, 'cliente_id');
+    }
+
+    public function estado()
+    {
+        return $this->belongsTo(Estado::class, 'estado_id');
+    }
+
+    public function ciudad()
+    {
+        return $this->belongsTo(Ciudad::class, 'ciudad_id');
+    }
+
+    public function sucursales()
+    {
+        return $this->hasMany(Cliente::class, 'parent', 'id');
+    }
+
+    public function padre()
+    {
+        return $this->belongsTo(Cliente::class, 'parent', 'id');
+    }
+
+    public function cupos()
+    {
+        return $this->hasMany(ClienteCupo::class, 'cliente_id');
+    }
+
+    public function placas()
+    {
+        return $this->hasMany(PlacaVehiculo::class, 'cliente_id');
+    }
+
+    public function choferes()
+    {
+        return $this->hasMany(ChoferCliente::class, 'cliente_id');
+    }
+
+    public function registroPaso()
+    {
+        return $this->belongsTo(RegistroPaso::class, 'registro_paso');
+    }
+
+    public function cuposGasco()
+    {
+        return $this->hasMany(GascoCupoMensual::class, 'cliente_id');
+    }
+
+    // -------------------------------------------------------
+    // SCOPES
+    // -------------------------------------------------------
+
+    public function scopeAprobados($query)
+    {
+        return $query->where('status', self::STATUS_APROBADO);
+    }
+
+    public function scopeEnRegistro($query)
+    {
+        return $query->where('status', self::STATUS_EN_REGISTRO);
+    }
+
+    public function scopeInactivos($query)
+    {
+        return $query->where('status', self::STATUS_INACTIVO);
+    }
+
+    public function scopeRechazados($query)
+    {
+        return $query->where('status', self::STATUS_RECHAZADO);
+    }
+
+    public function scopePadres($query)
+    {
+        return $query->where('parent', 0);
+    }
+
+    public function scopeSucursales($query)
+    {
+        return $query->where('parent', '>', 0);
+    }
+
     public function movimientosCombustible()
     {
-        return $this->hasMany(\App\Models\MovimientoCombustible::class, 'cliente_id');
+        return $this->hasMany(MovimientoCombustible::class, 'cliente_id','id');
     }
-
-    public function sucursales() {
-          return $this->hasMany(Cliente::class, 'parent');
-    }
-    public function parentCliente() {
-          return $this->belongsTo(Cliente::class, 'parent');
-    }
-    
-    public function pedidos() {
-          return $this->hasMany(Pedido::class, 'cliente_id');
-    }
-  
 }

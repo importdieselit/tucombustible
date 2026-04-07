@@ -1,520 +1,842 @@
 @extends('layouts.app')
 
 @section('title', 'Crear Nueva Orden de Trabajo')
-
-@push('scripts')
-<!-- jQuery para manejar las llamadas AJAX -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!-- Bootstrap JS para el modal -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@push('styles')
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 @endpush
-
 @section('content')
-<div class="row mb-4">
-    <div class="col-12">
-        <h1 class="mb-2">Crear Orden de Trabajo</h1>
-        <p class="text-muted">Registra una nueva orden de reparación o mantenimiento.</p>
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 shadow-sm rounded">
+        <div>
+            <h3 class="fw-bold mb-0 text-uppercase"><i class="fas fa-file-signature text-orange me-2"></i>Crear Orden de Trabajo</h3>
+            <p class="text-muted mb-0 small">Registro dinámico de reparaciones, mantenimientos y servicios generales.</p>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-corporate p-2 fs-6">ORDEN NRO: {{$nro_orden}}</span>
+        </div>
     </div>
-</div>
 
-<div class="card shadow-sm mb-4">
-    <div class="card-header bg-white">
-        <h5 class="card-title m-0">Datos de la Orden {{$nro_orden}}</h5>
-    </div>
-    <div class="card-body">
-        {{-- Se añade un campo oculto para el modo de guardado --}}
-        <form action="{{ route('ordenes.store') }}" method="POST" id="orden-form" enctype="multipart/form-data">
-            @csrf
-            <input type="hidden" name="estatus" value="2"> {{-- Estatus "Abierta" --}}
-            <input type="hidden" name="fecha_in" value="{{ date('Y-m-d') }}">
-            <input type="hidden" name="nro_orden" value="{{$nro_orden}}">
-            
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="id_vehiculo" class="form-label">Vehículo</label>
-                    @if(is_null($vehiculo))
-                    <select class="form-select" id="id_vehiculo" name="id_vehiculo" >
-                        <option value="">Seleccione Vehículo</option>
-                       @foreach ($vehiculos as $vehiculo)
-                            <option value="{{ $vehiculo->id }}">{{ $vehiculo->flota }} (Placa: {{ $vehiculo->placa }})</option>
-                        @endforeach
-                    </select>
-                    @else
-                    <input type="hidden" name="vehiculo_id" value="{{$vehiculo->vehiculo_id}}">
-                    <input type="text" name="none" id="none" disabled value="{{$vehiculo->flota}} {{$vehiculo->placa}}">
-                    @endif
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="tipo" class="form-label">Tipo de Orden</label>
-                    <select class="form-select" id="tipo" name="tipo" required>
-                        <option value="Preventivo">Preventivo</option>
-                        <option value="Revision">Revision</option>
-                        <option value="Correctivo">Correctivo</option>
-                        <option value="Mantenimiento">Mantenimiento</option>
-                        <option value="Otro">Otros</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="mb-3">
-                <label for="descripcion_1" class="form-label">Falla Principal/Título</label>
-                <input type="text" class="form-control" id="descripcion_1" name="descripcion_1" placeholder="Ej: Ruido en motor o Mantenimiento Preventivo" required>
-            </div>
-            <div class="mb-3">
-                <label for="descripcion" class="form-label">Descripción Detallada</label>
-                <textarea class="form-control" id="descripcion" name="descripcion" rows="3" required></textarea>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="prioridad" class="form-label">Prioridad</label>
-                    <select class="form-select" id="prioridad" name="prioridad" required>
-                        <option value="Baja">Baja</option>
-                        <option value="Media" selected>Media</option>
-                        <option value="Alta">Alta</option>
-                        <option value="Crítica">Crítica</option>
-                    </select>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="responsable">Responsable</label>
-                    <input type="text" class="form-control" id="responsable" name="responsable">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="fecha_prometida" class="form-label">Fecha de Cierre Prometida</label>
-                    <input type="date" class="form-control" id="fecha_prometida" name="fecha_prometida" value="{{ date('Y-m-d', strtotime('+3 days')) }}" required>
-                </div>
-            </div>
-            
-            <hr class="my-4">
+    <form action="{{ route('ordenes.store') }}" method="POST" id="orden-form" enctype="multipart/form-data">
+        @csrf
+        {{-- Campos ocultos de control --}}
+        <input type="hidden" name="estatus" value="2">
+        <input type="hidden" name="fecha_in" value="{{ date('Y-m-d') }}">
+        <input type="hidden" name="nro_orden" value="{{$nro_orden}}">
+        <input type="hidden" name="supplies_json" id="supplies_json">
+        <input type="hidden" name="trabajos_json" id="trabajos_json">
 
-<div class="col-md-6 mb-3">
-                    <label for="fotos_orden" class="form-label">
-                        Registro Fotografico (Usar Cámara en Móvil)
-                        <i class="bi bi-camera-fill text-primary ms-1"></i> 
-                    </label>
-                    <input 
-                        type="file" 
-                        name="fotos_orden[]" 
-                        id="fotos_orden" 
-                        class="form-control" 
-                        accept="image/*" 
-                        capture="environment" 
-                        multiple
+        {{-- 1. SELECTOR MAESTRO DE TIPO DE ORDEN --}}
+        <div class="card card-step border-orange shadow-sm mb-4">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-orange"><i class="fas fa-list-ul me-2"></i>Tipo de Requerimiento</label>
+                        <select name="id_tipo_req" id="id_tipo_req" class="form-select form-select-lg fw-bold border-orange">
+                           @foreach($tipo_req as $tipo)
+                                <option value="{{$tipo->id}}" @if($tipo->id==1) selected @endif>{{$tipo->tipo}}</option>
+                           @endforeach
+                          </select>
+                    </div>
+                    <div class="col-md-6" id="group-sede" >
+                        <label class="form-label fw-bold">Sede / Ubicación Administrativa</label>
+                        <select name="id_sede" class="form-select border-2">
+                            <option value="1" selected>Principal - Boleita</option>
+                            @foreach($sedes ?? [] as $sede)
+                                <option value="{{ $sede->id }}">{{ $sede->nombre }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            {{-- COLUMNA IZQUIERDA: DATOS DE CABECERA --}}
+            <div class="col-lg-6">
+                <div class="card card-step border-orange shadow-sm mb-4">
+                    <div class="card-header bg-white fw-bold py-3">
+                        <i class="fas fa-info-circle text-orange me-2"></i>Detalles del Servicio
+                    </div>
+                    <div class="card-body">
                         
-                    >
-                    <small class="form-text text-muted">En dispositivos móviles, esto abrirá la cámara trasera.</small>
+                        {{-- BLOQUE VEHÍCULO (Condicional) --}}
+                        <div class="section-dinamica mb-3" id="group-vehiculo">
+                            <label for="id_vehiculo" class="form-label fw-bold">Vehículo / Unidad</label>
+                            <select class="form-select select2 h-100" style="height: 100px" id="id_vehiculo" name="id_vehiculo">
+                                <option value="">Buscar unidad...</option>
+                                @foreach ($vehiculos as $v)
+                                    <option value="{{ $v->id }}" data-km="{{ $v->kilometraje }}">[{{ $v->flota }}] {{ $v->placa }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- BLOQUE UBICACIÓN / TALLER (Condicional) --}}
+                        <div class="section-dinamica mb-3" id="group-ubicacion-externa" style="display:none;">
+                            <label class="form-label fw-bold" id="label-ubicacion">Ubicación del Trabajo</label>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+                                <input type="text" name="descripcion_2" id="input-direccion" class="form-control" placeholder="Ej: Carretera Nacional / Planta Cliente">
+                            </div>
+                            {{-- Contenedor del Mapa --}}
+                            <div id="map"></div>
+                            <small class="text-muted">Puedes mover el marcador naranja para precisar la ubicación exacta.</small>
+
+                            {{-- Coordenadas ocultas --}}
+                            <input type="hidden" name="latitud" id="latitud">
+                            <input type="hidden" name="longitud" id="longitud">
+                            
+                            <div id="subgroup-taller-ext" style="display:none;">
+                                <label class="form-label small fw-bold mt-2">Taller Externo Responsable</label>
+                                <div class="input-group">
+                                    <select name="id_taller_externo" class="form-select">
+                                        <option value="">Seleccione Taller...</option>
+                                        @foreach ($talleres as $t)
+                                            <option value="{{ $t->id }}">{{ $t->nombre }}</option>
+                                                                                    
+                                        @endforeach
+                                    </select>
+                                    <button type="button" class="btn btn-outline-dark"><i class="fas fa-plus"></i></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="tipo" class="form-label fw-bold">Sub-Tipo</label>
+                                <select class="form-select" id="tipo" name="tipo" required>
+                                    <option value="Preventivo">Preventivo</option>
+                                    <option value="Correctivo" selected>Correctivo</option>
+                                    <option value="Mantenimiento">Mantenimiento</option>
+                                    <option value="Otro">Otro / General</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3" id="group-km">
+                                <label for="kilometraje" class="form-label fw-bold">Kilometraje</label>
+                                <input type="number" class="form-control fw-bold border-orange" id="kilometraje" name="kilometraje" placeholder="0" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="descripcion_1" class="form-label fw-bold">Título del Requerimiento</label>
+                            <input type="text" class="form-control" id="descripcion_1" name="descripcion_1" placeholder="Ej: Falla en frenos / Reparación de aire acondicionado" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="descripcion" class="form-label fw-bold">Descripción / Alcance</label>
+                            <div id="render_plan_html" class="p-3 border rounded bg-white shadow-sm d-none" style="min-height: 150px; border-left: 5px solid #0d6efd !important;">
+                            </div>
+
+                            <textarea id="descripcion" name="descripcion" class="form-control" rows="6" placeholder="Describa el trabajo a realizar..." required></textarea>
+                            
+                            <small class="text-muted mt-2 d-block" id="instruccion-detalle">
+                                <i class="bi bi-info-circle me-1"></i> 
+                                Si selecciona un plan, el detalle técnico se cargará automáticamente.
+                            </small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="responsable" class="form-label fw-bold">Solicitante / Responsable</label>
+                                <input type="text" class="form-control" id="responsable" name="responsable" value="{{ Auth::user()->name }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="fecha_prometida" class="form-label fw-bold">Fecha Estimada Final</label>
+                                <input type="date" class="form-control" id="fecha_prometida" name="fecha_prometida" value="{{ date('Y-m-d', strtotime('+2 days')) }}">
+                            </div>
+                        </div>
+
+                        <div class="bg-light p-3 rounded border-dashed mt-2">
+                            <label class="form-label fw-bold small"><i class="fas fa-camera me-1"></i> Fotos Iniciales</label>
+                            <input type="file" name="fotos_orden[]" class="form-control form-control-sm" accept="image/*" multiple>
+                        </div>
+                    </div>
                 </div>
-            <hr class="my-4">
-
-
-            {{-- ---------------------------------------------------- --}}
-            {{-- BLOQUE DE INSUMOS (Inventario y Manuales) --}}
-            {{-- ---------------------------------------------------- --}}
-            
-            <h5 class="card-title m-0 mb-3">Insumos y Repuestos Requeridos</h5>
-            
-            <div class="d-flex gap-2 mb-3">
-                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#searchSupplyModal">
-                    <i class="bi bi-search me-1"></i> Buscar en Inventario
-                </button>
-                <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#manualSupplyModal">
-                    <i class="bi bi-plus-circle me-1"></i> Agregar Suministro Manual
-                </button>
             </div>
 
-            {{-- Tabla de Insumos Seleccionados (Previsualización) --}}
-            <div class="table-responsive">
-                <table class="table table-striped table-hover align-middle">
-                    <thead class="table-primary">
-                        <tr>
-                            <th>Código</th>
-                            <th>Descripción</th>
-                            <th class="text-end">Existencia</th>
-                            <th class="text-end">Cant. Requerida</th>
-                            <th>Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody id="selectedSuppliesTableBody">
-                        {{-- Filas generadas por JS --}}
-                        <tr><td colspan="5" class="text-center text-muted">Aún no se han agregado insumos.</td></tr>
-                    </tbody>
-                </table>
-            </div>
-
-            {{-- Input Oculto para enviar los datos serializados al controlador --}}
-            <input type="hidden" name="supplies_json" id="supplies_json">
-            <div id="observations-container" style="display: none;">
-                <hr class="my-4">
-                <h5 class="card-title m-0 mb-3 text-primary">Observaciones de Suministros</h5>
-                <div class="mb-3">
-                    <label for="supplies_observations" class="form-label">Comentarios Adicionales sobre Repuestos Requeridos:</label>
-                    <textarea class="form-control" id="supplies_observations" name="supplies_observations" rows="2" 
-                              placeholder="Ej: Priorizar la compra del aceite 20W50 ya que no hay existencia."></textarea>
-                    <small class="form-text text-muted">Este campo solo se enviará si se han agregado suministros a la orden.</small>
+            {{-- COLUMNA DERECHA: TRABAJOS E INSUMOS --}}
+            <div class="col-lg-6">
+                {{-- SECCIÓN TRABAJOS --}}
+                <div class="card card-step border-orange shadow-sm mb-4">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                        <h5 class="m-0 fw-bold text-uppercase small"><i class="fas fa-tools text-orange me-2"></i>Planificación de Tareas</h5>
+                        <button type="button" class="btn btn-sm btn-outline-danger border-0" id="btn-limpiar-trabajos"><i class="fas fa-trash"></i></button>
+                    </div>
+                    <div class="card-body bg-light border-bottom">
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label class="small fw-bold">Categoría de Servicio</label>
+                                <select id="select-categoria" class="form-select form-select-sm select2">
+                                    <option value="">Seleccione...</option>
+                                    @foreach ($categorias_tempario as $cat)
+                                        {{-- El backend debe proveer un 'contexto' para filtrar: vehiculo, infraestructura, etc --}}
+                                        <option value="{{ $cat->id_tempario_categoria }}" data-context="{{ $cat->id_tipo_req }}">
+                                            [{{ $cat->codigo }}] {{ $cat->categoria }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small fw-bold">Tarea / Trabajo Específico</label>
+                                <select id="select-servicio" class="form-select form-select-sm select2">
+                                    <option value="">Seleccione categoría primero</option>
+                                </select>
+                            </div>
+                            <div class="col-12 mt-2">
+                                <label class="small fw-bold">Personal Asignado</label>
+                                <select id="select-mecanicos" class="form-select form-select-sm" multiple>
+                                    @foreach ($personal as $p)
+                                        <option value="{{ $p->id_personal }}">{{ $p->persona->nombre }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-12 text-end mt-2">
+                                <button type="button" class="btn btn-orange btn-sm fw-bold px-4" id="btn-agregar-trabajo">
+                                    <i class="fas fa-plus me-1"></i> ASIGNAR TAREA
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive" style="max-height: 200px;">
+                        <table class="table table-sm table-hover align-middle mb-0">
+                            <thead class="bg-corporate text-white x-small">
+                                <tr>
+                                    <th class="ps-3">CONCEPTO</th>
+                                    <th>RESPONSABLES</th>
+                                    <th class="text-center"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-trabajos-body">
+                                <tr><td colspan="3" class="text-center text-muted py-4 small">No hay tareas asignadas</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <hr class="my-4">
-            </div>
-            <hr class="my-4">
 
-            <div class="d-grid gap-2">
-                <button type="submit" class="btn btn-success btn-lg shadow-sm">
-                    <i class="bi bi-save me-2"></i> Guardar Orden de Trabajo
+                {{-- SECCIÓN INSUMOS --}}
+                <div class="card card-step shadow-sm border-orange">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                        <h5 class="m-0 fw-bold text-uppercase small"><i class="fas fa-box-open text-orange me-2"></i>Repuestos e Insumos</h5>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-dark btn-sm" data-bs-toggle="modal" data-bs-target="#searchSupplyModal"><i class="fas fa-search"></i> Solicitar de Almacen</button>
+                            <button type="button" class="btn btn-outline-dark btn-sm" data-bs-toggle="modal" data-bs-target="#manualSupplyModal"><i class="fas fa-plus"></i> Solicitar Compra</button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="min-height: 250px;">
+                            <table class="table table-hover align-middle mb-0 small">
+                                <thead>
+                                    <tr class="bg-light text-muted">
+                                        <th class="ps-3">CÓDIGO</th>
+                                        <th>DESCRIPCIÓN</th>
+                                        <th class="text-end">CANT.</th>
+                                        <th class="text-center"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="selectedSuppliesTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 mt-4 mb-5">
+                <button type="submit" class="btn btn-orange btn-lg w-100 shadow fw-bold py-3 text-uppercase">
+                    <i class="fas fa-save me-2"></i> Procesar Orden de Trabajo
                 </button>
             </div>
-        </form>
-    </div>
+        </div>
+    </form>
 </div>
+<
 
-@endsection
-
-{{-- ---------------------------------------------------- --}}
-{{-- MODALES --}}
-{{-- ---------------------------------------------------- --}}
-
-{{-- Modal para Búsqueda en Inventario (Permite múltiples adiciones) --}}
-<div class="modal fade" id="searchSupplyModal" tabindex="-1" aria-labelledby="searchSupplyModalLabel" aria-hidden="true">
+<div class="modal fade" id="searchSupplyModal" data-bs-backdrop="false" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="searchSupplyModalLabel"><i class="bi bi-search me-1"></i> Buscar Repuestos en Inventario</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-corporate text-white">
+                <h5 class="modal-title fw-bold">CATÁLOGO DE INVENTARIO</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-3">
-                    <label for="supplySearchInput" class="form-label">Buscar por Código o Descripción:</label>
-                    <input type="text" class="form-control" id="supplySearchInput" placeholder="Escriba aquí para buscar en tiempo real...">
+                <div class="input-group mb-3">
+                    <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" class="form-control border-start-0 ps-0" id="supplySearchInput" placeholder="Escriba código o nombre del producto...">
                 </div>
-
-                <div class="table-responsive">
-                    <table class="table table-bordered table-sm">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Código</th>
-                                <th>Descripción</th>
-                                <th class="text-end">Existencia</th>
-                                <th class="text-center" style="width: 120px;">Cantidad</th>
-                                <th style="width: 50px;"></th>
+                <div class="table-responsive" style="max-height: 400px;">
+                    <table class="table table-sm table-hover border">
+                        <thead class="bg-light sticky-top">
+                            <tr class="small text-muted">
+                                <th>CÓDIGO</th>
+                                <th>DESCRIPCIÓN</th>
+                                <th class="text-center">EXISTENCIA</th>
+                                <th class="text-center" style="width: 100px;">CANT.</th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody id="searchResultsTableBody">
-                            <tr><td colspan="5" class="text-center text-muted">Escriba en el campo de búsqueda para empezar.</td></tr>
+                            {{-- Resultados de búsqueda AJAX --}}
                         </tbody>
                     </table>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar y Volver</button>
-                {{-- No hay botón de guardar aquí, la adición es por fila --}}
-            </div>
         </div>
     </div>
 </div>
 
-{{-- Modal para Suministro Manual (Permite múltiples adiciones) --}}
-<div class="modal fade" id="manualSupplyModal" tabindex="-1" aria-labelledby="manualSupplyModalLabel" aria-hidden="true">
+<div class="modal fade" id="manualSupplyModal" data-bs-backdrop="false" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-secondary text-white">
-                <h5 class="modal-title" id="manualSupplyModalLabel"><i class="bi bi-plus-circle me-1"></i> Agregar Suministro Manual</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title fw-bold">SUMINISTRO NO CATALOGADO</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <p class="text-muted">Utilice esta opción para artículos que no están en inventario o que se comprarán aparte.</p>
+            <div class="modal-body bg-light">
                 <div class="mb-3">
-                    <label for="manual-descripcion" class="form-label">Descripción del Artículo:</label>
-                    <input type="text" class="form-control" id="manual-descripcion" required placeholder="Ej: Aceite 20w50 (Comprado en Ferretería)">
+                    <label class="form-label">Descripción del Repuesto</label>
+                    <input type="text" class="form-control" id="manual-descripcion" placeholder="Ej: Tornillo grado 8 1/2 pulgada">
                 </div>
                 <div class="mb-3">
-                    <label for="manual-cantidad" class="form-label">Cantidad Requerida:</label>
-                    <input type="number" class="form-control text-end" id="manual-cantidad" value="1" min="1" required>
+                    <label class="form-label">Cantidad Requerida</label>
+                    <input type="number" class="form-control text-end fw-bold" id="manual-cantidad" value="1" min="1">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Precio Unitario</label>
+                    <input type="number" class="form-control text-end fw-bold" id="manual-precio" value="0.00" min="0" step="0.01">
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Terminar y Cerrar</button>
-                <button type="button" class="btn btn-success" id="addManualSupplyBtn">
-                    <i class="bi bi-check-lg me-1"></i> Agregar a la Orden
-                </button>
+                <button type="button" class="btn btn-success w-100 fw-bold" id="addManualSupplyBtn">AÑADIR A LA LISTA</button>
             </div>
         </div>
     </div>
 </div>
-
+@endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
+    let map, marker;
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
     $(document).ready(function() {
-        // Objeto global para almacenar los suministros seleccionados (Inventario y Manuales)
-        // Key: id del inventario (numérico) o 'MANUAL_X'
-        let selectedSupplies = {};
-        let manualSupplyCounter = 0; // Contador para generar IDs únicos para items manuales
 
-        // Referencias a elementos del DOM
+        var checkSelect2 = setInterval(function() {
+        if ($.isFunction($.fn.select2)) {
+            clearInterval(checkSelect2); // Detener la espera
+            
+            // AQUÍ inicializas todo
+            $('.select2').select2({
+                theme: 'bootstrap-5',
+                
+            });
+          //  console.log("Select2 cargado y listo");
+        }else{                                                                                                                                                                                                                          
+            //console.log("Esperando a que Select2 esté disponible...");
+        }
+    }, 100); //
+
+        // --- TUS VARIABLES ORIGINALES ---
+        let selectedSupplies = {};
+        let manualSupplyCounter = 0;
+        let trabajosAsignados = [];
+
         const selectedSuppliesTableBody = document.getElementById('selectedSuppliesTableBody');
         const searchInput = document.getElementById('supplySearchInput');
         const searchResultsBody = document.getElementById('searchResultsTableBody');
         const suppliesJsonInput = document.getElementById('supplies_json');
         const addManualSupplyBtn = document.getElementById('addManualSupplyBtn');
 
-        // Función de utilidad para debouncing (limita la frecuencia de ejecución)
+        // --- TU LÓGICA AJAX ---
         function debounce(func, timeout = 300) {
             let timer;
             return (...args) => {
                 clearTimeout(timer);
-                timer = setTimeout(() => {
-                    func.apply(this, args);
-                }, timeout);
+                timer = setTimeout(() => { func.apply(this, args); }, timeout);
             };
         }
 
-        // --- LÓGICA DE BÚSQUEDA EN INVENTARIO (AJAX) ---
+
+// --- 1. LÓGICA DEL ORQUESTADOR DINÁMICO ---
+    const $tipoMaestro = $('#id_tipo_req');
+    
+    function adaptarFormulario() {
+        const tipo = $tipoMaestro.val();
+       
+        // Reset inicial
+        $('.section-dinamica, #subgroup-taller-ext').hide();
+        $('#group-km').fadeIn(); // Mostrar por defecto, ocultar solo en infraestructura
+        
+        switch(tipo) {
+            case '1':
+                $('#group-vehiculo').fadeIn();
+                break;
+                
+            case '2':
+                $('#group-vehiculo, #group-ubicacion-externa').fadeIn();
+                $('#label-ubicacion').text('Ubicación del Auxilio (Punto de Falla)');
+                break;
+                
+            case '3':
+                $('#group-vehiculo, #group-ubicacion-externa, #subgroup-taller-ext').fadeIn();
+                $('#label-ubicacion').text('Datos del Taller Externo');
+                break;
+                
+            case '4':
+                $('#group-ubicacion-externa, #group-km').toggle(); // Ocultamos KM en infra
+                $('#group-ubicacion-externa').fadeIn();
+                $('#label-ubicacion').text('Área / Oficina específica');
+                $('#group-km').hide().find('input').val(0);
+                $('#id_vehiculo').val(null).trigger('change');
+                break;
+                
+            case '5':
+                $('#group-ubicacion-externa').fadeIn();
+                $('#label-ubicacion').text('Ubicación / Cliente Final');
+                $('#group-km').hide().find('input').val(0);
+                $('#id_vehiculo').val(null).trigger('change');
+                break;
+        }
+
+        filterTempario(tipo);
+
+        if (['2', '3', '5'].includes(tipo)) {
+                setTimeout(() => {
+                    initMap();
+                    map.invalidateSize(); // Forzar renderizado correcto si estaba oculto
+                }, 300);
+            }
+    }
+
+    // Filtrado de categorías basado en el contexto
+    function filterTempario(tipoMaestro) {
+        const $catSelect = $('#select-categoria');
+        $catSelect.val(null).trigger('change');
+        // Mapeo simple: vehiculo, auxilio y taller externo usan contexto 'vehiculo'
+        // servicios_generales usa 'infraestructura', etc.
+        const contextoBuscado = (tipoMaestro === 4) ? 2 : 1;
+
+        $('#select-categoria option').each(function() {
+            const optContext = $(this).data('context');
+            // if (!optContext || optContext === contextoBuscado) {
+            //     $(this).prop('disabled', false);
+            // } else {
+            //     $(this).prop('disabled', true);
+            // }
+        });
+        if (typeof $.fn.select2 !== 'undefined') {
+            $catSelect.select2(); 
+        }
+        
+    }
+
+    $tipoMaestro.on('change', adaptarFormulario);
+    adaptarFormulario(); // Inicializar
+
+
+
+        function performSupplySearch() {
+            const query = searchInput.value.trim();
+            if (query.length < 3) {
+                searchResultsBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted p-4">Ingrese al menos 3 caracteres para buscar.</td></tr>';
+                return;
+            }
+            $.ajax({
+                url: '{{ route("ordenes.search-supplies") }}',
+                method: 'GET',
+                data: { query: query },
+                success: function(response) { renderSearchResults(response); }
+            });
+        }
+
+        searchInput.addEventListener('input', debounce(performSupplySearch, 300));
+
+        // --- TUS FUNCIONES DE RENDERIZADO ---
         function renderSearchResults(data) {
             let html = '';
-            if (data.length === 0) {
-                html = '<tr><td colspan="5" class="text-center text-warning">No se encontraron resultados.</td></tr>';
+            if(data.length === 0) {
+                html = '<tr><td colspan="5" class="text-center text-danger p-4">No se encontraron productos.</td></tr>';
             } else {
                 data.forEach(item => {
-                    // Determinar si el item ya está seleccionado para mostrar el estado
-                    const isSelected = selectedSupplies.hasOwnProperty(item.id);
-                    const selectedQty = isSelected ? selectedSupplies[item.id].cantidad : 1;
-                    const stockClass = item.existencia < selectedQty ? 'text-danger fw-bold' : '';
-
                     html += `
-                        <tr class="${isSelected ? 'table-info' : ''}">
-                            <td>${item.codigo}</td>
+                        <tr class="align-middle">
+                            <td class="fw-bold">${item.codigo}</td>
                             <td>${item.descripcion}</td>
-                            <td class="text-end ${stockClass}">${item.existencia}</td>
-                            <td class="text-center">
-                                <input type="number" class="form-control form-control-sm text-end search-quantity" 
-                                       data-item-id="${item.id}"
-                                       value="${selectedQty}" 
-                                       min="1" style="width: 100px; display: inline-block;">
-                            </td>
-                            <td class="text-center">
-                                <button type="button" class="btn btn-sm btn-success add-supply" data-item-id="${item.id}"
-                                    title="Agregar/Actualizar a la Orden">
-                                    <i class="bi bi-plus-lg"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    `;
+                            <td class="text-center"><span class="badge ${item.existencia > 0 ? 'bg-success' : 'bg-danger'}">${item.existencia}</span></td>
+                            <td><input type="number" class="form-control form-control-sm search-quantity text-center fw-bold" data-item-id="${item.id}" value="1" min="1"></td>
+                            <td class="text-end"><button type="button" class="btn btn-sm btn-orange add-supply" data-item-id="${item.id}"><i class="fas fa-plus"></i></button></td>
+                        </tr>`;
                 });
             }
             searchResultsBody.innerHTML = html;
         }
 
-        // Ejecuta la búsqueda de inventario
-        function performSupplySearch() {
-            const query = searchInput.value.trim();
-            if (query.length < 3) {
-                searchResultsBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Escriba al menos 3 caracteres.</td></tr>';
-                return;
-            }
-
-            searchResultsBody.innerHTML = '<tr><td colspan="5" class="text-center text-primary"><div class="spinner-border spinner-border-sm me-2" role="status"></div> Buscando...</td></tr>';
-
-            // Realizar la llamada AJAX (Asumimos una ruta 'supplies.search' que devuelve JSON)
-            $.ajax({
-                url: '{{ route("ordenes.search-supplies") }}', // RUTA DE EJEMPLO: DEBES CREAR ESTA RUTA EN LARAVEL
-                method: 'GET',
-                data: { query: query },
-                success: function(response) {
-                    renderSearchResults(response); // Asume que el controlador devuelve { data: [...] }
-                },
-                error: function(xhr) {
-                    searchResultsBody.innerHTML = '<tr><td colspan="5" class="text-center text-danger">Error al cargar el inventario.</td></tr>';
-                    console.error("Error en la búsqueda:", xhr.responseText);
-                }
-            });
-        }
-        // Listener con debounce para la búsqueda en tiempo real
-        searchInput.addEventListener('input', debounce(performSupplySearch, 300));
-
-
-        // --- LÓGICA DE TABLA PRINCIPAL Y PREVISUALIZACIÓN ---
-
-        // Dibuja la tabla de suministros seleccionados y actualiza el input JSON oculto
         function renderSuppliesTable() {
             let html = '';
             const suppliesArray = Object.values(selectedSupplies);
-            const observationsContainer = document.getElementById('observations-container'); // Referencia al nuevo contenedor
+            const obsContainer = document.getElementById('observations-container');
 
             if (suppliesArray.length === 0) {
-                html = '<tr><td colspan="5" class="text-center text-muted">Aún no se han agregado insumos.</td></tr>';
-                // OCULTAR campo si no hay insumos
-                if (observationsContainer) {
-                    observationsContainer.style.display = 'none';
-                }
+                html = '<tr><td colspan="5" class="text-center text-muted py-5">No se han añadido repuestos a esta orden.</td></tr>';
+                if(obsContainer) obsContainer.style.display = 'none';
             } else {
-                if (observationsContainer) {
-                    observationsContainer.style.display = 'block';
-                }
+                if(obsContainer) obsContainer.style.display = 'block';
                 suppliesArray.forEach(item => {
-                    // Clase de estilo si el item es de inventario y la cantidad excede la existencia
-                    let rowClass = '';
-                    let existenceText = item.existencia;
-                    if (!item.id.startsWith('MANUAL_') && item.cantidad > item.existencia) {
-                         // Item de inventario y requerimiento > existencia
-                        rowClass = 'table-warning';
-                    }
-                    
-                    if (item.id.startsWith('MANUAL_')) {
-                        // Item Manual
-                        existenceText = 'N/A (Manual)';
-                        rowClass = 'table-light';
-                    }
-
                     html += `
-                        <tr class="${rowClass}">
-                            <td>${item.codigo}</td>
-                            <td>${item.descripcion}</td>
-                            <td class="text-end">${existenceText}</td>
-                            <td class="text-end">${item.cantidad}</td>
+                        <tr class="align-middle">
+                            <td class="ps-3 fw-bold text-muted">${item.codigo}</td>
+                            <td class="small fw-bold">${item.descripcion}</td>
+                            <td class="text-end"><span class="text-muted small">${item.id.toString().startsWith('MANUAL') ? '-' : item.existencia}</span></td>
+                            <td class="text-end fw-bold text-orange">${item.cantidad}</td>
                             <td class="text-center">
-                                <button type="button" class="btn btn-sm btn-danger remove-supply" data-item-id="${item.id}" title="Quitar de la Orden">
-                                    <i class="bi bi-trash"></i>
-                                </button>
+                                <button type="button" class="btn btn-link btn-sm text-danger remove-supply" data-item-id="${item.id}"><i class="fas fa-times-circle"></i></button>
                             </td>
-                        </tr>
-                    `;
+                        </tr>`;
                 });
             }
             selectedSuppliesTableBody.innerHTML = html;
-            
-            // Actualizar el input oculto que se enviará con el formulario
             suppliesJsonInput.value = JSON.stringify(suppliesArray);
         }
 
         // --- MANEJO DE EVENTOS ---
+        $(document).on('click', '.add-supply', function() {
+            const itemId = $(this).data('item-id');
+            const row = $(this).closest('tr');
+            const quantity = parseInt(row.find('.search-quantity').val());
 
-        // 1. Añadir/Actualizar Suministro de Inventario (dentro del modal de búsqueda)
-        searchResultsBody.addEventListener('click', function(e) {
-            const addButton = e.target.closest('.add-supply');
-            if (addButton) {
-                const itemId = addButton.dataset.itemId;
-                const row = addButton.closest('tr');
-                // Buscamos el input de cantidad dentro de la fila
-                const quantityInput = row.querySelector('.search-quantity');
-                const quantity = parseInt(quantityInput.value, 10);
-                
-                if (quantity <= 0 || isNaN(quantity)) {
-                    Swal.fire('Error', 'La cantidad debe ser un número positivo.', 'error');
-                    return;
-                }
-                
-                // Los datos de la existencia y descripción se toman del HTML para evitar otra llamada
-                const itemData = {
-                    id: itemId,
-                    codigo: row.cells[0].textContent,
-                    descripcion: row.cells[1].textContent,
-                    // Parseamos la existencia, manejando el caso de errores de lectura si ocurre
-                    existencia: parseInt(row.cells[2].textContent, 10) || 0, 
-                    cantidad: quantity
-                };
-
-                // Si ya existe, se actualiza, si no, se añade
-                selectedSupplies[itemId] = itemData;
-                
-                renderSuppliesTable();
-                
-                // Retroalimentación visual
-                Swal.fire({
-                    toast: true,
-                    position: 'top-end',
-                    icon: 'success',
-                    title: `Agregado: ${itemData.descripcion} (x${quantity})`,
-                    showConfirmButton: false,
-                    timer: 2000
-                });
-                
-                // Vuelve a ejecutar la búsqueda para refrescar el color de la fila agregada/actualizada
-                // (Opcional: solo refrescar la fila, pero la búsqueda completa es más simple)
-                performSupplySearch(); 
-            }
+            selectedSupplies[itemId] = {
+                id: itemId,
+                codigo: row.find('td:eq(0)').text(),
+                descripcion: row.find('td:eq(1)').text(),
+                existencia: parseInt(row.find('td:eq(2)').text()),
+                cantidad: quantity
+            };
+            renderSuppliesTable();
+            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Agregado al listado', showConfirmButton: false, timer: 1500 });
         });
-        
-        // 2. Añadir Suministro Manual (del modal manual)
-        addManualSupplyBtn.addEventListener('click', function(e) {
-            const descripcionInput = document.getElementById('manual-descripcion');
-            const cantidadInput = document.getElementById('manual-cantidad');
-            
-            const descripcion = descripcionInput.value.trim();
-            const cantidad = parseInt(cantidadInput.value, 10);
 
-            if (!descripcion || cantidad <= 0 || isNaN(cantidad)) {
-                 Swal.fire('Error', 'Debe ingresar una descripción y una cantidad válida.', 'error');
-                 return;
+        addManualSupplyBtn.addEventListener('click', function() {
+            const desc = $('#manual-descripcion').val();
+            const cant = parseInt($('#manual-cantidad').val());
+            const precio = parseFloat($('#manual-precio').val());
+            if(!desc || cant <= 0 || isNaN(precio)) {
+                Swal.fire('Atención', 'Debe ingresar descripción y cantidad válida', 'warning');
+                return;
             }
 
-            // Generar un ID temporal único
             manualSupplyCounter++;
-            const manualId = 'MANUAL_' + manualSupplyCounter;
+            const id = 'MANUAL_' + manualSupplyCounter;
+            selectedSupplies[id] = { id: id, codigo: 'MANUAL', descripcion: desc, cantidad: cant, existencia: 0, precio: precio};
+            renderSuppliesTable();
+            $('#manual-descripcion').val('');
+            $('#manualSupplyModal').modal('hide');
+            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Agregado Manual', showConfirmButton: false, timer: 1500 });
+        });
 
-            const itemData = {
-                id: manualId,
-                codigo: 'N/A', // No tiene código de inventario
-                descripcion: descripcion,
-                tipo: 'COMPRA',
-                existencia: 0, // 0 existencia fuerza la compra (si aplica tu lógica de negocio)
-                cantidad: cantidad
+        $(document).on('click', '.remove-supply', function() {
+            const id = $(this).data('item-id');
+            delete selectedSupplies[id];
+            renderSuppliesTable();
+        });
+
+        // Asegurar que el JSON se envíe al procesar
+        $('#orden-form').on('submit', function() {
+            suppliesJsonInput.value = JSON.stringify(Object.values(selectedSupplies));
+            return true;
+        });
+
+        renderSuppliesTable();
+
+
+            // 1. CARGA DINÁMICA DE TEMPARIO
+        $('#select-categoria').on('change', function() {
+            const catId = $(this).val();
+            if (!catId) return;
+
+            $.post('{{ route("get.tempario_servicios") }}', { catemp: catId }, function(data) {
+                $('#select-servicio').html(data);
+            });
+        });
+
+        // 2. AGREGAR TRABAJO A LA LISTA
+        $('#btn-agregar-trabajo').on('click', function() {
+            const servicioId = $('#select-servicio').val();
+            const categoriaId = $('#select-categoria').val();
+            const servicioTexto = $('#select-servicio option:selected').text();
+            const mecanicosIds = $('#select-mecanicos').val();
+            const mecanicosNombres = $('#select-mecanicos option:selected').map(function(){ return $(this).text(); }).get();
+
+            if (!servicioId || mecanicosIds.length === 0) {
+                Swal.fire('Error', 'Debe seleccionar un servicio y al menos un mecánico', 'error');
+                return;
+            }
+
+            const nuevoTrabajo = {
+                id_tempario: servicioId,
+                id_categoria: categoriaId,
+                concepto: servicioTexto,
+                mecanicos: mecanicosIds,
+                mecanicos_nombres: mecanicosNombres.join(', ')
             };
 
-            selectedSupplies[manualId] = itemData;
-            renderSuppliesTable();
-
-            // Limpiar el formulario manual para permitir una nueva adición
-            descripcionInput.value = '';
-            cantidadInput.value = 1;
-
-            // Retroalimentación visual
-            Swal.fire({
-                toast: true,
-                position: 'top-end',
-                icon: 'success',
-                title: `Agregado Manual: ${itemData.descripcion} (x${cantidad})`,
-                showConfirmButton: false,
-                timer: 2000
-            });
+            trabajosAsignados.push(nuevoTrabajo);
+            renderTrabajos();
             
-            // NOTA: El modal manual permanece abierto para seguir agregando si el usuario lo desea.
+            // Limpiar selectores
+            $('#select-mecanicos').val(null).trigger('change');
         });
 
-
-        // 3. Eliminar un suministro de la tabla principal
-        selectedSuppliesTableBody.addEventListener('click', function(e) {
-            if (e.target.closest('.remove-supply')) {
-                const itemId = e.target.closest('.remove-supply').dataset.itemId;
-                delete selectedSupplies[itemId];
-                renderSuppliesTable();
-                 Swal.fire({
-                    toast: true,
-                    position: 'top-end',
-                    icon: 'info',
-                    title: 'Suministro Eliminado',
-                    showConfirmButton: false,
-                    timer: 1500
+        function renderTrabajos() {
+            let html = '';
+            if (trabajosAsignados.length === 0) {
+                html = '<tr><td colspan="3" class="text-center text-muted py-4 small">No hay trabajos asignados</td></tr>';
+            } else {
+                trabajosAsignados.forEach((t, index) => {
+                    html += `
+                    <tr class="small">
+                        <td class="ps-3 fw-bold">${t.concepto}</td>
+                        <td><span class="text-muted">${t.mecanicos_nombres}</span></td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-link btn-sm text-danger btn-remove-trabajo" data-index="${index}">
+                                <i class="fas fa-times-circle"></i>
+                            </button>
+                        </td>
+                    </tr>`;
                 });
-                // Si el modal de búsqueda está abierto, refresca los resultados
-                if ($('#searchSupplyModal').hasClass('show')) {
-                     performSupplySearch(); 
-                }
             }
+            $('#tabla-trabajos-body').html(html);
+            $('#trabajos_json').val(JSON.stringify(trabajosAsignados));
+        }
+
+        $(document).on('click', '.btn-remove-trabajo', function() {
+            const index = $(this).data('index');
+            trabajosAsignados.splice(index, 1);
+            renderTrabajos();
+        });
+
+        $('#btn-limpiar-trabajos').on('click', function() {
+            if(confirm('¿Desea limpiar todos los trabajos?')) {
+                trabajosAsignados = [];
+                renderTrabajos();
+            }
+        });
+
+        // --- VALIDACIÓN DE ORDEN ABIERTA AL SELECCIONAR VEHÍCULO ---
+        $('#id_vehiculo').on('change', function() {
+            const vehiculoId = $(this).val();
+            const kmVehiculo = $(this).find(':selected').data('km');
+
+            if (!vehiculoId) return;
+
+            // Sincronizar el kilometraje automáticamente (ya que lo tienes en el data-km)
+            if(kmVehiculo) {
+                $('#kilometraje').val(kmVehiculo);
+            }
+
+            // Consultar si tiene órdenes abiertas
+            $.ajax({
+                url: `/vehiculos/${vehiculoId}/orden-abierta`,
+                method: 'GET',
+                success: function(response) {
+                    if (response.existe) {
+                        Swal.fire({
+                            title: '<span style="color: #e67e22;">¡ATENCIÓN: ORDEN ACTIVA!</span>',
+                            html: `
+                                <div class="text-start p-3 border rounded bg-light">
+                                    <p class="mb-2">La unidad ya posee una orden de trabajo sin cerrar:</p>
+                                    <ul class="small mb-0">
+                                        <li><b>Nro. Orden:</b> ${response.nro_orden}</li>
+                                        <li><b>Fecha Apertura:</b> ${response.fecha}</li>
+                                    </ul>
+                                </div>
+                                <p class="mt-3 small text-muted">¿Desea gestionar la orden existente o crear una nueva de todos modos?</p>`,
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#e67e22', // Tu Naranja Corporativo
+                            cancelButtonColor: '#343a40',  // Gris Oscuro (Corporate)
+                            confirmButtonText: '<i class="fas fa-external-link-alt me-2"></i> IR A LA ORDEN',
+                            cancelButtonText: '<i class="fas fa-plus me-2"></i> CREAR OTRA',
+                            reverseButtons: true
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = response.url;
+                            }
+                        });
+                    }
+                },
+                error: function() {
+                    console.error("Error al verificar estado del vehículo");
+                }
+            });
+        });
+
+        function initMap() {
+            if (map) return; // Evitar reinicialización
+
+            // Coordenadas iniciales (puedes ajustarlas a tu sede principal)
+            const initialLat = 10.487836; 
+            const initialLng = -66.823308;
+
+            // Definimos los límites aproximados del país (Sur, Oeste, Norte, Este)
+            const southWest = L.latLng(0.5, -73.5);
+            const northEast = L.latLng(13.0, -59.5);
+            const bounds = L.latLngBounds(southWest, northEast);
+
+            map = L.map('map',
+                {
+                    attributionControl: false,
+                    maxBounds: bounds,         // El usuario no puede salirse de Venezuela
+                    maxBoundsViscosity: 1.0
+                }).setView([initialLat, initialLng], 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+               // attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Icono Personalizado (Naranja Corporativo)
+            const orangeIcon = L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-orange.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            });
+
+            marker = L.marker([initialLat, initialLng], {
+                draggable: true,
+                icon: orangeIcon,
+                autoPan: true,           
+                autoPanPadding: [50, 50], 
+                autoPanSpeed: 10
+            }).addTo(map);
+
+            // --- OPCIÓN 1: CLICK COLOCA EL MARCADOR ---
+            map.on('click', function(e) {
+                const { lat, lng } = e.latlng;
+                marker.setLatLng([lat, lng]);
+                map.panTo([lat, lng]);
+                updateCoords(lat, lng);
+                obtenerDireccion(lat, lng);
+            });
+
+            // --- OPCIÓN 2: ARRASTRAR EL MARCADOR ---
+            marker.on('dragend', function(e) {
+                const position = marker.getLatLng();
+                map.panTo(position);
+                updateCoords(position.lat, position.lng);
+                obtenerDireccion(position.lat, position.lng);
+            });
+        }
+
+        function updateCoords(lat, lng) {
+            $('#latitud').val(lat);
+            $('#longitud').val(lng);
+        }
+
+        
+        $('#select-servicio').on('change', function() {
+            const planId = $(this).val();
+            const $textarea = $('#descripcion');
+            const $titulo = $('#descripcion_1');
+            const $divVisual = $('#render_plan_html');
+            const $instruccion = $('#instruccion-detalle'); 
+            const $tipo = $('#tipo');
+            
+
+            // Feedback visual al usuario
+            $divVisual.html('<div class="text-center p-4"><i class="fas fa-spinner fa-spin me-2"></i>Cargando detalles técnicos...</div>')
+                  .removeClass('d-none');
+        $textarea.addClass('d-none');
+
+            // Llamada al endpoint que definiremos en el controlador
+            $.get(`/planes-mantenimiento/api/${planId}`, function(response) {
+                if (response.success) {
+
+                    if (!response.descripcion) {
+                        $titulo.val('');
+                        $textarea.val('').removeClass('d-none'); // Limpia y muestra textarea
+                        $divVisual.html('').addClass('d-none');   // Limpia y oculta Div HTML
+                        $instruccion.show();
+                        return;
+                    }
+
+                    // 1. Inyectamos el HTML en el DIV para que se vea con estilo
+                    $divVisual.html(response.descripcion);
+                    
+                    $textarea.val(response.descripcion);
+                    
+                    $instruccion.hide();
+                    $titulo.val(response.titulo);
+                    $tipo.val("Mantenimiento").change(); // Aseguramos que el tipo se establezca en 'mantenimiento'
+                        
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: 'Plan cargado',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                }
+            }).fail(function() {
+                $textarea.removeClass('d-none').val(''); // Mostrar textarea vacío para que el usuario pueda escribir
+                $titulo.val('');
+                $divVisual.addClass('d-none');
+            });
         });
         
-        // 4. Listener para la serialización final antes del submit
-        document.getElementById('orden-form').addEventListener('submit', function(e) {
-            // Asegúrate de que el input oculto tenga el valor correcto antes de enviar.
-            suppliesJsonInput.value = JSON.stringify(Object.values(selectedSupplies));
-            
-            // Puedes añadir una validación para asegurar que se agregaron items
-            if (Object.values(selectedSupplies).length === 0) {
-                 // Puedes emitir una advertencia, pero es mejor permitir órdenes sin insumos si aplica tu caso
-                 // Swal.fire('Atención', 'No se ha añadido ningún suministro a la orden.', 'warning');
-                 // e.preventDefault();
-            }
+
+        // Buscador simple integrado al input de dirección
+        $('#input-direccion').on('change', function() {
+            const $input = $(this);
+            const $icon = $input.siblings('.input-group-text').find('i');   
+            const query = $input.val();
+            $icon.removeClass('fa-map-marker-alt').addClass('fa-spinner fa-spin');
+            if (query.length < 5) return;
+
+            $.getJSON(`https://nominatim.openstreetmap.org/search?format=json&q=${query}&countrycodes=ve`, function(data) {
+                if (data && data.length > 0) {
+                    const lat = data[0].lat;
+                    const lon = data[0].lon;
+                    
+                    map.flyTo([lat, lon], 16);
+                    marker.setLatLng([lat, lon]);
+                    $icon.removeClass('fa-spinner fa-spin').addClass('fa-map-marker-alt');
+                    updateCoords(lat, lon);
+                } else {
+                    // --- VENTANA DE NO RESULTADOS (Imagen Corporativa) ---
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'info',
+                        title: 'Ubicación no encontrada',
+                        text: 'Intente con términos más generales (Ej: Calle, Ciudad)',
+                        showConfirmButton: false,
+                        timer: 4000,
+                        timerProgressBar: true,
+                        didOpen: (toast) => {
+                            toast.addEventListener('mouseenter', Swal.stopTimer)
+                            toast.addEventListener('mouseleave', Swal.resumeTimer)
+                        }
+                    });
+
+                    // Devolver el focus y limpiar/seleccionar el texto para reintentar
+                    $input.focus().select();
+                }
+            });
         });
 
-        // Inicializar la tabla vacía al cargar la página
-        renderSuppliesTable();
+        function obtenerDireccion(lat, lon) {
+            $.getJSON(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`, function(data) {
+                if (data && data.display_name) {
+                    $('#input-direccion').val(data.display_name);
+                }
+            });
+        }
+       
     });
 </script>
-@endpush
+@endpush    

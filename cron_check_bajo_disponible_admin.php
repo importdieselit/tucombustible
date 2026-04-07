@@ -35,7 +35,7 @@ function logMessage($message, $type = 'info') {
     echo "[{$timestamp}] {$prefix} {$message}\n";
     
     // También logear en archivo
-    Log::info("Cron Job Admin - {$message}");
+ //   Log::info("Cron Job Admin - {$message}");
 }
 
 // Función para mostrar ayuda
@@ -132,12 +132,12 @@ try {
                     logMessage("Notificación consolidada enviada a super admins sobre {$clientesConBajoDisponible} clientes", 'success');
                     
                     // Log detallado de la notificación consolidada enviada a super admins
-                    Log::info("Notificación consolidada de bajo disponible enviada a super admins por cron job admin", [
-                        'total_clientes' => $clientesConBajoDisponible,
-                        'clientes' => $clientesConBajoDisponibleData,
-                        'fecha' => now()->toDateTimeString(),
-                        'tipo_cron' => 'admin_hourly_consolidado'
-                    ]);
+                    // Log::info("Notificación consolidada de bajo disponible enviada a super admins por cron job admin", [
+                    //     'total_clientes' => $clientesConBajoDisponible,
+                    //     'clientes' => $clientesConBajoDisponibleData,
+                    //     'fecha' => now()->toDateTimeString(),
+                    //     'tipo_cron' => 'admin_hourly_consolidado'
+                    // ]);
                 } else {
                     $errores++;
                     logMessage("Error enviando notificación consolidada a super admins", 'error');

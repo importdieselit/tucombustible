@@ -35,21 +35,26 @@ class TemparioServicio extends Model
     // Relaciones
     public function categoria()
     {
-        return $this->belongsTo(TemparioCategoria::class, 'id_tempario_categoria', 'id');
+        return $this->belongsTo(TemparioCategoria::class, 'id_tempario_categoria', 'id_tempario_categoria');
     }
-
-    public function usuario()
+    
+    public function trabajos()
     {
-        return $this->belongsTo(User::class, 'id_usuario', 'id');
-    }
+        return $this->hasMany(Trabajos::class, 'id_tempario_servicio', 'id_tempario_servicio');
+    }   
 
-    public function createdBy()
-    {
-        return $this->belongsTo(User::class, 'created_by', 'id');
-    }
+    // public function usuario()
+    // {
+    //     return $this->belongsTo(User::class, 'id_usuario', 'id');
+    // }
 
-    public function updatedBy()
-    {
-        return $this->belongsTo(User::class, 'updated_by', 'id');
-    }
+    // public function createdBy()
+    // {
+    //     return $this->belongsTo(User::class, 'created_by', 'id');
+    // }
+
+    // public function updatedBy()
+    // {
+    //     return $this->belongsTo(User::class, 'updated_by', 'id');
+    // }
 }

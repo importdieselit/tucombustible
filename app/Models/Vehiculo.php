@@ -116,7 +116,10 @@ class Vehiculo extends Model
         'permiso_intt',
         'hrs_mantt',
         'hrs_contador',
-        'horas_trabajo'
+        'horas_trabajo',
+            'facturacion_completa',
+            'es_flota',
+            'acoplado_id',
     ];
     /**
      * The attributes that should be cast to native types.
@@ -156,6 +159,7 @@ class Vehiculo extends Model
         'rcv' => 'date',
         'racda' => 'string',
         'facturacion_completa' => 'boolean', // Si aplicara, basado en otro contexto si no fuera booleano nativo
+        'acoplado_id' => 'integer', // bigint unsigned
     ];
 
     // Relaciones (si es necesario y tienes los modelos correspondientes)
@@ -176,14 +180,37 @@ class Vehiculo extends Model
         return $this->belongsTo(Marca::class, 'marca', 'id')->first() ; // Ajusta 'App\Marca::class' al nombre de tu modelo de Marca
     }
 
+    public function isMarca()
+    {
+        return $this->belongsTo(Marca::class, 'marca', 'id'); // Ajusta 'App\Marca::class' al nombre de tu modelo de Marca
+    }
+
         public function ordenes()
         {
             // Ajusta 'id_vehiculo' si el nombre de la llave foránea en la tabla 'ordenes' es diferente
             return $this->hasMany(Orden::class, 'id_vehiculo'); 
         }
+
+    public function getDiasFueraServicioAttribute()
+    {
+        $orden = $this->ordenActiva;
+        if ($orden && $orden->created_at) {
+            return now()->diffInDays($orden->created_at);
+        }
+        return 0;
+    }
+
     public function viajes()
     {
-        return $this->hasMany(Viaje::class, 'id_vehiculo');
+        return $this->hasMany(Viaje::class, 'vehiculo_id');
+    }
+
+    public function ordenActiva()
+    {
+        // Asumiendo que tus órdenes tienen un campo 'estatus' (ej: 1 para abierta)
+        return $this->hasOne(Orden::class, 'id_vehiculo')
+                    ->where('estatus', 2) 
+                    ->orderBy('created_at', 'desc');
     }
 
     public function compraCombustible()
@@ -232,6 +259,11 @@ class Vehiculo extends Model
         $query->where('estatus', 1)->where('es_flota', true);
     }
 
+    public function scopeNoDisponibles(Builder $query): void
+    {
+        $query->where('estatus', '<>', 1)->where('es_flota', true);
+    }
+
     public function scopeEnServicio(Builder $query): void
     {
         // Ajustar el estatus según tu lógica de "Disponible"
@@ -275,6 +307,11 @@ class Vehiculo extends Model
         return $this->belongsTo(Modelo::class, 'modelo', 'id')->first(); // Ajusta 'App\Modelo::class' al nombre de tu modelo de Modelo
     }
 
+    public function isModelo()
+    {
+        return $this->belongsTo(Modelo::class, 'modelo', 'id'); // Ajusta 'App\Modelo::class' al nombre de tu modelo de Modelo
+    }
+
     public function tipoVehiculo()
     {
         return $this->belongsTo(TipoVehiculo::class, 'tipo', 'id'); // Ajusta 'App\TipoVehiculo::class' al nombre de tu modelo de TipoVehiculo
@@ -306,92 +343,127 @@ class Vehiculo extends Model
     /**
      * Evalúa el estatus de un documento basado en su campo de fecha o texto.
      */
-    public function getDocumentStatus(string $docName, ?string $dateField = null, ?string $textField = null): array
-    {
-        // 1. Obtener el valor crudo del campo, ya sea de fecha o texto
-        $rawValue = $dateField ? ($this->{$dateField} ?? '') : ($this->{$textField} ?? '');
-        $statusValue = trim(mb_strtoupper($rawValue));
-        // ==========================================================
-        // 2. VERIFICACIÓN DEFENSIVA Y MANEJO DE ESTATUS DE TEXTO
-        //    (Maneja S/P y N/A primero, sin importar si es dateField o textField)
-        // ==========================================================
-        if (in_array($statusValue, ['S/P', 'SIN PERMISO', 'NO REGISTRADO'])) {
-            return [
-                'class' => 'bg-danger', 
-                'icon' => 'bi-x-octagon-fill', 
-                'title' => "$docName: ¡Sin Permiso (S/P)! Dato: {$rawValue}",
-            ];
-        }
+   public function getDocumentStatus(string $docName, ?string $dateField = null, ?string $textField = null): array
+{
+    $rawValue = $dateField ? ($this->{$dateField} ?? '') : ($this->{$textField} ?? '');
+    $statusValue = trim(mb_strtoupper($rawValue));
+
+    // 1. MANEJO DE ESTATUS DE TEXTO (Añadimos PENDIENTE aquí)
+    if (in_array($statusValue, ['S/P', 'SIN PERMISO', 'NO REGISTRADO', 'PENDIENTE'])) {
+        return [
+            'class' => 'bg-danger', 
+            'icon' => 'bi-x-octagon-fill', 
+            'title' => "$docName: ¡Atención! Estado: {$rawValue}",
+        ];
+    }
+    
+    if (in_array($statusValue, ['N/A', 'NO APLICA', 'NO VENCE', 'OK', 'VIGENTE'])) {
+        return [
+            'class' => 'bg-success', 
+            'icon' => 'bi-check-circle', 
+            'title' => "$docName: Vigente / No aplica. Dato: {$rawValue}",
+        ];
+    }
+
+    // 2. VALIDACIÓN PRE-CARBON: Si no hay valor o no parece una fecha, salimos de forma segura
+    if (!$dateField || empty($rawValue) || !preg_match('/^\d{4}-\d{2}-\d{2}/', $rawValue)) {
+        return [
+            'class' => 'bg-secondary', 
+            'icon' => 'bi-slash-circle', 
+            'title' => "$docName: Información no disponible o formato inválido: {$rawValue}",
+        ];
+    }
+
+    // 3. MANEJO DE FECHAS (Solo si pasó las validaciones anteriores)
+    try {
         
-        if (in_array($statusValue, ['N/A', 'NO APLICA', 'NO VENCE', 'OK', 'VIGENTE'])) {
-            return [
-                'class' => 'bg-success', 
-                'icon' => 'bi-check-circle', 
-                'title' => "$docName: Vigente / No aplica / Status OK. Dato: {$rawValue}",
-            ];
-        }
-
-        // Si es un campo de texto y el valor no fue un estatus conocido, lo marcamos como indefinido
-        if ($textField && !empty($statusValue)) {
-            return [
-                'class' => 'bg-secondary', 
-                'icon' => 'bi-question-circle', 
-                'title' => "$docName: Estatus de texto no definido: {$rawValue}",
-            ];
-        }
-
-        // ==========================================================
-        // 3. MANEJO DE ESTATUS POR FECHA (Solo si no fue un estatus de texto conocido)
-        // ==========================================================
-        
-        // Si no hay valor o no es un campo de fecha, salimos
-        if (!$dateField || empty($rawValue)) {
-            return [
-                'class' => 'bg-secondary', 
-                'icon' => 'bi-slash-circle', 
-                'title' => "$docName: Fecha de vigencia no registrada",
-            ];
-        }
-
-        // INTENTAR PARSEAR LA FECHA
-        try {
-            $date = Carbon::parse($rawValue)->startOfDay();
-        } catch (\Exception $e) {
-            // CATCH: Si Carbon falla aquí (ej. la fecha está en un formato raro), marcamos error.
-            return [
-                'class' => 'bg-danger', 
-                'icon' => 'bi-x-circle', 
-                'title' =>  "$docName: Error de Formato. El valor '{$rawValue}' no es una fecha válida.",
-            ];
-        }
-
-        // Lógica de fechas (Vigente, Warning, Vencida)
-        $now = Carbon::now()->startOfDay();
+        $date = \Carbon\Carbon::parse($rawValue)->startOfDay();
+        $now = \Carbon\Carbon::now()->startOfDay();
         $oneMonthFromNow = $now->copy()->addMonth();
 
         if ($date->lessThan($now)) {
-            // Vencida
             return [
                 'class' => 'bg-danger', 
                 'icon' => 'bi-x-circle', 
                 'title' => "$docName: Vencida desde el {$date->format('d/m/Y')}",
             ];
         } elseif ($date->lessThan($oneMonthFromNow)) {
-            // Próximo a vencer (Warning)
             return [
                 'class' => 'bg-warning', 
                 'icon' => 'bi-exclamation-triangle-fill', 
                 'title' => "$docName: Vence pronto el {$date->format('d/m/Y')}",
             ];
         } else {
-            // Vigente
             return [
                 'class' => 'bg-success', 
                 'icon' => 'bi-check-circle', 
                 'title' => "$docName: Vigente hasta {$date->format('d/m/Y')}",
             ];
         }
+    } catch (\Exception $e) {
+        return [
+            'class' => 'bg-secondary', 
+            'icon' => 'bi-question-circle', 
+            'title' => "$docName: Error en dato: {$rawValue}",
+        ];
     }
+}
+
+    /**
+ * Agrupa los documentos por su estado de alerta (vencidos o por vencer)
+ * Reutiliza getDocumentStatus para mantener un solo punto de verdad.
+ */
+    public function getDocumentosAlertas()
+        {
+            $documentos = [
+                'Póliza' => ['poliza_fecha_out', null],
+                'RCV' => ['rcv', null],
+                'RACDA' => ['racda', null],
+                'ROTC' => ['rotc_venc', null],
+                'SEMCAMER' => [null, 'semcamer'],
+                'Homologación INTT' => [null, 'homologacion_intt'],
+                'Permiso INTT' => ['permiso_intt', null],
+            ];
+
+            $alertas = ['vencidos' => collect(), 'por_vencer' => collect(), 'sin_registrar' => collect()];
+
+            foreach ($documentos as $label => $fields) {
+                $status = $this->getDocumentStatus($label, $fields[0], $fields[1]);
+                
+                // Extraemos días si es por fecha (opcional, para el tooltip)
+                $diasText = "";
+                
+                if (!empty($rawValue) && preg_match('/^\d{4}-\d{2}-\d{2}/', $rawValue)) {
+                    try {
+                        $fecha = \Carbon\Carbon::parse($rawValue)->startOfDay();
+                        $diferencia = \Carbon\Carbon::now()->startOfDay()->diffInDays($fecha, false);
+                        
+                        if ($diferencia < 0) {
+                            $diasText = " (Vencido hace " . abs($diferencia) . " días)";
+                        } else {
+                            $diasText = " (Faltan $diferencia días)";
+                        }
+                    } catch (\Exception $e) {
+                        $diasText = " (Fecha: $rawValue)";
+                    }
+                } elseif (!empty($rawValue)) {
+                    // Si es un texto como "PENDIENTE", solo mostramos el texto
+                    $diasText = " ($rawValue)";
+                }
+
+                if ($status['class'] === 'bg-danger') {
+                    $alertas['vencidos']->push($label . $diasText);
+                } elseif ($status['class'] === 'bg-warning') {
+                    $alertas['por_vencer']->push($label . $diasText);
+                }elseif ($status['class'] === 'bg-secondary') {
+                    $alertas['sin_registrar']->push($label . $diasText);
+                }
+
+                
+            }
+
+            return $alertas;
+        }
 
     public static function getUnidadesConDocumentosVencidos($user)
     {
@@ -465,6 +537,23 @@ class Vehiculo extends Model
     
 
      return $totalUnidadesConAlertas;
+    }
+
+    // Relación para el Chuto: Obtener su cisterna
+    public function cisternaAcoplada()
+    {
+        return $this->belongsTo(Vehiculo::class, 'acoplado_id');
+    }
+
+    // Relación para la Cisterna: Saber qué chuto la tiene (Inversa)
+    public function chutoAsignado()
+    {
+        return $this->hasOne(Vehiculo::class, 'acoplado_id');
+    }
+    
+    public function choferes()
+    {        
+         return $this->belongsToMany(Chofer::class, 'vehiculo_chofer', 'vehiculo_id', 'chofer_id')->withTimestamps();
     }
 
     

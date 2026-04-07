@@ -11,6 +11,7 @@ class SuministroCompraDetalle extends Model
     use HasFactory;
 
     protected $table = 'suministros_compras_detalles';
+    protected $primary = 'id';
 
     protected $fillable = [
         'suministro_compra_id',
@@ -19,6 +20,7 @@ class SuministroCompraDetalle extends Model
         'cantidad_solicitada',
         'costo_unitario_aprobado',
         'cantidad_aprobada',
+        'estatus'
     ];
 
     /**

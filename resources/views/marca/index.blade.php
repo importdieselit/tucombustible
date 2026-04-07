@@ -96,7 +96,7 @@
 </div>
 
 {{-- Modal para Agregar Marca --}}
-<div class="modal fade" id="addMarcaModal" tabindex="-1" aria-labelledby="addMarcaModalLabel" aria-hidden="true">
+<div class="modal fade" id="addMarcaModal" data-bs-backdrop="false" tabindex="-1" aria-labelledby="addMarcaModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -121,7 +121,7 @@
 </div>
 
 {{-- Modal para Editar Marca --}}
-<div class="modal fade" id="editMarcaModal" tabindex="-1" aria-labelledby="editMarcaModalLabel" aria-hidden="true">
+<div class="modal fade" id="editMarcaModal" data-bs-backdrop="false" tabindex="-1" aria-labelledby="editMarcaModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">

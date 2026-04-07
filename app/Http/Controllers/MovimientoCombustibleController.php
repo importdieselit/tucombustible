@@ -1355,7 +1355,7 @@ public function storeDespachoIndustrial(Request $request)
         $ayudantes = Chofer:://whereNull('documento_vialidad_numero')-> 
                             where('cargo', 'like','%AYUDANTE%')->with('persona')->get();
         
-        $vehiculos = Vehiculo::where('es_flota', 1)->whereIn('tipo', [3,2])->get();
+        $vehiculos = Vehiculo::where('es_flota', 1)->whereIn('tipo', [5,3,2])->get();
         
 
         return view('combustible.flete', compact('proveedores', 'plantas', 'choferes','vehiculos','ayudantes','destino'));
@@ -1523,7 +1523,8 @@ public function storeDespachoIndustrial(Request $request)
                 'destino_ciudad' => 'FLETE -> '. $request->planta_destino_id.' -> '.$request->destino_ciudad ?? 'FLETE N/A', 
                 'fecha_salida' => $request->fecha_salida,
                 'status' => 'Programado',
-                'usuario_id' => $userId
+                'usuario_id' => $userId,
+                'cisterna' => $request->cisterna_id
                 
             ]);
 

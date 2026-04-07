@@ -12,7 +12,7 @@ p {
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Detalle de Inspección #{{ $inspeccion->id }} - Vehículo: {{ $inspeccion->vehiculo->placa ?? 'N/A' }}</h2>
         <div>
-            <a href="{{ route('inspeccion.pdf', $inspeccion->id) }}" class="btn btn-danger" target="_blank">
+            <a href="{{ route('inspecciones.pdf', $inspeccion->id) }}" class="btn btn-danger" target="_blank">
                 <i class="fa fa-file-pdf me-2"></i> Imprimir PDF
             </a>
             <a href="{{ url()->previous() }}" class="btn btn-secondary">

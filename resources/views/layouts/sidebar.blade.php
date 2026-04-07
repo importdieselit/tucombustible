@@ -1,5 +1,5 @@
 @php
-    use App\Models\Acceso;
+    use App\Models\PermisoPerfil;
     use Illuminate\Support\Facades\Auth;
     use App\Models\Modulo;
 
@@ -12,7 +12,7 @@
             ->orderBy('orden')
             ->get();
     } else {
-        $modulosPermitidosIds = Acceso::where('id_usuario', Auth::id())
+        $modulosPermitidosIds = PermisoPerfil::where('id_perfil', $user->id_perfil)
             ->where('read', 1)
             ->pluck('id_modulo');
 
@@ -37,7 +37,7 @@
     left: 0;
     width: 250px;
     padding-top: 1rem;
-    z-index: 1030;
+    z-index: 10;
     overflow-y: auto;
 }
 
@@ -205,6 +205,23 @@
             </li>
         @endforeach
     </ul>
+    <button id="install-button" class="btn btn-orange shadow-sm px-4 text-white fw-bold" style="display:none;">
+            <i class="fa fa-download me-2"></i> INSTALAR APP
+    </button>
+    <div class="card mt-3">
+    <div class="card-body text-center p-2">
+        <div id="push-container" class="d-flex flex-column align-items-center justify-content-center" style="min-height: 20px;">
+            
+            <h5 id="push-title" class="card-title h6 mb-2">Notificaciones en tiempo real</h5>
+            
+            <button id="btn-push" class="btn btn-primary shadow-sm px-4">
+                <i class="bi bi-bell"></i> <span id="btn-text">Activar Notificaciones</span>
+            </button>
+            
+            <div id="push-status" class="mt-2"></div>
+        </div>
+    </div>
+    </div>
 </div>
 
 <script>
@@ -226,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 parent.classList.add('open');
             }
 
-            // Cerrar otros menús abiertos para mantener limpieza (opcional)
+            // Cerrar otros menús abiertos para mantener limieza (opcional)
             document.querySelectorAll('.sidebar .nav-item.dropdown').forEach(function(item) {
                 if(item !== parent) {
                     item.classList.remove('open');
@@ -234,5 +251,121 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     });
+
+
+    const btnPush = document.getElementById('btn-push');
+    const btnText = document.getElementById('btn-text');
+    const pushStatus = document.getElementById('push-status');
+
+    // 1. Función para convertir la llave VAPID (Tu estándar de código reutilizable)
+    const urlBase64ToUint8Array = (base64String) => {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
+    };
+
+    // 2. Función principal de suscripción
+    async function suscribirDispositivo() {
+        try {
+            btnPush.disabled = true;
+            btnText.innerText = 'Procesando...';
+
+            const registration = await navigator.serviceWorker.ready;
+            const publicKey = @json(config('webpush.vapid.public_key')); 
+
+            if (!publicKey) {
+                alert("Error: La llave pública no llegó al navegador. Revisa tu config/webpush.php");
+                return;
+            }
+
+            const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(publicKey)
+            });
+
+            // Enviar a Laravel (Usando Fetch para evitar líos con Axios)
+            const response = await fetch('/notifications/subscribe', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(subscription)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                actualizarInterfaz('suscrito');
+            }
+        } catch (error) {
+            console.error("Error en suscripción:", error);
+            // AGREGA ESTA LÍNEA PARA VER EL ERROR EN EL CELULAR:
+            alert("Error real: " + error.name + " - " + error.message); 
+            actualizarInterfaz('error');
+        }
+    }
+
+    // 3. Manejo de la interfaz
+    function actualizarInterfaz(estado) {
+        if (estado === 'suscrito') {
+            const pushTitle = document.getElementById('push-title');
+    const pushContainer = document.getElementById('push-container');
+            // 1. Ocultar el título y el botón original
+            pushTitle.classList.add('d-none');
+            btnPush.classList.add('d-none');
+            
+            // 2. Limpiar cualquier mensaje de error previo
+            pushStatus.innerHTML = '';
+
+            // 3. Crear el indicador visual: Campanita Verde + Check
+            // Usamos Flexbox para centrarlo perfectamente en la pantalla del Redmi
+            pushStatus.innerHTML = `
+                <div class="d-inline align-items-center justify-content-center text-success position-relative" 
+                    style="font-size: 1.2rem; width: 20px; height: 20px;">
+                    
+                    <i class="fa fa-bell"></i>
+                    
+                    <i class="fa fa-check-circle position-absolute bg-white rounded-circle shadow-sm" 
+                    style="font-size: 0.5rem; bottom: 3px; right: 3px; padding: 1px;"></i>
+                </div>
+                <div class="small text-muted mt-1 text-center d-inline"> Notificaciones activas</div>
+            `;
+            
+            // Ajustamos el contenedor para que el icono quede centrado
+            pushContainer.classList.remove('flex-column');
+            pushContainer.classList.add('justify-content-center');
+
+        } else if (estado === 'error') {
+            // En caso de error, mostramos el botón y un mensaje de advertencia
+            pushTitle.classList.remove('d-none');
+            btnPush.classList.remove('d-none');
+            btnPush.disabled = false;
+            btnPush.innerText = 'Reintentar';
+            
+            pushStatus.innerHTML = `
+                <div class="text-danger small fw-bold mt-2">
+                    <i class="bi bi-exclamation-triangle"></i> Error al vincular. Intenta de nuevo.
+                </div>
+            `;
+        }
+    }
+
+    // Evento del botón
+    btnPush.addEventListener('click', suscribirDispositivo);
+
+    // 4. Check inicial: ¿Ya está suscrito en este navegador?
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(reg => {
+            reg.pushManager.getSubscription().then(sub => {
+                if (sub) actualizarInterfaz('suscrito');
+            });
+        });
+    }
+
+    
 });
+
 </script>

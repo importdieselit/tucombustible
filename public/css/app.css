@@ -3379,7 +3379,7 @@ textarea.form-control-lg {
 }
 
 .dropdown-menu {
-  --bs-dropdown-zindex: 1000;
+  --bs-dropdown-zindex: 100;
   --bs-dropdown-min-width: 10rem;
   --bs-dropdown-padding-x: 0;
   --bs-dropdown-padding-y: 0.5rem;
@@ -5428,14 +5428,14 @@ textarea.form-control-lg {
 }
 
 .modal {
-  --bs-modal-zindex: 1055;
+  --bs-modal-zindex: 1060 !important;
   --bs-modal-width: 500px;
   --bs-modal-padding: 1rem;
   --bs-modal-margin: 0.5rem;
   --bs-modal-color: var(--bs-body-color);
   --bs-modal-bg: var(--bs-body-bg);
   --bs-modal-border-color: var(--bs-border-color-translucent);
-  --bs-modal-border-width: var(--bs-border-width);
+  --bs-modal-border-width: solid;
   --bs-modal-border-radius: var(--bs-border-radius-lg);
   --bs-modal-box-shadow: var(--bs-box-shadow-sm);
   --bs-modal-inner-border-radius: calc(var(--bs-border-radius-lg) - (var(--bs-border-width)));
@@ -5450,7 +5450,7 @@ textarea.form-control-lg {
   --bs-modal-footer-border-color: var(--bs-border-color);
   --bs-modal-footer-border-width: var(--bs-border-width);
   position: fixed;
-  top: 0;
+  top: 20%;
   left: 0;
   z-index: var(--bs-modal-zindex);
   display: none;
@@ -5509,7 +5509,7 @@ textarea.form-control-lg {
   pointer-events: auto;
   background-color: var(--bs-modal-bg);
   background-clip: padding-box;
-  border: var(--bs-modal-border-width) solid var(--bs-modal-border-color);
+  border: solid;
   border-radius: var(--bs-modal-border-radius);
   outline: 0;
 }
@@ -5517,7 +5517,7 @@ textarea.form-control-lg {
 .modal-backdrop {
   --bs-backdrop-zindex: 0;
   --bs-backdrop-bg: #000;
-  --bs-backdrop-opacity: 0.5;
+  --bs-backdrop-opacity: 0.0;
   position: fixed;
   top: 0;
   left: 0;
@@ -5531,6 +5531,7 @@ textarea.form-control-lg {
 }
 .modal-backdrop.show {
   opacity: var(--bs-backdrop-opacity);
+  z-index: 0;
 }
 
 .modal-header {
@@ -6711,7 +6712,7 @@ textarea.form-control-lg {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 1040;
+  z-index: 10;
   width: 100vw;
   height: 100vh;
   background-color: #000;
@@ -6990,7 +6991,7 @@ textarea.form-control-lg {
   top: 0;
   right: 0;
   left: 0;
-  z-index: 1030;
+  z-index: 10;
 }
 
 .fixed-bottom {
@@ -6998,79 +6999,79 @@ textarea.form-control-lg {
   right: 0;
   bottom: 0;
   left: 0;
-  z-index: 1030;
+  z-index: 10;
 }
 
 .sticky-top {
   position: sticky;
   top: 0;
-  z-index: 1020;
+  z-index: 20;
 }
 
 .sticky-bottom {
   position: sticky;
   bottom: 0;
-  z-index: 1020;
+  z-index: 10;
 }
 
 @media (min-width: 576px) {
   .sticky-sm-top {
     position: sticky;
     top: 0;
-    z-index: 1020;
+    z-index: 20;
   }
   .sticky-sm-bottom {
     position: sticky;
     bottom: 0;
-    z-index: 1020;
+    z-index: 20;
   }
 }
 @media (min-width: 768px) {
   .sticky-md-top {
     position: sticky;
     top: 0;
-    z-index: 1020;
+    z-index: 20;
   }
   .sticky-md-bottom {
     position: sticky;
     bottom: 0;
-    z-index: 1020;
+    z-index: 20;
   }
 }
 @media (min-width: 992px) {
   .sticky-lg-top {
     position: sticky;
     top: 0;
-    z-index: 1020;
+    z-index: 20;
   }
   .sticky-lg-bottom {
     position: sticky;
     bottom: 0;
-    z-index: 1020;
+    z-index: 20;
   }
 }
 @media (min-width: 1200px) {
   .sticky-xl-top {
     position: sticky;
     top: 0;
-    z-index: 1020;
+    z-index: 20;
   }
   .sticky-xl-bottom {
     position: sticky;
     bottom: 0;
-    z-index: 1020;
+    z-index: 20;
   }
 }
 @media (min-width: 1400px) {
   .sticky-xxl-top {
     position: sticky;
     top: 0;
-    z-index: 1020;
+    z-index: 20;
   }
   .sticky-xxl-bottom {
     position: sticky;
     bottom: 0;
-    z-index: 1020;
+    z-index: 20;
   }
 }
 .hstack {
@@ -11975,3 +11976,227 @@ textarea.form-control-lg {
     display: none !important;
   }
 }
+
+   :root {
+        --corpo-base: #f2A435;
+        --corpo-dark: #f16201;
+        --corpo-light: #FCD124;
+        --corpo-bg: #4C474F;
+    }
+    .bg-corporate { background-color: var(--corpo-bg) !important; color: white; }
+    .btn-corporate { background-color: var(--corpo-base); color: white; border: none; }
+    .btn-corporate:hover { background-color: var(--corpo-dark); color: white; }
+    .btn-outline-corporate { border: 2px solid var(--corpo-base); color: var(--corpo-base); font-weight: bold; }
+    .btn-outline-corporate:hover { background-color: var(--corpo-base); color: white; }
+    .border-corporate { border-left: 4px solid var(--corpo-base) !important; }
+    .text-corporate { color: var(--corpo-base) !important; }
+    .text-corporate-emphasis { color: var(--corpo-bg) !important;} 
+    .text-corporate-emphasis.active, 
+    .text-corporate-emphasis:active { 
+        color: var(--corpo-dark) !important; 
+        font-weight: bold; 
+    }
+    .text-corporate-emphasis:hover { 
+        color: var(--corpo-base) !important; 
+        font-weight: bold; 
+    }
+
+    /* Fondo corporativo oscuro (el de los headers del sistema viejo) */
+    .bg-corporate-dark {
+        background-color: var(--corpo-bg) !important;
+        color: var(--corpo-light) !important;
+    }
+
+      /* Estándar Impordiesel */
+        .card-step { border: none; border-top: 5px solid #4C474F; }
+        .card-step.border-orange { border-top-color: #f2A435; }
+        .bg-corporate { background-color: #4C474F !important; color: white; }
+        .text-orange { color: #f2A435 !important; }
+        .btn-orange { background-color: #f2A435; color: white; }
+        .btn-orange:hover { background-color: #d9922e; color: white; }
+        
+        /* Ajustes de Tabla */
+        #ordenesTable thead { background-color: #4C474F; color: white; text-transform: uppercase; font-size: 0.85rem; }
+        .clickable-row { cursor: pointer; transition: all 0.2s; }
+        .clickable-row:hover { background-color: rgba(242, 164, 53, 0.1) !important; }
+        
+        /* Estilo de los botones de DataTables para que no rompan el diseño */
+        .dt-buttons .dt-button {
+            background-color: #4C474F !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 4px !important;
+            font-size: 0.8rem !important;
+        }
+
+         /* Ajustes de Tabs para coincidir con el diseño */
+        .nav-tabs .nav-link {
+            color: #6c757d;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            border: none;
+            padding: 12px 20px;
+        }
+        .nav-tabs .nav-link.active {
+            color: #FF6B00;
+            border-bottom: 3px solid #FF6B00;
+            background: none;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #FF6B00;
+            box-shadow: 0 0 0 0.25rem rgba(255, 107, 0, 0.1);
+        }
+
+          @media print {
+        .no-print, .btn, .main-footer, .sidebar, .navbar, .modal { display: none !important; }
+        .container-fluid { width: 100% !important; padding: 0 !important; }
+        .card { border: 1px solid #ddd !important; box-shadow: none !important; margin-bottom: 10px !important; }
+        body { background-color: white !important; font-size: 12px; }
+        .card-step { border-top: 3px solid #4C474F !important; }
+    }
+    .table-summary td { vertical-align: middle; }
+    .total-row { background-color: #f8f9fa; font-weight: bold; font-size: 1.1rem; }
+    .signature-box { border-top: 1px solid #4C474F; width: 200px; margin-top: 50px; text-align: center; padding-top: 5px; font-size: 0.8rem; }
+    .select2-container { z-index: 2050 !important; } 
+    .table-supply thead { background-color: #4C474F; color: white; }
+    .form-label { font-weight: 700; font-size: 0.85rem; text-transform: uppercase; color: #4C474F; }
+    /* Estándar Impordiesel: Estructura Base */
+    .card-kpi { 
+        border: none; 
+        border-bottom: 4px solid #4C474F; /* Gris Corporativo por defecto */
+        border-left: 0px solid transparent; /* Para evitar que el borde izquierdo afecte el diseño */
+        transition: all 0.3s ease; 
+        border-radius: 8px; /* Bordes ligeramente redondeados para suavizar el diseño */
+    }
+
+    .card-kpi:hover { 
+        transform: translateY(-5px); 
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important; 
+    }
+
+    /* Variaciones de Color del Estándar Impordiesel */
+    .card-kpi.border-b-orange { border-bottom-color: #f2A435 !important; }
+    .card-kpi.border-b-corporate { border-left: 0px; border-bottom-color: #4C474F !important; }
+    
+    /* Nuevos Estilos Solicitados (Success, Warning, Danger) */
+    .card-kpi.border-b-success { border-bottom-color: #1cc88a !important; } /* Verde para Eficiencia/Disponibilidad */
+    .card-kpi.border-b-warning { border-bottom-color: #f6c23e !important; } /* Amarillo para Alertas Próximas */
+    .card-kpi.border-b-danger { border-bottom-color: #e74a3b !important; }  /* Rojo para Fallas o Vencimientos */
+
+    /* Auxiliares de Texto */
+    .text-corporate { color: #f2A435 !important; }
+    .bg-corporate { background-color: #4C474F !important; color: white; }
+    .timeline-list .list-group-item {
+        border-left: 3px solid #f2A435; /* Naranja Impordiesel por defecto */
+        margin-bottom: 8px;
+        border-radius: 4px !important;
+        background: #fdfdfd;
+        transition: background 0.2s;
+    }
+    .timeline-list .list-group-item:hover { background: #f8f9fc; }
+    
+    /* Variaciones de borde según criticidad */
+    .border-timeline-danger { border-left-color: #e74a3b !important; }
+    .border-timeline-success { border-left-color: #1cc88a !important; }
+    .border-timeline-warning { border-left-color: #f6c23e !important; }
+    .border-timeline-primary { border-left-color: #4C474F !important; } /* Gris Corporativo */
+
+  #calendar-mantenimiento {
+    max-width: 1100px; margin: 20px auto; padding: 25px;
+    background: #ffffff; border-radius: 12px; border: none;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+  }
+  /* Colores FullCalendar Estándar */
+  .fc-event { background-color: #4C474F !important; border: none !important; padding: 2px 5px; }
+  .fc-daygrid-event:hover { background-color: #f2A435 !important; }
+  .fc-toolbar-title { color: #4C474F; font-weight: bold; text-transform: uppercase; font-size: 1.2rem !important; }
+  .fc-button-primary { background-color: #4C474F !important; border: none !important; }
+  .fc-button-primary:hover { background-color: #f2A435 !important; }
+  .select2-container--bootstrap-5 .select2-selection {
+    border: 1px solid #ced4da !important;
+    min-height: 38px !important;
+    border-radius: 0.375rem !important;
+}
+
+.border-orange { border-top: 3px solid #f2A435 !important; }
+
+/* Forzar que el buscador siempre sea visible y el menú baje */
+.select2-dropdown {
+    z-index: 9999 !important;
+    border: 1px solid #f2A435 !important; /* Borde naranja corporativo */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.select2-container .select2-search--inline .select2-search__field {
+    margin-top: 7px !important;
+}
+
+.badge-dual-status {
+    background: linear-gradient(90deg, #198754 50%, #ffc107 50%);
+    color: white;
+    border: none;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* Ajuste para que el icono se vea bien sobre ambos colores */
+.badge-dual-status i {
+    color: #fff;
+}
+#map {
+        height: 300px;
+        width: 100%;
+        border-radius: 8px;
+        border: 2px solid #e67e22; /* Tu naranja corporativo */
+        margin-top: 10px;
+    }
+
+    /* Limita a una sola línea y oculta el resto */
+    .collapsed-text {
+        display: -webkit-box;
+        -webkit-line-clamp: 1; /* Número de líneas visibles */
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    /* Clase que se aplicará al expandir */
+    .expanded-text {
+        display: block;
+        overflow: visible;
+        -webkit-line-clamp: unset;
+    }
+
+    .descripcion-celda:hover {
+        background-color: rgba(230, 126, 34, 0.03);
+    }
+    
+    .x-small { font-size: 0.7rem; }
+
+    .bg-orange { background-color: #ff6600 !important; }
+
+    .fw-black { font-weight: 900; }
+    
+    .list-hover { transition: background 0.2s; }
+    .list-hover:hover { background-color: #f8f9fa; }
+    
+    .hover-orange:hover { color: #e67e22 !important; }
+
+    /* Estilos para los números del Ranking */
+    .rank-number {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        font-size: 0.85rem;
+    }
+    .rank-1 { background-color: #FFD700; color: white; box-shadow: 0 2px 4px rgba(255,215,0,0.3); }
+    .rank-2 { background-color: #C0C0C0; color: white; }
+    .rank-3 { background-color: #CD7F32; color: white; }
+    .rank-other { background-color: #f1f3f5; color: #6c757d; }

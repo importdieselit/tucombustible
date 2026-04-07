@@ -105,7 +105,7 @@
 </div>
 
 {{-- Modal para Agregar Modelo --}}
-<div class="modal fade" id="addModeloModal" tabindex="-1" aria-labelledby="addModeloModalLabel" aria-hidden="true">
+<div class="modal fade" id="addModeloModal" data-bs-backdrop="false" tabindex="-1" aria-labelledby="addModeloModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -138,7 +138,7 @@
 </div>
 
 {{-- Modal para Editar Modelo --}}
-<div class="modal fade" id="editModeloModal" tabindex="-1" aria-labelledby="editModeloModalLabel" aria-hidden="true">
+<div class="modal fade" id="editModeloModal" data-bs-backdrop="false" tabindex="-1" aria-labelledby="editModeloModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">

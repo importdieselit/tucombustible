@@ -1,284 +1,332 @@
 @extends('layouts.app')
-@section('title', 'TuCombustible - '.Auth::user()->name)
-
-@push('styles')
-<style>
-    :root {
-        --bg-light: #f4f6f8;
-        --bg-card: #ffffff;
-        --text-dark: #333333;
-        --text-muted: #6c757d;
-        --primary-color: #3b82f6;
-        --primary-dark: #2563eb;
-        --secondary-color: #10b981;
-        --secondary-dark: #059669;
-    }
-
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        background-color: var(--bg-light);
-        color: var(--text-dark);
-    }
-
-    .card {
-        z-index: 1;
-        background-color: var(--bg-card);
-        border: none;
-        border-radius: 1rem;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-    }
-
-    .card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-    }
-
-    .btn-primary-custom { background-color: var(--primary-color); border-color: var(--primary-color); }
-    .btn-secondary-custom { background-color: var(--secondary-color); border-color: var(--secondary-color); }
-    .progress-bar-custom { background-color: var(--primary-color); }
-    .progress-bar-danger { background-color: #ef4444; }
-
-    .main-hero-card {
-        background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
-        color: var(--text-dark);
-    }
-
-    .hidden { display: none !important; }
-
-    .sucursal-card-container {
-        cursor: pointer;
-        transition: transform 0.2s ease-in-out;
-    }
-
-    .modal-backdrop.show { opacity: 0.1; }
-</style>
-@endpush
+@section('title', 'Mi Portal - ImporDiesel')
 
 @section('content')
-    <div class="container-fluid">
-        <h1 class="display-8 fw-bold mb-5 text-center text-black">{{ ucwords(Auth::user()->name)}}</h1>
+@if($viendoSucursal)
+    <div class="mb-4">
+        <a href="{{ route('portal.clientes.index') }}" class="bg-red-600 text-white px-4 py-2 rounded font-black text-[10px] uppercase shadow-md hover:bg-red-700">
+            <i class="fas fa-arrow-left mr-2"></i> Salir del modo sucursal (Volver a mi perfil)
+        </a>
+    </div>
+@endif
+<div class="container mx-auto py-6 px-4">
 
-        <div class="card p-4 mb-5 main-hero-card">
-            @php
-                /**
-                 * CORRECCIÓN DE SEGURIDAD:
-                 * Se valida la existencia de $cliente para evitar errores de objeto nulo.
-                 */
-                $isParent = isset($cliente) && $cliente->parent == 0;
-                $currentUserRole = $isParent ? 'principal' : 'sucursal';
-                $currentUserBranchId = Auth::user()->cliente_id;
-
-                // Asegurar que las colecciones existan aunque vengan vacías del controlador
-                $pedidos = $pedidosDashboard ?? [];
-                $solicitudes = $solicitudes ?? [['id' => 's1', 'estado' => 'Pendiente']];
-                $notificaciones = $notificaciones ?? [['id' => 'n1', 'leido' => false]];
-                $sucursales = $sucursales ?? [];
-
-                $totalCapacity = $cliente->cupo ?? 0;
-                $totalCurrent = $cliente->disponible ?? 0;
-                $percentage = $totalCapacity > 0 ? ($totalCurrent / $totalCapacity) * 100 : 0;
-                $isAlert = $totalCurrent <= ($totalCapacity * 0.1);
-
-                // Datos para el gráfico de Highcharts
-                $chartData = [];
-                if ($isParent) {
-                    foreach ($sucursales as $sucursal) {
-                        $chartData[] = [
-                            'name' => $sucursal['nombre'] ?? 'S/N',
-                            'cupo' => $sucursal['cupo'] ?? 0,
-                            'id'   => $sucursal['id'] ?? 0,
-                            'disponible' => $sucursal['disponible'] ?? 0,
-                            'consumido'  => ($sucursal['cupo'] ?? 0) - ($sucursal['disponible'] ?? 0)
-                        ];
-                    }
-                } else {
-                     // CORRECCIÓN: Uso de operador null-safe para evitar "offset on null"
-                     $sucursalActual = collect($sucursales)->firstWhere('id', $currentUserBranchId);
-                     $chartData[] = [
-                        'name'       => $sucursalActual['nombre'] ?? 'Mi Sucursal',
-                        'cupo'       => $sucursalActual['cupo'] ?? ($cliente->cupo ?? 0),
-                        'id'         => $sucursalActual['id'] ?? $currentUserBranchId,
-                        'disponible' => $sucursalActual['disponible'] ?? ($cliente->disponible ?? 0),
-                        'consumido'  => ($sucursalActual['cupo'] ?? 0) - ($sucursalActual['disponible'] ?? 0)
-                    ];
-                }
-            @endphp
-
-            <div class="d-flex align-items-center">
-                <i class="fas fa-money-bill-wave text-info me-3" style="font-size: 3rem;"></i>
-                <div>
-                    <h2 class="h4 fw-bold text-black mb-0">Estado de Cupo {{ $isParent ? 'General' : 'Actual' }}</h2>
-                    <p class="text-sm text-muted mb-0">{{ $isParent ? 'Resumen de todas las sucursales' : 'Detalle de sucursal' }}</p>
-                </div>
+    {{-- ENCABEZADO --}}
+    <div class="flex flex-col md:flex-row justify-between items-center mb-8 bg-white p-6 rounded-xl shadow-sm border-t-4 border-orange-impordiesel">
+        <div class="flex items-center mb-4 md:mb-0">
+            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center text-orange-impordiesel mr-4 shadow-inner">
+                <i class="fas fa-user-tie fa-lg"></i>
             </div>
-
-            <div class="mt-4">
-                <p class="fw-bold mb-2">Total Disponible / Cupo</p>
-                <div class="d-flex align-items-center mb-2">
-                    <h3 class="fw-bold mb-0 me-2">{{ number_format($totalCurrent, 2) }} L</h3>
-                    <p class="text-muted mb-0">/ {{ number_format($totalCapacity, 2) }} L</p>
-                </div>
-                <div class="progress" style="height: 10px;">
-                    <div class="progress-bar {{ $isAlert ? 'progress-bar-danger' : 'progress-bar-custom' }}"
-                         role="progressbar"
-                         style="width: {{ $percentage }}%;"
-                         aria-valuenow="{{ $percentage }}"
-                         aria-valuemin="0"
-                         aria-valuemax="100"></div>
-                </div>
+            <div>
+                <h1 class="text-xl font-bold text-gray-800 uppercase tracking-tight">{{ $cliente->nombre }}</h1>
+                <p class="text-gray-500 text-xs font-bold uppercase tracking-widest">
+                    RIF: {{ $cliente->rif }} — {{ $cliente->es_padre ? 'Sede Principal' : 'Sucursal' }}
+                </p>
             </div>
         </div>
+        <span class="bg-green-100 text-green-700 px-4 py-2 rounded-full text-xs font-black uppercase tracking-tighter border border-green-200 flex items-center">
+            <i class="fas fa-check-circle mr-2"></i> Cliente Activo
+        </span>
+    </div>
 
-        <div class="row g-4 mb-5">
-            <div class="col-12 col-md-6 col-lg-3">
-                <div class="card h-100 p-4 text-center" onclick="showDetails('pedidos-details')" style="cursor:pointer">
-                    <i class="fas fa-truck-ramp-box mb-2 text-warning fs-2"></i>
-                    <h5 class="fw-bold mb-1">Pedidos</h5>
-                    <p class="text-muted mb-0">{{ count(array_filter($pedidos, fn($p) => isset($p['estado']) && ($p['estado'] == 'En proceso' || $p['estado'] == 'Pendiente'))) }} en proceso</p>
+    {{-- COLUMNA IZQUIERDA --}}
+        <div class="lg:col-span-2 space-y-6">
+
+            {{-- DATOS PRINCIPALES --}}
+            <div class="bg-white rounded border-2 border-gray-300 shadow-md overflow-hidden">
+                <div class="bg-gray-800 p-5">
+                    <h2 class="text-2xl font-black text-white uppercase tracking-tighter">{{ $cliente->nombre }}</h2>
+                    <p class="text-orange-impordiesel text-sm font-black uppercase tracking-widest">
+                        RIF: {{ $cliente->rif }} —
+                        <span class="{{ $cliente->color_status }} text-white px-2 py-0.5 rounded text-[10px] font-black uppercase ml-1">
+                            {{ $cliente->label_status }}
+                        </span>
+                    </p>
                 </div>
-            </div>
-            <div class="col-12 col-md-6 col-lg-3">
-                <div class="card h-100 p-4 text-center" onclick="showDetails('solicitudes-details')" style="cursor:pointer">
-                    <i class="fas fa-clipboard-list mb-2 text-primary fs-2"></i>
-                    <h5 class="fw-bold mb-1">Solicitudes</h5>
-                    <p class="text-muted mb-0">{{ count(array_filter($solicitudes, fn($s) => $s['estado'] == 'Pendiente')) }} pendientes</p>
-                </div>
-            </div>
-            <div class="col-12 col-md-6 col-lg-3">
-                <div class="card h-100 p-4 text-center" onclick="showDetails('notificaciones-details')" style="cursor:pointer">
-                    <i class="fas fa-bell mb-2 text-danger fs-2"></i>
-                    <h5 class="fw-bold mb-1">Notificaciones</h5>
-                    <p class="text-muted mb-0">{{ count(array_filter($notificaciones, fn($n) => !$n['leido'])) }} nuevas</p>
-                </div>
-            </div>
-            @if ($isParent)
-                <div class="col-12 col-md-6 col-lg-3">
-                    <div class="card h-100 p-4 text-center sucursal-card-container" id="sucursales-card">
-                        <i class="fas fa-sitemap mb-2 text-success fs-2"></i>
-                        <h5 class="fw-bold mb-1">Ver Sucursales</h5>
-                        <p class="text-muted mb-0">{{ count($sucursales) }} activas</p>
+                <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+
+                    {{-- CONTACTO PRINCIPAL --}}
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Contacto Principal</p>
+                        <p class="font-black text-gray-700 uppercase mt-1">{{ $cliente->contacto ?? 'N/A' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Teléfono Principal</p>
+                        <p class="font-black text-gray-700 mt-1">{{ $cliente->telefono ?? 'N/A' }}</p>
+                    </div>
+
+                    {{-- CONTACTO ALTERNATIVO --}}
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Contacto Alternativo</p>
+                        <p class="font-black text-gray-700 uppercase mt-1">{{ $cliente->contacto_alt ?? '—' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Teléfono Alternativo</p>
+                        <p class="font-black text-gray-700 mt-1">{{ $cliente->telefono_alt ?? '—' }}</p>
+                    </div>
+
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Correo</p>
+                        <p class="font-black text-gray-700 mt-1">{{ $cliente->email ?? 'N/A' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Estado / Ciudad</p>
+                        <p class="font-black text-gray-700 uppercase mt-1">
+                            {{ $cliente->estado->nombre ?? 'N/A' }} / {{ $cliente->ciudad->nombre ?? 'N/A' }}
+                        </p>
+                    </div>
+                    <div class="md:col-span-2">
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Dirección Fiscal</p>
+                        <p class="font-black text-gray-700 uppercase mt-1">{{ $cliente->direccion ?? 'N/A' }}</p>
+                    </div>
+                    <div class="md:col-span-2">
+                        <p class="text-[10px] font-black text-orange-impordiesel uppercase tracking-widest">Dirección Operativa</p>
+                        <p class="font-black text-gray-700 uppercase mt-1">{{ $cliente->direccion_operativa ?? 'N/A' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Fecha de Creación</p>
+                        <p class="font-black text-gray-700 mt-1">{{ $cliente->created_at?->format('d/m/Y') ?? 'N/A' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Fecha de Aprobación</p>
+                        <p class="font-black text-gray-700 mt-1">{{ $cliente->fecha_aprobacion?->format('d/m/Y') ?? '—' }}</p>
                     </div>
                 </div>
-            @endif
-        </div>
+            </div>
 
-        <div class="text-center my-5">
-            <button class="btn btn-primary-custom btn-lg rounded-pill px-5 py-3 shadow-lg fs-5" data-bs-toggle="modal" data-bs-target="#hacerPedidoModal">
-                <i class="fas fa-plus-circle me-2"></i> Hacer Pedido
+    {{-- CUPOS DE COMBUSTIBLE --}}
+    <div class="mb-8">
+        <h2 class="text-sm font-black uppercase text-gray-700 tracking-widest mb-4">
+            <span class="text-orange-impordiesel">|</span> Cupo Mensual Aprobado
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            @forelse($cupos as $cupo)
+                <div class="bg-white p-6 rounded-xl border-l-4 border-orange-impordiesel shadow-sm">
+                    <p class="text-[10px] font-black uppercase tracking-widest mb-1 text-orange-impordiesel">
+                        {{ $cupo->tipoCombustible->nombre }}
+                    </p>
+                    <h3 class="text-3xl font-black text-gray-800">
+                        {{ number_format($cupo->litros_aprobados, 0, ',', '.') }}
+                        <small class="text-xs text-gray-500 uppercase font-bold">Litros / mes</small>
+                    </h3>
+                    <p class="text-[10px] text-gray-400 font-bold uppercase mt-2">
+                        Aprobado el {{ $cliente->fecha_aprobacion?->format('d/m/Y') ?? 'N/A' }}
+                    </p>
+                </div>
+            @empty
+                <div class="bg-gray-50 p-6 rounded-xl border border-gray-200 text-center col-span-2">
+                    <p class="text-gray-400 font-black uppercase text-xs">Sin cupo asignado aún.</p>
+                </div>
+            @endforelse
+        </div>
+    </div>
+
+    {{-- TOKEN PARA SUCURSALES (SOLO PADRE) --}}
+    @if($cliente->es_padre)
+    <div class="mb-8">
+        <h2 class="text-sm font-black uppercase text-gray-700 tracking-widest mb-4">
+            <span class="text-orange-impordiesel">|</span> Código para Registro de Sucursales
+        </h2>
+        <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-orange-impordiesel flex items-center justify-between max-w-md">
+            <div>
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Token de Empresa</p>
+                <span id="tokenInvitacion" class="text-xl font-black text-gray-800 tracking-widest">
+                    {{ $cliente->token_registro ?? 'SIN TOKEN' }}
+                </span>
+            </div>
+            <button onclick="copyToken()" class="text-orange-impordiesel hover:text-orange-800 p-3 transition" title="Copiar token">
+                <i class="fas fa-copy fa-lg"></i>
             </button>
         </div>
-
-        <div id="content-sections">
-            @if ($isParent)
-                <div id="sucursales-list-container" class="hidden">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="fw-bold mb-0">Mis Sucursales</h4>
-                        <button class="btn btn-outline-secondary" onclick="location.reload()">
-                            <i class="fas fa-arrow-left me-1"></i> Volver
-                        </button>
-                    </div>
-                    <div class="row g-4">
-                        @foreach ($sucursales as $sucursal)
-                        <div class="col-12 col-md-6 col-lg-4">
-                            <div class="card h-100 p-4">
-                                <h5 class="fw-bold mb-1">{{ $sucursal['nombre'] }}</h5>
-                                <div class="mt-3">
-                                    <p class="fw-bold mb-1">Disponible: <span class="text-success">{{ number_format($sucursal['disponible'], 0) }} L</span></p>
-                                    <p class="fw-bold mb-0">Cupo: <span class="text-muted">{{ number_format($sucursal['cupo'], 0) }} L</span></p>
-                                </div>
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-                </div>
-
-                <div id="dashboard-main-view">
-                    <div class="card p-4 mb-4">
-                        <h4 class="fw-bold mb-3">Gráfico de Consumo por Sucursal</h4>
-                        <div id="chart-container" style="width:100%; height:400px;"></div>
-                    </div>
-                </div>
-            @endif
-        </div>
     </div>
+    @endif
 
-    <div class="modal fade" id="hacerPedidoModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Realizar Pedido</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    {{-- PLACAS Y CHOFERES --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+
+        {{-- PLACAS --}}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="bg-gray-industrial px-6 py-3 flex justify-between items-center">
+                <h5 class="text-[10px] font-black uppercase text-orange-impordiesel italic tracking-widest">
+                    <i class="fas fa-truck-moving mr-2"></i> Placas Autorizadas
+                </h5>
+                <span class="bg-orange-impordiesel text-white text-[9px] px-2 py-0.5 rounded-full font-black">
+                    {{ $placas->count() }}
+                </span>
+            </div>
+            <div class="p-2 border-b border-gray-100">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-2.5 text-gray-400 text-[10px]"></i>
+                    <input type="text" id="filterPlacas" onkeyup="filtrarLista('filterPlacas', 'listaPlacas')"
+                           class="w-full pl-8 pr-4 py-2 bg-gray-100 border-none rounded text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-orange-impordiesel"
+                           placeholder="Buscar placa...">
                 </div>
-                <div class="modal-body">
-                    <form id="hacerPedidoForm">
-                        @csrf
-                        @if ($isParent)
-                            <div class="mb-3">
-                                <label class="form-label">Seleccionar Sucursal</label>
-                                <select class="form-select" name="cliente_id" required>
-                                    @foreach ($sucursales as $sucursal)
-                                        <option value="{{ $sucursal['id'] }}">{{ $sucursal['nombre'] }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        @else
-                             <input type="hidden" name="cliente_id" value="{{ $currentUserBranchId }}">
-                             <p class="alert alert-info">Pedido para: <strong>{{ Auth::user()->name }}</strong></p>
-                        @endif
-                        <div class="mb-3">
-                            <label class="form-label">Cantidad (Litros)</label>
-                            <input type="number" class="form-control" name="cantidad_solicitada" required min="1">
-                        </div>
-                    </form>
+            </div>
+            <div class="divide-y divide-gray-100 max-h-64 overflow-y-auto" id="listaPlacas">
+                @forelse($placas as $placa)
+                    <div class="placa-item flex justify-between items-center px-6 py-3 hover:bg-gray-50">
+                        <span class="text-xs font-black text-gray-700 tracking-widest">{{ $placa->placa }}</span>
+                        <i class="fas fa-check-circle text-green-500 text-[10px]"></i>
+                    </div>
+                @empty
+                    <p class="text-[10px] text-gray-400 text-center py-8 font-bold uppercase italic">Sin placas registradas.</p>
+                @endforelse
+            </div>
+        </div>
+
+        {{-- CHOFERES --}}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="bg-gray-industrial px-6 py-3 flex justify-between items-center">
+                <h5 class="text-[10px] font-black uppercase text-blue-400 italic tracking-widest">
+                    <i class="fas fa-id-card mr-2"></i> Personal Autorizado
+                </h5>
+                <span class="bg-blue-600 text-white text-[9px] px-2 py-0.5 rounded-full font-black">
+                    {{ $choferes->count() }}
+                </span>
+            </div>
+            <div class="p-2 border-b border-gray-100">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-2.5 text-gray-400 text-[10px]"></i>
+                    <input type="text" id="filterChoferes" onkeyup="filtrarLista('filterChoferes', 'listaChoferes')"
+                           class="w-full pl-8 pr-4 py-2 bg-gray-100 border-none rounded text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-blue-600"
+                           placeholder="Buscar chofer...">
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="button" class="btn btn-primary btn-primary-custom">Enviar Pedido</button>
-                </div>
+            </div>
+            <div class="divide-y divide-gray-100 max-h-64 overflow-y-auto" id="listaChoferes">
+                @forelse($choferes as $chofer)
+                    <div class="chofer-item px-6 py-3 hover:bg-gray-50">
+                        <p class="text-[10px] font-black text-gray-800 uppercase">{{ $chofer->nombre_completo }}</p>
+                        <p class="text-[9px] text-gray-500 font-bold">C.I: {{ $chofer->cedula }}</p>
+                    </div>
+                @empty
+                    <p class="text-[10px] text-gray-400 text-center py-8 font-bold uppercase italic">Sin choferes registrados.</p>
+                @endforelse
             </div>
         </div>
     </div>
-@endsection
 
-@push('scripts')
-<script src="https://code.highcharts.com/highcharts.js"></script>
+    {{-- SUCURSALES (SOLO PADRE) --}}
+    @if($cliente->es_padre && $sucursales->count() > 0)
+    <div class="mb-8">
+        <h2 class="text-sm font-black uppercase text-gray-700 tracking-widest mb-4">
+            <span class="text-orange-impordiesel">|</span> Sucursales Vinculadas
+        </h2>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="bg-gray-industrial text-white text-[10px] font-black uppercase tracking-widest">
+                        <th class="px-6 py-3">Sucursal</th>
+                        <th class="px-6 py-3 text-center">Estatus</th>
+                        <th class="px-6 py-3 text-center">Progreso</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @foreach($sucursales as $suc)
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-3 font-black text-gray-700 uppercase">
+                            {{ $suc->nombre }}<br>
+                            <span class="text-[9px] text-gray-400 font-bold">{{ $suc->rif }}</span>
+                        </td>
+                        <td class="px-6 py-3 text-center">
+                            <span class="{{ $suc->color_status }} text-white px-2 py-1 rounded text-[9px] font-black uppercase">
+                                {{ $suc->label_status }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-3 text-center">
+                            <div class="w-24 bg-gray-200 h-1.5 rounded-full overflow-hidden inline-block">
+                                <div class="bg-orange-impordiesel h-full" style="width: {{ $suc->porcentaje_registro }}%"></div>
+                            </div>
+                            <span class="text-[9px] font-black text-gray-500 block uppercase">Paso {{ $suc->registro_paso }}/5</span>
+                        </td>
+                        {{-- Dentro de tu @foreach($sucursales as $suc) --}}
+                        <td class="px-6 py-3 text-center">
+                            <a href="{{ route('portal.clientes.index', ['sucursal_id' => $suc->id]) }}" 
+                            class="bg-orange-impordiesel text-white px-3 py-1 rounded text-[10px] font-black uppercase hover:bg-black transition">
+                                Ver Detalle <i class="fas fa-chevron-right ml-1"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @endif
+
+    {{-- HISTORIAL DE PEDIDOS --}}
+    <div class="mb-8">
+        <h2 class="text-sm font-black uppercase text-gray-700 tracking-widest mb-4">
+            <span class="text-orange-impordiesel">|</span> Historial de Pedidos Recientes
+        </h2>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="bg-gray-industrial text-white text-[10px] font-black uppercase tracking-widest">
+                        <th class="px-6 py-3">ID Pedido</th>
+                        <th class="px-6 py-3">Tipo de Combustible</th>
+                        <th class="px-6 py-3 text-center">Litros Solicitados</th>
+                        <th class="px-6 py-3 text-center">Estatus</th>
+                        <th class="px-6 py-3 text-center">Fecha</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @forelse($pedidos as $pedido)
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-3 font-black text-gray-700">
+                            #{{ str_pad($pedido->id, 5, '0', STR_PAD_LEFT) }}
+                        </td>
+                        <td class="px-6 py-3 font-bold text-gray-600 uppercase text-[10px]">
+                            Combustible
+                        </td>
+                        <td class="px-6 py-3 text-center font-black text-gray-800">
+                            {{-- CORRECCIÓN: cantidad_solicitada --}}
+                            {{ number_format($pedido->cantidad_solicitada, 0, ',', '.') }} Lts
+                        </td>
+                        <td class="px-6 py-3 text-center">
+                            {{-- CORRECCIÓN: Usar los accessors del modelo Pedido --}}
+                            <span class="px-2 py-1 rounded text-[9px] font-black uppercase border" 
+                                style="background-color: {{ $pedido->estado_color }}20; color: {{ $pedido->estado_color }}; border-color: {{ $pedido->estado_color }}40;">
+                                {{ $pedido->estado_text }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-3 text-center text-gray-500 font-bold">
+                            {{-- CORRECCIÓN: fecha_solicitud --}}
+                            {{ $pedido->fecha_solicitud ? $pedido->fecha_solicitud->format('d/m/Y') : 'N/A' }}
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center">
+                            <i class="fas fa-box-open text-gray-200 fa-3x mb-3"></i>
+                            <p class="text-gray-400 font-black uppercase text-[10px] tracking-widest">
+                                No se encontraron pedidos registrados.
+                            </p>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="text-center mt-8">
+        <small class="text-gray-400 uppercase tracking-widest text-xs font-black">
+            Portal de Clientes - ImporDiesel &copy; {{ date('Y') }}
+        </small>
+    </div>
+</div>
+
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const chartData = {!! json_encode($chartData) !!};
-        const currentUserRole = '{{ $currentUserRole }}';
-
-        if (currentUserRole === 'principal' && chartData.length > 0) {
-            Highcharts.chart('chart-container', {
-                chart: { type: 'column' },
-                title: { text: '' },
-                xAxis: { categories: chartData.map(d => d.name) },
-                yAxis: { title: { text: 'Litros' }, stacking: 'normal' },
-                plotOptions: { column: { stacking: 'normal', dataLabels: { enabled: true } } },
-                series: [{
-                    name: 'Consumido',
-                    data: chartData.map(d => d.consumido),
-                    color: '#ef4444'
-                }, {
-                    name: 'Disponible',
-                    data: chartData.map(d => d.disponible),
-                    color: '#10b981'
-                }]
-            });
+    function copyToken() {
+        const t = document.getElementById('tokenInvitacion').innerText.trim();
+        navigator.clipboard.writeText(t).then(() => alert('¡Token copiado al portapapeles!'));
+    }
+    function filtrarLista(inputId, listaId) {
+        const filtro = document.getElementById(inputId).value.toUpperCase();
+        const items  = document.getElementById(listaId).children;
+        for (let i = 0; i < items.length; i++) {
+            items[i].style.display = (items[i].textContent || items[i].innerText).toUpperCase().includes(filtro) ? '' : 'none';
         }
-
-        // Lógica simple para mostrar sucursales
-        const sucursalesCard = document.getElementById('sucursales-card');
-        if(sucursalesCard) {
-            sucursalesCard.addEventListener('click', function() {
-                document.getElementById('dashboard-main-view').classList.add('hidden');
-                document.getElementById('sucursales-list-container').classList.remove('hidden');
-            });
-        }
-    });
-
-    function showDetails(sectionId) {
-        alert('Funcionalidad de detalles para: ' + sectionId);
     }
 </script>
-@endpush
+@endsection

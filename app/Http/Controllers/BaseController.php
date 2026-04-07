@@ -90,11 +90,32 @@ abstract class BaseController extends Controller
      * Muestra una lista de todos los recursos.
      * @return \Illuminate\View\View
      */
-    public function index()
-    {
-        $data = $this->model->all();
-        return view($this->getModelNameLowerCase() . '.index', compact('data'));
-    }
+
+        public function index()
+        {
+            $items = $this->model->all();
+            
+            // Llamamos a este método que por defecto devuelve un array vacío
+            $additionalData = $this->getAdditionalData();
+            
+            // Combinamos los datos base con los adicionales
+            $viewData = array_merge([
+                'data' => $items,
+                'modelName' => class_basename($this->model)
+            ], $additionalData);
+            return view($this->getModelNameLowerCase() . '.index', $viewData);
+        }
+
+
+        protected function getAdditionalData()
+        {
+            return [];
+        }
+
+        protected function getDetailsForView($item)
+        {
+            return [];
+        }
 
     /**
      * Muestra una lista de todos los recursos. Este método puede ser sobrescrito para vistas de listado.
@@ -178,7 +199,15 @@ abstract class BaseController extends Controller
         try {
             $estatusData = EstatusData::all()->keyBy('id_estatus');
             $item = $this->model->findOrFail($id);
-            return view($this->getModelNameLowerCase() . '.show', compact('item', 'estatusData'));
+            
+            $additionalDetails = $this->getDetailsForView($item);
+            // Combinamos los datos base con los adicionales
+            $viewData = array_merge([
+                'item' => $item,
+                'modelName' => class_basename($this->model)
+            ], $additionalDetails);
+
+            return view($this->getModelNameLowerCase() . '.show', $viewData);
         } catch (ModelNotFoundException $e) {
             Session::flash('error', 'El registro no fue encontrado.');
             return Redirect::route($this->getPluralModelNameLowerCase() . '.list');
@@ -194,7 +223,14 @@ abstract class BaseController extends Controller
     {
         try {
             $item = $this->model->findOrFail($id);
-            return view($this->getModelNameLowerCase() . '.edit', compact('item'));
+             $additionalDetails = $this->getDetailsForView($item);
+            // Combinamos los datos base con los adicionales
+            $viewData = array_merge([
+                'item' => $item,
+                'modelName' => class_basename($this->model)
+            ], $additionalDetails);
+
+            return view($this->getModelNameLowerCase() . '.edit', $viewData);
         } catch (ModelNotFoundException $e) {
             Session::flash('error', 'El registro no fue encontrado.');
             return Redirect::route($this->getPluralModelNameLowerCase() . '.list');

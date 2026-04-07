@@ -7,6 +7,11 @@ use App\Models\Vehiculo;
 use App\Models\Persona;
 use App\Models\User;
 use App\Models\ViaticoViaje;
+use App\Models\TipoDocumento;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Redirect;
@@ -26,8 +31,8 @@ class ChoferController extends BaseController
     {
         // Datos de ejemplo para el dashboard (simulados)
         $totalChoferes = Chofer::where('cargo','CHOFER')->count();
-        $choferesDisponibles = Chofer::whereNull('vehiculo_id')->count();
-        $choferesEnRuta = Chofer::whereNotNull('vehiculo_id')->count();
+        $choferesDisponibles = Chofer::where('cargo','CHOFER')->whereNull('vehiculo_id')->count();
+        $choferesEnRuta = Chofer::where('cargo','CHOFER')->whereNotNull('vehiculo_id')->count();
 
         // Datos para la gráfica de rendimiento (simulados)
         $rendimiento = [
@@ -125,8 +130,8 @@ class ChoferController extends BaseController
             $user = User::create([
                 'name' => $inicial.'.'.$apellido,
                 'email' => $persona->dni . '@tucombustible.com', // Generar un email ficticio
-                'password' => bcrypt('123456789'), // Contraseña por defecto, cambiar según sea necesario
-                'persona_id' => $persona->id,
+                'password' => bcrypt($request->dni), // Contraseña por defecto, cambiar según sea necesario
+                'id_persona' => $persona->id,
                 'id_perfil' => 4 // Asignar el perfil de chofer
             ]);
 
@@ -173,6 +178,8 @@ class ChoferController extends BaseController
         // Cargar las relaciones 'persona' y 'vehiculo'
         $chofer->load('persona', 'vehiculo');
 
+         $documentosRequeridos = TipoDocumento::where('tipo', 'CH')->get();
+
         // Datos de ejemplo para el historial y rendimiento del chofer (simulados)
         $historialViajes = $chofer->viajes()->select('destino_ciudad as ruta','fecha_salida as fecha','viajes.id as viaje_id')->orderBy('fecha_salida', 'desc')->limit(10)->get()->toArray();
 
@@ -181,8 +188,60 @@ class ChoferController extends BaseController
             'data' => [4.5, 4.8, 4.2, 5.0],
         ];
 
-        return view('chofer.show', compact('chofer', 'historialViajes', 'graficaRendimiento'));
+        return view('chofer.show', compact('chofer', 'historialViajes', 'graficaRendimiento', 'documentosRequeridos'));
     }
+
+    public function uploadDocumento(Request $request, $id)
+{
+    $request->validate([
+        'documento' => 'required|file|mimes:pdf,jpg,png,jpeg|max:2048',
+        'tipo_id' => 'required|exists:tipo_documento,id'
+    ]);
+
+    try {
+        $chofer = Chofer::findOrFail($id);
+        $tipoDoc =TipoDocumento::findOrFail($request->tipo_id);
+        
+        $file = $request->file('documento');
+        $extension = $file->getClientOriginalExtension();
+        $nombreArchivo = "{$tipoDoc->abreviatura}_{$chofer->id}.{$extension}";
+        
+        // Ruta: public/choferes/1/documentos/CI_1.pdf
+        $rutaDestino = "choferes/{$chofer->id}/documentos";
+
+        // Limpieza de archivos previos para evitar duplicidad de extensiones
+        foreach (['pdf', 'jpg', 'png', 'jpeg'] as $ext) {
+            $viejo = "public/{$rutaDestino}/{$tipoDoc->abreviatura}_{$chofer->id}.{$ext}";
+            if (Storage::exists($viejo)) Storage::delete($viejo);
+        }
+
+        $file->storeAs("public/{$rutaDestino}", $nombreArchivo);
+
+        return back()->with('success', 'Documento actualizado correctamente.');
+    } catch (\Exception $e) {
+        return back()->with('error', 'Error al subir: ' . $e->getMessage());
+    }
+}
+
+public function updateCargo(Request $request, $id)
+{
+    try {
+        $chofer = Chofer::findOrFail($id);
+        
+        // El switch enviará un booleano o el string directamente
+        $nuevoCargo = $request->cargo === 'CHOFER' ? 'CHOFER' : 'AYUDANTE DE CHOFER';
+        
+        $chofer->update(['cargo' => $nuevoCargo]);
+
+        return response()->json([
+            'success' => true, 
+            'message' => 'Cargo actualizado a: ' . $nuevoCargo,
+            'nuevo_cargo' => $nuevoCargo
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+    }
+}
 
     /**
      * Muestra el formulario para editar un chofer existente.

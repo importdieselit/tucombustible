@@ -93,3 +93,79 @@ footer.footer {
     background: #4e73df;
     border-radius: 4px;
 }
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: 600;
+            color: #495057;
+        }
+        .info-label {
+            font-weight: 500;
+            color: #6c757d;
+        }
+        .info-value {
+            font-weight: 400;
+            color: #343a40;
+        }
+        .indicator-card {
+            background-color: #e9f5ff;
+            border: 1px solid #cce5ff;
+        }
+        .indicator-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #f2A435;
+        }
+        .indicator-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #f2A435;
+        }
+        .text-success {
+            color: #f16201 !important;
+        }
+        .text-info {
+            color: #f2A435 !important;
+        }
+
+        
+      /* Estándar Impordiesel */
+        .card-step { border: none; border-top: 5px solid #4C474F; }
+        .card-step.border-orange { border-top-color: #f2A435; }
+        .bg-corporate { background-color: #4C474F !important; color: white; }
+        .text-orange { color: #f2A435 !important; }
+        .btn-orange { background-color: #f2A435; color: white; }
+        .btn-orange:hover { background-color: #d9922e; color: white; }
+        
+        /* Ajustes de Tabla */
+        #ordenesTable thead { background-color: #4C474F; color: white; text-transform: uppercase; font-size: 0.85rem; }
+        .clickable-row { cursor: pointer; transition: all 0.2s; }
+        .clickable-row:hover { background-color: rgba(242, 164, 53, 0.1) !important; }
+        
+        /* Estilo de los botones de DataTables para que no rompan el diseño */
+        .dt-buttons .dt-button {
+            background-color: #4C474F !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 4px !important;
+            font-size: 0.8rem !important;
+        }
+         /* Ajustes de Tabs para coincidir con el diseño */
+        .nav-tabs .nav-link {
+            color: #6c757d;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            border: none;
+            padding: 12px 20px;
+        }
+        .nav-tabs .nav-link.active {
+            color: #FF6B00;
+            border-bottom: 3px solid #FF6B00;
+            background: none;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #FF6B00;
+            box-shadow: 0 0 0 0.25rem rgba(255, 107, 0, 0.1);
+        }
+     

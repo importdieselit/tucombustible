@@ -52,7 +52,12 @@ class Orden extends Model
         'responsable',
         'parent',
         'id_vehiculo',
-        'id_inspeccion'
+        'id_inspeccion',
+        'id_tipo_falla',
+        'id_tipo_req',
+        'id_sede',
+        'latitud',
+        'longitud'
     ];
 
     protected $casts = [
@@ -96,13 +101,13 @@ class Orden extends Model
     public function vehiculoBelong(): BelongsTo
 {
     // Asegúrate de que el método devuelva la relación BelongsTo
-    return $this->belongsTo(Vehiculo::class, 'id_vehiculo');
+    return $this->belongsTo(Vehiculo::class, 'id_vehiculo', 'id');
 }
-
-    public function tipo()
-    {
-        return $this->belongsTo(TipoOrden::class, 'tipo', 'id_tipo_orden')->first();
-    }
+ 
+    // public function tipoOrden()
+    // {
+    //     return $this->belongsTo(TipoOrden::class, 'tipo', 'id_tipo_orden');
+    // }   
 
     public function usuarioInicio()
     {
@@ -128,7 +133,28 @@ class Orden extends Model
     {
         // Asegúrate de que tu modelo OrdenFoto esté importado
         return $this->hasMany(OrdenFoto::class, 'orden_id'); 
-    }   
+    } 
+    
+    public function tipoFalla()
+    {
+        return $this->belongsTo(TipoFalla::class, 'tipo', 'id_tipo_falla')->first();
+    }
+
+    public function trabajos()
+    {
+        return $this->hasMany(Trabajos::class, 'id_orden', 'id');
+    }
+
+    public function suministros()
+    {
+        return $this->hasMany(InventarioSuministro::class, 'id_orden', 'id');
+    }
+
+    public function tipoRequerimiento()
+    {
+        return $this->belongsTo(TipoRequerimiento::class, 'tipo', 'id_tipo_req');
+    }
+
 
     public function inspeccion()
     {
@@ -161,6 +187,11 @@ class Orden extends Model
     public function scopeByVehiculo(Builder $query, int $vehiculoId): void
     {
         $query->where('id_vehiculo', $vehiculoId);
+    }
+
+    public function TrabajosExternos()
+    {
+        return $this->hasMany(TrabajoExterno::class, 'id_orden', 'id');
     }
 
 }

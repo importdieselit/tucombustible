@@ -103,7 +103,7 @@ class PlanificacionMantenimientoController extends Controller
             'vehiculo_id' => 'required|exists:vehiculos,id',
             'fecha_programada' => 'required|date|after_or_equal:today',
             'tipo_mantenimiento' => 'required|string|max:50',
-    ]);
+        ]);
 
         $userId = auth()->id();
         
@@ -117,10 +117,10 @@ class PlanificacionMantenimientoController extends Controller
                 'vehiculo_id' => $request->vehiculo_id,
                 'plan_id' => $plan->plan_id ?? null ,
                 'fecha' => $request->fecha_programada,
-                'tipo' => $plan->short ?? $request->tipo_mantenimiento,
-                'descripcion' => $plan->titulo ?? null,
+                'tipo' => $plan->short ?? $request->titulo,
+                'descripcion' => $plan->descripcion ?? null,
                 'km' => $vehiculo->km_mantt ?? null,
-                'estatus' => 1, // Programado
+                'estatus' => 3, // Programado
             ]);
 
             // 2. Generar la Orden de Trabajo (OT) inmediatamente

@@ -106,7 +106,6 @@ class TelegramController extends Controller
 
             // 3. Verificar si la respuesta de Telegram es exitosa
             if ($response->successful() && $response->json('ok')) {
-                Log::info("Reporte enviado a Telegram con éxito. Chat ID: {$this->chatId}");
                 return response()->json(['message' => 'Reporte enviado a Telegram con éxito.'], 200);
             } else {
                 // Registrar el error detallado de la API de Telegram para debugging
@@ -138,7 +137,6 @@ class TelegramController extends Controller
     {
         // 1. Verificar si hay un mensaje de texto
         $update = $request->all();
-        Log::info($update);
         if (isset($update['message']['text'])) {
             $text = $update['message']['text'];
             $chat_id = $update['message']['chat']['id'];
@@ -227,7 +225,6 @@ class TelegramController extends Controller
 
         // Primero, verificamos si el mensaje tiene la estructura general de Aforo
         if (preg_match($aforo_header_pattern, $text) && preg_match($aforo_detail_pattern, $text)) {
-            Log::info('actualizacion de aforo');
             
             $success_messages = [];
             $error_messages = [];
@@ -291,10 +288,7 @@ class TelegramController extends Controller
     
 
      private function sendToBotpress(string $message,$chatId, $userId): ?string
-    {
-        Log::info("Delegando a Botpress: " . $message);
-
-        
+    {  
         
         $payload = [
                 'type' => 'text', 
@@ -316,16 +310,12 @@ class TelegramController extends Controller
             ];
     
         try {
-
-            Log::info("enviado a botpress:  ".json_encode($payload));
             
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $this->botpressToken,
                 'Content-Type' => 'application/json',
             ])->post($this->botpressUrl, $payload);
             
-            Log::info("Respuesta de Botpress (Status {$response->status()}): " . $response->body());
-    
             if ($response->successful()) {
                 $body = $response->json();
                 
@@ -346,9 +336,7 @@ class TelegramController extends Controller
 
     public function handleWebhook_old(Request $request)
     {
-        // La primera línea de log SÍ se debe ejecutar ahora que el 419 está resuelto.
-        Log::info('Webhook de Telegram recibido:', $request->all());
-
+      
         $data = $request->all();
         $message = $data['message'] ?? null;
 
@@ -386,14 +374,10 @@ class TelegramController extends Controller
                 'target_channel' => 'telegram' 
             ];
             
-            Log::info('enviando a botpress:  '.json_encode($payload));
-
             $botpressResponse = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $botpressToken,
                 'Content-Type' => 'application/json',
             ])->post($botpressUrl, $payload)->json();
-            
-            Log::info('recibiendo: '.$botpressResponse);
             
             // ----------------------------------------------------
             // PASO 2: Procesar la respuesta de Botpress
@@ -421,8 +405,6 @@ class TelegramController extends Controller
             // ----------------------------------------------------
             // PASO 3: Enviar la respuesta final a Telegram
             // ----------------------------------------------------
-            Log::info('enviado a botpress'.$finalResponseText);
-            // Usamos el servicio inyectado para la respuesta
             $this->processMessage($finalResponseText); 
 
         } catch (\Exception $e) {
@@ -577,7 +559,6 @@ class TelegramController extends Controller
      */
  public function handleLogisticaWebhook(Request $request)
     {
-        Log::info('Webhook de Logística recibido:', $request->all());
         try {
             $update = $request->all();
             $logisticaToken = '8267350827:AAGWkn8hFmqIyQmW1ojlKk-eTfXke5um1Po';
@@ -590,12 +571,6 @@ class TelegramController extends Controller
             $userName = ($from['first_name'] ?? '') . ' ' . ($from['last_name'] ?? '');
             $userTg = $from['username'] ?? $userName;
             $text = $update['message']['text'] ?? '';
-
-            Log::info("Bot Logística - Procesando mensaje", [
-                'origen_chat_id' => $chatId,
-                'remitente_user_id' => $userId,
-                'texto' => $text
-            ]);
 
             // Lógica de Vinculación
             if (str_contains(strtolower($text), '/vincular')) {

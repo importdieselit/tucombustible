@@ -18,11 +18,15 @@ class TemparioCategoria extends Model
         'costo_mo'
     ];
 
-    protected $casts = [
-        'codigo' => 'varchar:50',
-        'cateforia' => 'varchar:50',
-        'costo_mo' => 'decimal:2',
-    ];
+
+    function servicios()
+    {
+        return $this->hasMany(TemparioServicio::class, 'id_tempario_categoria', 'id_tempario_categoria');
+    }   
+    function trabajos()
+    {
+        return $this->hasMany(Trabajos::class, 'id_categoria', 'id_tempario_categoria');
+    }
 
     // Relaciones
 

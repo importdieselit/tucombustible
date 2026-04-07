@@ -61,7 +61,7 @@
                         @enderror   
                     </div>
 {{-- Campo de FLETE --}}
-                    <div class="col-md-3 d-flex align-items-center">
+                    <div class="col-md-4 d-flex align-items-center">
                         <div class="form-check form-switch pt-4">
                             <input class="form-check-input" type="checkbox" id="es_flete" name="es_flete" value="1" 
                                 {{ old('es_flete') ? 'checked' : '' }}>
@@ -71,18 +71,31 @@
                         </div>
                     </div>
                     {{-- VEHÍCULO --}}
-                    <div class="col-md-6">
-                        <label for="vehiculo_id" class="form-label fw-bold">Vehículo (Flota)</label>
-                        <select name="vehiculo_id" id="vehiculo_id" class="form-select select-or-other" data-other-field="otro_vehiculo">
+                    <div class="col-md-4">
+                        <label for="vehiculo_id">Vehículo (Flota)</label>
+                        <select name="vehiculo_id" id="vehiculo_id" class="form-select w-100 select-or-other" data-other-field="otro_vehiculo">
                             <option value="">Seleccione un Vehículo</option>
                             <!-- Se asume que $vehiculos es un array de objetos Vehiculo -->
                             @foreach($vehiculos as $vehiculo)
-                                <option value="{{ $vehiculo->id }}" @if(old('vehiculo_id') == $vehiculo->id) selected @endif>{{ $vehiculo->flota }} ({{ $vehiculo->placa }})</option>
+                                @if($vehiculo->tipo!==2 && $vehiculo->tipo!==6)
+                                    <option value="{{ $vehiculo->id }}" @if(old('vehiculo_id') == $vehiculo->id) selected @endif>{{ $vehiculo->flota }} ({{ $vehiculo->placa }})</option>
+                                @endif
                             @endforeach
                         </select>
                         @error('vehiculo_id')
                             <div class="invalid-feedback d-block">{{ $message }}</div>
                         @enderror
+                    </div>
+                    <div class="col-md-4">
+                            <label for="cisterna">Cisterna</label>
+                            <select name="cisterna" id="cisterna" class="form-select">
+                                <option value="">Seleccione una cisterna</option>
+                                @foreach($cisternas as $cisterna)
+                                    <option value="{{ $cisterna->id }}">{{ $cisterna->flota }} {{ $cisterna->placa }}</option>
+                                @endforeach 
+                            </select>
+                        <input type="text" name="otro_cisterna" id="otro_cisterna" class="form-control mt-2" style="display:none" placeholder="Nombre cisterna externa">
+
                     </div>
                     <div class="col-md-6" style="display: none">
                         <label for="otro_vehiculo" class="form-label fw-bold">Vehiculo Externo</label>
@@ -124,9 +137,7 @@
                             <!-- Este loop debe cargar los usuarios con rol 'chofer' -->
                           
                             @foreach($choferes as $chofer)
-                                @if($chofer->cargo == 'AYUDANTE' || $chofer->cargo == 'AYUDANTE DE CHOFER')
                                     <option value="{{ $chofer->id }}" {{ old('ayudante') == $chofer->id ? 'selected' : '' }}>{{ $chofer->persona->nombre }}</option>
-                                @endif
                             @endforeach
                         </select>
                         @error('ayudante')

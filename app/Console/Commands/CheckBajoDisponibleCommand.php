@@ -79,14 +79,14 @@ class CheckBajoDisponibleCommand extends Command
                             $this->info("✅ Notificación enviada al cliente: {$cliente->nombre}");
                             
                             // Log de la notificación enviada al cliente
-                            Log::info("Notificación de bajo disponible enviada al cliente por cron job", [
-                                'cliente_id' => $cliente->id,
-                                'cliente_nombre' => $cliente->nombre,
-                                'disponible' => $cliente->disponible,
-                                'cupo' => $cliente->cupo,
-                                'porcentaje' => $porcentajeDisponible,
-                                'fecha' => now()->toDateTimeString()
-                            ]);
+                            // Log::info("Notificación de bajo disponible enviada al cliente por cron job", [
+                            //     'cliente_id' => $cliente->id,
+                            //     'cliente_nombre' => $cliente->nombre,
+                            //     'disponible' => $cliente->disponible,
+                            //     'cupo' => $cliente->cupo,
+                            //     'porcentaje' => $porcentajeDisponible,
+                            //     'fecha' => now()->toDateTimeString()
+                            // ]);
                         } else {
                             $this->error("❌ Error enviando notificación al cliente: {$cliente->nombre}");
                         }
@@ -95,14 +95,14 @@ class CheckBajoDisponibleCommand extends Command
                             $this->info("✅ Notificación enviada a super admins sobre: {$cliente->nombre}");
                             
                             // Log de la notificación enviada a super admins
-                            Log::info("Notificación de bajo disponible enviada a super admins por cron job", [
-                                'cliente_id' => $cliente->id,
-                                'cliente_nombre' => $cliente->nombre,
-                                'disponible' => $cliente->disponible,
-                                'cupo' => $cliente->cupo,
-                                'porcentaje' => $porcentajeDisponible,
-                                'fecha' => now()->toDateTimeString()
-                            ]);
+                            // Log::info("Notificación de bajo disponible enviada a super admins por cron job", [
+                            //     'cliente_id' => $cliente->id,
+                            //     'cliente_nombre' => $cliente->nombre,
+                            //     'disponible' => $cliente->disponible,
+                            //     'cupo' => $cliente->cupo,
+                            //     'porcentaje' => $porcentajeDisponible,
+                            //     'fecha' => now()->toDateTimeString()
+                            // ]);
                         } else {
                             $this->warn("⚠️ Error enviando notificación a super admins sobre: {$cliente->nombre}");
                         }
@@ -126,13 +126,13 @@ class CheckBajoDisponibleCommand extends Command
             }
 
             // Log del resumen
-            Log::info("Cron job de bajo disponible completado", [
-                'clientes_revisados' => $clientes->count(),
-                'clientes_con_bajo_disponible' => $clientesConBajoDisponible,
-                'notificaciones_enviadas' => $notificacionesEnviadas,
-                'fecha_ejecucion' => now()->toDateTimeString(),
-                'modo_dry_run' => $isDryRun
-            ]);
+            // Log::info("Cron job de bajo disponible completado", [
+            //     'clientes_revisados' => $clientes->count(),
+            //     'clientes_con_bajo_disponible' => $clientesConBajoDisponible,
+            //     'notificaciones_enviadas' => $notificacionesEnviadas,
+            //     'fecha_ejecucion' => now()->toDateTimeString(),
+            //     'modo_dry_run' => $isDryRun
+            // ]);
 
             $this->info('✅ Revisión completada exitosamente');
             return 0;

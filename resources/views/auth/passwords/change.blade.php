@@ -11,7 +11,7 @@
                 <div class="card-body">
                     <p class="text-muted">Por seguridad, debe cambiar la contraseña asignada automáticamente (su RIF) por una nueva antes de continuar.</p>
                     
-                    <form method="POST" action="{{ route('password.update_change') }}">
+                    <form method="POST" action="{{ route('password.update') }}">
                         @csrf
 
                         <div class="form-group">
