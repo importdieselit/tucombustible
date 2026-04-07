@@ -497,6 +497,8 @@
             </div>
 
             {{-- Tabla de Movimientos --}}
+            <h3 class="w-100 text-center"><strong>  PLANIFICACION DEL DIA </strong></h3>
+                    <div class="col-12 col-md-6 col-lg-3">
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
                     <thead class="bg-light">
