@@ -1411,6 +1411,7 @@ public function storeDespachoIndustrial(Request $request)
             $viaje = Viaje::create([
                 'solicitud_combustible_id' => $solicitud->id,
                 'vehiculo_id' => $request->vehiculo_id,
+                'cisterna' => $request->cisterna_id,
                 'chofer_id' => $request->chofer_id,
                 'ayudante' => $request->ayudante ?? null, // Ayudante es opcional
                 'destino_ciudad' => $destino->destino ?? 'N/A', 
@@ -1424,6 +1425,12 @@ public function storeDespachoIndustrial(Request $request)
                 'usuario_id' => $userId
                 
             ]);
+
+            if(is_null($request->cisterna_id)){
+                $vehiculo = Vehiculo::find($request->vehiculo_id);
+                $vehiculo->acoplado_id = $request->cisterna_id;
+                $vehiculo->save();  
+            }
                 $chofer=Chofer::find($request->chofer_id);
                 $ayudante=Chofer::find($request->ayudante);
             
@@ -1527,6 +1534,12 @@ public function storeDespachoIndustrial(Request $request)
                 'cisterna' => $request->cisterna_id
                 
             ]);
+
+            if(is_null($request->cisterna_id)){
+                $vehiculo = Vehiculo::find($request->vehiculo_id);
+                $vehiculo->acoplado_id = $request->cisterna_id;
+                $vehiculo->save();  
+            }
 
 
            foreach ($request->despachos as $index => $despacho) {

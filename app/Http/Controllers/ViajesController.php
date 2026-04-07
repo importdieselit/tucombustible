@@ -240,12 +240,18 @@ class ViajesController extends Controller
                 'status' => $status,
                 'chofer_id' => $request->chofer_id ?? 0,
                 'vehiculo_id' => $request->vehiculo_id ?? 0,
+                'cisterna' =>   $request->cisterna ?? null,
                 'ayudante' => $request->ayudante ?? 0,
                 'otro_chofer' => $request->otro_chofer_id ?? null,
                 'otro_vehiculo' => $request->otro_vehiculo_id ?? null,
                 'otro_ayudante' => $request->otro_ayudante_id ?? null,
                 'tipo' => $request->tipo, // Tipo 1 para viajes con múltiples despachos
             ]);
+            if(!is_null($request->cisterna)){
+               $vehiculo = Vehiculo::find($request->vehiculo_id);
+               $vehiculo->cisterna = $request->cisterna;
+               $vehiculo->save();
+            }
 
             // 4. Crear los registros de DespachoViaje
             $cantidadDespachos = count($request->despachos);
@@ -1142,12 +1148,19 @@ public function updateGuiaData(Request $request, $viajeId)
                 'status' => $status,
                 'chofer_id' => $request->chofer_id ?? 0,
                 'vehiculo_id' => $request->vehiculo_id ?? 0,
+                'cisterna' => $request->cisterna ?? 0,
                 'ayudante' => $request->ayudante ?? 0,
                 'otro_chofer' => $request->otro_chofer_id ?? null,
                 'otro_vehiculo' => $request->otro_vehiculo_id ?? null,
                 'otro_ayudante' => $request->otro_ayudante_id ?? null,
                 'tipo' => 1, // Tipo 1 para viajes con múltiples despachos
             ]);
+
+            if(!is_null($request->cisterna)){
+                $vehiculo=Vehiculo::find($request->vehiculo_id);
+                $vehiculo->acoplado_id = $request->cisterna;
+                $vehiculo->save();
+            }
 
             // 4. Crear los registros de DespachoViaje
             $cantidadDespachos = count($request->despachos);
