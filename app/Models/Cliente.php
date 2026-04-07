@@ -100,6 +100,15 @@ class Cliente extends Model
         };
     }
 
+    // Método para obtener el cupo del mes actual
+    public function cupoGascoActual()
+    {
+        return $this->cuposGasco()
+            ->where('mes', now()->month)
+            ->where('anio', now()->year)
+            ->first();
+    }
+
     // -------------------------------------------------------
     // RELACIONES
     // -------------------------------------------------------
@@ -157,6 +166,11 @@ class Cliente extends Model
     public function registroPaso()
     {
         return $this->belongsTo(RegistroPaso::class, 'registro_paso');
+    }
+
+    public function cuposGasco()
+    {
+        return $this->hasMany(GascoCupoMensual::class, 'cliente_id');
     }
 
     // -------------------------------------------------------

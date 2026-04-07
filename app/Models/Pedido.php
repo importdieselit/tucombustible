@@ -18,7 +18,8 @@ class Pedido extends Model
         'cantidad_solicitada', 'cantidad_aprobada', 'cantidad_recibida',
         'estado', 'observaciones', 'observaciones_admin',
         'fecha_solicitud', 'fecha_aprobacion', 'fecha_completado',
-        'calificacion', 'comentario_calificacion',
+        'calificacion', 'comentario_calificacion', 'muelle_atraque','buque_nombre',
+        'imo_bandera', 'estado'
     ];
 
     protected $casts = [
@@ -60,5 +61,10 @@ class Pedido extends Model
             case 'cancelado': return '#9E9E9E';
             default: return '#9E9E9E';
         }
+    }
+
+    public function movimientos()
+    {
+        return $this->hasMany(MovimientoCombustible::class, 'pedido_id');
     }
 }
