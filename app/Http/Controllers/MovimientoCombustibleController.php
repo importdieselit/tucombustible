@@ -15,6 +15,7 @@ use App\Models\VehiculoPrecargado;
 use App\Models\Planta;
 use App\Models\Chofer;
 use App\Models\CompraCombustible;
+use App\Models\RepostajeVehiculo;
 use App\Models\Viaje;
 use App\Models\User;
 use App\Models\Persona;
@@ -273,7 +274,6 @@ class MovimientoCombustibleController extends Controller
                     'aprobado',
                     $validatedData['observaciones_admin']
                 );
-                Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por aprobación de pedido");
             } catch (\Exception $e) {
                 Log::error("Error enviando notificación FCM: " . $e->getMessage());
                 // No fallar la operación principal por error en notificación
@@ -665,9 +665,11 @@ public function storeDespachoIndustrial(Request $request)
             'id_tanque' => $tanque00->id,
             'id_us' => $user->id,
             'qty' => $cantidad,
-            'qtya' => $tanque00->nivel_actual_litros,
-            'rest' => $tanque00->nivel_actual_litros - $cantidad,
+            'qtya' => $cliente->prepagado, // Saldo antes del despacho
+            'rest' => $cliente->prepagado - $cantidad,
             'fecha' => $request->fecha,
+            'ticket' => $request->nro_ticket,
+            'ref'=> $mov->id, // Referencia al movimiento registrado
             'obs' => "Despacho a vehiculo: " . ($request->observaciones ?? 'Sin notas'),
             // => $mov->id,
             'created_at' => now()
@@ -692,7 +694,7 @@ public function storeDespachoIndustrial(Request $request)
         $grupoId = "-1002935486238"; 
         
         // Enviar al grupo principal
-       // $this->telegramService->sendSimpleMessage($grupoId, $ticket, $token);
+        $this->telegramService->sendSimpleMessage($grupoId, $ticket, $token);
 
         // Enviar a la persona designada (si el cliente tiene un telegram_id vinculado)
         // $usuarioCliente = User::where('id_cliente', $request->cliente_id)->whereNotNull('telegram_id')->first();
@@ -946,7 +948,7 @@ public function storeDespachoIndustrial(Request $request)
     public function historialDespachosIndustrial()
     {
         // Obtenemos los despachos de forma descendente (los más recientes primero)
-        $historial = MovimientoCombustible::with(['cliente', 'vehiculo', 'deposito'])
+        $historial = MovimientoCombustible::with(['cliente', 'vehiculo', 'deposito','repostajeVehiculo'])
             ->whereIn('deposito_id', [0,3]) // TanqInue 00
              ->whereIn('tipo_movimiento', ['salida','recarga_prepago'])
             ->orWhere('deposito_id',3)->where('observaciones','like','%traspaso%')
@@ -1041,7 +1043,6 @@ public function storeDespachoIndustrial(Request $request)
                     'aprobado',
                     $pedido->observaciones_admin
                 );
-                Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por aprobación de pedido");
             } catch (\Exception $e) {
                 Log::error("Error enviando notificación FCM: " . $e->getMessage());
                 // No fallar la operación principal por error en notificación
@@ -1274,7 +1275,6 @@ public function storeDespachoIndustrial(Request $request)
                     'en_proceso',
                     $pedido->observaciones_admin
                 );
-                Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por aprobación de pedido");
             } catch (\Exception $e) {
                 Log::error("Error enviando notificación FCM: " . $e->getMessage());
                 // No fallar la operación principal por error en notificación
@@ -1288,7 +1288,6 @@ public function storeDespachoIndustrial(Request $request)
                     'Baja Disponibilidad', 
                     'Estimado cliente su disponibilidad actual es de '.($cliente->disponible - $cantidadDespachar).' Litros de su cupo de '.$cliente->cupo.' se recomienda tomar previsiones'
                 );
-                Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por aprobación de pedido");
             } catch (\Exception $e) {
                 Log::error("Error enviando notificación FCM: " . $e->getMessage());
                 // No fallar la operación principal por error en notificación
