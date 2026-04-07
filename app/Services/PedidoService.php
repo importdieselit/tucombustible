@@ -3,37 +3,34 @@
 namespace App\Services;
 
 use App\Repositories\PedidoRepository;
-use App\Models\Cliente;
-use App\Models\ClienteCupo;
-use App\Models\Pedido; 
+use App\Repositories\GascoCupoRepository;
+use App\Models\Cliente; 
 use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Log;
 
 class PedidoService
 {
     protected $repository;
+    protected $gascoRepository;
 
-    public function __construct(PedidoRepository $repository)
-    {
+    public function __construct(
+        PedidoRepository $repository,
+        GascoCupoRepository $gascoRepository
+    ) {
         $this->repository = $repository;
+        $this->gascoRepository = $gascoRepository;
     }
 
     /**
      * Lista pedidos según jerarquía (Padre/Sucursal)
      */
-    public function listarPedidosParaUsuario($user)
+    public function listarPedidosParaUsuario($cliente)
     {
-        $cliente = Cliente::find($user->cliente_id);
-        if (!$cliente) return collect();
-
+        // Creamos un array con el ID del cliente actual
         $ids = [$cliente->id];
 
-        if (is_null($cliente->parent)) {
-            $sucursalesIds = Cliente::where('parent', $cliente->id)->pluck('id')->toArray();
-            $ids = array_merge($ids, $sucursalesIds);
-        }
-
+        // LLAMADA AL REPOSITORIO USANDO EL ARRAY DE IDS
         return $this->repository->getPedidosPorClientes($ids);
     }
 
@@ -55,45 +52,37 @@ class PedidoService
 
     /**
      * Registra solicitud con validación de cupo mensual dinámica.
-     * Usa 'litros_aprobados' de la tabla cliente_cupos.
      */
     public function registrarSolicitud(array $data, $user)
     {
-        $data['cliente_id'] = $user->cliente_id;
-        $cliente = Cliente::findOrFail($data['cliente_id']);
+        return DB::transaction(function () use ($data, $user) {
+            $data['cliente_id'] = $user->cliente_id;
+            $cliente = Cliente::findOrFail($data['cliente_id']);
+            $cantidad = (float)$data['cantidad'];
 
-        // 1. Obtener el cupo configurado desde cliente_cupos
-        $cupoConfig = ClienteCupo::where('cliente_id', $cliente->id)
-            ->where('tipo_combustible_id', $data['tipo_combustible_id'])
-            ->first();
+            // 1. Obtenemos el cupo (ya sea el existente o uno nuevo heredado del mes pasado)
+            $cupoGasco = $this->gascoRepository->getOrCreateMonthlyQuota($cliente->id);
 
-        if (!$cupoConfig) {
-            throw new Exception("No tiene un cupo configurado para este tipo de combustible.");
-        }
+            if (!$cupoGasco) {
+                throw new Exception("Operación rechazada: No se ha configurado un cupo GASCO inicial para este cliente.");
+            }
 
-        // Columna real según DDL: litros_aprobados
-        $cupoMensualTotal = (float)$cupoConfig->litros_aprobados;
+            // 2. El disponible ahora siempre será correcto. 
+            // Si es un registro nuevo creado por herencia, consumidos será 0.
+            $disponibleReal = (float)$cupoGasco->litros_autorizados - (float)$cupoGasco->litros_consumidos;
 
-        // 2. Sumar consumo del mes calendario actual
-        // Según DDL: la tabla pedidos usa 'deposito_id'
-        $consumoMesActual = Pedido::where('cliente_id', $cliente->id)
-            ->where('deposito_id', $data['tipo_combustible_id']) 
-            ->whereIn('estado', ['pendiente', 'aprobado', 'en_proceso', 'completado'])
-            ->whereMonth('created_at', Carbon::now()->month)
-            ->whereYear('created_at', Carbon::now()->year)
-            ->sum('cantidad_solicitada');
+            if ($cantidad > $disponibleReal) {
+                throw new Exception("Cupo mensual insuficiente en GASCO. Le quedan " . number_format($disponibleReal, 2) . " L disponibles para este mes.");
+            }
 
-        // 3. Cálculo del disponible: Cupo Base - Consumido Mes
-        $disponibleReal = $cupoMensualTotal - (float)$consumoMesActual;
+            // 3. Crear el pedido
+            $pedido = $this->repository->create($data);
 
-        // Registro en log para auditoría técnica
-        Log::info("Validación Cupo - Cliente: {$cliente->nombre} | Cupo Base: {$cupoMensualTotal} | Consumido: {$consumoMesActual} | Disponible: {$disponibleReal}");
+            // 4. Actualizar consumos
+            $this->gascoRepository->updateConsumed($cupoGasco->id, $cantidad);
+            $cliente->decrement('disponible', $cantidad);
 
-        // 4. Validación de la cantidad solicitada
-        if ($data['cantidad'] > $disponibleReal) {
-            throw new Exception("Cupo mensual insuficiente. Le quedan " . number_format($disponibleReal, 2) . " L disponibles para este mes.");
-        }
-
-        return $this->repository->create($data);
+            return $pedido;
+        });
     }
 }

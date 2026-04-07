@@ -118,31 +118,130 @@
                 </div>
             </div>
 
-            {{-- LISTADOS: PLACAS Y CHOFERES --}}
-            <div class="row g-4 no-print">
-                <div class="col-md-6">
-                    <div class="card shadow-sm border-0 h-100">
-                        <div class="card-header bg-dark d-flex justify-content-between align-items-center py-2">
-                            <span class="text-orange fw-bold small text-uppercase"><i class="fas fa-truck-moving me-2"></i>Placas</span>
-                            <span class="badge bg-orange rounded-pill">{{ $cliente->placas->count() }}</span>
-                        </div>
-                        <div class="p-2">
-                            <input type="text" id="filterPlacas" onkeyup="filtrarLista('filterPlacas', 'containerPlacas')"
-                                   class="form-control form-control-sm text-uppercase fw-bold border-0 bg-light" placeholder="Buscar placa...">
-                        </div>
-                        <div class="card-body p-2 overflow-auto" id="containerPlacas" style="max-height: 250px;">
-                            @forelse($cliente->placas as $placa)
-                                <div class="activo-item d-flex justify-content-between align-items-center p-2 mb-1 bg-white border rounded">
-                                    <span class="fw-bold text-dark tracking-widest">{{ $placa->placa }}</span>
-                                    <form action="{{ route('clientes.placas.inactivar', $placa->id) }}" method="POST">
-                                        @csrf
-                                        <button type="submit" class="btn btn-link text-danger p-0" onclick="return confirm('¿Inactivar?')"><i class="fas fa-times"></i></button>
-                                    </form>
-                                </div>
+            {{-- HISTORIAL DE PEDIDOS --}}
+            <div class="mb-8">
+                <h2 class="text-sm font-black uppercase text-gray-700 tracking-widest mb-4">
+                    <span class="text-orange-impordiesel">|</span> Historial de Pedidos Recientes
+                </h2>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="bg-gray-industrial text-white text-[10px] font-black uppercase tracking-widest">
+                                <th class="px-6 py-3">ID Pedido</th>
+                                <th class="px-6 py-3">Tipo de Combustible</th>
+                                <th class="px-6 py-3 text-center">Litros Solicitados</th>
+                                <th class="px-6 py-3 text-center">Estatus</th>
+                                <th class="px-6 py-3 text-center">Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @forelse($pedidos as $pedido)
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-6 py-3 font-black text-gray-700">
+                                    #{{ str_pad($pedido->id, 5, '0', STR_PAD_LEFT) }}
+                                </td>
+                                <td class="px-6 py-3 font-bold text-gray-600 uppercase text-[10px]">
+                                    Combustible
+                                </td>
+                                <td class="px-6 py-3 text-center font-black text-gray-800">
+                                    {{-- CORRECCIÓN: cantidad_solicitada --}}
+                                    {{ number_format($pedido->cantidad_solicitada, 0, ',', '.') }} Lts
+                                </td>
+                                <td class="px-6 py-3 text-center">
+                                    {{-- CORRECCIÓN: Usar los accessors del modelo Pedido --}}
+                                    <span class="px-2 py-1 rounded text-[9px] font-black uppercase border" 
+                                        style="background-color: {{ $pedido->estado_color }}20; color: {{ $pedido->estado_color }}; border-color: {{ $pedido->estado_color }}40;">
+                                        {{ $pedido->estado_text }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-3 text-center text-gray-500 font-bold">
+                                    {{-- CORRECCIÓN: fecha_solicitud --}}
+                                    {{ $pedido->fecha_solicitud ? $pedido->fecha_solicitud->format('d/m/Y') : 'N/A' }}
+                                </td>
+                            </tr>
                             @empty
-                                <div class="text-center py-4 text-muted small italic">Sin placas.</div>
+                            <tr>
+                                <td colspan="5" class="px-6 py-12 text-center">
+                                    <i class="fas fa-box-open text-gray-200 fa-3x mb-3"></i>
+                                    <p class="text-gray-400 font-black uppercase text-[10px] tracking-widest">
+                                        No se encontraron pedidos registrados.
+                                    </p>
+                                </td>
+                            </tr>
                             @endforelse
-                        </div>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {{-- --- INICIO BLOQUE SUCURSALES --- --}}
+            @if($cliente->es_padre)
+            <div class="mt-4 bg-white rounded border-2 border-gray-300 shadow-md overflow-hidden">
+                <div class="bg-gray-800 p-3">
+                    <h5 class="text-[10px] font-black uppercase text-orange-impordiesel italic">
+                        <i class="fas fa-sitemap mr-2"></i> Sucursales Vinculadas
+                    </h5>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-[10px] font-black uppercase">
+                        <thead class="bg-gray-100 border-b border-gray-300">
+                            <tr>
+                                <th class="p-3 text-left">Razón Social</th>
+                                <th class="p-3 text-right">Expediente</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($cliente->sucursales as $sucursal)
+                            <tr class="border-b border-gray-200 hover:bg-orange-50">
+                                <td class="p-3 text-gray-700">{{ $sucursal->nombre }}</td>
+                                <td class="p-3 text-right">
+                                    <a href="{{ route('clientes.show', $sucursal->id) }}" 
+                                    class="bg-gray-industrial text-white px-2 py-1 rounded hover:bg-black transition">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            @endif
+            {{-- --- FIN BLOQUE SUCURSALES --- --}}
+
+            {{-- PLACAS Y CHOFERES --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 no-print">
+
+                {{-- PLACAS --}}
+                <div class="bg-white rounded border-2 border-gray-300 shadow-md flex flex-col h-[380px]">
+                    <div class="bg-gray-800 p-3 flex justify-between items-center">
+                        <h5 class="text-[10px] font-black uppercase text-orange-impordiesel italic">
+                            <i class="fas fa-truck-moving mr-2"></i> Placas Autorizadas
+                        </h5>
+                        <span class="bg-orange-impordiesel text-white text-[9px] px-2 py-0.5 rounded-full font-black">
+                            {{ $cliente->placas->count() }}
+                        </span>
+                    </div>
+                    <div class="p-2 border-b">
+                        <input type="text" id="filterPlacas" onkeyup="filtrarLista('filterPlacas', 'containerPlacas')"
+                               class="w-full px-3 py-2 bg-gray-100 border-none rounded text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-orange-impordiesel"
+                               placeholder="Buscar placa...">
+                    </div>
+                    <div class="flex-1 overflow-y-auto p-2" id="containerPlacas">
+                        @forelse($cliente->placas as $placa)
+                            <div class="activo-item flex justify-between items-center p-2 mb-1 bg-gray-50 border border-gray-200 rounded hover:border-orange-impordiesel transition">
+                                <span class="text-xs font-black text-gray-700 tracking-widest">{{ $placa->placa }}</span>
+                                <form action="{{ route('clientes.placas.inactivar', $placa->id) }}" method="POST" class="inline">
+                                    @csrf
+                                    <button type="submit" class="text-red-400 hover:text-red-600 text-[10px] font-black uppercase transition"
+                                            onclick="return confirm('¿Inactivar esta placa?')">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        @empty
+                            <p class="text-[10px] text-gray-400 text-center mt-10 font-bold uppercase italic">Sin placas registradas.</p>
+                        @endforelse
                     </div>
                 </div>
 

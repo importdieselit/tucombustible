@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\DashboardService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
@@ -14,7 +15,7 @@ class DashboardController extends Controller
         $this->dashboardService = $dashboardService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
 
@@ -24,9 +25,27 @@ class DashboardController extends Controller
             return redirect()->route('vehiculos.index');
         }
 
-        // Cliente (perfil 3)
-        $data = $this->dashboardService->getDashboardData($user);
+        // -------------------------------------------------------
+        // LÓGICA DEL CLIENTE (perfil 3)
+        // -------------------------------------------------------
+        
+        // 1. Capturamos el ID de sucursal si viene en la URL
+        $sucursalId = $request->query('sucursal_id');
 
+        // 2. Pasamos el ID al servicio para el "Modo Espejo"
+        $data = $this->dashboardService->getDashboardData($user, $sucursalId);
+
+        // 3. Cargamos los pedidos usando el cliente correcto (Padre o Sucursal)
+        // Validamos que exista 'cliente' en el array por si el perfil es 'cliente_sin_vincular'
+        if (isset($data['cliente'])) {
+            $data['pedidos'] = app(\App\Services\PedidoService::class)
+                                ->listarPedidosParaUsuario($data['cliente']);
+        }
+
+        // 4. Definimos la variable que hacía explotar la vista
+        $data['viendoSucursal'] = $request->filled('sucursal_id');
+
+        // Retornamos la vista correspondiente
         return match ($data['perfil']) {
             'cliente_en_registro' => view('cliente.en_proceso', $data),
             'cliente_rechazado'   => view('cliente.rechazado', $data),

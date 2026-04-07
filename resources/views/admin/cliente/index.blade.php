@@ -40,6 +40,96 @@
         </div>
     </div>
 
+    {{-- SECCIÓN DE PEDIDOS GLOBALES (SIMÉTRICA A TABLA CLIENTES) --}}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-300 overflow-hidden mb-8">
+        <div class="p-6 border-b border-gray-200 bg-gray-50">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <h5 class="text-lg font-black uppercase tracking-tight text-gray-800 italic">
+                    <span class="text-orange-impordiesel">|</span> Gestión Global de Pedidos
+                </h5>
+                
+                <div class="flex items-center gap-2">
+                    <form action="{{ route('clientes.index') }}" method="GET" class="flex items-center gap-2">
+                        {{-- Mantenemos filtros de clientes activos --}}
+                        <input type="hidden" name="search" value="{{ request('search') }}">
+                        <input type="hidden" name="status" value="{{ request('status') }}">
+                        
+                        <select name="status_pedido" onchange="this.form.submit()"
+                                class="text-xs font-black border-2 border-gray-300 rounded p-2.5 outline-none focus:border-orange-impordiesel bg-white uppercase">
+                            <option value="">Todos los pedidos</option>
+                            <option value="pendiente" {{ request('status_pedido') == 'pendiente' ? 'selected' : '' }}>Pendientes</option>
+                            <option value="aprobado" {{ request('status_pedido') == 'aprobado' ? 'selected' : '' }}>Aprobados</option>
+                            <option value="rechazado" {{ request('status_pedido') == 'rechazado' ? 'selected' : '' }}>Rechazados</option>
+                        </select>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto overflow-y-auto max-h-[450px]">
+            <table class="w-full text-left border-collapse">
+                <thead class="sticky top-0 z-20">
+                    <tr class="bg-gray-industrial text-white text-xs font-black uppercase tracking-widest">
+                        <th class="px-6 py-4">ID</th>
+                        <th class="px-6 py-4">Cliente / Identificación</th>
+                        <th class="px-6 py-4 text-center">Cantidad</th>
+                        <th class="px-6 py-4 text-center">Estatus</th>
+                        <th class="px-6 py-4 text-center">Fecha Solicitud</th>
+                        <th class="px-6 py-4 text-right">Acción</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    @forelse($ultimosPedidos as $pedido)
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 font-black text-gray-400 italic">
+                            #{{ str_pad($pedido->id, 5, '0', STR_PAD_LEFT) }}
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="font-black text-gray-800 uppercase text-sm leading-tight">
+                                {{ $pedido->cliente->nombre ?? 'N/A' }}
+                            </div>
+                            <div class="text-xs font-bold text-gray-500 mt-1">
+                                RIF: {{ $pedido->cliente->rif ?? '-' }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="text-sm font-black text-gray-700">
+                                {{ number_format($pedido->cantidad_solicitada, 0, ',', '.') }}
+                                <span class="text-[10px] text-gray-400 uppercase">Lts</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <span class="px-3 py-1 rounded text-[10px] font-black uppercase border shadow-sm" 
+                                  style="background-color: {{ $pedido->estado_color }}20; color: {{ $pedido->estado_color }}; border-color: {{ $pedido->estado_color }}40;">
+                                {{ $pedido->estado_text }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <div class="text-xs font-bold text-gray-700">
+                                {{ $pedido->fecha_solicitud ? $pedido->fecha_solicitud->format('d/m/Y h:i A') : '—' }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <a href="{{ route('clientes.show', $pedido->cliente_id) }}"
+                               class="inline-block bg-orange-impordiesel text-white px-5 py-2 rounded text-xs font-black uppercase hover:bg-orange-700 transition shadow-md border-b-2 border-orange-900">
+                                <i class="fas fa-folder-open mr-1"></i> Expediente
+                            </a>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-400 font-black uppercase text-xs tracking-widest">
+                            No se encontraron pedidos con este estatus.
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        <div class="p-4 bg-gray-50 border-t border-gray-200 text-[10px] font-black uppercase text-gray-400">
+            Total en lista: {{ $ultimosPedidos->count() }} registros
+        </div>
+    </div>
 
     {{-- LISTADO --}}
     <div class="bg-white rounded-lg shadow-sm border border-gray-300 overflow-hidden mb-8">
@@ -247,16 +337,16 @@
                                 <small class="fw-bold text-muted" style="font-size: 10px;">RIF: {{ $cliente->rif }}</small>
                             </div>
                         </div>
-                        <div class="text-end">
-                            <p class="h5 fw-black text-info mb-0">
-                                {{ number_format($cliente->cupos_max_litros_aprobados, 0, ',', '.') }}
-                                <small class="text-muted fw-bold" style="font-size: 9px;">L</small>
-                            </p>
-                            <a href="{{ route('clientes.show', $cliente->id) }}"
-                               class="text-decoration-none fw-black text-uppercase text-muted hover-orange" style="font-size: 9px;">
-                                Ver expediente <i class="fas fa-chevron-right ms-1"></i>
-                            </a>
-                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-lg font-black text-blue-600">
+                            {{ number_format($cliente->cupos_max, 0, ',', '.') }}
+                            <small class="text-[9px] text-gray-400 font-bold uppercase">L</small>
+                        </p>
+                        <a href="{{ route('clientes.show', $cliente->id) }}"
+                           class="text-[9px] font-black uppercase text-gray-400 hover:text-orange-impordiesel transition">
+                            Ver expediente →
+                        </a>
                     </div>
                 </div>
                 @empty

@@ -2,6 +2,13 @@
 @section('title', 'Mi Portal - ImporDiesel')
 
 @section('content')
+@if($viendoSucursal)
+    <div class="mb-4">
+        <a href="{{ route('portal.clientes.index') }}" class="bg-red-600 text-white px-4 py-2 rounded font-black text-[10px] uppercase shadow-md hover:bg-red-700">
+            <i class="fas fa-arrow-left mr-2"></i> Salir del modo sucursal (Volver a mi perfil)
+        </a>
+    </div>
+@endif
 <div class="container mx-auto py-6 px-4">
 
     {{-- ENCABEZADO --}}
@@ -21,6 +28,71 @@
             <i class="fas fa-check-circle mr-2"></i> Cliente Activo
         </span>
     </div>
+
+    {{-- COLUMNA IZQUIERDA --}}
+        <div class="lg:col-span-2 space-y-6">
+
+            {{-- DATOS PRINCIPALES --}}
+            <div class="bg-white rounded border-2 border-gray-300 shadow-md overflow-hidden">
+                <div class="bg-gray-800 p-5">
+                    <h2 class="text-2xl font-black text-white uppercase tracking-tighter">{{ $cliente->nombre }}</h2>
+                    <p class="text-orange-impordiesel text-sm font-black uppercase tracking-widest">
+                        RIF: {{ $cliente->rif }} —
+                        <span class="{{ $cliente->color_status }} text-white px-2 py-0.5 rounded text-[10px] font-black uppercase ml-1">
+                            {{ $cliente->label_status }}
+                        </span>
+                    </p>
+                </div>
+                <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+
+                    {{-- CONTACTO PRINCIPAL --}}
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Contacto Principal</p>
+                        <p class="font-black text-gray-700 uppercase mt-1">{{ $cliente->contacto ?? 'N/A' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Teléfono Principal</p>
+                        <p class="font-black text-gray-700 mt-1">{{ $cliente->telefono ?? 'N/A' }}</p>
+                    </div>
+
+                    {{-- CONTACTO ALTERNATIVO --}}
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Contacto Alternativo</p>
+                        <p class="font-black text-gray-700 uppercase mt-1">{{ $cliente->contacto_alt ?? '—' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Teléfono Alternativo</p>
+                        <p class="font-black text-gray-700 mt-1">{{ $cliente->telefono_alt ?? '—' }}</p>
+                    </div>
+
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Correo</p>
+                        <p class="font-black text-gray-700 mt-1">{{ $cliente->email ?? 'N/A' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Estado / Ciudad</p>
+                        <p class="font-black text-gray-700 uppercase mt-1">
+                            {{ $cliente->estado->nombre ?? 'N/A' }} / {{ $cliente->ciudad->nombre ?? 'N/A' }}
+                        </p>
+                    </div>
+                    <div class="md:col-span-2">
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Dirección Fiscal</p>
+                        <p class="font-black text-gray-700 uppercase mt-1">{{ $cliente->direccion ?? 'N/A' }}</p>
+                    </div>
+                    <div class="md:col-span-2">
+                        <p class="text-[10px] font-black text-orange-impordiesel uppercase tracking-widest">Dirección Operativa</p>
+                        <p class="font-black text-gray-700 uppercase mt-1">{{ $cliente->direccion_operativa ?? 'N/A' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Fecha de Creación</p>
+                        <p class="font-black text-gray-700 mt-1">{{ $cliente->created_at?->format('d/m/Y') ?? 'N/A' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Fecha de Aprobación</p>
+                        <p class="font-black text-gray-700 mt-1">{{ $cliente->fecha_aprobacion?->format('d/m/Y') ?? '—' }}</p>
+                    </div>
+                </div>
+            </div>
 
     {{-- CUPOS DE COMBUSTIBLE --}}
     <div class="mb-8">
@@ -166,6 +238,13 @@
                             </div>
                             <span class="text-[9px] font-black text-gray-500 block uppercase">Paso {{ $suc->registro_paso }}/5</span>
                         </td>
+                        {{-- Dentro de tu @foreach($sucursales as $suc) --}}
+                        <td class="px-6 py-3 text-center">
+                            <a href="{{ route('portal.clientes.index', ['sucursal_id' => $suc->id]) }}" 
+                            class="bg-orange-impordiesel text-white px-3 py-1 rounded text-[10px] font-black uppercase hover:bg-black transition">
+                                Ver Detalle <i class="fas fa-chevron-right ml-1"></i>
+                            </a>
+                        </td>
                     </tr>
                     @endforeach
                 </tbody>
@@ -173,6 +252,62 @@
         </div>
     </div>
     @endif
+
+    {{-- HISTORIAL DE PEDIDOS --}}
+    <div class="mb-8">
+        <h2 class="text-sm font-black uppercase text-gray-700 tracking-widest mb-4">
+            <span class="text-orange-impordiesel">|</span> Historial de Pedidos Recientes
+        </h2>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="bg-gray-industrial text-white text-[10px] font-black uppercase tracking-widest">
+                        <th class="px-6 py-3">ID Pedido</th>
+                        <th class="px-6 py-3">Tipo de Combustible</th>
+                        <th class="px-6 py-3 text-center">Litros Solicitados</th>
+                        <th class="px-6 py-3 text-center">Estatus</th>
+                        <th class="px-6 py-3 text-center">Fecha</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    @forelse($pedidos as $pedido)
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-3 font-black text-gray-700">
+                            #{{ str_pad($pedido->id, 5, '0', STR_PAD_LEFT) }}
+                        </td>
+                        <td class="px-6 py-3 font-bold text-gray-600 uppercase text-[10px]">
+                            Combustible
+                        </td>
+                        <td class="px-6 py-3 text-center font-black text-gray-800">
+                            {{-- CORRECCIÓN: cantidad_solicitada --}}
+                            {{ number_format($pedido->cantidad_solicitada, 0, ',', '.') }} Lts
+                        </td>
+                        <td class="px-6 py-3 text-center">
+                            {{-- CORRECCIÓN: Usar los accessors del modelo Pedido --}}
+                            <span class="px-2 py-1 rounded text-[9px] font-black uppercase border" 
+                                style="background-color: {{ $pedido->estado_color }}20; color: {{ $pedido->estado_color }}; border-color: {{ $pedido->estado_color }}40;">
+                                {{ $pedido->estado_text }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-3 text-center text-gray-500 font-bold">
+                            {{-- CORRECCIÓN: fecha_solicitud --}}
+                            {{ $pedido->fecha_solicitud ? $pedido->fecha_solicitud->format('d/m/Y') : 'N/A' }}
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center">
+                            <i class="fas fa-box-open text-gray-200 fa-3x mb-3"></i>
+                            <p class="text-gray-400 font-black uppercase text-[10px] tracking-widest">
+                                No se encontraron pedidos registrados.
+                            </p>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     <div class="text-center mt-8">
         <small class="text-gray-400 uppercase tracking-widest text-xs font-black">

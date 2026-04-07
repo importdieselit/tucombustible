@@ -40,12 +40,13 @@ class DashboardService
         $this->clientRepo      = $clientRepo;
     }
 
-    public function getDashboardData($user): array
+    public function getDashboardData($user, $sucursalId = null): array
     {
         // -------------------------------------------------------
         // DASHBOARD DEL CLIENTE (perfil 3)
         // -------------------------------------------------------
         if ($user->id_perfil == 3) {
+            // Cargamos el cliente original del usuario
             $cliente = Cliente::with([
                 'registroPaso',
                 'cupos.tipoCombustible',
@@ -61,6 +62,22 @@ class DashboardService
                 ];
             }
 
+            // --- INICIO LÓGICA MODO ESPEJO ---
+            // Si el cliente es padre y seleccionó una sucursal, cambiamos el objeto $cliente
+            if ($cliente->es_padre && $sucursalId) {
+                $hijo = $cliente->sucursales()->with([
+                    'registroPaso',
+                    'cupos.tipoCombustible',
+                    'placas',
+                    'choferes',
+                ])->find($sucursalId);
+
+                if ($hijo) {
+                    $cliente = $hijo; // Ahora todo el código de abajo usará los datos del hijo
+                }
+            }
+            // --- FIN LÓGICA MODO ESPEJO ---
+
             // Cliente en proceso de registro
             if ($cliente->status === Cliente::STATUS_EN_REGISTRO) {
                 return [
@@ -73,23 +90,18 @@ class DashboardService
                 ];
             }
 
-            // Cliente rechazado
+            // El resto del código (Rechazado, Inactivo, Aprobado) 
+            // funcionará igual pero usando el $cliente (Padre o Hijo) según corresponda.
+
             if ($cliente->status === Cliente::STATUS_RECHAZADO) {
-                return [
-                    'perfil'  => 'cliente_rechazado',
-                    'cliente' => $cliente,
-                ];
+                return ['perfil' => 'cliente_rechazado', 'cliente' => $cliente];
             }
 
-            // Cliente inactivo
             if ($cliente->status === Cliente::STATUS_INACTIVO) {
-                return [
-                    'perfil'  => 'cliente_inactivo',
-                    'cliente' => $cliente,
-                ];
+                return ['perfil' => 'cliente_inactivo', 'cliente' => $cliente];
             }
 
-            // Cliente aprobado — solo ve cupo, placas y choferes
+            // Cliente aprobado
             return [
                 'perfil'     => $cliente->es_padre ? 'cliente_padre' : 'cliente_sucursal',
                 'cliente'    => $cliente,
