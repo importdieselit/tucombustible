@@ -249,7 +249,7 @@ class ViajesController extends Controller
             ]);
             if(!is_null($request->cisterna)){
                $vehiculo = Vehiculo::find($request->vehiculo_id);
-               $vehiculo->cisterna = $request->cisterna;
+               $vehiculo->acoplado_id = $request->cisterna;
                $vehiculo->save();
             }
 
