@@ -383,10 +383,10 @@ class ChecklistController extends Controller
             }
             if(!is_null($condicion)){
                 $viaje = Viaje::where('vehiculo_id', $vehiculo->id)
-                        ->where('estatus', $condicion)
+                        ->where('status', $condicion)
                         ->first();
                 if ($viaje) {
-                    $viaje->estatus = $nuevoEstatusViaje;
+                    $viaje->status = $nuevoEstatusViaje;
                     $viaje->save();
                     $cisterna= $viaje->cisterna;
                     if(!is_null($cisterna)){
