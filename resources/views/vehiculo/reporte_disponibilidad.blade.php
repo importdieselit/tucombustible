@@ -479,6 +479,7 @@
         </div>
     </div>
     <div class="col-12">
+        <h3 class="w-100 text-center"><strong>  PLANIFICACION DEL DIA </strong></h3>
         <div class="card shadow-sm border-0 h-100" style="border-radius: 15px;">
             <div class="card-body">
         
@@ -497,7 +498,7 @@
             </div>
 
             {{-- Tabla de Movimientos --}}
-            <h3 class="w-100 text-center"><strong>  PLANIFICACION DEL DIA </strong></h3>
+            
                     <div class="col-12 col-md-6 col-lg-3">
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
