@@ -167,6 +167,12 @@ class ClienteRepository
         return $cliente;
     }
 
+    public function obtenerClientesActivos()
+    {
+        // Usamos el scope que ya definiste en el modelo Cliente
+        return \App\Models\Cliente::aprobados()->orderBy('nombre', 'asc')->get();
+    }
+
     // -------------------------------------------------------
     // GESTIÓN DE CUPOS
     // -------------------------------------------------------
