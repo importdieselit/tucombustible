@@ -108,7 +108,7 @@ class ViajesController extends Controller
             'vehiculo_id' => $validated['vehiculo_id'],
             'ayudante' => $validated['ayudante'] ?? 0,
             'custodia_count' => $validated['custodia_count'] ?? 0,
-            'status' => 'COMPLETADO', // Cambia el estado para el siguiente paso (Viáticos)
+            'status' => 'Programado', // Cambia el estado para el siguiente paso (Viáticos)
         ]);
 
         return redirect()->route('viajes.list')->with('success', 
@@ -373,7 +373,7 @@ class ViajesController extends Controller
 
         $viaje = Viaje::findOrFail($viajeId);
         if($viaje->chofer_id != null){
-            $viaje->status = 'COMPLETADO';
+            $viaje->status = 'Programado';
             $viaje->save();
         }
         $adminId = Auth::id();
