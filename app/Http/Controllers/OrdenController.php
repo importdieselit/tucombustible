@@ -481,7 +481,7 @@ class OrdenController extends BaseController
             $orden = $this->model->where('id', $id)->with(['vehiculoBelong'])->first();
             if (!$orden) {
                  Session::flash('error', 'La orden de trabajo no fue encontrada.');
-                return Redirect::route('orden.list');
+                return Redirect::route('ordenes.list');
             }
             $trabajos = Trabajos::where('id_orden', $id)->with(['categoria', 'servicio'])->get();
             $trabajosExternos = TrabajoExterno::where('id_orden', $id)->with(['proveedor'])->get();
@@ -532,7 +532,7 @@ class OrdenController extends BaseController
             return view('orden.show', compact('orden', 'requerimientos', 'suministros','proveedores','trabajos','estatusData','fotos', 'trabajos', 'personal', 'inventario','categorias_tempario', 'trabajosExternos'));
         } catch (ModelNotFoundException $e) {
             Session::flash('error', 'La orden de trabajo no fue encontrada.');
-            return Redirect::route('orden.list');
+            return Redirect::route('ordenes.list');
         }
     }
 
