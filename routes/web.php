@@ -306,7 +306,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/send-telegram-message', [TelegramController::class, 'sendMessage'])->name('telegram.send.message');
   
 
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/admin/principal', [DashboardController::class, 'adminPrincipal'])->name('dashboard.admin');
 
         /**
          * MÓDULOS DE ADMINISTRACIÓN (Perfiles 1 y 2: Admin y Super)
@@ -391,5 +391,9 @@ Route::middleware(['auth'])->group(function () {
         Route::middleware(['role:3'])->prefix('mi-cuenta')->name('portal.clientes.')->group(function () {
             Route::get('/resumen',   [PortalClienteController::class, 'index'])->name('index');
             Route::get('/mi-perfil', [PortalClienteController::class, 'perfil'])->name('perfil');
+            Route::get('/pedidos',           [PedidoController::class, 'index'])->name('pedidos.index');
+            Route::get('/pedidos/nuevo',     [PedidoController::class, 'create'])->name('pedidos.create');
+            Route::post('/pedidos/guardar',  [PedidoController::class, 'store'])->name('pedidos.store');
+            Route::put('/pedidos/{id}/cancelar', [PedidoController::class, 'cancelar'])->name('pedidos.cancelar');
         });
 });

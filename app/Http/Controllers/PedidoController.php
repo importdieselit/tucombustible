@@ -28,7 +28,12 @@ class PedidoController extends Controller
     public function create()
     {
         $cliente = Auth::user()->cliente;
-        return view('pedidos.create', compact('cliente'));
+        
+        // Calculamos el disponible de GASCO para mostrarlo en la vista
+        $cupoGasco = $cliente->cupoGascoActual(); 
+        $disponibleGasco = $cupoGasco ? ($cupoGasco->litros_autorizados - $cupoGasco->litros_consumidos) : 0;
+
+        return view('pedidos.create', compact('cliente', 'disponibleGasco'));
     }
 
     public function store(Request $request)
@@ -75,8 +80,4 @@ class PedidoController extends Controller
             return back()->with('error', $e->getMessage());
         }
     }
-<<<<<<< Updated upstream
 }
-=======
-}
->>>>>>> Stashed changes

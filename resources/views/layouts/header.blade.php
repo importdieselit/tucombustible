@@ -19,6 +19,7 @@
         </button>
 
         <a class="navbar-brand d-flex align-items-center d-md-none" href="{{ route('dashboard') }}">
+
             <img src="{{ asset('img/logomini.png') }}" alt="Logo" class="img-fluid rounded-circle border border-2 border-secondary me-2" style="max-width: 35px; background: white; padding: 2px;">
             <span class="d-none d-sm-inline fw-bold text-primary">TuCombustible</span>
         </a>
