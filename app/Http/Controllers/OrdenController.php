@@ -479,6 +479,10 @@ class OrdenController extends BaseController
         try {
             // Asumiendo que se puede obtener la orden con sus relaciones
             $orden = $this->model->where('id', $id)->with(['vehiculoBelong'])->first();
+            if (!$orden) {
+                 Session::flash('error', 'La orden de trabajo no fue encontrada.');
+                return Redirect::route('orden.list');
+            }
             $trabajos = Trabajos::where('id_orden', $id)->with(['categoria', 'servicio'])->get();
             $trabajosExternos = TrabajoExterno::where('id_orden', $id)->with(['proveedor'])->get();
 
