@@ -139,5 +139,23 @@ class DashboardService
         $pasos = $this->clientRepo->getPasos();
         return $pasos->firstWhere('id', $pasoId)?->nombre ?? 'Estatus Pendiente';
     }
+
+    /**
+     * Obtiene las estadísticas para el Dashboard Administrativo
+     */
+    public function getAdminStats(): array
+    {
+        return [
+            'totalVehiculos'       => $this->vehicleRepo->countAll(),
+            'totalUsuarios'        => $this->userRepo->countAll(),
+            'totalOrdenesAbiertas' => $this->orderRepo->countAbiertas(),
+            'totalTanques'         => $this->tankRepo->countAll(),
+            'programadosHoy'       => $this->maintenanceRepo->countHoy(),
+            // Estos nombres deben coincidir con lo que usa tu Blade
+            'clientes_activos'     => Cliente::aprobados()->count(), 
+            'clientes_en_registro' => Cliente::enRegistro()->count(),
+            'clientes_rechazados'  => Cliente::rechazados()->count(),
+        ];
+    }
     
 }

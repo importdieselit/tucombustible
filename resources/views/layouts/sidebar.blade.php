@@ -154,13 +154,42 @@
     <ul class="nav flex-column px-2">
         {{-- Dashboard Principal --}}
         <li class="nav-item">
-            <a href="{{ route('dashboard') }}" class="nav-link {{ Request::routeIs('dashboard') ? 'active' : '' }}">
+            <a href="{{ route('dashboard.admin') }}" class="nav-link {{ Request::routeIs('dashboard.admin') ? 'active' : '' }}">
                 <span><i class="fas fa-tachometer-alt nav-icon"></i> Dashboard</span>
             </a>
         </li>
 
         <hr class="text-muted my-2">
 
+        {{-- INICIO DE MÓDULOS EN DESARROLLO (SOLO ADMINS) --}}
+        @if(in_array($user->id_perfil, [1, 2])) 
+            <li class="nav-item px-3 mb-1">
+                <small class="text-muted text-uppercase" style="font-size: 0.7rem; font-weight: bold;">Operaciones Principales</small>
+            </li>
+
+            <li class="nav-item">
+                <a href="{{ route('clientes.index') }}" class="nav-link {{ Request::routeIs('clientes.*') ? 'active' : '' }}">
+                    <span><i class="fas fa-users nav-icon"></i> Módulo Clientes</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{{ route('combustible.estadisticas') }}" class="nav-link {{ Request::routeIs('combustible.*') ? 'active' : '' }}">
+                    <span><i class="fas fa-gas-pump nav-icon"></i> Módulo Combustible</span>
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a href="{{ route('viajes.dashboard') }}" class="nav-link {{ Request::routeIs('viajes.*') ? 'active' : '' }}">
+                    <span><i class="fas fa-truck-loading nav-icon"></i> Módulo Logística</span>
+                </a>
+            </li>
+
+            <hr class="text-muted my-2">
+        @endif
+        {{-- FIN DE MÓDULOS EN DESARROLLO --}}
+
+        {{-- RENDERIZADO DINÁMICO (MÓDULOS ANTIGUOS) --}}
         @foreach($modulos as $modulo)
             @php
                 // Obtener sub-módulos
@@ -205,22 +234,24 @@
             </li>
         @endforeach
     </ul>
+    
     <button id="install-button" class="btn btn-orange shadow-sm px-4 text-white fw-bold" style="display:none;">
             <i class="fa fa-download me-2"></i> INSTALAR APP
     </button>
+    
     <div class="card mt-3">
-    <div class="card-body text-center p-2">
-        <div id="push-container" class="d-flex flex-column align-items-center justify-content-center" style="min-height: 20px;">
-            
-            <h5 id="push-title" class="card-title h6 mb-2">Notificaciones en tiempo real</h5>
-            
-            <button id="btn-push" class="btn btn-primary shadow-sm px-4">
-                <i class="bi bi-bell"></i> <span id="btn-text">Activar Notificaciones</span>
-            </button>
-            
-            <div id="push-status" class="mt-2"></div>
+        <div class="card-body text-center p-2">
+            <div id="push-container" class="d-flex flex-column align-items-center justify-content-center" style="min-height: 20px;">
+                
+                <h5 id="push-title" class="card-title h6 mb-2">Notificaciones en tiempo real</h5>
+                
+                <button id="btn-push" class="btn btn-primary shadow-sm px-4">
+                    <i class="bi bi-bell"></i> <span id="btn-text">Activar Notificaciones</span>
+                </button>
+                
+                <div id="push-status" class="mt-2"></div>
+            </div>
         </div>
-    </div>
     </div>
 </div>
 

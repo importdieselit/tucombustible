@@ -22,7 +22,7 @@ class DashboardController extends Controller
         // 1. DASHBOARD PRINCIPAL (Admin / SuperUser)
         // Redirigimos antes de tocar cualquier Servicio
         if (in_array($user->id_perfil, [1, 2,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18])) {
-            return redirect()->route('vehiculos.index');
+            return redirect()->route('dashboard.admin');
         }
 
         // -------------------------------------------------------
@@ -54,5 +54,14 @@ class DashboardController extends Controller
             'cliente_sucursal'    => view('cliente.index', $data),
             default               => abort(403, 'Perfil de usuario no reconocido o expediente no vinculado.'),
         };
+    }
+
+    public function adminPrincipal()
+    {
+        // Ahora sí existe el método en el Service
+        $stats = $this->dashboardService->getAdminStats();
+        
+        // Cargamos la vista profesional que está en resources/views/dashboard/admin_principal.blade.php
+        return view('dashboard.admin_principal', compact('stats'));
     }
 }
