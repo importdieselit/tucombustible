@@ -187,7 +187,7 @@ class VehiculoController extends BaseController
         $unidades_en_servicio = Vehiculo::EnServicio()->count();
         $historicoEficiencia = ResumenDiario::orderBy('fecha', 'desc')->limit(15)->get()->sortBy('fecha')->toArray();
         $mantenimientos = MantenimientoProgramado::with('vehiculo')
-                ->whereIn('estatus', [3, 2])
+                ->whereIn('estatus', [1, 2]) // Solo pendientes o en proceso
                 ->orderBy('fecha', 'desc') // o por km si lo deseas
                 ->limit(7)
                 ->get();

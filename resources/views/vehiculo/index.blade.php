@@ -243,13 +243,13 @@
                 <ul class="list-group list-group-flush timeline-list">
                     @foreach($mantenimientos as $item)
                         @php
-                            $atrasado = $item->fecha->isPast() && $item->estatus != '3';
+                            $atrasado = $item->fecha->isPast();
                             
                             // Definir clase de borde según estatus
                             $borderClass = 'border-timeline-primary';
                             if($atrasado) $borderClass = 'border-timeline-danger';
                             elseif($item->estatus == '1') $borderClass = 'border-timeline-warning';
-                            elseif($item->estatus == '3') $borderClass = 'border-timeline-success';
+                            elseif($item->estatus == '2') $borderClass = 'border-timeline-success';
                         @endphp
 
                         <li class="list-group-item shadow-sm {{ $borderClass }}">
@@ -271,8 +271,7 @@
                                         @else
                                             @switch($item->estatus)
                                                 @case('1') <span class="badge bg-warning text-dark">Pendiente</span> @break
-                                                @case('2') <span class="badge bg-info text-white">Programado</span> @break
-                                                @case('3') <span class="badge bg-success">Realizado</span> @break
+                                                @case('2') <span class="badge bg-info text-white">Iniciado</span> @break
                                             @endswitch
                                         @endif
                                     </div>
