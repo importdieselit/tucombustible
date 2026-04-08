@@ -62,6 +62,7 @@
                     @php($TotalLitrosC=0)
                     
                     @forelse($viajes as $viaje)
+                    dd($viaje);
                         @php($TotalLitrosC += $viaje->litros)
 
                       <tr style="border-bottom: 1px solid #01050a; background-color:white"   >
