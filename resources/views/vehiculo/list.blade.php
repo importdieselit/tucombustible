@@ -446,30 +446,35 @@
                 }
             });
 
-            $('.btn-detalle-orden').on('click', function() {
-                console.log('Detalle orden clicked');
-                const btn = $(this);
-                
-                // Extraer datos de los atributos data-
-                const nro = btn.data('nro');
-                const tipo = btn.data('tipo');
-                const placa = btn.data('placa');
-                const flota = btn.data('flota');
-                const desc = btn.data('desc');
-                const obs = btn.data('obs');
-                const url = btn.data('url');
-                console.log({ nro, tipo, desc, obs, url });
-                // Inyectar en el modal
-                $('#txt-nro-orden').text(nro);
-                $('#txt-tipo-orden').text(tipo);
-                $('#txt-unidad').text(flota + ' [' + placa+']');
-                $('#txt-descripcion').text(desc);
-                $('#txt-observaciones').text(obs);
-                $('#btn-ir-orden').attr('href', url);
+        });
 
-                // Mostrar el modal
-                $('#modalDetalleOrden').modal('show');
-            });
+        $(document).on('click', '.btn-detalle-orden', function(e) {
+            e.preventDefault(); // Buena práctica por si el span está dentro de un tag <a>
+            console.log('Detalle orden clicked');
+            
+            const btn = $(this);
+            
+            // Extraer datos de los atributos data-
+            const nro = btn.data('nro');
+            const tipo = btn.data('tipo');
+            const placa = btn.data('placa');
+            const flota = btn.data('flota');
+            const desc = btn.data('desc');
+            const obs = btn.data('obs');
+            const url = btn.data('url');
+            
+            console.log({ nro, tipo, desc, obs, url });
+            
+            // Inyectar en el modal
+            $('#txt-nro-orden').text(nro);
+            $('#txt-tipo-orden').text(tipo);
+            $('#txt-unidad').text(flota + ' [' + placa+']');
+            $('#txt-descripcion').text(desc);
+            $('#txt-observaciones').text(obs);
+            $('#btn-ir-orden').attr('href', url);
+
+            // Mostrar el modal
+            $('#modalDetalleOrden').modal('show');
         });
     function abrirModalAcoplar(id, placa) {
         // Limpiar el select por si se abrió antes
