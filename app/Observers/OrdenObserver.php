@@ -14,6 +14,8 @@ class OrdenObserver
         }
 
         $vehiculo->estatus = in_array($orden->tipo, ['Mantenimiento', 'Preventivo']) ? 3 : 5;
+        $vehiculo->save();
+
 
         // Ejemplo: Notificar al Gerente de Operaciones
         $gerente = \App\Models\User::whereIn('id_perfil', [1,2,6,12] )->get();
