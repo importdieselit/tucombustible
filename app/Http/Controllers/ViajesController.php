@@ -230,7 +230,7 @@ class ViajesController extends Controller
             DB::beginTransaction();
             $status = 'PENDIENTE_ASIGNACION';
             if($request->chofer_id != null && $request->vehiculo_id != null){
-                $status = 'PROGRAMADO';
+                $status = 'Programado';
             }
             //
             // 3. Crear el Viaje ÚNICO
@@ -1135,7 +1135,7 @@ public function updateGuiaData(Request $request, $viajeId)
 
         // 1. Cliente: Si no viene ID, crear o actualizar por RIF
     
-        $status = 'PROGRAMADO';
+        $status = 'Programado';
             //
             // 3. Crear el Viaje ÚNICO
             $viaje = Viaje::create([
