@@ -33,7 +33,7 @@
             <span class="small fw-bold text-uppercase text-muted me-3">Filtrar Estatus:</span>
             <div class="btn-group shadow-sm">
                 <a href="{{ route('viajes.list') }}" class="btn btn-sm btn-light border {{ !request('status') ? 'active fw-bold' : '' }}">Todos</a>
-                <a href="{{ route('viajes.list', ['status' => 'Programados']) }}" class="btn btn-sm btn-light border {{ request('status') === 'Programados' ? 'active bg-warning text-white' : '' }}">Programados</a>
+                <a href="{{ route('viajes.list', ['status' => 'Programado']) }}" class="btn btn-sm btn-light border {{ request('status') === 'Programados' ? 'active bg-warning text-white' : '' }}">Programados</a>
                 <a href="{{ route('viajes.list', ['status' => 'COMPLETADO']) }}" class="btn btn-sm btn-light border {{ request('status') === 'COMPLETADO' ? 'active bg-success text-white' : '' }}">Completados</a>
             </div>
         </div>
