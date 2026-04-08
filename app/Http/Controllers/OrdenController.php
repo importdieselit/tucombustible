@@ -629,7 +629,7 @@ class OrdenController extends BaseController
             if($orden->tipo == 'Mantenimiento' || $orden->tipo == 'Preventivo'){
                 $mantenimiento = MantenimientoProgramado::where('orden_id', $orden->id)->first();
                 if($mantenimiento){
-                    $mantenimiento->estatus = 4; // ANULADA
+                    $mantenimiento->estatus = 1; // ANULADA
                     $mantenimiento->save();
                 }   
             }
@@ -1134,7 +1134,7 @@ class OrdenController extends BaseController
             if($orden->tipo == 'Mantenimiento' || $orden->tipo == 'Preventivo'){
                 $mantenimiento = MantenimientoProgramado::where('orden_id', $orden->id)->first();
                 if($mantenimiento){
-                    $mantenimiento->estatus = 1; // Cerrada
+                    $mantenimiento->estatus = 3; // Cerrada
                     $mantenimiento->save();
                 }   
             }
@@ -1176,7 +1176,7 @@ class OrdenController extends BaseController
              if($orden->tipo == 'Mantenimiento' || $orden->tipo == 'Preventivo'){
                 $mantenimiento = MantenimientoProgramado::where('orden_id', $orden->id)->first();
                 if($mantenimiento){
-                    $mantenimiento->estatus = 4; // Anulada
+                    $mantenimiento->estatus = 1; // Anulada
                     $mantenimiento->save();
                 }   
             }
@@ -1294,7 +1294,7 @@ class OrdenController extends BaseController
             if($orden->tipo == 'Mantenimiento' || $orden->tipo == 'Preventivo'){
                 $mantenimiento = MantenimientoProgramado::where('orden_id', $orden->id)->first();
                 if($mantenimiento){
-                    $mantenimiento->estatus = 2; // Anulada
+                    $mantenimiento->estatus = 2; // Abierto
                     $mantenimiento->save();
                 }   
             }
