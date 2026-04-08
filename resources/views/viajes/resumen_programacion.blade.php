@@ -82,14 +82,15 @@
                       </tr>
 
                       @foreach($viaje->despachos as $index => $despacho)
-                      @if($despacho)
-                      @php($TotalLitros += $despacho->litros ?? 0)
-                        <tr style="font-size: 17px; font-weight: 600;">
-                            <td>{{$despacho->cliente->alias  ?? $despacho->cliente->nombre  ?? $despacho->otro_cliente ?? 'Cliente Null' }} @if(!is_null($despacho->observacion)) <br> [{{$despacho->observacion}}] @endif</td>
-                            <td>{{ number_format($despacho->litros, 0)}} Lts</td>
-                        </tr>
-                      @endforeach
+                        @if($despacho)
+                            @php($TotalLitros += $despacho->litros ?? 0)
+                            <tr style="font-size: 17px; font-weight: 600;">
+                                <td>{{$despacho->cliente->alias  ?? $despacho->cliente->nombre  ?? $despacho->otro_cliente ?? 'Cliente Null' }} @if(!is_null($despacho->observacion)) <br> [{{$despacho->observacion}}] @endif</td>
+                                <td>{{ number_format($despacho->litros, 0)}} Lts</td>
+                            </tr>
                         @endif
+                      @endforeach
+                        
                     @empty
                     <tr>
                         <td colspan="7" class="text-center text-muted">No hay viajes programados o en curso.</td>
