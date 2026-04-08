@@ -669,11 +669,11 @@
                             <select class="form-select select2-proveedor" name="id_proveedor" id="select-proveedor" required>
                                 <option value="">Seleccione un proveedor...</option>
                                 @foreach($proveedores as $prov)
-                                    <option value="{{ $prov->id }}">{{ $prov->nombre_proveedor }}</option>
+                                    <option value="{{ $prov->id }}">{{ $prov->nombre }}</option>
                                 @endforeach
                             </select>
                             <button class="btn btn-outline-primary" type="button" id="btn-nuevo-proveedor" title="Agregar nuevo proveedor">
-                                <i class="bi bi-plus-circle-fill"></i>
+                                <i class="fa fa-plus"> Nuevo Proveedor</i>
                             </button>
                         </div>
                     </div>
@@ -766,7 +766,14 @@
                     text: res.message || 'Operación exitosa',
                     timer: 1500,
                     showConfirmButton: false
-                }).then(() => window.location.reload());
+                }).then(() => {
+                    // Evaluamos el método para decidir el destino
+                    if (method === 'DELETE') {
+                        window.location.href = '/ordenes/';
+                    } else {
+                        window.location.reload();
+                    }
+                });
             } else {
                 Swal.fire('Error', res.message || 'Error en el servidor', 'error');
             }

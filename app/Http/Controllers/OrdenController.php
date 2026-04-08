@@ -284,6 +284,7 @@ class OrdenController extends BaseController
         $categorias_tempario = TemparioCategoria::orderBy('categoria')->get();
         $personal = Personal::with('persona')->where('cargo', 'Mecánico')->get(); // Cargar relación con Persona para obtener nombres completos
         $inventario = Inventario::all()->keyBy('id_inventario');
+        $proveedores = Proveedor::whereIn('id_tipo_proveedor', [2])->orderBy('nombre')->get();
 
 
         
@@ -296,7 +297,8 @@ class OrdenController extends BaseController
             'categorias_tempario' => $categorias_tempario,
             'personal' => $personal,
             'inventario' => $inventario,
-            'trabajosExternos' => $trabajosExternos
+            'trabajosExternos' => $trabajosExternos,
+            'proveedores' => $proveedores,
         ];  
 
     }
@@ -552,8 +554,7 @@ class OrdenController extends BaseController
                 if ($request->filled('nuevo_proveedor_nombre')) {
                     // Usamos firstOrCreate para evitar duplicados por nombre
                     $proveedor = Proveedor::firstOrCreate(
-                        ['nombre' => trim($request->nuevo_proveedor_nombre)],
-                        
+                        ['nombre' => trim($request->nuevo_proveedor_nombre), 'id_tipo_proveedor' => 2],
                     );
                     $idProveedor = $proveedor->id;
                 }
@@ -1286,19 +1287,23 @@ class OrdenController extends BaseController
             $orden->save();
 
             $vehiculo = Vehiculo::find($orden->id_vehiculo);
-            if($vehiculo){
-                $vehiculo->estatus = 3; // En mantenimiento
-                $vehiculo->save();
-            }
+            
 
             if($orden->tipo == 'Mantenimiento' || $orden->tipo == 'Preventivo'){
+                if($vehiculo){
+                    $vehiculo->estatus = 3; // En mantenimiento
+                }
                 $mantenimiento = MantenimientoProgramado::where('orden_id', $orden->id)->first();
                 if($mantenimiento){
                     $mantenimiento->estatus = 2; // Abierto
                     $mantenimiento->save();
                 }   
+            }else{
+                if($vehiculo){
+                    $vehiculo->estatus = 5;       
+                }
             }
-
+            $vehiculo->save();
             // Enviar notificación a Telegram
          $mensajeTelegram = "Orden #{$orden->nro_orden} ha sido {$accion}.\n";
          if ($vehiculo) {

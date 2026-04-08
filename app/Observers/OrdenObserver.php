@@ -8,7 +8,7 @@ class OrdenObserver
 {
     public function created(Orden $orden)
     {
-        $vehiculo = $orden->vehiculo;
+        $vehiculo = $orden->vehiculo();
         if (!$vehiculo) {
             return;
         }
