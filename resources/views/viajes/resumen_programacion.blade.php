@@ -62,7 +62,6 @@
                     @php($TotalLitrosC=0)
                     
                     @forelse($viajes as $viaje)
-                    {{dd($viaje)}}
                         @php($TotalLitrosC += $viaje->litros)
 
                       <tr style="border-bottom: 1px solid #01050a; background-color:white"   >
@@ -83,7 +82,6 @@
                       </tr>
 
                       @foreach($viaje->despachos as $index => $despacho)
-                      {{dd($despacho)}}
                       @php($TotalLitros += $despacho->litros ?? 0)
                         <tr style="font-size: 17px; font-weight: 600;">
                             <td>{{$despacho->cliente->alias  ?? $despacho->cliente->nombre  ?? $despacho->otro_cliente ?? 'Cliente Null' }} @if(!is_null($despacho->observacion)) <br> [{{$despacho->observacion}}] @endif</td>
