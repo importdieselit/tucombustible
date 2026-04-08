@@ -59,8 +59,10 @@
                 </thead>
                 <tbody>
                     @php($TotalLitros=0)
-                    @forelse($viajes as $viaje)
+                    @php($TotalLitrosC=0)
                     
+                    @forelse($viajes as $viaje)
+                        @php($TotalLitrosC += $viaje->litros)
 
                       <tr style="border-bottom: 1px solid #01050a; background-color:white"   >
                         <td colspan="2" class="text-black text-bold" style="font-weight: bold; font-size: 20px;">Salida: {{ \Carbon\Carbon::parse($viaje->fecha_salida)->locale('es')->isoFormat('DD/MM/YYYY [ Hora de Salida: ]hh:mm a') }}<br>
@@ -94,7 +96,7 @@
                     @endforelse
                     <tr style="font-weight: 700; font-size:19px; border-top: 2px solid #01050a; background-color: #d1ecf1;">
                         <td class="py-1">Total Litros</td>
-                        <td class="py-1">{{ is_null($viajes->litros) ? $TotalLitros : $viajes->litros }}</td>
+                        <td class="py-1">{{ is_null($viajes->litros) ? $TotalLitros : $TotalLitrosC }}</td>
                         <td class="py-1"></td>
                         <td class="py-1"></td>
                 </tbody>
