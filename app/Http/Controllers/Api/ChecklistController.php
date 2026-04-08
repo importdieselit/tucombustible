@@ -216,7 +216,8 @@ class ChecklistController extends Controller
 
             // 2. AHORA: Procesar lógica de negocio con respuestas ya decodificadas
             $vehiculo = Vehiculo::find($request->vehiculo_id);
-
+            $km = 0;
+            $horasDuracion = 0;
 
             $old_inspeccion = Inspeccion::where('vehiculo_id', $request->vehiculo_id)->where('checklist_id',1)
                             ->whereNull('respuesta_in')
@@ -309,7 +310,7 @@ class ChecklistController extends Controller
 
             }else{
                 $old_inspeccion->respuesta_in = $payloadJson;
-                $old_inspeccion->respuesta_json = $payloadJson;
+                //$old_inspeccion->respuesta_json = $payloadJson;
                 $old_inspeccion->estatus_general = $request->estatus_general ?? 'OK';
                 $old_inspeccion->save();
                 $createdAt = $old_inspeccion->created_at; 
@@ -377,21 +378,30 @@ class ChecklistController extends Controller
 
 
             // 3. Aplicar el cambio de estatus (Solo si el estatus cambia)
-            if ($vehiculo->estatus != $nuevoEstatus) {
+            if ($nuevoEstatus == 5) {
                 $vehiculo->estatus = $nuevoEstatus;
-                $vehiculo->save();
+                
             }
+
+            $vehiculo->save();
+
             if(!is_null($condicion)){
                 $viaje = Viaje::where('vehiculo_id', $vehiculo->id)
                         ->where('status', $condicion)
                         ->first();
-                if ($viaje) {
+                if ($viaje && $viaje->status != $nuevoEstatusViaje) {
                     $viaje->status = $nuevoEstatusViaje;
                     $viaje->save();
                     $cisterna= $viaje->cisterna;
                     if(!is_null($cisterna)){
                         $vehiculoCisterna=Vehiculo::find($cisterna->id_vehiculo);
                         $vehiculoCisterna->estatus=$nuevoEstatus;
+                        $vehiculoCisterna->kilometraje+=$km;
+                        $vehiculoCisterna->horas_trabajo+=$horasDuracion;
+                        $vehiculoCisterna->hrs_trabajo+=$horasDuracion;
+                        $vehiculoCisterna->hrs_contador+=$horasDuracion;
+                        $vehiculoCisterna->km_contador+=$km;
+                        $vehiculoCisterna->km_mantt+=$km;
                         $vehiculoCisterna->save();
                         
                     }

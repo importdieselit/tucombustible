@@ -117,9 +117,10 @@ class Vehiculo extends Model
         'hrs_mantt',
         'hrs_contador',
         'horas_trabajo',
-            'facturacion_completa',
-            'es_flota',
-            'acoplado_id',
+        'facturacion_completa',
+        'es_flota',
+        'acoplado_id',
+        'chofer_id'
     ];
     /**
      * The attributes that should be cast to native types.
@@ -160,6 +161,7 @@ class Vehiculo extends Model
         'racda' => 'string',
         'facturacion_completa' => 'boolean', // Si aplicara, basado en otro contexto si no fuera booleano nativo
         'acoplado_id' => 'integer', // bigint unsigned
+        'chofer_id' => 'integer', // bigint unsigned
     ];
 
     // Relaciones (si es necesario y tienes los modelos correspondientes)
@@ -203,6 +205,11 @@ class Vehiculo extends Model
     public function viajes()
     {
         return $this->hasMany(Viaje::class, 'vehiculo_id');
+    }
+
+    public function chofer()
+    {
+        return $this->belongsTo(Chofer::class, 'chofer_id');
     }
 
     public function ordenActiva()

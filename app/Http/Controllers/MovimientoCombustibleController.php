@@ -1425,15 +1425,10 @@ public function storeDespachoIndustrial(Request $request)
                 'usuario_id' => $userId
                 
             ]);
-
-            if(is_null($request->cisterna_id)){
-                Vehiculo::where('acoplado_id', $request->cisterna_id)->update(['acoplado_id' => null]);
-                $vehiculo = Vehiculo::find($request->vehiculo_id);
-                $vehiculo->acoplado_id = $request->cisterna_id;
-                $vehiculo->save();  
-            }
-                $chofer=Chofer::find($request->chofer_id);
-                $ayudante=Chofer::find($request->ayudante);
+            
+            
+            $chofer=Chofer::find($request->chofer_id);
+            $ayudante=Chofer::find($request->ayudante);
             
            // dd($viaje);
            switch ($request->tipo) {
@@ -1536,12 +1531,6 @@ public function storeDespachoIndustrial(Request $request)
                 
             ]);
 
-            if(is_null($request->cisterna_id)){
-                Vehiculo::where('acoplado_id', $request->cisterna_id)->update(['acoplado_id' => null]);
-                $vehiculo = Vehiculo::find($request->vehiculo_id);
-                $vehiculo->acoplado_id = $request->cisterna_id;
-                $vehiculo->save();  
-            }
 
 
            foreach ($request->despachos as $index => $despacho) {

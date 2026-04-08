@@ -3,14 +3,6 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use App\Models\Pedido;
-use App\Observers\PedidoObserver;
-use App\Models\Deposito;
-use App\Observers\DepositoObserver;
-use App\Models\Cliente;
-use App\Observers\ClienteObserver;
-use App\Models\Orden;
-use App\Observers\OrdenObserver;
 use Illuminate\Support\Facades\View;
 use App\View\Composers\AlertsComposer;
 
@@ -37,10 +29,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot() : void
     {
-        Pedido::observe(PedidoObserver::class);
-        Deposito::observe(DepositoObserver::class); 
-        Cliente::observe(ClienteObserver::class);
-        Orden::observe(OrdenObserver::class);
         View::composer('layouts.header', AlertsComposer::class); 
         if (app()->environment('local')) {
             error_reporting(E_ALL & ~E_DEPRECATED & ~E_WARNING);

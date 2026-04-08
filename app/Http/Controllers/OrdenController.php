@@ -762,8 +762,8 @@ class OrdenController extends BaseController
     public function destroy($id)
     {
         $orden = Orden::findOrFail($id);
-        $supply = InventarioSuministro::where('orden_id')->delete();
-        $compras = SuministroCompra::where('orden_id')->get();
+        $supply = InventarioSuministro::where('id_orden', $id)->delete();
+        $compras = SuministroCompra::where('orden_id', $id)->get();
         foreach($compras as $compra){
             $compra->detalles()->delete();
             $compra->delete();
@@ -904,7 +904,6 @@ class OrdenController extends BaseController
                     $vehiculo->km_contador += $dif;
                     $vehiculo->km_mantt += $dif;
                 }
-                $vehiculo->estatus = in_array($orden->tipo, ['Mantenimiento', 'Preventivo']) ? 3 : 5;
                 $vehiculo->save();
             }
 
