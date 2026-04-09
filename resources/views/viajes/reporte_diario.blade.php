@@ -282,27 +282,21 @@
                     <tbody>
                        @foreach($viajesDelDia as $v)
                             @php
-                                $destinoRaw = $v->destino_ciudad;
-                                $esFlete = str_contains(strtoupper($destinoRaw), 'FLETE');
-                                $destinoLimpio = trim(str_ireplace(['FLETE', ' ->'], ['', ''], $destinoRaw));
                                 
-                                if ($esFlete) {
+                                if ($v->es_flete) {
                                     $tipoEtiqueta = 'Flete';
                                     $badgeColor = 'bg-dark text-white';
                                     $icon = 'fa-truck-loading';
                                     $textColor = 'text-purple'; // Definir este color en CSS: #6f42c1
-                                    $totalLitros = $v->litros ?? ($v->despachos->sum('litros') ?? 0);
                                 } else {
-                                    $esDespacho = is_null($v->litros);
-                                    $tipoEtiqueta = $esDespacho ? 'Despacho' : 'Carga';
-                                    $badgeColor = $esDespacho ? 'bg-primary' : 'bg-danger';
-                                    $icon = $esDespacho ? 'fa-arrow-up' : 'fa-arrow-down';
-                                    $textColor = $esDespacho ? 'text-primary' : 'text-danger';
-                                    $totalLitros = $esDespacho ? ($v->despachos->sum('litros') ?? 0) : $v->litros;
+                                    $tipoEtiqueta = $v->es_despacho ? 'Despacho' : 'Carga';
+                                    $badgeColor = $v->es_despacho ? 'bg-primary' : 'bg-danger';
+                                    $icon = $v->es_despacho ? 'fa-arrow-up' : 'fa-arrow-down';
+                                    $textColor = $v->es_despacho ? 'text-primary' : 'text-danger';
                                 }
                             @endphp
-                            <tr>
-                                <td class="ps-3">
+                            <tr style="cursor: default; font-size: 0.8rem;">
+                                <td class="p-1">
                                     @php
                                         $statusConfig = match($v->status) {
                                             'Programado' => ['class' => 'bg-info', 'icon' => 'fa-clock'],
@@ -311,12 +305,12 @@
                                             default      => ['class' => 'bg-secondary', 'icon' => 'fa-info-circle']
                                         };
                                     @endphp
-                                    <span class="badge {{ $statusConfig['class'] }} p-2 px-3 shadow-sm border-0" style="min-width: 120px;">
+                                    <span class="badge {{ $statusConfig['class'] }} p-1 px-2 shadow-sm border-0" style="min-width: 80px; font-size: 0.6rem;">
                                         <i class="fas {{ $statusConfig['icon'] }} me-1"></i> {{ $v->status }}
                                     </span>
                                 </td>
                                 <td>
-                                    <div class="fw-bold text-small" style="font-size: 0.8rem;">{{ $v->fecha_salida ? \Carbon\Carbon::parse($v->fecha_salida)->format('d/m/Y') : 'N/A' }}</div>
+                                    <div class=" text-small" style="font-size: 0.8rem;">{{ $v->fecha_salida ? \Carbon\Carbon::parse($v->fecha_salida)->format('d/m/Y') : 'N/A' }}</div>
                                     {{-- <div class="fw-bold text-small" style="font-size: 0.7rem;">{{ $v->fecha_salida ? \Carbon\Carbon::parse($v->fecha_salida)->format('H:i') : 'N/A' }}</div> --}}
                                 </td>
                                 <td class="small fw-bold {{ $textColor }}">
@@ -324,13 +318,15 @@
                                 </td>
                                 <td>
                                     <div class="fw-bold">{{ $v->vehiculo->flota ?? 'N/A' }} {{ $v->vehiculo->placa ?? 'N/A' }}</div>
-                                    <div class="fw-bold small bt-1" style="font-size: 0.9rem; border-top:solid 1px #ced4da; width: fit-content;">{{ $v->cisternaAcoplada->flota ?? '' }} {{ $v->cisternaAcoplada->placa ?? '' }}</div>
+                                    <div class="fw-bold small bt-1" style="font-size: 0.8rem; border-top:solid 1px #ced4da; width: fit-content;">{{ $v->cisternaAcoplada->flota ?? '' }} {{ $v->cisternaAcoplada->placa ?? '' }}</div>
                                 </td>
                                 <td class="small">{{ explode(' ', $v->chofer->persona->nombre ?? 'Sin asignar')[0] }}</td>
-                                <td>{{ $v->litros ?? $v->despachos->sum('litros'); }}</td>
+                                <td class="small fw-bold">{{ $v->litros_totales; }}</td>
                                 <td><span class="badge border text-dark bg-white">{{ $v->producto->nombre ?? 'N/A' }}</span></td>
-                                <td class="small text-truncate" style="max-width: 180px;" title="{{ $destinoRaw }}">
-                                    {{ $destinoLimpio }}
+                                <td class="small text-wrap " style="max-width: 180px;" title="{{ $v->destino_limpio }}">
+                                    <div class="fw-bold">{{ $v->destino_limpio }}</div>
+                                    <div class="small bt-1" style="font-size: 0.7rem; border-top:solid 1px #ced4da; width: fit-content;">{{ $v->cliente_reporte }}</div>
+
                                 </td>
                             </tr>
                         @endforeach

@@ -1302,27 +1302,75 @@ public function updateGuiaData(Request $request, $viajeId)
         
     }
 
-   public function reporteDiario(Request $request)
+  public function reporteDiario(Request $request)
 {
     $fecha = $request->input('fecha', now()->format('Y-m-d'));
 
-    $viajesDelDia = Viaje::with(['vehiculo', 'chofer', 'producto', 'despachos'])
-        ->whereDate('fecha_salida','>=', $fecha)
+    // 1. Eager Loading: Traemos relaciones necesarias para evitar N+1
+    $viajesRaw = Viaje::with([
+            'vehiculo', 'chofer', 'producto', 'despachos.cliente', 
+            'cliente', 'cisternaAcoplada'
+        ])
+        ->whereDate('fecha_salida', '>=', $fecha)
         ->get();
 
-    // Función de ayuda para clasificar y contar por producto y estatus
+    // 2. Procesamiento y Enriquecimiento de la data
+    $viajesDelDia = $viajesRaw->map(function($v) {
+        $destinoRaw = strtoupper($v->destino_ciudad);
+        $v->es_flete = str_contains($destinoRaw, 'FLETE');
+        $v->es_despacho = is_null($v->litros);
+        $v->es_carga = !$v->es_despacho && !$v->es_flete;
+
+        // Limpieza de destino
+        $v->destino_limpio = trim(str_ireplace(['FLETE', ' ->'], ['', ''], $v->destino_ciudad));
+
+        // Cálculo de Litros Totales (Centralizado)
+        $v->litros_totales = $v->es_despacho 
+            ? $v->despachos->sum('litros') 
+            : ($v->litros ?? 0);
+
+        // Lógica de Jerarquía de Cliente
+        $clienteFinal = null;
+        if (!$v->es_carga) {
+            // A. Cliente directo del viaje
+            $clienteFinal = $v->cliente ? ($v->cliente->alias ?? $v->cliente->nombre) : null;
+
+            // B. Si no hay, buscar en el primer despacho que tenga cliente
+            if (!$clienteFinal && $v->despachos->isNotEmpty()) {
+                $conCliente = $v->despachos->whereNotNull('cliente_id')->first();
+                if ($conCliente && $conCliente->cliente) {
+                    $clienteFinal = $conCliente->cliente->alias ?? $conCliente->cliente->nombre;
+                }else{
+                    // Si no hay cliente_id, pero hay otro_cliente en el despacho
+                    $conOtroCliente = $v->despachos->whereNotNull('otro_cliente')->first();
+                    if ($conOtroCliente) {
+                        $clienteFinal = $conOtroCliente->otro_cliente;
+                    }
+                }
+            }
+
+            // C. Si aún no hay, usar el campo manual
+            if (!$clienteFinal) {
+                $clienteFinal = $v->otro_cliente;
+            }
+        }
+        $v->cliente_reporte = $clienteFinal;
+
+        return $v;
+    });
+
+    // 3. Función de ayuda para clasificación (Usa los nuevos atributos)
     $contarGranular = function($coleccion, $status, $productoNombre) {
         return $coleccion->where('status', $status)
             ->filter(fn($v) => $v->producto && str_contains(strtoupper($v->producto->nombre), strtoupper($productoNombre)))
             ->count();
     };
 
-    // Separación inicial por la nueva lógica de Fletes
-    $fletes = $viajesDelDia->filter(fn($v) => str_contains(strtoupper($v->destino_ciudad), 'FLETE'));
-    $operacionesBase = $viajesDelDia->reject(fn($v) => str_contains(strtoupper($v->destino_ciudad), 'FLETE'));
-
-    $cargas = $operacionesBase->whereNotNull('litros');
-    $despachos = $operacionesBase->whereNull('litros');
+    // 4. Clasificación para las tablas
+    $fletes = $viajesDelDia->filter(fn($v) => $v->es_flete);
+    $operacionesBase = $viajesDelDia->reject(fn($v) => $v->es_flete);
+    $cargas = $operacionesBase->where('es_carga', true);
+    $despachos = $operacionesBase->where('es_despacho', true);
 
     $reporte = [
         'fecha' => $fecha,
@@ -1331,25 +1379,20 @@ public function updateGuiaData(Request $request, $viajeId)
         'fletes'    => $this->generarEstructuraEstatus($fletes, $contarGranular),
     ];
 
-    // 1. Litros Disponibles (Ajustar según el nombre de tu modelo de Tanques/Depósitos)
-     $totalDisponibles = Deposito::sum('nivel_actual_litros'); 
-   // $totalDisponibles = 154000; // Valor de prueba (sustituir por tu consulta real)
+    // 5. Estadísticas para las Cards (Usando los litros ya procesados)
+    $totalDisponibles = Deposito::sum('nivel_actual_litros');
 
-    // 2. Total Litros Despachados (Ejecutados: EN RUTA o COMPLETADO)
-    $totalDespachados = $despachos->whereIn('status', ['EN RUTA', 'COMPLETADO']) // Es despacho
-        ->flatMap->despachos->sum('litros');
+    $totalDespachados = $despachos->whereIn('status', ['EN RUTA', 'COMPLETADO'])
+        ->sum('litros_totales');
 
-    // 3. Total Litros Carga (Ejecutados: EN RUTA o COMPLETADO)
-    $totalCarga = $cargas->whereIn('status', ['EN RUTA', 'COMPLETADO']) // Es carga
-        ->sum('litros');
+    $totalCarga = $cargas->whereIn('status', ['EN RUTA', 'COMPLETADO'])
+        ->sum('litros_totales');
 
-    // 4. Total Litros Programados (Solo Despachos con status 'Programado')
     $totalProgDespacho = $despachos->where('status', 'Programado')
-        ->flatMap->despachos->sum('litros');
+        ->sum('litros_totales');
 
-    // 5. Total Cargas Programadas (Solo Cargas con status 'Programado')
     $totalProgCarga = $cargas->where('status', 'Programado')
-        ->sum('litros');
+        ->sum('litros_totales');
 
     return view('viajes.reporte_diario', [
         'fecha' => $fecha,
