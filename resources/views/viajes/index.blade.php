@@ -88,6 +88,17 @@
             </div>
         </div>
 
+         <!-- Tarjeta 5: Ver Tabulador de Viaticos -->
+        <div class="col">
+            <div class="card h-100 shadow border-start border-4 border-secondary">
+                <div class="card-body">
+                    <h5 class="card-title text-secondary"><i class="bi bi-graph-up me-2"></i> Reporte Diario</h5>
+                    <p class="card-text">Resumen de movimientos compras y cargas del dia.</p>
+                    <a href="{{ route('viajes.reporteDiario') }}" class="btn btn-primary w-100 " aria-disabled="true">Ver Reporte</a>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 @endsection

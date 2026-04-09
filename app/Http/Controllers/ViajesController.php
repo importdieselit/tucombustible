@@ -1299,4 +1299,56 @@ public function updateGuiaData(Request $request, $viajeId)
         }
         
     }
+
+    public function reporteDiario(Request $request)
+    {
+        $fecha = $request->input('fecha', now()->format('Y-m-d'));
+
+        // Cargamos relaciones clave: vehículo, chofer y el producto (tipo)
+        $viajesDelDia = Viaje::with(['vehiculo', 'chofer', 'producto','despachos','despachos.cliente'])
+            ->whereDate('fecha_salida', $fecha)
+            ->get();
+
+        // 1. Separar Cargas vs Despachos según el campo 'litros'
+        $cargas = $viajesDelDia->whereNotNull('litros');
+        $despachos = $viajesDelDia->whereNull('litros');
+
+        // 2. Función auxiliar para filtrar por producto (Industrial vs MGO)
+        // Ajusta 'Industrial' o 'MGO' según los nombres reales en tu tabla 'productos'
+        $filtrarPorProducto = function($coleccion, $nombreProducto) {
+            return $coleccion->filter(function($v) use ($nombreProducto) {
+                return $v->producto && str_contains(strtoupper($v->producto->nombre), strtoupper($nombreProducto));
+            });
+        };
+
+        $reporte = [
+            'fecha' => $fecha,
+            'despachos' => [
+                'programados' => [
+                    'total'      => $despachos->where('status', 'Programado')->count(),
+                    'industrial' => $filtrarPorProducto($despachos->where('status', 'Programado'), 'Industrial')->count(),
+                    'mgo'        => $filtrarPorProducto($despachos->where('status', 'Programado'), 'MGO')->count(),
+                ],
+                'realizados' => [
+                    'total'      => $despachos->whereIn('status', ['EN RUTA', 'COMPLETADO'])->count(),
+                    'industrial' => $filtrarPorProducto($despachos->whereIn('status', ['EN RUTA', 'COMPLETADO']), 'Industrial')->count(),
+                    'mgo'        => $filtrarPorProducto($despachos->whereIn('status', ['EN RUTA', 'COMPLETADO']), 'MGO')->count(),
+                ]
+            ],
+            'cargas' => [
+                'programadas' => [
+                    'total'      => $cargas->where('status', 'Programado')->count(),
+                    'industrial' => $filtrarPorProducto($cargas->where('status', 'Programado'), 'Industrial')->count(),
+                    'mgo'        => $filtrarPorProducto($cargas->where('status', 'Programado'), 'MGO')->count(),
+                ],
+                'realizadas' => [
+                    'total'      => $cargas->whereIn('status', ['EN RUTA', 'COMPLETADO'])->count(),
+                    'industrial' => $filtrarPorProducto($cargas->whereIn('status', ['EN RUTA', 'COMPLETADO']), 'Industrial')->count(),
+                    'mgo'        => $filtrarPorProducto($cargas->whereIn('status', ['EN RUTA', 'COMPLETADO']), 'MGO')->count(),
+                ]
+            ]
+        ];
+
+        return view('viajes.reporte_diario', compact('reporte', 'viajesDelDia'));
+    }
 }

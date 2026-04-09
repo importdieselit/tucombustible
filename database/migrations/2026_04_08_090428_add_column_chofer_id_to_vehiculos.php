@@ -14,7 +14,7 @@ class AddColumnChoferIdToVehiculos extends Migration
     public function up()
     {
         Schema::table('vehiculos', function (Blueprint $table) {
-            //
+            $table->unsignedBigInteger('chofer_id')->nullable()->after('acoplado_id');
         });
     }
 
@@ -26,7 +26,7 @@ class AddColumnChoferIdToVehiculos extends Migration
     public function down()
     {
         Schema::table('vehiculos', function (Blueprint $table) {
-            //
+            $table->dropColumn('chofer_id');
         });
     }
 }

@@ -131,15 +131,14 @@
                 </thead>
                 <tbody>
                     @foreach ($data as $index => $vehiculo)
-                     @php $orden=false; @endphp
+                        @php $orden=false; @endphp
                         @php
-
                             $orden=App\Models\Orden::where('id_vehiculo',$vehiculo->id)->where('estatus',2)->get()->first();
                             if($orden){
                                 $fecha=$orden->fecha_in;
                                 $duracionDias = Illuminate\Support\Carbon::parse($fecha)->diffInDays(Illuminate\Support\Carbon::parse(now()));
                             }
-                            @endphp
+                        @endphp
                     <tr class="clickable-row" @if($orden && $duracionDias>3) style="border: none red !important; font-weight: bold;" @endif  data-id="{{ $vehiculo->id }}">
                         <td class="d-none d-md-table-cell clickable-td">{{ $index + 1 }}</td>
                         <td class="clickable-td">{{ $vehiculo->flota ?? 'N/A' }}</td>
@@ -476,6 +475,7 @@
             // Mostrar el modal
             $('#modalDetalleOrden').modal('show');
         });
+
     function abrirModalAcoplar(id, placa) {
         // Limpiar el select por si se abrió antes
         $('#formAcoplar')[0].reset();

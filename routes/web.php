@@ -230,6 +230,8 @@ Route::middleware(['auth'])->group(function () {
         Route::put('viaticos/tabulador/update', [ViajesController::class, 'tabuladorUpdate'])->name('viaticos.tabulador.update');
         Route::put('viaticos/parametros/update', [ViajesController::class, 'parametrosUpdate'])->name('viaticos.parametros.update');
         Route::get('eventos', [ViajesController::class, 'getCombinedEventos'])->name('eventos');
+        Route::get('viajes/reporte/{fecha?}', [ViajesController::class, 'reporteDiario'])->name('viajes.reporteDiario');
+
 
         // Boletas y Nominaciones
         Route::get('/despachos/guia-distribucion/{viajeId}', [ViajesController::class, 'printGuiaDistribucion'])->name('despachos.guia_distribucion');
