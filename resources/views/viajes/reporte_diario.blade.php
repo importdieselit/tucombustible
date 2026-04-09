@@ -98,6 +98,26 @@
     .card:hover {
         transform: translateY(-3px);
     }
+
+    /* Estilo para el placeholder del div editable */
+[contenteditable=true]:empty:before {
+    content: attr(placeholder);
+    display: block;
+    color: #adb5bd;
+}
+
+/* En la captura, quitamos el borde punteado para que parezca un reporte oficial */
+.is-capturing #observaciones_reporte {
+    border: none !important;
+    padding-left: 0 !important;
+    color: #333 !important;
+}
+
+/* Color específico para el título de observaciones si prefieres el naranja de los Chutos */
+.bg-observaciones {
+    background-color: #2c3e50; /* Color camionetas */
+    color: white;
+}
 }
 </style>
 @endpush
@@ -220,6 +240,25 @@
                         @endforeach
                     </tbody>
                 </table>
+            </div>
+            <div class="card border-0 shadow-sm mt-4 mb-4 mx-3">
+                <div class="card-header bg-camionetas text-white d-flex align-items-center">
+                    <h6 class="mb-0 small fw-bold"><i class="fas fa-comment-alt me-2"></i> OBSERVACIONES / NOVEDADES DEL DÍA</h6>
+                </div>
+                <div class="card-body bg-white border border-top-0">
+                    <div id="observaciones_reporte" 
+                        contenteditable="true" 
+                        class="p-3 text-muted" 
+                        style="min-height: 100px; border: 1px dashed #ced4da; border-radius: 8px; font-size: 0.9rem; outline: none;"
+                        placeholder="Haga clic aquí para escribir las novedades...">
+                        Sin observaciones adicionales para la jornada.
+                    </div>
+                </div>
+                <div class="card-footer bg-light p-1 text-center no-print">
+                    <small class="text-muted" style="font-size: 0.7rem;">
+                        <i class="fas fa-info-circle"></i> Este recuadro es editable. Lo que escribas aquí saldrá en la imagen capturada.
+                    </small>
+                </div>
             </div>
         </div>
     </div>
