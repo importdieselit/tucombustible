@@ -64,12 +64,18 @@
                         }
                         switch ($po->estatus) {
                             case 1:
-                                $estatus='Solicitados';
+                                $estatus='Despachado';
                                 break;
                             case 2:
-                                $estatus='Aprobado';
+                                $estatus='Solicitado';
                                 break;
                             case 3:
+                                $estatus='Aprobado';
+                                break;
+                            case 4:
+                                $estatus='En Observación';
+                                break;
+                            case 5:
                                 $estatus='Rechazado'; 
                                 break;
                             
