@@ -1307,7 +1307,7 @@ public function updateGuiaData(Request $request, $viajeId)
     $fecha = $request->input('fecha', now()->format('Y-m-d'));
 
     $viajesDelDia = Viaje::with(['vehiculo', 'chofer', 'producto', 'despachos'])
-        ->whereDate('fecha_salida', $fecha)
+        ->whereDate('fecha_salida','>=', $fecha)
         ->get();
 
     // Función de ayuda para clasificar y contar por producto y estatus
