@@ -270,6 +270,7 @@
                     <thead class="table-light x-small text-uppercase">
                         <tr>
                             <th class="ps-3">Estatus</th>
+                            <th>Fecha Salida</th>
                             <th>Tipo</th>
                             <th>Unidad</th>
                             <th>Chofer</th>
@@ -313,6 +314,10 @@
                                     <span class="badge {{ $statusConfig['class'] }} p-2 px-3 shadow-sm border-0" style="min-width: 120px;">
                                         <i class="fas {{ $statusConfig['icon'] }} me-1"></i> {{ $v->status }}
                                     </span>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-small" style="font-size: 0.8rem;">{{ $v->fecha_salida ? \Carbon\Carbon::parse($v->fecha_salida)->format('d/m/Y') : 'N/A' }}</div>
+                                    {{-- <div class="fw-bold text-small" style="font-size: 0.7rem;">{{ $v->fecha_salida ? \Carbon\Carbon::parse($v->fecha_salida)->format('H:i') : 'N/A' }}</div> --}}
                                 </td>
                                 <td class="small fw-bold {{ $textColor }}">
                                     <i class="fas {{ $icon }}"></i> {{ strtoupper($tipoEtiqueta) }}
