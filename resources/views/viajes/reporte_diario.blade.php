@@ -23,31 +23,20 @@
   /* Si usas fuentes de iconos como FontAwesome, 
      esto asegura que no haya desfases */
 }
-.bg-chutos {
-        background-color: #ff6600 !important;
-    }
-    .bg-camiones {
-        background-color: #ffc107 !important;
-    }
-    .bg-cisternas {
-        background-color: #198754 !important;
-    }
-    .bg-camionetas {
-        background-color: #2c3e50 !important;
-    }
+/* Colores de Flota */
+.bg-chutos { background-color: #ff6600 !important; color: white; }
+.bg-camiones { background-color: #ffc107 !important; color: #212529; }
+.bg-cisternas { background-color: #198754 !important; color: white; }
+.bg-camionetas { background-color: #e7e7e7 !important; color: white; }
 
-    .border-chutos {
-        border-color: #ff6600 !important;
-    }
-    .border-camiones {
-        border-color: #ffc107 !important;
-        }
-    .border-cisternas {
-        border-color: #198754 !important;
-    }
-    .border-camionetas {
-        border-color: #2c3e50 !important
-    }
+.border-chutos { border-color: #ff6600 !important; }
+.border-camiones { border-color: #ffc107 !important; }
+.border-cisternas { border-color: #198754 !important; }
+.border-camionetas { border-color: #e7e7e7 !important; }
+
+/* Utilidades de contraste */
+.text-chutos { color: #ff6600; }
+.bg-white-clean { background-color: #ffffff; }
 
 @media print {
     /* Configuración de la página */
@@ -136,43 +125,105 @@
     </div>
 
     <div class="report-master-card shadow-lg bg-white mx-auto p-0 printableArea" style="max-width: 1000px; border-radius: 15px; overflow: hidden;">
-        <table class="table table-bordered text-center shadow-sm">
-            <thead class="table-dark">
-                <tr>
-                    <th rowspan="2" class="align-middle text-start">Operación Diaria</th>
-                    <th colspan="3" class="bg-primary">Planificación (Programados)</th>
-                    <th colspan="3" class="bg-success">Ejecución (Realizados/En Ruta)</th>
-                </tr>
-                <tr>
-                    <th>IND</th>
-                    <th>MGO</th>
-                    <th class="table-active">Total</th>
-                    <th>IND</th>
-                    <th>MGO</th>
-                    <th class="table-active">Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="text-start"><strong>Despachos a Clientes</strong></td>
-                    <td>{{ $reporte['despachos']['programados']['industrial'] }}</td>
-                    <td>{{ $reporte['despachos']['programados']['mgo'] }}</td>
-                    <td class="table-active"><strong>{{ $reporte['despachos']['programados']['total'] }}</strong></td>
-                    <td>{{ $reporte['despachos']['realizados']['industrial'] }}</td>
-                    <td>{{ $reporte['despachos']['realizados']['mgo'] }}</td>
-                    <td class="table-active"><strong>{{ $reporte['despachos']['realizados']['total'] }}</strong></td>
-                </tr>
-                <tr>
-                    <td class="text-start"><strong>Cargas (Compra Combustible)</strong></td>
-                    <td>{{ $reporte['cargas']['programadas']['industrial'] }}</td>
-                    <td>{{ $reporte['cargas']['programadas']['mgo'] }}</td>
-                    <td class="table-active"><strong>{{ $reporte['cargas']['programadas']['total'] }}</strong></td>
-                    <td>{{ $reporte['cargas']['realizadas']['industrial'] }}</td>
-                    <td>{{ $reporte['cargas']['realizadas']['mgo'] }}</td>
-                    <td class="table-active"><strong>{{ $reporte['cargas']['realizadas']['total'] }}</strong></td>
-                </tr>
-            </tbody>
-        </table>
+ 
+<div class="container-fluid py-4">
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-corporate-blue d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i> RESUMEN DE OPERACIONES</h5>
+            <span class="badge bg-white text-dark">{{ \Carbon\Carbon::parse($reporte['fecha'])->format('d/m/Y') }}</span>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered mb-0 text-center align-middle">
+                <thead class="bg-light small">
+                    <tr>
+                    <th rowspan="2" class="text-start ps-3 bg-white-clean">CATEGORÍA</th>
+                        <th colspan="2" class="bg-camionetas border-camionetas">1. PROGRAMADOS</th>
+                        <th colspan="2" class="bg-camiones border-camiones">2. EN RUTA</th>
+                        <th colspan="2" class="bg-cisternas border-cisternas">3. COMPLETADOS</th>
+                    </tr>
+                    <tr class="bg-light x-small">
+                        <th width="12%">DIESEL</th><th width="12%">MGO</th>
+                        <th width="12%">DIESEL</th><th width="12%">MGO</th>
+                        <th width="12%">DIESEL</th><th width="12%">MGO</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-start ps-3 fw-bold"><i class="fas fa-shipping-fast text-primary me-2"></i> DESPACHOS</td>
+                        <td class="fw-bold">{{ $reporte['despachos']['programados']['ind'] }}</td>
+                        <td class="fw-bold">{{ $reporte['despachos']['programados']['mgo'] }}</td>
+                        <td class="bg-warning bg-opacity-10 fw-bold">{{ $reporte['despachos']['en_ruta']['ind'] }}</td>
+                        <td class="bg-warning bg-opacity-10 fw-bold">{{ $reporte['despachos']['en_ruta']['mgo'] }}</td>
+                        <td class="bg-success bg-opacity-10 fw-bold text-success">{{ $reporte['despachos']['completados']['ind'] }}</td>
+                        <td class="bg-success bg-opacity-10 fw-bold text-success">{{ $reporte['despachos']['completados']['mgo'] }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-start ps-3 fw-bold"><i class="fas fa-filling-station text-danger me-2"></i> CARGAS PLANTA</td>
+                        <td class="fw-bold">{{ $reporte['cargas']['programadas']['ind'] }}</td>
+                        <td class="fw-bold">{{ $reporte['cargas']['programadas']['mgo'] }}</td>
+                        <td class="bg-warning bg-opacity-10 fw-bold">{{ $reporte['cargas']['en_ruta']['ind'] }}</td>
+                        <td class="bg-warning bg-opacity-10 fw-bold">{{ $reporte['cargas']['en_ruta']['mgo'] }}</td>
+                        <td class="bg-success bg-opacity-10 fw-bold text-success">{{ $reporte['cargas']['completadas']['ind'] }}</td>
+                        <td class="bg-success bg-opacity-10 fw-bold text-success">{{ $reporte['cargas']['completadas']['mgo'] }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fas fa-list-ul me-2"></i> DETALLE DE PLANIFICACIÓN DIARIA</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light x-small text-uppercase">
+                        <tr>
+                            <th class="ps-3">Estatus</th>
+                            <th>Tipo</th>
+                            <th>Unidad</th>
+                            <th>Chofer</th>
+                            <th>Producto</th>
+                            <th>Destino</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($viajesDelDia as $v)
+                        <tr>
+                            <td class="ps-3">
+                                @php
+                                    $statusMap = [
+                                        'Programado' => ['class' => 'bg-primary', 'icon' => 'fa-clock'],
+                                        'EN RUTA'    => ['class' => 'bg-warning text-dark', 'icon' => 'fa-truck-moving'],
+                                        'COMPLETADO' => ['class' => 'bg-success', 'icon' => 'fa-check-circle']
+                                    ];
+                                    $current = $statusMap[$v->status] ?? ['class' => 'bg-secondary', 'icon' => 'fa-info'];
+                                @endphp
+                                <span class="badge rounded-pill {{ $current['class'] }} p-2 px-3 shadow-sm" style="min-width: 110px;">
+                                    <i class="fas {{ $current['icon'] }} me-1"></i> {{ $v->status }}
+                                </span>
+                            </td>
+                            <td class="small fw-bold {{ $v->litros ? 'text-danger' : 'text-primary' }}">
+                                {{ $v->litros ? 'CARGA' : 'DESPACHO' }}
+                            </td>
+                            <td>
+                                <div class="fw-bold">{{ $v->vehiculo->flota ?? 'N/A' }} {{ $v->vehiculo->placa ?? 'N/A' }}</div>
+                                <div class="text-muted small" style="font-size: 0.7rem;">{{ $v->cisternaAcoplada->flota ?? '' }} {{ $v->cisternaAcoplada->placa ?? '' }}</div>
+                            </td>
+                            <td class="small">{{ explode(' ', $v->chofer->nombre ?? 'Sin asignar')[0] }}</td>
+                            <td><span class="badge border text-dark bg-white">{{ $v->producto->nombre ?? 'N/A' }}</span></td>
+                            <td class="small text-truncate" style="max-width: 180px;">{{ $v->destino_ciudad }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
         
 
 

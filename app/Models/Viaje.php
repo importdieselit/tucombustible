@@ -39,8 +39,7 @@ class Viaje extends Model
         'otro_vehiculo',
         'otro_chofer',
         'otro_ayudante',
-        'tipo',
-        'cisterna'
+        'tipo'
     ];
 
     protected $casts = [
