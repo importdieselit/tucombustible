@@ -89,13 +89,9 @@
                         <td>{{ $orden->nro_orden }}</td>
                         <td>{{ $orden->vehiculo()?$orden->vehiculo()->flota.' '.$orden->vehiculo()->placa:null }}</td>
                         <td>{{ $orden->tipo }}</td>
-                        <td>
-                                {{ $orden->created_at->format('d/m/Y') }}
-                        </td>
+                        <td>{{ $orden->created_at->format('d/m/Y') }}</td>
                         <td>{{$po->created_at->diffForHumans(now())}}</td>
-                        <td>
-                            {{$estatus}}
-                        </td>
+                        <td>{{$estatus}}</td>
                     </tr>
                     @endforeach
                 </tbody>

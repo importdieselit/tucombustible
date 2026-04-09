@@ -25,6 +25,8 @@ use App\Models\Guia;
 use App\Models\Buques;
 use App\Models\Muelles;
 use App\Models\CaptacionCliente;
+use App\Models\Deposito;
+use App\Models\CompraCombustible;
 
 class ViajesController extends Controller
 {
@@ -1301,61 +1303,73 @@ public function updateGuiaData(Request $request, $viajeId)
     }
 
    public function reporteDiario(Request $request)
-    {
-        $fecha = $request->input('fecha', now()->format('Y-m-d'));
+{
+    $fecha = $request->input('fecha', now()->format('Y-m-d'));
 
-        // Eager Loading de todas las relaciones necesarias para el detalle
-        $viajesDelDia = Viaje::with(['vehiculo', 'cisternaAcoplada', 'chofer', 'producto'])
-            ->whereDate('fecha_salida', $fecha)
-            ->orderBy('status', 'asc')
-            ->get();
+    $viajesDelDia = Viaje::with(['vehiculo', 'chofer', 'producto', 'despachos'])
+        ->whereDate('fecha_salida', $fecha)
+        ->get();
 
-        // Lógica de filtrado para el resumen (Colecciones)
-        $cargas = $viajesDelDia->whereNotNull('litros');
-        $despachos = $viajesDelDia->whereNull('litros');
+    // Función de ayuda para clasificar y contar por producto y estatus
+    $contarGranular = function($coleccion, $status, $productoNombre) {
+        return $coleccion->where('status', $status)
+            ->filter(fn($v) => $v->producto && str_contains(strtoupper($v->producto->nombre), strtoupper($productoNombre)))
+            ->count();
+    };
 
-        $filtrarPorProducto = function($coleccion, $termino) {
-            return $coleccion->filter(fn($v) => $v->producto && str_contains(strtoupper($v->producto->nombre), strtoupper($termino)));
-        };
+    // Separación inicial por la nueva lógica de Fletes
+    $fletes = $viajesDelDia->filter(fn($v) => str_contains(strtoupper($v->destino_ciudad), 'FLETE'));
+    $operacionesBase = $viajesDelDia->reject(fn($v) => str_contains(strtoupper($v->destino_ciudad), 'FLETE'));
 
-        $reporte = [
-            'fecha' => $fecha,
-            'despachos' => [
-                'programados' => [
-                    'total' => $despachos->where('status', 'Programado')->count(),
-                    'ind'   => $filtrarPorProducto($despachos->where('status', 'Programado'), 'DIESEL')->count(),
-                    'mgo'   => $filtrarPorProducto($despachos->where('status', 'Programado'), 'M.G.O.')->count(),
-                ],
-                'en_ruta' => [
-                    'total' => $despachos->where('status', 'EN RUTA')->count(),
-                    'ind'   => $filtrarPorProducto($despachos->where('status', 'EN RUTA'), 'DIESEL')->count(),
-                    'mgo'   => $filtrarPorProducto($despachos->where('status', 'EN RUTA'), 'M.G.O.')->count(),
-                ],
-                'completados' => [
-                    'total' => $despachos->where('status','COMPLETADO')->count(),
-                    'ind'   => $filtrarPorProducto($despachos->where('status', 'COMPLETADO'), 'DIESEL')->count(),
-                    'mgo'   => $filtrarPorProducto($despachos->where('status', 'COMPLETADO'), 'M.G.O.')->count(),
-                ]
-            ],
-            'cargas' => [
-                'programadas' => [
-                    'total' => $cargas->where('status', 'Programado')->count(),
-                    'ind'   => $filtrarPorProducto($cargas->where('status', 'Programado'), 'DIESEL')->count(),
-                    'mgo'   => $filtrarPorProducto($cargas->where('status', 'Programado'), 'M.G.O.')->count(),
-                ],
-                'en_ruta' => [
-                    'total' => $cargas->where('status', 'EN RUTA')->count(),
-                    'ind'   => $filtrarPorProducto($cargas->where('status', 'EN RUTA'), 'DIESEL')->count(),
-                    'mgo'   => $filtrarPorProducto($cargas->where('status', 'EN RUTA'), 'M.G.O.')->count(),
-                ],
-                'completadas' => [
-                    'total' => $cargas->where('status', 'COMPLETADO')->count(),
-                    'ind'   => $filtrarPorProducto($cargas->where('status', 'COMPLETADO'), 'DIESEL')->count(),
-                    'mgo'   => $filtrarPorProducto($cargas->where('status', 'COMPLETADO'), 'M.G.O.')->count(),
-                ]
-            ]
-        ];
+    $cargas = $operacionesBase->whereNotNull('litros');
+    $despachos = $operacionesBase->whereNull('litros');
 
-        return view('viajes.reporte_diario', compact('reporte', 'viajesDelDia','fecha'));
-    }
+    $reporte = [
+        'fecha' => $fecha,
+        'despachos' => $this->generarEstructuraEstatus($despachos, $contarGranular),
+        'cargas'    => $this->generarEstructuraEstatus($cargas, $contarGranular),
+        'fletes'    => $this->generarEstructuraEstatus($fletes, $contarGranular),
+    ];
+
+    // 1. Litros Disponibles (Ajustar según el nombre de tu modelo de Tanques/Depósitos)
+     $totalDisponibles = Deposito::sum('nivel_actual_litros'); 
+   // $totalDisponibles = 154000; // Valor de prueba (sustituir por tu consulta real)
+
+    // 2. Total Litros Despachados (Ejecutados: EN RUTA o COMPLETADO)
+    $totalDespachados = $despachos->whereIn('status', ['EN RUTA', 'COMPLETADO']) // Es despacho
+        ->flatMap->despachos->sum('litros');
+
+    // 3. Total Litros Carga (Ejecutados: EN RUTA o COMPLETADO)
+    $totalCarga = $cargas->whereIn('status', ['EN RUTA', 'COMPLETADO']) // Es carga
+        ->sum('litros');
+
+    // 4. Total Litros Programados (Solo Despachos con status 'Programado')
+    $totalProgDespacho = $despachos->where('status', 'Programado')
+        ->flatMap->despachos->sum('litros');
+
+    // 5. Total Cargas Programadas (Solo Cargas con status 'Programado')
+    $totalProgCarga = $cargas->where('status', 'Programado')
+        ->sum('litros');
+
+    return view('viajes.reporte_diario', [
+        'fecha' => $fecha,
+        'viajesDelDia' => $viajesDelDia,
+        'reporte' => $reporte,
+        'stats' => [
+            'disponibles' => $totalDisponibles,
+            'despachados' => $totalDespachados,
+            'cargas'      => $totalCarga,
+            'prog_desp'   => $totalProgDespacho,
+            'prog_carg'   => $totalProgCarga
+        ]
+    ]);
+}
+
+private function generarEstructuraEstatus($coleccion, $callback) {
+    return [
+        'programados' => ['ind' => $callback($coleccion, 'Programado', 'DIESEL'), 'mgo' => $callback($coleccion, 'Programado', 'M.G.O.')],
+        'en_ruta'     => ['ind' => $callback($coleccion, 'EN RUTA', 'DIESEL'),     'mgo' => $callback($coleccion, 'EN RUTA', 'M.G.O.')],
+        'completados' => ['ind' => $callback($coleccion, 'COMPLETADO', 'DIESEL'),  'mgo' => $callback($coleccion, 'COMPLETADO', 'M.G.O.')],
+    ];
+}
 }

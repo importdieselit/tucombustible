@@ -152,6 +152,58 @@
             <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i> RESUMEN DE OPERACIONES</h5>
             <span class="badge bg-white text-dark">{{ \Carbon\Carbon::parse($reporte['fecha'])->format('d/m/Y') }}</span>
         </div>
+        <div class="row g-2 mb-4 mx-1">
+    <div class="col-md-2 col-sm-6">
+        <div class="card border-0 shadow-sm border-start border-4 border-camionetas">
+            <div class="card-body p-2 text-center">
+                <small class="text-muted fw-bold d-block text-uppercase" style="font-size: 0.65rem;">Disponibles</small>
+                <h5 class="mb-0 fw-bold text-dark">{{ number_format($stats['disponibles'], 0, ',', '.') }} <span class="small">L</span></h5>
+                <i class="fas fa-warehouse text-muted mt-1"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-2 col-sm-6">
+        <div class="card border-0 shadow-sm border-start border-4 border-cisternas">
+            <div class="card-body p-2 text-center">
+                <small class="text-muted fw-bold d-block text-uppercase" style="font-size: 0.65rem;">Despachados</small>
+                <h5 class="mb-0 fw-bold text-success">{{ number_format($stats['despachados'], 0, ',', '.') }} <span class="small">L</span></h5>
+                <i class="fas fa-sign-out-alt text-success mt-1"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-2 col-sm-6">
+        <div class="card border-0 shadow-sm border-start border-4 border-camiones">
+            <div class="card-body p-2 text-center">
+                <small class="text-muted fw-bold d-block text-uppercase" style="font-size: 0.65rem;">Cargas</small>
+                <h5 class="mb-0 fw-bold text-warning">{{ number_format($stats['cargas'], 0, ',', '.') }} <span class="small">L</span></h5>
+                <i class="fas fa-truck-loading text-warning mt-1"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+        <div class="card border-0 shadow-sm border-start border-4 border-chutos">
+            <div class="card-body p-2 text-center">
+                <small class="text-muted fw-bold d-block text-uppercase" style="font-size: 0.65rem;">Despachos Programados</small>
+                <h5 class="mb-0 fw-bold text-chutos">{{ number_format($stats['prog_desp'], 0, ',', '.') }} <span class="small">L</span></h5>
+                <i class="fas fa-calendar-alt text-chutos mt-1"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+         
+        <div class="card border-0 shadow-sm border-start border-4 border-info">
+            <div class="card-body p-2 text-center">
+                <small class="text-muted fw-bold d-block text-uppercase" style="font-size: 0.65rem;">Carga Programada</small>
+                <h5 class="mb-0 fw-bold text-info">{{ number_format($stats['prog_carg'], 0, ',', '.') }} <span class="small">L</span></h5>
+                <i class="fas fa-clock text-info mt-1"></i>
+            </div>
+        </div>
+    </div>
+</div>
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-bordered mb-0 text-center align-middle">
@@ -170,7 +222,9 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td class="text-start ps-3 fw-bold"><i class="fas fa-shipping-fast text-primary me-2"></i> DESPACHOS</td>
+                        <td class="text-start ps-3 fw-bold border-start border-4 border-camionetas" style="border-left-color: #ffc107 !important;">
+                            <i class="fas fa-shipping-fast text-orange me-2"></i> DESPACHOS
+                        </td>
                         <td class="fw-bold">{{ $reporte['despachos']['programados']['ind'] }}</td>
                         <td class="fw-bold">{{ $reporte['despachos']['programados']['mgo'] }}</td>
                         <td class="bg-warning bg-opacity-10 fw-bold">{{ $reporte['despachos']['en_ruta']['ind'] }}</td>
@@ -178,14 +232,27 @@
                         <td class="bg-success bg-opacity-10 fw-bold text-success">{{ $reporte['despachos']['completados']['ind'] }}</td>
                         <td class="bg-success bg-opacity-10 fw-bold text-success">{{ $reporte['despachos']['completados']['mgo'] }}</td>
                     </tr>
-                    <tr>
-                        <td class="text-start ps-3 fw-bold"><i class="fas fa-filling-station text-danger me-2"></i> CARGAS PLANTA</td>
-                        <td class="fw-bold">{{ $reporte['cargas']['programadas']['ind'] }}</td>
-                        <td class="fw-bold">{{ $reporte['cargas']['programadas']['mgo'] }}</td>
+                    <tr class="bg-white-clean">
+                        <td class="text-start ps-3 fw-bold border-start border-4 border-camionetas" style="border-left-color: #ff6600 !important;">
+                            <i class="fas fa-gas-pump text-chutos me-2"></i> CARGAS PLANTA
+                        </td>
+                        <td class="fw-bold">{{ $reporte['cargas']['programados']['ind'] }}</td>
+                        <td class="fw-bold">{{ $reporte['cargas']['programados']['mgo'] }}</td>
                         <td class="bg-warning bg-opacity-10 fw-bold">{{ $reporte['cargas']['en_ruta']['ind'] }}</td>
                         <td class="bg-warning bg-opacity-10 fw-bold">{{ $reporte['cargas']['en_ruta']['mgo'] }}</td>
-                        <td class="bg-success bg-opacity-10 fw-bold text-success">{{ $reporte['cargas']['completadas']['ind'] }}</td>
-                        <td class="bg-success bg-opacity-10 fw-bold text-success">{{ $reporte['cargas']['completadas']['mgo'] }}</td>
+                        <td class="bg-success bg-opacity-10 fw-bold text-success">{{ $reporte['cargas']['completados']['ind'] }}</td>
+                        <td class="bg-success bg-opacity-10 fw-bold text-success">{{ $reporte['cargas']['completados']['mgo'] }}</td>
+                    </tr>
+                    <tr class="bg-white-clean">
+                        <td class="text-start ps-3 fw-bold border-start border-4 border-camionetas" style="border-left-color: #6f42c1 !important;">
+                            <i class="fas fa-truck-loading text-purple me-2"></i> FLETES
+                        </td>
+                        <td class="fw-bold">{{ $reporte['fletes']['programados']['ind'] }}</td>
+                        <td class="fw-bold">{{ $reporte['fletes']['programados']['mgo'] }}</td>
+                        <td class="bg-warning bg-opacity-10 fw-bold">{{ $reporte['fletes']['en_ruta']['ind'] }}</td>
+                        <td class="bg-warning bg-opacity-10 fw-bold">{{ $reporte['fletes']['en_ruta']['mgo'] }}</td>
+                        <td class="bg-success bg-opacity-10 fw-bold text-success">{{ $reporte['fletes']['completados']['ind'] }}</td>
+                        <td class="bg-success bg-opacity-10 fw-bold text-success">{{ $reporte['fletes']['completados']['mgo'] }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -206,37 +273,61 @@
                             <th>Tipo</th>
                             <th>Unidad</th>
                             <th>Chofer</th>
+                            <th>Litros</th>
                             <th>Producto</th>
                             <th>Destino</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($viajesDelDia as $v)
-                        <tr>
-                            <td class="ps-3">
-                                @php
-                                    $statusMap = [
-                                        'Programado' => ['class' => 'bg-primary', 'icon' => 'fa-clock'],
-                                        'EN RUTA'    => ['class' => 'bg-warning text-dark', 'icon' => 'fa-truck-moving'],
-                                        'COMPLETADO' => ['class' => 'bg-success', 'icon' => 'fa-check-circle']
-                                    ];
-                                    $current = $statusMap[$v->status] ?? ['class' => 'bg-secondary', 'icon' => 'fa-info'];
-                                @endphp
-                                <span class="badge rounded-pill {{ $current['class'] }} p-2 px-3 shadow-sm" style="min-width: 110px;">
-                                    <i class="fas {{ $current['icon'] }} me-1"></i> {{ $v->status }}
-                                </span>
-                            </td>
-                            <td class="small fw-bold {{ $v->litros ? 'text-danger' : 'text-primary' }}">
-                                {{ $v->litros ? 'CARGA' : 'DESPACHO' }}
-                            </td>
-                            <td>
-                                <div class="fw-bold">{{ $v->vehiculo->flota ?? 'N/A' }} {{ $v->vehiculo->placa ?? 'N/A' }}</div>
-                                <div class="text-muted small" style="font-size: 0.7rem;">{{ $v->cisternaAcoplada->flota ?? '' }} {{ $v->cisternaAcoplada->placa ?? '' }}</div>
-                            </td>
-                            <td class="small">{{ explode(' ', $v->chofer->nombre ?? 'Sin asignar')[0] }}</td>
-                            <td><span class="badge border text-dark bg-white">{{ $v->producto->nombre ?? 'N/A' }}</span></td>
-                            <td class="small text-truncate" style="max-width: 180px;">{{ $v->destino_ciudad }}</td>
-                        </tr>
+                       @foreach($viajesDelDia as $v)
+                            @php
+                                $destinoRaw = $v->destino_ciudad;
+                                $esFlete = str_contains(strtoupper($destinoRaw), 'FLETE');
+                                $destinoLimpio = trim(str_ireplace(['FLETE', ' ->'], ['', ''], $destinoRaw));
+                                
+                                if ($esFlete) {
+                                    $tipoEtiqueta = 'Flete';
+                                    $badgeColor = 'bg-dark text-white';
+                                    $icon = 'fa-truck-loading';
+                                    $textColor = 'text-purple'; // Definir este color en CSS: #6f42c1
+                                    $totalLitros = $v->litros ?? ($v->despachos->sum('litros') ?? 0);
+                                } else {
+                                    $esDespacho = is_null($v->litros);
+                                    $tipoEtiqueta = $esDespacho ? 'Despacho' : 'Carga';
+                                    $badgeColor = $esDespacho ? 'bg-primary' : 'bg-danger';
+                                    $icon = $esDespacho ? 'fa-arrow-up' : 'fa-arrow-down';
+                                    $textColor = $esDespacho ? 'text-primary' : 'text-danger';
+                                    $totalLitros = $esDespacho ? ($v->despachos->sum('litros') ?? 0) : $v->litros;
+                                }
+                            @endphp
+                            <tr>
+                                <td class="ps-3">
+                                    @php
+                                        $statusConfig = match($v->status) {
+                                            'Programado' => ['class' => 'bg-info', 'icon' => 'fa-clock'],
+                                            'EN RUTA'    => ['class' => 'bg-camiones', 'icon' => 'fa-truck-moving'],
+                                            'COMPLETADO' => ['class' => 'bg-cisternas', 'icon' => 'fa-check-double'],
+                                            default      => ['class' => 'bg-secondary', 'icon' => 'fa-info-circle']
+                                        };
+                                    @endphp
+                                    <span class="badge {{ $statusConfig['class'] }} p-2 px-3 shadow-sm border-0" style="min-width: 120px;">
+                                        <i class="fas {{ $statusConfig['icon'] }} me-1"></i> {{ $v->status }}
+                                    </span>
+                                </td>
+                                <td class="small fw-bold {{ $textColor }}">
+                                    <i class="fas {{ $icon }}"></i> {{ strtoupper($tipoEtiqueta) }}
+                                </td>
+                                <td>
+                                    <div class="fw-bold">{{ $v->vehiculo->flota ?? 'N/A' }} {{ $v->vehiculo->placa ?? 'N/A' }}</div>
+                                    <div class="fw-bold small bt-1" style="font-size: 0.9rem; border-top:solid 1px #ced4da; width: fit-content;">{{ $v->cisternaAcoplada->flota ?? '' }} {{ $v->cisternaAcoplada->placa ?? '' }}</div>
+                                </td>
+                                <td class="small">{{ explode(' ', $v->chofer->persona->nombre ?? 'Sin asignar')[0] }}</td>
+                                <td>{{ $v->litros ?? $v->despachos->sum('litros'); }}</td>
+                                <td><span class="badge border text-dark bg-white">{{ $v->producto->nombre ?? 'N/A' }}</span></td>
+                                <td class="small text-truncate" style="max-width: 180px;" title="{{ $destinoRaw }}">
+                                    {{ $destinoLimpio }}
+                                </td>
+                            </tr>
                         @endforeach
                     </tbody>
                 </table>
