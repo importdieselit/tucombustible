@@ -283,10 +283,10 @@
                                     <i class="fas fa-truck text-danger fa-2x"></i>
                                 </div>
                                 <div>
-                                    <small class="text-danger fw-bold d-block text-uppercase mb-1"><i class="fas fa-exclamation-circle"></i> UNIDAD CON MÁS FALLAS ACTIVAS</small>
+                                    <small class="text-danger fw-bold d-block text-uppercase mb-1"><i class="fas fa-exclamation-circle"></i> UNIDAD CON MÁS FALLAS</small>
                                     @if($reporte['operativo']['unidad_top'])
                                         <h5 class="mb-0 fw-bold text-dark">Unidad {{ $reporte['operativo']['unidad_top']['vehiculo'] }} <span class="small text-muted">({{ $reporte['operativo']['unidad_top']['placa'] }})</span></h5>
-                                        <span class="badge bg-danger mt-1">{{ $reporte['operativo']['unidad_top']['cantidad'] }} Órdenes en Taller</span>
+                                        <span class="badge bg-danger mt-1">{{ $reporte['operativo']['unidad_top']['cantidad'] }} Órdenes Abiertas</span>
                                     @else
                                         <span class="text-muted">No hay unidades en taller actualmente.</span>
                                     @endif

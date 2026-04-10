@@ -1372,7 +1372,7 @@ class OrdenController extends BaseController
         $fallaMasRecurrente = $porCategoria->keys()->first() ?? 'N/A';
         
         // Unidad con más órdenes abiertas actualmente
-        $unidadMasProblematica = $ordenesActivas
+        $unidadMasProblematica = $ordenesBase
         ->filter(function($orden) {
             // Solo dejamos pasar las órdenes que tengan un ID de vehículo y cuya relación exista
             return !empty($orden->id_vehiculo) && $orden->vehiculoBelong;

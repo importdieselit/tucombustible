@@ -146,9 +146,11 @@
 
 <div class="sidebar d-md-block">
     <div class="d-flex flex-column align-items-center mb-3">
+        <a href="{{ route('dashboard') }}" class="d-flex flex-column align-items-center text-decoration-none">
         <img src="{{ asset('img/logomini.png') }}" alt="Logo" class="img-fluid rounded-circle border border-3 border-secondary" style="max-width: 80px; background: white; padding: 5px;">
         <span class="mt-2 text-white"><strong>TuCombustible</strong></span>
         <small class="text-muted">Impordiesel</small>
+        </a>
     </div>
 
     <ul class="nav flex-column px-2">
