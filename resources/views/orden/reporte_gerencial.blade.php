@@ -468,8 +468,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // 3. Crear FormData para enviar el archivo al servidor (POST request)
             const formData = new FormData();
-            formData.append('chart_image', imageBlob, 'reporte_disponibilidad.png');
-            formData.append('caption', `*Reporte de Disponibilidad*\nGenerado el: ${new Date().toLocaleString('es-VE')}\nTotal Flota: {{ $total }}\nUnidades Activas: {{ $operativosCount }}\nDisponibilidad: {{ $porcentajeDisponibilidad }}%`);
+            formData.append('chart_image', imageBlob, 'reporte_mantenimiento.png');
             
             // 4. Enviar al endpoint de Laravel (ruta que debe existir: telegram.send.photo)
             const response = await fetch('{{ route('telegram.send.photo') }}', {
