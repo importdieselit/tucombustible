@@ -1362,7 +1362,7 @@ class OrdenController extends BaseController
         $porCategoria = $ordenesBase->flatMap->trabajos->groupBy(function($trabajo) {
             // Si la relación 'categoria' existe, devolvemos el campo 'categoria' (el nombre), si no, 'Sin Categoría'
             return $trabajo->categoria ? $trabajo->categoria->categoria : 'Sin Categoría';
-        })->map->sortDesc();
+        })->map->count()->sortDesc();
         
         // 5. Trabajos Internos vs Externos (Cantidad)
         $trabajosInternos = $ordenesBase->flatMap->trabajos->count();
