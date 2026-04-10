@@ -31,10 +31,13 @@ class PedidoService
      */
     public function listarPedidosParaUsuario($cliente)
     {
-        // Creamos un array con el ID del cliente actual
         $ids = [$cliente->id];
 
-        // LLAMADA AL REPOSITORIO USANDO EL ARRAY DE IDS
+        // Si es padre, agregamos los IDs de todas sus sucursales
+        if ($cliente->es_padre) {
+            $ids = array_merge($ids, $cliente->sucursales()->pluck('id')->toArray());
+        }
+
         return $this->repository->getPedidosPorClientes($ids);
     }
 
@@ -55,41 +58,54 @@ class PedidoService
     }
 
     /**
-     * Registra solicitud con validación de cupo mensual dinámica.
+     * Registra solicitud con validación de inventario y reserva de cupos.
      */
     public function registrarSolicitud(array $data, $user)
     {
         return DB::transaction(function () use ($data, $user) {
-            // Si el Admin crea el pedido, el cliente_id viene en $data. 
-            // Si es el Portal, lo tomamos del usuario logueado.
-            $clienteId = $data['cliente_id'] ?? $user->cliente_id;
-            
+            // Usamos el cliente_id que viene del modal (ya validado en el Controller)
+            $clienteId = $data['cliente_id']; 
             $cliente = Cliente::findOrFail($clienteId);
-            $cantidad = (float)$data['cantidad'];
+            
+            // Alineamos con el nombre del input del modal
+            $cantidad = (float)$data['cantidad_solicitada']; 
 
+            // 1. VALIDACIÓN DE INVENTARIO FÍSICO
+            $stockFisicoTotal = $this->depositoRepository->getNivelTotal(); 
+            if ($cantidad > $stockFisicoTotal) {
+                throw new Exception("No hay suficiente combustible físico. Stock: " . number_format($stockFisicoTotal, 0) . " L.");
+            }
+
+            // 2. VALIDACIÓN DE CUPO GASCO (Mensual)
             $cupoGasco = $this->gascoRepository->getOrCreateMonthlyQuota($cliente->id);
-
             if (!$cupoGasco) {
-                throw new Exception("Operación rechazada: No se ha configurado un cupo GASCO inicial.");
+                throw new Exception("No hay cupo GASCO configurado para este mes.");
             }
 
-            $disponibleReal = (float)$cupoGasco->litros_autorizados - (float)$cupoGasco->litros_consumidos;
-
-            if ($cantidad > $disponibleReal) {
-                throw new Exception("Cupo insuficiente en GASCO. Disponible: " . number_format($disponibleReal, 2) . " L.");
+            $disponibleGasco = (float)$cupoGasco->litros_autorizados - (float)$cupoGasco->litros_consumidos;
+            if ($cantidad > $disponibleGasco) {
+                throw new Exception("Cupo GASCO insuficiente. Disponible: " . number_format($disponibleGasco, 0) . " L.");
             }
 
-            // Crear el pedido (asegúrate que tu repo soporte los campos adicionales)
+            // 3. VALIDACIÓN DE DISPONIBLE EN TABLA CLIENTES
+            if ($cantidad > $cliente->disponible) {
+                throw new Exception("Saldo insuficiente en cuenta. Saldo: " . number_format($cliente->disponible, 0) . " L.");
+            }
+
+            // 4. CREACIÓN DEL PEDIDO (Incluyendo nuevos campos del modal)
             $pedido = $this->repository->create([
-                'cliente_id' => $clienteId,
+                'cliente_id'          => $clienteId,
+                'user_id'             => $user->id, // Importante saber quién lo creó
                 'cantidad_solicitada' => $cantidad,
-                'observaciones' => $data['observaciones'] ?? null,
-                'estado' => 'pendiente'
+                'fecha_entrega'       => $data['fecha_entrega'],
+                'direccion_despacho'  => $data['direccion_despacho'],
+                'observaciones'       => $data['observaciones'] ?? null,
+                'estado'              => 'pendiente',
+                'fecha_solicitud'     => now(),
             ]);
 
+            // 5. ACTUALIZACIÓN DE SALDOS
             $this->gascoRepository->updateConsumed($cupoGasco->id, $cantidad);
-            
-            // Usamos la columna 'disponible' de la tabla clientes según tu DDL
             $cliente->decrement('disponible', $cantidad);
 
             return $pedido;

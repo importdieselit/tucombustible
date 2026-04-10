@@ -32,8 +32,7 @@ class Viaje extends Model
         'fecha_llegada',
         'fecha_salida_real',
         'status',
-        'vehiculo_id',
-        'cisterna', 
+        'vehiculo_id', 
         'litros',
         'has_viatico',
         'cliente_id',
@@ -123,5 +122,12 @@ class Viaje extends Model
     public function inspecciones(): HasOne
     {
         return $this->hasOne(Inspeccion::class, 'viaje_id');
+    }
+    public function tipoCombustible() { 
+        return $this->belongsTo(TipoCombustible::class, 'tipo_combustible_id'); 
+    }
+    
+    public function detalles() { 
+        return $this->hasMany(DespachoViaje::class, 'viaje_id'); 
     }
 }

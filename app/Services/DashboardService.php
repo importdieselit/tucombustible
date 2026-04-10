@@ -11,6 +11,7 @@ use App\Repositories\OrderRepository;
 use App\Repositories\TankRepository;
 use App\Repositories\MaintenanceRepository;
 use App\Repositories\PurchaseRepository;
+use App\Services\GascoCupoService;
 
 class DashboardService
 {
@@ -21,6 +22,7 @@ class DashboardService
     protected $maintenanceRepo;
     protected $purchaseRepo;
     protected $clientRepo;
+    protected $gascoCupoService;
 
     public function __construct(
         VehicleRepository     $vehicleRepo,
@@ -29,7 +31,8 @@ class DashboardService
         TankRepository        $tankRepo,
         MaintenanceRepository $maintenanceRepo,
         PurchaseRepository    $purchaseRepo,
-        ClienteRepository     $clientRepo
+        ClienteRepository     $clientRepo,
+        GascoCupoService      $gascoCupoService
     ) {
         $this->vehicleRepo     = $vehicleRepo;
         $this->orderRepo       = $orderRepo;
@@ -38,6 +41,7 @@ class DashboardService
         $this->maintenanceRepo = $maintenanceRepo;
         $this->purchaseRepo    = $purchaseRepo;
         $this->clientRepo      = $clientRepo;
+        $this->gascoCupoService = $gascoCupoService;
     }
 
     public function getDashboardData($user, $sucursalId = null): array
@@ -102,11 +106,17 @@ class DashboardService
             }
 
             // Cliente aprobado
+            // NUEVO: Consultamos el saldo GASCO usando el servicio
+            $saldoGasco = $this->gascoCupoService->obtenerSaldoActual($cliente->id);
+
             return [
                 'perfil'     => $cliente->es_padre ? 'cliente_padre' : 'cliente_sucursal',
                 'cliente'    => $cliente,
                 'es_padre'   => $cliente->es_padre,
                 'cupos'      => $cliente->cupos,
+                // Agregamos la data de GASCO para la vista del cliente:
+                'cupo_gasco' => $saldoGasco['autorizados'],
+                'saldo_gasco'=> $saldoGasco['disponible'],
                 'placas'     => $cliente->placas()->activas()->get(),
                 'choferes'   => $cliente->choferes()->activos()->get(),
                 'sucursales' => $cliente->es_padre

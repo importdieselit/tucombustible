@@ -346,6 +346,59 @@
                         @endforeach
                     @endif
 
+                    {{-- GESTIÓN DE CUPO GASCO --}}
+                    @if($cliente->status == \App\Models\Cliente::STATUS_APROBADO)
+                        @php
+                            // Obtenemos el cupo general para mostrarlo como referencia en el formulario
+                            $cupoGeneralLimit = $cliente->cupos->first()->litros_aprobados ?? 0;
+                        @endphp
+
+                        <div class="card shadow-sm border-orange mb-4">
+                            <div class="card-body">
+                                <h6 class="fw-bold text-uppercase small text-dark mb-3 border-bottom pb-1">
+                                    <i class="fas fa-gas-pump me-2 text-orange"></i>Cupo Mensual GASCO
+                                </h6>
+                                
+                                {{-- Visualización de Valores Actuales --}}
+                                <div class="row mb-3">
+                                    <div class="col-6 border-end text-center">
+                                        <span class="text-[10px] text-muted text-uppercase fw-bold d-block">Asignado Mes</span>
+                                        <span class="fs-5 fw-black text-dark">{{ number_format($infoGasco['autorizados'], 0) }} L</span>
+                                    </div>
+                                    <div class="col-6 text-center">
+                                        <span class="text-[10px] text-muted text-uppercase fw-bold d-block">Disponible</span>
+                                        <span class="fs-5 fw-black text-success">{{ number_format($infoGasco['disponible'], 0) }} L</span>
+                                    </div>
+                                </div>
+
+                                <form action="{{ route('clientes.gasco.asignar', $cliente->id) }}" method="POST">
+                                    @csrf
+                                    <div class="mb-2">
+                                        <label class="small fw-bold text-muted uppercase">Actualizar Cantidad</label>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" name="litros_autorizados" 
+                                                class="form-control fw-bold border-orange @error('litros_autorizados') is-invalid @enderror" 
+                                                placeholder="Ej: 5000" 
+                                                value="{{ $infoGasco['autorizados'] }}"
+                                                required>
+                                            <button class="btn btn-dark fw-bold" type="submit">
+                                                <i class="fas fa-save me-1"></i> GUARDAR
+                                            </button>
+                                        </div>
+                                        @error('litros_autorizados')
+                                            <span class="invalid-feedback d-block small" style="font-size: 10px;">{{ $message }}</span>
+                                        @enderror
+                                        <div class="mt-1">
+                                            <small class="text-muted italic" style="font-size: 10px;">
+                                                Límite: >= 100 y máx. {{ number_format($cupoGeneralLimit, 0) }} L (Cupo General)
+                                            </small>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- REGISTRO RÁPIDO PLACA/CHOFER --}}
                     @if($cliente->status == \App\Models\Cliente::STATUS_APROBADO)
                         <div class="mt-4 pt-3 border-top">

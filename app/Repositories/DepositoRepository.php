@@ -26,4 +26,13 @@ class DepositoRepository
         $deposito->decrement('nivel_actual_litros', $cantidad);
         return $deposito;
     }
+
+    /**
+     * Obtiene la suma total de litros físicos en todos los depósitos/tanques.
+     */
+    public function getNivelTotal(): float
+    {
+        // Sumamos la columna nivel_actual_litros de todos los registros
+        return (float) Deposito::sum('nivel_actual_litros');
+    }
 }

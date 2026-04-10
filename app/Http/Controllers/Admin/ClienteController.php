@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Repositories\PedidoRepository;
 use App\Services\ClienteService;
 use App\Services\ClienteLubricanteService;
+use App\Services\GascoCupoService;
 use App\Models\Cliente;
 use App\Models\TipoCombustible;
 use Illuminate\Http\Request;
@@ -16,15 +17,18 @@ class ClienteController extends Controller
     protected ClienteService $clienteService;
     protected ClienteLubricanteService $lubricanteService;
     protected PedidoRepository $repository;
+    protected GascoCupoService $gascoCupoService;
 
     public function __construct(
         ClienteService $clienteService,
         ClienteLubricanteService $lubricanteService,
-        PedidoRepository $repository
+        PedidoRepository $repository,
+        GascoCupoService $gascoCupoService
     ) {
         $this->clienteService    = $clienteService;
         $this->lubricanteService = $lubricanteService;
         $this->repository        = $repository;
+        $this->gascoCupoService  = $gascoCupoService;
     }
 
     // -------------------------------------------------------
@@ -69,8 +73,9 @@ class ClienteController extends Controller
         $cliente          = $this->clienteService->obtenerExpediente($id);
         $tiposCombustible = TipoCombustible::all();
         $pedidos = $this->repository->getPedidosPorClientes([$id]);
+        $infoGasco = $this->gascoCupoService->obtenerSaldoActual($id);
 
-        return view('admin.cliente.show', compact('cliente', 'tiposCombustible', 'pedidos'));
+        return view('admin.cliente.show', compact('cliente', 'tiposCombustible', 'pedidos', 'infoGasco'));
     }
 
     // -------------------------------------------------------
@@ -419,6 +424,41 @@ class ClienteController extends Controller
             return Redirect::back();
         } catch (\Exception $e) {
             return Redirect::back()->with('error', $e->getMessage());
+        }
+    }
+
+    // -------------------------------------------------------
+    // NUEVO: ASIGNACIÓN DE CUPO GASCO
+    // -------------------------------------------------------
+    public function asignarCupoGasco(Request $request, $id)
+    {
+        // 1. Obtenemos el cliente y su cupo aprobado general
+        // Asumo que el cupo general está en la relación 'cupos' (según tu show.blade)
+        $cliente = Cliente::with('cupos')->findOrFail($id);
+        
+        // Tomamos el primer cupo aprobado (o el principal) como techo máximo
+        $cupoGeneral = $cliente->cupos->first()->litros_aprobados ?? 0;
+
+        // 2. Validaciones con mensajes personalizados
+        $request->validate([
+            'litros_autorizados' => [
+                'required',
+                'numeric',
+                'min:99.9', // Debe ser mayor a 99.9
+                'max:' . $cupoGeneral // No puede exceder el cupo general
+            ]
+        ], [
+            'litros_autorizados.min' => 'La cantidad a asignar debe ser mayor a 100 litros.',
+            'litros_autorizados.max' => 'No puede asignar más del Cupo Aprobado general (' . number_format($cupoGeneral, 0) . ' Ltrs).',
+        ]);
+
+        try {
+            $this->gascoCupoService->asignarCupoMensual($id, $request->litros_autorizados);
+            Session::flash('success', 'Cupo GASCO del mes actualizado correctamente.');
+            return Redirect::back();
+        } catch (\Exception $e) {
+            Log::error('Error al asignar cupo GASCO: ' . $e->getMessage());
+            return Redirect::back()->with('error', 'Error técnico al asignar el cupo.');
         }
     }
 }
