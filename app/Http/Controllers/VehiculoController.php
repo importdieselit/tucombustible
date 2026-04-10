@@ -652,18 +652,18 @@ class VehiculoController extends BaseController
     $ligero=Vehiculo::misVehiculos()->with(['tipoVehiculo', 'ordenActiva'])->where('tipo', 6)->get();
     $totalLivianos= $ligero->count();
     
-    $cisternasFalla = $cisternas->where('estatus', '!=', 1);
-    $cisternasOperativas = $cisternas->where('estatus', 1);
+    $cisternasFalla = $cisternas->where('estatus', '>', 2);
     $camionesFalla = $camiones->where('estatus', '>', 2);
     $chutosFalla = $chutos->where('estatus', '>', 2);
-    $camionetasFalla = $ligero->where('estatus', '!=', 1);
+    $camionetasFalla = $ligero->where('estatus', '>', 2);
+    $cisternasOperativas = $cisternas->where('estatus', 1);
     $camionetasOperativas = $ligero->where('estatus', 1);
     $camionesOperativos = $camiones->where('estatus', 1);
+    $chutosOperativos = $chutos->where('estatus', 1);
     $chutosEnRuta = $chutos->where('estatus', 2);
     $camionetasEnRuta = $ligero->where('estatus', 2);
     $camionesEnRuta = $camiones->where('estatus', 2);
     $cisternasEnRuta = $cisternas->where('estatus', 2);
-    $chutosOperativos = $chutos->where('estatus', 1);
 
    $today = Carbon::parse($today);
    $queryViajesHoy = Viaje::whereDate('fecha_salida', now()->format('Y-m-d'));
