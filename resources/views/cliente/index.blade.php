@@ -255,9 +255,16 @@
 
     {{-- HISTORIAL DE PEDIDOS --}}
     <div class="mb-8">
-        <h2 class="text-sm font-black uppercase text-gray-700 tracking-widest mb-4">
-            <span class="text-orange-impordiesel">|</span> Historial de Pedidos Recientes
-        </h2>
+        <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+            <h2 class="text-sm font-black uppercase text-gray-700 tracking-widest">
+                <span class="text-orange-impordiesel">|</span> Historial de Pedidos Recientes
+            </h2>
+            <button onclick="openModalPedido()" 
+                    class="bg-orange-impordiesel text-white px-6 py-2.5 rounded shadow-lg font-black text-[11px] uppercase hover:bg-black transition-all flex items-center">
+                <i class="fas fa-gas-pump mr-2"></i> Solicitar Combustible
+            </button>
+        </div>
+
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <table class="w-full text-left text-xs">
                 <thead>
@@ -316,7 +323,148 @@
     </div>
 </div>
 
+{{-- MODAL SOLICITAR COMBUSTIBLE --}}
+<div id="modalPedido" class="fixed inset-0 z-50 hidden overflow-y-auto" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
+    <div class="flex items-center justify-center min-h-screen px-4 py-8">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border-t-8 border-orange-impordiesel">
+            
+            <div class="bg-gray-800 p-5 flex justify-between items-center">
+                <div>
+                    <h3 class="text-white font-black uppercase text-sm tracking-widest">Nueva Solicitud de Despacho</h3>
+                    <p class="text-orange-impordiesel text-[10px] font-black uppercase tracking-tighter">Formulario de Pedido de Combustible</p>
+                </div>
+                <button onclick="closeModalPedido()" class="text-gray-400 hover:text-white transition-colors">
+                    <i class="fas fa-times fa-lg"></i>
+                </button>
+            </div>
+            
+            <form action="{{ route('portal.clientes.pedidos.store') }}" method="POST" class="p-8">
+                @csrf
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    {{-- SELECCIÓN DE SUCURSAL --}}
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-2 tracking-widest">1. Seleccionar Sucursal de Destino</label>
+                        <select id="sucursal_select" name="cliente_id" onchange="updateModalData(this.value)"
+                                class="w-full border-2 border-gray-200 rounded-lg p-3 font-black text-xs uppercase focus:border-orange-impordiesel outline-none bg-gray-50">
+                            <option value="{{ $cliente->id }}" 
+                                    data-rif="{{ $cliente->rif }}"
+                                    data-razon="{{ $cliente->nombre }}"
+                                    data-combustible="{{ $cupos->first()->tipoCombustible->nombre ?? 'N/A' }}"
+                                    data-cupo="{{ number_format($cupos->first()->litros_aprobados ?? 0, 0, ',', '.') }}"
+                                    data-disponible="{{ number_format($cliente->disponible, 0, ',', '.') }}"
+                                    data-direccion="{{ $cliente->direccion_operativa }}">
+                                [Principal] {{ $cliente->nombre }}
+                            </option>
+                            @if($cliente->es_padre)
+                                @foreach($sucursales as $suc)
+                                    <option value="{{ $suc->id }}"
+                                            data-rif="{{ $suc->rif }}"
+                                            data-razon="{{ $suc->nombre }}"
+                                            data-combustible="{{ $suc->cupos->first()->tipoCombustible->nombre ?? 'N/A' }}"
+                                            data-cupo="{{ number_format($suc->cupos->first()->litros_aprobados ?? 0, 0, ',', '.') }}"
+                                            data-disponible="{{ number_format($suc->disponible, 0, ',', '.') }}"
+                                            data-direccion="{{ $suc->direccion_operativa }}">
+                                        [Sucursal] {{ $suc->nombre }}
+                                    </option>
+                                @endforeach
+                            @endif
+                        </select>
+                    </div>
+
+                    {{-- DATOS AUTOCOMPLETADOS (READ-ONLY) --}}
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                        <label class="block text-[9px] font-black text-gray-400 uppercase mb-1">Razón Social / RIF</label>
+                        <p id="display_razon" class="text-[11px] font-black text-gray-800 uppercase">{{ $cliente->nombre }}</p>
+                        <p id="display_rif" class="text-[10px] font-bold text-gray-500 uppercase">{{ $cliente->rif }}</p>
+                    </div>
+
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                        <label class="block text-[9px] font-black text-gray-400 uppercase mb-1">Tipo de Combustible</label>
+                        <p id="display_combustible" class="text-[11px] font-black text-orange-impordiesel uppercase">
+                            {{ $cupos->first()->tipoCombustible->nombre ?? 'No asignado' }}
+                        </p>
+                    </div>
+
+                    <div class="bg-orange-50 p-4 rounded-lg border border-orange-100">
+                        <label class="block text-[9px] font-black text-orange-400 uppercase mb-1">Cupo Mensual GASCO</label>
+                        <p id="display_cupo" class="text-lg font-black text-gray-800 tracking-tighter">
+                            {{ number_format($cupos->first()->litros_aprobados ?? 0, 0, ',', '.') }} <span class="text-[10px]">Lts</span>
+                        </p>
+                    </div>
+
+                    <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+                        <label class="block text-[9px] font-black text-green-600 uppercase mb-1">Saldo Disponible</label>
+                        <p id="display_disponible" class="text-lg font-black text-gray-800 tracking-tighter">
+                            {{ number_format($cliente->disponible, 0, ',', '.') }} <span class="text-[10px]">Lts</span>
+                        </p>
+                    </div>
+
+                    {{-- DATOS A INGRESAR --}}
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 uppercase mb-2">Fecha de Entrega Sugerida</label>
+                        <input type="date" name="fecha_entrega" required min="{{ date('Y-m-d') }}"
+                               class="w-full border-2 border-gray-200 rounded-lg p-3 font-black text-xs outline-none focus:border-orange-impordiesel">
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 uppercase mb-2">Litros a Solicitar</label>
+                        <input type="number" name="cantidad_solicitada" step="0.01" required 
+                               class="w-full border-2 border-gray-200 rounded-lg p-3 font-black text-sm outline-none focus:border-orange-impordiesel"
+                               placeholder="0.00">
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-black text-gray-500 uppercase mb-2">Dirección de Entrega (Confirmación)</label>
+                        <textarea id="display_direccion" name="direccion_despacho" rows="2" required
+                                  class="w-full border-2 border-gray-200 rounded-lg p-3 text-xs font-bold uppercase outline-none focus:border-orange-impordiesel bg-white">{{ $cliente->direccion_operativa }}</textarea>
+                    </div>
+
+                </div>
+
+                <div class="mt-8">
+                    <button type="submit" class="w-full bg-orange-impordiesel text-white py-4 rounded-xl font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl flex items-center justify-center">
+                        <i class="fas fa-paper-plane mr-3"></i> Enviar Solicitud de Pedido
+                    </button>
+                    <p class="text-[9px] text-gray-400 text-center mt-4 font-bold uppercase italic">
+                        Al enviar, el sistema descontará automáticamente los litros de su saldo disponible.
+                    </p>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
+    function openModalPedido() { 
+        document.getElementById('modalPedido').classList.remove('hidden'); 
+        document.body.style.overflow = 'hidden'; // Evita scroll de fondo
+    }
+    
+    function closeModalPedido() { 
+        document.getElementById('modalPedido').classList.add('hidden'); 
+        document.body.style.overflow = 'auto';
+    }
+
+    // Lógica para actualizar los campos al cambiar de sucursal
+    function updateModalData(clienteId) {
+        const select = document.getElementById('sucursal_select');
+        const selectedOption = select.options[select.selectedIndex];
+
+        // Mapeo de datos desde los atributos data-
+        document.getElementById('display_razon').innerText = selectedOption.getAttribute('data-razon');
+        document.getElementById('display_rif').innerText = selectedOption.getAttribute('data-rif');
+        document.getElementById('display_combustible').innerText = selectedOption.getAttribute('data-combustible');
+        document.getElementById('display_cupo').innerHTML = `${selectedOption.getAttribute('data-cupo')} <span class="text-[10px]">Lts</span>`;
+        document.getElementById('display_disponible').innerHTML = `${selectedOption.getAttribute('data-disponible')} <span class="text-[10px]">Lts</span>`;
+        document.getElementById('display_direccion').value = selectedOption.getAttribute('data-direccion');
+        
+        // Ajustar el máximo de litros permitidos en el input
+        const inputLitros = document.querySelector('input[name="cantidad_solicitada"]');
+        const disponibleRaw = selectedOption.getAttribute('data-disponible').replace(/\./g, '').replace(',', '.');
+        inputLitros.max = disponibleRaw;
+    }
     function copyToken() {
         const t = document.getElementById('tokenInvitacion').innerText.trim();
         navigator.clipboard.writeText(t).then(() => alert('¡Token copiado al portapapeles!'));

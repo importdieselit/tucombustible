@@ -11,22 +11,9 @@ class DespachoViaje extends Model
     use HasFactory;
 
     protected $table = 'despachos_viajes';
+    protected $fillable = ['viaje_id', 'pedido_id', 'cliente_id', 'otro_cliente', 'litros', 'observacion'];
 
-    protected $fillable = [
-        'viaje_id',
-        'cliente_id',
-        'observacion',
-        'otro_cliente', // Para clientes no registrados
-        'litros',
-    ];
-
-    /**
-     * Relación con el Viaje al que pertenece el despacho.
-     */
-    public function viaje(): BelongsTo
-    {
-        return $this->belongsTo(Viaje::class, 'viaje_id'); 
-    }
+    public function viaje() { return $this->belongsTo(Viaje::class); }
 
     /**
      * Relación con el Cliente registrado (si aplica).

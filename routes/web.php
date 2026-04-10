@@ -19,7 +19,7 @@ use App\Http\Controllers\{
     AlertaController, AccesoController, InspeccionController, PedidoController,
     ReporteController, AforoController, SearchController, DataDeletionController,
     ViajesController, TelegramController, PlanificacionMantenimientoController,
-    ReportController, ClienteActivosController,NotificationController
+    ReportController, ClienteActivosController,NotificationController,LogisticaController
 };
 
 /* --- Rutas Públicas y Auth --- */
@@ -256,6 +256,7 @@ Route::middleware(['auth'])->group(function () {
   
 
         Route::get('/admin/principal', [DashboardController::class, 'adminPrincipal'])->name('dashboard.admin');
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         /**
          * MÓDULOS DE ADMINISTRACIÓN (Perfiles 1 y 2: Admin y Super)
@@ -296,6 +297,19 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/search', [SearchController::class, 'query'])->name('search');
         });
 
+        // --- MÓDULO DE LOGÍSTICA Y PLANIFICACIÓN ---
+        Route::middleware(['auth', 'role:1,2,6,11,12,18'])->prefix('logistica')->name('logistica.')->group(function () {
+            
+            // Lista principal / Dashboard de planificaciones
+            Route::get('/planificacion', [LogisticaController::class, 'index'])->name('index');
+            
+            // Formulario para crear (Manual y desde Solicitudes)
+            Route::get('/crear', [LogisticaController::class, 'create'])->name('create');
+            
+            // Acción de procesar y guardar en base de datos
+            Route::post('/guardar', [LogisticaController::class, 'store'])->name('store');
+            
+        });
 
         // --- MÓDULO CLIENTES COMBUSTIBLE ---
         Route::prefix('admin-clientes')->name('clientes.')->group(function () {
@@ -317,6 +331,7 @@ Route::middleware(['auth'])->group(function () {
 
             // Cupos
             Route::post('/{id}/ajustar-cupo',  [AdminClienteController::class, 'ajustarCupo'])->name('ajustarCupo');
+            Route::post('/{id}/gasco-cupo', [AdminClienteController::class, 'asignarCupoGasco'])->name('gasco.asignar');
 
             // Placas
             Route::post('/{id}/placas',                    [AdminClienteController::class, 'registrarPlaca'])->name('placas.store');

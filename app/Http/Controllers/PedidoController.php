@@ -38,19 +38,38 @@ class PedidoController extends Controller
 
     public function store(Request $request)
     {
+        // 1. Validación de campos según el Modal
         $validated = $request->validate([
-            'cantidad' => 'required|numeric|min:1',
-            'observaciones' => 'nullable|string|max:500',
-            // cliente_id opcional por si el usuario padre pide para una sucursal
-            'cliente_id' => 'nullable|exists:clientes,id', 
+            'cliente_id'          => 'required|exists:clientes,id',
+            'cantidad_solicitada' => 'required|numeric|min:1',
+            'fecha_entrega'       => 'required|date|after_or_equal:today',
+            'direccion_despacho'  => 'required|string|max:500',
+            'observaciones'       => 'nullable|string|max:500',
         ]);
 
         try {
-            $this->pedidoService->registrarSolicitud($validated, Auth::user());
+            $user = Auth::user();
+            $clienteUsuario = $user->cliente; // El cliente asociado al usuario logueado
 
-            // Ajusta el nombre de la ruta según tu web.php
-            return redirect()->route('pedidos.index')
-                ->with('success', 'Solicitud registrada. Espere la planificación de despacho.');
+            // 2. SEGURIDAD: Validar que el cliente_id solicitado pertenezca al usuario
+            // Si el cliente_id no es él mismo Y no es una sucursal suya, bloqueamos.
+            if ($validated['cliente_id'] != $clienteUsuario->id) {
+                $esSucursalPropia = $clienteUsuario->sucursales()
+                                    ->where('id', $validated['cliente_id'])
+                                    ->exists();
+                
+                if (!$esSucursalPropia) {
+                    throw new Exception("No tiene autorización para realizar pedidos a esta cuenta.");
+                }
+            }
+
+            // 3. Registrar mediante el Service
+            $this->pedidoService->registrarSolicitud($validated, $user);
+
+            // 4. Redirección (Usando el nombre de ruta de tu web.php)
+            return redirect()->route('portal.clientes.index')
+                ->with('success', '¡Solicitud enviada con éxito! Se ha descontado de su saldo disponible.');
+
         } catch (Exception $e) {
             return back()->with('error', $e->getMessage())->withInput();
         }

@@ -14,28 +14,31 @@ class Pedido extends Model
     protected $table = 'pedidos';
 
     protected $fillable = [
-        'cliente_id', 'deposito_id', 'vehiculo_id', 'chofer_id',
+        'cliente_id', 'user_id', 'deposito_id', 'vehiculo_id', 'chofer_id',
         'cantidad_solicitada', 'cantidad_aprobada', 'cantidad_recibida',
-        'estado', 'observaciones', 'observaciones_admin',
+        'estado', 'muelle_atraque', 'buque_nombre', 'imo_bandera',
+        'observaciones', 'observaciones_admin',
         'fecha_solicitud', 'fecha_aprobacion', 'fecha_completado',
-        'calificacion', 'comentario_calificacion', 'muelle_atraque','buque_nombre',
-        'imo_bandera', 'estado'
+        'fecha_entrega', 'direccion_despacho', // Campos nuevos
+        'calificacion', 'comentario_calificacion'
     ];
 
     protected $casts = [
         'cantidad_solicitada' => 'decimal:2',
-        'cantidad_aprobada' => 'decimal:2',
-        'cantidad_recibida' => 'decimal:2',
-        'fecha_solicitud' => 'datetime',
-        'fecha_aprobacion' => 'datetime',
-        'fecha_completado' => 'datetime',
-        'calificacion' => 'integer',
+        'cantidad_aprobada'   => 'decimal:2',
+        'cantidad_recibida'   => 'decimal:2',
+        'fecha_solicitud'     => 'datetime',
+        'fecha_aprobacion'    => 'datetime',
+        'fecha_completado'    => 'datetime',
+        'fecha_entrega'       => 'date',
+        'calificacion'        => 'integer',
     ];
 
     public function cliente(): BelongsTo { return $this->belongsTo(Cliente::class, 'cliente_id'); }
     public function deposito(): BelongsTo { return $this->belongsTo(Deposito::class, 'deposito_id'); }
     public function vehiculo(): BelongsTo { return $this->belongsTo(Vehiculo::class, 'vehiculo_id'); }
     public function chofer(): BelongsTo { return $this->belongsTo(Chofer::class, 'chofer_id'); }
+    public function usuario(): BelongsTo { return $this->belongsTo(User::class, 'user_id'); }
 
     public function getEstadoTextAttribute(): string
     {

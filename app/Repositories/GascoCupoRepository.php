@@ -36,13 +36,21 @@ class GascoCupoRepository
         }
 
         // 3. Creamos el registro del nuevo mes heredando los litros_autorizados
-        return GascoCupoMensual::create([
-            'cliente_id' => $clienteId,
-            'mes' => $ahora->month,
-            'anio' => $ahora->year,
+        $nuevoCupo = GascoCupoMensual::create([
+            'cliente_id'         => $clienteId,
+            'mes'                => $ahora->month,
+            'anio'               => $ahora->year,
             'litros_autorizados' => $ultimoCupo->litros_autorizados,
-            'litros_consumidos' => 0 // Reinicio automático de mes
+            'litros_consumidos'  => 0 // Reinicio automático de mes
         ]);
+
+        // NUEVO: Como es un mes nuevo (consumo = 0), el disponible de la tabla cliente 
+        // vuelve a estar completo igual al autorizado heredado.
+        \App\Models\Cliente::where('id', $clienteId)->update([
+            'disponible' => $nuevoCupo->litros_autorizados
+        ]);
+
+        return $nuevoCupo;
     }
 
     /**
