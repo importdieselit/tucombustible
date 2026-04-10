@@ -7,6 +7,15 @@ use App\Models\PlanMantenimiento;
 use App\Models\User;
 use App\Models\Vehiculo;
 use App\Models\Inspeccion;
+use App\Models\TipoFalla;
+use App\Models\TipoRequerimiento;
+use App\Models\OrdenFoto;
+use App\Models\Trabajos;
+use App\Models\InventarioSuministro;
+use App\Models\SuministroCompra;
+use App\Models\TrabajoExterno;
+use App\Models\Taller;
+
 use Google\Service\ApigeeRegistry\Build;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -189,9 +198,13 @@ class Orden extends Model
         $query->where('id_vehiculo', $vehiculoId);
     }
 
-    public function TrabajosExternos()
+    public function trabajosExternos()
     {
         return $this->hasMany(TrabajoExterno::class, 'id_orden', 'id');
+    }
+    public function suministrosCompras()
+    {
+        return $this->hasMany(SuministroCompra::class, 'orden_id', 'id');
     }
 
 }

@@ -28,6 +28,7 @@ use App\Services\TelegramNotificationService;
 use App\Models\MantenimientoProgramado;
 use App\Models\OrdenFoto;
 use App\Models\User;
+use Carbon\CarbonPeriod;
 use Google\Service\Datastore\Sum;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\TemparioCategoria;
@@ -1325,5 +1326,119 @@ class OrdenController extends BaseController
             return response()->json(['success' => false, 'message' => 'Error al cerrar la orden de trabajo: ' . $e->getMessage()], 500);
         }
 
+    }
+
+    public function reporteGerencial(Request $request)
+    {
+        // Por defecto evaluamos el mes en curso, pero permitimos filtrar
+        $inicio = $request->input('fecha_inicio', now()->startOfMonth()->format('Y-m-d'));
+        $fin = $request->input('fecha_fin', now()->endOfMonth()->format('Y-m-d'));
+
+        // 1. Consultas Base (Eager Loading para optimizar)
+        // Asumiendo relaciones: vehiculo, suministros, serviciosExternos
+        $ordenesBase = Orden::with(['vehiculoBelong', 'suministros', 'TrabajosExternos', 'trabajos','suministrosCompras'])
+            ->whereBetween('fecha_in', [$inicio, $fin])
+            ->get();
+
+        $ordenesActivas = Orden::whereIn('estatus', [2,3])->get();
+
+        // 2. KPIs Principales
+        $abiertasHoy = $ordenesBase->count();
+        $cerradasMes = Orden::whereBetween('fecha_out', [$inicio, $fin])->count();
+        $totalActivas = $ordenesActivas->count();
+
+        // 3. Costos
+        $costoSuministros = $ordenesBase->flatMap->suministros->sum('costo_total');
+        $costoExternos = $ordenesBase->flatMap->trabajosExternos->sum('costo');
+        $costoCompras = $ordenesBase->flatMap->suministrosCompras->flatMap->detalles->whereNotNull('costo_unitario_aprobado')->sum(function($detalle) {
+            return $detalle->costo_unitario_aprobado * $detalle->cantidad_aprobada;
+            });
+        // Asumimos un estimado de costo interno si tienes horas de mecánicos, o simplemente 0 si es nómina fija.
+        $costoInternos = 0; // O la suma de horas_hombre * tarifa
+        $costoTotalGeneral = $costoSuministros + $costoExternos + $costoInternos + $costoCompras;
+                    
+        // 4. Clasificación por Tipo y Categoría
+        $porTipo = $ordenesBase->groupBy('tipo')->map->count(); // Ej: ['Preventivo' => 15, 'Correctivo' => 20]
+        $porCategoria = $ordenesBase->flatMap->trabajos->groupBy(function($trabajo) {
+            // Si la relación 'categoria' existe, devolvemos el campo 'categoria' (el nombre), si no, 'Sin Categoría'
+            return $trabajo->categoria ? $trabajo->categoria->categoria : 'Sin Categoría';
+        })->map->count()->sortDesc();
+        // 5. Trabajos Internos vs Externos (Cantidad)
+        $trabajosInternos = $ordenesBase->flatMap->trabajos->count();
+        $trabajosExternos = $ordenesBase->flatMap->trabajosExternos->count();
+
+        // 6. Los "Ofensores" (Lo que más falla)
+        $fallaMasRecurrente = $porCategoria->keys()->first() ?? 'N/A';
+        
+        // Unidad con más órdenes abiertas actualmente
+        $unidadMasProblematica = $ordenesActivas
+        ->filter(function($orden) {
+            // Solo dejamos pasar las órdenes que tengan un ID de vehículo y cuya relación exista
+            return !empty($orden->id_vehiculo) && $orden->vehiculoBelong;
+        })
+        ->groupBy('id_vehiculo')
+        ->map(fn($ordenes) => [
+            'vehiculo' => $ordenes->first()->vehiculoBelong->flota ?? 'S/N',
+            'placa'    => $ordenes->first()->vehiculoBelong->placa ?? 'S/N',
+            'cantidad' => $ordenes->count()
+        ])
+        ->sortByDesc('cantidad')
+        ->first();
+
+
+        $periodo = CarbonPeriod::create($inicio, $fin);
+        $labels = [];
+        $dataAbiertas = [];
+        $dataCerradas = [];
+
+        // Pre-agrupamos para no hacer loops pesados dentro del periodo
+        $ordenesPorDia = $ordenesBase->groupBy(function($item) {
+            return Carbon::parse($item->fecha_in)->format('Y-m-d');
+        });
+
+        $cerradasPorDia = $ordenesBase->where('estatus', 1)->groupBy(function($item) {
+            // Usamos updated_at o fecha_fin si la tienes, para saber cuándo se cerró
+            return Carbon::parse($item->fecha_out)->format('Y-m-d');
+        });
+
+        foreach ($periodo as $date) {
+            $fecha = $date->format('Y-m-d');
+            $labels[] = $date->format('d/m'); // Formato corto para el gráfico
+            
+            $dataAbiertas[] = isset($ordenesPorDia[$fecha]) ? $ordenesPorDia[$fecha]->count() : 0;
+            $dataCerradas[] = isset($cerradasPorDia[$fecha]) ? $cerradasPorDia[$fecha]->count() : 0;
+        }
+
+
+        // 7. Estructurar la data para la vista
+        $reporte = [
+            'periodo' => ['inicio' => $inicio, 'fin' => $fin],
+            'kpis' => [
+                'abiertas_hoy' => $abiertasHoy,
+                'cerradas_mes' => $cerradasMes,
+                'activas_totales' => $totalActivas,
+            ],
+            'financiero' => [
+                'suministros' => $costoSuministros+$costoCompras,
+                'externos'    => $costoExternos,
+                'internos'    => $costoInternos,
+                'total'       => $costoTotalGeneral,
+            ],
+            'operativo' => [
+                'por_tipo'      => $porTipo,
+                'por_categoria' => $porCategoria->take(5), // Top 5 categorías
+                'internos_qty'  => $trabajosInternos,
+                'externos_qty'  => $trabajosExternos,
+                'falla_top'     => $fallaMasRecurrente,
+                'unidad_top'    => $unidadMasProblematica
+            ],
+            'timeline' => [
+                'labels'   => $labels,
+                'abiertas' => $dataAbiertas,
+                'cerradas' => $dataCerradas,
+            ]
+        ];
+
+        return view('orden.reporte_gerencial', compact('reporte'));
     }
 }
