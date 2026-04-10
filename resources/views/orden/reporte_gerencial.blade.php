@@ -134,7 +134,38 @@
     <div id="statusMessage" class="text-center p-3 rounded-lg bg-yellow-100 text-yellow-800 hidden mb-4">
             Procesando...
     </div>
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-3">
+            <form action="{{ route('ordenes.reporte_gerencial') }}" method="GET" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="small fw-bold text-muted mb-1"><i class="fas fa-calendar-alt me-1"></i> FECHA INICIO</label>
+                    <input type="date" 
+                        name="fecha_inicio" 
+                        class="form-control form-control-sm border-0 bg-light" 
+                        value="{{ $reporte['periodo']['inicio'] }}">
+                </div>
+                
+                <div class="col-md-4">
+                    <label class="small fw-bold text-muted mb-1"><i class="fas fa-calendar-check me-1"></i> FECHA FIN</label>
+                    <input type="date" 
+                        name="fecha_fin" 
+                        class="form-control form-control-sm border-0 bg-light" 
+                        value="{{ $reporte['periodo']['fin'] }}">
+                </div>
 
+                <div class="col-md-4">
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                        <button type="submit" class="btn btn-chutos btn-sm px-4 shadow-sm">
+                            <i class="fas fa-filter me-1"></i> Consultar
+                        </button>
+                        <a href="{{ route('ordenes.reporte_gerencial') }}" class="btn btn-light btn-sm px-3 text-muted">
+                            <i class="fas fa-undo me-1"></i> Limpiar
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
     <div class="report-master-card shadow-lg bg-white mx-auto p-0 printableArea" style="max-width: 1000px; border-radius: 15px; overflow: hidden;">
         <div class="container-fluid px-4 py-3" id="printableArea">
         <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">

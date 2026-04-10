@@ -33,7 +33,7 @@
                 <a href="{{ route('ordenes.compra') }}" class="btn btn-outline-dark">
                     <i class="fas fa-shopping-cart me-2"></i> Compras
                 </a>
-                <a href="{{ route('ordenes.reporte_gerencial') }}" class="btn btn-corporate">
+                <a href="{{ route('ordenes.reporte_gerencial') }}" class="btn btn-dark" style="background-color: #ebeaeb; color: #000; border: 1px solid #000 !important;">
                     <i class="fas fa-table me-2"></i> Reporte General
                 </a>
                 <a href="{{ route('ordenes.list') }}" class="btn btn-dark">
