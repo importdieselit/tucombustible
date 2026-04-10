@@ -271,7 +271,7 @@
                                     @endforeach
                                 </div> --}}
 
-                                <div id="container-highcharts-tipo" style="width:100%; height:300px;"></div>
+                                <div id="container-highcharts-tipo" style="width:100%; height:500px;"></div>
                             </div>
                         </div>
                     </div>

@@ -662,9 +662,9 @@ class OrdenController extends BaseController
             'id_orden' => $id,
             'descripcion' => $request->descripcion,
             'id_mecanico' => $id_mecanico_formateado,
-            'id_tempario' => $request->id_tempario,
+            'id_tempario_servicio' => $request->id_tempario,
             'costo' => $request->costo,
-            'id_tempario' => $request->id_tempario
+            'id_categoria' => $request->id_categoria
         ]);
 
         return response()->json([
@@ -883,7 +883,7 @@ class OrdenController extends BaseController
                     'id_orden' => $orden->id,
                     'id_tempario_servicio' => $t['id_tempario'],
                     'descripcion' => $concepto,
-                    'id_categoria' => $t['id_categoria'],
+                    'id_categoria' => $serv ? $serv->id_tempario_categoria : null,
                     'costo' => $serv->costo ?? 0,
                     'id_mecanico' => $t['mecanicos'][0] ?? null,
                     'fecha_inicio' => now(),
@@ -1362,7 +1362,8 @@ class OrdenController extends BaseController
         $porCategoria = $ordenesBase->flatMap->trabajos->groupBy(function($trabajo) {
             // Si la relación 'categoria' existe, devolvemos el campo 'categoria' (el nombre), si no, 'Sin Categoría'
             return $trabajo->categoria ? $trabajo->categoria->categoria : 'Sin Categoría';
-        })->map->count()->sortDesc();
+        })->map->sortDesc();
+        dd($porCategoria);
         // 5. Trabajos Internos vs Externos (Cantidad)
         $trabajosInternos = $ordenesBase->flatMap->trabajos->count();
         $trabajosExternos = $ordenesBase->flatMap->trabajosExternos->count();
