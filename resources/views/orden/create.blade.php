@@ -62,7 +62,7 @@
                         {{-- BLOQUE VEHÍCULO (Condicional) --}}
                         <div class="section-dinamica mb-3" id="group-vehiculo">
                             <label for="id_vehiculo" class="form-label fw-bold">Vehículo / Unidad</label>
-                            <select class="form-select select2 h-100" style="height: 100px" id="id_vehiculo" name="id_vehiculo">
+                            <select class="form-select select2 h-100" style="height: 100px" id="id_vehiculo" name="id_vehiculo" required>
                                 <option value="">Buscar unidad...</option>
                                 @foreach ($vehiculos as $v)
                                     <option value="{{ $v->id }}" data-km="{{ $v->kilometraje }}">[{{ $v->flota }}] {{ $v->placa }}</option>
@@ -372,16 +372,20 @@
         switch(tipo) {
             case '1':
                 $('#group-vehiculo').fadeIn();
+                $('#id_vehiculo').attr('required', 'required');
                 break;
                 
             case '2':
                 $('#group-vehiculo, #group-ubicacion-externa').fadeIn();
                 $('#label-ubicacion').text('Ubicación del Auxilio (Punto de Falla)');
+                $('#id_vehiculo').attr('required', 'required');
                 break;
                 
             case '3':
                 $('#group-vehiculo, #group-ubicacion-externa, #subgroup-taller-ext').fadeIn();
                 $('#label-ubicacion').text('Datos del Taller Externo');
+                $('#id_vehiculo').attr('required', 'required');
+
                 break;
                 
             case '4':
@@ -389,6 +393,7 @@
                 $('#group-ubicacion-externa').fadeIn();
                 $('#label-ubicacion').text('Área / Oficina específica');
                 $('#group-km').hide().find('input').val(0);
+                $('#id_vehiculo').removeAttr('required');
                 $('#id_vehiculo').val(null).trigger('change');
                 break;
                 
@@ -396,6 +401,7 @@
                 $('#group-ubicacion-externa').fadeIn();
                 $('#label-ubicacion').text('Ubicación / Cliente Final');
                 $('#group-km').hide().find('input').val(0);
+                $('#id_vehiculo').removeAttr('required');
                 $('#id_vehiculo').val(null).trigger('change');
                 break;
         }
