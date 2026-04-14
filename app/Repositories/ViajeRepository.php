@@ -16,4 +16,14 @@ class ViajeRepository
     {
         return DespachoViaje::create($data);
     }
+
+    public function find($id)
+    {
+        return Viaje::with(['tipoCombustible', 'detalles.cliente', 'vehiculo', 'chofer'])->findOrFail($id);
+    }
+
+    public function getViajesProgramados()
+    {
+        return Viaje::where('status', 'PROGRAMADO')->orderBy('fecha_salida', 'asc')->get();
+    }
 }

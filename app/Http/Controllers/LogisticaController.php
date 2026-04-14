@@ -37,29 +37,24 @@ class LogisticaController extends Controller
     public function create(Request $request)
     {
         $tipos = TipoCombustible::all();
-
-        // 1. Vehículos (tal cual lo solicitaste, sin filtros de estatus)
         $vehiculos = Vehiculo::select('id', 'placa', 'carga_max', 'tipo')->get();
+        
+        $personal = Chofer::with('persona')->get()->sortBy(function($chofer) {
+            return $chofer->persona->nombre ?? '';
+        });
 
-        // 2. Personal (Chóferes y Ayudantes)
-        // Cargamos la relación 'persona' para tener nombres y apellidos
-        $personal = Chofer::with('persona')
-            ->get()
-            ->sortBy(function($chofer) {
-                return $chofer->persona->nombre ?? '';
-            });
+        $clientes = Cliente::orderBy('nombre')->get(['id', 'nombre', 'rif', 'cupo_gasco', 'cupo']);
 
-        // 3. Clientes para carga manual (usamos el RIF y Disponible que pide la gerencia)
-        $clientes = Cliente::orderBy('nombre')->get(['id', 'nombre', 'rif', 'disponible', 'cupos_max']);
-
-        // 4. Pedidos pendientes (Carga automática)
         $tipoSeleccionado = $request->get('tipo_combustible_id');
         $pedidosPendientes = [];
+
+        // Lógica de Negocio: Solo hay pedidos pendientes si el combustible es DIESEL (ID suele ser 1 o 2, verifica el tuyo)
+        // Suponiendo que el ID de Diesel es el que el usuario elija y tenga pedidos asociados:
         if ($tipoSeleccionado) {
             $pedidosPendientes = Pedido::where('estado', 'pendiente')
-                ->where('tipo_combustible_id', $tipoSeleccionado)
                 ->with('cliente')
-                ->get();
+                ->get(); 
+            // Nota: Si en el futuro agregas MGO al portal, aquí filtrarías por tipo.
         }
 
         return view('admin.logistica.create', compact(
@@ -69,19 +64,18 @@ class LogisticaController extends Controller
 
     public function store(Request $request)
     {
-        // Validación ajustada a tus tablas
+        // Cambiamos 'clientes' por 'items' para que coincida con la vista Alpine.js
         $request->validate([
             'tipo_combustible_id' => 'required|exists:tipos_combustible,id',
-            'vehiculo_id'         => 'required|exists:vehiculos,id',
-            'chofer_id'           => 'required|exists:choferes,id', // ID de la tabla choferes
-            'ayudante_id'         => 'nullable|exists:choferes,id', // ID de la tabla choferes
             'fecha_programada'    => 'required|date',
-            'clientes'            => 'required|array|min:1',
+            'items'               => 'required|array|min:1', 
         ]);
 
         try {
             $viaje = $this->logisticaService->procesarPlanificacion($request->all());
-            return redirect()->route('logistica.planificacion')->with('success', 'Planificación guardada.');
+            
+            // Redirigimos a 'logistica.index' que es el nombre real en web.php
+            return redirect()->route('logistica.index')->with('success', 'Planificación guardada con éxito.');
         } catch (Exception $e) {
             return back()->withInput()->with('error', $e->getMessage());
         }

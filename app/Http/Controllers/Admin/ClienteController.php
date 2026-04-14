@@ -85,7 +85,7 @@ class ClienteController extends Controller
     public function listaGeneralPedidos()
     {
         // Usamos el método que ya tienes en el repositorio
-        $pedidos = $this->repository->getAllPedidosAdmin(30);
+        $pedidos = $this->repository->getAllPedidosAdmin();
 
         return view('admin.cliente.pedidos_general', compact('pedidos'));
     }
@@ -432,20 +432,19 @@ class ClienteController extends Controller
     // -------------------------------------------------------
     public function asignarCupoGasco(Request $request, $id)
     {
-        // 1. Obtenemos el cliente y su cupo aprobado general
-        // Asumo que el cupo general está en la relación 'cupos' (según tu show.blade)
-        $cliente = Cliente::with('cupos')->findOrFail($id);
+        // 1. Obtenemos el cliente directamente
+        $cliente = Cliente::findOrFail($id);
         
-        // Tomamos el primer cupo aprobado (o el principal) como techo máximo
-        $cupoGeneral = $cliente->cupos->first()->litros_aprobados ?? 0;
+        // 2. Tomamos el valor de la columna 'cupo' como techo máximo
+        // Si el campo se llama 'cupo' en tu tabla, lo usamos directamente
+        $cupoGeneral = $cliente->cupo ?? 0;
 
-        // 2. Validaciones con mensajes personalizados
         $request->validate([
             'litros_autorizados' => [
                 'required',
                 'numeric',
-                'min:99.9', // Debe ser mayor a 99.9
-                'max:' . $cupoGeneral // No puede exceder el cupo general
+                'min:100',
+                'max:' . $cupoGeneral // Ahora sí comparamos contra la columna correcta
             ]
         ], [
             'litros_autorizados.min' => 'La cantidad a asignar debe ser mayor a 100 litros.',
@@ -453,12 +452,15 @@ class ClienteController extends Controller
         ]);
 
         try {
+            // Aquí es donde el Service hace la magia en gasco_cupos_mensuales
             $this->gascoCupoService->asignarCupoMensual($id, $request->litros_autorizados);
+            
             Session::flash('success', 'Cupo GASCO del mes actualizado correctamente.');
             return Redirect::back();
         } catch (\Exception $e) {
+            // Para debuguear rápido mientras desarrollas, podrías devolver $e->getMessage()
             Log::error('Error al asignar cupo GASCO: ' . $e->getMessage());
-            return Redirect::back()->with('error', 'Error técnico al asignar el cupo.');
+            return Redirect::back()->with('error', 'Error técnico: ' . $e->getMessage());
         }
     }
 }

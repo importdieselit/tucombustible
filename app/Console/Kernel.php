@@ -26,6 +26,9 @@ class Kernel extends ConsoleKernel
             app(\App\Services\ReporteEficienciaService::class)->refrescarAgregados();
         })->hourly(); // Se actualiza cada hora automáticamente
         $schedule->command('queue:work --stop-when-empty')->everyMinute()->withoutOverlapping();
+
+        $schedule->command('summary:daily-report')->dailyAt('00:00');
+        $schedule->command('cupos:reset')->monthlyOn(1, '00:00');
     }
 
  

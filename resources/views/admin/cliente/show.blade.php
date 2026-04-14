@@ -98,6 +98,14 @@
                             <label class="text-muted text-uppercase fw-bold d-block small mb-1">Teléfono Principal</label>
                             <span class="fw-bold text-dark">{{ $cliente->telefono ?? 'N/A' }}</span>
                         </div>
+                        <div class="col-md-6">
+                            <label class="text-muted text-uppercase fw-bold d-block small mb-1">Contacto Alternativo</label>
+                            <span class="fw-bold text-dark uppercase">{{ $cliente->contacto_alt ?? 'N/A' }}</span>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted text-uppercase fw-bold d-block small mb-1">Teléfono Alternativo</label>
+                            <span class="fw-bold text-dark">{{ $cliente->telefono_alt ?? 'N/A' }}</span>
+                        </div>
                         <div class="col-md-6 border-top pt-3">
                             <label class="text-muted text-uppercase fw-bold d-block small mb-1">Correo Electrónico</label>
                             <span class="fw-bold text-dark">{{ $cliente->email ?? 'N/A' }}</span>
@@ -350,7 +358,7 @@
                     @if($cliente->status == \App\Models\Cliente::STATUS_APROBADO)
                         @php
                             // Obtenemos el cupo general para mostrarlo como referencia en el formulario
-                            $cupoGeneralLimit = $cliente->cupos->first()->litros_aprobados ?? 0;
+                            $cupoGeneralLimit = $cliente->cupo ?? 0;
                         @endphp
 
                         <div class="card shadow-sm border-orange mb-4">
