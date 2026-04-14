@@ -23,6 +23,11 @@
                     </a>
                 </div>
                 <div class="col">
+                    <a href="{{ route('vehiculos.documentacion') }}" class="btn btn-sm btn-outline-dark w-100 h-100 d-flex align-items-center justify-content-center">
+                        <i class="fas fa-file-alt me-1 me-md-2"></i> <span class="d-none d-sm-inline">Documentación</span>
+                    </a>
+                </div>
+                <div class="col">
                     <a href="{{ route('mantenimiento.planificacion.index') }}" class="btn btn-sm btn-dark w-100 h-100 d-flex align-items-center justify-content-center">
                         <i class="fas fa-wrench me-1 me-md-2"></i> Planificar
                     </a>
