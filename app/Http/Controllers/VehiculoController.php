@@ -11,6 +11,7 @@ use App\Models\Orden;
 use App\Models\ResumenDiario;
 use App\Models\Cliente;
 use App\Models\MantenimientoProgramado;
+use App\Models\DocumentosVehiculo;
 use App\Models\InventarioSuministro;
 use App\Models\DespachoViaje;
 use Illuminate\Http\Request;
@@ -342,9 +343,6 @@ class VehiculoController extends BaseController
       
     }
 
-    
-
-
     public function controlDocumentacion(Request $request)
     {
         $query = Vehiculo::query();
@@ -365,8 +363,10 @@ class VehiculoController extends BaseController
 
         $vehiculos = $query->orderBy('placa', 'asc')->paginate(20);
         $clientes = Cliente::orderBy('nombre', 'asc')->get();
+        $docsV = TipoDocumento::where('tipo', 'V')->get();
 
-        return view('vehiculo.documentacion', compact('vehiculos', 'clientes'));
+        return view('vehiculo.documentacion', compact('vehiculos', 'clientes', 'docsV'));
+
     }
 
      protected function applyBusinessFilters(Builder $query): Builder
@@ -522,6 +522,64 @@ class VehiculoController extends BaseController
 
         return Redirect::route('vehiculos.list');
 
+    }
+
+
+    
+    public function updateDocumento(Request $request)
+    {
+        $tipoDoc = TipoDocumento::findOrFail($request->doc_id);
+        
+        // Validación dinámica: si el documento tiene campo_destino, la fecha es obligatoria.
+        // Si no (como el Certificado), la fecha puede ser opcional.
+        $rules = [
+            'vehiculo_id' => 'required',
+            'doc_id'      => 'required',
+            'archivo'     => 'nullable|file|mimes:pdf,jpg,png|max:5120'
+        ];
+        
+        if ($tipoDoc->campo_destino) {
+            $rules['valor_texto'] = 'required';
+        }
+
+        $request->validate($rules);
+
+        $vehiculo = Vehiculo::findOrFail($request->vehiculo_id);
+
+        // 1. Gestión del Archivo (Ruta Estándar)
+        if ($request->hasFile('archivo')) {
+            $extension = $request->file('archivo')->getClientOriginalExtension();
+            $fileName = "{$tipoDoc->abreviatura}_{$vehiculo->id}.{$extension}";
+            $folder = "public/vehiculos/{$vehiculo->id}/documentos";
+            
+            // Borrar archivos viejos con otras extensiones para evitar duplicados (estándar)
+            foreach(['pdf','jpg','png'] as $ext) {
+                Storage::delete("{$folder}/{$tipoDoc->abreviatura}_{$vehiculo->id}.{$ext}");
+            }
+            
+            $request->file('archivo')->storeAs($folder, $fileName);
+        }
+
+        // 2. Actualización en Tabla Principal (Solo si aplica)
+        if ($tipoDoc->tabla_destino == 'vehiculos' && $tipoDoc->campo_destino) {
+            $campo = $tipoDoc->campo_destino;
+            $vehiculo->$campo = $request->valor_texto;
+            $vehiculo->save();
+        }
+
+        // 3. Registro en Tabla de Documentos (Auditoría/Histórico)
+        // Esto se hace SIEMPRE para tener el rastro de quién subió qué y cuándo
+        DocumentosVehiculo::updateOrCreate(
+            ['vehiculo_id' => $vehiculo->id, 'tipo' => $tipoDoc->id],
+            [
+                'fecha_venc' => $request->fecha_venc ?? null,
+                'nro'        => $request->nro ?? null,
+                'doc'        => "vehiculos/{$vehiculo->id}/documentos/{$tipoDoc->abreviatura}_{$vehiculo->id}", // nombre base
+                'fecha_ing' => now(),
+            ]
+        );
+
+        return back()->with('success', "{$tipoDoc->nombre} gestionado correctamente.");
     }
 
     public function updateV(Request $request)

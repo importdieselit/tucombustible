@@ -394,7 +394,7 @@ class ChecklistController extends Controller
                     $viaje->save();
                     $cisterna= $viaje->cisterna;
                     if(!is_null($cisterna)){
-                        $vehiculoCisterna=Vehiculo::find($cisterna->id_vehiculo);
+                        $vehiculoCisterna=Vehiculo::find($cisterna);
                         $vehiculoCisterna->estatus=$nuevoEstatus;
                         $vehiculoCisterna->kilometraje+=$km;
                         $vehiculoCisterna->horas_trabajo+=$horasDuracion;
