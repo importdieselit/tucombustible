@@ -53,22 +53,9 @@ class GascoCupoRepository
         return $nuevoCupo;
     }
 
-    /**
-     * Crea o actualiza el cupo operativo enviado por GASCO (Uso exclusivo del Admin).
-     * Si ya existe un registro en el mes, actualiza el autorizado sin tocar el consumo.
-     */
-    public function updateOrCreateQuota(array $data)
+    public function updateOrCreateQuota(array $search, array $values) // <-- Cambiado a dos parámetros
     {
-        return GascoCupoMensual::updateOrCreate(
-            [
-                'cliente_id' => $data['cliente_id'],
-                'mes'        => $data['mes'] ?? Carbon::now()->month,
-                'anio'       => $data['anio'] ?? Carbon::now()->year,
-            ],
-            [
-                'litros_autorizados' => $data['litros_autorizados']
-            ]
-        );
+        return GascoCupoMensual::updateOrCreate($search, $values);
     }
 
     /**

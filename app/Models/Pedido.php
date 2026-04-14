@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Carbon;
 
 class Pedido extends Model
 {
@@ -13,13 +12,13 @@ class Pedido extends Model
 
     protected $table = 'pedidos';
 
+    // Se eliminaron los campos marítimos porque los pedidos del portal son exclusivos para Diesel
     protected $fillable = [
         'cliente_id', 'user_id', 'deposito_id', 'vehiculo_id', 'chofer_id',
         'cantidad_solicitada', 'cantidad_aprobada', 'cantidad_recibida',
-        'estado', 'muelle_atraque', 'buque_nombre', 'imo_bandera',
-        'observaciones', 'observaciones_admin',
+        'estado', 'observaciones', 'observaciones_admin',
         'fecha_solicitud', 'fecha_aprobacion', 'fecha_completado',
-        'fecha_entrega', 'direccion_despacho', // Campos nuevos
+        'fecha_entrega', 'direccion_despacho', 
         'calificacion', 'comentario_calificacion'
     ];
 

@@ -6,7 +6,7 @@ use App\Models\Cliente;
 use App\Models\ClienteCupo;
 use App\Repositories\ClienteRepository;
 use App\Repositories\UserRepository;
-use App\Repositories\VehicleRepository;
+use App\Repositories\VehiculoRepository;
 use App\Repositories\OrderRepository;
 use App\Repositories\TankRepository;
 use App\Repositories\MaintenanceRepository;
@@ -15,7 +15,7 @@ use App\Services\GascoCupoService;
 
 class DashboardService
 {
-    protected $vehicleRepo;
+    protected $vehiculoRepo;
     protected $orderRepo;
     protected $userRepo;
     protected $tankRepo;
@@ -25,7 +25,7 @@ class DashboardService
     protected $gascoCupoService;
 
     public function __construct(
-        VehicleRepository     $vehicleRepo,
+        VehiculoRepository    $vehiculoRepo,
         OrderRepository       $orderRepo,
         UserRepository        $userRepo,
         TankRepository        $tankRepo,
@@ -34,7 +34,7 @@ class DashboardService
         ClienteRepository     $clientRepo,
         GascoCupoService      $gascoCupoService
     ) {
-        $this->vehicleRepo     = $vehicleRepo;
+        $this->vehiculoRepo    = $vehiculoRepo;
         $this->orderRepo       = $orderRepo;
         $this->userRepo        = $userRepo;
         $this->tankRepo        = $tankRepo;
@@ -131,7 +131,7 @@ class DashboardService
         return [
             'perfil' => 'admin_sistema',
             'stats'  => [
-                'totalVehiculos'       => $this->vehicleRepo->countAll(),
+                'totalVehiculos'       => $this->vehiculoRepo->getAll(),
                 'totalUsuarios'        => $this->userRepo->countAll(),
                 'totalOrdenesAbiertas' => $this->orderRepo->countAbiertas(),
                 'totalTanques'         => $this->tankRepo->countAll(),
@@ -156,7 +156,7 @@ class DashboardService
     public function getAdminStats(): array
     {
         return [
-            'totalVehiculos'       => $this->vehicleRepo->countAll(),
+            'totalVehiculos'       => $this->vehiculoRepo->getAll(),
             'totalUsuarios'        => $this->userRepo->countAll(),
             'totalOrdenesAbiertas' => $this->orderRepo->countAbiertas(),
             'totalTanques'         => $this->tankRepo->countAll(),

@@ -17,6 +17,7 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
         $schedule->command('summary:daily-report')->dailyAt('00:00');
+        $schedule->command('cupos:reset')->monthlyOn(1, '00:00');
     }
 
     /**

@@ -180,7 +180,7 @@
             </li>
 
             <li class="nav-item">
-                <a href="{{ route('viajes.dashboard') }}" class="nav-link {{ Request::routeIs('viajes.*') ? 'active' : '' }}">
+                <a href="{{ route('logistica.index') }}" class="nav-link {{ Request::routeIs('logistica.*') ? 'active' : '' }}">
                     <span><i class="fas fa-truck-loading nav-icon"></i> Módulo Logística</span>
                 </a>
             </li>

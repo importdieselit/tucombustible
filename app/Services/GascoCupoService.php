@@ -21,7 +21,6 @@ class GascoCupoService
     {
         $ahora = Carbon::now();
 
-        // 1. Guardamos/Actualizamos en la tabla de GASCO
         $cupo = $this->repository->updateOrCreateQuota([
             'cliente_id' => $clienteId,
             'mes'        => $ahora->month,
@@ -30,9 +29,9 @@ class GascoCupoService
             'litros_autorizados' => $litros
         ]);
 
-        // 2. NUEVO: Sincronizamos la columna 'disponible' en la tabla 'clientes'
-        // Formula = (Cupo GASCO Autorizado - Lo que ya haya pedido este mes)
-        $nuevoDisponible = $cupo->litros_autorizados - $cupo->litros_consumidos;
+        // Aseguramos que si consumidos es null, se trate como 0
+        $consumidos = $cupo->litros_consumidos ?? 0;
+        $nuevoDisponible = $cupo->litros_autorizados - $consumidos;
         
         \App\Models\Cliente::where('id', $clienteId)->update([
             'disponible' => $nuevoDisponible
