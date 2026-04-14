@@ -61,8 +61,7 @@ class InspeccionObserver
                 }
 
                 // Buscar viaje en ruta
-                //$viajesEnRuta =
-                 Viaje::where('vehiculo_id', $vehiculo->id)
+                $viajesEnRuta =Viaje::where('vehiculo_id', $vehiculo->id)
                                      ->where('status', 'EN RUTA')
                                      ->update(['status' => 'COMPLETADO']);
                                     // ->get();

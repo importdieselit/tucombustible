@@ -424,7 +424,7 @@ public function store(Request $request)
             'vehiculos_mantenimiento' => Vehiculo::where('estatus', 3)->count(),
         ];
         $user = auth()->user();
-        $vehiculosDisponibles = Vehiculo::where('es_flota',true)->get();
+        $vehiculosDisponibles = Vehiculo::where('es_flota',true)->select('id', 'flota', 'placa')->get();
       
         return view('checklist.index', compact('resumenAlertas','vehiculosDisponibles'));
     }

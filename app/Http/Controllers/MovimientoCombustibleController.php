@@ -1386,7 +1386,7 @@ public function storeDespachoIndustrial(Request $request)
                 'cantidad_litros' => $request->litros,
                 'planta_destino_id' => $request->planta_destino_id,
                 'fecha' => $request->fecha,
-                'estatus' => 'PENDIENTE_ASIGNACION',
+                'estatus' => 'Programado',
                 'tipo' => $request->tipo,
                 'flete' => $flete,
                 'vehiculo_id' => $request->vehiculo_id,

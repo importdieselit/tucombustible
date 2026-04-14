@@ -395,10 +395,28 @@ class VehiculoController extends BaseController
                 case 'con_orden_abierta':
                     $query->VehiculosConOrdenAbierta();
                     break;
+                case 'en_mantenimiento':
+                    $query->VehiculosEnMantenimiento();
+                    break;
                 case 'flota':
                     $query->EsFlota();
                     break;
-                
+                case 'chutos_camiones':
+                    $query->whereIn('tipo', [1,3])->where('es_flota', true);
+                    break;
+                case 'cisternas':
+                    $query->whereIn('tipo', [2,5])->where('es_flota', true);
+                    break;
+                case 'chutos_disponibles':
+                    $query->where('tipo', 3)->where('estatus', 1)->where('es_flota', true);
+                    break;
+                case 'camiones_disponibles':
+                    $query->where('tipo', 1)->where('estatus', 1)->where('es_flota', true);
+                    break;
+                case 'cisternas_disponibles':
+                    $query->whereIn('tipo', [2,5])->where('estatus', 1)->where('es_flota', true);
+                    break;
+
             }
         }
 

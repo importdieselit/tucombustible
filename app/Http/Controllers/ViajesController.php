@@ -231,8 +231,8 @@ class ViajesController extends Controller
         try {
             DB::beginTransaction();
             $status = 'PENDIENTE_ASIGNACION';
-            if($request->chofer_id != null && $request->vehiculo_id != null){
-                $status = 'Programado';
+            if($request->chofer_id != null && $request->vehiculo_id != null || $request->otro_chofer != null && $request->otro_vehiculo != null){
+                 $status = 'Programado';
             }
             //
             // 3. Crear el Viaje ÚNICO
@@ -244,9 +244,9 @@ class ViajesController extends Controller
                 'vehiculo_id' => $request->vehiculo_id ?? 0,
                 'cisterna' =>   $request->cisterna ?? null,
                 'ayudante' => $request->ayudante ?? 0,
-                'otro_chofer' => $request->otro_chofer_id ?? null,
-                'otro_vehiculo' => $request->otro_vehiculo_id ?? null,
-                'otro_ayudante' => $request->otro_ayudante_id ?? null,
+                'otro_chofer' => $request->otro_chofer ?? null,
+                'otro_vehiculo' => $request->otro_vehiculo ?? null,
+                'otro_ayudante' => $request->otro_ayudante?? null,
                 'tipo' => $request->tipo, // Tipo 1 para viajes con múltiples despachos
             ]);
           

@@ -12200,3 +12200,29 @@ textarea.form-control-lg {
     .rank-2 { background-color: #C0C0C0; color: white; }
     .rank-3 { background-color: #CD7F32; color: white; }
     .rank-other { background-color: #f1f3f5; color: #6c757d; }
+
+    .bg-chutos {
+        background-color: #ff6600 !important;
+    }
+    .bg-camiones {
+        background-color: #ffc107 !important;
+    }
+    .bg-cisternas {
+        background-color: #198754 !important;
+    }
+    .bg-camionetas {
+        background-color: #2c3e50 !important;
+    }
+
+    .border-chutos {
+        border-color: #ff6600 !important;
+    }
+    .border-camiones {
+        border-color: #ffc107 !important;
+        }
+    .border-cisternas {
+        border-color: #198754 !important;
+    }
+    .border-camionetas {
+        border-color: #2c3e50 !important
+    }
