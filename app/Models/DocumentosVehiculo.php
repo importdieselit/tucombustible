@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class DocumentosVehiculo extends Model
 {
     use HasFactory;
-    protected $table = 'documentos_vehiculo';
+    protected $table = 'documentos_vehiculos';
     protected $primaryKey = 'id';
     protected $fillable = [
         'vehiculo_id',

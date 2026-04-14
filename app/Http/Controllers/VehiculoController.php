@@ -524,6 +524,44 @@ class VehiculoController extends BaseController
 
     }
 
+    public function getDocumentoDetalle($vehiculo_id, $tipo_id)
+    {
+        $vehiculo = Vehiculo::findOrFail($vehiculo_id);
+        $tipoDoc = TipoDocumento::findOrFail($tipo_id);
+
+        // 1. Obtener el valor del campo dinámico si existe (ej: rcv, racda)
+        $valorCampoDestino = null;
+        if ($tipoDoc->campo_destino && isset($vehiculo->{$tipoDoc->campo_destino})) {
+            $valorCampoDestino = $vehiculo->{$tipoDoc->campo_destino};
+        }
+
+        // 2. Obtener el registro detallado (el último subido)
+        $registro = DocumentosVehiculo::where('vehiculo_id', $vehiculo_id)
+                                    ->where('tipo', $tipo_id)
+                                    ->first();
+
+        // 3. Verificar si el archivo físico existe (PDF, JPG o PNG)
+        $finalPath = null;
+        $extensions = ['pdf', 'jpg', 'png', 'jpeg'];
+        foreach ($extensions as $ext) {
+            $path = "storage/vehiculos/{$vehiculo_id}/documentos/{$tipoDoc->abreviatura}_{$vehiculo_id}.{$ext}";
+            if (file_exists(public_path($path))) {
+                $finalPath = asset($path);
+                break;
+            }
+        }
+
+        return response()->json([
+            'success'      => true,
+            'label'        => $tipoDoc->nombre,
+            'abreviatura'  => $tipoDoc->abreviatura,
+            'valor_actual' => $valorCampoDestino ?? ($registro->fecha_venc ?? ''),
+            'nro_registro' => $registro->nro ?? '',
+            'file_url'     => $finalPath,
+            'tiene_campo'  => !empty($tipoDoc->campo_destino)
+        ]);
+    }
+
 
     
     public function updateDocumento(Request $request)
