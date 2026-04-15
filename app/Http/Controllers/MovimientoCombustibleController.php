@@ -1352,8 +1352,7 @@ public function storeDespachoIndustrial(Request $request)
                                       ->get();
         $destino = TabuladorViatico::where('id','>',5)->orderBy('destino','asc')->pluck('destino')->unique();
 
-        $ayudantes = Chofer:://whereNull('documento_vialidad_numero')-> 
-                            where('cargo', 'like','%AYUDANTE%')->with('persona')->get();
+        $ayudantes = Chofer::with('persona')->get();
         
         $vehiculos = Vehiculo::where('es_flota', 1)->whereIn('tipo', [5,3,2])->get();
         
