@@ -62,9 +62,21 @@
             </div>
 
         <div class="col-12 mt-4 mb-5">
+            <div class="progress mb-3 shadow-sm" style="height: 12px; border-radius: 8px; display: none;" id="wizardProgressContainer">
+                <div id="wizardProgressBar" class="progress-bar" style="background-color: #ff6600; font-size: 10px; font-weight: bold;" role="progressbar" style="width: 0%;"></div>
+            </div>
+
             <div class="card border-0 shadow-sm p-3 bg-light">
-                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                    <button type="submit" class="btn btn-primary btn-lg shadow" id="submitBtn">
+                <div class="d-flex justify-content-between align-items-center">
+                    <button type="button" class="btn btn-secondary shadow-sm" id="btnPrev" style="display: none;">
+                        <i class="fas fa-arrow-left me-2"></i>Atrás
+                    </button>
+                    
+                    <button type="button" class="btn text-white fw-bold shadow-sm ms-auto" id="btnNext" style="background-color: #ff6600; display: none;">
+                        Siguiente<i class="fas fa-arrow-right ms-2"></i>
+                    </button>
+                    
+                    <button type="submit" class="btn btn-primary btn-lg shadow ms-auto" id="submitBtn" style="display: none;">
                         <i class="fas fa-save me-2"></i>Finalizar y Notificar
                     </button>
                 </div>
@@ -110,6 +122,9 @@
     const container = document.getElementById('checklist-container');
     const form = document.getElementById('inspeccionForm');
     const submitBtn = document.getElementById('submitBtn');
+    let currentStep = 0;
+    let totalWizardSteps = 0;
+ 
 
 
     document.addEventListener('input', function (e) {
@@ -196,11 +211,19 @@
 
     function renderChecklist(blueprint) {
         blueprint.sections.forEach((section, secIndex) => {
+            // NUEVO: Contenedor del paso (Wizard Step)
+            const stepDiv = document.createElement('div');
+            stepDiv.className = 'wizard-step';
+            stepDiv.id = `step-${secIndex}`;
+            stepDiv.style.display = secIndex === 0 ? 'block' : 'none'; // Mostrar solo el paso 1 al inicio
+
+            // TU CÓDIGO ORIGINAL de la tarjeta
             const sectionDiv = document.createElement('div');
             sectionDiv.className = 'card border-0 shadow-sm mb-4';
             sectionDiv.innerHTML = `
-                <div class="card-header bg-dark text-white d-flex align-items-center">
-                    <i class="fas fa-layer-group me-2"></i> ${section.section_title}
+                <div class="card-header bg-dark text-white d-flex align-items-center justify-content-between">
+                    <div><i class="fas fa-layer-group me-2"></i> ${section.section_title}</div>
+                    <span class="badge bg-secondary opacity-75">Paso ${secIndex + 1} de ${blueprint.sections.length}</span>
                 </div>
                 <div class="card-body row g-3"></div>`;
             
@@ -220,10 +243,12 @@
                 });
             }
             
-            container.appendChild(sectionDiv);
+            // Adjuntamos la tarjeta al Paso, y el Paso al contenedor
+            stepDiv.appendChild(sectionDiv);
+            container.appendChild(stepDiv);
         });
 
-        // Inicializar lógica de colores y etiquetas
+        // TU CÓDIGO ORIGINAL: Inicializar lógica de colores y etiquetas
         document.querySelectorAll('.check-item-input').forEach(input => {
             const updateUI = (el) => {
                 const itemContainer = el.closest('.inspection-item') || el.closest('.composite-group');
@@ -244,11 +269,14 @@
             updateUI(input); // Carga inicial
         });
 
-        // Auto-llenado de datos básicos
+        // TU CÓDIGO ORIGINAL: Auto-llenado de datos básicos
         if (VEHICULO_DATA) {
             const inputPlaca = document.querySelector('[name*="Placa"]');
             if(inputPlaca) inputPlaca.value = VEHICULO_DATA.placa || '';
         }
+
+        // NUEVO: Inicializar la interfaz del Wizard
+        initWizard(blueprint.sections.length);
     }
 
     renderChecklist(CHECKLIST_BLUEPRINT);
@@ -313,7 +341,6 @@
         return result;
     }
 
-
     // 5. Envío del Formulario (AJAX/Fetch)
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -359,6 +386,64 @@
             submitBtn.textContent = 'Guardar Inspección y Notificar';
         }
     });
+
+
+
+    function initWizard(total) {
+        totalWizardSteps = total;
+        document.getElementById('wizardProgressContainer').style.display = 'flex';
+        
+        // Listeners de los botones
+        document.getElementById('btnNext').addEventListener('click', () => {
+            if (currentStep < totalWizardSteps - 1) {
+                currentStep++;
+                updateWizardUI();
+            }
+        });
+
+        document.getElementById('btnPrev').addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateWizardUI();
+            }
+        });
+
+        // Dibuja el estado inicial
+        updateWizardUI();
+    }
+
+    function updateWizardUI() {
+        // Ocultar todos los pasos y mostrar el actual
+        document.querySelectorAll('.wizard-step').forEach((step, index) => {
+            step.style.display = index === currentStep ? 'block' : 'none';
+        });
+
+        // Actualizar barra de progreso
+        const progress = ((currentStep + 1) / totalWizardSteps) * 100;
+        const progressBar = document.getElementById('wizardProgressBar');
+        progressBar.style.width = `${progress}%`;
+        progressBar.innerText = `${Math.round(progress)}%`;
+
+        // Mostrar/Ocultar Botones dependiendo del paso
+        const btnPrev = document.getElementById('btnPrev');
+        const btnNext = document.getElementById('btnNext');
+        const submitBtn = document.getElementById('submitBtn');
+
+        btnPrev.style.display = currentStep > 0 ? 'block' : 'none'; // Mostrar "Atrás" si no es el primer paso
+        
+        if (currentStep === totalWizardSteps - 1) {
+            // Si es el último paso
+            btnNext.style.display = 'none';
+            submitBtn.style.display = 'block';
+        } else {
+            // Si NO es el último paso
+            btnNext.style.display = 'block';
+            submitBtn.style.display = 'none';
+        }
+
+        // Subir al inicio de la página para que el usuario no quede abajo al cambiar de paso
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 
 </script>
 @endpush

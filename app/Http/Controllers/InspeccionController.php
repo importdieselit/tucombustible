@@ -41,6 +41,13 @@ class InspeccionController extends Controller
         $inspeccion = Inspeccion::where('vehiculo_id', $vehiculo_id)
                          ->whereNull('respuesta_in') // <-- CORRECCIÓN AQUÍ
                          ->first();
+        if($inspeccion){
+            $tipo='entrada';
+            $dataResponse=json_decode($inspeccion->respuesta_json,true);
+        }else{
+            $dataResponse=json_decode($checklist->checklist,true);
+            $tipo='salida';
+        }
 
         // Obtener datos del vehículo (para pre-rellenar el formulario)
         $vehiculo = Vehiculo::with(['tipoVehiculo', 'isMarca', 'isModelo'])->findOrFail($vehiculo_id);
@@ -101,12 +108,9 @@ class InspeccionController extends Controller
                             // }
                         }
                     }
-        if($inspeccion){
-            $tipo='entrada';
-            $checklist=json_decode($inspeccion->respuesta_json);
-        }else{
-            $tipo='salida';
-        }
+                    $checklist->checklist=$dataResponse;
+                
+       
 
         return view('checklist.salida', [
             'checklist' => $checklist,
