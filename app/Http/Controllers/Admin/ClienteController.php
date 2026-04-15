@@ -122,7 +122,6 @@ class ClienteController extends Controller
             'ciudad_id'           => 'required|exists:ciudades,id',
             'direccion'           => 'nullable|string',
             'direccion_operativa' => 'required|string',
-            'tipo_combustible_id' => 'required|exists:tipos_combustible,id',
             'tipo_cliente'        => 'nullable|in:padre,sucursal',
             'token_padre'         => 'nullable|string|exists:clientes,token_registro',
         ], [
@@ -131,7 +130,6 @@ class ClienteController extends Controller
             'telefono.digits_between' => 'El teléfono debe tener entre 10 y 11 dígitos.',
             'telefono_alt.digits_between' => 'El teléfono alternativo debe tener entre 10 y 11 dígitos.',
             'token_padre.exists'      => 'El Token de la empresa principal no es válido.',
-            'tipo_combustible_id.exists' => 'El tipo de combustible seleccionado no es válido.',
         ]);
 
         try {
@@ -228,22 +226,10 @@ class ClienteController extends Controller
 
     public function aprobar(Request $request, $id)
     {
-        $request->validate([
-            'tipo_combustible_id' => 'required|exists:tipos_combustible,id',
-            'litros_aprobados'    => 'required|numeric|min:1',
-        ], [
-            'litros_aprobados.min' => 'El cupo aprobado debe ser mayor a 0.',
-        ]);
-
         try {
             $this->clienteService->aprobarCliente($id);
-            $this->clienteService->ajustarCupo(
-                $id,
-                (int) $request->tipo_combustible_id,
-                (float) $request->litros_aprobados
-            );
 
-            Session::flash('success', 'Cliente aprobado y cupo asignado correctamente.');
+            Session::flash('success', 'Cliente aprobado.');
             return Redirect::back();
         } catch (\Exception $e) {
             Log::error('Error al aprobar cliente: ' . $e->getMessage());

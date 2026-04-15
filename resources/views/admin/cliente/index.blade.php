@@ -340,7 +340,7 @@
                     </div>
                     <div class="text-right">
                         <p class="text-lg font-black text-blue-600">
-                            {{ number_format($cliente->cupos_max, 0, ',', '.') }}
+                            {{ number_format($cliente->cupos_max_litros_aprobados, 0, ',', '.') }}
                             <small class="text-[9px] text-gray-400 font-bold uppercase">L</small>
                         </p>
                         <a href="{{ route('clientes.show', $cliente->id) }}"
