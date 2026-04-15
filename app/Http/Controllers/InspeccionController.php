@@ -480,11 +480,14 @@ public function store(Request $request)
             'ordenes_abiertas' => Orden::where('estatus', 2)->count(),
             'vehiculos_mantenimiento' => Vehiculo::where('estatus', 3)->count(),
         ];
+        $inspeccionesRecientes = Inspeccion::with('vehiculo')->whereNull('respuesta_in')
+                                        ->orderBy('created_at', 'desc')
+                                        ->get();
         $user = auth()->user();
         $vehiculosDisponibles = Vehiculo::where('es_flota',true)->get()->mapWithKeys(function ($v) {
             return [$v->id => "{$v->flota} - {$v->placa}"];
         });
-        return view('checklist.index', compact('resumenAlertas','vehiculosDisponibles'));
+        return view('checklist.index', compact('resumenAlertas','vehiculosDisponibles', 'inspeccionesRecientes','user'));
     }
 
 }

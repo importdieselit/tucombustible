@@ -56,6 +56,7 @@
                     </tr>
                 </thead>
                 <tbody>
+                    @if($inspeccionesRecientes)
                     @foreach($inspeccionesRecientes as $insp)
                     <tr>
                         <td class="ps-4">
@@ -71,6 +72,7 @@
                         </td>
                     </tr>
                     @endforeach
+                    @endif
                 </tbody>
             </table>
         </div>
