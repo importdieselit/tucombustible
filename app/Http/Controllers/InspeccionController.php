@@ -44,6 +44,63 @@ class InspeccionController extends Controller
 
         // Obtener datos del vehículo (para pre-rellenar el formulario)
         $vehiculo = Vehiculo::with(['tipoVehiculo', 'isMarca', 'isModelo'])->findOrFail($vehiculo_id);
+        $viajes = Viaje::where('vehiculo_id', $vehiculo_id)
+                                ->whereDate('fecha_salida', '>=', now())
+                                ->get();
+
+                    // --- BLOQUE 1: Inyectar Rutas/Viajes en "Información General" ---
+                    if ($viajes->count() > 0) {
+                        // IMPORTANTE: Flutter espera List<String>, así que aplanamos a un string simple
+                        $opcionesViajes = $viajes->map(function($v) {
+                            return "ID-{$v->id} | Ruta: " . ($v->destino_ciudad ?? 'Sin Destino');
+                        })->toArray();
+
+                        $valorInicial = $opcionesViajes[0] ?? "";
+
+                        $campoViaje = [
+                            "label" => "Seleccione Ruta a Cubrir",
+                            "response_type" => "radio",
+                            "options" => $opcionesViajes, // Esto es ["String1", "String2"]
+                            "value" => (string)$valorInicial, // Forzamos cast a string
+                            "col_width" => 12
+                        ];
+                        // Lo insertamos al final de la primera sección
+                        $dataResponse['sections'][0]['items'][] = $campoViaje;
+//Log::info("Checklist ID {$id}: Se inyectó campo de selección de ruta con " . count($opcionesViajes) . " opciones para Vehículo ID {$vehiculoId}.");
+                    }
+
+                    foreach ($dataResponse['sections'][1]['items'] as &$item) {
+                        if (isset($item['data_source'])) {
+                            // Caso para campos simples (Vehiculo.placa, etc)
+                            if (is_string($item['data_source'])) {
+                                $campo = str_replace('Vehiculo.', '', $item['data_source']);
+                                
+                                // Mapeo manual de nombres si los de la API difieren del JSON
+                                $mapaAtributos = [
+                                    'marca' => 'marca_nombre',
+                                    'modelo' => 'modelo_nombre',
+                                    'tipo_vehiculo' => 'tipo_nombre',
+                                    'version' => 'modelo_nombre', // O el campo que uses para versión
+                                    'serial_motor' => 'serial_motor',
+                                    'serial_carroceria' => 'serial_carroceria'
+                                ];
+
+                                $key = $mapaAtributos[$campo] ?? $campo;
+                                $item['value'] = $vehiculo->$key ?? "";
+                            }
+                        
+                            // Caso para campos compuestos (Seguros, Verificación)
+                            // if (is_array($item['data_source']) && $item['data_source']['model'] == 'Vehiculo') {
+                            //     $statusField = $item['data_source']['status_field'];
+                            //     $dateField = $item['data_source']['date_field'];
+                                
+                            //     $item['value'] = [
+                            //         "status" => $vehiculo->$statusField ?? false,
+                            //         "vigencia" => $vehiculo->$dateField ?? ""
+                            //     ];
+                            // }
+                        }
+                    }
         if($inspeccion){
             $tipo='entrada';
             $checklist=json_decode($inspeccion->respuesta_json);
@@ -424,8 +481,9 @@ public function store(Request $request)
             'vehiculos_mantenimiento' => Vehiculo::where('estatus', 3)->count(),
         ];
         $user = auth()->user();
-        $vehiculosDisponibles = Vehiculo::where('es_flota',true)->select('id', 'flota', 'placa')->get();
-      
+        $vehiculosDisponibles = Vehiculo::where('es_flota',true)->get()->mapWithKeys(function ($v) {
+            return [$v->id => "{$v->flota} - {$v->placa}"];
+        });
         return view('checklist.index', compact('resumenAlertas','vehiculosDisponibles'));
     }
 
