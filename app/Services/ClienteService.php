@@ -22,20 +22,7 @@ class ClienteService
 
     public function registrarCliente(array $data): Cliente
     {
-        $tipoCombustibleId = $data['tipo_combustible_id'] ?? null;
-
-        if (!$tipoCombustibleId) {
-            throw new \Exception('Debe seleccionar el tipo de combustible.');
-        }
-
-        if ($this->repository->existeClienteConTipoCombustible($data['rif'], $tipoCombustibleId)) {
-            throw new \Exception(
-                'Ya existe un cliente registrado con este RIF para el tipo de combustible seleccionado. ' .
-                'Si desea registrar un cupo de otro combustible, debe crear un nuevo registro.'
-            );
-        }
-
-        return DB::transaction(function () use ($data, $tipoCombustibleId) {
+        return DB::transaction(function () use ($data) {
 
             $rifOficial = strtoupper($data['rif']);
             $rifLimpio  = str_replace(['-', ' '], '', $rifOficial);
@@ -82,13 +69,6 @@ class ClienteService
                 'id_perfil'      => 3,
                 'cliente_id'     => $cliente->id,
                 'status_usuario' => 'en_registro',
-            ]);
-
-            $this->repository->registrarCupo([
-                'cliente_id'          => $cliente->id,
-                'tipo_combustible_id' => $tipoCombustibleId,
-                'litros_solicitados'  => $data['litros_solicitados'] ?? 0,
-                'litros_aprobados'    => 0,
             ]);
 
             return $cliente;

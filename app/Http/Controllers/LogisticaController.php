@@ -43,7 +43,7 @@ class LogisticaController extends Controller
             return $chofer->persona->nombre ?? '';
         });
 
-        $clientes = Cliente::orderBy('nombre')->get(['id', 'nombre', 'rif', 'cupo_gasco', 'cupo']);
+        $clientes = Cliente::orderBy('nombre')->get(['id', 'nombre', 'rif', 'cupo']);
 
         $tipoSeleccionado = $request->get('tipo_combustible_id');
         $pedidosPendientes = [];

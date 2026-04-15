@@ -122,29 +122,6 @@
                                 </div>
                                 @error('email') <div class="text-danger mt-1 small">{{ $message }}</div> @enderror
                             </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold small text-muted">Tipo de Combustible <span class="text-danger">*</span></label>
-                                <select name="tipo_combustible_id" required class="form-select">
-                                    <option value="" disabled selected>Seleccione...</option>
-                                    @foreach($tiposCombustible as $tipo)
-                                        <option value="{{ $tipo->id }}" {{ old('tipo_combustible_id') == $tipo->id ? 'selected' : '' }}>
-                                            {{ $tipo->nombre }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('tipo_combustible_id') <div class="text-danger mt-1 small">{{ $message }}</div> @enderror
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold small text-muted">Litros Solicitados / Mes <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <input type="number" name="litros_solicitados" value="{{ old('litros_solicitados') }}"
-                                           min="1" required class="form-control border-end-0" placeholder="Ej: 10000">
-                                    <span class="input-group-text bg-light border-start-0 fw-bold">LTS</span>
-                                </div>
-                                @error('litros_solicitados') <div class="text-danger mt-1 small">{{ $message }}</div> @enderror
-                            </div>
                         </div>
 
                         {{-- SECCIÓN: PERSONAS DE CONTACTO --}}

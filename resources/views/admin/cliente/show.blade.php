@@ -321,37 +321,85 @@
                             <button type="submit" class="btn btn-dark w-100 btn-sm fw-bold">ACTUALIZAR ETAPA</button>
                         </form>
 
-                        {{-- APROBAR --}}
+                        {{-- BLOQUE APROBAR --}}
+                        @if($cliente->status == \App\Models\Cliente::STATUS_EN_REGISTRO)
                         <div class="p-3 border-2 border-success rounded mb-3 bg-light">
-                            <h6 class="text-success fw-bold text-uppercase small mb-3"><i class="fas fa-check-circle me-1"></i>Aprobar Cliente</h6>
+                            <h6 class="text-success fw-bold text-uppercase small mb-3">
+                                <i class="fas fa-check-circle me-1"></i>Aprobar Cliente
+                            </h6>
+                            <p class="text-muted mb-3" style="font-size: 11px;">
+                                Al aprobar, el cliente podrá solicitar <strong>MGO</strong> por los canales regulares. 
+                                Si requiere <strong>Diesel</strong>, use la sección de "Cupo General" abajo.
+                            </p>
                             <form action="{{ route('clientes.aprobar', $cliente->id) }}" method="POST">
                                 @csrf
-                                <select name="tipo_combustible_id" required class="form-select form-select-sm mb-2">
-                                    <option value="" disabled selected>Combustible...</option>
-                                    @foreach($tiposCombustible as $tipo)
-                                        <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
-                                    @endforeach
-                                </select>
-                                <input type="number" name="litros_aprobados" required class="form-control form-control-sm mb-2" placeholder="Litros / Mes">
-                                <button type="submit" class="btn btn-success w-100 btn-sm fw-bold shadow-sm" onclick="return confirm('¿Aprobar?')">APROBAR Y ASIGNAR CUPO</button>
+                                <button type="submit" class="btn btn-success w-100 btn-sm fw-bold shadow-sm">
+                                    CONFIRMAR APROBACIÓN
+                                </button>
                             </form>
                         </div>
+                        @endif
                     @endif
 
-                    {{-- AJUSTAR CUPO --}}
+                    {{-- GESTIÓN DE CUPO GENERAL (SIAVCOM) --}}
                     @if($cliente->status == \App\Models\Cliente::STATUS_APROBADO)
-                        <h6 class="fw-bold text-uppercase small text-orange mb-3 border-bottom pb-1">Ajuste de Cupos</h6>
-                        @foreach($cliente->cupos as $cupo)
-                            <form action="{{ route('clientes.ajustarCupo', $cliente->id) }}" method="POST" class="mb-3 p-2 border rounded">
-                                @csrf
-                                <input type="hidden" name="tipo_combustible_id" value="{{ $cupo->tipo_combustible_id }}">
-                                <p class="mb-1 fw-bold small text-muted text-uppercase">{{ $cupo->tipoCombustible->nombre }}</p>
-                                <div class="input-group input-group-sm">
-                                    <input type="number" name="litros_aprobados" value="{{ $cupo->litros_aprobados }}" class="form-control fw-bold border-orange">
-                                    <button class="btn-orange text-white fw-bold" type="submit"><i class="fas fa-sync-alt"></i></button>
+                        <div class="card shadow-sm border-orange mb-4">
+                            <div class="card-body">
+                                <h6 class="fw-bold text-uppercase small text-dark mb-3 border-bottom pb-1">
+                                    <i class="fas fa-shield-alt me-2 text-orange"></i>Cupo General (SIAVCOM)
+                                </h6>
+                                
+                                {{-- Visualización de Valores Actuales (Simétrico a GASCO) --}}
+                                <div class="row mb-3">
+                                    <div class="col-6 border-end text-center">
+                                        <span class="text-[10px] text-muted text-uppercase fw-bold d-block">Cupo Aprobado</span>
+                                        <span class="fs-5 fw-black text-dark">{{ number_format($cliente->cupo ?? 0, 0) }} L</span>
+                                    </div>
+                                    <div class="col-6 text-center">
+                                        <span class="text-[10px] text-muted text-uppercase fw-bold d-block">Saldo Disponible</span>
+                                        <span class="fs-5 fw-black text-orange">{{ number_format($cliente->disponible ?? 0, 0) }} L</span>
+                                    </div>
                                 </div>
-                            </form>
-                        @endforeach
+
+                                <form action="{{ route('clientes.ajustarCupo', $cliente->id) }}" method="POST">
+                                    @csrf
+                                    <div class="mb-2">
+                                        <label class="small fw-bold text-muted uppercase">Configurar Producto y Cantidad</label>
+                                        <div class="row g-1"> {{-- Uso de row pequeña para alinear select e input --}}
+                                            <div class="col-5">
+                                                <select name="tipo_combustible_id" required class="form-select form-select-sm fw-bold border-orange h-100">
+                                                    <option value="" disabled {{ !$cliente->cupo ? 'selected' : '' }}>Producto...</option>
+                                                    @foreach($tiposCombustible as $tipo)
+                                                        @if($tipo->id != 2) {{-- Excluir MGO --}}
+                                                            <option value="{{ $tipo->id }}" {{ ($cliente->cupo > 0 && $tipo->id == 1) ? 'selected' : '' }}>
+                                                                {{ $tipo->nombre }}
+                                                            </option>
+                                                        @endif
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="col-7">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" name="litros_aprobados" 
+                                                        class="form-control fw-bold border-orange" 
+                                                        placeholder="Cant. Litros" 
+                                                        value="{{ $cliente->cupo }}"
+                                                        required>
+                                                    <button class="btn btn-dark fw-bold" type="submit">
+                                                        <i class="fas fa-save me-1"></i> GUARDAR
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <small class="text-muted italic" style="font-size: 10px;">
+                                                <i class="fas fa-info-circle me-1"></i> Este cupo define el límite máximo para la asignación de GASCO.
+                                            </small>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     @endif
 
                     {{-- GESTIÓN DE CUPO GASCO --}}
