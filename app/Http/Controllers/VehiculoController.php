@@ -745,7 +745,15 @@ class VehiculoController extends BaseController
 
     public function reporteDisponibilidad()
 {
-    return view('vehiculo.reporte_disponibilidad');
+    $today = now();
+    $data = Vehiculo::miFlota()->with(['tipoVehiculo', 'cisternaAcoplada', 'ordenActiva'])->get();
+
+
+    $total = $data->count();
+    
+
+    return view('vehiculo.reporte_disponibilidad', compact(
+        'today', 'total' ));
 }
 
   public function refreshDisponibilidad()
