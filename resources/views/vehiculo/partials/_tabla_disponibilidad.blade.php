@@ -11,7 +11,7 @@
             </div>
             
         </div>
-<div class="row w-100 align-items-center bg-light p-0 m-0 border">
+<div class="row w-100 align-items-center bg-light p-0 m-0 border noPrint no-print">
                 <div class="col-4 text-muted small">
                     <i class="fas fa-clock me-1"></i> Última actualización: 
                     <span id="last-sync-time" class="fw-bold">--:--:--</span>
