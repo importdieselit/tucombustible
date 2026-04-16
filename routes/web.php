@@ -81,6 +81,7 @@ Route::middleware(['auth'])->group(function () {
     Route::put('vehiculos/updatev/{id}', [VehiculoController::class, 'updateV'])->name('vehiculos.updatev');
     Route::get('/inspecciones/{inspeccion_id}/pdf', [InspeccionController::class, 'exportPdf'])->name('inspecciones.pdf');
     Route::get('/reporte/vehiculos-disponibilidad', [VehiculoController::class, 'reporteDisponibilidad'])->name('vehiculos.reporte.disponibilidad');
+    Route::get('/vehiculos/disponibilidad/refresh', [VehiculoController::class, 'refreshDisponibilidad'])->name('vehiculos.disponibilidad.refresh');
     Route::get('/vehiculos/report/pdf', [VehiculoController::class, 'reportPdf'])->name('vehiculos.report.pdf');
     Route::get('/documentacion/vehiculos/', [VehiculoController::class, 'controlDocumentacion'])->name('vehiculos.documentacion');
     Route::post('/vehiculos/documentacion/update', [VehiculoController::class, 'updateDocumento'])->name('vehiculos.documentacion.update');

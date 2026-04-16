@@ -807,6 +807,70 @@ class VehiculoController extends BaseController
     ));
 }
 
+  public function refreshDisponibilidad()
+{
+    $today = now();
+    $data = Vehiculo::miFlota()->with(['tipoVehiculo', 'cisternaAcoplada', 'ordenActiva'])->get();
+
+    $vehiculosEnRuta = $data->where('estatus', 2);
+    $enRuta = $vehiculosEnRuta->count();
+
+    $total = $data->count();
+    $operativosCount = $data->where('estatus', 1)->count();
+    
+    $cisternas= $data->where('tipo', 2);
+    $totalCisternas= $cisternas->count();
+    $camiones = $data->whereIn('tipoVehiculo.tipo', ['CAMION','CAMION CISTERNA']);
+    $chutos = $data->whereIn('tipoVehiculo.tipo', ['CHUTO']);
+    $totalCamiones= $camiones->count();
+    $totalChutos= $chutos->count();
+
+    $fallaCount = $data->whereIn('estatus', [3,4,5])->count();
+    $porcentajeDisponibilidad = $total > 0 ? round(($operativosCount / $total) * 100) : 0;
+    $ligero=Vehiculo::misVehiculos()->with(['tipoVehiculo', 'ordenActiva'])->where('tipo', 6)->get();
+    $totalLivianos= $ligero->count();
+    
+    $cisternasFalla = $cisternas->where('estatus', '>', 2);
+    $camionesFalla = $camiones->where('estatus', '>', 2);
+    $chutosFalla = $chutos->where('estatus', '>', 2);
+    $camionetasFalla = $ligero->where('estatus', '>', 2);
+    $cisternasOperativas = $cisternas->where('estatus', 1);
+    $camionetasOperativas = $ligero->where('estatus', 1);
+    $camionesOperativos = $camiones->where('estatus', 1);
+    $chutosOperativos = $chutos->where('estatus', 1);
+    $chutosEnRuta = $chutos->where('estatus', 2);
+    $camionetasEnRuta = $ligero->where('estatus', 2);
+    $camionesEnRuta = $camiones->where('estatus', 2);
+    $cisternasEnRuta = $cisternas->where('estatus', 2);
+
+   $today = Carbon::parse($today);
+   $queryViajesHoy = Viaje::whereDate('fecha_salida', now()->format('Y-m-d'));
+
+    // 2. Obtener el conteo de vehículos únicos (usando el nombre real de la columna: id_vehiculo)
+    $vehiculosEnUsoHoy = (clone $queryViajesHoy)->distinct()->count('vehiculo_id');
+
+
+    // 3. Cálculo de la tasa de utilización
+    // Evitamos división por cero si no hay flota operativa configurada
+    $utilizacionFlota = $operativosCount > 0 
+        ? round(($vehiculosEnUsoHoy / $operativosCount) * 100, 1) 
+        : 0;
+
+    // Obtenemos los viajes activos de esos vehículos
+    $despachosHoy = $queryViajesHoy->with(['vehiculo', 'chofer'])->get();
+    // ------------------------------------
+    
+
+    return view('vehiculo.partials._tabla_disponibilidad', compact(
+        'today', 'cisternasFalla', 'enRuta', 'totalCisternas','camionesFalla', 'despachosHoy', 
+        'camionetasFalla', 'camionetasOperativas', 'totalLivianos','totalCamiones', 'totalChutos',
+        'chutosFalla', 'chutosOperativos', 'camionesOperativos', 
+        'total', 'operativosCount', 'fallaCount', 'porcentajeDisponibilidad','cisternasOperativas','utilizacionFlota',
+        'chutosEnRuta', 'camionetasEnRuta', 'camionesEnRuta', 'cisternasEnRuta'
+
+    ))->render();
+}
+
     /**
      * Procesa y guarda los vehículos del archivo cargado.
      *

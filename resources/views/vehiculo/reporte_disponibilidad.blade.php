@@ -136,7 +136,7 @@
             Procesando...
     </div>
 
-    <div class="report-master-card shadow-lg bg-white mx-auto p-0 printableArea" style="max-width: 1000px; border-radius: 15px; overflow: hidden;">
+    <div class="report-master-card shadow-lg bg-white mx-auto p-0 printableArea" id="reportContent" style="max-width: 1000px; border-radius: 15px; overflow: hidden;">
         
         <div class="bg-dark p-4 text-white d-flex justify-content-between align-items-center">
             <div>
@@ -637,69 +637,103 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     
-    // 1. Gráfica de Disponibilidad (Donut)
-    Highcharts.chart('chart-disponibilidad', {
-        chart: { type: 'pie', backgroundColor: 'transparent' },
-        title: { text: 'Disponibilidad Real', align: 'left', style: { fontWeight: '900', fontSize: '15px', textTransform: 'uppercase', color: '#666' } },
-        plotOptions: {
-            pie: {
-                innerSize: '50%',
-                dataLabels: { enabled: true, format: '{point.name}: {point.y}' }
-            }
-        },
-        series: [{
-            name: 'Unidades',
-            data: [
-                { name: 'Operativos', y: {{ $operativosCount }}, color: '#2c3e50' },
-                { name: 'En Ruta', y: {{ $enRuta }}, color: '#ff6600' },
-                { name: 'Fuera de Servicio', y: {{ $fallaCount }}, color: '#e74c3c' }
-            ]
-        }],
-        credits: { enabled: false }
-    });
+    function renderCharts() {
+        const meta = document.getElementById('chart-data-meta');
+        if (!meta) return;
 
-    // 2. Gráfica de Segmentos (Columnas con Variación)
-    Highcharts.chart('chart-segmentos', {
-    chart: { type: 'column', backgroundColor: 'transparent' },
-    title: { text: null },
-    xAxis: { 
-        categories: [ 'Chutos', 'Camiones', 'Tanques', 'Livianos'], 
-        crosshair: true,
-        labels: { style: { fontWeight: 'bold', color: '#2c3e50' } }
-    },
-    yAxis: { min: 0, title: { text: 'Cantidad de Unidades' } },
-    tooltip: { shared: true },
-    plotOptions: {
-        column: { 
-            borderRadius: 5, 
-            colorByPoint: true,
-            // --- AJUSTE AQUÍ: ACTIVAR ETIQUETAS ---
-            dataLabels: {
-                enabled: true,
-                // Mostramos cantidad y el nombre de la categoría
-                format: '{point.y}',
-                style: {
-                    fontSize: '12px',
-                    fontFamily: 'inherit',
-                    textOutline: 'none', // Quita el borde blanco de la letra
-                    textAlign: 'center'
-                },
-                y: -10 // Ajuste para que floten un poco sobre la barra
-            }
+        // Extraer datos del HTML inyectado
+        const data = {
+            operativos: parseInt(meta.dataset.operativos),
+            enRuta: parseInt(meta.dataset.enruta),
+            fallas: parseInt(meta.dataset.fallas),
+            chutos: parseInt(meta.dataset.chutos),
+            camiones: parseInt(meta.dataset.camiones),
+            tanques: parseInt(meta.dataset.tanques),
+            livianos: parseInt(meta.dataset.livianos)
+        };
+
+        // Gráfico de Disponibilidad (Donut)
+        Highcharts.chart('chart-disponibilidad', {
+            chart: { type: 'pie', backgroundColor: 'transparent' },
+            title: { text: 'Disponibilidad Real', align: 'left', style: { fontWeight: '900', fontSize: '15px', textTransform: 'uppercase', color: '#666' } },
+            plotOptions: {
+                pie: {
+                    innerSize: '50%',
+                    dataLabels: { enabled: true, format: '{point.name}: {point.y}' }
+                }
+            },
+            series: [{
+                name: 'Unidades',
+                data: [
+                    { name: 'Operativos', y: data.operativos, color: '#2c3e50' },
+                    { name: 'En Ruta', y: data.enRuta, color: '#ff6600' },
+                    { name: 'Fuera de Servicio', y: data.fallas, color: '#e74c3c' }
+                ]
+            }],
+            credits: { enabled: false }
+        });
+
+        // Gráfico de Segmentos (Columnas)
+        Highcharts.chart('chart-segmentos', {
+            chart: { type: 'column', backgroundColor: 'transparent' },
+            title: { text: null },
+            xAxis: { 
+                categories: ['Chutos', 'Camiones', 'Tanques', 'Livianos'], 
+                crosshair: true,
+                labels: { style: { fontWeight: 'bold', color: '#2c3e50' } }
+            },
+            yAxis: { min: 0, title: { text: 'Cantidad de Unidades' } },
+            tooltip: { shared: true },
+            plotOptions: {
+                column: { 
+                    borderRadius: 5, 
+                    colorByPoint: true,
+                    dataLabels: {
+                        enabled: true,
+                        format: '{point.y}',
+                        style: { fontSize: '12px', textOutline: 'none' },
+                        y: -10
+                    }
+                }
+            },
+            colors: ['#ff6600', '#ffc107', '#198754', '#2c3e50'],
+            series: [{
+                name: 'Unidades',
+                data: [
+                    { y: data.chutos, name: 'Chutos' },
+                    { y: data.camiones, name: 'Camiones' },
+                    { y: data.tanques, name: 'Tanques' },
+                    { y: data.livianos, name: 'Livianos' }
+                ]
+            }],
+            credits: { enabled: false }
+        });
+    }
+
+    // 2. LÓGICA DE ACTUALIZACIÓN (POLLING)
+    async function updateDashboard() {
+        try {
+            const response = await fetch('{{ route("vehiculos.disponibilidad.refresh") }}');
+            const html = await response.text();
+            
+            // Inyectar nuevo HTML
+            document.getElementById('reporte-container').innerHTML = html;
+            
+            // Re-dibujar gráficos con la nueva data
+            renderCharts();
+            
+            console.log("Dashboard actualizado con éxito");
+        } catch (error) {
+            console.error("Error al actualizar:", error);
         }
-    },
-    colors: ['#ff6600', '#ffc107','#198754','#2c3e50'],
-    series: [{
-        name: '',
-        data: [
-            { y: {{ $totalChutos }}, name: 'Chutos' },
-            { y: {{ $totalCamiones }}, name: 'Camiones' },
-            { y: {{ $totalCisternas }}, name: 'Tanques' }, 
-            { y: {{ $totalLivianos }}, name: 'Livianos' } 
-        ]
-    }],
-    credits: { enabled: false }
-});
+    }
+
+    // Ejecutar al cargar por primera vez
+    document.addEventListener('DOMContentLoaded', () => {
+        renderCharts();
+        // Refrescar cada 45 segundos
+        setInterval(updateDashboard, 45000);
+    });
     
     const printableArea = $("div.printableArea")[0]; 
     const sendTelegramButton = document.querySelector('#sendTelegramButton');
@@ -713,6 +747,20 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error("Faltan elementos DOM críticos (printableArea, captureButton, statusMessage, o outputContainer).");
         return; // Salir si no se puede inicializar correctamente
     }
+
+    function updateReport() {
+        fetch('{{ route("vehiculos.disponibilidad.refresh") }}')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('reportContent').innerHTML = html;
+                renderCharts();
+                console.log('Sincronizado a las: ' + new Date().toLocaleTimeString());
+            })
+            .catch(error => console.warn('Error en actualización:', error));
+    }
+
+    // Consultar cada 45 segundos para no sobrecargar
+    setInterval(updateReport, 5000);
 
     statusMessage.textContent = 'Procesando...';
 
@@ -890,6 +938,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (sendTelegramButton) {
         sendTelegramButton.addEventListener('click', sendReportToTelegram);
     }
+
+
+
 });
 </script>
 @endpush
