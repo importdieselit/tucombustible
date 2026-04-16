@@ -29,11 +29,11 @@ class InspeccionObserver
             $viajesProgramados = Viaje::where('vehiculo_id', $vehiculo->id)
                                       ->where('status', 'Programado')->orderBy('fecha_salida', 'asc')
                                       ->get();
-
-            $viaje = $viajesProgramados->first();
-            $viaje->status = 'EN RUTA';
-            $viaje->save(); // ¡Esto disparará el ViajeObserver automáticamente!
-            
+            if ($viajesProgramados->isNotEmpty()) {
+                $viaje = $viajesProgramados->first();
+                $viaje->status = 'EN RUTA';
+                $viaje->save(); // ¡Esto disparará el ViajeObserver automáticamente!
+            }
         }
     }
 

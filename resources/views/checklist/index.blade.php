@@ -68,7 +68,7 @@
                             <span class="badge rounded-pill bg-{{ $color }} px-3">{{ $insp->estatus_general }}</span>
                         </td>
                         <td class="text-end pe-4">
-                            <a href="{{ route('inspecciones.show', $insp->id) }}" class="btn btn-outline-primary btn-sm rounded-circle"><i class="fa fa-eye"></i></a>
+                            <a href="{{ route('inspeccion.create', ['vehiculo_id' => $insp->vehiculo->id , 'tipo' => 'entrada']) }}" class="btn btn-outline-primary btn-sm rounded-circle"><i class="fa fa-eye"></i></a>
                         </td>
                     </tr>
                     @endforeach

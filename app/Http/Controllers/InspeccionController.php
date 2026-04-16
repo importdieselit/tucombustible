@@ -31,8 +31,7 @@ class InspeccionController extends Controller
         $this->telegramService = $telegramService;
     }
 
-    public function create($vehiculo_id)
-    {
+    public function create($vehiculo_id, $tipo='salida'){
         // Obtener el blueprint del checklist
         $checklist = Checklist::find(self::CHECKLIST_VEHICULOS_ID);
         if (!$checklist) {
@@ -46,7 +45,7 @@ class InspeccionController extends Controller
             $dataResponse=json_decode($inspeccion->respuesta_json,true);
         }else{
             $dataResponse=json_decode($checklist->checklist,true);
-            $tipo='salida';
+          //  $tipo='salida';
         }
 
         // Obtener datos del vehículo (para pre-rellenar el formulario)
@@ -245,7 +244,7 @@ public function store(Request $request)
             $vehiculo->hrs_contador   += $horasDuracion;    
             $vehiculo->estatus = 1;
 
-            $viaje=Viaje::where('id_vehiculo',$vehiculo->id)->where('estatus',2)->first();
+            $viaje=Viaje::where('vehiculo_id',$vehiculo->id)->where('status', 'EN RUTA')->first();
         }
 
         if ($isCriticalFailure) {

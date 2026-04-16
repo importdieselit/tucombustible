@@ -374,7 +374,7 @@
                     icon: result.estatus === 'OK' ? 'success' : 'warning',
                     confirmButtonText: 'Ver Dashboard'
                 }).then(() => {
-                    window.location.href = '/dashboard'; // Redirigir al dashboard
+                    window.location.href = '/inspecciones'; // Redirigir al dashboard
                 });
             } else {
                 Swal.fire('Error', result.message || 'Error al procesar la inspección.', 'error');
