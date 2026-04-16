@@ -8,10 +8,24 @@
             </div>
             <div class="text-end">
                 <div class="h4 mb-0">{{ $today->translatedFormat('d M, Y') }}</div>
-                <div class="small opacity-75">Sincronizado: {{ $today->format('g:i A') }}</div>
             </div>
+            
         </div>
-
+<div class="row w-100 align-items-center bg-light p-0 m-0 border">
+                <div class="col-4 text-muted small">
+                    <i class="fas fa-clock me-1"></i> Última actualización: 
+                    <span id="last-sync-time" class="fw-bold">--:--:--</span>
+                </div>
+                <div class="col-4 text-muted small border-start">
+                    <i class="fas fa-hourglass-half me-1"></i> Próxima en: 
+                    <span id="countdown-timer" class="badge bg-dark">45s</span>
+                </div>
+                <div class="col-4 text-end">
+                    <button onclick="manualRefresh()" class="btn btn-sm btn-primary ms-2" id="btn-refresh">
+                        <i class="fas fa-sync-alt" id="refresh-icon"></i> Actualizar Ahora
+                    </button>
+                </div>
+            </div>
         <div class="row g-0 border-bottom">
             <div class="col-md-3 p-4 text-center border-end">
                 <div class="display-5 fw-bold text-primary">{{ $total }}</div>
@@ -482,79 +496,3 @@
             data-tanques="{{ $totalCisternas }}"
             data-livianos="{{ $totalLivianos }}">
         </div>
-@push('scripts')
-<script src="{{ asset('js/highcharts.js') }}"></script>
-
-
-    <script>
-
-        document.addEventListener('DOMContentLoaded', function() {
-    
-    // 1. Gráfica de Disponibilidad (Donut)
-    Highcharts.chart('chart-disponibilidad', {
-        chart: { type: 'pie', backgroundColor: 'transparent' },
-        title: { text: 'Disponibilidad Real', align: 'left', style: { fontWeight: '900', fontSize: '15px', textTransform: 'uppercase', color: '#666' } },
-        plotOptions: {
-            pie: {
-                innerSize: '50%',
-                dataLabels: { enabled: true, format: '{point.name}: {point.y}' }
-            }
-        },
-        series: [{
-            name: 'Unidades',
-            data: [
-                { name: 'Operativos', y: {{ $operativosCount }}, color: '#2c3e50' },
-                { name: 'En Ruta', y: {{ $enRuta }}, color: '#ff6600' },
-                { name: 'Fuera de Servicio', y: {{ $fallaCount }}, color: '#e74c3c' }
-            ]
-        }],
-        credits: { enabled: false }
-    });
-
-    // 2. Gráfica de Segmentos (Columnas con Variación)
-    Highcharts.chart('chart-segmentos', {
-    chart: { type: 'column', backgroundColor: 'transparent' },
-    title: { text: null },
-    xAxis: { 
-        categories: [ 'Chutos', 'Camiones', 'Tanques', 'Livianos'], 
-        crosshair: true,
-        labels: { style: { fontWeight: 'bold', color: '#2c3e50' } }
-    },
-    yAxis: { min: 0, title: { text: 'Cantidad de Unidades' } },
-    tooltip: { shared: true },
-    plotOptions: {
-        column: { 
-            borderRadius: 5, 
-            colorByPoint: true,
-            // --- AJUSTE AQUÍ: ACTIVAR ETIQUETAS ---
-            dataLabels: {
-                enabled: true,
-                // Mostramos cantidad y el nombre de la categoría
-                format: '{point.y}',
-                style: {
-                    fontSize: '12px',
-                    fontFamily: 'inherit',
-                    textOutline: 'none', // Quita el borde blanco de la letra
-                    textAlign: 'center'
-                },
-                y: -10 // Ajuste para que floten un poco sobre la barra
-            }
-        }
-    },
-    colors: ['#ff6600', '#ffc107','#198754','#2c3e50'],
-    series: [{
-        name: '',
-        data: [
-            { y: {{ $totalChutos }}, name: 'Chutos' },
-            { y: {{ $totalCamiones }}, name: 'Camiones' },
-            { y: {{ $totalCisternas }}, name: 'Tanques' }, 
-            { y: {{ $totalLivianos }}, name: 'Livianos' } 
-        ]
-    }],
-    credits: { enabled: false }
-});
-
-});
-
-    </script>
-@endpush
