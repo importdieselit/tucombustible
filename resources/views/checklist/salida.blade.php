@@ -134,23 +134,52 @@
     });
 
     function generateInput(item, sectionIndex, itemIndex, subIndex = -1) {
-        const name = `sec_${sectionIndex}_item_${itemIndex}_sub_${subIndex}_${item.label.replace(/\s/g, '_')}`;
-        if(item.label=='Fecha de Inspección'){
+        // El nombre debe coincidir con lo que espera serializeFormToJson
+        const name = `sec_${sectionIndex}_item_${itemIndex}_sub_${subIndex}_field_-1_${item.label.replace(/\s/g, '_')}`;
+        
+        if(item.label == 'Fecha de Inspección'){
             const hoy = new Date().toISOString().split('T')[0];
-            console.log("Asignando fecha a:", name);
             item.value = hoy;
-            console.log("Nuevo valor:", item.value);
         }
+
         let valorFinal = item.value;
-            if (item.data_source) {
-                valorFinal = obtenerValorDataSource(item.data_source);
-            }
+        if (item.data_source) {
+            valorFinal = obtenerValorDataSource(item.data_source);
+        }
+
+        const options = Array.isArray(item.options) ? item.options : [];
+
         switch (item.response_type) {
             case 'text':
             case 'date':
+            case 'number':
                 return `<input type="${item.response_type}" class="form-control shadow-sm" name="${name}" value="${valorFinal || ''}">`;
+            
             case 'textarea':
                 return `<textarea class="form-control shadow-sm" name="${name}" rows="2">${valorFinal || ''}</textarea>`;
+            
+            case 'select':
+                let selectHtml = `<select class="form-select shadow-sm" name="${name}">`;
+                selectHtml += `<option value="" disabled ${!valorFinal ? 'selected' : ''}>Seleccione...</option>`;
+                options.forEach(opt => {
+                    selectHtml += `<option value="${opt}" ${valorFinal == opt ? 'selected' : ''}>${opt}</option>`;
+                });
+                selectHtml += `</select>`;
+                return selectHtml;
+
+            case 'radio':
+                let radioHtml = `<div class="bg-white p-2 rounded border shadow-sm">`;
+                options.forEach((opt, i) => {
+                    const isChecked = (valorFinal == opt) ? 'checked' : '';
+                    radioHtml += `
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="${name}" id="${name}_${i}" value="${opt}" ${isChecked}>
+                            <label class="form-check-label" for="${name}_${i}">${opt}</label>
+                        </div>`;
+                });
+                radioHtml += `</div>`;
+                return radioHtml;
+
             case 'boolean':
                 return `
                     <div class="form-check form-switch mt-2">
@@ -159,55 +188,54 @@
                             ${valorFinal ? '<span class="text-success text-sm">Operativo (OK)</span>' : '<span class="text-danger text-sm">Falla Detectada</span>'}
                         </label>
                     </div>`;
+
             case 'composite':
                 return `
                     <div class="row g-2 align-items-center bg-white p-2 rounded border shadow-sm">
                         <div class="col-6 border-end">
                             <div class="form-check form-switch">
-                                <input class="form-check-input check-item-input composite-status" type="checkbox" name="${name}_status" ${item.value.status ? 'checked' : ''} id="${name}_status">
-                                <label class="form-check-label small d-block" for="${name}_status">Estado: ${item.value.status ? 'OK' : 'Fallo'}</label>
+                                <input class="form-check-input check-item-input composite-status" type="checkbox" name="${name}_status" ${item.value?.status ? 'checked' : ''} id="${name}_status">
+                                <label class="form-check-label small d-block" for="${name}_status">Estado: ${item.value?.status ? 'OK' : 'Fallo'}</label>
                             </div>
                         </div>
                         <div class="col-6">
                             <label class="small text-muted d-block mb-1">Vigencia</label>
-                            <input type="date" class="form-control form-control-sm" name="${name}_vigencia" value="${item.value.vigencia || ''}">
+                            <input type="date" class="form-control form-control-sm" name="${name}_vigencia" value="${item.value?.vigencia || ''}">
                         </div>
                     </div>`;
+            default: return '';
         }
     }
 
     function obtenerValorDataSource(dataSource) {
-    if (!dataSource) return '';
+        if (!dataSource) return '';
 
-    // Si es un string simple tipo "Vehiculo.campo"
-    if (typeof dataSource === 'string') {
-        const [modelo, campo] = dataSource.split('.');
-        
-        if (modelo === 'Vehiculo' && VEHICULO_DATA) {
-            // Manejo de relaciones anidadas (Marca/Modelo/Tipo)
-            if (campo === 'marca') return VEHICULO_DATA.is_marca?.marca || 'N/A';
-            if (campo === 'modelo') return VEHICULO_DATA.is_modelo?.modelo || 'N/A';
-            if (campo === 'tipo_vehiculo') return VEHICULO_DATA.tipo_vehiculo?.tipo || 'N/A';
-            
-            return VEHICULO_DATA[campo] || '';
+        // Si es un string simple tipo "Vehiculo.campo"
+        if (typeof dataSource === 'string') {
+            const [modelo, campo] = dataSource.split('.');            
+            if (modelo === 'Vehiculo' && VEHICULO_DATA) {
+                // Manejo de relaciones anidadas (Marca/Modelo/Tipo)
+                if (campo === 'marca') return VEHICULO_DATA.is_marca?.marca || 'N/A';
+                if (campo === 'modelo') return VEHICULO_DATA.is_modelo?.modelo || 'N/A';
+                if (campo === 'tipo_vehiculo') return VEHICULO_DATA.tipo_vehiculo?.tipo || 'N/A';
+                
+                return VEHICULO_DATA[campo] || '';
+            }           
         }
-        
-        
+
+        // Si es un objeto (como el caso de Verificación Técnica o Seguros)
+        if (typeof dataSource === 'object') {
+            const obj = (dataSource.model === 'Vehiculo') ? VEHICULO_DATA :null;
+            if (!obj) return { status: null, vigencia: null };
+
+            return {
+                status: obj[dataSource.status_field],
+                vigencia: obj[dataSource.date_field]
+            };
+        }
+
+        return '';
     }
-
-    // Si es un objeto (como el caso de Verificación Técnica o Seguros)
-    if (typeof dataSource === 'object') {
-        const obj = (dataSource.model === 'Vehiculo') ? VEHICULO_DATA :null;
-        if (!obj) return { status: null, vigencia: null };
-
-        return {
-            status: obj[dataSource.status_field],
-            vigencia: obj[dataSource.date_field]
-        };
-    }
-
-    return '';
-}
 
     function renderChecklist(blueprint) {
         blueprint.sections.forEach((section, secIndex) => {
@@ -284,54 +312,48 @@
     
     // 4. Función para serializar el formulario de vuelta al JSON Blueprint
     function serializeFormToJson() {
-        const result = JSON.parse(JSON.stringify(CHECKLIST_BLUEPRINT)); // Clonar el blueprint
-        const inputs = container.querySelectorAll('input, textarea');
+        const result = JSON.parse(JSON.stringify(CHECKLIST_BLUEPRINT));
+        const container = document.getElementById('checklist-container');
+        
+        // Capturamos todos los tipos de entrada, incluidos SELECT y RADIOS chekeados
+        const inputs = container.querySelectorAll('input, textarea, select');
         const data = {};
 
-        // Recolectar todos los valores del formulario por nombre
         inputs.forEach(input => {
             if (input.type === 'checkbox') {
                 data[input.name] = input.checked;
+            } else if (input.type === 'radio') {
+                if (input.checked) data[input.name] = input.value;
             } else {
                 data[input.name] = input.value;
             }
         });
 
-        // Iterar el blueprint y rellenar los valores
         result.sections.forEach((section, secIndex) => {
-            
-            // Recorrer items de la sección principal
             if (section.items) {
                 section.items.forEach((item, itemIndex) => {
                     const nameBase = `sec_${secIndex}_item_${itemIndex}_sub_-1_field_-1_${item.label.replace(/\s/g, '_')}`;
 
-                    if (item.response_type === 'boolean') {
-                        item.value = data[nameBase];
-                    } else if (item.response_type === 'text' || item.response_type === 'date' || item.response_type === 'textarea') {
-                        item.value = data[nameBase];
+                    if (['text', 'date', 'textarea', 'select', 'radio', 'number'].includes(item.response_type)) {
+                        item.value = data[nameBase] || null;
+                    } else if (item.response_type === 'boolean') {
+                        item.value = data[nameBase] || false;
                     } else if (item.response_type === 'composite') {
-                        const statusName = `${nameBase}_status`;
-                        const vigenciaName = `${nameBase}_vigencia`;
-                        item.value.status = data[statusName] || false;
-                        item.value.vigencia = data[vigenciaName] || null;
+                        item.value.status = data[`${nameBase}_status`] || false;
+                        item.value.vigencia = data[`${nameBase}_vigencia`] || null;
                     }
                 });
             }
             
-            // Recorrer items de subsecciones
+            // Lo mismo para subsections si las usas...
             if (section.subsections) {
-                section.subsections.forEach((subsection, subIndex) => {
-                    subsection.items.forEach((item, itemIndex) => {
+                section.subsections.forEach((sub, subIndex) => {
+                    sub.items.forEach((item, itemIndex) => {
                         const nameBase = `sec_${secIndex}_item_${itemIndex}_sub_${subIndex}_field_-1_${item.label.replace(/\s/g, '_')}`;
-                        
-                        // Lógica similar a la de arriba para composite y boolean
-                        if (item.response_type === 'composite') {
-                            const statusName = `${nameBase}_status`;
-                            const vigenciaName = `${nameBase}_vigencia`;
-                            item.value.status = data[statusName] || false;
-                            item.value.vigencia = data[vigenciaName] || null;
+                        if (['text', 'date', 'textarea', 'select', 'radio'].includes(item.response_type)) {
+                            item.value = data[nameBase] || null;
                         } else if (item.response_type === 'boolean') {
-                            item.value = data[nameBase];
+                            item.value = data[nameBase] || false;
                         }
                     });
                 });

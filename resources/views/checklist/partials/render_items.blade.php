@@ -25,4 +25,4 @@
         <strong class="d-block">{{ $item['label'] }}:</strong>
         <p class="{{ $statusClass }}">{{ $displayValue }}</p>
     </div>
-@endforeach`
+@endforeach

@@ -37,16 +37,36 @@ class InspeccionController extends Controller
         if (!$checklist) {
             abort(404, 'Checklist de vehículos no encontrado.');
         }
+
+        $viajePrevioId = null;
         $inspeccion = Inspeccion::where('vehiculo_id', $vehiculo_id)
                          ->whereNull('respuesta_in') // <-- CORRECCIÓN AQUÍ
                          ->first();
         if($inspeccion){
             $tipo='entrada';
-            $dataResponse=json_decode($inspeccion->respuesta_json,true);
-        }else{
-            $dataResponse=json_decode($checklist->checklist,true);
+            $dataResponse = is_array($inspeccion->respuesta_json) 
+                    ? $inspeccion->respuesta_json 
+                    : json_decode($inspeccion->respuesta_json, true);
+
+            if(isset($dataResponse['sections'][0]['items'])) {
+                // Buscamos si ya existe el campo de ruta en el JSON guardado de la salida
+                foreach($dataResponse['sections'][0]['items'] as $item) {
+                    if($item['label'] == 'Seleccione Ruta a Cubrir') {
+                        $viajePrevioId = $item['value'];
+                        break;
+                    }
+                }
+            }
+        } else {
+            // Lo mismo para el objeto $checklist
+            $dataResponse = is_array($checklist->checklist) 
+                            ? $checklist->checklist 
+                            : json_decode($checklist->checklist, true);
           //  $tipo='salida';
         }
+
+            
+
 
         // Obtener datos del vehículo (para pre-rellenar el formulario)
         $vehiculo = Vehiculo::with(['tipoVehiculo', 'isMarca', 'isModelo'])->findOrFail($vehiculo_id);
@@ -55,7 +75,7 @@ class InspeccionController extends Controller
                                 ->get();
 
                     // --- BLOQUE 1: Inyectar Rutas/Viajes en "Información General" ---
-                    if ($viajes->count() > 0) {
+                    if ($viajes->count() > 0 && is_null($viajePrevioId)) {
                         // IMPORTANTE: Flutter espera List<String>, así que aplanamos a un string simple
                         $opcionesViajes = $viajes->map(function($v) {
                             return "ID-{$v->id} | Ruta: " . ($v->destino_ciudad ?? 'Sin Destino');
@@ -68,11 +88,18 @@ class InspeccionController extends Controller
                             "response_type" => "radio",
                             "options" => $opcionesViajes, // Esto es ["String1", "String2"]
                             "value" => (string)$valorInicial, // Forzamos cast a string
-                            "col_width" => 12
+                            "col_width" => 12,
+                            "readonly" => $tipo === 'entrada' // Solo editable en salida
                         ];
                         // Lo insertamos al final de la primera sección
                         $dataResponse['sections'][0]['items'][] = $campoViaje;
-//Log::info("Checklist ID {$id}: Se inyectó campo de selección de ruta con " . count($opcionesViajes) . " opciones para Vehículo ID {$vehiculoId}.");
+                    } elseif (!is_null($viajePrevioId)) {
+                        // Si ya hay un viaje (Entrada), lo dejamos como texto estático o radio deshabilitado
+                        foreach($dataResponse['sections'][0]['items'] as &$item) {
+                            if($item['label'] == 'Seleccione Ruta a Cubrir') {
+                                $item['readonly'] = true; // El JS debe manejar este atributo
+                            }
+                        }
                     }
 
                     foreach ($dataResponse['sections'][1]['items'] as &$item) {
@@ -128,6 +155,7 @@ public function store(Request $request)
         
         //$chofer= 'n/a';
         $respuestaJson = $data['respuesta_json'];
+        $viajeIdSeleccionado = null;
         $checklistId = self::CHECKLIST_VEHICULOS_ID;
         $estatusGeneral = 'OK';
         $warningFound = false;
@@ -157,6 +185,12 @@ public function store(Request $request)
                 foreach ($items as $item) {
                     if($item['label']=='Nombre'){
                         $chofer=$item['value'];
+                    }
+
+                    if ($item['label'] == 'Seleccione Ruta a Cubrir' && !empty($item['value'])) {
+                        // El valor viene como "ID-45 | Ruta: Caracas"
+                        preg_match('/ID-(\d+)/', $item['value'], $matches);
+                        $viajeIdSeleccionado = $matches[1] ?? null;
                     }
                     
                     if ($item['label'] == 'Km. Recorridos' ) {
@@ -229,6 +263,14 @@ public function store(Request $request)
                 'estatus_general' => $estatusGeneral,
                 'respuesta_json' => json_encode($respuestaJson), 
             ]);
+            if ($viajeIdSeleccionado) {
+                        $viaje = Viaje::find($viajeIdSeleccionado);
+                        if ($viaje) {
+                            $viaje->status = 'EN RUTA';
+                            $viaje->save();
+                        }
+                    }
+
             $tipoCheck='OUT';
             $vehiculo->estatus=2;
         }else{
@@ -245,6 +287,10 @@ public function store(Request $request)
             $vehiculo->estatus = 1;
 
             $viaje=Viaje::where('vehiculo_id',$vehiculo->id)->where('status', 'EN RUTA')->first();
+            if($viaje){
+                $viaje->status='FINALIZADO';
+                $viaje->save();
+            }
         }
 
         if ($isCriticalFailure) {
