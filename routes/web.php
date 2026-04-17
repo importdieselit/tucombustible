@@ -300,13 +300,8 @@ Route::middleware(['auth'])->group(function () {
         // --- MÓDULO DE LOGÍSTICA Y PLANIFICACIÓN ---
         Route::middleware(['auth', 'role:1,2,6,11,12,18'])->prefix('logistica')->name('logistica.')->group(function () {
             
-            // Lista principal / Dashboard de planificaciones
             Route::get('/planificacion', [LogisticaController::class, 'index'])->name('index');
-            
-            // Formulario para crear (Manual y desde Solicitudes)
-            Route::get('/crear', [LogisticaController::class, 'create'])->name('create');
-            
-            // Acción de procesar y guardar en base de datos
+            Route::get('/crear/{tipo?}', [LogisticaController::class, 'create'])->name('create');
             Route::post('/guardar', [LogisticaController::class, 'store'])->name('store');
             
         });

@@ -26,4 +26,15 @@ class ViajeRepository
     {
         return Viaje::where('status', 'PROGRAMADO')->orderBy('fecha_salida', 'asc')->get();
     }
+
+    public function getPlanificacionesFiltradas($tipoPlanificacion = null)
+    {
+        $query = Viaje::with(['sede', 'vehiculo', 'chofer']);
+
+        if ($tipoPlanificacion) {
+            $query->where('tipo_planificacion', $tipoPlanificacion);
+        }
+
+        return $query->orderBy('created_at', 'desc')->paginate(15);
+    }
 }

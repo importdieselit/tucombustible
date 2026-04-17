@@ -23,23 +23,21 @@ class Viaje extends Model
     protected $table = 'viajes';
 
     protected $fillable = [
-        'destino_ciudad',
-        'chofer_id',
-        'ayudante',
-        'custodia_count',
-        'fecha_salida',
-        'status',
-        'vehiculo_id', 
-        'litros',
-        'has_viatico',
-        'cliente_id',
-        'otro_cliente',
-        'usuario_id',
-        'otro_vehiculo',
-        'otro_chofer',
-        'otro_ayudante',
-        'tipo',
-        'cisterna'
+        // Campos existentes
+        'destino_ciudad', 'chofer_id', 'ayudante', 'custodia_count', 
+        'fecha_salida', 'status', 'vehiculo_id', 'litros', 'has_viatico', 
+        'cliente_id', 'otro_cliente', 'usuario_id', 'otro_vehiculo', 
+        'otro_chofer', 'otro_ayudante', 'tipo', 'cisterna',
+        
+        // Campos nuevos para Logística
+        'tipo_planificacion', // 1:Diesel, 2:MGO, 3:Flete, 4:Compra
+        'sede_id', 
+        'ayudante_id', // Para la nueva integridad que hablamos
+        'tipo_remolque', 
+        'punto_salida', 
+        'punto_llegada', 
+        'codigo_sap',
+        'nombre_cliente_externo'
     ];
 
     protected $casts = [
@@ -108,5 +106,16 @@ class Viaje extends Model
     
     public function detalles() { 
         return $this->hasMany(DespachoViaje::class, 'viaje_id'); 
+    }
+
+    public function sede(): BelongsTo
+    {
+        return $this->belongsTo(Sede::class, 'sede_id');
+    }
+
+    // Relación para el nuevo ayudante_id (Integridad referencial)
+    public function ayudante_id_rel(): BelongsTo
+    {
+        return $this->belongsTo(Chofer::class, 'ayudante_id');
     }
 }
