@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\Chofer;
 use App\Models\ViaticoViaje;
 use App\Models\Vehiculo;
@@ -24,43 +23,23 @@ class Viaje extends Model
     protected $table = 'viajes';
 
     protected $fillable = [
-        'destino_ciudad',
-        'chofer_id',
-        'ayudante',
-        'custodia_count',
-        'fecha_salida',
-        'fecha_llegada',
-        'fecha_salida_real',
-        'status',
-        'vehiculo_id', 
-        'litros',
-        'has_viatico',
-        'cliente_id',
-        'otro_cliente',
-        'usuario_id',
-        'otro_vehiculo',
-        'otro_chofer',
-        'otro_ayudante',
-        'chofer_externo',
-        'ayudante_externo',
-        'cisterna_externo',
-        'vehiculo_externo',
-        'es_transporte_externo',
-        'sede_id',
-        'tipo_planificacion',
-        'observacion',
-        'tipo',
-        'tipo_remolque',
-        'punto_salida',
-        'punto_llegada',
-        'codigo_sap',
-        'nombre_cliente_externo'
+        'destino_ciudad', 'chofer_id', 'ayudante', 'custodia_count', 
+        'fecha_salida', 'status', 'vehiculo_id', 'litros', 'has_viatico', 
+        'cliente_id', 'otro_cliente', 'usuario_id', 'otro_vehiculo', 
+        'otro_chofer', 'otro_ayudante', 'tipo', 'cisterna', 'tipo_combustible_id', 'proveedor_id',
+        'observacion', 'producto_flete',
+
+        // Campos de Logística
+        'tipo_planificacion', 'sede_id', 'ayudante_id', 'tipo_remolque', 
+        'punto_salida', 'punto_llegada', 'codigo_sap', 'nombre_cliente_externo',
+        
+        // AGREGAR ESTOS CAMPOS DE TRANSPORTE EXTERNO:
+        'es_transporte_externo', 'vehiculo_externo', 'chofer_externo', 
+        'ayudante_externo', 'cisterna_externo'
     ];
 
     protected $casts = [
         'fecha_salida' => 'datetime',
-        'fecha_llegada' => 'datetime',
-        'fecha_salida_real' => 'datetime',
     ];
 
     /**
@@ -72,10 +51,17 @@ class Viaje extends Model
         return $this->belongsTo(Chofer::class, 'chofer_id'); 
     }
 
-    public function ayudante_chofer(): BelongsTo
+    public function ayudante(): BelongsTo
     {
-        return $this->belongsTo(Chofer::class, 'ayudante', 'id'); 
+        return $this->belongsTo(Chofer::class, 'ayudante_id'); 
     }
+
+    public function proveedor(): BelongsTo
+    {
+        return $this->belongsTo(Proveedor::class, 'proveedor_id');
+    }
+
+
 
     /**
      * Relación con el cuadro de viáticos generados para este viaje.
@@ -119,15 +105,28 @@ class Viaje extends Model
     {
         return $this->hasMany(CompraCombustible::class, 'viaje_id');
     }
-    public function inspecciones(): HasOne
-    {
-        return $this->hasOne(Inspeccion::class, 'viaje_id');
-    }
     public function tipoCombustible() { 
         return $this->belongsTo(TipoCombustible::class, 'tipo_combustible_id'); 
     }
     
     public function detalles() { 
         return $this->hasMany(DespachoViaje::class, 'viaje_id'); 
+    }
+
+    public function sede(): BelongsTo
+    {
+        return $this->belongsTo(Sedes::class, 'sede_id');
+    }
+
+    public function inspecciones(): HasOne
+    {
+        return $this->hasOne(Inspeccion::class, 'viaje_id');
+    }
+   
+
+    // Relación para el nuevo ayudante_id (Integridad referencial)
+    public function ayudante_id_rel(): BelongsTo
+    {
+        return $this->belongsTo(Chofer::class, 'ayudante_id');
     }
 }
