@@ -1311,7 +1311,7 @@ public function updateGuiaData(Request $request, $viajeId)
             'vehiculo', 'chofer', 'producto', 'despachos.cliente', 
             'cliente', 'cisternaAcoplada'
         ])
-        ->whereDate('fecha_salida', '>=', $fecha)
+        ->whereDate('fecha_salida', '>=', $fecha)->orderBy('fecha_salida', 'asc')
         ->get();
 
     // 2. Procesamiento y Enriquecimiento de la data
