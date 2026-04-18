@@ -17,7 +17,11 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
         $schedule->command('summary:daily-report')->dailyAt('00:00');
+        $schedule->command('send:reporte-diario-operaciones')->dailyAt('17:00');
+
     }
+
+ 
 
     /**
      * Register the commands for the application.

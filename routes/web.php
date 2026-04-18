@@ -25,6 +25,8 @@ use App\Http\Controllers\{
 /* --- Rutas Públicas y Auth --- */
 Auth::routes(['reset' => false]);
 Route::get('/', function () { return redirect()->route('login'); });
+Route::get('/viajes/reporte-interno', [ViajesController::class, 'reporteDiario'])
+    ->name('reporte.operaciones.interno');
 
 Route::get('/test-push', function () {
     $user = User::find(1); // Tu usuario
@@ -82,6 +84,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/inspecciones/{inspeccion_id}/pdf', [InspeccionController::class, 'exportPdf'])->name('inspecciones.pdf');
     Route::get('/reporte/vehiculos-disponibilidad', [VehiculoController::class, 'reporteDisponibilidad'])->name('vehiculos.reporte.disponibilidad');
     Route::get('/vehiculos/disponibilidad/refresh', [VehiculoController::class, 'refreshDisponibilidad'])->name('vehiculos.disponibilidad.refresh');
+    Route::get('/vehiculos/disponibilidad/print', [VehiculoController::class, 'printDisponibilidad'])->name('vehiculos.disponibilidad.print');
+
     Route::get('/vehiculos/report/pdf', [VehiculoController::class, 'reportPdf'])->name('vehiculos.report.pdf');
     Route::get('/documentacion/vehiculos/', [VehiculoController::class, 'controlDocumentacion'])->name('vehiculos.documentacion');
     Route::post('/vehiculos/documentacion/update', [VehiculoController::class, 'updateDocumento'])->name('vehiculos.documentacion.update');
@@ -235,6 +239,7 @@ Route::middleware(['auth'])->group(function () {
         Route::put('viaticos/parametros/update', [ViajesController::class, 'parametrosUpdate'])->name('viaticos.parametros.update');
         Route::get('eventos', [ViajesController::class, 'getCombinedEventos'])->name('eventos');
         Route::get('/viajes/reporte/{fecha?}', [ViajesController::class, 'reporteDiario'])->name('viajes.reporteDiario');
+        Route::get('/viajes/reporte/print/{fecha?}', [ViajesController::class, 'reporteDiarioPrint'])->name('viajes.reporteDiario.print');
 
 
         // Boletas y Nominaciones

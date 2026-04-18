@@ -34,8 +34,17 @@ class Handler extends ExceptionHandler
      */
     public function register()
     {
-        $this->reportable(function (Throwable $e) {
-            //
+        $this->reportable(function (\Throwable $e) {
+            // Si el error viene de la librería 'safe', ignorarlo por completo
+            if (str_contains($e->getFile(), 'thecodingmachine\safe')) {
+                return false;
+            }
         });
+
+        // También silenciamos los avisos de tipo 'deprecated' y 'notice' globalmente
+        // para que no afecten la ejecución por consola.
+        if (app()->runningInConsole()) {
+            error_reporting(E_ALL & ~E_DEPRECATED & ~E_NOTICE);
+        }
     }
 }

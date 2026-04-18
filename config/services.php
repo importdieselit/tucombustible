@@ -34,5 +34,13 @@ return [
         "project_id" => env("FIREBASE_PROJECT_ID"),
         "server_key" => env("FCM_SERVER_KEY"),
     ],
+    'whatsapp' => [
+        'url' => env('WHATSAPP_API_URL'),
+        'key' => env('WHATSAPP_API_KEY'),
+        'group_id' => env('WHATSAPP_GROUP_ID'),
+    ],
+    'reporte' => [
+        'internal_token' => env('REPORTE_INTERNAL_TOKEN'),
+    ],
 
 ];

@@ -1304,6 +1304,12 @@ public function updateGuiaData(Request $request, $viajeId)
 
   public function reporteDiario(Request $request)
 {
+    $tokenValido = env('REPORTE_INTERNAL_TOKEN');
+
+    // Si no está logueado Y el token no coincide, entonces al login
+    if (!auth()->check() && $request->get('token') !== $tokenValido) {
+        abort(403, 'Acceso no autorizado');
+    }
     $fecha = $request->input('fecha', now()->format('Y-m-d'));
 
     // 1. Eager Loading: Traemos relaciones necesarias para evitar N+1

@@ -144,7 +144,7 @@
             Procesando...
     </div>
 
-    <div class="report-master-card shadow-lg bg-white mx-auto p-0 printableArea" style="max-width: 1000px; border-radius: 15px; overflow: hidden;">
+    <div id="reporteOperaciones" class="report-master-card shadow-lg bg-white mx-auto p-0 printableArea" style="max-width: 1000px; border-radius: 15px; overflow: hidden;">
  
 <div class="container-fluid py-4">
     <div class="card border-0 shadow-sm mb-4">
