@@ -12,9 +12,12 @@ class ReporteImagenService
         // Construimos la URL con el token
         $url = route('reporte.operaciones.interno') . "?token=" . $token;
         $path = storage_path('app/public/reportes/operaciones_' . date('Y-m-d') . '.png');
-        
+        $nodePath = '~/nodevenv/public_html/tucombustible/10/bin/node'; // REEMPLAZA con lo que te dio 'which node'
+        $npmPath = '~/nodevenv/public_html/tucombustible/10/bin/npm';
         // Browsershot carga la URL de tu reporte o un HTML directo
         Browsershot::url($url) // Una ruta optimizada para impresión
+            ->setNodeBinary($nodePath)
+            ->setNpmBinary($npmPath)
             ->noSandbox() // Evita problemas de permisos en Windows
             ->ignoreHttpsErrors()
             ->waitUntilNetworkIdle() // Espera a que carguen todas las peticiones (gráficos, css)
