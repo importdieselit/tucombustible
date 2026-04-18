@@ -48,6 +48,8 @@ class SendReporteDiarioOperacionesCommand extends Command
 
             $dataImagen = file_get_contents($rutaImagen);
             $base64 = base64_encode($dataImagen);
+            // 3. Añadir el prefijo que UltraMsg necesita para reconocer la extensión
+            $img_ready = "data:image/png;base64," . $base64;
 
             // 1. Generar la imagen
             $imgService = new ReporteImagenService();
@@ -62,7 +64,7 @@ class SendReporteDiarioOperacionesCommand extends Command
             $response = \Illuminate\Support\Facades\Http::asForm()->post($endpoint, [
                 'token'   => $token,
                 'to'      => config('services.whatsapp.group_id'),
-                'image'   => $base64,
+                'image'   => $img_ready,
                 'caption' => "📊 *Reporte operaciones - " . date('d/m/Y') . "*",
             ]);
 
