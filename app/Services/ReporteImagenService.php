@@ -8,7 +8,7 @@ class ReporteImagenService
     public function generarSnapshotReporteOperaciones()
     {
 
-        $token = config('reporte.internal_token');
+        $token = config('services.reporte.internal_token');
         // Construimos la URL con el token
         $url = route('reporte.operaciones.interno') . "?token=" . $token;
         // $path = storage_path('app/public/reportes/operaciones_' . date('Y-m-d') . '.png');
