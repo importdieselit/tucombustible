@@ -166,7 +166,7 @@
             </form>
         </div>
     </div>
-    <div class="report-master-card shadow-lg bg-white mx-auto p-0 printableArea" style="max-width: 1000px; border-radius: 15px; overflow: hidden;">
+    <div id="reporte-container" class="report-master-card shadow-lg bg-white mx-auto p-0 printableArea" style="max-width: 1000px; border-radius: 15px; overflow: hidden;">
         <div class="container-fluid px-4 py-3" id="printableArea">
         <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
             <h5 class="fw-bold text-camionetas"><i class="fas fa-tools me-2"></i> REPORTE GERENCIAL DE MANTENIMIENTO</h5>
