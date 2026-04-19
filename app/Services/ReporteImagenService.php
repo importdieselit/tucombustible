@@ -27,10 +27,11 @@ class ReporteImagenService
         //     ->setOption('args', ['--disable-web-security']) // Ayuda si hay bloqueos de CORS
         //     ->save($path);'
 
-        $myAccessKey = 'tucombustiblepass'; 
+        $myAccessKey = 'b0b040fb73add2438ed72e257208bf44'; 
 Log::info("Generando snapshot con ScreenshotLayer para URL: " . $url);
     $params = http_build_query([
         'access_key' => $myAccessKey,
+        'secret_key' => 'tucombustiblepass', // A veces requieren ambos campos
         'url'        => $url,
         'viewport'   => '1200x800', // Tamaño de la ventana del navegador
         'width'      => '1200',     // Tamaño de la imagen final
