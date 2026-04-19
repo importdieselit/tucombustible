@@ -748,7 +748,7 @@ class VehiculoController extends BaseController
     $tokenValido = config('services.reporte.internal_token');
     // Si no está logueado Y el token no coincide, entonces al login
     if (!auth()->check() && $request->get('token') !== $tokenValido) {
-        abort(403, 'Acceso no autorizado');
+       // abort(403, 'Acceso no autorizado');
     }
     $today = now();
     $data = Vehiculo::miFlota()->with(['tipoVehiculo', 'cisternaAcoplada', 'ordenActiva'])->get();
