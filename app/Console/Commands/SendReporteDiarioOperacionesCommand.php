@@ -45,33 +45,35 @@ class SendReporteDiarioOperacionesCommand extends Command
         try {
             $reporteService = new ReporteImagenService();
             $rutaImagen = $reporteService->generarSnapshotReporteOperaciones();
-
+            $this->info('Imagen generada en: ' . $rutaImagen);
+            
             $dataImagen = file_get_contents($rutaImagen);
             $base64 = base64_encode($dataImagen);
             // 3. Añadir el prefijo que UltraMsg necesita para reconocer la extensión
             $img_ready = "data:image/png;base64," . $base64;
-
+            $this->info($img_ready);
             // 1. Generar la imagen
             $imgService = new ReporteImagenService();
 
             $baseUrl = rtrim(config('services.whatsapp.url'), '/');
+
             // Ultramsg usa /messages/image para enviar archivos de imagen
             $token   = config('services.whatsapp.key');
     
             // Concatenamos el token a la URL
             $endpoint = "{$baseUrl}/messages/image?token={$token}";
-
+            $this->info('Endpoint completo: ' . $endpoint);
             $response = \Illuminate\Support\Facades\Http::asForm()->post($endpoint, [
                 'token'   => $token,
                 'to'      => config('services.whatsapp.group_id'),
                 'image'   => $img_ready,
                 'caption' => "📊 *Reporte operaciones - " . date('d/m/Y') . "*",
             ]);
-
+            $this->info('Respuesta de la API: ' . $response->body());
             // 3. DEPUREMOS LA RESPUESTA REAL
             if ($response->successful()) {
                 $data = $response->json();
-                
+                $this->info('Respuesta de la API: ' . json_encode($data));
                 // Si la API responde OK pero trae un error interno
                 if (isset($data['sent']) && $data['sent'] == 'true') {
                     $this->info('Reporte enviado correctamente al grupo.');

@@ -25,40 +25,39 @@ class ReporteImagenService
         //     ->select('#reporteOperaciones')
         //     ->windowSize(1200, 800)
         //     ->setOption('args', ['--disable-web-security']) // Ayuda si hay bloqueos de CORS
-        //     ->save($path);
+        //     ->save($path);'
 
-        $params = http_build_query([
-            'access_key' => $token,
-            'url' => $url,
-            'selector' => '#reporteOperaciones', // <--- AQUÍ ESTÁ TU DIV ESPECÍFICO
-            'viewport_width' => 1200,
-            'viewport_height' => 800,
-            'device_scale_factor' => 2, // Para que se vea en alta resolución (Retina)
-            'format' => 'png',
-            'delay' => 3
-        ]);
+        $myAccessKey = 'b0b040fb73add2438ed72e257208bf44'; 
 
-        $apiKey = "b0b040fb73add2438ed72e257208bf44"; // Regístrate gratis en screenshotlayer.com
-        $apiUrl = "https://api.screenshotlayer.com/api/capture?{$params}";
+    $params = http_build_query([
+        'access_key' => $myAccessKey,
+        'url'        => $url,
+        'viewport'   => '1200x800', // Tamaño de la ventana del navegador
+        'width'      => '1200',     // Tamaño de la imagen final
+        'format'     => 'PNG',
+        'delay'      => 5           // Segundos que espera para que carguen los gráficos
+    ]);
 
-        $path = storage_path('app/public/reportes/operaciones_' . date('Y-m-d') . '.png');
+    $apiUrl = "https://api.screenshotlayer.com/api/capture?{$params}";
+    
+    $path = storage_path('app/public/reportes/operaciones_' . date('Y_m_d') . '.png');
 
-        try {
-            // 3. Descargar la imagen generada por la API
-            $content = file_get_contents($apiUrl);
-            
-            if ($content === false) {
-                throw new \Exception("No se pudo obtener la imagen de la API externa.");
-            }
+    // Usamos el cliente HTTP de Laravel que es más robusto en servidores
+    $response = \Illuminate\Support\Facades\Http::get($apiUrl);
 
-            // 4. Guardar en el storage local para que el comando de WhatsApp la encuentre
-            file_put_contents($path, $content);
-            
-            return $path;
-
-            } catch (\Exception $e) {
-            \Log::error("Error en captura externa: " . $e->getMessage());
-            throw $e;
+    if ($response->successful()) {
+        // Guardamos el cuerpo de la respuesta (la imagen real)
+        file_put_contents($path, $response->body());
+        
+        // VALIDACIÓN: Si el archivo es muy pequeño, la API devolvió un error de texto
+        if (filesize($path) < 2000) {
+            $errorMsg = file_get_contents($path);
+            \Log::error("ScreenshotLayer devolvió un error: " . $errorMsg);
+            return null;
         }
+        
+        return $path;
+    
+    }
     }
 }
