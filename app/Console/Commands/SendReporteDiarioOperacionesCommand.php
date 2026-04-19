@@ -36,67 +36,94 @@ class SendReporteDiarioOperacionesCommand extends Command
      *
      * @return int
      */
+ 
     public function handle()
     {
-        // Silenciar avisos de compatibilidad de librerías de terceros
-    error_reporting(E_ALL & ~E_DEPRECATED & ~E_NOTICE & ~E_WARNING);
-        $this->info('Iniciando generación de reporte...');
+        error_reporting(E_ALL & ~E_DEPRECATED & ~E_NOTICE & ~E_WARNING);
         
-        try {
-            // 1. Generar la imagen
-            $reporteService = new ReporteImagenService();
-            $url = route('reporte.operaciones.interno') . "?token=" . $token;
-            $apiUrl = "https://api.screenshotone.com/take?access_key=m7uxLbNHYl45Tg&url=" . urlencode($url) . "&format=jpg&block_ads=true&block_cookie_banners=true&block_banners_by_heuristics=false&block_trackers=true&delay=0&timeout=60&response_type=by_format&selector=%23reporteOperaciones&image_quality=80";
+        // 1. Configuración de los reportes a enviar
+        $reportesAProcesar = [
+            [
+                'ruta_web' => 'reporte.operaciones.interno',
+                'nombre_archivo' => 'reporte_operaciones',
+                'titulo' => '📊 *Reporte de Operaciones*',
+                'selector' => '#reporteOperaciones'
+            ],
+            [
+                'ruta_web' => 'reporte.flota.interno', // Ajusta según tus rutas reales
+                'nombre_archivo' => 'reporte_flota',
+                'titulo' => '🚛 *Reporte de Flota*',
+                'selector' => '#reporte-container'
+            ],
+            [
+                'ruta_web' => 'reporte.mantenimiento.interno',
+                'nombre_archivo' => 'reporte_mantenimiento',
+                'titulo' => '🔧 *Reporte de Mantenimiento*',
+                'selector' => '#reporte-container'
+            ],
+        ];
 
-            $rutaImagen = $reporteService->generarSnapshotReporteOperaciones($apiUrl);
+        $this->info('Iniciando secuencia de reportes...');
+        $tokenInterno = config('services.reporte.internal_token');
+        $reporteService = new ReporteImagenService();
 
-            if (!$rutaImagen || !file_exists($rutaImagen) || filesize($rutaImagen) < 3000) {
-                 throw new \Exception("La imagen generada no existe o es inválida. Revisa los logs de ReporteImagenService.");
-            }
+        foreach ($reportesAProcesar as $reporte) {
+            try {
+                $this->info("Procesando: {$reporte['nombre_archivo']}...");
 
-            $this->info('Imagen generada en: ' . $rutaImagen);
-            
-            // 2. Preparar la imagen en Base64 con el prefijo correcto
-            $dataImagen = file_get_contents($rutaImagen);
-            $base64 = base64_encode($dataImagen);
-            // 3. Añadir el prefijo que UltraMsg necesita para reconocer la extensión
-            $img_ready = "data:image/png;base64," . $base64;
-            
-            // 4. Configurar envío a WhatsApp
-            $baseUrl = rtrim(config('services.whatsapp.url'), '/');
-            $token   = config('services.whatsapp.key');
-            
-            // Concatenamos el token a la URL
-            $endpoint = "{$baseUrl}/messages/image?token={$token}";
-            $this->info('Endpoint completo: ' . $endpoint);
-            
-            $response = \Illuminate\Support\Facades\Http::asForm()->post($endpoint, [
-                'token'   => $token,
-                'to'      => config('services.whatsapp.group_id'),
-                'image'   => $img_ready, // Ahora lleva el prefijo de extensión
-                'caption' => "📊 *Reporte operaciones - " . date('d/m/Y') . "*",
-            ]);
-
-            // 5. DEPUREMOS LA RESPUESTA REAL
-            if ($response->successful()) {
-                $data = $response->json();
-                $this->info('Respuesta de la API: ' . json_encode($data));
+                // 2. Construir URL del reporte con el token
+                $urlInterna = route($reporte['ruta_web']) . "?token=" . $tokenInterno;
                 
-                // Si la API responde OK pero trae un error interno
-                if (isset($data['sent']) && $data['sent'] == 'true') {
-                    $this->info('Reporte enviado correctamente al grupo.');
-                } else {
-                    $this->error('La API aceptó el mensaje pero NO lo envió: ' . json_encode($data));
-                }
-            } else {
-                $this->error('Error de conexión con la API (' . $response->status() . '): ' . $response->body());
-            }
-            $this->info('Reporte generado y enviado exitosamente.');
+                // 3. Construir URL de ScreenshotOne (Variables estandarizadas)
+                $accessKey = 'm7uxLbNHYl45Tg'; // Podrías mover esto al config o .env
+                $apiUrl = "https://api.screenshotone.com/take?" . http_build_query([
+                    'access_key' => $accessKey,
+                    'url' => $urlInterna,
+                    'format' => 'png',
+                    'block_ads' => 'true',
+                    'block_cookie_banners' => 'true',
+                    'delay' => 2, // Un pequeño delay para asegurar carga de JS/CSS
+                    'timeout' => 60,
+                    'selector' => $reporte['selector'],
+                    'image_quality' => 80
+                ]);
 
-        } catch (\Exception $e) {
-            $this->error('Error al generar o enviar el reporte: ' . $e->getMessage());
-            // Importante loguear la excepción completa para detalles
-            \Log::error("Error en SendReporteDiarioOperacionesCommand: " . $e->getMessage());
+                // 4. Generar la imagen localmente
+                $rutaImagen = $reporteService->generarSnapshot($apiUrl, $reporte['nombre_archivo']);
+                
+                // 5. Preparar para WhatsApp
+                $dataImagen = file_get_contents($rutaImagen);
+                $base64 = base64_encode($dataImagen);
+                $img_ready = "data:image/png;base64," . $base64;
+
+                // 6. Enviar vía UltraMsg
+                $baseUrl = rtrim(config('services.whatsapp.url'), '/');
+                $tokenWA = config('services.whatsapp.key');
+                $endpoint = "{$baseUrl}/messages/image?token={$tokenWA}";
+
+                $response = Http::asForm()->post($endpoint, [
+                    'token' => $tokenWA,
+                    'to' => config('services.whatsapp.group_id'),
+                    'image' => $img_ready,
+                    'caption' => $reporte['titulo'] . " - " . date('d/m/Y'),
+                ]);
+
+                if ($response->successful() && ($response->json()['sent'] ?? '') == 'true') {
+                    $this->info("✅ {$reporte['nombre_archivo']} enviado.");
+                } else {
+                    $this->error("❌ Error enviando {$reporte['nombre_archivo']}: " . $response->body());
+                }
+
+                // Opcional: una pequeña pausa para no saturar la API de WhatsApp
+                sleep(2);
+
+            } catch (\Exception $e) {
+                $this->error("Hubo un fallo con {$reporte['nombre_archivo']}: " . $e->getMessage());
+                Log::error("Error reporte {$reporte['nombre_archivo']}: " . $e->getMessage());
+            }
         }
+
+        $this->info('Secuencia finalizada.');
     }
+
 }

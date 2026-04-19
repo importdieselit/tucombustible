@@ -1330,6 +1330,11 @@ class OrdenController extends BaseController
 
     public function reporteGerencial(Request $request)
     {
+        $tokenValido = config('services.reporte.internal_token');
+        // Si no está logueado Y el token no coincide, entonces al login
+        if (!auth()->check() && $request->get('token') !== $tokenValido) {
+            abort(403, 'Acceso no autorizado');
+        }
         // Por defecto evaluamos el mes en curso, pero permitimos filtrar
         $inicio = $request->input('fecha_inicio', now()->startOfMonth()->format('Y-m-d'));
         $fin = $request->input('fecha_fin', now()->endOfMonth()->format('Y-m-d'));
