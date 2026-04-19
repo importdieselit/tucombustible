@@ -1304,8 +1304,7 @@ public function updateGuiaData(Request $request, $viajeId)
 
   public function reporteDiario(Request $request)
 {
-    $tokenValido = env('REPORTE_INTERNAL_TOKEN');
-
+    $tokenValido = config('services.reporte.internal_token');
     // Si no está logueado Y el token no coincide, entonces al login
     if (!auth()->check() && $request->get('token') !== $tokenValido) {
         abort(403, 'Acceso no autorizado');
