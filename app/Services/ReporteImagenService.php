@@ -31,7 +31,7 @@ class ReporteImagenService
 Log::info("Generando snapshot con ScreenshotLayer para URL: " . $url);
     $params = http_build_query([
         'access_key' => $myAccessKey,
-        'secret_key' => 'tucombustiblepass', // A veces requieren ambos campos
+        'secret_key' => md5($url.'tucombustiblepass'), // A veces requieren ambos campos
         'url'        => $url,
         'viewport'   => '1200x800', // Tamaño de la ventana del navegador
         'width'      => '1200',     // Tamaño de la imagen final
