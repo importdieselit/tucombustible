@@ -38,7 +38,7 @@ Log::info("Generando snapshot con ScreenshotLayer para URL: " . $url);
         'delay'      => 5           // Segundos que espera para que carguen los gráficos
     ]);
 Log::info("Parámetros para ScreenshotLayer: " . $params);
-    $apiUrl = "https://api.screenshotlayer.com/api/capture?{$params}";
+    $apiUrl = "http://api.screenshotlayer.com/api/capture?{$params}";
     Log::info("URL completa para ScreenshotLayer: " . $apiUrl);
     $path = storage_path('app/public/reportes/operaciones_' . date('Y_m_d') . '.png');
 Log::info("Ruta local donde se guardará la imagen: " . $path);
