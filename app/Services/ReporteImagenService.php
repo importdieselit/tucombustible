@@ -1,7 +1,6 @@
 <?php
 namespace App\Services;
-
-use GPBMetadata\Google\Api\Log;
+use Illuminate\Support\Facades\Log;
 use Spatie\Browsershot\Browsershot;
 
 class ReporteImagenService 
