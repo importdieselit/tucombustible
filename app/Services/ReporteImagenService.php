@@ -29,7 +29,7 @@ class ReporteImagenService
         //     ->save($path);'
 
         $myAccessKey = 'b0b040fb73add2438ed72e257208bf44'; 
-Log::debug("Generando snapshot con ScreenshotLayer para URL: " . $url);
+Log::info("Generando snapshot con ScreenshotLayer para URL: " . $url);
     $params = http_build_query([
         'access_key' => $myAccessKey,
         'url'        => $url,
@@ -38,14 +38,14 @@ Log::debug("Generando snapshot con ScreenshotLayer para URL: " . $url);
         'format'     => 'PNG',
         'delay'      => 5           // Segundos que espera para que carguen los gráficos
     ]);
-Log::debug("Parámetros para ScreenshotLayer: " . $params);
+Log::info("Parámetros para ScreenshotLayer: " . $params);
     $apiUrl = "https://api.screenshotlayer.com/api/capture?{$params}";
-    Log::debug("URL completa para ScreenshotLayer: " . $apiUrl);
+    Log::info("URL completa para ScreenshotLayer: " . $apiUrl);
     $path = storage_path('app/public/reportes/operaciones_' . date('Y_m_d') . '.png');
-Log::debug("Ruta local donde se guardará la imagen: " . $path);
+Log::info("Ruta local donde se guardará la imagen: " . $path);
     // Usamos el cliente HTTP de Laravel que es más robusto en servidores
     $response = \Illuminate\Support\Facades\Http::get($apiUrl);
-Log::debug("Respuesta de ScreenshotLayer: HTTP " . $response->status());
+Log::info("Respuesta de ScreenshotLayer: HTTP " . $response->status());
     if ($response->successful()) {
         // Guardamos el cuerpo de la respuesta (la imagen real)
         file_put_contents($path, $response->body());
