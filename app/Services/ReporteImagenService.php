@@ -27,7 +27,7 @@ class ReporteImagenService
         //     ->setOption('args', ['--disable-web-security']) // Ayuda si hay bloqueos de CORS
         //     ->save($path);'
 
-        $myAccessKey = 'b0b040fb73add2438ed72e257208bf44'; 
+        $myAccessKey = 'tucombustiblepass'; 
 Log::info("Generando snapshot con ScreenshotLayer para URL: " . $url);
     $params = http_build_query([
         'access_key' => $myAccessKey,
