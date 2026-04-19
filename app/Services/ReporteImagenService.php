@@ -43,21 +43,26 @@ Log::info("Parámetros para ScreenshotLayer: " . $params);
     $path = storage_path('app/public/reportes/operaciones_' . date('Y_m_d') . '.png');
 Log::info("Ruta local donde se guardará la imagen: " . $path);
     // Usamos el cliente HTTP de Laravel que es más robusto en servidores
-    $response = \Illuminate\Support\Facades\Http::get($apiUrl);
-Log::info("Respuesta de ScreenshotLayer: HTTP " . $response->status());
-    if ($response->successful()) {
-        // Guardamos el cuerpo de la respuesta (la imagen real)
-        file_put_contents($path, $response->body());
+    $response = \Illuminate\Support\Facades\Http::timeout(30)
+                    ->withoutVerifying() 
+                    ->get($apiUrl);
+
+        if ($response->successful()) {
+            // Guardamos el cuerpo de la respuesta (la imagen real)
+            file_put_contents($path, $response->body());
+            
+            // VALIDACIÓN: Si el archivo es muy pequeño, la API devolvió un error de texto
+            if (filesize($path) < 3000) {
+                $errorContenido = file_get_contents($path);
+                // ESTO ES CLAVE: Veremos el error real en los logs de Laravel
+                \Log::error("ScreenshotLayer devolvió un error: " . $errorContenido);
+                throw new \Exception("La API no devolvió una imagen. Respuesta: " . $errorContenido);
+            }
+            
+            return $path;
         
-        // VALIDACIÓN: Si el archivo es muy pequeño, la API devolvió un error de texto
-        if (filesize($path) < 2000) {
-            $errorMsg = file_get_contents($path);
-            \Log::error("ScreenshotLayer devolvió un error: " . $errorMsg);
-            return null;
+        } else {
+            throw new \Exception("Error de conexión con ScreenshotLayer: Status " . $response->status());
         }
-        
-        return $path;
-    
-    }
     }
 }
