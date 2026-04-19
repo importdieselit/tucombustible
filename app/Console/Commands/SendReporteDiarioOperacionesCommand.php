@@ -45,7 +45,10 @@ class SendReporteDiarioOperacionesCommand extends Command
         try {
             // 1. Generar la imagen
             $reporteService = new ReporteImagenService();
-            $rutaImagen = $reporteService->generarSnapshotReporteOperaciones();
+            $url = route('reporte.operaciones.interno') . "?token=" . $token;
+            $apiUrl = "https://api.screenshotone.com/take?access_key=m7uxLbNHYl45Tg&url=" . urlencode($url) . "&format=jpg&block_ads=true&block_cookie_banners=true&block_banners_by_heuristics=false&block_trackers=true&delay=0&timeout=60&response_type=by_format&selector=%23reporteOperaciones&image_quality=80";
+
+            $rutaImagen = $reporteService->generarSnapshotReporteOperaciones($apiUrl);
 
             if (!$rutaImagen || !file_exists($rutaImagen) || filesize($rutaImagen) < 3000) {
                  throw new \Exception("La imagen generada no existe o es inválida. Revisa los logs de ReporteImagenService.");

@@ -5,13 +5,11 @@ use Spatie\Browsershot\Browsershot;
 
 class ReporteImagenService 
 {
-    public function generarSnapshotReporteOperaciones()
+    public function generarSnapshotReporteOperaciones($apiUrl = null)
     {
 
         $token = config('services.reporte.internal_token');
         // Construimos la URL con el token
-        $url = route('reporte.operaciones.interno') . "?token=" . $token;
-    $apiUrl = "https://api.screenshotone.com/take?access_key=m7uxLbNHYl45Tg&url=https%3A%2F%2Ftucombustible.com.ve%2Fviajes%2Freporte-interno%3Ftoken%3DOZ8ucq4Np6yDTSJQPwKQYsXsByC4bR55N%2FVTj%2Fg9GC8%3D&format=jpg&block_ads=true&block_cookie_banners=true&block_banners_by_heuristics=false&block_trackers=true&delay=0&timeout=60&response_type=by_format&selector=%23reporteOperaciones&image_quality=80";
     Log::info("URL completa para ScreenshotLayer: " . $apiUrl);
     $path = storage_path('app/public/reportes/operaciones_' . date('Y_m_d') . '.png');
     Log::info("Ruta local donde se guardará la imagen: " . $path);
