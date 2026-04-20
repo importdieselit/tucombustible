@@ -265,7 +265,7 @@
             <h5 class="mb-0"><i class="fas fa-list-ul me-2"></i> DETALLE DE PLANIFICACIÓN DIARIA</h5>
         </div>
         <div class="card-body p-0">
-            <div class="table-responsive">
+            {{-- <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-light x-small text-uppercase">
                         <tr>
@@ -312,7 +312,7 @@
                                 <td>
                                     <div class=" text-small" style="font-size: 0.8rem;">{{ $v->fecha_salida ? \Carbon\Carbon::parse($v->fecha_salida)->format('d/m/Y') : 'N/A' }}</div>
                                     {{-- <div class="fw-bold text-small" style="font-size: 0.7rem;">{{ $v->fecha_salida ? \Carbon\Carbon::parse($v->fecha_salida)->format('H:i') : 'N/A' }}</div> --}}
-                                </td>
+                               {{--  </td>
                                 <td class="small fw-bold {{ $textColor }}">
                                     <i class="fas {{ $icon }}"></i> {{ strtoupper($tipoEtiqueta) }}
                                 </td>
@@ -330,6 +330,138 @@
                                 </td>
                             </tr>
                         @endforeach
+                    </tbody>
+                </table>
+            </div> --}}
+            <div class="table-responsive">
+                <div class=" p-3 mb-3 shadow-sm border-light">
+                    <h6 class="text-muted mb-3"><i class="fa fa-info-circle me-2"></i> Leyenda de Estatus y Tipo de Servicio</h6>
+                    <div class="d-flex flex-wrap gap-3 small">
+                        <div class="d-flex align-items-center me-4">
+                            <div class="rounded-circle bg-cisternas me-2" style="width: 15px; height: 15px; border: 1px solid #0002;"></div>
+                            <span class="small">COMPLETADOS</span>
+                        </div>
+                        <div class="d-flex align-items-center me-4">
+                            <div class="rounded-circle bg-camiones me-2" style="width: 15px; height: 15px; border: 1px solid #0002;"></div>
+                            <span class="small">EN RUTA</span>
+                        </div>
+                        <div class="d-flex align-items-center me-4">
+                            <div class="rounded-circle bg-info me-2" style="width: 15px; height: 15px; border: 1px solid #0002;"></div>
+                            <span class="small">PROGRAMADO</span>
+                        </div>
+                        <div class="d-flex align-items-center me-4">
+                            <i class="fa fa-arrow-down mx-1"></i>
+                            <span class="small">DESPACHO</span>
+                        </div>
+                        <div class="d-flex align-items-center me-4">
+                            <i class="fa fa-arrow-up mx-1"></i>
+                            <span class="small">CARGA</span>
+                        </div>
+                        <div class="d-flex align-items-center me-4">
+                             <i class="fas fa-truck-loading"></i>
+                            <span class="small">FLETE</span>
+                        </div>
+                    </div>
+                </div>
+                <table class="table table-bordered align-top mb-0">
+                    <thead class="table-light x-small text-uppercase">
+                        <tr>
+                            <th class="ps-3" style="width: 100px; background: #f8f9fa;">Unidad</th>
+                            @foreach($rangoDias as $dia)
+                                <th class="text-center" style="min-width: 200px;">
+                                    {{ \Carbon\Carbon::parse($dia)->locale('es')->dayName }} {{ \Carbon\Carbon::parse($dia)->format('d/m') }}
+                                </th>
+                            @endforeach
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($viajesPorUnidad as $vehiculoId => $viajesUnidad)
+                            @php $primerViaje = $viajesUnidad->first(); @endphp
+                            <tr>
+                                <td class="ps-3 bg-light border-end">
+                                    <div class="fw-bold text-navy" style="font-size: 0.85rem;">
+                                        {{ $primerViaje->vehiculo->flota ?? 'N/A' }}
+                                    </div>
+                                    <div class="small text-muted" style="font-size: 0.7rem;">
+                                        {{ $primerViaje->vehiculo->placa ?? 'N/A' }}
+                                    </div>
+                                </td>
+
+                                @foreach($rangoDias as $dia)
+                                    @php
+                                        $viajesEseDia = $viajesUnidad->filter(fn($v) => \Carbon\Carbon::parse($v->fecha_salida)->format('Y-m-d') === $dia);
+                                    @endphp
+
+                                    <td class="p-2" style="vertical-align: top; min-width: 450px;"> <div class="d-flex flex-wrap gap-2">
+        @foreach($viajesEseDia as $v)
+            @php
+                if ($v->es_flete) {
+                    $tipo = ['label' => 'FLETE', 'icon' => 'fa-truck-loading', 'color' => 'purple', 'border' => '#6f42c1'];
+                } else {
+                    $tipo = $v->es_despacho 
+                        ? ['label' => 'DESPACHO', 'icon' => 'fa-arrow-up', 'color' => 'primary', 'border' => '#0d6efd']
+                        : ['label' => 'CARGA', 'icon' => 'fa-arrow-down', 'color' => 'danger', 'border' => '#dc3545'];
+                }
+
+                $statusConfig = match($v->status) {
+                    'Programado' => ['class' => 'bg-info', 'icon' => 'fa-clock'],
+                    'EN RUTA'    => ['class' => 'bg-warning text-dark', 'icon' => 'fa-truck-moving'],
+                    'COMPLETADO' => ['class' => 'bg-success text-white', 'icon' => 'fa-check-double'],
+                    default      => ['class' => 'bg-secondary', 'icon' => 'fa-info-circle']
+                };
+            @endphp
+
+            <div class="card shadow-sm border-0 border-start border-4 flex-grow-1" 
+                 style="border-color: {{ $tipo['border'] }} !important; 
+                        flex: 1 1 calc(50% - 0.5rem); /* Esto obliga a intentar ocupar el 50% menos el espacio del gap */
+                        min-width: 200px; /* Ancho mínimo para que no se rompa el texto */
+                        max-width: 100%;">
+                
+                <div class="p-2">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="badge {{ $statusConfig['class'] }} p-1 px-2" style="font-size: 0.6rem;">
+                            <i class="fas {{ $tipo['icon'] }} me-1"></i>
+                        </span>
+                        <span class="x-small text-dark  text-truncate" style="font-size: 0.65rem; max-width: 120px;" title="{{ $v->producto->nombre ?? 'N/A' }} | {{ $v->cliente_reporte }}">
+                            {{ $v->cliente_reporte }}
+                        </span>
+                        <span class="fw-bold text-muted" style="font-size: 0.75rem;">
+                            {{ \Carbon\Carbon::parse($v->fecha_salida)->format('H:i') }}
+                        </span>
+                    </div>
+
+                    <div class="fw-bold text-uppercase mb-1" style="font-size: 0.85rem; color: {{ $tipo['border'] }}; white-space: nowrap; overflow: hidden; text-wrap:auto;">
+                         {{ $v->destino_limpio   ?? 'N/A' }}
+                    </div>
+
+                    <div class="row g-0 border-top pt-1 mt-1 align-items-center" style="font-size: 0.75rem;">
+                        <div class="col-4 text-truncate">
+                            <i class="fas fa-user text-secondary me-1"></i>
+                            <strong>{{ explode(' ', $v->chofer->persona->nombre ?? 'N/A')[0] }}</strong>
+                        </div>
+                        <div class="col-4 x-small text-dark  text-truncate" style="font-size: 0.65rem; max-width: 100px;" title="{{ $v->producto->nombre ?? 'N/A' }} | {{ $v->cliente_reporte }}">
+                                                {{ $v->producto->nombre ?? 'N/A' }}
+                        </div>
+                        <div class="col-4 text-end">
+                            <span class="fw-bolder">{{ number_format($v->litros_totales, 0) }}</span> 
+                            <small class="text-muted">L</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endforeach
+    </div>
+</td>
+                                @endforeach
+                                
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="{{ count($rangoDias) + 1 }}" class="text-center p-4 text-muted">
+                                    No hay planificaciones para los próximos 3 días.
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>

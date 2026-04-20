@@ -1361,8 +1361,29 @@ public function updateGuiaData(Request $request, $viajeId)
         }
         $v->cliente_reporte = $clienteFinal;
 
+        
+
         return $v;
     });
+
+    $fechaReferencia = \Carbon\Carbon::parse($fecha)->startOfDay();
+    $fechaLimite = $fechaReferencia->copy()->addDays(3)->endOfDay();
+
+    // 2. Extraemos solo las fechas que tienen viajes, dentro del rango permitido
+    $rangoDias = $viajesDelDia->map(function($v) {
+            return \Carbon\Carbon::parse($v->fecha_salida)->format('Y-m-d');
+        })
+        ->filter(function($fecha) use ($fechaReferencia, $fechaLimite) {
+            $f = \Carbon\Carbon::parse($fecha);
+            // Solo días entre hoy y hoy + 3
+            return $f->between($fechaReferencia, $fechaLimite);
+        })
+        ->unique() // Eliminamos duplicados para tener una columna por día
+        ->sort()   // Ordenamos cronológicamente
+        ->values();
+
+    // 3. Agrupamos por unidad para el cuerpo de la tabla
+    $viajesPorUnidad = $viajesDelDia->groupBy('vehiculo_id');    
 
     // 3. Función de ayuda para clasificación (Usa los nuevos atributos)
     $contarGranular = function($coleccion, $status, $productoNombre) {
@@ -1403,6 +1424,8 @@ public function updateGuiaData(Request $request, $viajeId)
         'fecha' => $fecha,
         'viajesDelDia' => $viajesDelDia,
         'reporte' => $reporte,
+        'viajesPorUnidad' => $viajesPorUnidad,
+        'rangoDias' => $rangoDias,
         'stats' => [
             'disponibles' => $totalDisponibles,
             'despachados' => $totalDespachados,
