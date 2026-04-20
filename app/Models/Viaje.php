@@ -33,6 +33,7 @@ class Viaje extends Model
         'tipo_planificacion', 'sede_id', 'ayudante_id', 'tipo_remolque', 
         'punto_salida', 'punto_llegada', 'codigo_sap', 'nombre_cliente_externo',
         
+
         // AGREGAR ESTOS CAMPOS DE TRANSPORTE EXTERNO:
         'es_transporte_externo', 'vehiculo_externo', 'chofer_externo', 
         'ayudante_externo', 'cisterna_externo'

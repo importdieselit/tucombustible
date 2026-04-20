@@ -24,23 +24,20 @@ class LogisticaService
     public function procesarPlanificacion(array $data)
     {
         return DB::transaction(function () use ($data) {
-            $tipoPlanificacion = $data['tipo_planificacion']; // 1:Diesel, 2:MGO, 3:Flete, 4:Compra
+            $tipoPlanificacion = $data['tipo_planificacion']; 
             
-            // Aseguramos que 'items' exista (excepto en Compras, que la lógica de detalle es distinta)
             $items = $data['items'] ?? [];
             if ($tipoPlanificacion != 4 && empty($items)) {
                 throw new Exception("No hay destinos o clientes agregados a la carga.");
             }
 
-            // Para compras, los litros totales vienen del form general, no de los items
             $totalLitros = ($tipoPlanificacion == 4) ? ($data['cantidad_litros'] ?? 0) : collect($items)->sum('litros');
 
-            // 1. VALIDACIÓN DE CAPACIDAD (Aplica a transporte propio)
-            if (isset($data['es_transporte_propio']) && $data['es_transporte_propio']) {
+            if (isset($data['es_transporte_propio']) && $data['es_transporte_propio'] == '1') {
                 $vehiculo = Vehiculo::findOrFail($data['vehiculo_id']);
                 $capacidadReal = ($vehiculo->carga_max > 0) ? $vehiculo->carga_max : 0;
                 
-                if (isset($data['cisterna_id'])) {
+                if (!empty($data['cisterna_id'])) {
                     $cisterna = Vehiculo::find($data['cisterna_id']);
                     $capacidadReal = $cisterna ? $cisterna->carga_max : $capacidadReal;
                 }
@@ -50,46 +47,49 @@ class LogisticaService
                 }
             }
 
-            // 2. CREAR CABECERA DE VIAJE (Tabla 'viajes')
-            // Se añaden los campos nuevos de las migraciones sin tocar los viejos
+            // 2. CREAR CABECERA DE VIAJE
+            $esPropio = ($data['es_transporte_propio'] ?? '1') == '1';
+
             $viaje = $this->viajeRepo->createViaje([
                 'tipo_planificacion'   => $tipoPlanificacion,
                 'sede_id'              => $data['sede_id'] ?? null,
-                'tipo_combustible_id'  => $data['tipo_combustible_id'] ?? null,
+                'tipo'                 => $data['tipo_combustible_id'] ?? null, // Corregido: la columna en DB es 'tipo'
                 'fecha_salida'         => $data['fecha_programada'],
                 'destino_ciudad'       => $data['destino_ciudad'] ?? 'VARIOS',
                 'status'               => 'PROGRAMADO',
-                'litros_totales'       => $totalLitros, // Mantenemos tu campo original
-                'litros'               => $totalLitros, // Campo redundante original
-                'vehiculo_id'          => $data['es_transporte_propio'] ? $data['vehiculo_id'] : null,
-                'cisterna_id'          => $data['es_transporte_propio'] ? ($data['cisterna_id'] ?? null) : null,
-                'chofer_id'            => $data['es_transporte_propio'] ? $data['chofer_id'] : null,
-                'ayudante_id'          => $data['es_transporte_propio'] ? ($data['ayudante_id'] ?? null) : null,
-                'es_transporte_externo'=> !$data['es_transporte_propio'],
-                'vehiculo_externo'     => !$data['es_transporte_propio'] ? ($data['vehiculo_externo'] ?? null) : null,
-                // Campos específicos
+                'litros'               => $totalLitros, 
+                
+                // Mapeo Transporte Propio
+                'vehiculo_id'          => $esPropio ? $data['vehiculo_id'] : null,
+                'cisterna'             => $esPropio ? ($data['cisterna_id'] ?? null) : null, // Corregido a 'cisterna'
+                'chofer_id'            => $esPropio ? $data['chofer_id'] : null,
+                'ayudante_id'          => $esPropio ? ($data['ayudante_id'] ?? null) : null,
+                
+                // Mapeo Transporte Externo (Coincidiendo con los names del formulario)
+                'es_transporte_externo'=> !$esPropio,
+                'vehiculo_externo'     => !$esPropio ? ($data['externo_vehiculo_placa'] ?? null) : null,
+                'cisterna_externo'     => !$esPropio ? ($data['externo_cisterna_placa'] ?? null) : null,
+                'chofer_externo'       => !$esPropio ? ($data['externo_chofer_nombre'] ?? null) : null,
+                'ayudante_externo'     => !$esPropio ? ($data['externo_ayudante_nombre'] ?? null) : null,
+                
                 'tipo_remolque'        => $tipoPlanificacion == 3 ? ($data['tipo_remolque'] ?? null) : null,
                 'codigo_sap'           => $tipoPlanificacion == 4 ? ($data['codigo_sap'] ?? null) : null,
                 'nombre_cliente_externo'=> $data['nombre_cliente_externo'] ?? null,
             ]);
 
             // 3. REGISTRAR DETALLES 
-            if (in_array($tipoPlanificacion, [1, 2, 3])) { // Despachos_viajes
+            if (in_array($tipoPlanificacion, [1, 2, 3])) { 
                 foreach ($items as $item) {
                     
-                    // LÓGICA EXCLUSIVA PARA DIESEL (1) - Intacta
-                    if ($tipoPlanificacion == 1 && isset($item['cliente_id'])) { 
+                    if ($tipoPlanificacion == 1 && !empty($item['cliente_id'])) { 
                         $cliente = Cliente::lockForUpdate()->findOrFail($item['cliente_id']);
                         
-                        // Validar contra el DISPONIBLE (Saldo real)
                         if ($item['litros'] > $cliente->disponible) {
                             throw new Exception("Saldo insuficiente para {$cliente->nombre}. Disponible: {$cliente->disponible}L");
                         }
 
-                        // Restar del disponible del cliente
                         $cliente->decrement('disponible', $item['litros']);
 
-                        // Actualizar consumo GASCO
                         $cupoMensual = GascoCupoMensual::where('cliente_id', $cliente->id)
                             ->where('mes', now()->month)
                             ->where('anio', now()->year)
@@ -100,7 +100,7 @@ class LogisticaService
                         }
                     }
                     
-                    // REGISTRAR EN DESPACHOS_VIAJES
+                    // REGISTRAR EN DESPACHOS_VIAJES (Corregido mapeo de modal)
                     $this->viajeRepo->createDetalle([
                         'viaje_id'            => $viaje->id,
                         'cliente_id'          => $item['cliente_id'] ?? null,
@@ -109,18 +109,16 @@ class LogisticaService
                         'muelle_atraque'      => $item['muelle'] ?? null,
                         'direccion_despacho'  => $item['direccion'] ?? null,
                         'buque_nombre_manual' => $item['buque_nombre'] ?? null,
-                        'imo'                 => $item['imo'] ?? null,
-                        'bandera'             => $item['bandera'] ?? null,
-                        'observacion'         => $item['observacion'] ?? null,
+                        'imo'                 => $item['buque_imo'] ?? null, // Nombre exacto del input
+                        'bandera'             => $item['buque_bandera'] ?? null, // Nombre exacto del input
+                        'observacion'         => $item['observaciones'] ?? null, // Nombre exacto del input
                     ]);
 
-                    // Actualizar Pedido si existe
-                    if (isset($item['pedido_id'])) {
+                    if (!empty($item['pedido_id'])) {
                         $this->pedidoRepo->update($item['pedido_id'], ['estado' => 'en_proceso']);
                     }
                 }
             } elseif ($tipoPlanificacion == 4) {
-                // LÓGICA DE COMPRAS
                 DB::table('compras_combustible')->insert([
                     'viaje_id'          => $viaje->id,
                     'proveedor_id'      => $data['proveedor_id'],
@@ -133,12 +131,9 @@ class LogisticaService
                 ]);
             }
 
-            // 4. AFECTAR INVENTARIO 
-            // Solo descontamos inventario global si es venta propia (Diesel o MGO)
             if (in_array($tipoPlanificacion, [1, 2])) {
                 $this->afectarInventarioGlobal($data['tipo_combustible_id'], $totalLitros, $viaje->id);
             } 
-            // Nota: Las compras (4) sumarán al inventario al momento de recibirlas (otro módulo), no al planificarlas.
 
             return $viaje;
         });
@@ -146,18 +141,33 @@ class LogisticaService
 
     private function afectarInventarioGlobal($tipoId, $cantidad, $viajeId)
     {
-        // 'nivel_actual' es el nombre que solemos usar en tus depósitos
-        DB::table('depositos')
-            ->where('tipo_combustible_id', $tipoId)
-            ->decrement('nivel_actual', $cantidad);
-            
-        DB::table('movimientos_combustible')->insert([
-            'tipo_combustible_id' => $tipoId,
-            'tipo' => 'salida',
-            'cantidad' => $cantidad,
-            'referencia' => "PLANIFICACIÓN VIAJE #$viajeId",
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
+        // 1. Identificar el nombre del producto para la tabla depositos
+        $nombreProducto = ($tipoId == 1) ? 'DIESEL' : (($tipoId == 2) ? 'MGO' : null);
+
+        if ($nombreProducto) {
+            // Buscamos el depósito para obtener su ID y descontar
+            $deposito = DB::table('depositos')
+                ->where('producto', $nombreProducto)
+                ->first();
+
+            if ($deposito) {
+                // Descontamos del depósito
+                DB::table('depositos')
+                    ->where('id', $deposito->id)
+                    ->decrement('nivel_actual_litros', $cantidad);
+
+                // 2. Registrar el movimiento con las columnas correctas del DDL
+                DB::table('movimientos_combustible')->insert([
+                    'tipo_combustible_id' => $tipoId,
+                    'tipo_movimiento'     => 'salida', // Corregido: antes era 'tipo'
+                    'deposito_id'         => $deposito->id, // Obligatorio en el DDL
+                    'viaje_id'            => $viajeId,
+                    'cantidad_litros'     => $cantidad, // Corregido: antes era 'cantidad'
+                    'observaciones'       => "PLANIFICACIÓN VIAJE #$viajeId",
+                    'created_at'          => now(),
+                    'updated_at'          => now()
+                ]);
+            }
+        }
     }
 }
