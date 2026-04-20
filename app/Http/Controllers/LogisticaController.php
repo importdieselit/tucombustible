@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Services\LogisticaService;
 use App\Models\Vehiculo;
 use App\Models\Chofer; 
 use App\Models\Cliente;
+use App\Models\Muelles;
 use App\Models\TipoCombustible;
 use App\Models\Pedido;
 use App\Models\Viaje;
@@ -40,7 +42,7 @@ class LogisticaController extends Controller
     /**
      * El "Constructor de Carga" dinámico
      */
-    public function create($tipo)
+    public function create($tipo = 'diesel')
     {
         // Mapeo del parámetro de la URL al ID de la Base de Datos
         $tiposPermitidos = ['diesel' => 1, 'mgo' => 2, 'flete' => 3, 'compra' => 4];
@@ -66,7 +68,7 @@ class LogisticaController extends Controller
         if (in_array($tipoPlanificacionId, [1, 2])) {
             $clientes = Cliente::where('status', Cliente::STATUS_APROBADO)
                                ->orderBy('nombre')
-                               ->get(['id', 'nombre', 'rif', 'cupo']);
+                               ->get(['id', 'nombre', 'rif', 'cupo', 'direccion']);
         }
 
         // Si es DIESEL exclusivamente, cargamos los pedidos (MGO no tiene portal de clientes aún)
@@ -76,8 +78,10 @@ class LogisticaController extends Controller
                 ->get(); 
         }
 
+        $muelles = DB::table('muelles')->orderBy('nombre')->get();
+
         return view('admin.logistica.create', compact(
-            'tipo', 'tipoPlanificacionId', 'tipos', 'sedes', 'vehiculos', 'personal', 'clientes', 'pedidosPendientes'
+            'tipo', 'tipoPlanificacionId', 'tipos', 'sedes', 'vehiculos', 'personal', 'clientes', 'pedidosPendientes', 'muelles'
         ));
     }
 
