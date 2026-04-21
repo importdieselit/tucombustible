@@ -18,7 +18,7 @@ class Kernel extends ConsoleKernel
         // $schedule->command('inspire')->hourly();
         $schedule->command('summary:daily-report')->dailyAt('00:00')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));;
         $schedule->command('send:reporte-diario-operaciones')->dailyAt('17:00')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));;
-        $schedule->command('send:reporte-diario-operaciones')->dailyAt('15:00')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));;
+        $schedule->command('send:reporte-diario-operaciones')->dailyAt('14:00')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));;
         $schedule->command('send:reporte-diario-operaciones')->dailyAt('08:00')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));;
 
     }

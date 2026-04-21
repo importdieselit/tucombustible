@@ -155,6 +155,87 @@
 
             {{-- COLUMNA DERECHA: TRABAJOS E INSUMOS --}}
             <div class="col-lg-6">
+
+
+                {{-- SECCIÓN TRABAJOS --}}
+<div class="card card-step border-orange shadow-sm mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+        <h5 class="m-0 fw-bold text-uppercase small"><i class="fas fa-tools text-orange me-2"></i>Planificación de Tareas</h5>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="switch-servicio-manual">
+            <label class="form-check-label small fw-bold" for="switch-servicio-manual">Servicio no catalogado</label>
+        </div>
+    </div>
+    <div class="card-body bg-light border-bottom">
+        <div class="row g-2">
+            <div class="col-md-12 mb-2">
+                <label class="small fw-bold">Categoría de Servicio</label>
+                <select id="select-categoria" class="form-select form-select-sm select2">
+                    <option value="">Seleccione...</option>
+                    @foreach ($categorias_tempario as $cat)
+                        <option value="{{ $cat->id_tempario_categoria }}" data-context="{{ $cat->id_tipo_req }}">
+                            [{{ $cat->codigo }}] {{ $cat->categoria }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- Buscador de Catálogo --}}
+            <div class="col-md-8" id="container-select-servicio">
+                <label class="small fw-bold">Tarea / Trabajo Específico</label>
+                <select id="select-servicio" class="form-select form-select-sm select2">
+                    <option value="">Seleccione categoría primero</option>
+                </select>
+            </div>
+
+            {{-- Entrada Manual (Oculta por defecto) --}}
+            <div class="col-md-8" id="container-input-servicio" style="display: none;">
+                <label class="small fw-bold">Nombre del Nuevo Servicio</label>
+                <input type="text" id="input-servicio-manual" class="form-control form-control-sm" placeholder="Ej: Rectificación de rosca especial">
+            </div>
+
+            <div class="col-md-4">
+                <label class="small fw-bold">Costo Mano de Obra</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text">$</span>
+                    <input type="number" id="input-costo-trabajo" class="form-control form-control-sm text-end" value="0.00" step="0.01">
+                </div>
+            </div>
+
+            <div class="col-12 mt-2">
+                <label class="small fw-bold">Personal Asignado</label>
+                <select id="select-mecanicos" class="form-select form-select-sm" multiple>
+                    @foreach ($personal as $p)
+                        <option value="{{ $p->id_personal }}">{{ $p->persona->nombre }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-12 text-end mt-2">
+                <button type="button" class="btn btn-orange btn-sm fw-bold px-4" id="btn-agregar-trabajo">
+                    <i class="fas fa-plus me-1"></i> ASIGNAR TAREA
+                </button>
+            </div>
+        </div>
+    </div>
+    {{-- Tabla de resultados --}}
+    <div class="table-responsive" style="max-height: 200px;">
+        <table class="table table-sm table-hover align-middle mb-0">
+            <thead class="bg-corporate text-white x-small">
+                <tr>
+                    <th class="ps-3">CONCEPTO</th>
+                    <th class="text-end">COSTO M.O</th>
+                    <th>RESPONSABLES</th>
+                    <th class="text-center"></th>
+                </tr>
+            </thead>
+            <tbody id="tabla-trabajos-body">
+                <tr><td colspan="4" class="text-center text-muted py-4 small">No hay tareas asignadas</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
                 {{-- SECCIÓN TRABAJOS --}}
                 <div class="card card-step border-orange shadow-sm mb-4">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
@@ -357,6 +438,19 @@
                 timer = setTimeout(() => { func.apply(this, args); }, timeout);
             };
         }
+
+$('#switch-servicio-manual').on('change', function() {
+    const isManual = $(this).is(':checked');
+    if (isManual) {
+        $('#container-select-servicio').hide();
+        $('#container-input-servicio').fadeIn();
+        $('#input-costo-trabajo').val('0.00').focus();
+    } else {
+        $('#container-input-servicio').hide();
+        $('#container-select-servicio').fadeIn();
+    }
+});
+
 
 
 // --- 1. LÓGICA DEL ORQUESTADOR DINÁMICO ---
@@ -568,14 +662,24 @@
 
         // 2. AGREGAR TRABAJO A LA LISTA
         $('#btn-agregar-trabajo').on('click', function() {
-            const servicioId = $('#select-servicio').val();
+            const isManual = $('#switch-servicio-manual').is(':checked');
             const categoriaId = $('#select-categoria').val();
-            const servicioTexto = $('#select-servicio option:selected').text();
             const mecanicosIds = $('#select-mecanicos').val();
             const mecanicosNombres = $('#select-mecanicos option:selected').map(function(){ return $(this).text(); }).get();
+            const costo = parseFloat($('#input-costo-trabajo').val()) || 0;
 
-            if (!servicioId || mecanicosIds.length === 0) {
-                Swal.fire('Error', 'Debe seleccionar un servicio y al menos un mecánico', 'error');
+            let servicioId, servicioTexto;
+
+            if (isManual) {
+                servicioId = 'MANUAL';
+                servicioTexto = $('#input-servicio-manual').val().trim();
+            } else {
+                servicioId = $('#select-servicio').val();
+                servicioTexto = $('#select-servicio option:selected').text();
+            }
+
+            if (!categoriaId || !servicioTexto || mecanicosIds.length === 0) {
+                Swal.fire('Atención', 'Complete categoría, servicio y personal responsable.', 'warning');
                 return;
             }
 
@@ -584,13 +688,16 @@
                 id_categoria: categoriaId,
                 concepto: servicioTexto,
                 mecanicos: mecanicosIds,
-                mecanicos_nombres: mecanicosNombres.join(', ')
+                mecanicos_nombres: mecanicosNombres.join(', '),
+                costo_mano_obra: costo,
+                es_nuevo_servicio: isManual // Ban
             };
 
             trabajosAsignados.push(nuevoTrabajo);
             renderTrabajos();
             
-            // Limpiar selectores
+            $('#input-servicio-manual').val('');
+            $('#input-costo-trabajo').val('0.00');
             $('#select-mecanicos').val(null).trigger('change');
         });
 
@@ -601,8 +708,12 @@
             } else {
                 trabajosAsignados.forEach((t, index) => {
                     html += `
-                    <tr class="small">
-                        <td class="ps-3 fw-bold">${t.concepto}</td>
+                   <tr class="small">
+                        <td class="ps-3 fw-bold">
+                            ${t.es_nuevo_servicio ? '<span class="badge bg-info me-1">NUEVO</span>' : ''} 
+                            ${t.concepto}
+                        </td>
+                        <td class="text-end fw-bold text-navy">$ ${t.costo_mano_obra.toFixed(2)}</td>
                         <td><span class="text-muted">${t.mecanicos_nombres}</span></td>
                         <td class="text-center">
                             <button type="button" class="btn btn-link btn-sm text-danger btn-remove-trabajo" data-index="${index}">
@@ -742,7 +853,7 @@
             $('#longitud').val(lng);
         }
 
-        
+    
         $('#select-servicio').on('change', function() {
             const planId = $(this).val();
             const $textarea = $('#descripcion');
@@ -750,7 +861,8 @@
             const $divVisual = $('#render_plan_html');
             const $instruccion = $('#instruccion-detalle'); 
             const $tipo = $('#tipo');
-            
+            const costo = $(this).find(':selected').data('costo') || 0; // Asumiendo que envías el costo en el data
+            $('#input-costo-trabajo').val(parseFloat(costo).toFixed(2));
 
             // Feedback visual al usuario
             $divVisual.html('<div class="text-center p-4"><i class="fas fa-spinner fa-spin me-2"></i>Cargando detalles técnicos...</div>')

@@ -650,29 +650,49 @@ class OrdenController extends BaseController
      * Agregar Trabajo (Desde el Modal)
      */
     public function addTrabajo(Request $request, $id)
-    {
-        $mecanicos = $request->mecanicos; // [1] o [1, 2, 5]
+{
+    // 1. Estandarización de mecánicos (mantiene tu lógica de persistencia por comas)
+    $mecanicos = $request->mecanicos;
+    $id_mecanico_formateado = is_array($mecanicos) ? implode(',', $mecanicos) : $mecanicos;
 
-        // Procesamos la lógica: Si es array y tiene elementos, los unimos por coma
-        // Si no, lo dejamos nulo o vacío
-        $id_mecanico_formateado = is_array($mecanicos) ? implode(',', $mecanicos) : $mecanicos;
-    
-        // Tu estándar de creación de trabajos
-        $trabajo=Trabajos::create([
-            'id_orden' => $id,
-            'descripcion' => $request->descripcion,
-            'id_mecanico' => $id_mecanico_formateado,
-            'id_tempario_servicio' => $request->id_tempario,
-            'costo' => $request->costo,
-            'id_categoria' => $request->id_categoria
-        ]);
+    // 2. Definición base del ID de servicio
+    $id_tempario = $request->id_tempario;
 
-        return response()->json([
-            'success' => true, 
-            'message' => 'Trabajo agregado',
-            'data' => $trabajo
+    // 3. Lógica de registro en Catálogo (Tempario) si es un servicio nuevo
+    // Usamos filter_var para manejar booleanos que lleguen como string desde el JS
+    $esNuevo = filter_var($request->es_nuevo_servicio, FILTER_VALIDATE_BOOLEAN);
+
+    if ($esNuevo) {
+        $nuevoServicio = TemparioServicio::create([
+            'id_tempario_categoria' => $request->id_categoria,
+            'servicio'              => strtoupper($request->descripcion),
+            'costo'                 => $request->costo,
+            'horas'                 => 1,
+            'id_usuario'            => auth()->id() ?? 76, // Uso de auth con fallback a tu ID estándar
+            'codigo'                => 'M-OBRA-' . strtoupper(Str::random(5))
         ]);
+        
+        // Sobrescribimos el ID para la relación del trabajo
+        $id_tempario = $nuevoServicio->id_tempario_servicio;
     }
+
+    // 4. Creación del Trabajo en la Orden
+    $trabajo = Trabajos::create([
+        'id_orden'             => $id,
+        'descripcion'          => strtoupper($request->descripcion),
+        'id_mecanico'          => $id_mecanico_formateado,
+        'id_tempario_servicio' => $id_tempario,
+        'costo'                => $request->costo,
+        'id_categoria'         => $request->id_categoria,
+        'es_manual'            => $esNuevo // Recomendado: bandera para auditoría visual
+    ]);
+
+    return response()->json([
+        'success' => true, 
+        'message' => $esNuevo ? 'Servicio catalogado y trabajo agregado' : 'Trabajo agregado correctamente',
+        'data'    => $trabajo->load('categoria') // Cargamos relación para actualizar la UI si es necesario
+    ]);
+}
 
     public function deleteTrabajo($id)
     {
@@ -876,7 +896,21 @@ class OrdenController extends BaseController
 
             // 4. Procesar Trabajos (Eager Loading preventivo)
             foreach ($trabajos as $t) {
-                $serv = TemparioServicio::with('categoria')->find($t['id_tempario']);
+                if ($t['es_nuevo_servicio'] === true) {
+                    // Lógica para registrar en el catálogo real (Tempario)
+                    $nuevoServicio = TemparioServicio::create([
+                        'id_tempario_categoria' => $t['id_categoria'],
+                        'servicio'              => $t['concepto'],
+                        'costo'                 => $t['costo_mano_obra'],
+                        'horas'                 => 1,
+                        'id_usuario'            => 76,
+                        'codigo'                => 'M-OBRA' . strtoupper(Str::random(5))
+                    ]);
+                    
+                    // Reemplazamos el ID 'MANUAL' por el ID recién creado
+                    $t['id_tempario'] = $nuevoServicio->id_tempario_servicio;
+                }
+                $serv = TemparioServicio::with('categoria')->find($t['id_tempario_ser']);
                 $concepto = ($serv && $serv->categoria) ? $serv->categoria->categoria . ' - ' . $serv->servicio : $t['concepto'];
                 
                 $orden->trabajos()->create([
@@ -1213,7 +1247,7 @@ class OrdenController extends BaseController
 
         $output = '<option value="">Seleccione un servicio...</option>';
         foreach ($servicios as $s) {
-            $output .= '<option value="' . $s->id_tempario_servicio . '">' . $s->servicio . '</option>';
+            $output .= '<option value="' . $s->id_tempario_servicio . '" data-costo="'.$s->costo.'">' . $s->servicio . '</option>';
         }
 
         return response($output);

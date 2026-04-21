@@ -16,7 +16,7 @@ class TemparioServicio extends Model
         'id_tempario_categoria',
         'id_usuario',
         'codigo',
-        'serivicio',
+        'servicio',
         'horas',
         'costo',
         'created_by',
