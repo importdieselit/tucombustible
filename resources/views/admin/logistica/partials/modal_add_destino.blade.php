@@ -5,6 +5,7 @@
                 <h6 class="modal-title fw-bold text-uppercase small">Añadir Destino</h6>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
+            
             <div class="modal-body p-0">
                 <ul class="nav nav-tabs nav-fill bg-light" id="destinyTabs">
                     <template x-if="modo === 'diesel'">
@@ -70,6 +71,7 @@
                                     @endforeach
                                 </select>
                             </div>
+                            
                             <div class="col-md-4">
                                 <label class="small fw-bold text-muted uppercase">Cantidad (Litros)</label>
                                 <input type="number" class="form-control border-orange fw-black" x-model.number="manual.litros">
@@ -77,7 +79,7 @@
                             
                             {{-- CONDICIONAL: Solo aparece si es MGO --}}
                             <div class="col-md-8" x-show="modo === 'mgo'">
-                                <label class="small fw-bold text-muted uppercase">Nombre del Buque (Opcional)</label>
+                                <label class="small fw-bold text-muted uppercase">Nombre del Buque</label>
                                 <input type="text" class="form-control" x-model="manual.buque" placeholder="Ej: MV Clipper">
                             </div>
 
@@ -95,6 +97,7 @@
                                                 cliente_rif: opt.dataset.rif,
                                                 cliente_cupo: parseFloat(opt.dataset.cupo),
                                                 litros: manual.litros,
+                                                muelle_id: '',
                                                 buque_nombre: manual.buque, 
                                                 buque_imo: '', 
                                                 buque_bandera: '', 

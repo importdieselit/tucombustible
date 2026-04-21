@@ -26,10 +26,8 @@ class LogisticaController extends Controller
 
     public function index(Request $request)
     {
-        // Traemos las sedes también para mostrar de dónde sale la carga
         $query = Viaje::with(['tipoCombustible', 'detalles.cliente', 'sede']);
 
-        // Filtro rápido por si quieres ver solo Fletes o solo MGO desde la vista
         if ($request->has('tipo')) {
             $query->where('tipo_planificacion', $request->tipo);
         }
@@ -44,14 +42,14 @@ class LogisticaController extends Controller
      */
     public function create($tipo = 'diesel')
     {
-        // Mapeo del parámetro de la URL al ID de la Base de Datos
+        // 1. Mapeo del parámetro de la URL al ID de la Base de Datos
         $tiposPermitidos = ['diesel' => 1, 'mgo' => 2, 'flete' => 3, 'compra' => 4];
         if (!array_key_exists($tipo, $tiposPermitidos)) {
             abort(404, 'Tipo de planificación no válido.');
         }
         $tipoPlanificacionId = $tiposPermitidos[$tipo];
 
-        // Datasources comunes para todos los formularios
+        // 2. Datasources comunes
         $tipos = TipoCombustible::all();
         $sedes = Sedes::where('estatus', true)->get();
         $vehiculos = Vehiculo::select('id', 'placa', 'carga_max', 'tipo')->where('estatus', 1)->get();
@@ -60,40 +58,57 @@ class LogisticaController extends Controller
             return $chofer->persona->nombre ?? '';
         });
 
-        // Datasources condicionales (Para no recargar la BD si no hacen falta)
+        // 3. Inicializar colecciones
         $clientes = collect();
         $pedidosPendientes = collect();
+        $proveedores = collect();
+        $muelles = DB::table('muelles')->orderBy('nombre')->get();
 
-        // Si es Diesel o MGO, necesitamos clientes
-        if (in_array($tipoPlanificacionId, [1, 2])) {
+        // 4. Carga condicional de datos según el DDL y lógica de negocio
+        
+        // Clientes: Para Diesel, MGO y Fletes
+        if (in_array($tipoPlanificacionId, [1, 2, 3])) {
             $clientes = Cliente::where('status', Cliente::STATUS_APROBADO)
                                ->orderBy('nombre')
                                ->get(['id', 'nombre', 'rif', 'cupo', 'direccion']);
         }
 
-        // Si es DIESEL exclusivamente, cargamos los pedidos (MGO no tiene portal de clientes aún)
+        // Pedidos: Solo para Diesel
         if ($tipoPlanificacionId == 1) {
             $pedidosPendientes = Pedido::where('estado', 'pendiente')
                 ->with('cliente')
                 ->get(); 
         }
 
-        $muelles = DB::table('muelles')->orderBy('nombre')->get();
+        // Proveedores: Solo para Compras (Corregido según tu DDL)
+        if ($tipoPlanificacionId == 4) {
+            $proveedores = DB::table('proveedores')
+                ->select('id', 'nombre', 'rif')
+                ->orderBy('nombre')
+                ->get();
+        }
 
         return view('admin.logistica.create', compact(
-            'tipo', 'tipoPlanificacionId', 'tipos', 'sedes', 'vehiculos', 'personal', 'clientes', 'pedidosPendientes', 'muelles'
+            'tipo', 
+            'tipoPlanificacionId', 
+            'tipos', 
+            'sedes', 
+            'vehiculos', 
+            'personal', 
+            'clientes', 
+            'pedidosPendientes', 
+            'muelles',
+            'proveedores'
         ));
     }
 
     public function store(Request $request)
     {
-        // Añadimos validación del tipo de planificación
         $request->validate([
             'tipo_planificacion'  => 'required|in:1,2,3,4',
-            'tipo_combustible_id' => 'required|exists:tipos_combustible,id',
+            'tipo_combustible_id' => 'required_unless:tipo_planificacion,3|nullable|exists:tipos_combustible,id',
             'fecha_programada'    => 'required|date',
-            // Solo exigimos items si NO es una compra
-            'items'               => 'required_unless:tipo_planificacion,4|array', 
+            'items'               => 'required_if:tipo_planificacion,1,2|array', 
         ]);
 
         try {
