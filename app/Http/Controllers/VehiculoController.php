@@ -470,15 +470,15 @@ class VehiculoController extends BaseController
         try {
             $marcaId = $request->marca;
             if ($marcaId === 'otro') {
-                $nuevaMarca = Marca::create(['nombre' => $request->nueva_marca]);
+                $nuevaMarca = Marca::create(['marca' => $request->nueva_marca]);
                 $request->marca = $nuevaMarca->id;
             }
 
             $modeloId = $request->modelo;
             if ($modeloId === 'otro') {
                 $nuevoModelo = Modelo::create([
-                    'nombre' => $request->nuevo_modelo,
-                    'marca_id' => $request->marca, // Usamos el ID de la marca recién creada o seleccionada
+                    'modelo' => $request->nuevo_modelo,
+                    'id_marca' => $request->marca, // Usamos el ID de la marca recién creada o seleccionada
                 ]);
                 $request->modelo = $nuevoModelo->id;
             }
