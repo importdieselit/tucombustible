@@ -78,10 +78,6 @@ class ClienteController extends Controller
         return view('admin.cliente.show', compact('cliente', 'tiposCombustible', 'pedidos', 'infoGasco'));
     }
 
-    // -------------------------------------------------------
-    // LISTADO GENERAL DE PEDIDOS (ADMIN)
-    // -------------------------------------------------------
-
     public function listaGeneralPedidos()
     {
         // Usamos el método que ya tienes en el repositorio
@@ -89,10 +85,6 @@ class ClienteController extends Controller
 
         return view('admin.cliente.pedidos_general', compact('pedidos'));
     }
-
-    // -------------------------------------------------------
-    // REGISTRO DE NUEVO CLIENTE (ADMIN)
-    // -------------------------------------------------------
 
     public function create()
     {
@@ -141,10 +133,6 @@ class ClienteController extends Controller
             return Redirect::back()->withInput()->with('error', $e->getMessage());
         }
     }
-
-    // -------------------------------------------------------
-    // EDICIÓN DE DATOS DEL CLIENTE
-    // -------------------------------------------------------
 
     public function edit($id)
     {
@@ -200,10 +188,6 @@ class ClienteController extends Controller
         }
     }
 
-    // -------------------------------------------------------
-    // AVANCE DE PASOS DEL REGISTRO
-    // -------------------------------------------------------
-
     public function avanzarPaso(Request $request, $id)
     {
         $request->validate([
@@ -219,10 +203,6 @@ class ClienteController extends Controller
             return Redirect::back()->with('error', $e->getMessage());
         }
     }
-
-    // -------------------------------------------------------
-    // APROBACIÓN Y RECHAZO
-    // -------------------------------------------------------
 
     public function aprobar(Request $request, $id)
     {
@@ -249,10 +229,6 @@ class ClienteController extends Controller
         }
     }
 
-    // -------------------------------------------------------
-    // INACTIVAR Y REACTIVAR
-    // -------------------------------------------------------
-
     public function inactivar($id)
     {
         try {
@@ -276,10 +252,6 @@ class ClienteController extends Controller
             return Redirect::back()->with('error', $e->getMessage());
         }
     }
-
-    // -------------------------------------------------------
-    // AJUSTE DE CUPO
-    // -------------------------------------------------------
 
     public function ajustarCupo(Request $request, $id)
     {
@@ -413,40 +385,75 @@ class ClienteController extends Controller
         }
     }
 
-    // -------------------------------------------------------
-    // NUEVO: ASIGNACIÓN DE CUPO GASCO
-    // -------------------------------------------------------
     public function asignarCupoGasco(Request $request, $id)
     {
-        // 1. Obtenemos el cliente directamente
         $cliente = Cliente::findOrFail($id);
         
-        // 2. Tomamos el valor de la columna 'cupo' como techo máximo
-        // Si el campo se llama 'cupo' en tu tabla, lo usamos directamente
+        // Tomamos el valor de la columna 'cupo' (SIAVCOM)
         $cupoGeneral = $cliente->cupo ?? 0;
 
-        $request->validate([
-            'litros_autorizados' => [
-                'required',
-                'numeric',
-                'min:100',
-                'max:' . $cupoGeneral // Ahora sí comparamos contra la columna correcta
-            ]
-        ], [
+        // Reglas base (siempre debe ser mayor a 100)
+        $rules = [
+            'litros_autorizados' => ['required', 'numeric', 'min:100']
+        ];
+
+        // LÓGICA NUEVA: Solo limitamos si el Cupo SIAVCOM es mayor o igual a 1
+        if ($cupoGeneral >= 1) {
+            $rules['litros_autorizados'][] = 'max:' . $cupoGeneral;
+        }
+
+        $messages = [
             'litros_autorizados.min' => 'La cantidad a asignar debe ser mayor a 100 litros.',
-            'litros_autorizados.max' => 'No puede asignar más del Cupo Aprobado general (' . number_format($cupoGeneral, 0) . ' Ltrs).',
-        ]);
+            'litros_autorizados.max' => 'No puede asignar más del Cupo SIAVCOM general (' . number_format($cupoGeneral, 0) . ' Ltrs).',
+        ];
+
+        $request->validate($rules, $messages);
 
         try {
-            // Aquí es donde el Service hace la magia en gasco_cupos_mensuales
             $this->gascoCupoService->asignarCupoMensual($id, $request->litros_autorizados);
             
             Session::flash('success', 'Cupo GASCO del mes actualizado correctamente.');
             return Redirect::back();
         } catch (\Exception $e) {
-            // Para debuguear rápido mientras desarrollas, podrías devolver $e->getMessage()
             Log::error('Error al asignar cupo GASCO: ' . $e->getMessage());
             return Redirect::back()->with('error', 'Error técnico: ' . $e->getMessage());
+        }
+    }
+
+    public function generarToken($id)
+    {
+        $cliente = Cliente::findOrFail($id);
+
+        // Seguridad: Solo los padres (parent == 0) deben tener token
+        if ($cliente->parent != 0) {
+            return Redirect::back()->with('error', 'Solo los Clientes Padres pueden poseer un token de vinculación.');
+        }
+
+        // Evitar sobreescritura si ya existe uno
+        if (!empty($cliente->token_registro)) {
+            return Redirect::back()->with('error', 'Este cliente ya tiene un token asignado.');
+        }
+
+        try {
+            // Generamos el token de 10 caracteres (Alfanumérico)
+            // Str::random genera una cadena aleatoria alfanumérica
+            $nuevoToken = strtoupper(\Illuminate\Support\Str::random(10));
+
+            // Verificación de unicidad en la base de datos
+            while (Cliente::where('token_registro', $nuevoToken)->exists()) {
+                $nuevoToken = strtoupper(\Illuminate\Support\Str::random(10));
+            }
+
+            $cliente->update([
+                'token_registro' => $nuevoToken
+            ]);
+
+            Session::flash('success', 'Token de 10 caracteres generado: ' . $nuevoToken);
+            return Redirect::back();
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error al generar token: ' . $e->getMessage());
+            return Redirect::back()->with('error', 'No se pudo generar el token por un error técnico.');
         }
     }
 }

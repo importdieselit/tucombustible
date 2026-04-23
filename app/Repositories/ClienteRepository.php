@@ -8,7 +8,9 @@ use App\Models\ChoferCliente;
 use App\Models\PlacaVehiculo;
 use App\Models\RegistroPaso;
 use App\Models\User;
+use App\Models\GascoCupoMensual;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class ClienteRepository
 {
@@ -31,8 +33,24 @@ class ClienteRepository
 
     public function getClientesCombustible(array $filtros)
     {
-        $query = Cliente::with(['registroPaso','padre']);
+        $ahora = Carbon::now();
 
+        // 1. Iniciamos la query con las relaciones básicas
+        $query = Cliente::with(['registroPaso', 'padre']);
+
+        // 2. Agregamos el cálculo de SIAVCOM (Suma de todos sus cupos de combustible)
+        $query->withSum('cupos as cupo_siavcom', 'litros_aprobados');
+
+        // 3. Agregamos el Cupo GASCO del mes actual mediante un subquery
+        // Esto permite que 'cupo_gasco' esté disponible directamente en cada objeto $c de la tabla
+        $query->addSelect(['cupo_gasco' => GascoCupoMensual::select('litros_autorizados')
+            ->whereColumn('cliente_id', 'clientes.id')
+            ->where('mes', $ahora->month)
+            ->where('anio', $ahora->year)
+            ->limit(1)
+        ]);
+
+        // --- FILTROS EXISTENTES ---
         if (!empty($filtros['search'])) {
             $query->where(function ($q) use ($filtros) {
                 $q->where('nombre', 'like', "%{$filtros['search']}%")
@@ -46,10 +64,10 @@ class ClienteRepository
 
         if (!empty($filtros['tipo'])) {
             if ($filtros['tipo'] === 'padre') {
-            $query->where('parent', 0);
-        } elseif ($filtros['tipo'] === 'sucursal') {
-            $query->where('parent', '>', 0);
-        }
+                $query->where('parent', 0);
+            } elseif ($filtros['tipo'] === 'sucursal') {
+                $query->where('parent', '>', 0);
+            }
         }
 
         return $query->orderBy('updated_at', 'desc')->paginate(15);

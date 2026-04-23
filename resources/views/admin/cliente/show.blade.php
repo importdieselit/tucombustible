@@ -287,17 +287,41 @@
         {{-- COLUMNA DERECHA: PANEL DE CONTROL --}}
         <div class="col-lg-4">
             
-            {{-- TOKEN SUCURSALES --}}
-            @if($cliente->es_padre)
-            <div class="card shadow-sm border-orange mb-4 bg-light">
-                <div class="card-body">
-                    <h6 class="fw-bold text-uppercase border-bottom pb-2 mb-3"><i class="fas fa-key me-2 text-orange"></i>Token Sucursales</h6>
-                    <div class="d-flex align-items-center justify-content-between bg-white border rounded p-3">
-                        <span id="tokenAdmin" class="h4 mb-0 fw-bold tracking-widest text-dark">{{ $cliente->token_registro ?? 'SIN TOKEN' }}</span>
-                        <button onclick="copyTokenAdmin()" class="btn btn-link text-orange"><i class="fas fa-copy fa-lg"></i></button>
+            {{-- ÁREA DEL TOKEN (AHORA SÍ DENTRO DE UNA CARD) --}}
+            @if($cliente->parent == 0)
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-uppercase small text-dark mb-3 border-bottom pb-1">
+                            <i class="fas fa-link me-2 text-orange"></i>Token de Vinculación
+                        </h6>
+                        
+                        @if($cliente->token_registro)
+                            {{-- ESTADO CON TOKEN: Tu diseño original intacto --}}
+                            <div class="d-flex align-items-center">
+                                <span id="tokenAdmin" class="badge bg-light text-dark border p-2 fw-black fs-6 me-2">
+                                    {{ $cliente->token_registro }}
+                                </span>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="copyTokenAdmin()" title="Copiar Token">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted d-block mt-2" style="font-size: 10px;">
+                                Código para registro de sucursales.
+                            </small>
+                        @else
+                            {{-- ESTADO SIN TOKEN: Botón de asignación --}}
+                            <form action="{{ route('clientes.generar-token', $cliente->id) }}" method="POST" class="m-0">
+                                @csrf
+                                <button type="submit" class="btn btn-sm btn-dark fw-bold px-3 shadow-sm w-100">
+                                    <i class="fas fa-key me-1"></i> ASIGNAR TOKEN
+                                </button>
+                            </form>
+                            <small class="text-danger d-block mt-2 fw-bold text-center" style="font-size: 10px;">
+                                <i class="fas fa-exclamation-circle"></i> Cliente antiguo sin token generado.
+                            </small>
+                        @endif
                     </div>
                 </div>
-            </div>
             @endif
 
             {{-- PANEL DE ACCIONES DINÁMICAS --}}
@@ -405,16 +429,27 @@
                     {{-- GESTIÓN DE CUPO GASCO --}}
                     @if($cliente->status == \App\Models\Cliente::STATUS_APROBADO)
                         @php
-                            // Obtenemos el cupo general para mostrarlo como referencia en el formulario
                             $cupoGeneralLimit = $cliente->cupo ?? 0;
                         @endphp
 
-                        <div class="card shadow-sm border-orange mb-4">
+                        {{-- Inicializamos Alpine.js en la Card --}}
+                        <div class="card shadow-sm border-orange mb-4" 
+                             x-data="{ 
+                                 cupoSiavcom: {{ $cupoGeneralLimit }}, 
+                                 cupoGasco: {{ $infoGasco['autorizados'] ?? 0 }},
+                                 get errorCupo() {
+                                     // Solo hay error si SIAVCOM >= 1 Y Gasco lo supera
+                                     if (this.cupoSiavcom >= 1) {
+                                         return parseFloat(this.cupoGasco) > parseFloat(this.cupoSiavcom);
+                                     }
+                                     return false; // Si SIAVCOM es 0, es libre
+                                 }
+                             }">
                             <div class="card-body">
                                 <h6 class="fw-bold text-uppercase small text-dark mb-3 border-bottom pb-1">
                                     <i class="fas fa-gas-pump me-2 text-orange"></i>Cupo Mensual GASCO
                                 </h6>
-                                
+                                 
                                 {{-- Visualización de Valores Actuales --}}
                                 <div class="row mb-3">
                                     <div class="col-6 border-end text-center">
@@ -434,19 +469,38 @@
                                         <div class="input-group input-group-sm">
                                             <input type="number" name="litros_autorizados" 
                                                 class="form-control fw-bold border-orange @error('litros_autorizados') is-invalid @enderror" 
+                                                :class="errorCupo ? 'is-invalid text-danger' : ''"
                                                 placeholder="Ej: 5000" 
-                                                value="{{ $infoGasco['autorizados'] }}"
+                                                x-model.number="cupoGasco"
                                                 required>
-                                            <button class="btn btn-dark fw-bold" type="submit">
+                                            {{-- El botón se desactiva si hay error --}}
+                                            <button class="btn btn-dark fw-bold" type="submit" :disabled="errorCupo">
                                                 <i class="fas fa-save me-1"></i> GUARDAR
                                             </button>
                                         </div>
+                                        
+                                        {{-- Alerta en tiempo real de Alpine.js --}}
+                                        <template x-if="errorCupo">
+                                            <span class="text-danger d-block mt-1 fw-bold" style="font-size: 10px;">
+                                                El cupo GASCO no puede superar el Cupo SIAVCOM (<span x-text="cupoSiavcom"></span> L).
+                                            </span>
+                                        </template>
+
+                                        {{-- Alerta del backend de Laravel (por si acaso) --}}
                                         @error('litros_autorizados')
-                                            <span class="invalid-feedback d-block small" style="font-size: 10px;">{{ $message }}</span>
+                                            <span class="invalid-feedback d-block mt-1 fw-bold" style="font-size: 10px;">{{ $message }}</span>
                                         @enderror
+
                                         <div class="mt-1">
                                             <small class="text-muted italic" style="font-size: 10px;">
-                                                Límite: >= 100 y máx. {{ number_format($cupoGeneralLimit, 0) }} L (Cupo General)
+                                                Límite: >= 100 
+                                                {{-- Texto dinámico para explicar la regla al usuario --}}
+                                                <template x-if="cupoSiavcom >= 1">
+                                                    <span>y máx. {{ number_format($cupoGeneralLimit, 0) }} L (SIAVCOM)</span>
+                                                </template>
+                                                <template x-if="cupoSiavcom < 1">
+                                                    <span class="text-success fw-bold">(Sin límite superior)</span>
+                                                </template>
                                             </small>
                                         </div>
                                     </div>

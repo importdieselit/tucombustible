@@ -241,7 +241,7 @@
                                         <tr>
                                             <th class="ps-3">Cliente</th>
                                             <th width="150">Litros</th>
-                                            <th x-show="modo === 'mgo'">Logística Buque</th>
+                                            <th x-show="modo === 'mgo'" width="250">Logística Buque</th>
                                             <th>Notas</th>
                                             <th width="50"></th>
                                         </tr>
@@ -258,7 +258,21 @@
                                                     <input type="number" :name="'items['+index+'][litros]'" class="form-control form-control-sm fw-bold border-orange" x-model.number="item.litros" @input="calcularTotal()">
                                                 </td>
                                                 <td x-show="modo === 'mgo'">
-                                                    <input type="text" :name="'items['+index+'][buque_nombre]'" class="form-control form-control-sm mb-1" placeholder="Buque" x-model="item.buque_nombre">
+                                                    <div class="d-flex flex-column gap-1">
+                                                        <input type="text" :name="'items['+index+'][buque_nombre]'" 
+                                                            class="form-control form-control-sm fw-bold border-primary" 
+                                                            placeholder="Nombre del Buque" x-model="item.buque_nombre">
+                                                        
+                                                        <div class="d-flex gap-1">
+                                                            <input type="text" :name="'items['+index+'][buque_imo]'" 
+                                                                class="form-control form-control-sm" 
+                                                                placeholder="IMO" x-model="item.buque_imo">
+                                                            
+                                                            <input type="text" :name="'items['+index+'][buque_bandera]'" 
+                                                                class="form-control form-control-sm" 
+                                                                placeholder="Bandera" x-model="item.buque_bandera">
+                                                        </div>
+                                                    </div>
                                                 </td>
                                                 <td>
                                                     <textarea :name="'items['+index+'][observaciones]'" class="form-control form-control-sm" rows="1" x-model="item.observaciones"></textarea>
@@ -367,6 +381,9 @@
                     cliente_nombre: nombre,
                     cliente_rif: rif,
                     litros: parseFloat(litros),
+                    buque_nombre: '',
+                    buque_imo: '',
+                    buque_bandera: '',
                     observaciones: ''
                 });
                 this.calcularTotal();

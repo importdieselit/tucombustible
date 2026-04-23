@@ -314,6 +314,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}/expediente',     [AdminClienteController::class, 'show'])->name('show');
             Route::get('/{id}/editar',         [AdminClienteController::class, 'edit'])->name('edit');
             Route::put('/{id}',                [AdminClienteController::class, 'update'])->name('update');
+            Route::post('/clientes/{id}/generar-token', [AdminClienteController::class, 'generarToken'])->name('generar-token');
 
             // Flujo de registro
             Route::post('/{id}/avanzar-paso',  [AdminClienteController::class, 'avanzarPaso'])->name('avanzarPaso');
