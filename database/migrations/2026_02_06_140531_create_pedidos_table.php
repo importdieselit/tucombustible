@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('pedidos', function (Blueprint $table) {
-            $table->unsignedBigInteger('id');
+            $table->id();
             $table->unsignedBigInteger('cliente_id');
             $table->unsignedBigInteger('deposito_id')->nullable();
             $table->decimal('cantidad_solicitada', 10);
