@@ -19,7 +19,7 @@ use App\Http\Controllers\{
     AlertaController, AccesoController, InspeccionController, PedidoController,
     ReporteController, AforoController, SearchController, DataDeletionController,
     ViajesController, TelegramController, PlanificacionMantenimientoController,
-    ReportController, ClienteActivosController,NotificationController
+    ReportController, ClienteActivosController,NotificationController,ConteoController
 };
 
 /* --- Rutas Públicas y Auth --- */
@@ -122,7 +122,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/clientes/store-ajax', [PortalClienteController::class, 'storeAjax'])->name('clientes.storeAjax');  
     Route::get('/ventas/list', [InventarioController::class, 'ventaList'])->name('ventas.list'); 
     Route::get('/ventas/show/{id}', [InventarioController::class, 'ventaShow'])->name('ventas.show'); 
-
+    Route::get('inventario/conteo/', [ConteoController::class, 'create'])->name('inventario.conteo');
+    Route::post('inventario/conteo/guardar', [ConteoController::class, 'store'])->name('inventario.conteo.store');
+    Route::get('inventario/conteo/estadisticas', [ConteoController::class, 'estadisticas'])->name('conteo.estadisticas');
+    
     // Importaciones
     Route::get('choferes/importar', [ChoferController::class, 'showImportForm'])->name('choferes.show-import-form');
     Route::post('choferes/importar', [ChoferController::class, 'importar'])->name('choferes.importar');

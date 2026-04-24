@@ -1,65 +1,111 @@
-{{-- resources/views/reportes/create.blade.php --}}
-
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
-    <h2>Reportar Nueva Reporte</h2>
-    <div class="card">
+<div class="container py-3">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-navy text-white py-3">
+            <h5 class="mb-0 fw-bold"><i class="fas fa-bullhorn me-2"></i>REPORTE EN RUTA</h5>
+        </div>
         <div class="card-body">
-            {{-- Importante: El enctype es necesario para subir archivos --}}
-            <form method="POST" action="{{ route('reportes.store') }}" enctype="multipart/form-data">
+            <form id="form-reporte" enctype="multipart/form-data">
                 @csrf
+                {{-- Inputs ocultos para GPS --}}
+                <input type="hidden" name="latitud" id="latitud">
+                <input type="hidden" name="longitud" id="longitud">
 
-                {{-- Tipo de Reporte (Clasificación) --}}
                 <div class="mb-3">
-                    <label for="id_tipo_reporte" class="form-label">Tipo de Falla/Reporte <span class="text-danger">*</span></label>
-                    <select name="id_tipo_reporte" id="id_tipo_reporte" class="form-control @error('id_tipo_reporte') is-invalid @enderror" required>
-                        <option value="">Seleccione un tipo...</option>
-                        {{-- $tiposReporte viene del método create() en el controlador --}}
-                        @foreach ($tiposReporte as $id => $nombre)
-                            <option value="{{ $id }}" {{ old('id_tipo_reporte') == $id ? 'selected' : '' }}>
-                                {{ $nombre }}
-                            </option>
-                        @endforeach
+                    <label class="form-label fw-bold">Tipo de Incidencia</label>
+                    <select name="tipo_reporte" class="form-select form-select-lg" required>
+                        <option value="">Seleccione...</option>
+                        <option value="FALLA MECANICA">Falla Mecánica</option>
+                        <option value="ACCIDENTE">Accidente / Colisión</option>
+                        <option value="RETRASO">Retraso en Vía (Tráfico/Cierre)</option>
+                        <option value="COMBUSTIBLE">Problema con Combustible</option>
+                        <option value="OTRO">Otro</option>
                     </select>
-                    @error('id_tipo_reporte')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
                 </div>
 
-                {{-- Lugar del Reporte --}}
                 <div class="mb-3">
-                    <label for="lugar_reporte" class="form-label">Lugar/Ubicación del Reporte <span class="text-danger">*</span></label>
-                    <input type="text" name="lugar_reporte" id="lugar_reporte" class="form-control @error('lugar_reporte') is-invalid @enderror" value="{{ old('lugar_reporte') }}" required>
-                    @error('lugar_reporte')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+                    <label class="form-label fw-bold">Descripción</label>
+                    <textarea name="descripcion" class="form-control" rows="3" placeholder="Detalle lo sucedido..."></textarea>
                 </div>
 
-                {{-- Descripción Detallada --}}
-                <div class="mb-3">
-                    <label for="descripcion" class="form-label">Descripción de la Falla <span class="text-danger">*</span></label>
-                    <textarea name="descripcion" id="descripcion" class="form-control @error('descripcion') is-invalid @enderror" rows="5" required>{{ old('descripcion') }}</textarea>
-                    @error('descripcion')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+                <div class="mb-3 text-center">
+                    <label class="form-label fw-bold d-block text-start">Evidencia Fotográfica</label>
+                    <div class="upload-area p-4 border rounded bg-light" onclick="document.getElementById('foto').click()">
+                        <i class="fas fa-camera fa-2x text-muted mb-2"></i>
+                        <p class="small mb-0">Tocar para tomar foto</p>
+                        <input type="file" name="foto" id="foto" accept="image/*" capture="environment" class="d-none">
+                    </div>
+                    <div id="preview" class="mt-2 d-none">
+                        <img src="" class="img-thumbnail" style="max-height: 150px;">
+                    </div>
                 </div>
 
-                {{-- Registro Gráfico Opcional --}}
-                <div class="mb-3">
-                    <label for="imagen_evidencia" class="form-label">Registro Gráfico (Opcional)</label>
-                    <input type="file" name="imagen_evidencia" id="imagen_evidencia" class="form-control @error('imagen_evidencia') is-invalid @enderror" accept="image/png, image/jpeg, image/jpg">
-                    <small class="form-text text-muted">Formatos permitidos: JPG, PNG. Máx. 2MB.</small>
-                    @error('imagen_evidencia')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+                <div id="gps-status" class="alert alert-info py-2 small mb-3">
+                    <i class="fas fa-spinner fa-spin me-2"></i>Obteniendo ubicación GPS...
                 </div>
 
-                <button type="submit" class="btn btn-success">Guardar Reporte</button>
-                <a href="{{ route('reportes.index') }}" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-navy btn-lg w-100 fw-bold shadow">
+                    <i class="fas fa-paper-plane me-2"></i>ENVIAR REPORTE
+                </button>
             </form>
         </div>
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    // 1. Obtener Ubicación automáticamente al abrir
+    if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            $('#latitud').val(position.coords.latitude);
+            $('#longitud').val(position.coords.longitude);
+            $('#gps-status').removeClass('alert-info').addClass('alert-success')
+                .html('<i class="fas fa-check-circle me-2"></i>Ubicación GPS fijada');
+        }, function(error) {
+            $('#gps-status').removeClass('alert-info').addClass('alert-warning')
+                .html('<i class="fas fa-exclamation-triangle me-2"></i>GPS no disponible. Active su ubicación.');
+        }, { enableHighAccuracy: true });
+    }
+
+    // 2. Previsualización de foto
+    $('#foto').change(function(e) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            $('#preview img').attr('src', e.target.result);
+            $('#preview').removeClass('d-none');
+        }
+        reader.readAsDataURL(this.files[0]);
+    });
+
+    // 3. Envío AJAX
+    $('#form-reporte').on('submit', function(e) {
+        e.preventDefault();
+        let formData = new FormData(this);
+        
+        // Bloquear botón
+        const $btn = $(this).find('button[type="submit"]');
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>ENVIANDO...');
+
+        $.ajax({
+            url: "{{ route('reporte.store') }}",
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(res) {
+                Swal.fire('¡Enviado!', res.message, 'success')
+                    .then(() => window.location.reload());
+            },
+            error: function() {
+                Swal.fire('Error', 'No se pudo enviar el reporte.', 'error');
+                $btn.prop('disabled', false).text('ENVIAR REPORTE');
+            }
+        });
+    });
+});
+</script>
+@endpush

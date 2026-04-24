@@ -10,8 +10,11 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Session;
 use App\Models\InventarioSuministro;
+use App\Models\SuministroCompra;
+use App\Models\SuministroCompraDetalle;
 use App\Models\Ventas;
 use App\Models\VentasDetalle;
 
@@ -24,11 +27,95 @@ class InventarioController extends BaseController
      */
     public function index()
     {
-        $totalItems = Inventario::count();
-        $totalCantidad = Inventario::sum('existencia');
-        $valorTotal = Inventario::sum(DB::raw('existencia * costo'));
+        // 1. Métricas Principales (KPIs)
+        
+        $itemsBajoStock = Inventario::whereColumn('existencia', '<=', 'existencia_minima')
+            ->where('estatus', 1)->where('venta',0)
+            ->count();
 
-        return view('inventario.index', compact('totalItems', 'totalCantidad', 'valorTotal'));
+        // Asumimos que los despachos son movimientos de tipo 'SALIDA' con estatus 'PENDIENTE'
+        $despachosPendientes = InventarioSuministro::where('estatus', 2)
+            ->count();
+
+        $comprasPendientes = SuministroCompra::where('estatus', 2)
+            ->count();
+        
+        $despachosPendientes+=$comprasPendientes;
+
+
+        $movimientosRecientes = InventarioSuministro::where('created_at', '>=', Carbon::now()->subDay())
+            ->count();
+
+        // 2. Alertas de Reposición (Stock Crítico)
+        $stockCritico = Inventario::whereColumn('existencia', '<=', 'existencia_minima')
+            ->select('descripcion', 'existencia as cantidad', 'existencia_minima')
+            ->orderBy(DB::raw('existencia / existencia_minima'), 'asc') // Los más urgentes primero
+            ->limit(5)
+            ->get();
+
+        // 3. Data para Gráfica de Entradas vs Salidas (Últimos 6 meses)
+        $meses = [];
+        $entradasData = [];
+        $salidasData = [];
+
+        for ($i = 5; $i >= 0; $i--) {
+            $mes = Carbon::now()->subMonths($i);
+            $meses[] = strtoupper($mes->translatedFormat('M'));
+            
+            $entradasData[] = SuministroCompraDetalle::whereMonth('created_at', $mes->month)
+                ->whereYear('created_at', $mes->year)
+                ->sum('cantidad_aprobada');
+
+            $salidasData[] = InventarioSuministro::whereMonth('created_at', $mes->month)
+                ->whereYear('created_at', $mes->year)
+                ->sum('cantidad');
+            $salidasCompras=SuministroCompraDetalle::where('estatus', 1)->whereMonth('created_at', $mes->month)
+                ->whereYear('created_at', $mes->year)
+                ->sum('cantidad_aprobada');
+            $salidasData[] += $salidasCompras;
+        }
+
+        // 4. Inversión por Categoría (Doughnut Chart)
+        // 4.1. Calculamos el valor global primero para los porcentajes
+        $valorTotal = Inventario::selectRaw('SUM(existencia * costo) as total')->value('total') ?? 0;
+
+        // 4.2. Agrupamos por el campo 'grupo' y sumamos la inversión de cada uno
+        $categoriasData = Inventario::select('grupo')
+            ->selectRaw('SUM(existencia * costo) as subtotal')
+           // ->where('venta',0)
+            ->groupBy('grupo')
+            ->get()
+            ->map(function ($item, $index) use ($valorTotal) {
+                return [
+                    'nombre'     => strtoupper($item->grupo ?? 'SIN GRUPO'),
+                    'valor'      => $item->subtotal,
+                    'porcentaje' => $valorTotal > 0 ? ($item->subtotal / $valorTotal) * 100 : 0,
+                    'color'      => $this->generarColorCorporativo($index)
+                ];
+            });
+
+        return view('inventario.index', [
+            'valorTotal' => $valorTotal,
+            'itemsBajoStock' => $itemsBajoStock,
+            'despachosPendientes' => $despachosPendientes,
+            'movimientosRecientes' => $movimientosRecientes,
+            'stockCritico' => $stockCritico,
+            'mesesMovimientos' => $meses,
+            'entradasData' => $entradasData,
+            'salidasData' => $salidasData,
+            'categorias' => $categoriasData,
+            'categoriasNombres' => $categoriasData->pluck('nombre'),
+            'categoriasValores' => $categoriasData->pluck('valor')
+        ]);
+    }
+
+    /**
+     * Mantiene la consistencia visual con la paleta Navy/Orange
+     */
+    private function generarColorCorporativo($id)
+    {
+        $colores = ['#002855', '#ff6600', '#6c757d', '#adb5bd', '#004085'];
+        return $colores[$id % count($colores)];
     }
 
 
