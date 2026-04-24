@@ -4,53 +4,56 @@ namespace App\Observers;
 
 use App\Models\Cliente;
 use App\Models\Alerta;
+use App\Models\GascoCupoMensual;
 use App\Services\FcmNotificationService;
 
 class ClienteObserver
 {
-    /**
-     * Manejar el evento 'updated' del modelo Cliente.
-     */
     public function updated(Cliente $cliente)
     {
+        // Solo actuamos si el campo 'disponible' en la tabla 'clientes' cambió
         if ($cliente->isDirty('disponible')) {
-            $oldDisponible = $cliente->getOriginal('disponible');
+            
             $newDisponible = $cliente->disponible;
+            $oldDisponible = $cliente->getOriginal('disponible');
 
-            // Si el disponible ha bajado y cruza el umbral del 10%
-            $porcentajeActual = ($newDisponible / $cliente->cupo) * 100;
-            if ($newDisponible < $oldDisponible && $porcentajeActual < 10) {
-                // Notificación y alerta para el cliente
-                FcmNotificationService::sendBajoDisponibleNotification(
-                    $cliente, 
-                    $newDisponible, 
-                    $cliente->cupo
-                );
-                
-                Alerta::create([
-                    'id_usuario' => $cliente->user->id,
-                    'id_rel' => $cliente->id,
-                    'fecha' => now(),
-                    'observacion' => "Tu disponible ha bajado a {$newDisponible}L, menos del 10% de tu cupo.",
-                    'estatus' => 0,
-                    'accion' => "/mi-perfil"
-                ]);
+            // 1. Buscamos el Cupo Total (litros_autorizados) de este mes en GASCO
+            $cupoMensual = GascoCupoMensual::where('cliente_id', $cliente->id)
+                ->where('mes', now()->month)
+                ->where('anio', now()->year)
+                ->first();
 
-                // Notificación y alerta para el administrador
-                FcmNotificationService::sendBajoDisponibleNotificationToSuperAdmins(
-                    $cliente,
-                    $newDisponible,
-                    $cliente->cupo
-                );
+            // 2. Verificamos que exista el cupo y no sea cero para evitar el crash
+            if ($cupoMensual && $cupoMensual->litros_autorizados > 0) {
                 
-                Alerta::create([
-                    'id_usuario' => null,
-                    'id_rel' => $cliente->id,
-                    'fecha' => now(),
-                    'observacion' => "El cliente {$cliente->nombre} tiene bajo disponible ({$newDisponible}L).",
-                    'estatus' => 0,
-                    'accion' => "/clientes/{$cliente->id}"
-                ]);
+                $totalAutorizado = $cupoMensual->litros_autorizados;
+                $porcentajeRestante = ($newDisponible / $totalAutorizado) * 100;
+
+                // 3. Si el disponible bajó y ahora es menos del 10% del total mensual
+                if ($newDisponible < $oldDisponible && $porcentajeRestante < 10) {
+                    
+                    try {
+                        // Enviar Notificación Push
+                        FcmNotificationService::sendBajoDisponibleNotification(
+                            $cliente,
+                            $newDisponible,
+                            $totalAutorizado
+                        );
+
+                        // Registrar Alerta en DB
+                        Alerta::create([
+                            'id_usuario'  => $cliente->user->id ?? 1,
+                            'id_rel'      => $cliente->id,
+                            'fecha'       => now(),
+                            'observacion' => "¡Alerta de consumo! Tu disponible actual es de " . number_format($newDisponible, 0) . "L, lo cual representa menos del 10% de tu cupo GASCO mensual (" . number_format($totalAutorizado, 0) . "L).",
+                            'estatus'     => 0,
+                            'accion'      => "/mi-perfil",
+                        ]);
+                        
+                    } catch (\Exception $e) {
+                        \Log::error("Error enviando alerta de disponible bajo: " . $e->getMessage());
+                    }
+                }
             }
         }
     }
