@@ -21,6 +21,9 @@ class Reporte extends Model
         'estatus_actual',
         'requiere_ot',
         'orden_trabajo_id',
+        'latitud',
+        'longitud',
+        'vehiculo_id'
     ];
 
     // Relaciones:
@@ -40,6 +43,14 @@ class Reporte extends Model
     {
         return $this->hasMany(ReporteEstatusHistorial::class, 'reporte_id');
     }
-    
-    // Puedes añadir la relación a OrdenTrabajo aquí cuando crees ese módulo.
+
+    public function vehiculo()
+    {
+        return $this->belongsTo(Vehiculo::class, 'vehiculo_id');
+    }
+    public function ordenTrabajo()
+    {
+        return $this->belongsTo(Orden::class, 'orden_trabajo_id');
+    }
 }
+    

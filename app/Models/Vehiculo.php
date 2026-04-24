@@ -120,7 +120,9 @@ class Vehiculo extends Model
         'facturacion_completa',
         'es_flota',
         'acoplado_id',
-        'chofer_id'
+        'chofer_id',
+        'latitud',
+        'longitud'
     ];
     /**
      * The attributes that should be cast to native types.

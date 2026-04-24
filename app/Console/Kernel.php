@@ -16,11 +16,11 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // $schedule->command('inspire')->hourly();
-        $schedule->command('summary:daily-report')->dailyAt('00:00')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));;
-        $schedule->command('send:reporte-diario-operaciones')->dailyAt('17:00')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));;
-        $schedule->command('send:reporte-diario-operaciones')->dailyAt('14:00')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));;
-        $schedule->command('send:reporte-diario-operaciones')->dailyAt('08:00')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));;
-
+        $schedule->command('summary:daily-report')->dailyAt('00:00')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));
+        $schedule->command('send:reporte-diario-operaciones')->dailyAt('17:00')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));
+        $schedule->command('send:reporte-diario-operaciones')->dailyAt('14:00')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));
+        $schedule->command('send:reporte-diario-operaciones')->dailyAt('08:00')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));
+        $schedule->command('gps:actualizar')->everyFiveMinutes()->appendOutputTo(storage_path('logs/reportes_automaticos.log'));
     }
 
  
