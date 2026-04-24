@@ -69,7 +69,7 @@ class ActualizarUbicacionUnidadesCommand extends Command
         $this->success();
 
     } catch (\Illuminate\Http\Client\ConnectionException $e) {
-        $this->error('ERROR DE CONEXIÓN: El servidor de GPS tardó demasiado en responder.');
+        $this->error('ERROR DE CONEXIÓN: El servidor de GPS tardó demasiado en responder.'.$e->getMessage());
     } catch (\Exception $e) {
         $this->error('ERROR INESPERADO: ' . $e->getMessage());
     }

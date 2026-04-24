@@ -73,7 +73,7 @@ class Service24GPSService
         Log::info("=== INICIO DE PETICIÓN GPS ===");
         Log::info("URL: {$this->baseUrl}/getdata");
         
-        $response = Http::asForm()->timeout(30)->post("{$this->baseUrl}/getdata", $params);
+        $response = Http::asForm()->timeout(3000)->post("{$this->baseUrl}/getdata", $params);
 
         $status = $response->json('status');
 
