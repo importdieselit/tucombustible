@@ -383,7 +383,7 @@
                                         {{ $primerViaje->vehiculo->flota ?? 'N/A' }}
                                     </div>
                                     <div class="small text-muted" style="font-size: 0.7rem;">
-                                        {{ $primerViaje->vehiculo->placa ?? 'N/A' }}
+                                        {{ $primerViaje->vehiculo->placa ?? $primerViaje->otro_vehiculo ?? 'N/A' }}
                                     </div>
                                 </td>
 
@@ -437,7 +437,7 @@
                     <div class="row g-0 border-top pt-1 mt-1 align-items-center" style="font-size: 0.75rem;">
                         <div class="col-4 text-truncate">
                             <i class="fas fa-user text-secondary me-1"></i>
-                            <strong>{{ explode(' ', $v->chofer->persona->nombre ?? 'N/A')[0] }}</strong>
+                            <strong>{{ explode(' ', $v->chofer->persona->nombre ?? $v->otro_chofer ?? 'N/A')[0] }}</strong>
                         </div>
                         <div class="col-4 x-small text-dark  text-truncate" style="font-size: 0.65rem; max-width: 100px;" title="{{ $v->producto->nombre ?? 'N/A' }} | {{ $v->cliente_reporte }}">
                                                 {{ $v->producto->nombre ?? 'N/A' }}
