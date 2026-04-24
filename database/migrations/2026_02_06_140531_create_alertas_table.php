@@ -14,7 +14,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('alertas', function (Blueprint $table) {
-            $table->integer('id_alerta')->primary();
+            $table->id('id_alerta');
             $table->integer('id_usuario')->nullable();
             $table->smallInteger('id_rel')->nullable();
             $table->integer('dias')->nullable();

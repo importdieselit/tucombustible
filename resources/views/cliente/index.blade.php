@@ -30,69 +30,69 @@
     </div>
 
     {{-- COLUMNA IZQUIERDA --}}
-        <div class="lg:col-span-2 space-y-6">
+    <div class="lg:col-span-2 space-y-6">
 
-            {{-- DATOS PRINCIPALES --}}
-            <div class="bg-white rounded border-2 border-gray-300 shadow-md overflow-hidden">
-                <div class="bg-gray-800 p-5">
-                    <h2 class="text-2xl font-black text-white uppercase tracking-tighter">{{ $cliente->nombre }}</h2>
-                    <p class="text-orange-impordiesel text-sm font-black uppercase tracking-widest">
-                        RIF: {{ $cliente->rif }} —
-                        <span class="{{ $cliente->color_status }} text-white px-2 py-0.5 rounded text-[10px] font-black uppercase ml-1">
-                            {{ $cliente->label_status }}
-                        </span>
+        {{-- DATOS PRINCIPALES --}}
+        <div class="bg-white rounded border-2 border-gray-300 shadow-md overflow-hidden mb-8">
+            <div class="bg-gray-800 p-5">
+                <h2 class="text-2xl font-black text-white uppercase tracking-tighter">{{ $cliente->nombre }}</h2>
+                <p class="text-orange-impordiesel text-sm font-black uppercase tracking-widest">
+                    RIF: {{ $cliente->rif }} —
+                    <span class="{{ $cliente->color_status }} text-white px-2 py-0.5 rounded text-[10px] font-black uppercase ml-1">
+                        {{ $cliente->label_status }}
+                    </span>
+                </p>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+
+                {{-- CONTACTO PRINCIPAL --}}
+                <div>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Contacto Principal</p>
+                    <p class="font-black text-gray-700 uppercase mt-1">{{ $cliente->contacto ?? 'N/A' }}</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Teléfono Principal</p>
+                    <p class="font-black text-gray-700 mt-1">{{ $cliente->telefono ?? 'N/A' }}</p>
+                </div>
+
+                {{-- CONTACTO ALTERNATIVO --}}
+                <div>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Contacto Alternativo</p>
+                    <p class="font-black text-gray-700 uppercase mt-1">{{ $cliente->contacto_alt ?? '—' }}</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Teléfono Alternativo</p>
+                    <p class="font-black text-gray-700 mt-1">{{ $cliente->telefono_alt ?? '—' }}</p>
+                </div>
+
+                <div>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Correo</p>
+                    <p class="font-black text-gray-700 mt-1">{{ $cliente->email ?? 'N/A' }}</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Estado / Ciudad</p>
+                    <p class="font-black text-gray-700 uppercase mt-1">
+                        {{ $cliente->estado->nombre ?? 'N/A' }} / {{ $cliente->ciudad->nombre ?? 'N/A' }}
                     </p>
                 </div>
-                <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-
-                    {{-- CONTACTO PRINCIPAL --}}
-                    <div>
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Contacto Principal</p>
-                        <p class="font-black text-gray-700 uppercase mt-1">{{ $cliente->contacto ?? 'N/A' }}</p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Teléfono Principal</p>
-                        <p class="font-black text-gray-700 mt-1">{{ $cliente->telefono ?? 'N/A' }}</p>
-                    </div>
-
-                    {{-- CONTACTO ALTERNATIVO --}}
-                    <div>
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Contacto Alternativo</p>
-                        <p class="font-black text-gray-700 uppercase mt-1">{{ $cliente->contacto_alt ?? '—' }}</p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Teléfono Alternativo</p>
-                        <p class="font-black text-gray-700 mt-1">{{ $cliente->telefono_alt ?? '—' }}</p>
-                    </div>
-
-                    <div>
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Correo</p>
-                        <p class="font-black text-gray-700 mt-1">{{ $cliente->email ?? 'N/A' }}</p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Estado / Ciudad</p>
-                        <p class="font-black text-gray-700 uppercase mt-1">
-                            {{ $cliente->estado->nombre ?? 'N/A' }} / {{ $cliente->ciudad->nombre ?? 'N/A' }}
-                        </p>
-                    </div>
-                    <div class="md:col-span-2">
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Dirección Fiscal</p>
-                        <p class="font-black text-gray-700 uppercase mt-1">{{ $cliente->direccion ?? 'N/A' }}</p>
-                    </div>
-                    <div class="md:col-span-2">
-                        <p class="text-[10px] font-black text-orange-impordiesel uppercase tracking-widest">Dirección Operativa</p>
-                        <p class="font-black text-gray-700 uppercase mt-1">{{ $cliente->direccion_operativa ?? 'N/A' }}</p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Fecha de Creación</p>
-                        <p class="font-black text-gray-700 mt-1">{{ $cliente->created_at?->format('d/m/Y') ?? 'N/A' }}</p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Fecha de Aprobación</p>
-                        <p class="font-black text-gray-700 mt-1">{{ $cliente->fecha_aprobacion?->format('d/m/Y') ?? '—' }}</p>
-                    </div>
+                <div class="md:col-span-2">
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Dirección Fiscal</p>
+                    <p class="font-black text-gray-700 uppercase mt-1">{{ $cliente->direccion ?? 'N/A' }}</p>
+                </div>
+                <div class="md:col-span-2">
+                    <p class="text-[10px] font-black text-orange-impordiesel uppercase tracking-widest">Dirección Operativa</p>
+                    <p class="font-black text-gray-700 uppercase mt-1">{{ $cliente->direccion_operativa ?? 'N/A' }}</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Fecha de Creación</p>
+                    <p class="font-black text-gray-700 mt-1">{{ $cliente->created_at?->format('d/m/Y') ?? 'N/A' }}</p>
+                </div>
+                <div>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Fecha de Aprobación</p>
+                    <p class="font-black text-gray-700 mt-1">{{ $cliente->fecha_aprobacion?->format('d/m/Y') ?? '—' }}</p>
                 </div>
             </div>
+        </div>
 
     {{-- CUPOS DE COMBUSTIBLE --}}
     <div class="mb-8">
@@ -218,6 +218,7 @@
                         <th class="px-6 py-3">Sucursal</th>
                         <th class="px-6 py-3 text-center">Estatus</th>
                         <th class="px-6 py-3 text-center">Progreso</th>
+                        <th class="px-6 py-3 text-center">Acción</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -238,7 +239,6 @@
                             </div>
                             <span class="text-[9px] font-black text-gray-500 block uppercase">Paso {{ $suc->registro_paso }}/5</span>
                         </td>
-                        {{-- Dentro de tu @foreach($sucursales as $suc) --}}
                         <td class="px-6 py-3 text-center">
                             <a href="{{ route('portal.clientes.index', ['sucursal_id' => $suc->id]) }}" 
                             class="bg-orange-impordiesel text-white px-3 py-1 rounded text-[10px] font-black uppercase hover:bg-black transition">
@@ -283,21 +283,18 @@
                             #{{ str_pad($pedido->id, 5, '0', STR_PAD_LEFT) }}
                         </td>
                         <td class="px-6 py-3 font-bold text-gray-600 uppercase text-[10px]">
-                            Combustible
+                            DIESEL
                         </td>
                         <td class="px-6 py-3 text-center font-black text-gray-800">
-                            {{-- CORRECCIÓN: cantidad_solicitada --}}
                             {{ number_format($pedido->cantidad_solicitada, 0, ',', '.') }} Lts
                         </td>
                         <td class="px-6 py-3 text-center">
-                            {{-- CORRECCIÓN: Usar los accessors del modelo Pedido --}}
                             <span class="px-2 py-1 rounded text-[9px] font-black uppercase border" 
                                 style="background-color: {{ $pedido->estado_color }}20; color: {{ $pedido->estado_color }}; border-color: {{ $pedido->estado_color }}40;">
                                 {{ $pedido->estado_text }}
                             </span>
                         </td>
                         <td class="px-6 py-3 text-center text-gray-500 font-bold">
-                            {{-- CORRECCIÓN: fecha_solicitud --}}
                             {{ $pedido->fecha_solicitud ? $pedido->fecha_solicitud->format('d/m/Y') : 'N/A' }}
                         </td>
                     </tr>
@@ -351,7 +348,7 @@
                             <option value="{{ $cliente->id }}" 
                                     data-rif="{{ $cliente->rif }}"
                                     data-razon="{{ $cliente->nombre }}"
-                                    data-combustible="{{ $cupos->first()->tipoCombustible->nombre ?? 'N/A' }}"
+                                    data-combustible="DIESEL"
                                     data-cupo="{{ number_format($cupos->first()->litros_aprobados ?? 0, 0, ',', '.') }}"
                                     data-disponible="{{ number_format($cliente->disponible, 0, ',', '.') }}"
                                     data-direccion="{{ $cliente->direccion_operativa }}">
@@ -362,7 +359,7 @@
                                     <option value="{{ $suc->id }}"
                                             data-rif="{{ $suc->rif }}"
                                             data-razon="{{ $suc->nombre }}"
-                                            data-combustible="{{ $suc->cupos->first()->tipoCombustible->nombre ?? 'N/A' }}"
+                                            data-combustible="DIESEL"
                                             data-cupo="{{ number_format($suc->cupos->first()->litros_aprobados ?? 0, 0, ',', '.') }}"
                                             data-disponible="{{ number_format($suc->disponible, 0, ',', '.') }}"
                                             data-direccion="{{ $suc->direccion_operativa }}">
@@ -382,9 +379,7 @@
 
                     <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
                         <label class="block text-[9px] font-black text-gray-400 uppercase mb-1">Tipo de Combustible</label>
-                        <p id="display_combustible" class="text-[11px] font-black text-orange-impordiesel uppercase">
-                            {{ $cupos->first()->tipoCombustible->nombre ?? 'No asignado' }}
-                        </p>
+                        <p id="display_combustible" class="text-[11px] font-black text-orange-impordiesel uppercase">DIESEL</p>
                     </div>
 
                     <div class="bg-orange-50 p-4 rounded-lg border border-orange-100">
@@ -439,7 +434,9 @@
 <script>
     function openModalPedido() { 
         document.getElementById('modalPedido').classList.remove('hidden'); 
-        document.body.style.overflow = 'hidden'; // Evita scroll de fondo
+        document.body.style.overflow = 'hidden'; 
+        // Inicializar el valor máximo para el cliente principal por defecto
+        updateModalData(document.getElementById('sucursal_select').value);
     }
     
     function closeModalPedido() { 
@@ -447,12 +444,10 @@
         document.body.style.overflow = 'auto';
     }
 
-    // Lógica para actualizar los campos al cambiar de sucursal
     function updateModalData(clienteId) {
         const select = document.getElementById('sucursal_select');
         const selectedOption = select.options[select.selectedIndex];
 
-        // Mapeo de datos desde los atributos data-
         document.getElementById('display_razon').innerText = selectedOption.getAttribute('data-razon');
         document.getElementById('display_rif').innerText = selectedOption.getAttribute('data-rif');
         document.getElementById('display_combustible').innerText = selectedOption.getAttribute('data-combustible');
@@ -460,15 +455,20 @@
         document.getElementById('display_disponible').innerHTML = `${selectedOption.getAttribute('data-disponible')} <span class="text-[10px]">Lts</span>`;
         document.getElementById('display_direccion').value = selectedOption.getAttribute('data-direccion');
         
-        // Ajustar el máximo de litros permitidos en el input
         const inputLitros = document.querySelector('input[name="cantidad_solicitada"]');
         const disponibleRaw = selectedOption.getAttribute('data-disponible').replace(/\./g, '').replace(',', '.');
+        
+        // Sincronizar el atributo max con el disponible real numérico
         inputLitros.max = disponibleRaw;
+        // Opcional: mostrar ayuda visual en el placeholder
+        inputLitros.placeholder = "Máx: " + selectedOption.getAttribute('data-disponible');
     }
+
     function copyToken() {
         const t = document.getElementById('tokenInvitacion').innerText.trim();
         navigator.clipboard.writeText(t).then(() => alert('¡Token copiado al portapapeles!'));
     }
+
     function filtrarLista(inputId, listaId) {
         const filtro = document.getElementById(inputId).value.toUpperCase();
         const items  = document.getElementById(listaId).children;

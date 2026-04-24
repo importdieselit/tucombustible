@@ -47,46 +47,42 @@ class PedidoService
     public function registrarSolicitud(array $data, $user)
     {
         return DB::transaction(function () use ($data, $user) {
-            $clienteId = $data['cliente_id']; 
+            $clienteId = $data['cliente_id'];
             $cliente = Cliente::findOrFail($clienteId);
-            $cantidad = (float)$data['cantidad_solicitada']; 
 
-            // 1. VALIDACIÓN DE INVENTARIO FÍSICO
-            $stockFisicoTotal = $this->depositoRepository->getNivelTotal(); 
-            if ($cantidad > $stockFisicoTotal) {
-                throw new Exception("No hay suficiente combustible físico. Stock: " . number_format($stockFisicoTotal, 0) . " L.");
+            // 1. FORZAR DIESEL: El ID 1 es Diesel en tu sistema
+            $tipoCombustibleId = 1; 
+
+            // 2. OBTENER CUPO MES ACTUAL (Usando tu repositorio existente)
+            $cupoMensual = $this->gascoRepository->getOrCreateMonthlyQuota($clienteId);
+            
+            if (!$cupoMensual) {
+                throw new Exception("El cliente no tiene un Cupo GASCO asignado para este mes.");
             }
 
-            // 2. VALIDACIÓN DE CUPO GASCO (Mensual)
-            $cupoGasco = $this->gascoRepository->getOrCreateMonthlyQuota($cliente->id);
-            if (!$cupoGasco) {
-                throw new Exception("No hay cupo GASCO configurado para este mes.");
+            $cantidad = $data['cantidad_solicitada'];
+            $disponibleReal = $cupoMensual->litros_autorizados - $cupoMensual->litros_consumidos;
+
+            // 3. VALIDACIÓN DE DISPONIBLE
+            if ($cantidad > $disponibleReal) {
+                throw new Exception("Solicitud excede el disponible. Saldo actual: " . number_format($disponibleReal, 0) . " Ltrs.");
             }
 
-            $disponibleGasco = (float)$cupoGasco->litros_autorizados - (float)$cupoGasco->litros_consumidos;
-            if ($cantidad > $disponibleGasco) {
-                throw new Exception("Cupo GASCO insuficiente. Disponible: " . number_format($disponibleGasco, 0) . " L.");
-            }
-
-            // 3. VALIDACIÓN DE DISPONIBLE EN TABLA CLIENTES
-            if ($cantidad > $cliente->disponible) {
-                throw new Exception("Saldo insuficiente en cuenta. Saldo: " . number_format($cliente->disponible, 0) . " L.");
-            }
-
-            // 4. CREACIÓN DEL PEDIDO
+            // 4. CREAR PEDIDO (Campos ajustados a tu ModeloPedido.txt)
             $pedido = $this->repository->create([
                 'cliente_id'          => $clienteId,
                 'user_id'             => $user->id,
+                'tipo_combustible_id' => $tipoCombustibleId, 
                 'cantidad_solicitada' => $cantidad,
-                'fecha_entrega'       => $data['fecha_entrega'],
-                'direccion_despacho'  => $data['direccion_despacho'],
-                'observaciones'       => $data['observaciones'] ?? null,
                 'estado'              => 'pendiente',
                 'fecha_solicitud'     => now(),
+                'direccion_despacho'  => $data['direccion_despacho'] ?? $cliente->direccion_operativa,
             ]);
 
-            // 5. ACTUALIZACIÓN DE SALDOS
-            $this->gascoRepository->updateConsumed($cupoGasco->id, $cantidad);
+            // 5. ACTUALIZAR CONSUMO Y DISPONIBLE
+            $cupoMensual->increment('litros_consumidos', $cantidad);
+            
+            // Sincronizamos la columna 'disponible' en la tabla clientes para las vistas
             $cliente->decrement('disponible', $cantidad);
 
             return $pedido;
@@ -100,13 +96,14 @@ class PedidoService
         return DB::transaction(function () use ($pedidoId) {
             $pedido = $this->repository->find($pedidoId);
 
-            // Se agrega 'en_proceso' porque si Logística ya armó el viaje, el cliente no puede cancelarlo
             if (in_array($pedido->estado, ['despachado', 'cancelado', 'en_proceso'])) {
-                throw new Exception("No se puede cancelar un pedido en estado {$pedido->estado}. Comuníquese con administración.");
+                throw new Exception("No se puede cancelar un pedido en estado {$pedido->estado}.");
             }
 
+            // Devolver litros al cliente
             Cliente::where('id', $pedido->cliente_id)->increment('disponible', $pedido->cantidad_solicitada);
 
+            // Devolver litros al cupo mensual
             $cupoGasco = \App\Models\GascoCupoMensual::where('cliente_id', $pedido->cliente_id)
                 ->where('mes', $pedido->created_at->month)
                 ->where('anio', $pedido->created_at->year)
