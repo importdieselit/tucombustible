@@ -12,7 +12,44 @@
             box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
             z-index: 1; /* Para que no se superponga a los menús desplegables */
         }
-    </style>
+    /* Efecto de Radar para la unidad */
+    .map-marker-container {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: white;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        border: 2px solid #002d72; /* Color corporativo */
+        box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    
+    .marker-pulse {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 2px solid #002d72;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+        opacity: 0;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); opacity: 0.5; }
+        100% { transform: scale(2.5); opacity: 0; }
+    }
+
+    /* Eliminar borde azul de Leaflet al hacer click */
+    .leaflet-container { outline: 0; }
+
+    /* Pantalla completa manual (si no quieres usar plugins) */
+    #map:fullscreen {
+        width: 100vw;
+        height: 100vh;
+    }
+</style>
 @endpush
 
 
@@ -439,38 +476,61 @@
 
         // Verificar si hay coordenadas válidas (si no, poner una por defecto o no mostrar)
         if (lat !== 0 && lng !== 0) {
-            // Inicializar mapa
-            const map = L.map('map').setView([lat, lng], 15);
+    // 1. Inicializar mapa ocultando el control de atribución por defecto
+    const map = L.map('map', {
+        attributionControl: false, // ELIMINA LA MARCA DE LEAFLET
+        zoomControl: false,        // Lo quitamos para posicionarlo a la derecha (más estético)
+        scrollWheelZoom: false     // Evita zoom accidental al hacer scroll en el reporte
+    }).setView([lat, lng], 16);
 
-            // Agregar capa de OpenStreetMap
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: false
-            }).addTo(map);
+    // 2. Capa de Mapa Estilo "Corporate" (Sin etiquetas pesadas)
+    // Usamos CartoDB Positron: es más limpio y profesional que el OSM estándar
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        subdomains: 'abcd',
+        maxZoom: 20
+    }).addTo(map);
 
-            // Icono personalizado (opcional, usando FontAwesome o un PNG)
-            const truckIcon = L.divIcon({
-                html: '<i class="fa-solid fa-truck-moving fa-2x text-corporate"></i>',
-                iconSize: [30, 30],
-                className: 'my-custom-pin'
-            });
+    // 3. Añadir Control de Zoom en una posición específica
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-            // Agregar marcador
-            L.marker([lat, lng], { icon: truckIcon })
-                .addTo(map)
-                .bindPopup(`<b>Unidad: ${placa}</b><br>Última actualización: {{ $item->updated_at->diffForHumans() }}`)
-                .openPopup();
-            
-            // Forzar el re-renderizado al cambiar de pestaña (importante en Bootstrap)
-            document.getElementById('resumen-tab').addEventListener('shown.bs.tab', function () {
-                map.invalidateSize();
-            });
-        } else {
-            document.getElementById('map').innerHTML = `
-                <div class="d-flex align-items-center justify-content-center h-100 bg-light">
-                    <p class="text-muted small"><i class="fa-solid fa-circle-exclamation me-1"></i> Sin coordenadas GPS registradas</p>
-                </div>`;
-        }
+    // 4. Icono Personalizado Pro (Usando un pulso de radar para resaltar)
+    const truckIcon = L.divIcon({
+        html: `
+            <div class="map-marker-container">
+                <div class="marker-pulse"></div>
+                <i class="fa-solid fa-truck-moving text-corporate shadow-sm"></i>
+            </div>`,
+        iconSize: [40, 40],
+        className: 'custom-truck-icon'
+    });
 
+    // 5. Marcador con Popup Pro
+    L.marker([lat, lng], { icon: truckIcon })
+        .addTo(map)
+        .bindPopup(`
+            <div class="p-1">
+                <h6 class="fw-bold mb-1">Unidad: ${placa}</h6>
+                <p class="small text-muted mb-0"><i class="fas fa-clock me-1"></i> {{ $item->updated_at->format('d/m/Y h:i A') }}</p>
+                <hr class="my-2">
+                <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="btn btn-xs btn-primary w-100 text-white">
+                    <i class="fas fa-external-link-alt me-1"></i> Ver en Google Maps
+                </a>
+            </div>
+        `, { closeButton: false })
+        .openPopup();
+
+    // 6. Fix para Tabs de Bootstrap
+    $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+        map.invalidateSize();
+    });
+
+} else {
+    $('#map').html(`
+        <div class="d-flex flex-column align-items-center justify-content-center h-100 bg-light border rounded">
+            <i class="fa-solid fa-location-dot fa-3x text-muted mb-2"></i>
+            <p class="text-muted fw-bold mb-0 text-uppercase small">Sin señal GPS disponible</p>
+        </div>`);
+}
 
 // Lógica de recomendación de rutina
     const kmAcumulado = {{ $item->km_contador ?? 0 }};
