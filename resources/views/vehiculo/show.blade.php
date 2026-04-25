@@ -49,6 +49,26 @@
         width: 100vw;
         height: 100vh;
     }
+ .custom-tooltip {
+        background: rgba(0, 45, 114, 0.9); /* Azul corporativo con transparencia */
+        color: white !important;
+        border: none !important;
+        border-radius: 20px !important;
+        padding: 5px 12px !important;
+        font-family: 'Inter', sans-serif;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+        font-size: 11px !important;
+        pointer-events: none; /* No interfiere con clics en el mapa */
+    }
+
+    /* Eliminar la flecha clásica de Leaflet si prefieres algo más limpio */
+    .leaflet-tooltip-top:before {
+        border-top-color: rgba(0, 45, 114, 0.9) !important;
+    }
+
+    /* Contenedor de texto dentro de la burbuja */
+    .tooltip-content b { color: #ffc107; text-transform: uppercase; }
+    .location-text { display: block; opacity: 0.9; margin-top: 2px; }
 </style>
 @endpush
 
@@ -476,61 +496,45 @@
 
         // Verificar si hay coordenadas válidas (si no, poner una por defecto o no mostrar)
         if (lat !== 0 && lng !== 0) {
-    // 1. Inicializar mapa ocultando el control de atribución por defecto
-    const map = L.map('map', {
-        attributionControl: false, // ELIMINA LA MARCA DE LEAFLET
-        zoomControl: false,        // Lo quitamos para posicionarlo a la derecha (más estético)
-        scrollWheelZoom: false     // Evita zoom accidental al hacer scroll en el reporte
-    }).setView([lat, lng], 16);
+  if (lat !== 0 && lng !== 0) {
+    const map = L.map('map', { attributionControl: false }).setView([lat, lng], 16);
+    
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
-    // 2. Capa de Mapa Estilo "Corporate" (Sin etiquetas pesadas)
-    // Usamos CartoDB Positron: es más limpio y profesional que el OSM estándar
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        subdomains: 'abcd',
-        maxZoom: 20
-    }).addTo(map);
-
-    // 3. Añadir Control de Zoom en una posición específica
-    L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-    // 4. Icono Personalizado Pro (Usando un pulso de radar para resaltar)
     const truckIcon = L.divIcon({
-        html: `
-            <div class="map-marker-container">
-                <div class="marker-pulse"></div>
-                <i class="fa-solid fa-truck-moving text-corporate shadow-sm"></i>
-            </div>`,
+        html: `<div class="map-marker-container"><div class="marker-pulse"></div><i class="fa-solid fa-truck-moving text-corporate"></i></div>`,
         iconSize: [40, 40],
         className: 'custom-truck-icon'
     });
 
-    // 5. Marcador con Popup Pro
-    L.marker([lat, lng], { icon: truckIcon })
-        .addTo(map)
-        .bindPopup(`
-            <div class="p-1">
-                <h6 class="fw-bold mb-1">Unidad: ${placa}</h6>
-                <p class="small text-muted mb-0"><i class="fas fa-clock me-1"></i> {{ $item->updated_at->format('d/m/Y h:i A') }}</p>
-                <hr class="my-2">
-                <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="btn btn-xs btn-primary w-100 text-white">
-                    <i class="fas fa-external-link-alt me-1"></i> Ver en Google Maps
-                </a>
-            </div>
-        `, { closeButton: false })
-        .openPopup();
+    // Creamos el marcador
+    const marker = L.marker([lat, lng], { icon: truckIcon }).addTo(map);
 
-    // 6. Fix para Tabs de Bootstrap
-    $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
-        map.invalidateSize();
+    // 1. Colocamos un contenido temporal mientras carga la dirección
+    marker.bindTooltip(`
+        <div class="tooltip-content">
+            <b>${placa}</b>
+            <span id="geo-loader" class="location-text"><i class="fas fa-spinner fa-spin"></i> Traduciendo ubicación...</span>
+        </div>`, {
+        permanent: true,       // Para que siempre esté visible
+        direction: 'top',      // Que aparezca arriba
+        offset: [0, -20],      // SUBE la burbuja 20px para que NO tape el camión
+        className: 'custom-tooltip'
+    }).openTooltip();
+
+    // 2. Llamada asíncrona para actualizar el texto
+    obtenerDireccion(lat, lng).then(direccion => {
+        const content = `
+            <div class="tooltip-content">
+                <b>${placa}</b>
+                <span class="location-text"><i class="fas fa-map-marker-alt"></i> ${direccion}</span>
+            </div>`;
+        marker.setTooltipContent(content);
     });
-
-} else {
-    $('#map').html(`
-        <div class="d-flex flex-column align-items-center justify-content-center h-100 bg-light border rounded">
-            <i class="fa-solid fa-location-dot fa-3x text-muted mb-2"></i>
-            <p class="text-muted fw-bold mb-0 text-uppercase small">Sin señal GPS disponible</p>
-        </div>`);
+  }
 }
+
+
 
 // Lógica de recomendación de rutina
     const kmAcumulado = {{ $item->km_contador ?? 0 }};
@@ -705,6 +709,22 @@
                     btn.html('<i class="fas fa-chevron-down me-1"></i>Ver más');
                 }
             }
+
+            async function obtenerDireccion(lat, lng) {
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
+        const data = await response.json();
+        
+        // Estructuramos la dirección: Calle, Población/Municipio, Estado.
+        const calle = data.address.road || data.address.pedestrian || 'Vía innominada';
+        const poblacion = data.address.city || data.address.town || data.address.village || 'N/D';
+        const estado = data.address.state || '';
+        
+        return `${calle}, ${poblacion}, ${estado}`;
+    } catch (error) {
+        return "Dirección no disponible";
+    }
+}
 
 
 </script>
