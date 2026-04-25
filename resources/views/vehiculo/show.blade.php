@@ -4,6 +4,9 @@
 
 @push('styles')
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/leaflet.fullscreen.css" rel="stylesheet" />
+
+
     <style>
         #map {
             height: 300px;
@@ -69,6 +72,25 @@
     /* Contenedor de texto dentro de la burbuja */
     .tooltip-content b { color: #ffc107; text-transform: uppercase; }
     .location-text { display: block; opacity: 0.9; margin-top: 2px; }
+
+    .leaflet-control-fullscreen-button {
+        background-color: #ffffff !important;
+        border: 2px solid rgba(0,0,0,0.2) !important;
+        border-radius: 4px !important;
+        width: 34px !important;
+        height: 34px !important;
+        background-size: 18px 18px !important; /* Ajustar icono interno */
+    }
+
+    .leaflet-control-fullscreen-button:hover {
+        background-color: #f4f4f4 !important;
+    }
+
+    /* Ajuste para que el Tooltip (burbuja) no se pierda en fullscreen */
+    .leaflet-fullscreen-on .custom-tooltip {
+        font-size: 14px !important; /* Un poco más grande en pantalla completa */
+        padding: 8px 15px !important;
+    }
 </style>
 @endpush
 
@@ -409,7 +431,7 @@
                 <input type="hidden" name="vehiculo_id" value="{{ $item->id }}">
                 
                 <div class="modal-header bg-corporate text-white">
-  eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee                  <h5 class="modal-title"><i class="fas fa-tools me-2"></i>Planificar Rutina Preventiva</h5>
+                <h5 class="modal-title"><i class="fas fa-tools me-2"></i>Planificar Rutina Preventiva</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
 
@@ -486,6 +508,8 @@
     </div>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script src="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/Leaflet.fullscreen.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
 
@@ -496,46 +520,85 @@
 
         // Verificar si hay coordenadas válidas (si no, poner una por defecto o no mostrar)
         if (lat !== 0 && lng !== 0) {
-  if (lat !== 0 && lng !== 0) {
-    const map = L.map('map', { attributionControl: false,dragging: false }).setView([lat, lng], 16);
+            const map = L.map('map', { 
+                attributionControl: false,
+                dragging: false,
+                fullscreenControl: true,
+                fullscreenControlOptions: {
+                    position: 'topleft',
+                    title: 'Ver en pantalla completa',
+                    titleExit: 'Salir de pantalla completa'
+                }
+            }).setView([lat, lng], 16);
+
+            // EVENTO: Detectar cambio a pantalla completa
+            map.on('enterFullscreen', function(){
+                console.log('Mapa en pantalla completa');
+                // Opcional: Podrías aumentar el zoom automáticamente
+                map.setZoom(18);
+            });
+
+            map.on('exitFullscreen', function(){
+                console.log('Salida de pantalla completa');
+                map.setZoom(16);
+                map.invalidateSize(); // Crucial para recalcular dimensiones
+            });
+            
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+            const truckIcon = L.divIcon({
+                html: `<div class="map-marker-container"><div class="marker-pulse"></div><i class="fa-solid fa-truck-moving text-corporate"></i></div>`,
+                iconSize: [40, 40],
+                className: 'custom-truck-icon'
+            });
+
+            // Creamos el marcador
+            const marker = L.marker([lat, lng], { icon: truckIcon }).addTo(map);
+
+            // 1. Colocamos un contenido temporal mientras carga la dirección
+            marker.bindTooltip(`
+                <div class="tooltip-content">
+                    <b>${placa}</b>
+                    <span id="geo-loader" class="location-text"><i class="fas fa-spinner fa-spin"></i> Traduciendo ubicación...</span>
+                </div>`, {
+                permanent: true,       // Para que siempre esté visible
+                direction: 'top',      // Que aparezca arriba
+                offset: [0, -20],      // SUBE la burbuja 20px para que NO tape el camión
+                className: 'custom-tooltip'
+            }).openTooltip();
+
+            // 2. Llamada asíncrona para actualizar el texto
+            obtenerDireccion(lat, lng).then(direccion => {
+                const content = `
+                    <div class="tooltip-content">
+                        <b>${placa}</b><a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="w-100 text-white">
+                                    <i class="fas fa-external-link-alt me-1"></i> Ver en Google Maps
+                                </a>
+        
+                        <span class="location-text"><i class="fas fa-map-marker-alt"></i> ${direccion}</span>
+                    </div>`;
+                marker.setTooltipContent(content);
+            });
+            
+
+
+            const centerBtn = L.control({position: 'topleft'});
+            centerBtn.onAdd = function() {
+                const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+                div.innerHTML = `
+                    <a class="leaflet-control-center" href="#" title="Centrar en Unidad" 
+                    style="background: white; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #002d72;">
+                        <i class="fas fa-crosshairs"></i>
+                    </a>`;
+                div.onclick = function(e) {
+                    e.preventDefault();
+                    map.flyTo([lat, lng], 17); // Efecto de vuelo suave
+                };
+                return div;
+            };
+            centerBtn.addTo(map);
+        }
     
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
-
-    const truckIcon = L.divIcon({
-        html: `<div class="map-marker-container"><div class="marker-pulse"></div><i class="fa-solid fa-truck-moving text-corporate"></i></div>`,
-        iconSize: [40, 40],
-        className: 'custom-truck-icon'
-    });
-
-    // Creamos el marcador
-    const marker = L.marker([lat, lng], { icon: truckIcon }).addTo(map);
-
-    // 1. Colocamos un contenido temporal mientras carga la dirección
-    marker.bindTooltip(`
-        <div class="tooltip-content">
-            <b>${placa}</b>
-            <span id="geo-loader" class="location-text"><i class="fas fa-spinner fa-spin"></i> Traduciendo ubicación...</span>
-        </div>`, {
-        permanent: true,       // Para que siempre esté visible
-        direction: 'top',      // Que aparezca arriba
-        offset: [0, -20],      // SUBE la burbuja 20px para que NO tape el camión
-        className: 'custom-tooltip'
-    }).openTooltip();
-
-    // 2. Llamada asíncrona para actualizar el texto
-    obtenerDireccion(lat, lng).then(direccion => {
-        const content = `
-            <div class="tooltip-content">
-                <b>${placa}</b><a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="w-100 text-white">
-                            <i class="fas fa-external-link-alt me-1"></i> Ver en Google Maps
-                        </a>
-  
-                <span class="location-text"><i class="fas fa-map-marker-alt"></i> ${direccion}</span>
-            </div>`;
-        marker.setTooltipContent(content);
-    });
-    }
-}
 
 
 
