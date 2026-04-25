@@ -526,7 +526,7 @@
     obtenerDireccion(lat, lng).then(direccion => {
         const content = `
             <div class="tooltip-content">
-                <b>${placa}</b><a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="btn btn-xs btn-primary w-100 text-white">
+                <b>${placa}</b><a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="w-100 text-white">
                             <i class="fas fa-external-link-alt me-1"></i> Ver en Google Maps
                         </a>
   
