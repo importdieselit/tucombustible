@@ -110,8 +110,6 @@ class ChecklistController extends Controller
                 if ($vehiculoId) {
                     // Consultar datos completos del vehículo
                     $vehiculo = $this->getVehiculoCompleto($vehiculoId);
-                    Log::info("vehiculo encontrado");
-                    Log::info($vehiculo);
                     
                     $viajes = Viaje::where('vehiculo_id', $vehiculoId)
                                 ->whereDate('fecha_salida', '>=', now())
@@ -119,7 +117,6 @@ class ChecklistController extends Controller
 
                     // --- BLOQUE 1: Inyectar Rutas/Viajes en "Información General" ---
                     if ($viajes->count() > 0) {
-                        Log::info("Viajes encontrados para Vehículo ID {$vehiculoId}");
                         // IMPORTANTE: Flutter espera List<String>, así que aplanamos a un string simple
                         $opcionesViajes = $viajes->map(function($v) {
                             return "ID-{$v->id} | Ruta: " . ($v->destino_ciudad ?? 'Sin Destino');
@@ -138,8 +135,7 @@ class ChecklistController extends Controller
                         $dataResponse['sections'][0]['items'][] = $campoViaje;
                       //  Log::info("Checklist ID {$id}: Se inyectó campo de selección de ruta con " . count($opcionesViajes) . " opciones para Vehículo ID {$vehiculoId}.");
                     }
-                    Log::info("Checklist data ". json_encode($dataResponse) . " para Checklist ID {$id} y Vehículo ID {$vehiculoId} después de inyectar rutas.");
-
+                    
                     // --- BLOQUE 2: Auto-completar "Datos del Vehículo" ---
                     foreach ($dataResponse['sections'][1]['items'] as &$item) {
                         if (isset($item['data_source'])) {
@@ -175,7 +171,6 @@ class ChecklistController extends Controller
                     }
                 }
 
-            Log::info("Checklist ID {$id} solicitado por Usuario ID " . auth()->id() . ". Vehículo ID en cache: " . ($vehiculoId ?? 'No encontrado') . ". Intentos de polling: {$intentos}");
 
             return response()->json([
                 'success' => true,
@@ -184,7 +179,6 @@ class ChecklistController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error al obtener checklist: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener checklist: ' . $e->getMessage()
@@ -222,9 +216,7 @@ class ChecklistController extends Controller
             $vehiculo = Vehiculo::find($request->vehiculo_id);
             $km = 0;
             $horasDuracion = 0;
-            Log::info("Vehiculoencontrado ");
-            Log::info($vehiculo);
-
+            
             $old_inspeccion = Inspeccion::where('vehiculo_id', $request->vehiculo_id)->whereIn('checklist_id',[1,3])
                             ->whereNull('respuesta_in')
                             ->orderByDesc('created_at')
@@ -296,7 +288,6 @@ class ChecklistController extends Controller
                 // Tiene OUT e IN → próximo movimiento: salida
                 $tipoCheck = 'OUT'; 
             }
-            Log::info("tipo check:".$tipoCheck);
             if($tipoCheck == 'OUT'){
                 $inspeccion = Inspeccion::create([
                     'vehiculo_id' => $request->vehiculo_id,
