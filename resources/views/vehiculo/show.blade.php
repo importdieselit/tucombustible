@@ -409,7 +409,7 @@
                 <input type="hidden" name="vehiculo_id" value="{{ $item->id }}">
                 
                 <div class="modal-header bg-corporate text-white">
-                    <h5 class="modal-title"><i class="fas fa-tools me-2"></i>Planificar Rutina Preventiva</h5>
+  eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee                  <h5 class="modal-title"><i class="fas fa-tools me-2"></i>Planificar Rutina Preventiva</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
 
@@ -526,7 +526,10 @@
     obtenerDireccion(lat, lng).then(direccion => {
         const content = `
             <div class="tooltip-content">
-                <b>${placa}</b>
+                <b>${placa}</b><a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="btn btn-xs btn-primary w-100 text-white">
+                            <i class="fas fa-external-link-alt me-1"></i> Ver en Google Maps
+                        </a>
+  
                 <span class="location-text"><i class="fas fa-map-marker-alt"></i> ${direccion}</span>
             </div>`;
         marker.setTooltipContent(content);
