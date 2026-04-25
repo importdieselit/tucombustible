@@ -36,7 +36,6 @@
         .text-corporate { color: var(--marker-color); }
     </style>
 @endsection
-{{ dd($unidaddes); }}
 @section('content')
 <div class="container-fluid py-3">
     <div class="card shadow-sm border-0 mb-3">
@@ -83,7 +82,7 @@
     <script>
         let map, markers = [];
         const unidades = @json($unidades);
-
+        console.log(unidades);
         function initMap() {
             map = L.map('map-global', { attributionControl: false, fullscreenControl: true })
                    .setView([10.4806, -66.9036], 12);
