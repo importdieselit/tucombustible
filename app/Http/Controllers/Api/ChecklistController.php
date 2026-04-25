@@ -110,12 +110,16 @@ class ChecklistController extends Controller
                 if ($vehiculoId) {
                     // Consultar datos completos del vehículo
                     $vehiculo = $this->getVehiculoCompleto($vehiculoId);
+                    Log::info("vehiculo encontrado");
+                    Log::($vehiculo);
+                    
                     $viajes = Viaje::where('vehiculo_id', $vehiculoId)
                                 ->whereDate('fecha_salida', '>=', now())
                                 ->get();
 
                     // --- BLOQUE 1: Inyectar Rutas/Viajes en "Información General" ---
                     if ($viajes->count() > 0) {
+                        Log::info("Viajes encontrados para Vehículo ID {$vehiculoId}");
                         // IMPORTANTE: Flutter espera List<String>, así que aplanamos a un string simple
                         $opcionesViajes = $viajes->map(function($v) {
                             return "ID-{$v->id} | Ruta: " . ($v->destino_ciudad ?? 'Sin Destino');
@@ -218,8 +222,10 @@ class ChecklistController extends Controller
             $vehiculo = Vehiculo::find($request->vehiculo_id);
             $km = 0;
             $horasDuracion = 0;
+            Log::info("Vehiculoencontrado ");
+            Log::info($vehiculo);
 
-            $old_inspeccion = Inspeccion::where('vehiculo_id', $request->vehiculo_id)->where('checklist_id',1)
+            $old_inspeccion = Inspeccion::where('vehiculo_id', $request->vehiculo_id)->whereIn('checklist_id',[1,3])
                             ->whereNull('respuesta_in')
                             ->orderByDesc('created_at')
                             ->first();
@@ -290,7 +296,7 @@ class ChecklistController extends Controller
                 // Tiene OUT e IN → próximo movimiento: salida
                 $tipoCheck = 'OUT'; 
             }
-
+            Log::info("tipo check:".$tipoCheck);
             if($tipoCheck == 'OUT'){
                 $inspeccion = Inspeccion::create([
                     'vehiculo_id' => $request->vehiculo_id,
