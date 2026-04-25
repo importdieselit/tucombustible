@@ -20,7 +20,7 @@ class FcmNotificationService
             $clienteUser = User::where('cliente_id', $pedido->cliente_id)->first();
             
             if (!$clienteUser || !$clienteUser->fcm_token) {
-                Log::warning("No se encontró token FCM para el cliente {$pedido->cliente_id}");
+               // Log::warning("No se encontró token FCM para el cliente {$pedido->cliente_id}");
                 return false;
             }
 
@@ -33,7 +33,7 @@ class FcmNotificationService
             return self::sendFcmNotification($clienteUser->fcm_token, $title, $body, $data);
 
         } catch (\Exception $e) {
-            Log::error("Error enviando notificación de cambio de estatus: " . $e->getMessage());
+            //Log::error("Error enviando notificación de cambio de estatus: " . $e->getMessage());
             return false;
         }
     }
@@ -45,7 +45,7 @@ class FcmNotificationService
             //$clienteU = User::where('cliente_id', $cliente->cliente_id)->first();
             
             if (!$cliente || !$cliente->fcm_token) {
-                Log::warning("No se encontró token FCM para el cliente {$cliente->cliente_id}");
+              //  Log::warning("No se encontró token FCM para el cliente {$cliente->cliente_id}");
                 return false;
             }
 
@@ -58,7 +58,7 @@ class FcmNotificationService
             return self::sendFcmNotification($cliente->fcm_token, $title, $body, $data);
 
         } catch (\Exception $e) {
-            Log::error("Error enviando notificación de cambio de estatus: " . $e->getMessage());
+           // Log::error("Error enviando notificación de cambio de estatus: " . $e->getMessage());
             return false;
         }
     }
@@ -71,7 +71,7 @@ class FcmNotificationService
             //$clienteU = User::where('cliente_id', $cliente->cliente_id)->first();
             
             if (!$user || !$user->fcm_token) {
-                Log::warning("No se encontró token FCM para el Usuario {$user->id}");
+             //   Log::warning("No se encontró token FCM para el Usuario {$user->id}");
                 return false;
             }
 
@@ -87,7 +87,7 @@ class FcmNotificationService
             return self::sendFcmNotification($user->fcm_token, $title, $body, $data);
 
         } catch (\Exception $e) {
-            Log::error("Error enviando notificación de cambio de estatus: " . $e->getMessage());
+            //Log::error("Error enviando notificación de cambio de estatus: " . $e->getMessage());
             return false;
         }
     }
@@ -108,7 +108,7 @@ class FcmNotificationService
                 ->first();
             
             if (!$chofer || !$chofer->fcm_token) {
-                Log::warning("No se encontró token FCM para el conductor {$chofer_id}");
+              //  Log::warning("No se encontró token FCM para el conductor {$chofer_id}");
                 return false;
             }
 
@@ -138,7 +138,7 @@ class FcmNotificationService
             return $result;
 
         } catch (\Exception $e) {
-            Log::error("Error enviando notificación al conductor: " . $e->getMessage());
+            //Log::error("Error enviando notificación al conductor: " . $e->getMessage());
             return false;
         }
     }
@@ -236,14 +236,14 @@ class FcmNotificationService
             $projectId = config('services.fcm.project_id');
             
             if (!$projectId) {
-                Log::error('FCM Project ID no configurado');
+              //  Log::error('FCM Project ID no configurado');
                 return false;
             }
 
             $credentialsFilePath = storage_path("tucombustible-76660-firebase-adminsdk-fbsvc-186df7ef1c.json");
             
             if (!file_exists($credentialsFilePath)) {
-                Log::error('Archivo de credenciales FCM no encontrado: ' . $credentialsFilePath);
+                //Log::error('Archivo de credenciales FCM no encontrado: ' . $credentialsFilePath);
                 return false;
             }
 
@@ -256,7 +256,7 @@ class FcmNotificationService
             $token = $client->getAccessToken();
             
             if (!isset($token['access_token'])) {
-                Log::error('No se pudo obtener token de acceso para FCM');
+                //Log::error('No se pudo obtener token de acceso para FCM');
                 return false;
             }
 
@@ -305,12 +305,12 @@ class FcmNotificationService
             if ($response->successful()) {
                 return true;
             } else {
-                Log::error("Error enviando notificación FCM: " . $response->body());
+          //      Log::error("Error enviando notificación FCM: " . $response->body());
                 return false;
             }
 
         } catch (\Exception $e) {
-            Log::error("Excepción enviando notificación FCM: " . $e->getMessage());
+        //    Log::error("Excepción enviando notificación FCM: " . $e->getMessage());
             return false;
         }
     }
@@ -325,7 +325,7 @@ class FcmNotificationService
             $admins = User::whereIn('id_perfil', [1, 2])->get();
             
             if ($admins->isEmpty()) {
-                Log::warning("No se encontraron usuarios administradores para enviar notificación");
+            //    Log::warning("No se encontraron usuarios administradores para enviar notificación");
                 return false;
             }
 
@@ -350,14 +350,14 @@ class FcmNotificationService
                         $successCount++;
                     }
                 } else {
-                    Log::warning("Administrador {$admin->email} no tiene token FCM");
+               //     Log::warning("Administrador {$admin->email} no tiene token FCM");
                 }
             }
 
             return $successCount > 0;
 
         } catch (\Exception $e) {
-            Log::error("Error enviando notificación de nuevo pedido al administrador: " . $e->getMessage());
+            //Log::error("Error enviando notificación de nuevo pedido al administrador: " . $e->getMessage());
             return false;
         }
     }
@@ -372,7 +372,7 @@ class FcmNotificationService
             $clienteUser = User::where('cliente_id', $pedido->cliente_id)->first();
             
             if (!$clienteUser || !$clienteUser->fcm_token) {
-                Log::warning("No se encontró token FCM para el cliente {$pedido->cliente_id}");
+              //  Log::warning("No se encontró token FCM para el cliente {$pedido->cliente_id}");
                 return false;
             }
 
@@ -387,7 +387,7 @@ class FcmNotificationService
             return self::sendFcmNotification($clienteUser->fcm_token, $title, $body, $data);
 
         } catch (\Exception $e) {
-            Log::error("Error enviando notificación de nuevo pedido: " . $e->getMessage());
+            //Log::error("Error enviando notificación de nuevo pedido: " . $e->getMessage());
             return false;
         }
     }
@@ -399,7 +399,7 @@ class FcmNotificationService
     {
         try {
             if (!$sucursalUser->fcm_token) {
-                Log::warning("No se encontró token FCM para el usuario de sucursal {$sucursalUser->id}");
+              //  Log::warning("No se encontró token FCM para el usuario de sucursal {$sucursalUser->id}");
                 return false;
             }
 
@@ -423,7 +423,7 @@ class FcmNotificationService
             return self::sendFcmNotification($sucursalUser->fcm_token, $title, $body, $data);
 
         } catch (\Exception $e) {
-            Log::error("Error enviando notificación a sucursal: " . $e->getMessage());
+            //Log::error("Error enviando notificación a sucursal: " . $e->getMessage());
             return false;
         }
     }
@@ -439,7 +439,7 @@ class FcmNotificationService
             $clienteUser = User::where('cliente_id', $clientePadre->id)->first();
             
             if (!$clienteUser || !$clienteUser->fcm_token) {
-                Log::warning("No se encontró token FCM para el cliente padre {$clientePadre->id}");
+              //  Log::warning("No se encontró token FCM para el cliente padre {$clientePadre->id}");
                 return false;
             }
 
@@ -468,7 +468,7 @@ class FcmNotificationService
             return self::sendFcmNotification($clienteUser->fcm_token, $title, $body, $data);
 
         } catch (\Exception $e) {
-            Log::error("Error enviando notificación de bajo disponible: " . $e->getMessage());
+            //Log::error("Error enviando notificación de bajo disponible: " . $e->getMessage());
             return false;
         }
     }
@@ -484,7 +484,7 @@ class FcmNotificationService
             $superAdmins = User::where('id_perfil', 1)->get();
             
             if ($superAdmins->isEmpty()) {
-                Log::warning("No se encontraron usuarios super admin para enviar notificación de bajo disponible");
+              //  Log::warning("No se encontraron usuarios super admin para enviar notificación de bajo disponible");
                 return false;
             }
 
@@ -515,14 +515,14 @@ class FcmNotificationService
                         $successCount++;
                     }
                 } else {
-                    Log::warning("Super admin {$superAdmin->email} no tiene token FCM");
+                //    Log::warning("Super admin {$superAdmin->email} no tiene token FCM");
                 }
             }
 
             return $successCount > 0;
 
         } catch (\Exception $e) {
-            Log::error("Error enviando notificación de bajo disponible a super admins: " . $e->getMessage());
+           // Log::error("Error enviando notificación de bajo disponible a super admins: " . $e->getMessage());
             return false;
         }
     }
@@ -538,7 +538,7 @@ class FcmNotificationService
             $superAdmins = User::where('id_perfil', 1)->get();
             
             if ($superAdmins->isEmpty()) {
-                Log::warning("No se encontraron usuarios super admin para enviar notificación consolidada de bajo disponible");
+             //   Log::warning("No se encontraron usuarios super admin para enviar notificación consolidada de bajo disponible");
                 return false;
             }
 
@@ -577,14 +577,14 @@ class FcmNotificationService
                         $successCount++;
                     }
                 } else {
-                    Log::warning("Super admin {$superAdmin->email} no tiene token FCM");
+             //       Log::warning("Super admin {$superAdmin->email} no tiene token FCM");
                 }
             }
 
             return $successCount > 0;
 
         } catch (\Exception $e) {
-            Log::error("Error enviando notificación consolidada de bajo disponible a super admins: " . $e->getMessage());
+           // Log::error("Error enviando notificación consolidada de bajo disponible a super admins: " . $e->getMessage());
             return false;
         }
     }
@@ -609,7 +609,7 @@ class FcmNotificationService
                                     ->whereNotNull('fcm_token')
                                     ->get();
             if ($usuarios->isEmpty()) {
-                Log::warning('No se encontraron usuarios con tokens FCM para notificar');
+               // Log::warning('No se encontraron usuarios con tokens FCM para notificar');
                 return;
             }
 
@@ -636,13 +636,13 @@ class FcmNotificationService
                         $successCount++;
                     }
                 } else {
-                    Log::warning("Usuario {$usuario->email} no tiene token FCM");
+                 //   Log::warning("Usuario {$usuario->email} no tiene token FCM");
                 }
             }
 
             
         } catch (\Exception $e) {
-            Log::error('Error enviando notificación: ' . $e->getMessage());
+//            Log::error('Error enviando notificación: ' . $e->getMessage());
         }
     }
 }

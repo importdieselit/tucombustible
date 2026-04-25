@@ -444,7 +444,7 @@
 
             // Agregar capa de OpenStreetMap
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
+                attribution: false
             }).addTo(map);
 
             // Icono personalizado (opcional, usando FontAwesome o un PNG)

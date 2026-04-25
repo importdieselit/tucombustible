@@ -23,7 +23,7 @@ class Service24GPSService
    protected function login()
     {
         // LOG para depurar el login
-        Log::info("GPS: Intentando Login para obtener nuevo token...");
+//        Log::info("GPS: Intentando Login para obtener nuevo token...");
 
         $response = Http::asForm()->post("{$this->baseUrl}/gettoken", [
             'apikey'   => $this->apiKey,
@@ -37,12 +37,12 @@ class Service24GPSService
             
             // Verificamos si existe la clave 'token' dentro de 'data'
             if (isset($data['data']) && $data['status']==200) {
-                Log::info("GPS: Token obtenido con éxito.");
+  //              Log::info("GPS: Token obtenido con éxito.");
                 return $data['data'];
             }
         }
 
-        Log::error("GPS: Falló el login. Respuesta: " . $response->body());
+    //    Log::error("GPS: Falló el login. Respuesta: " . $response->body());
         throw new \Exception("No se pudo obtener el token de Service24GPS.");
     }
 
@@ -70,15 +70,15 @@ class Service24GPSService
             'sensores'    => '1'
         ];  
 
-        Log::info("=== INICIO DE PETICIÓN GPS ===");
-        Log::info("URL: {$this->baseUrl}/getdata");
+      //  Log::info("=== INICIO DE PETICIÓN GPS ===");
+        //Log::info("URL: {$this->baseUrl}/getdata");
         
         $response = Http::asForm()->timeout(3000)->post("{$this->baseUrl}/getdata", $params);
 
         $status = $response->json('status');
 
         if ($status == 30400) {
-            Log::warning("Token inválido (30400). Limpiando caché y reintentando...");
+          //  Log::warning("Token inválido (30400). Limpiando caché y reintentando...");
             Cache::forget('s24_token');
             // IMPORTANTE: Solo reintentar una vez o manejar un contador para evitar bucles infinitos
             return $this->getData(); 
