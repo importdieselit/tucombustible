@@ -497,7 +497,7 @@
         // Verificar si hay coordenadas válidas (si no, poner una por defecto o no mostrar)
         if (lat !== 0 && lng !== 0) {
   if (lat !== 0 && lng !== 0) {
-    const map = L.map('map', { attributionControl: false }).setView([lat, lng], 16);
+    const map = L.map('map', { attributionControl: false,dragging: false }).setView([lat, lng], 16);
     
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
 
