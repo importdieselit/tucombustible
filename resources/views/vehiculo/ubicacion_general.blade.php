@@ -73,90 +73,94 @@
 
     <div id="map-global"></div>
 </div>
-@endsection
-
-@section('scripts')
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/Leaflet.fullscreen.min.js"></script>
 
     <script>
-        let map, markers = [];
-        const unidades = @json($unidades);
-        console.log(unidades);
-        function initMap() {
-            map = L.map('map-global', { attributionControl: false, fullscreenControl: true })
-                   .setView([10.4806, -66.9036], 12);
+        document.addEventListener('DOMContentLoaded', function () {
+            let map, markers = [];
+            const unidades = @json($unidades);
+            console.log("Unidades cargadas:", unidades);
 
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
-            renderMarkers(unidades);
-        }
+            function initMap() {
+                // Inicializar mapa
+                map = L.map('map-global', { attributionControl: false, fullscreenControl: true })
+                       .setView([10.4806, -66.9036], 12); // Centro por defecto (Caracas)
 
-        function renderMarkers(dataFiltro) {
-            // Limpiar marcadores previos
-            markers.forEach(m => map.removeLayer(m));
-            markers = [];
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+                
+                // Renderizar marcadores iniciales
+                renderMarkers(unidades);
+            }
 
-            const group = L.featureGroup();
+            function renderMarkers(dataFiltro) {
+                // Limpiar marcadores previos
+                markers.forEach(m => map.removeLayer(m));
+                markers = [];
 
-            dataFiltro.forEach(u => {
-                // Determinar clase de color según estatus
-                let colorClass = 'status-detenido';
-                if(u.estatus === 'en ruta') colorClass = 'status-ruta';
-                if(u.estatus === 'incidencia') colorClass = 'status-incidencia';
+                const group = L.featureGroup();
 
-                const icon = L.divIcon({
-                    html: `
-                        <div class="map-marker-container ${colorClass}">
-                            <div class="marker-pulse"></div>
-                            <i class="fa-solid fa-truck text-corporate small"></i>
-                        </div>`,
-                    iconSize: [35, 35],
-                    className: 'custom-marker'
-                });
+                dataFiltro.forEach(u => {
+                    // Validación por si el estatus es null en base de datos
 
-                const m = L.marker([u.latitud, u.longitud], { icon: icon })
-                    .bindTooltip(`<b>${u.placa}</b><br><small>${u.modelo}</small><br><span class="badge bg-dark">${u.estatus.toUpperCase()}</span>`, {
-                        direction: 'top',
-                        offset: [0, -15],
-                        className: 'custom-tooltip'
+                    const icon = L.divIcon({
+                        html: `
+                            <div class="map-marker-container">
+                                <div class="marker-pulse"></div>
+                                <i class="fa-solid fa-truck text-corporate small"></i>
+                            </div>`,
+                        iconSize: [35, 35],
+                        className: 'custom-marker'
                     });
 
-                m.unitData = u; // Guardamos data para filtrar
-                m.addTo(map);
-                markers.push(m);
-                group.addLayer(m);
-            });
+                    const m = L.marker([u.latitud, u.longitud], { icon: icon })
+                        .bindTooltip(`<b>${u.placa}</b><br><small>${u.modelo || 'Sin modelo'}</small>`, {
+                            direction: 'top',
+                            offset: [0, -15],
+                            className: 'custom-tooltip'
+                        });
 
-            if (markers.length > 0) map.fitBounds(group.getBounds(), { padding: [50, 50] });
-        }
+                    m.unitData = u; // Guardamos data para filtrar
+                    m.addTo(map);
+                    markers.push(m);
+                    group.addLayer(m);
+                });
 
-        // Lógica de Filtrado
-        function applyFilters() {
-            const placa = document.getElementById('filter-placa').value.toLowerCase();
-            const status = document.getElementById('filter-status').value.toLowerCase();
-            const tipo = document.getElementById('filter-tipo').value.toLowerCase();
+                // Auto-ajuste de zoom solo si hay marcadores en pantalla
+                if (markers.length > 0) {
+                    map.fitBounds(group.getBounds(), { padding: [50, 50] });
+                }
+            }
 
-            const filtrados = unidades.filter(u => {
-                return (u.placa.toLowerCase().includes(placa)) &&
-                       (status === "" || u.estatus.toLowerCase() === status) &&
-                       (tipo === "" || u.tipo.toLowerCase() === tipo);
-            });
+            // Lógica de Filtrado
+            function applyFilters() {
+                const placa = document.getElementById('filter-placa').value.toLowerCase();
+                const tipo = document.getElementById('filter-tipo').value.toLowerCase();
 
-            renderMarkers(filtrados);
-        }
+                const filtrados = unidades.filter(u => {
+                    const tipoU = (u.tipo || '').toLowerCase();
+                    const placaU = (u.placa || '').toLowerCase();
 
-        function resetFilters() {
-            document.getElementById('filter-placa').value = "";
-            document.getElementById('filter-status').value = "";
-            document.getElementById('filter-tipo').value = "";
-            renderMarkers(unidades);
-        }
+                    return (placaU.includes(placa)) &&
+                           (tipo === "" || tipoU === tipo);
+                });
 
-        // Listeners
-        document.getElementById('filter-placa').addEventListener('input', applyFilters);
-        document.getElementById('filter-status').addEventListener('change', applyFilters);
-        document.getElementById('filter-tipo').addEventListener('change', applyFilters);
+                renderMarkers(filtrados);
+            }
 
-        document.addEventListener('DOMContentLoaded', initMap);
+            function resetFilters() {
+                document.getElementById('filter-placa').value = "";
+                document.getElementById('filter-status').value = "";
+                document.getElementById('filter-tipo').value = "";
+                renderMarkers(unidades);
+            }
+
+            // Listeners de los filtros
+            document.getElementById('filter-placa').addEventListener('input', applyFilters);
+            document.getElementById('filter-tipo').addEventListener('change', applyFilters);
+
+            // EJECUTAR EL MAPA: Llamamos a la función dentro del mismo scope donde fue creada
+            initMap();
+        });
     </script>
 @endsection
