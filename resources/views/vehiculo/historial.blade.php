@@ -3,6 +3,7 @@
 @push('styles')
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/leaflet.fullscreen.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
 
 
     <style>
@@ -144,7 +145,10 @@
                     <span class="visually-hidden">Cargando...</span>
                 </div>
             </div>
-            
+            <div id="info-ruta" class="position-absolute top-0 end-0 m-3 p-2 bg-white shadow-sm rounded" style="z-index: 1000;">
+                <small class="text-muted d-block">Distancia Calculada:</small>
+                <span id="distancia-recorrida" class="fw-bold text-primary">0.00 KM</span>
+            </div>
             <div id="map" style="height: 600px; width: 100%; border-radius: 0 0 0.375rem 0.375rem;"></div>
         </div>
     </div>
@@ -154,6 +158,7 @@
 @push('scripts')
    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/Leaflet.fullscreen.min.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
 <script> // 1. Corregida la etiqueta de apertura
 document.addEventListener('DOMContentLoaded', function () {
     let map;
@@ -211,73 +216,59 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function dibujarTrazado(vehiculoId, desde, hasta) {
         const loader = document.getElementById('map-loader');
-        const btnBuscar = document.getElementById('btn-buscar');
-        
-        // Feedback visual
         if(loader) loader.classList.remove('d-none');
-        if(btnBuscar) btnBuscar.disabled = true;
-
-        // Limpiar lo anterior antes de la nueva consulta para que el usuario vea el cambio
-        limpiarRutaPrevia();
 
         try {
-            // 4. Construcción de la URL (asegúrate de que coincida con tu ruta en web.php)
-            const url = `/api/vehiculos/${vehiculoId}/puntos?desde=${desde}&hasta=${hasta}`;
-            
-            const response = await fetch(url, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
-            });
-
-            if (!response.ok) throw new Error('Error en la red o sesión expirada');
-            
+            const response = await fetch(`/api/vehiculos/${vehiculoId}/puntos?desde=${desde}&hasta=${hasta}`);
             const puntos = await response.json();
 
-            if (puntos.length === 0) {
-                alert('No se encontraron registros GPS para este vehículo en este horario.');
+            limpiarRutaPrevia();
+
+            if (puntos.length < 2) {
+                alert('Se necesitan al menos 2 puntos para trazar una ruta por carretera.');
                 return;
             }
 
-            // Mapeo de coordenadas
-            const latLngs = puntos.map(p => [parseFloat(p.latitud), parseFloat(p.longitud)]);
+            // 1. Convertir puntos a formato Waypoints de Leaflet Routing
+            const waypoints = puntos.map(p => L.latLng(p.latitud, p.longitud));
 
-            // 5. Dibujar Polilínea
-            rutaActual = L.polyline(latLngs, {
-                color: '#f2A435', 
-                weight: 5,
-                opacity: 0.8,
-                dashArray: '10, 10', 
-                lineJoin: 'round'
+            // 2. Crear el control de ruta
+            rutaActual = L.Routing.control({
+                waypoints: waypoints,
+                router: L.Routing.osrmv1({
+                    serviceUrl: `https://router.project-osrm.org/route/v1` // Servidor gratuito de OSRM
+                }),
+                lineOptions: {
+                    styles: [{ color: '#f2A435', opacity: 0.8, weight: 6 }]
+                },
+                addWaypoints: false, // Evita que el usuario mueva los puntos
+                draggableWaypoints: false,
+                fitSelectedRoutes: true,
+                show: false, // Oculta el panel de instrucciones giro a giro
+                createMarker: function(i, wp, n) {
+                    // Personalizamos los marcadores de inicio y fin
+                    if (i === 0) return L.marker(wp.latLng, { icon: crearIcono('#28a745', 'fa-play') });
+                    if (i === n - 1) return L.marker(wp.latLng, { icon: crearIcono('#dc3545', 'fa-flag-checkered') });
+                    return null; // No mostrar marcadores en puntos intermedios
+                }
             }).addTo(map);
 
-            // Marcador INICIO
-            const iconInicio = crearIcono('#28a745', 'fa-play');
-            const mInicio = L.marker(latLngs[0], { icon: iconInicio })
-                .bindTooltip(`<b>Inicio:</b> ${formatearFecha(puntos[0].created_at)}`)
-                .addTo(map);
-            marcadoresRuta.push(mInicio);
-
-            // Marcador FIN
-            if (latLngs.length > 1) {
-                const puntoFinal = puntos[puntos.length - 1];
-                const iconFin = crearIcono('#dc3545', 'fa-flag-checkered');
-                const mFin = L.marker(latLngs[latLngs.length - 1], { icon: iconFin })
-                    .bindTooltip(`<b>Fin:</b> ${formatearFecha(puntoFinal.created_at)}`)
-                    .addTo(map);
-                marcadoresRuta.push(mFin);
-            }
-
-            // Ajustar vista a la ruta encontrada
-            map.fitBounds(rutaActual.getBounds(), { padding: [50, 50] });
+            // 3. Capturar el evento cuando la ruta se calcula para obtener los KM
+            rutaActual.on('routesfound', function(e) {
+                const routes = e.routes;
+                const summary = routes[0].summary;
+                // summary.totalDistance está en metros
+                const kilometros = (summary.totalDistance / 1000).toFixed(2);
+                
+                // Ejemplo: Mostrar los KM en un alert o en un div de tu vista
+                console.log(`Distancia Real: ${kilometros} KM`);
+                document.getElementById('distancia-recorrida').innerText = `${kilometros} KM Totales`;
+            });
 
         } catch (error) {
             console.error('Error:', error);
-            alert('No se pudo cargar el historial. Intente de nuevo.');
         } finally {
             if(loader) loader.classList.add('d-none');
-            if(btnBuscar) btnBuscar.disabled = false;
         }
     }
 
