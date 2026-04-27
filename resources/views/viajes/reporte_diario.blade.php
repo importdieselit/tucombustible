@@ -139,11 +139,38 @@
         <button id="exportButton" class="btn btn-primary shadow-sm px-4">
             <i class="fa fa-printer-fill me-2"></i>Exportar Reporte
         </button>
+
+        
     </div>
     <div id="statusMessage" class="text-center p-3 rounded-lg bg-yellow-100 text-yellow-800 hidden mb-4">
             Procesando...
     </div>
-
+<div class="card shadow-sm mb-4 no-print border-0">
+        <div class="card-body bg-white rounded-3">
+            <form action="{{ url()->current() }}" method="GET" class="row align-items-end g-3">
+                <div class="col-md-3">
+                    <label for="fecha_inicio" class="form-label small fw-bold text-muted mb-1"><i class="fas fa-calendar-alt me-1"></i> Desde</label>
+                    <input type="date" id="fecha_inicio" name="fecha_inicio" class="form-control form-control-sm" 
+                           value="{{ request('fecha_inicio', \Carbon\Carbon::now()->format('Y-m-d')) }}" required>
+                </div>
+                <div class="col-md-3">
+                    <label for="fecha_fin" class="form-label small fw-bold text-muted mb-1"><i class="fas fa-calendar-check me-1"></i> Hasta</label>
+                    <input type="date" id="fecha_fin" name="fecha_fin" class="form-control form-control-sm" 
+                           value="{{ request('fecha_fin', \Carbon\Carbon::now()->addDays(2)->format('Y-m-d')) }}" required>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-dark btn-sm w-100 shadow-sm">
+                        <i class="fas fa-search me-1"></i> Generar Reporte
+                    </button>
+                </div>
+                <div class="col-md-3 text-end">
+                    <a href="{{ url()->current() }}" class="btn btn-outline-secondary btn-sm w-100">
+                        <i class="fas fa-undo me-1"></i> Limpiar Filtro
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
     <div id="reporteOperaciones" class="report-master-card shadow-lg bg-white mx-auto p-0 printableArea" style="max-width: 1000px; border-radius: 15px; overflow: hidden;">
  
 <div class="container-fluid py-4">

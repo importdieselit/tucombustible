@@ -12,6 +12,10 @@ use App\Models\ResumenDiario;
 use Carbon\Carbon;
 use App\Models\Mantenimiento;
 use App\Models\Orden;
+use App\Models\HistorialGpsVehiculo;
+use App\Models\Marca;
+use App\Models\Modelo;
+use App\Models\Cliente;
 
 
 class VehiculoController extends Controller
@@ -761,5 +765,21 @@ class VehiculoController extends Controller
             ], 500);
         }
     }
+
+    public function getHistorialRuta(Request $request, $id = null)
+    {
+        // Validamos que existan las fechas para evitar errores 500
+        if (!$request->has(['desde', 'hasta'])) {
+            return response()->json([]);
+        }
+
+        $puntos = HistorialGpsVehiculo::where('vehiculo_id', $id)
+            ->whereBetween('created_at', [$request->desde, $request->hasta])
+            ->orderBy('created_at', 'asc')
+            ->get(['latitud', 'longitud', 'created_at']);
+
+        return response()->json($puntos);
+    }
+    
 
 }

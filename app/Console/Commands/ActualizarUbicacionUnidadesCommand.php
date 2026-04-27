@@ -78,30 +78,21 @@ class ActualizarUbicacionUnidadesCommand extends Command
 
 
                     // // 2. Registro por hora (Si ya existe registro para esa placa en esta hora, lo actualiza)
-                    $ahora = Carbon::now();
-                    $inicioHora = $ahora->copy()->startOfHour(); // Ejemplo: 2026-04-27 17:00:00
-                    $finHora = $ahora->copy()->endOfHour();     // Ejemplo: 2026-04-27 17:59:59
-
-                    // 2. Buscar si ya existe un registro para este vehículo en este rango
-                    $historial = HistorialGpsVehiculo::where('vehiculo_id', $vehiculo->id)
-                        ->whereBetween('created_at', [$inicioHora, $finHora])
-                        ->first();
-
-                    if ($historial) {
-                        // Si ya existe, actualizamos la posición (el created_at se queda igual)
-                        $historial->update([
-                            'latitud' => $lat,
-                            'longitud' => $lng,
-                        ]);
-                    } else {
-                        // Si no existe, creamos el registro de esta hora
-                        HistorialGpsVehiculo::create([
+                   // Lógica de Historial por Hora
+                    $inicioHora = Carbon::now()->startOfHour();
+                    
+                    // Usamos updateOrCreate simulado con búsqueda manual por eficiencia
+                    HistorialGpsVehiculo::updateOrInsert(
+                        [
                             'vehiculo_id' => $vehiculo->id,
-                            'latitud' => $lat,
-                            'longitud' => $lng,
-                            'created_at' => $inicioHora 
-                        ]);
-                    }
+                            'created_at'  => $inicioHora
+                        ],
+                        [
+                            'latitud'    => $lat,
+                            'longitud'   => $lng,
+                            'updated_at' => Carbon::now()
+                        ]
+                    );
             }
             $bar->advance();
         }

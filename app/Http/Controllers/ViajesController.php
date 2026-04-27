@@ -1309,6 +1309,24 @@ public function updateGuiaData(Request $request, $viajeId)
     if (!auth()->check() && $request->get('token') !== $tokenValido) {
         abort(403, 'Acceso no autorizado');
     }
+
+    $fechaInicio = $request->filled('fecha_inicio') 
+        ? Carbon::parse($request->fecha_inicio)->startOfDay() 
+        : Carbon::now()->startOfDay();
+
+    $fechaFin = $request->filled('fecha_fin') 
+        ? Carbon::parse($request->fecha_fin)->endOfDay() 
+        : Carbon::now()->addDays(2)->endOfDay();
+
+    // 2. Generar el arreglo de días dinámico para las columnas de la tabla
+    // Esto reemplaza tu generación estática de "$rangoDias"
+    $rangoDias = [];
+    $periodo = \Carbon\CarbonPeriod::create($fechaInicio, $fechaFin);
+    foreach ($periodo as $fecha) {
+        $rangoDias[] = $fecha->format('Y-m-d');
+    }
+
+
     $fecha = $request->input('fecha', now()->format('Y-m-d'));
 
     // 1. Eager Loading: Traemos relaciones necesarias para evitar N+1
@@ -1316,7 +1334,7 @@ public function updateGuiaData(Request $request, $viajeId)
             'vehiculo', 'chofer', 'producto', 'despachos.cliente', 
             'cliente', 'cisternaAcoplada'
         ])
-        ->whereDate('fecha_salida', '>=', $fecha)->orderBy('fecha_salida', 'asc')
+        ->whereBetween('fecha_salida', [$fechaInicio, $fechaFin])->orderBy('fecha_salida', 'asc')
         ->get();
 
     // 2. Procesamiento y Enriquecimiento de la data

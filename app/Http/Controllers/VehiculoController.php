@@ -14,26 +14,27 @@ use App\Models\MantenimientoProgramado;
 use App\Models\DocumentosVehiculo;
 use App\Models\InventarioSuministro;
 use App\Models\DespachoViaje;
+use App\Models\Viaje;
+use App\Models\EstatusData;
+use App\Models\VehiculoFoto;
+use App\Models\TipoDocumento;
+use App\Models\HistorialGpsVehiculo;
 use Illuminate\Http\Request;
 use App\Http\Requests\VehiculoStoreRequest;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Str; 
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Support\Str; // Es necesario para la función Str::plural()
-use Illuminate\Support\Facades\DB;
-use App\Models\TipoDocumento;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Schema;
 use App\Traits\GenerateAlerts;
 use App\Traits\PluralizaEnEspanol;
-use App\Models\VehiculoFoto;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
-use App\Models\Viaje;
-use App\Models\EstatusData;
-use Illuminate\Support\Facades\Storage;
 
 
 class VehiculoController extends BaseController
@@ -1042,6 +1043,15 @@ class VehiculoController extends BaseController
             ->where('latitud', '!=', 0)
             ->get(['id', 'placa', 'marca', 'modelo', 'tipo', 'estatus', 'latitud', 'longitud', 'updated_at']);
         return response()->json($unidades);
+    }
+
+    public function vistaHistorial($id = null)
+    {
+        // Obtenemos los vehículos para el select del buscador
+        $vehiculos = Vehiculo::with(['isMarca','isModelo'])->orderBy('placa', 'asc')->get();
+        
+        // Cargamos la vista y le pasamos el ID si es que viene desde la ficha
+        return view('vehiculo.historial', compact('vehiculos', 'id'));
     }
     
 }

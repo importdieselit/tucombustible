@@ -22,10 +22,13 @@ class HistorialGpsVehiculo extends Model
      */
     protected $primaryKey = 'id';
 
+
     protected $fillable = [
         'vehiculo_id',
         'latitud',
-        'longitud'
+        'longitud',
+        'created_at',
+        'updated_at'
     ];
 
     public function vehiculo()
