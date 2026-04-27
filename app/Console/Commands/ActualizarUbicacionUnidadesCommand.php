@@ -43,42 +43,65 @@ class ActualizarUbicacionUnidadesCommand extends Command
             $placa = $unidadApi['UnitPlate']; // Ajusta según el nombre del campo en la API
             $lat = $unidadApi['Latitude'];
             $lng = $unidadApi['Longitude'];
-                
+            $cisterna = false;
+           
             // 1. Actualizar tabla principal (ubicación en tiempo real)
             $vehiculo=Vehiculo::where('placa', $placa)->first();
+            $estatus = $vehiculo->estatus;
+
             if($vehiculo){
 
                 $distancia = $this->calcularDistancia($latSede, $lngSede, $lat, $lng);
 
                 // 2. LÓGICA DE AUTOMATIZACIÓN DE ESTATUS (Solo para estatus 1 y 2)
                 if (in_array($vehiculo->estatus, [1, 2])) {
-                        
                     // Si está fuera de los 100m y está Disponible (1) -> Pasa a En Ruta (2)
                     if ($distancia > $radioSede && $vehiculo->estatus == 1) {
-                        $vehiculo->estatus = 2;
-                    } 
-                    // Si entró al perímetro y está En Ruta (2) -> Pasa a Disponible (1)
-                    elseif ($distancia <= $radioSede && $vehiculo->estatus == 2) {
-                        $vehiculo->estatus = 1;
+                        $estatus = 2;
+                        
+                    }elseif ($distancia <= $radioSede && $vehiculo->estatus == 2) {
+                        $estatus = 1;            
                     }
                 }
                 $vehiculo->latitud = $lat;
                 $vehiculo->longitud = $lng;
+                $vehiculo->estatus = $estatus;
                 $vehiculo->save();
+                if(!is_null($vehiculo->acoplado_id)){
+                    $cisterna = Vehiculo::where('id', $vehiculo->acoplado_id)->first();
+                    $cisterna->estatus = $estatus;
+                    $cisterna->latitud = $lat;
+                    $cisterna->longitud = $lng;
+                    $cisterna->save();
+                }
+                
+
 
                     // // 2. Registro por hora (Si ya existe registro para esa placa en esta hora, lo actualiza)
-                    // // Esto cumple con tu requerimiento de "almacenar solo un registro por hora"
-                    // $horaActual = Carbon::now()->startOfHour(); // Ejemplo: 2024-05-20 14:00:00
+                    $ahora = Carbon::now();
+                    $inicioHora = $ahora->copy()->startOfHour(); // Ejemplo: 2026-04-27 17:00:00
+                    $finHora = $ahora->copy()->endOfHour();     // Ejemplo: 2026-04-27 17:59:59
 
-                HistorialGpsVehiculo::updateOrCreate(
-                     [
-                         'vehiculo_id' => $vehiculo->id
-                     ],
-                     [
-                         'latitud' => $lat,
-                         'longitud' => $lng
-                     ]
-                 );
+                    // 2. Buscar si ya existe un registro para este vehículo en este rango
+                    $historial = HistorialGpsVehiculo::where('vehiculo_id', $vehiculo->id)
+                        ->whereBetween('created_at', [$inicioHora, $finHora])
+                        ->first();
+
+                    if ($historial) {
+                        // Si ya existe, actualizamos la posición (el created_at se queda igual)
+                        $historial->update([
+                            'latitud' => $lat,
+                            'longitud' => $lng,
+                        ]);
+                    } else {
+                        // Si no existe, creamos el registro de esta hora
+                        HistorialGpsVehiculo::create([
+                            'vehiculo_id' => $vehiculo->id,
+                            'latitud' => $lat,
+                            'longitud' => $lng,
+                            'created_at' => $inicioHora 
+                        ]);
+                    }
             }
             $bar->advance();
         }
