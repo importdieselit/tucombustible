@@ -23,6 +23,11 @@
                     </a>
                 </div>
                 <div class="col">
+                    <a href="{{ route('vehiculos.ubicacion') }}" class="btn btn-sm text-white w-100 h-100 d-flex align-items-center justify-content-center" style="background-color: #f2A435;">
+                        <i class="fas fa-map-marker-alt me-1 me-md-2"></i> Ubicacion
+                    </a>
+                </div>
+                <div class="col">
                     <a href="{{ route('vehiculos.documentacion') }}" class="btn btn-sm btn-outline-dark w-100 h-100 d-flex align-items-center justify-content-center">
                         <i class="fas fa-file-alt me-1 me-md-2"></i> <span class="d-none d-sm-inline">Documentación</span>
                     </a>
