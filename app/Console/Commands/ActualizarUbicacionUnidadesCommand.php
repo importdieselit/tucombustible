@@ -17,6 +17,10 @@ class ActualizarUbicacionUnidadesCommand extends Command
 
     public function handle(Service24GPSService $gpsService)
 {
+
+    $latSede = 10.48834308128781;
+    $lngSede = -66.82329619185627;
+    $radioSede = 0.100; // 100 metros en km (aprox)
     $this->output->title('Monitoreo de Sincronización GPS');
 
     $this->comment('1/3 -> Solicitando Token...');
@@ -43,6 +47,21 @@ class ActualizarUbicacionUnidadesCommand extends Command
             // 1. Actualizar tabla principal (ubicación en tiempo real)
             $vehiculo=Vehiculo::where('placa', $placa)->first();
             if($vehiculo){
+
+                $distancia = $this->calcularDistancia($latSede, $lngSede, $lat, $lng);
+
+                // 2. LÓGICA DE AUTOMATIZACIÓN DE ESTATUS (Solo para estatus 1 y 2)
+                if (in_array($vehiculo->estatus, [1, 2])) {
+                        
+                    // Si está fuera de los 100m y está Disponible (1) -> Pasa a En Ruta (2)
+                    if ($distancia > $radioSede && $vehiculo->estatus == 1) {
+                        $vehiculo->estatus = 2;
+                    } 
+                    // Si entró al perímetro y está En Ruta (2) -> Pasa a Disponible (1)
+                    elseif ($distancia <= $radioSede && $vehiculo->estatus == 2) {
+                        $vehiculo->estatus = 1;
+                    }
+                }
                 $vehiculo->latitud = $lat;
                 $vehiculo->longitud = $lng;
                 $vehiculo->save();
@@ -77,5 +96,21 @@ class ActualizarUbicacionUnidadesCommand extends Command
 
     public function success(){
         $this->comment('¡Proceso terminado con éxito!');
+    }
+
+    private function calcularDistancia($lat1, $lon1, $lat2, $lon2)
+    {
+        $earthRadius = 6371; // Radio de la tierra en KM
+
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+
+        $a = sin($dLat / 2) * sin($dLat / 2) +
+             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+             sin($dLon / 2) * sin($dLon / 2);
+
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+        
+        return $earthRadius * $c;
     }
 }

@@ -25,6 +25,7 @@
         height: 40px;
         border: 2px solid #002d72; /* Color corporativo */
         box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        transition: border-color 0.3s ease, background-color 0.3s ease;
     }
     
     .marker-pulse {
@@ -84,6 +85,10 @@
         background-color: #f4f4f4 !important;
     }
 
+    .leaflet-marker-icon {
+        transition: transform 0.5s linear;
+    }
+
     /* Ajuste para que el Tooltip (burbuja) no se pierda en fullscreen */
     .leaflet-fullscreen-on .custom-tooltip {
         font-size: 14px !important; /* Un poco más grande en pantalla completa */
@@ -101,7 +106,7 @@
                     <label class="small fw-bold">Buscar Unidad</label>
                     <input type="text" id="filter-placa" class="form-control form-control-sm" placeholder="Ej: AB123CD">
                 </div>
-                {{-- <div class="col-md-3">
+                 <div class="col-md-3">
                     <label class="small fw-bold">Estatus</label>
                     <select id="filter-status" class="form-select form-select-sm">
                         <option value="">Todos los estatus</option>
@@ -109,6 +114,7 @@
                         <option value="1">Disponibles</option>
                     </select>
                 </div>
+                {{--
                 <div class="col-md-3">
                     <label class="small fw-bold">Tipo de Vehículo</label>
                     <select id="filter-tipo" class="form-select form-select-sm">
@@ -132,161 +138,242 @@
 </div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/Leaflet.fullscreen.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        let map, markers = [];
+        // Cambiamos a 'let' para permitir actualizaciones de GPS
+        let unidades = @json($unidades); 
+        
+        console.log("Unidades iniciales:", unidades);
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            let map, markers = [];
-            const unidades = @json($unidades);
-            console.log(unidades);
-            // COORDENADAS DE LA SEDE
-            const sedeCoords = L.latLng(10.48834308128781, -66.82329619185627);
-            const RADIO_SEDE_METROS = 80;
-            function initMap() {
-                // Inicializar mapa
-                map = L.map('map', { attributionControl: false, fullscreenControl: true })
-                       .setView([10.4806, -66.9036], 6); // Centro por defecto (Caracas)
-                       
+        // COORDENADAS DE LA SEDE
+        const sedeCoords = L.latLng(10.48834308128781, -66.82329619185627);
+        const RADIO_SEDE_METROS = 100;
 
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
-                
-                // Dibujar un círculo suave para representar la sede (opcional, ayuda visualmente)
-                L.circle(sedeCoords, {
-                    color: '#002d72',
-                    fillColor: '#002d72',
-                    fillOpacity: 0.1,
-                    radius: RADIO_SEDE_METROS
-                }).addTo(map).bindPopup("Sede Principal");
-                // Renderizar marcadores iniciales
-                renderMarkers(unidades);
-                setInterval(actualizarData, 60000);
-            }
+        function initMap() {
+            map = L.map('map', { attributionControl: false, fullscreenControl: true })
+                   .setView([10.4806, -66.9036], 6); 
 
-            async function actualizarData() {
-                console.log('Buscando actualizaciones de GPS...');
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+            
+            L.circle(sedeCoords, {
+                color: '#002d72',
+                fillColor: '#002d72',
+                fillOpacity: 0.1,
+                radius: RADIO_SEDE_METROS
+            }).addTo(map).bindPopup("Sede Principal");
+
+            renderMarkers(unidades);
+            
+            // Ciclo de actualización cada 60seg
+            setInterval(actualizarData, 150000);
+        }
+
+        async function actualizarData() {
+            console.log('Intentando actualizar...');
                 try {
-                    const response = await fetch("{{ route('api.vehiculos.ubicacion') }}");
+                    const response = await fetch("{{ route('api.vehiculos.ubicacion') }}", {
+                        method: 'GET',
+                        credentials: 'include', // <--- IMPORTANTE: Incluye cookies de sesión
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.status === 401) {
+                        console.warn('Sesión expirada. Redirigiendo...');
+                        window.location.reload(); // O manejar el re-login
+                        return;
+                    }
+
                     const nuevaData = await response.json();
                     
                     if (nuevaData.length > 0) {
-                        unidades = nuevaData; // Actualizamos la variable global
-                        applyFilters();       // Re-renderizamos respetando los filtros actuales
-                        console.log('Mapa actualizado con éxito.');
+                        unidades = nuevaData; 
+                        updateMapMarkers(nuevaData);
+                        console.log('Posiciones actualizadas.');
                     }
                 } catch (error) {
-                    console.error('Error al actualizar posiciones:', error);
+                    console.error('Error al actualizar:', error);
                 }
             }
 
-            function renderMarkers(dataFiltro) {
-                // Limpiar marcadores previos
-                markers.forEach(m => map.removeLayer(m));
-                markers = [];
+        function renderMarkers(dataFiltro) {
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+            const group = L.featureGroup();
 
-                const group = L.featureGroup();
+            dataFiltro.forEach(u => {
+                const unitLatLng = L.latLng(u.latitud, u.longitud);
+                const distanciaASede = unitLatLng.distanceTo(sedeCoords);
+                
+                // Mostrar siempre si estatus es 2 (En Ruta) o está lejos de la sede
+                const mostrarSiempre = (u.estatus == 2 || distanciaASede > RADIO_SEDE_METROS);
 
-                dataFiltro.forEach(u => {
-                   const unitLatLng = L.latLng(u.latitud, u.longitud);
-            
-                    // 1. Calcular distancia a la sede
-                    const distanciaASede = unitLatLng.distanceTo(sedeCoords);
-                    
-                    // 2. Lógica de visibilidad permanente:
-                    // Es estatus 2 (En Ruta) O está a más de 200 metros de la sede
-                    const mostrarSiempre = (u.estatus == 2 || distanciaASede > RADIO_SEDE_METROS);
+                let colorStatus = '#002d72'; 
+                if(u.estatus == 2) colorStatus = '#f2A435'; // Naranja/Dorado (Ruta)
+                if(u.estatus == 3) colorStatus = '#e74a3b'; // Rojo (Incidencia)
 
-                    // 3. Color dinámico para el pulso (Verde si está en ruta, Azul si está en sede, Rojo si hay incidencia)
-                    let colorStatus = '#002d72'; // Azul corporativo (Default/Sede)
-                    if(u.estatus == 2) colorStatus = '#f2A435'; // Verde (Ruta)
-                    if(u.estatus == 3) colorStatus = '#e74a3b'; // Rojo (Incidencia/Parado)
+                const icon = L.divIcon({
+                    html: `
+                        <div class="map-marker-container" style="border-color: ${colorStatus}">
+                            <div class="marker-pulse" style="border-color: ${colorStatus}"></div>
+                            <i class="fa-solid fa-truck small" style="color: ${colorStatus}"></i>
+                        </div>`,
+                    iconSize: [35, 35],
+                    className: 'custom-marker'
+                });
 
-                    const icon = L.divIcon({
-                        html: `
-                            <div class="map-marker-container" style="border-color: ${colorStatus}">
-                                <div class="marker-pulse" style="border-color: ${colorStatus}"></div>
-                                <i class="fa-solid fa-truck small" style="color: ${colorStatus}"></i>
-                            </div>`,
-                        iconSize: [35, 35],
-                        className: 'custom-marker'
+                const m = L.marker(unitLatLng, { icon: icon })
+                    .bindTooltip(`
+                        <div class="tooltip-content">
+                            <b>${u.placa}</b><br>
+                            <small>${u.is_marca?.marca || ''} ${u.is_modelo?.modelo || ''}</small><br>
+                            <small class="text-white opacity-75">${tiempoRelativo(u.updated_at)}</small>
+                        </div>`, {
+                        direction: 'top',
+                        offset: [0, -15],
+                        className: 'custom-tooltip',
+                        permanent: mostrarSiempre,
+                        sticky: false 
                     });
 
-                    const m = L.marker(unitLatLng, { icon: icon })
-                        .bindTooltip(`
-                            <div class="tooltip-content">
-                                <b>${u.placa}</b><br>
-                                <small>${u.is_marca.marca || ''} ${u.is_modelo.modelo || ''}</small><br>
-                                <small class="text-white opacity-75">${tiempoRelativo(u.updated_at)}</small>
-                            </div>`, {
-                            direction: 'top',
-                            offset: [0, -15],
-                            className: 'custom-tooltip',
-                            permanent: mostrarSiempre, // AQUÍ SE APLICA LA REGLA
-                            sticky: false 
-                        });
+                m.addTo(map);
+                markers.push(m);
+                group.addLayer(m);
+            });
 
-                    m.unitData = u; // Guardamos data para filtrar
+            if (markers.length > 0) {
+                map.fitBounds(group.getBounds(), { padding: [50, 50] });
+            }
+        }
+
+        function updateMapMarkers(data) {
+            const currentIds = data.map(u => u.id);
+
+            data.forEach(u => {
+                const newLatLng = [u.latitud, u.longitud];
+                const colorStatus = obtenerColorPorEstatus(u.estatus);
+                const contentTooltip = generarHtmlTooltip(u);
+
+                if (markers[u.id]) {
+                    // --- EL VEHÍCULO YA EXISTE: ACTUALIZAR ---
+                    
+                    // 1. Mover posición (El CSS hará el resto)
+                    markers[u.id].setLatLng(newLatLng);
+
+                    // 2. Actualizar Icono (Por si cambió el estatus/color)
+                    const newIcon = generarIcono(colorStatus);
+                    markers[u.id].setIcon(newIcon);
+
+                    // 3. Actualizar Contenido del Tooltip y visibilidad
+                    const mostrarSiempre = (u.estatus == 2 || L.latLng(newLatLng).distanceTo(sedeCoords) > RADIO_SEDE_METROS);
+                    markers[u.id].getTooltip().setContent(contentTooltip);
+                    
+                    // Forzar visibilidad del tooltip según estatus
+                    if (mostrarSiempre) {
+                        markers[u.id].openTooltip();
+                    } else {
+                        markers[u.id].closeTooltip();
+                    }
+
+                } else {
+                    // --- VEHÍCULO NUEVO: CREAR ---
+                    const mostrarSiempre = (u.estatus == 2 || L.latLng(newLatLng).distanceTo(sedeCoords) > RADIO_SEDE_METROS);
+                    
+                    const m = L.marker(newLatLng, { 
+                        icon: generarIcono(colorStatus) 
+                    }).bindTooltip(contentTooltip, {
+                        direction: 'top',
+                        offset: [0, -15],
+                        className: 'custom-tooltip',
+                        permanent: mostrarSiempre
+                    });
+
                     m.addTo(map);
-                    markers.push(m);
-                    group.addLayer(m);
-                });
-
-                // Auto-ajuste de zoom solo si hay marcadores en pantalla
-                if (markers.length > 0) {
-                    map.fitBounds(group.getBounds(), { padding: [50, 50] });
+                    markers[u.id] = m; // Guardar en el registro global
                 }
-            }
+            });
 
-            // Lógica de Filtrado
-            function applyFilters() {
-                const placa = document.getElementById('filter-placa').value.toLowerCase();
-                //const tipo = document.getElementById('filter-tipo').value.toLowerCase();
-                //const estatus = document.getElementById('filter-status').value.toLowerCase();
+            // Opcional: Eliminar marcadores de unidades que ya no vienen en la data
+            Object.keys(markers).forEach(id => {
+                if (!currentIds.includes(parseInt(id))) {
+                    map.removeLayer(markers[id]);
+                    delete markers[id];
+                }
+            });
+        }
 
+        // Funciones Helper para mantener el código limpio y reutilizable
+        function obtenerColorPorEstatus(estatus) {
+            if(estatus == 2) return '#f2A435'; // Ruta
+            if(estatus == 3) return '#e74a3b'; // Incidencia
+            return '#002d72'; // Sede/Disponible
+        }
 
-                const filtrados = unidades.filter(u => {
-                    //const tipoU = (u.tipo || '').toLowerCase();
-                    const placaU = (u.placa || '').toLowerCase();
-                    //const estatusU = (u.estatus || '').toLowerCase();
+        function generarIcono(color) {
+            return L.divIcon({
+                html: `
+                    <div class="map-marker-container" style="border-color: ${color}">
+                        <div class="marker-pulse" style="border-color: ${color}"></div>
+                        <i class="fa-solid fa-truck small" style="color: ${color}"></i>
+                    </div>`,
+                iconSize: [35, 35],
+                className: 'custom-marker'
+            });
+        }
 
-                    return (placaU.includes(placa));
-                });
+        function generarHtmlTooltip(u) {
+            return `
+                <div class="tooltip-content">
+                    <b>${u.placa}</b><br>
+                    <small>${u.is_marca?.marca || ''} ${u.is_modelo?.modelo || ''}</small><br>
+                    <small class="text-white opacity-75">Actualizado: ${tiempoRelativo(u.updated_at)}</small>
+                </div>`;
+        }
 
-                renderMarkers(filtrados);
-            }
+        function applyFilters() {
+            const fPlaca = document.getElementById('filter-placa').value.toLowerCase();
+            const fEstatus = document.getElementById('filter-status').value;
 
-            function resetFilters() {
-                document.getElementById('filter-placa').value = "";
-               // document.getElementById('filter-status').value = "";
-               // document.getElementById('filter-tipo').value = "";
-                renderMarkers(unidades);
-            }
+            const filtrados = unidades.filter(u => {
+                const placaU = (u.placa || '').toLowerCase();
+                const estatusU = String(u.estatus || ''); // Normalizar a String
 
-            function tiempoRelativo(fecha) {
-                const now = new Date();
-                const past = new Date(fecha);
+                const coincidePlaca = placaU.includes(fPlaca);
+                const coincideEstatus = (fEstatus === "") || (estatusU === fEstatus);
 
-                const diffMin = Math.floor((now - past) / 1000 / 60);
+                return coincidePlaca && coincideEstatus;
+            });
 
-                if (diffMin < 1) return 'Hace segundos';
-                if (diffMin < 60) return `Hace ${diffMin} min`;
+            renderMarkers(filtrados);
+        }
 
-                const horas = Math.floor(diffMin / 60);
-                if (horas < 24) return `Hace ${horas} h`;
+        function resetFilters() {
+            document.getElementById('filter-placa').value = "";
+            document.getElementById('filter-status').value = "";
+            renderMarkers(unidades);
+        }
 
-                const dias = Math.floor(horas / 24);
-                return `Hace ${dias} días`;
-            }
+        function tiempoRelativo(fecha) {
+            const now = new Date();
+            const past = new Date(fecha);
+            const diffMin = Math.floor((now - past) / 1000 / 60);
 
-            // Listeners de los filtros
-            document.getElementById('filter-placa').addEventListener('input', applyFilters);
-           // document.getElementById('filter-tipo').addEventListener('change', applyFilters);
-            //document.getElementById('filter-status').addEventListener('change', applyFilters);
+            if (diffMin < 1) return 'Hace segundos';
+            if (diffMin < 60) return `Hace ${diffMin} min`;
+            const horas = Math.floor(diffMin / 60);
+            if (horas < 24) return `Hace ${horas} h`;
+            return `Hace ${Math.floor(horas / 24)} días`;
+        }
 
+        // Listeners activados
+        document.getElementById('filter-placa').addEventListener('input', applyFilters);
+        document.getElementById('filter-status').addEventListener('change', applyFilters);
 
-            // EJECUTAR EL MAPA: Llamamos a la función dentro del mismo scope donde fue creada
-            initMap();
-
-        });
-
-
-    </script>
+        initMap();
+    });
+</script>
 @endsection

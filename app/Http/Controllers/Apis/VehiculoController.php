@@ -219,6 +219,15 @@ class VehiculoController extends Controller
         return true;
     }
 
+     public function apiUbicaciones()
+    {
+        $unidades = Vehiculo::with(['isMarca','isModelo'])->whereNotNull('latitud')
+            ->whereNotNull('longitud')
+            ->where('latitud', '!=', 0)
+            ->get(['id', 'placa', 'marca', 'modelo', 'tipo', 'estatus', 'latitud', 'longitud', 'updated_at']);
+        return response()->json($unidades);
+    }
+
 
     /**
      * Crear un nuevo vehículo
