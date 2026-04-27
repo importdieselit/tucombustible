@@ -146,9 +146,9 @@
                 </div>
             </div>
             <div id="info-ruta" class="position-absolute top-0 end-0 m-3 p-2 bg-white shadow-sm rounded" style="z-index: 1000;">
-                <small class="text-muted d-block">Distancia Calculada:</small>
-                <span id="distancia-recorrida" class="fw-bold text-primary">0.00 KM</span>
-            </div>
+            <small class="text-muted d-block">Distancia Calculada:</small>
+            <span id="distancia-recorrida" class="fw-bold text-primary">0.00 KM</span>
+        </div>
             <div id="map" style="height: 600px; width: 100%; border-radius: 0 0 0.375rem 0.375rem;"></div>
         </div>
     </div>
