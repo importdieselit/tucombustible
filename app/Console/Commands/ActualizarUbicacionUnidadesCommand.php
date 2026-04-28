@@ -20,7 +20,7 @@ class ActualizarUbicacionUnidadesCommand extends Command
 
     $latSede = 10.48834308128781;
     $lngSede = -66.82329619185627;
-    $radioSede = 0.100; // 100 metros en km (aprox)
+    $radioSede = 0.150; // 150 metros en km (aprox)
     //$this->output->title('Monitoreo de Sincronización GPS');
 
     //$this->comment('1/3 -> Solicitando Token...');
@@ -95,10 +95,15 @@ class ActualizarUbicacionUnidadesCommand extends Command
                         $cisterna->km_contador += $distanciaDelta;
                         $cisterna->km_mantt += $distanciaDelta;
                         $cisterna->save();
-                        $this->actualizarHistorialPorHora($cisterna->id, $lat, $lng, $distanciaDelta);
+                        if($distancia > $radioSede || $vehiculo->estatus == 2){
+                            $this->actualizarHistorialPorHora($cisterna->id, $lat, $lng, $distanciaDelta);
+                        }
                     }
                 }      
-                $this->actualizarHistorialPorHora($vehiculo->id, $lat, $lng, $distanciaDelta);
+                
+                if($distancia > $radioSede || $vehiculo->estatus == 2){
+                    $this->actualizarHistorialPorHora($vehiculo->id, $lat, $lng, $distanciaDelta);
+                }
             }
             $bar->advance();
         }
