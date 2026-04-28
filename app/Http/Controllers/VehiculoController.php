@@ -1045,15 +1045,16 @@ class VehiculoController extends BaseController
         return response()->json($unidades);
     }
 
-    public function vistaHistorial($id = null)
+    public function vistaHistorial(Request $request, $id = null)
     {
         // Obtenemos los vehículos para el select del buscador
         $vehiculos = Vehiculo::with(['isMarca','isModelo'])->whereNotNull('latitud')
             ->whereNotNull('longitud')
             ->where('latitud', '!=', 0)->orderBy('placa', 'asc')->get();
-        
-        // Cargamos la vista y le pasamos el ID si es que viene desde la ficha
-        return view('vehiculo.historial', compact('vehiculos', 'id'));
+        $desde = $request->get('desde', now()->subDay()->format('Y-m-d\TH:i'));
+        $hasta = $request->get('hasta', now()->format('Y-m-d\TH:i'));
+
+        return view('vehiculo.historial', compact('vehiculo', 'id', 'desde', 'hasta'));
     }
     
     public function historial(Request $request, $id)
