@@ -1054,7 +1054,7 @@ class VehiculoController extends BaseController
         $desde = $request->get('desde', now()->subDay()->format('Y-m-d\TH:i'));
         $hasta = $request->get('hasta', now()->format('Y-m-d\TH:i'));
 
-        return view('vehiculo.historial', compact('vehiculo', 'id', 'desde', 'hasta'));
+        return view('vehiculo.historial', compact('vehiculos', 'id', 'desde', 'hasta'));
     }
     
     public function historial(Request $request, $id)
