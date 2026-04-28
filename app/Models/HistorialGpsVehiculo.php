@@ -27,6 +27,7 @@ class HistorialGpsVehiculo extends Model
         'vehiculo_id',
         'latitud',
         'longitud',
+        'distancia',
         'created_at',
         'updated_at'
     ];

@@ -50,9 +50,21 @@ class ActualizarUbicacionUnidadesCommand extends Command
             $estatus = $vehiculo->estatus;
 
             if($vehiculo){
+                $distanciaDelta = 0;
+                if (!is_null($vehiculo->latitud) && !is_null($vehiculo->longitud)) {
+                    $distanciaDelta = $this->calcularDistancia(
+                        $vehiculo->latitud, 
+                        $vehiculo->longitud, 
+                        $lat, 
+                        $lng
+                    );
+                    if ($distanciaDelta < 0.05) {
+                        $distanciaDelta = 0;
+                    }
+                }
 
                 $distancia = $this->calcularDistancia($latSede, $lngSede, $lat, $lng);
-
+                $estatus = $vehiculo->estatus;
                 // 2. LÓGICA DE AUTOMATIZACIÓN DE ESTATUS (Solo para estatus 1 y 2)
                 if (in_array($vehiculo->estatus, [1, 2])) {
                     // Si está fuera de los 100m y está Disponible (1) -> Pasa a En Ruta (2)
@@ -66,33 +78,26 @@ class ActualizarUbicacionUnidadesCommand extends Command
                 $vehiculo->latitud = $lat;
                 $vehiculo->longitud = $lng;
                 $vehiculo->estatus = $estatus;
+                $vehiculo->kilometraje += $distanciaDelta;
+                $vehiculo->km_contador += $distanciaDelta;
+                $vehiculo->km_mantt += $distanciaDelta;
+
                 $vehiculo->save();
-                if(!is_null($vehiculo->acoplado_id)){
-                    $cisterna = Vehiculo::where('id', $vehiculo->acoplado_id)->first();
-                    $cisterna->estatus = $estatus;
-                    $cisterna->latitud = $lat;
-                    $cisterna->longitud = $lng;
-                    $cisterna->save();
-                }
-                
 
-
-                    // // 2. Registro por hora (Si ya existe registro para esa placa en esta hora, lo actualiza)
-                   // Lógica de Historial por Hora
-                    $inicioHora = Carbon::now()->startOfHour();
-                    
-                    // Usamos updateOrCreate simulado con búsqueda manual por eficiencia
-                    HistorialGpsVehiculo::updateOrInsert(
-                        [
-                            'vehiculo_id' => $vehiculo->id,
-                            'created_at'  => $inicioHora
-                        ],
-                        [
-                            'latitud'    => $lat,
-                            'longitud'   => $lng,
-                            'updated_at' => Carbon::now()
-                        ]
-                    );
+                if ($vehiculo->tipo_id == 3 && !is_null($vehiculo->acoplado_id)) {
+                    $cisterna = Vehiculo::find($vehiculo->acoplado_id);
+                    if ($cisterna) {
+                        $cisterna->estatus = $estatus;
+                        $cisterna->latitud = $lat;
+                        $cisterna->longitud = $lng;
+                        $cisterna->kilometraje += $distanciaDelta; // La cisterna recorre lo mismo que el chuto
+                        $cisterna->km_contador += $distanciaDelta;
+                        $cisterna->km_mantt += $distanciaDelta;
+                        $cisterna->save();
+                        $this->actualizarHistorialPorHora($cisterna->id, $lat, $lng, $distanciaDelta);
+                    }
+                }      
+                $this->actualizarHistorialPorHora($vehiculo->id, $lat, $lng, $distanciaDelta);
             }
             $bar->advance();
         }
@@ -126,5 +131,23 @@ class ActualizarUbicacionUnidadesCommand extends Command
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
         
         return $earthRadius * $c;
+    }
+
+    private function actualizarHistorialPorHora($vehiculoId, $lat, $lng, $delta)
+    {
+        $inicioHora = Carbon::now()->startOfHour();
+
+        // Buscamos el registro de esta hora o lo creamos si no existe
+        $historial = HistorialGpsVehiculo::firstOrCreate(
+            ['vehiculo_id' => $vehiculoId, 'created_at' => $inicioHora],
+            ['latitud' => $lat, 'longitud' => $lng, 'distancia' => 0]
+        );
+
+        // Incrementamos la distancia acumulada y actualizamos la última posición conocida
+        $historial->increment('distancia', $delta, [
+            'latitud' => $lat, 
+            'longitud' => $lng,
+            'updated_at' => Carbon::now()
+        ]);
     }
 }

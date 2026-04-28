@@ -20,7 +20,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('send:reporte-diario-operaciones')->dailyAt('17:00')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));
         $schedule->command('send:reporte-diario-operaciones')->dailyAt('14:00')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));
         $schedule->command('send:reporte-diario-operaciones')->dailyAt('08:00')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));
-        $schedule->command('gps:actualizar')->everyFiveMinutes()->appendOutputTo(storage_path('logs/reportes_automaticos.log'));
+        $schedule->command('gps:actualizar')->everyTwoMinutes()->appendOutputTo(storage_path('logs/reportes_automaticos.log'));
     }
 
  
