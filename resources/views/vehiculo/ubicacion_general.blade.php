@@ -208,6 +208,11 @@
             dataFiltro.forEach(u => {
                 const unitLatLng = L.latLng(u.latitud, u.longitud);
                 const distanciaASede = unitLatLng.distanceTo(sedeCoords);
+                const fechaActual = new Date();
+                const fechaAyer = new Date(fechaActual.getTime() - (24 * 60 * 60 * 1000));
+                // Formatear para que coincida con el formato del controlador (YYYY-MM-DDTHH:mm)
+                const formatDT = (date) => date.toISOString().slice(0, 16);
+                const urlHistorial = `/vehiculos/${v.id}/historial?desde=${formatDT(fechaAyer)}&hasta=${formatDT(fechaActual)}`;
                 
                 // Mostrar siempre si estatus es 2 (En Ruta) o está lejos de la sede
                 const mostrarSiempre = (u.estatus == 2 || distanciaASede > RADIO_SEDE_METROS);
@@ -231,6 +236,7 @@
                         <div class="tooltip-content">
                             <b>${u.placa}</b><br>
                             <small>${u.is_marca?.marca || ''} ${u.is_modelo?.modelo || ''}</small><br>
+                            <a href="${urlHistorial}" class="btn btn-sm btn-dark text-white w-100">Ver Recorrido</a>
                             <small class="text-white opacity-75">${tiempoRelativo(u.updated_at)}</small>
                         </div>`, {
                         direction: 'top',

@@ -5,7 +5,7 @@
 @push('styles')
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/leaflet.fullscreen.css" rel="stylesheet" />
-
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
 
     <style>
         #map {
@@ -208,7 +208,12 @@
 
                 <div class="tab-pane fade show active" id="resumen" role="tabpanel">
                     <div class="row">
-                        <h6 class="mb-3">Historial de Kilometraje y Consumo Mensual <span class="text-danger">(MODO DEMO)</span></h6>
+                        <h6 class="mb-3">Historial de Kilometraje y Consumo Mensual</h6>
+                        @php
+                            // Calculamos las fechas para que el input datetime-local las reconozca
+                            $fechaFin = now()->format('Y-m-d\TH:i');
+                            $fechaInicio = now()->subDay()->format('Y-m-d\TH:i');
+                        @endphp
                     {{-- Contenedor del gráfico --}}
                     <div class="col-md-8 d-none" id="monthly-chart" style="height: 300px; margin-bottom: 20px;"></div>
                     <div class="card border-0 shadow-sm mt-3">
@@ -216,6 +221,14 @@
                             <h6 class="mb-0 text-uppercase small fw-bold">
                                 <i class="fa-solid fa-location-dot text-danger me-1"></i> Ubicación en Tiempo Real
                             </h6>
+                            <a href="{{ route('vehiculos.historial', [
+                                    'id' => $vehiculo->id, 
+                                    'desde' => $fechaInicio, 
+                                    'hasta' => $fechaFin
+                                ]) }}" 
+                            class="btn btn-primary w-100 mb-2">
+                                <i class="fa-solid fa-clock-rotate-left me-2"></i> Ver Historial (Últimas 24h)
+                            </a>
                         </div>
                         <div class="card-body p-0">
                             <div id="map"></div>

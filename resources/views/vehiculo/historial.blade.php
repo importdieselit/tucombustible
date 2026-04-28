@@ -112,19 +112,19 @@
                         <option value="" selected disabled>Elige un vehículo...</option>
                         {{-- Iteramos los vehículos que mandes desde el controlador web --}}
                         @foreach($vehiculos as $v)
-                            <option value="{{ $v->id }}">{{ $v->placa }} - {{ $v->isMarca->marca ?? '' }} {{ $v->isModelo->modelo ?? '' }}</option>
+                            <option value="{{ $v->id }}"  @if($v->id==$id) selected @endif>{{ $v->placa }} - {{ $v->isMarca->marca ?? '' }} {{ $v->isModelo->modelo ?? '' }}</option>
                         @endforeach
                     </select>
                 </div>
 
                 <div class="col-md-3">
                     <label class="form-label small fw-bold">Desde</label>
-                    <input type="datetime-local" id="filtro-desde" value="{{ date('Y-m-d H:i') }}"class="form-control" required>
+                    <input type="datetime-local" id="filtro-desde" value="{{ $desde }}"class="form-control" required>
                 </div>
 
                 <div class="col-md-3">
                     <label class="form-label small fw-bold">Hasta</label>
-                    <input type="datetime-local" id="filtro-hasta" value="{{ date('Y-m-d H:i') }}" class="form-control" required>
+                    <input type="datetime-local" id="filtro-hasta" class="form-control" value="{{ $hasta }}">
                 </div>
 
                 <div class="col-md-2">
