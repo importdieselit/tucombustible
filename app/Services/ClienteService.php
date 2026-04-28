@@ -81,7 +81,16 @@ class ClienteService
 
     public function obtenerExpediente($id): Cliente
     {
-        return $this->repository->find($id);
+        $cliente = $this->repository->find($id);
+
+        // Extraemos los litros del cupo de GASCO cargado en el 'with' del Repo
+        // Buscamos el primero que coincida con el mes/año actual o simplemente el primero de la relación
+        $cupoActual = $cliente->cuposGasco->first(); 
+
+        // Creamos un atributo dinámico para que el Blade lo vea directo
+        $cliente->cupo_gasco_informativo = $cupoActual ? $cupoActual->litros_autorizados : 0;
+
+        return $cliente;
     }
 
     public function obtenerDashboardAdmin(array $filtros): array

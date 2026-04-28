@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Services\{ClienteService, DashboardService};
+use App\Services\GascoCupoService;
 use App\Models\{Estado, Ciudad};
 use App\Models\TipoCombustible;
 use Illuminate\Http\Request;
@@ -13,11 +14,13 @@ class ClienteController extends Controller
 {
     protected ClienteService $clienteService;
     protected DashboardService $dashboardService;
+    protected GascoCupoService $gascoCupoService;
 
-    public function __construct(ClienteService $clienteService, DashboardService $dashboardService)
+    public function __construct(ClienteService $clienteService, DashboardService $dashboardService, GascoCupoService $gascoCupoService)
     {
         $this->clienteService   = $clienteService;
         $this->dashboardService = $dashboardService;
+        $this->gascoCupoService = $gascoCupoService;
     }
 
     // -------------------------------------------------------
@@ -79,55 +82,55 @@ class ClienteController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        
-        // Verificación de seguridad básica
         if (!$user->cliente) {
             Auth::logout();
             return redirect()->route('login')->with('error', 'No tiene un expediente asociado.');
         }
 
-        // 1. Capturamos el ID de la sucursal si viene en la URL
         $sucursalId = $request->query('sucursal_id');
-
-        // 2. Llamamos al servicio (Asegúrate de haber actualizado la firma del método en el DashboardService)
+        
+        // 1. Cargamos la data base (Aquí viene el cliente con sus relaciones)
         $data = $this->dashboardService->getDashboardData($user, $sucursalId);
+        $cliente = $data['cliente'];
 
-        // 3. CARGA DE PEDIDOS (Usando el cliente que determinó el servicio: Padre o Hijo)
-        if (isset($data['cliente'])) {
-            // Aquí $data['cliente'] ya es el HIJO si venimos por modo espejo
-            $data['pedidos'] = app(\App\Services\PedidoService::class)
-                                ->listarPedidosParaUsuario($data['cliente']);
-        }
+        // 2. Consulta de GASCO
+        // IMPORTANTE: Este método debe llamar internamente a 'getOrCreateMonthlyQuota' 
+        // del repositorio para asegurar que si es un mes nuevo, se cree el registro.
+        $infoGasco = $this->gascoCupoService->obtenerSaldoActual($cliente->id);
+        
+        // 3. REFRESH DEL MODELO
+        // Si el paso anterior creó un registro de mes nuevo, actualizó la DB pero NO esta instancia.
+        // Con refresh() nos aseguramos que $cliente->disponible sea el valor real de la DB.
+        $cliente->refresh();
 
-        // 4. SOLUCIÓN AL ERROR: Definimos la variable SIEMPRE
-        // Si hay un sucursal_id en la URL, es true. Si no, es false.
+        // 4. MAPEO DE LÓGICA RESTAURADA PARA LA VISTA
+        
+        // Cupo SIAVCOM: Ahora lo sacamos de la tabla relacional (cliente_cupos)
+        $data['cupoSiavcom'] = $cliente->cupos->first()->litros_aprobados ?? 0;
+
+        // Cupo GASCO: El autorizado para el mes actual
+        $data['cupoGasco'] = $infoGasco['autorizados'] ?? 0;
+
+        // Disponible: El campo que el Repo mantiene (Reset mensual - Despachos)
+        $data['disponible'] = $cliente->disponible;
+
+        // 5. Carga de Pedidos y resto de la lógica
+        $data['pedidos'] = app(\App\Services\PedidoService::class)
+                            ->listarPedidosParaUsuario($cliente);
+
         $data['viendoSucursal'] = $request->filled('sucursal_id');
 
-        // Manejo de vistas según el perfil retornado por el servicio
-        if ($data['perfil'] === 'cliente_en_registro') {
-            return view('cliente.en_proceso', $data);
+        if (in_array($data['perfil'], ['cliente_en_registro', 'cliente_rechazado', 'cliente_inactivo'])) {
+            return view("cliente." . str_replace('cliente_', '', $data['perfil']), $data);
         }
 
-        if ($data['perfil'] === 'cliente_rechazado') {
-            return view('cliente.rechazado', $data);
-        }
-
-        if ($data['perfil'] === 'cliente_inactivo') {
-            return view('cliente.inactivo', $data);
-        }
-
-        // Retornamos la vista principal con todas las variables definidas
         return view('cliente.index', $data);
     }
 
-    // -------------------------------------------------------
-    // PERFIL DEL CLIENTE
-    // -------------------------------------------------------
-
     public function perfil()
     {
-        $cliente = $this->clienteService->obtenerExpediente(Auth::user()->cliente_id);
-        return view('cliente.perfil', compact('cliente'));
+        // NO uses compact('cliente'), llama al index para que cargue TODO
+        return $this->index(new Request());
     }
 
     // -------------------------------------------------------
