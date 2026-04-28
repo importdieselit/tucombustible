@@ -222,7 +222,7 @@
                                 <i class="fa-solid fa-location-dot text-danger me-1"></i> Ubicación en Tiempo Real
                             </h6>
                             <a href="{{ route('vehiculos.historial', [
-                                    'id' => $vehiculo->id, 
+                                    'id' => $item->id, 
                                     'desde' => $fechaInicio, 
                                     'hasta' => $fechaFin
                                 ]) }}" 
