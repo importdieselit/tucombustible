@@ -60,7 +60,7 @@ class LogisticaController extends Controller
 
         // 3. Inicializar colecciones
         $clientes = collect();
-        $pedidosPendientes = collect();
+        $pedidosPendientes = Pedido::where('estado', 'pendiente')->with('cliente')->get();
         $proveedores = collect();
         $muelles = DB::table('muelles')->orderBy('nombre')->get();
 

@@ -253,6 +253,7 @@
                                                     <b x-text="item.cliente_nombre"></b><br>
                                                     <span class="text-muted" x-text="'RIF: ' + item.cliente_rif"></span>
                                                     <input type="hidden" :name="'items['+index+'][cliente_id]'" :value="item.cliente_id">
+                                                    <input type="hidden" :name="'items['+index+'][pedido_id]'" :value="item.pedido_id">
                                                 </td>
                                                 <td>
                                                     <input type="number" :name="'items['+index+'][litros]'" class="form-control form-control-sm fw-bold border-orange" x-model.number="item.litros" @input="calcularTotal()">

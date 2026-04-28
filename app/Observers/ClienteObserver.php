@@ -6,6 +6,7 @@ use App\Models\Cliente;
 use App\Models\Alerta;
 use App\Models\GascoCupoMensual;
 use App\Services\FcmNotificationService;
+use Illuminate\Support\Facades\Log;
 
 class ClienteObserver
 {
@@ -51,7 +52,7 @@ class ClienteObserver
                         ]);
                         
                     } catch (\Exception $e) {
-                        \Log::error("Error enviando alerta de disponible bajo: " . $e->getMessage());
+                        Log::error("Error enviando alerta de disponible bajo: " . $e->getMessage());
                     }
                 }
             }

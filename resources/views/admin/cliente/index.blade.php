@@ -186,6 +186,7 @@
                             <th class="px-3 py-3 text-center border-0">Estatus</th>
                             <th class="px-3 py-3 text-center border-0">Cupo SIAVCOM</th>
                             <th class="px-3 py-3 text-center border-0">Cupo GASCO</th>
+                            <th class="px-3 py-3 text-center border-0">Disponible</th>
                             <th class="px-3 py-3 text-center border-0">Registro</th>
                             <th class="px-3 py-3 text-center border-0">Aprobación</th>
                             <th class="px-4 py-3 text-end border-0">Acción</th>
@@ -234,6 +235,12 @@
                             <td class="px-3 py-3 text-center">
                                 <div class="fw-black text-dark small">
                                     {{ number_format($c->cupo_gasco ?? 0, 0, ',', '.') }}
+                                    <span class="text-[9px] text-muted">LTS</span>
+                                </div>
+                            </td>
+                            <td class="px-3 py-3 text-center">
+                                <div class="fw-black text-dark small">
+                                    {{ number_format($c->disponible ?? 0, 0, ',', '.') }}
                                     <span class="text-[9px] text-muted">LTS</span>
                                 </div>
                             </td>

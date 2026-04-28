@@ -27,7 +27,15 @@ class ClienteRepository
             'choferes',
             'estado',
             'ciudad',
+            // Cargamos el cupo de las sucursales para el modal
             'sucursales.registroPaso',
+            'sucursales.cuposGasco' => function($q) {
+                $q->where('mes', now()->month)->where('anio', now()->year);
+            },
+            // Cargamos el cupo del cliente actual
+            'cuposGasco' => function($q) {
+                $q->where('mes', now()->month)->where('anio', now()->year);
+            }
         ])->findOrFail($id);
     }
 
@@ -36,7 +44,7 @@ class ClienteRepository
         $ahora = Carbon::now();
 
         // 1. Iniciamos la query con las relaciones básicas
-        $query = Cliente::with(['registroPaso', 'padre']);
+        $query = Cliente::with(['registroPaso', 'padre', 'cupos']);
 
         // 2. Agregamos el cálculo de SIAVCOM (Suma de todos sus cupos de combustible)
         $query->withSum('cupos as cupo_siavcom', 'litros_aprobados');
@@ -70,7 +78,7 @@ class ClienteRepository
             }
         }
 
-        return $query->orderBy('updated_at', 'desc')->paginate(15);
+        return $query->orderBy('updated_at', 'desc')->paginate(20);
     }
 
     public function getStatsGlobales(): array
@@ -195,25 +203,33 @@ class ClienteRepository
     // GESTIÓN DE CUPOS
     // -------------------------------------------------------
 
-    public function ajustarCupo($clienteId, int $tipoCombustibleId, float $litros): ClienteCupo
+    public function ajustarCupo($clienteId, $tipoCombustibleId, $litros): ClienteCupo
     {
+
         return DB::transaction(function () use ($clienteId, $tipoCombustibleId, $litros) {
-            // Actualiza solo el cupo del tipo de combustible indicado
-            // Si no existe, lo crea (caso de primer registro de cupo)
+            $cliente = Cliente::findOrFail($clienteId);
+
+            // 1. (Opcional) Limpiar el campo viejo en la tabla clientes
+            $cliente->update(['cupo' => 0]); 
+
+            // 2. Usar updateOrCreate para que si es Padre (no tiene registro) lo cree
+            // y si es Sucursal (ya tiene registro) lo actualice.
             $cupo = ClienteCupo::updateOrCreate(
                 [
-                    'cliente_id'          => $clienteId,
-                    'tipo_combustible_id' => $tipoCombustibleId,
+                    'cliente_id'          => $cliente->id, 
+                    'tipo_combustible_id' => $tipoCombustibleId
                 ],
                 [
                     'litros_aprobados'   => $litros,
                     'litros_solicitados' => $litros,
+                    'updated_at'         => now()
                 ]
             );
 
-            // Sincroniza el campo cupo en la tabla clientes (referencia rápida)
-            Cliente::where('id', $clienteId)->update(['cupo' => $litros, 'disponible' => $litros]);
+            // 3. Actualizar el disponible del cliente
+            $cliente->update(['disponible' => $litros]);
 
+            // IMPORTANTE: Retornar el objeto $cupo para que coincida con el Return Type
             return $cupo;
         });
     }
@@ -295,9 +311,20 @@ class ClienteRepository
 
     public function getSucursales($parentId)
     {
-        return Cliente::with(['registroPaso', 'cupos.tipoCombustible'])
+        $mes = now()->month;
+        $anio = now()->year;
+
+        return Cliente::with(['registroPaso'])
+            ->with(['cuposGasco' => function($q) use ($mes, $anio) {
+                $q->where('mes', $mes)->where('anio', $anio);
+            }])
             ->where('parent', $parentId)
-            ->get();
+            ->get()
+            ->map(function($sucursal) {
+                // Creamos un atributo dinámico para facilitar el acceso en el Blade
+                $sucursal->cupo_gasco_actual = $sucursal->cuposGasco->first()->litros_autorizados ?? 0;
+                return $sucursal;
+            });
     }
 
     public function existeClienteConTipoCombustible(string $rif, int $tipoCombustibleId): bool

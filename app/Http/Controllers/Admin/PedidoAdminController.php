@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Pedido;
 use App\Services\PedidoService;
+use App\Services\LogisticaService;
 use App\Repositories\ClienteRepository;
 use App\Repositories\DepositoRepository;
 use Illuminate\Http\Request;
@@ -14,15 +16,18 @@ class PedidoAdminController extends Controller
     protected $pedidoService;
     protected $clienteRepo;
     protected $depositoRepo;
+    protected $LogisticaService;
 
     public function __construct(
         PedidoService $pedidoService,
         ClienteRepository $clienteRepo,
-        DepositoRepository $depositoRepo
+        DepositoRepository $depositoRepo,
+        LogisticaService $LogisticaService
     ) {
         $this->pedidoService = $pedidoService;
         $this->clienteRepo = $clienteRepo;
         $this->depositoRepo = $depositoRepo;
+        $this->LogisticaService = $LogisticaService;
     }
 
     public function index()
@@ -67,16 +72,34 @@ class PedidoAdminController extends Controller
     {
         $validated = $request->validate([
             'deposito_id'    => 'required|exists:depositos,id',
-            'vehiculo_id'    => 'required|exists:vehiculos,id', // Vimos que la app pide vehículo
+            'vehiculo_id'    => 'required|exists:vehiculos,id', 
             'fecha_despacho' => 'required|date|after_or_equal:today',
         ]);
 
         try {
-            // Toda la lógica pesada (validar disponibilidad del depósito, restar saldos, cambiar estatus, FCM) 
-            // se encapsula en este método del Service.
-            $this->pedidoService->planificarYDespachar($id, $validated);
+            // 1. Buscamos el pedido para armar el "item" de logística
+            $pedido = Pedido::findOrFail($id);
 
-            return back()->with('success', 'Planificación guardada. El pedido ha sido despachado del tanque.');
+            // 2. Construimos el array exacto que espera LogisticaService
+            $dataLogistica = [
+                'tipo_planificacion'   => 1, // 1 es Diesel
+                'fecha_programada'     => $validated['fecha_despacho'],
+                'es_transporte_propio' => '1', 
+                'vehiculo_id'          => $validated['vehiculo_id'],
+                'tipo_combustible_id'  => 1, 
+                'items' => [
+                    [
+                        'cliente_id' => $pedido->cliente_id,
+                        'pedido_id'  => $pedido->id,
+                        'litros'     => $pedido->cantidad_solicitada,
+                    ]
+                ]
+            ];
+
+            // 3. Ahora sí llamamos al servicio correctamente
+            $this->LogisticaService->procesarPlanificacion($dataLogistica);
+
+            return back()->with('success', 'Planificación guardada. El pedido ha sido procesado.');
         } catch (Exception $e) {
             return back()->with('error', 'Error al planificar: ' . $e->getMessage());
         }

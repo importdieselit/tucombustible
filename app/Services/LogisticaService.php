@@ -105,18 +105,27 @@ class LogisticaService
             // REGISTRAR DETALLES SOLO SI ES DIESEL (1) O MGO (2)
             if (in_array($tipoPlanificacion, [1, 2])) { 
                 foreach ($items as $item) {
-                    // Descuento de cupo solo si es Diesel (1)
-                    if ($tipoPlanificacion == 1 && !empty($item['cliente_id'])) { 
+
+                    // Definimos claramente si es un pedido real
+                    $pedidoId = (isset($item['pedido_id']) && $item['pedido_id'] !== '' && $item['pedido_id'] !== 'null') 
+                                ? $item['pedido_id'] 
+                                : null;
+                    
+                    // CORRECCIÓN A: Evitar doble descuento. Solo descontamos si NO hay pedido_id
+                    if ($tipoPlanificacion == 1 && !empty($item['cliente_id']) && is_null($pedidoId)) { 
+                        
                         $cliente = Cliente::lockForUpdate()->findOrFail($item['cliente_id']);
                         if ($item['litros'] > $cliente->disponible) {
                             throw new Exception("Saldo insuficiente para {$cliente->nombre}. Disponible: {$cliente->disponible}L");
                         }
+
                         $cliente->decrement('disponible', $item['litros']);
 
                         $cupoMensual = GascoCupoMensual::where('cliente_id', $cliente->id)
                             ->where('mes', now()->month)
                             ->where('anio', now()->year)
                             ->first();
+
                         if ($cupoMensual) {
                             $cupoMensual->increment('litros_consumidos', $item['litros']);
                         }
@@ -125,7 +134,7 @@ class LogisticaService
                     $this->viajeRepo->createDetalle([
                         'viaje_id'            => $viaje->id,
                         'cliente_id'          => $item['cliente_id'] ?? null,
-                        'pedido_id'           => $item['pedido_id'] ?? null,
+                        'pedido_id'           => $item['pedido_id'] ?? null, // Aquí se enlaza el pedido
                         'litros'              => $item['litros'] ?? 0,
                         'muelle_atraque'      => $item['muelle_id'] ?? null,
                         'buque_nombre_manual' => $item['buque_nombre'] ?? null,
@@ -134,8 +143,12 @@ class LogisticaService
                         'observacion'         => $item['observaciones'] ?? null,
                     ]);
 
-                    if (!empty($item['pedido_id'])) {
-                        $this->pedidoRepo->update($item['pedido_id'], ['estado' => 'en_proceso']);
+                    // CORRECCIÓN B: Cambiar estatus para que desaparezca de la lista
+                    if ($pedidoId) {
+                        $this->pedidoRepo->update($pedidoId, [
+                            'estado' => 'en_proceso',
+                            'fecha_aprobacion' => now()
+                        ]);
                     }
                 }
             } elseif ($tipoPlanificacion == 4) {

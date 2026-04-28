@@ -211,4 +211,9 @@ class Cliente extends Model
     {
         return $this->hasMany(MovimientoCombustible::class, 'cliente_id','id');
     }
+
+    public function getCupoAttribute()
+    {
+        return $this->cupos->sum('litros_aprobados') ?: 0;
+    }
 }

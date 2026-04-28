@@ -3,7 +3,9 @@
 namespace App\Repositories;
 
 use App\Models\GascoCupoMensual;
+use App\Models\Cliente;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class GascoCupoRepository
 {
@@ -71,8 +73,18 @@ class GascoCupoRepository
      */
     public function updateConsumed(int $id, float $cantidad)
     {
-        $cupo = GascoCupoMensual::findOrFail($id);
-        $cupo->increment('litros_consumidos', $cantidad);
-        return $cupo;
+        return DB::transaction(function () use ($id, $cantidad) {
+            $cupo = GascoCupoMensual::findOrFail($id);
+            
+            // 1. Incrementamos el consumo en la tabla mensual
+            $cupo->increment('litros_consumidos', $cantidad);
+
+            // 2. Restamos la misma cantidad del disponible en la tabla clientes
+            // Usamos decrement para que sea una operación atómica en la DB
+            Cliente::where('id', $cupo->cliente_id)
+                ->decrement('disponible', $cantidad);
+
+            return $cupo;
+        });
     }
 }

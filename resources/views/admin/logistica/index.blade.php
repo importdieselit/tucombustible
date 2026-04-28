@@ -72,7 +72,7 @@
         <div class="card-body bg-light py-2">
             <form action="{{ route('logistica.index') }}" method="GET" class="row g-2 align-items-end">
                 <div class="col-md-3">
-                    <label class="small fw-bold text-uppercase text-muted mb-1">Tipo de Operación</label>
+                    <label class="small fw-bold text-uppercase text-muted mb-1">Tipo de Planificación</label>
                     <select name="tipo" class="form-select form-select-sm fw-bold">
                         <option value="">TODAS</option>
                         <option value="1" {{ request('tipo') == '1' ? 'selected' : '' }}>Despacho Diesel</option>
@@ -112,7 +112,7 @@
     {{-- TABLA DE VIAJES / PLANIFICACIONES --}}
     <div class="card shadow-sm border-0">
         <div class="card-header bg-white border-bottom py-3">
-            <h6 class="mb-0 fw-black text-uppercase small"><i class="fas fa-list me-2"></i>Historial de Operaciones</h6>
+            <h6 class="mb-0 fw-black text-uppercase small"><i class="fas fa-list me-2"></i>Historial de Planificaciones</h6>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -120,7 +120,7 @@
                     <thead class="bg-light">
                         <tr class="text-uppercase text-muted" style="font-size: 11px;">
                             <th class="ps-3">ID / Fecha</th>
-                            <th>Tipo Operación</th>
+                            <th>Tipo Planificación</th>
                             <th>Transporte</th>
                             <th>Origen / Destino</th>
                             <th>Volumen (L)</th>

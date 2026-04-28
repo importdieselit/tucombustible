@@ -36,7 +36,8 @@
                                     </thead>
                                     <tbody>
                                         @forelse($pedidosPendientes as $ped)
-                                            <tr>
+                                            {{-- La fila solo se muestra si el pedido_id NO está presente en el array de items --}}
+                                            <tr x-show="!items.some(item => item.pedido_id == {{ $ped->id }})">
                                                 <td>
                                                     <span class="fw-bold d-block text-dark">{{ $ped->cliente->nombre }}</span>
                                                     <small class="text-muted">RIF: {{ $ped->cliente->rif }}</small>
