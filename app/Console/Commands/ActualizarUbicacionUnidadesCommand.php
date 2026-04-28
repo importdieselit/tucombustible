@@ -37,7 +37,7 @@ class ActualizarUbicacionUnidadesCommand extends Command
         }
 
         //$this->info('3/3 -> Actualizando base de datos...');
-        $bar = $this->output->createProgressBar(count($unidades));
+        //$bar = $this->output->createProgressBar(count($unidades));
         
         foreach ($unidades as $unidadApi) {
             $placa = $unidadApi['UnitPlate']; // Ajusta según el nombre del campo en la API
@@ -105,12 +105,12 @@ class ActualizarUbicacionUnidadesCommand extends Command
                     $this->actualizarHistorialPorHora($vehiculo->id, $lat, $lng, $distanciaDelta);
                 }
             }
-            $bar->advance();
+       //     $bar->advance();
         }
         
-        $bar->finish();
-        $this->newLine(2);
-        $this->success();
+        //$bar->finish();
+       // $this->newLine(2);
+     //   $this->success();
 
     } catch (\Illuminate\Http\Client\ConnectionException $e) {
         $this->error('ERROR DE CONEXIÓN: El servidor de GPS tardó demasiado en responder.'.$e->getMessage());
