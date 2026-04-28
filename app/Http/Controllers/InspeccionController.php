@@ -288,8 +288,9 @@ public function store(Request $request)
 
             $viaje=Viaje::where('vehiculo_id',$vehiculo->id)->where('status', 'EN RUTA')->first();
             if($viaje){
-                $viaje->status='FINALIZADO';
+                $viaje->status='COMPLETADO';
                 $viaje->save();
+                
             }
         }
 

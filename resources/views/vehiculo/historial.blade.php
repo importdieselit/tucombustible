@@ -274,7 +274,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function limpiarRutaPrevia() {
         if (rutaActual) {
-            map.removeLayer(rutaActual);
+            map.removeControl(rutaActual); // El routing se elimina como control
             rutaActual = null;
         }
         marcadoresRuta.forEach(m => map.removeLayer(m));

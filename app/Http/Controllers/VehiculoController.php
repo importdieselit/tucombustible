@@ -1048,7 +1048,9 @@ class VehiculoController extends BaseController
     public function vistaHistorial($id = null)
     {
         // Obtenemos los vehículos para el select del buscador
-        $vehiculos = Vehiculo::with(['isMarca','isModelo'])->orderBy('placa', 'asc')->get();
+        $vehiculos = Vehiculo::with(['isMarca','isModelo'])->whereNotNull('latitud')
+            ->whereNotNull('longitud')
+            ->where('latitud', '!=', 0)->orderBy('placa', 'asc')->get();
         
         // Cargamos la vista y le pasamos el ID si es que viene desde la ficha
         return view('vehiculo.historial', compact('vehiculos', 'id'));

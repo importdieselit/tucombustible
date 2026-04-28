@@ -69,6 +69,16 @@ class VehiculoObserver
 
             } 
         }
+
+        if($vehiculo->isDirty('estatus')){
+            if(!is_null($vehiculo->acoplado_id)){
+                $cisterna= Vehiculo::find($vehiculo->acoplado_id);
+                if($cisterna->estatus!==$vehiculo->estatus){
+                    $cisterna->estatus=$vehiculo->estatus;
+                    $cisterna->save();
+                }
+            }
+        }
         
     }
 

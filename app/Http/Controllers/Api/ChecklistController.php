@@ -279,14 +279,11 @@ class ChecklistController extends Controller
                 && (empty($old_inspeccion->respuesta_in) || empty($old_inspeccion->respuesta_json));
             
            if (is_null($old_inspeccion)) {
-                // Nunca ha salido → primera salida
+                // No ha salido → primera salida
                 $tipoCheck = 'OUT'; // salida
-            } elseif (is_null($old_inspeccion->respuesta_in)) {
+            } else {
                 // Tiene OUT pendiente → ahora está entrando
                 $tipoCheck = 'IN'; // entrada
-            } else {
-                // Tiene OUT e IN → próximo movimiento: salida
-                $tipoCheck = 'OUT'; 
             }
             if($tipoCheck == 'OUT'){
                 $inspeccion = Inspeccion::create([
@@ -399,8 +396,7 @@ class ChecklistController extends Controller
                         $vehiculoCisterna->hrs_contador+=$horasDuracion;
                         $vehiculoCisterna->km_contador+=$km;
                         $vehiculoCisterna->km_mantt+=$km;
-                        $vehiculoCisterna->save();
-                        
+                        $vehiculoCisterna->save();         
                     }
                 }
             }
@@ -425,13 +421,11 @@ class ChecklistController extends Controller
                     'accion' => "/inspecciones/{$inspeccion->id}" // Ruta al detalle de la inspección
                 ];
                 
-                 FcmNotificationService::enviarNotification(
-                        "Unidad {$vehiculo->flota} requiere Mantenimiento",  
-                        "Unidad {$vehiculo->flota} requiere planificacion para Servicio de Mantenimiento. presenta acumulados {$vehiculo->km_mantt}km y {$vehiculo->hrs_mantt} horas de trabajo",
-                        $data
-                    );
-                    
-                    
+                FcmNotificationService::enviarNotification(
+                    "Unidad {$vehiculo->flota} requiere Mantenimiento",  
+                    "Unidad {$vehiculo->flota} requiere planificacion para Servicio de Mantenimiento. presenta acumulados {$vehiculo->km_mantt}km y {$vehiculo->hrs_mantt} horas de trabajo",
+                    $data
+                );    
             }
 
                         // 4. Crear los datos de la Alerta/Notificación (Estructura centralizada)
