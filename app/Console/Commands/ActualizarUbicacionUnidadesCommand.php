@@ -21,14 +21,14 @@ class ActualizarUbicacionUnidadesCommand extends Command
     $latSede = 10.48834308128781;
     $lngSede = -66.82329619185627;
     $radioSede = 0.100; // 100 metros en km (aprox)
-    $this->output->title('Monitoreo de Sincronización GPS');
+    //$this->output->title('Monitoreo de Sincronización GPS');
 
-    $this->comment('1/3 -> Solicitando Token...');
+    //$this->comment('1/3 -> Solicitando Token...');
     try {
         // Esto lanzará una excepción si el timeout de 30s se cumple
         $data = $gpsService->getData();
         
-        $this->comment('2/3 -> Datos recibidos. Analizando JSON...');
+      //  $this->comment('2/3 -> Datos recibidos. Analizando JSON...');
         
         $unidades = $data['data'] ?? [];
         if (empty($unidades)) {
@@ -36,7 +36,7 @@ class ActualizarUbicacionUnidadesCommand extends Command
             return;
         }
 
-        $this->info('3/3 -> Actualizando base de datos...');
+        //$this->info('3/3 -> Actualizando base de datos...');
         $bar = $this->output->createProgressBar(count($unidades));
         
         foreach ($unidades as $unidadApi) {
