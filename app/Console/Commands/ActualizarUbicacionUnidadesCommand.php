@@ -37,7 +37,7 @@ class ActualizarUbicacionUnidadesCommand extends Command
         }
 
         //$this->info('3/3 -> Actualizando base de datos...');
-        //$bar = $this->output->createProgressBar(count($unidades));
+        //  $bar = $this->output->createProgressBar(count($unidades));
         
         foreach ($unidades as $unidadApi) {
             $placa = $unidadApi['UnitPlate']; // Ajusta según el nombre del campo en la API
