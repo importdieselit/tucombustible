@@ -47,9 +47,10 @@ class ActualizarUbicacionUnidadesCommand extends Command
            
             // 1. Actualizar tabla principal (ubicación en tiempo real)
             $vehiculo=Vehiculo::where('placa', $placa)->first();
-            $estatus = $vehiculo->estatus;
-
+            
             if($vehiculo){
+                $estatus = $vehiculo->estatus;
+
                 $distanciaDelta = 0;
                 if (!is_null($vehiculo->latitud) && !is_null($vehiculo->longitud)) {
                     $distanciaDelta = $this->calcularDistancia(
