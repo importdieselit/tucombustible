@@ -415,7 +415,7 @@
             </div>
                       
 
-            <div class="card bg-corporate text-white shadow-sm">
+            <div class="card bg-corporate text-dark shadow-sm">
                 <div class="card-body">
                     <div class="d-flex justify-content-between mb-2 small">
                         <span>SUBTOTAL SERVICIOS:</span>
