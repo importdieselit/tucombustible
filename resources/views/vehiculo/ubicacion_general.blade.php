@@ -212,7 +212,7 @@
                 const fechaAyer = new Date(fechaActual.getTime() - (24 * 60 * 60 * 1000));
                 // Formatear para que coincida con el formato del controlador (YYYY-MM-DDTHH:mm)
                 const formatDT = (date) => date.toISOString().slice(0, 16);
-                const urlHistorial = `/vehiculos/${v.id}/historial?desde=${formatDT(fechaAyer)}&hasta=${formatDT(fechaActual)}`;
+                const urlHistorial = `/vehiculos/historial/${u.id}?desde=${formatDT(fechaAyer)}&hasta=${formatDT(fechaActual)}`;
                 
                 // Mostrar siempre si estatus es 2 (En Ruta) o está lejos de la sede
                 const mostrarSiempre = (u.estatus == 2 || distanciaASede > RADIO_SEDE_METROS);
