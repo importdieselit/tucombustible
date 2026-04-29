@@ -236,8 +236,7 @@
                         <div class="tooltip-content">
                             <b>${u.placa}</b><br>
                             <small>${u.is_marca?.marca || ''} ${u.is_modelo?.modelo || ''}</small><br>
-                            <a href="${urlHistorial}" class="btn btn-sm btn-dark text-white w-100">Ver Recorrido</a>
-                            <small class="text-white opacity-75">${tiempoRelativo(u.updated_at)}</small>
+                             <small class="text-white opacity-75">${tiempoRelativo(u.updated_at)}</small>
                         </div>`, {
                         direction: 'top',
                         offset: [0, -15],
