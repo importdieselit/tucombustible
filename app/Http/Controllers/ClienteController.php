@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Services\{ClienteService, DashboardService};
 use App\Services\GascoCupoService;
+use App\Services\PedidoService;
 use App\Models\{Estado, Ciudad};
 use App\Models\TipoCombustible;
 use Illuminate\Http\Request;
@@ -115,7 +116,7 @@ class ClienteController extends Controller
         $data['disponible'] = $cliente->disponible;
 
         // 5. Carga de Pedidos y resto de la lógica
-        $data['pedidos'] = app(\App\Services\PedidoService::class)
+        $data['pedidos'] = app(PedidoService::class)
                             ->listarPedidosParaUsuario($cliente);
 
         $data['viendoSucursal'] = $request->filled('sucursal_id');

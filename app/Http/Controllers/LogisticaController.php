@@ -28,13 +28,26 @@ class LogisticaController extends Controller
     {
         $query = Viaje::with(['tipoCombustible', 'detalles.cliente', 'sede']);
 
-        if ($request->has('tipo')) {
+        // Filtros de la tabla de viajes
+        if ($request->has('tipo') && $request->tipo != '') {
             $query->where('tipo_planificacion', $request->tipo);
+        }
+        if ($request->has('estado') && $request->estado != '') {
+            $query->where('status', $request->estado);
+        }
+        if ($request->has('fecha') && $request->fecha != '') {
+            $query->whereDate('fecha_salida', $request->fecha);
         }
 
         $viajes = $query->orderBy('created_at', 'desc')->paginate(15);
 
-        return view('admin.logistica.index', compact('viajes'));
+        // NUEVO: Consultar Pedidos Pendientes de Diesel (->where('estado', 'pendiente'))
+        $pedidosPendientes = Pedido::with('cliente')
+            ->where('estado', 'pendiente') 
+            ->orderBy('fecha_solicitud', 'asc')
+            ->get();
+
+        return view('admin.logistica.index', compact('viajes', 'pedidosPendientes'));
     }
 
     /**

@@ -67,6 +67,63 @@
         </div>
     </div>
 
+    {{-- LISTA DE PEDIDOS PENDIENTES DE DIESEL --}}
+    <div class="card shadow-sm border-0 mb-4" style="border-left: 4px solid #ff6600;">
+        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 fw-black text-uppercase small text-dark">
+                <i class="fas fa-clipboard-list text-orange me-2"></i>Pedidos de Diesel en Espera
+            </h6>
+            <span class="badge bg-orange text-white text-uppercase" style="font-size: 10px;">
+                {{ $pedidosPendientes->count() }} Pendientes
+            </span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light sticky-top">
+                        <tr class="text-uppercase text-muted" style="font-size: 10px;">
+                            <th class="ps-4">Cliente</th>
+                            <th>RIF</th>
+                            <th class="text-center">Fecha Solicitud</th>
+                            <th class="text-center">Volumen (L)</th>
+                            <th class="text-center">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($pedidosPendientes as $pedido)
+                            <tr>
+                                <td class="ps-4 fw-black text-dark" style="font-size: 13px;">
+                                    {{ $pedido->cliente->nombre }}
+                                </td>
+                                <td class="text-muted fw-bold" style="font-size: 12px;">
+                                    {{ $pedido->cliente->rif }}
+                                </td>
+                                <td class="text-center text-muted fw-bold" style="font-size: 12px;">
+                                    {{ $pedido->fecha_solicitud ? $pedido->fecha_solicitud->format('d/m/Y h:i A') : 'N/A' }}
+                                </td>
+                                <td class="text-center fw-black text-orange" style="font-size: 14px;">
+                                    {{ number_format($pedido->cantidad_solicitada, 0, ',', '.') }}
+                                </td>
+                                <td class="text-center">
+                                    <a href="{{ route('logistica.create', 'diesel') }}" class="btn btn-sm btn-dark fw-bold text-uppercase shadow-sm" style="font-size: 10px;">
+                                        <i class="fas fa-truck-loading me-1"></i> Planificar
+                                    </a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="text-center py-5">
+                                    <i class="fas fa-check-circle text-success fa-2x mb-2 opacity-50"></i>
+                                    <p class="text-muted fw-bold mb-0 text-uppercase small">No hay pedidos Pendientes</p>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     {{-- BARRA DE FILTROS --}}
     <div class="card shadow-sm border-orange mb-4">
         <div class="card-body bg-light py-2">

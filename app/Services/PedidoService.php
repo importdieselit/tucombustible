@@ -6,6 +6,7 @@ use App\Repositories\PedidoRepository;
 use App\Repositories\GascoCupoRepository;
 use App\Repositories\DepositoRepository;
 use App\Models\Cliente; 
+use App\Models\GascoCupoMensual;
 use Exception;
 use Illuminate\Support\Facades\DB;
 
@@ -104,7 +105,7 @@ class PedidoService
             Cliente::where('id', $pedido->cliente_id)->increment('disponible', $pedido->cantidad_solicitada);
 
             // Devolver litros al cupo mensual
-            $cupoGasco = \App\Models\GascoCupoMensual::where('cliente_id', $pedido->cliente_id)
+            $cupoGasco = GascoCupoMensual::where('cliente_id', $pedido->cliente_id)
                 ->where('mes', $pedido->created_at->month)
                 ->where('anio', $pedido->created_at->year)
                 ->first();
