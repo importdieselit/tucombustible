@@ -530,9 +530,49 @@
                             </form>
                         </div>
                     @endif
-
                 </div>
             </div>
+            {{-- ========================================== --}}
+            {{-- BOTONES DE HABILITAR / INHABILITAR CLIENTE --}}
+            {{-- ========================================== --}}
+
+            @if($cliente->status == \App\Models\Cliente::STATUS_APROBADO)
+                <div class="card shadow-sm border-danger mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-uppercase small text-danger mb-3 border-bottom pb-1">
+                            <i class="fas fa-ban me-2"></i>Inhabilitar Cliente
+                        </h6>
+                        <p class="text-muted mb-3" style="font-size: 11px;">
+                            Al inhabilitar, este cliente <strong>{{ $cliente->es_padre ? 'y TODAS sus sucursales vinculadas perderán' : 'perderá' }}</strong> el acceso para realizar nuevos pedidos de combustible.
+                        </p>
+                        <form action="{{ route('clientes.inactivar', $cliente->id) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="btn btn-danger w-100 btn-sm fw-bold shadow-sm" 
+                                    onclick="return confirm('¿Estás seguro de inhabilitar a este cliente?')">
+                                INHABILITAR
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            @elseif($cliente->status == \App\Models\Cliente::STATUS_INACTIVO)
+                <div class="card shadow-sm border-success mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-uppercase small text-success mb-3 border-bottom pb-1">
+                            <i class="fas fa-check-circle me-2"></i>Reactivar Cliente
+                        </h6>
+                        <p class="text-muted mb-3" style="font-size: 11px;">
+                            Restaura el acceso para que el cliente pueda volver a operar y solicitar pedidos en la plataforma.
+                        </p>
+                        <form action="{{ route('clientes.reactivar', $cliente->id) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="btn btn-success w-100 btn-sm fw-bold shadow-sm" 
+                                    onclick="return confirm('¿Estás seguro de habilitar nuevamente a este cliente?')">
+                                HABILITAR / REACTIVAR
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 </div>

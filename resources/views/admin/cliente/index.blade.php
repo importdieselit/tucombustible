@@ -56,10 +56,13 @@
                         
                         <select name="status_pedido" onchange="this.form.submit()"
                                 class="text-xs font-black border-2 border-gray-300 rounded p-2.5 outline-none focus:border-orange-impordiesel bg-white uppercase">
-                            <option value="">Todos los pedidos</option>
+                            <option value="">Todos los Pedidos</option>
                             <option value="pendiente" {{ request('status_pedido') == 'pendiente' ? 'selected' : '' }}>Pendientes</option>
                             <option value="aprobado" {{ request('status_pedido') == 'aprobado' ? 'selected' : '' }}>Aprobados</option>
+                            <option value="en_proceso" {{ request('status_pedido') == 'en_proceso' ? 'selected' : '' }}>En Proceso</option>
+                            <option value="completado" {{ request('status_pedido') == 'completado' ? 'selected' : '' }}>Completados</option>
                             <option value="rechazado" {{ request('status_pedido') == 'rechazado' ? 'selected' : '' }}>Rechazados</option>
+                            <option value="cancelado" {{ request('status_pedido') == 'cancelado' ? 'selected' : '' }}>Cancelados</option>
                         </select>
                     </form>
                 </div>

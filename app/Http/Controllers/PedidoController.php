@@ -51,6 +51,12 @@ class PedidoController extends Controller
             $user = Auth::user();
             $clienteUsuario = $user->cliente; // El cliente asociado al usuario logueado
 
+            $clienteDestino = \App\Models\Cliente::findOrFail($validated['cliente_id']);
+    
+            if ($clienteDestino->status == \App\Models\Cliente::STATUS_INACTIVO) {
+                throw new Exception("Operación denegada. Esta cuenta se encuentra INHABILITADA para solicitar combustible.");
+            }
+
             // 2. SEGURIDAD: Validar que el cliente_id solicitado pertenezca al usuario
             // Si el cliente_id no es él mismo Y no es una sucursal suya, bloqueamos.
             if ($validated['cliente_id'] != $clienteUsuario->id) {
