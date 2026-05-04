@@ -348,13 +348,15 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/search', [SearchController::class, 'query'])->name('search');
         });
 
-        // --- MÓDULO DE LOGÍSTICA Y PLANIFICACIÓN ---
+        // --- MÓDULO DE LOGÍSTICA ---
         Route::middleware(['auth', 'role:1,2,6,11,12,18'])->prefix('logistica')->name('logistica.')->group(function () {
             
             Route::get('/planificacion', [LogisticaController::class, 'index'])->name('index');
             Route::get('/crear/{tipo?}', [LogisticaController::class, 'create'])->name('create');
             Route::post('/guardar', [LogisticaController::class, 'store'])->name('store');
-            
+            // Rutas para Edición
+            Route::get('/{id}/editar', [LogisticaController::class, 'edit'])->name('edit');
+            Route::put('/{id}/actualizar', [LogisticaController::class, 'update'])->name('update');
         });
 
         // --- MÓDULO CLIENTES COMBUSTIBLE ---
