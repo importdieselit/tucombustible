@@ -132,4 +132,75 @@ class LogisticaController extends Controller
             return back()->withInput()->with('error', $e->getMessage());
         }
     }
+
+    // Método para ver detalles
+    public function show($id)
+    {
+        $viaje = Viaje::with(['vehiculo', 'chofer', 'ayudante', 'sede', 'detalles.cliente', 'proveedor'])
+                    ->findOrFail($id);
+
+        // Retornamos una vista parcial que se cargará dentro del modal
+        return view('logistica.partials.detalles_modal', compact('viaje'));
+    }
+
+    // Método para cancelar
+    public function cancelar($id)
+    {
+        try {
+            $viaje = Viaje::findOrFail($id);
+            
+            if ($viaje->status === 'COMPLETADO') {
+                return response()->json(['error' => 'No se puede cancelar una planificación ya completada.'], 422);
+            }
+
+            $viaje->update(['status' => 'CANCELADO']);
+
+            return response()->json(['success' => 'Planificación cancelada correctamente.']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Error al cancelar: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function edit($id)
+    {
+        $viaje = Viaje::with(['detalles', 'vehiculo', 'chofer'])->findOrFail($id);
+        
+        // Mapeo inverso para obtener el slug del tipo (diesel, mgo, flete, compra)
+        $tipoSlugs = [1 => 'diesel', 2 => 'mgo', 3 => 'flete', 4 => 'compra'];
+        $tipo = $tipoSlugs[$viaje->tipo_planificacion];
+        $tipoPlanificacionId = $viaje->tipo_planificacion;
+
+        // Datasources comunes (Reutilizando lógica de create[cite: 11])
+        $tipos = TipoCombustible::all();
+        $sedes = Sedes::where('estatus', true)->get();
+        $vehiculos = Vehiculo::where('estatus', 1)->get(['id', 'placa', 'carga_max', 'tipo']);
+        $personal = Chofer::with('persona')->get();
+        $muelles = DB::table('muelles')->orderBy('nombre')->get();
+        
+        // Datos específicos por tipo
+        $clientes = (in_array($tipoPlanificacionId, [1, 2, 3])) ? Cliente::where('status', Cliente::STATUS_APROBADO)->orderBy('nombre')->get() : collect();
+        $proveedores = ($tipoPlanificacionId == 4) ? DB::table('proveedores')->get() : collect();
+        $pedidosPendientes = ($tipoPlanificacionId == 1) ? Pedido::where('estado', 'pendiente')->with('cliente')->get() : collect();
+
+        return view('admin.logistica.edit', compact(
+            'viaje', 'tipo', 'tipoPlanificacionId', 'tipos', 'sedes', 
+            'vehiculos', 'personal', 'clientes', 'muelles', 'proveedores', 'pedidosPendientes'
+        ));
+    }
+
+    public function update(Request $request, $id)
+    {
+        // Mismas validaciones que store[cite: 11]
+        $request->validate([
+            'tipo_planificacion'  => 'required|in:1,2,3,4',
+            'fecha_programada'    => 'required|date',
+        ]);
+
+        try {
+            $this->logisticaService->actualizarPlanificacion($id, $request->all());
+            return redirect()->route('logistica.index')->with('success', 'Planificación actualizada correctamente.');
+        } catch (Exception $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
+    }    
 }

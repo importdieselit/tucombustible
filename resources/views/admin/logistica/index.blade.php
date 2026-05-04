@@ -241,12 +241,23 @@
                                     <span class="badge bg-{{ $statusColor }} text-uppercase" style="font-size: 9px;">{{ $viaje->status }}</span>
                                 </td>
                                 <td class="text-center">
-                                    <button class="btn btn-sm btn-light border shadow-sm" title="Ver Detalles">
-                                        <i class="fas fa-eye text-primary"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-light border shadow-sm" title="Imprimir Guía">
-                                        <i class="fas fa-file-pdf text-danger"></i>
-                                    </button>
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <button class="btn btn-sm btn-light border shadow-sm" onclick="verDetalles({{ $viaje->id }})" title="Ver Detalles">
+                                            <i class="fas fa-eye text-primary"></i>
+                                        </button>
+
+                                        @if($viaje->status == 'PROGRAMADO')
+                                            <a href="{{ route('logistica.edit', $viaje->id) }}" class="btn btn-sm btn-light border shadow-sm" title="Editar">
+                                                <i class="fas fa-edit text-warning"></i>
+                                            </a>
+                                        @endif
+
+                                        @if($viaje->status !== 'CANCELADO' && $viaje->status !== 'COMPLETADO')
+                                            <button class="btn btn-sm btn-light border shadow-sm" onclick="cancelarPlanificacion({{ $viaje->id }})" title="Cancelar">
+                                                <i class="fas fa-times-circle text-danger"></i>
+                                            </button>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -279,4 +290,73 @@
     .bg-orange { background-color: #ff6600 !important; }
     .fw-black { font-weight: 900; }
 </style>
+
+<!-- MODAL DE DETALLES -->
+<div class="modal fade" id="modalDetalles" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div id="contenidoModalDetalles">
+                <!-- Aquí se cargará la info vía AJAX -->
+                <div class="p-5 text-center">
+                    <div class="spinner-border text-orange" role="status"></div>
+                    <p class="mt-2 fw-bold text-uppercase small">Cargando información...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // Función para Cargar Detalles
+    function verDetalles(id) {
+        const modal = new bootstrap.Modal(document.getElementById('modalDetalles'));
+        const container = document.getElementById('contenidoModalDetalles');
+        
+        container.innerHTML = '<div class="p-5 text-center"><div class="spinner-border text-orange"></div></div>';
+        modal.show();
+
+        fetch(`/logistica/${id}`)
+            .then(response => response.text())
+            .then(html => {
+                container.innerHTML = html;
+            })
+            .catch(error => {
+                container.innerHTML = '<div class="alert alert-danger m-3">Error al cargar los datos.</div>';
+            });
+    }
+
+    // Función para Cancelar
+    function cancelarPlanificacion(id) {
+        Swal.fire({
+            title: '¿ESTÁS SEGURO?',
+            text: "Esta acción cancelará la planificación y no se podrá revertir.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#212529',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'SÍ, CANCELAR',
+            cancelButtonText: 'NO'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/logistica/${id}/cancelar`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('¡CANCELADO!', data.success, 'success')
+                        .then(() => location.reload());
+                    } else {
+                        Swal.fire('ERROR', data.error, 'error');
+                    }
+                });
+            }
+        });
+    }
+</script>
 @endsection
