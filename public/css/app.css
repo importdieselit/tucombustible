@@ -11975,3 +11975,70 @@ textarea.form-control-lg {
     display: none !important;
   }
 }
+
+
+* Estándar Impordiesel */
+        .card-step { border: none; border-top: 5px solid #4C474F; }
+        .card-step.border-orange { border-top-color: #f2A435; }
+        .bg-corporate { background-color: #4C474F !important; color: white; }
+        .text-orange { color: #f2A435 !important; }
+        .btn-orange { background-color: #f2A435; color: white; }
+        .btn-orange:hover { background-color: #d9922e; color: white; }
+        
+        /* Ajustes de Tabla */
+        #ordenesTable thead { background-color: #4C474F; color: white; text-transform: uppercase; font-size: 0.85rem; }
+        .clickable-row { cursor: pointer; transition: all 0.2s; }
+        .clickable-row:hover { background-color: rgba(242, 164, 53, 0.1) !important; }
+        
+        /* Estilo de los botones de DataTables para que no rompan el diseño */
+        .dt-buttons .dt-button {
+            background-color: #4C474F !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 4px !important;
+            font-size: 0.8rem !important;
+        }
+         /* Ajustes de Tabs para coincidir con el diseño */
+        .nav-tabs .nav-link {
+            color: #6c757d;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            border: none;
+            padding: 12px 20px;
+        }
+        .nav-tabs .nav-link.active {
+            color: #FF6B00;
+            border-bottom: 3px solid #FF6B00;
+            background: none;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #FF6B00;
+            box-shadow: 0 0 0 0.25rem rgba(255, 107, 0, 0.1);
+        }
+
+        .bg-chutos {
+        background-color: #ff6600 !important;
+    }
+    .bg-camiones {
+        background-color: #ffc107 !important;
+    }
+    .bg-cisternas {
+        background-color: #198754 !important;
+    }
+    .bg-camionetas {
+        background-color: #2c3e50 !important;
+    }
+
+    .border-chutos {
+        border-color: #ff6600 !important;
+    }
+    .border-camiones {
+        border-color: #ffc107 !important;
+        }
+    .border-cisternas {
+        border-color: #198754 !important;
+    }
+    .border-camionetas {
+        border-color: #2c3e50 !important
+    }

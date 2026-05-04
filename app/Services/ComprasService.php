@@ -50,7 +50,7 @@ class ComprasService
 
     private function actualizarEstatusCabecera($solicitudId)
     {
-        $detalles = SuministroCompraDetalle::where('solicitud_compra_id', $solicitudId)->get();
+        $detalles = SuministroCompraDetalle::where('suministro_compra_id', $solicitudId)->get();
         $totalSolicitado = $detalles->sum('cantidad_solicitada');
         $totalRecibido = $detalles->sum('cantidad_recibida');
 
