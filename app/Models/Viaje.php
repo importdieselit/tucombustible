@@ -55,6 +55,18 @@ class Viaje extends Model
         return $this->belongsTo(Chofer::class, 'ayudante', 'id'); 
     }
 
+    public function ayudante(): BelongsTo
+    {
+        return $this->belongsTo(Chofer::class, 'ayudante', 'id'); 
+    }
+
+    public function proveedor(): BelongsTo
+    {
+        return $this->belongsTo(Proveedor::class, 'proveedor_id');
+    }
+
+
+
     /**
      * Relación con el cuadro de viáticos generados para este viaje.
      */

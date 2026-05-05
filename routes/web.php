@@ -304,8 +304,10 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/crear/{tipo?}', [LogisticaController::class, 'create'])->name('create');
             Route::post('/guardar', [LogisticaController::class, 'store'])->name('store');
             // Rutas para Edición
+            Route::get('/{id}', [LogisticaController::class, 'show'])->name('show');
             Route::get('/{id}/editar', [LogisticaController::class, 'edit'])->name('edit');
             Route::put('/{id}/actualizar', [LogisticaController::class, 'update'])->name('update');
+            Route::post('/{id}/cancelar', [LogisticaController::class, 'cancelar'])->name('cancelar');
         });
 
         // --- MÓDULO CLIENTES COMBUSTIBLE ---

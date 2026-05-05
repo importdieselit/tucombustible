@@ -140,7 +140,7 @@ class LogisticaController extends Controller
                     ->findOrFail($id);
 
         // Retornamos una vista parcial que se cargará dentro del modal
-        return view('logistica.partials.detalles_modal', compact('viaje'));
+        return view('admin.logistica.partials.detalles_modal', compact('viaje'));
     }
 
     // Método para cancelar
