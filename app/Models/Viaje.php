@@ -55,7 +55,7 @@ class Viaje extends Model
 
     public function ayudante(): BelongsTo
     {
-        return $this->belongsTo(Chofer::class, 'ayudante', 'id'); 
+        return $this->belongsTo(Chofer::class, 'ayudante_id'); 
     }
 
 
