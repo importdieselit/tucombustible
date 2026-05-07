@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\DashboardService;
+use App\Services\PedidoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -36,6 +37,7 @@ class DashboardController extends Controller
             default => in_array($perfilId, [1, 2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18])
                 ? redirect()->route('vehiculos.index')
                 : abort(403, 'Perfil de usuario no reconocido o sin privilegios de acceso.'),
+
         };
     }
 
