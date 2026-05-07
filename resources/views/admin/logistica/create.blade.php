@@ -218,7 +218,7 @@
                                 </div>
                                 <div class="col-12 mt-3">
                                     <label class="small fw-bold text-muted text-uppercase">Observaciones</label>
-                                    <textarea name="observacion" class="form-control border-light" rows="3"></textarea>
+                                    <textarea name="observaciones" class="form-control border-light" rows="3"></textarea>
                                 </div>
                             </div>
                         </div>
@@ -310,7 +310,7 @@
                                 </div>
                                 <div class="col-12 mt-3">
                                     <label class="small fw-bold text-muted uppercase">Observaciones</label>
-                                    <textarea name="observacion" class="form-control border-light" rows="3"></textarea>
+                                    <textarea name="observaciones" class="form-control border-light" rows="3"></textarea>
                                 </div>
                             </div>
                         </div>

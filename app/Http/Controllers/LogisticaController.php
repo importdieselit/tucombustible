@@ -101,6 +101,10 @@ class LogisticaController extends Controller
                 ->get();
         }
 
+        $muelles = DB::table('muelles')->orderBy('nombre')->get();
+
+        $buques = DB::table('buques')->orderBy('nombre')->get();
+
         return view('admin.logistica.create', compact(
             'tipo', 
             'tipoPlanificacionId', 
@@ -111,7 +115,8 @@ class LogisticaController extends Controller
             'clientes', 
             'pedidosPendientes', 
             'muelles',
-            'proveedores'
+            'proveedores',
+            'buques'
         ));
     }
 
@@ -136,8 +141,19 @@ class LogisticaController extends Controller
     // Método para ver detalles
     public function show($id)
     {
-        $viaje = Viaje::with(['vehiculo', 'chofer', 'ayudante', 'sede', 'detalles.cliente', 'proveedor'])
-                    ->findOrFail($id);
+        $viaje = Viaje::with([
+            'vehiculo', 
+            'chofer.persona', 
+            'ayudante.persona', 
+            'sede', 
+            'detalles.cliente',
+            'detalles.buques',
+            'proveedor',
+            'chofer.persona',
+            'ayudante.persona',
+            'compraCombustible',
+            'proveedor'
+            ])->findOrFail($id);
 
         // Retornamos una vista parcial que se cargará dentro del modal
         return view('admin.logistica.partials.detalles_modal', compact('viaje'));

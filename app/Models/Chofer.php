@@ -116,7 +116,7 @@ class Chofer extends Model
 
     public function viajes_ayudante()
         {
-            return $this->hasMany(Viaje::class, 'ayudante');
+            return $this->hasMany(Viaje::class, 'ayudante_id');
         }
         
 

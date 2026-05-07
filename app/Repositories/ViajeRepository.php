@@ -19,7 +19,15 @@ class ViajeRepository
 
     public function find($id)
     {
-        return Viaje::with(['tipoCombustible', 'detalles.cliente', 'vehiculo', 'chofer'])->findOrFail($id);
+        return Viaje::with([
+            'tipoCombustible', 
+            'detalles.cliente', 
+            'vehiculo', 
+            'chofer.persona',
+            'ayudante.persona',
+            'sede',
+            'proveedor',
+            ])->findOrFail($id);
     }
 
     public function getViajesProgramados()

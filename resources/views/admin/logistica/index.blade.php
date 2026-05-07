@@ -310,19 +310,26 @@
 <script>
     // Función para Cargar Detalles
     function verDetalles(id) {
-        const modal = new bootstrap.Modal(document.getElementById('modalDetalles'));
+        const myModalEl = document.getElementById('modalDetalles');
+        // Esto previene que se apilen fondos grises si se hace clic varias veces
+        const modal = bootstrap.Modal.getOrCreateInstance(myModalEl);
         const container = document.getElementById('contenidoModalDetalles');
         
         container.innerHTML = '<div class="p-5 text-center"><div class="spinner-border text-orange"></div></div>';
         modal.show();
 
-        fetch(`/logistica/${id}`)
-            .then(response => response.text())
+        // Usamos el helper url() de Laravel para evitar problemas de rutas relativas
+        fetch(`{{ url('logistica') }}/${id}`)
+            .then(response => {
+                if(!response.ok) throw new Error('Error de servidor al cargar los detalles');
+                return response.text();
+            })
             .then(html => {
                 container.innerHTML = html;
             })
             .catch(error => {
-                container.innerHTML = '<div class="alert alert-danger m-3">Error al cargar los datos.</div>';
+                console.error("Error AJAX:", error);
+                container.innerHTML = '<div class="alert alert-danger m-4 text-center fw-bold"><i class="fas fa-exclamation-triangle me-2"></i> Error 500: Revisa la consola o los logs de Laravel.</div>';
             });
     }
 

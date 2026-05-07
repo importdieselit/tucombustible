@@ -26,8 +26,9 @@ class Viaje extends Model
         'destino_ciudad', 'chofer_id', 'ayudante', 'custodia_count', 
         'fecha_salida', 'status', 'vehiculo_id', 'litros', 'has_viatico', 
         'cliente_id', 'otro_cliente', 'usuario_id', 'otro_vehiculo', 
-        'otro_chofer', 'otro_ayudante', 'tipo', 'cisterna',
-        
+        'otro_chofer', 'otro_ayudante', 'tipo', 'cisterna', 'tipo_combustible_id', 'proveedor_id',
+        'observacion',
+
         // Campos de Logística
         'tipo_planificacion', 'sede_id', 'ayudante_id', 'tipo_remolque', 
         'punto_salida', 'punto_llegada', 'codigo_sap', 'nombre_cliente_externo',
@@ -50,14 +51,9 @@ class Viaje extends Model
         return $this->belongsTo(Chofer::class, 'chofer_id'); 
     }
 
-    public function ayudante_chofer(): BelongsTo
-    {
-        return $this->belongsTo(Chofer::class, 'ayudante', 'id'); 
-    }
-
     public function ayudante(): BelongsTo
     {
-        return $this->belongsTo(Chofer::class, 'ayudante', 'id'); 
+        return $this->belongsTo(Chofer::class, 'ayudante_id'); 
     }
 
     public function proveedor(): BelongsTo
@@ -120,11 +116,5 @@ class Viaje extends Model
     public function sede(): BelongsTo
     {
         return $this->belongsTo(Sedes::class, 'sede_id');
-    }
-
-    // Relación para el nuevo ayudante_id (Integridad referencial)
-    public function ayudante_id_rel(): BelongsTo
-    {
-        return $this->belongsTo(Chofer::class, 'ayudante_id');
     }
 }
