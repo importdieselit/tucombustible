@@ -30,7 +30,9 @@
             <p class="text-muted mb-0 small">Monitoreo de existencias, rotación y alertas de reposición.</p>
         </div>
         <div class="d-flex gap-2">
-            <button class="btn btn-navy btn-sm fw-bold  btn-outline-dark px-3"><i class="fas fa-plus me-1"></i> NUEVA ENTRADA</button>
+            <a href="{{ route('inventario.create') }}" class="btn btn-navy fw-bold  btn-outline-dark shadow-sm">
+                <i class="fas fa-plus me-1"></i> NUEVA ENTRADA
+            </a>
             <a href="{{ route('inventario.list') }}" class="btn btn-light fw-bold  btn-outline-dark shadow-sm">
                 <i class="fas fa-boxes text-orange fw-bold"></i> Maestro Artículos
             </a>

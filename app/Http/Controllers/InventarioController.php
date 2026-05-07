@@ -16,6 +16,7 @@ use App\Models\InventarioSuministro;
 use App\Models\SuministroCompra;
 use App\Models\SuministroCompraDetalle;
 use App\Models\Ventas;
+use App\Models\Proveedor;
 use App\Models\VentasDetalle;
 
 
@@ -118,6 +119,19 @@ class InventarioController extends BaseController
         return $colores[$id % count($colores)];
     }
 
+    public function buscar(Request $request)
+        {
+            $term = $request->get('q');
+            
+            // Buscamos por código de parte o descripción
+            $resultados = Inventario::where('codigo', 'LIKE', "%$term%")
+                ->orWhere('descripcion', 'LIKE', "%$term%")
+                ->limit(10)
+                ->get(['id', 'codigo', 'descripcion', 'marca', 'costo_div']);
+
+            return response()->json($resultados);
+        }
+
 
     /**
      * Muestra el formulario para crear un nuevo item.
@@ -127,8 +141,9 @@ class InventarioController extends BaseController
     {
         $item = new Inventario();
         $almacenes = Almacen::all();
+        $proveedores = Proveedor::all();
         // Nota: Los datos de Marca, Modelo, Condicion, etc. deben ser cargados aquí
-        return view('inventario.form', compact('item', 'almacenes'));
+        return view('inventario.form', compact('item', 'almacenes','proveedores'));
     }
 
     /**

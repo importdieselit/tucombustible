@@ -117,6 +117,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/inventario/solicitudes/{id}/dispatch', [InventarioController::class, 'dispatch'])->name('inventario.requests.dispatch');
     Route::post('/inventario/import/excel', [InventarioController::class, 'import'])->name('inventario.import');
     Route::get('/inventario/export/excel', [InventarioController::class, 'export'])->name('inventario.export');
+    Route::get('inventario/compras/crear', [InventarioController::class, 'create'])->name('compras.create');
+    Route::post('inventario/compras/guardar', [InventarioController::class, 'store'])->name('compras.store');
     Route::get('/ventas/create', [InventarioController::class, 'ventaCreate'])->name('ventas.create');
     Route::post('/ventas/store', [InventarioController::class, 'ventaStore'])->name('ventas.store');
     Route::post('/clientes/store-ajax', [PortalClienteController::class, 'storeAjax'])->name('clientes.storeAjax');  

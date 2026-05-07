@@ -91,7 +91,7 @@
                         </div>
                     </div>
                     <div class="col-md-6 text-end">
-                        <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary px-4 me-2">CANCELAR</a>
+                        <a href="{{ route('inventario.index') }}" class="btn btn-outline-secondary px-4 me-2">CANCELAR</a>
                         <button type="submit" class="btn btn-navy px-4 fw-bold">
                             <i class="fas fa-save me-1"></i> FINALIZAR Y GENERAR AJUSTES
                         </button>

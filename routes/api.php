@@ -28,6 +28,7 @@ use App\Http\Controllers\Apis\IncidenciaController;
 use App\Http\Controllers\ViajesController;
 use App\Http\Controllers\Apis\SearchController;
 use App\Http\Controllers\TelegramController;
+use App\Http\Controllers\InventarioController;
 
 
 
@@ -70,6 +71,7 @@ Route::get('search/autocomplete', [SearchController::class, 'handle'])->name('ap
     Route::get('/destinos/{id}/muelles', [ViajesController::class, 'getMuellesPorDestino']);
     Route::get('/destinos/{id}/clientes/{tipo}', [ViajesController::class, 'getClientes']);
     Route::get('/cliente/{id}/buques', [ViajesController::class, 'getBuquesPorCliente']);
+    Route::get('/inventario/buscar', [InventarioController::class, 'buscar'])->name('api.inventario.buscar');
 
     // Actualización de datos de guía en el viaje
     Route::put('viajes/{viajeId}/update-guia-data', [ViajesController::class, 'updateGuiaData']);
@@ -79,6 +81,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
+
     
     // Profile
     Route::get('/profile/data', [ProfileController::class, 'getProfileData']);
