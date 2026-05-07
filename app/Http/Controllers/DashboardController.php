@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\DashboardService;
+use App\Services\PedidoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -29,6 +30,10 @@ class DashboardController extends Controller
         // LÓGICA DEL CLIENTE (perfil 3)
         // -------------------------------------------------------
         
+        if ($user->id_perfil == 3) {
+            return redirect()->route('portal.clientes.index');
+        }
+
         // 1. Capturamos el ID de sucursal si viene en la URL
         $sucursalId = $request->query('sucursal_id');
 
@@ -38,7 +43,7 @@ class DashboardController extends Controller
         // 3. Cargamos los pedidos usando el cliente correcto (Padre o Sucursal)
         // Validamos que exista 'cliente' en el array por si el perfil es 'cliente_sin_vincular'
         if (isset($data['cliente'])) {
-            $data['pedidos'] = app(\App\Services\PedidoService::class)
+            $data['pedidos'] = app(PedidoService::class)
                                 ->listarPedidosParaUsuario($data['cliente']);
         }
 
