@@ -3,6 +3,9 @@
 namespace App\Observers;
 
 use App\Models\Vehiculo;
+use App\Services\FcmNotificationService;
+use App\Models\Viaje;
+use App\Models\Inspeccion;
 use App\Services\TelegramNotificationService;
 use Illuminate\Support\Facades\Log;
 
@@ -69,17 +72,38 @@ class VehiculoObserver
 
             } 
         }
+        
+    }
 
-        if($vehiculo->isDirty('estatus')){
-            if(!is_null($vehiculo->acoplado_id)){
-                $cisterna= Vehiculo::find($vehiculo->acoplado_id);
-                if($cisterna->estatus!==$vehiculo->estatus){
-                    $cisterna->estatus=$vehiculo->estatus;
-                    $cisterna->save();
+    public function updated(Vehiculo $vehiculo)
+    {
+        // CASO 2: Cambio a EN RUTA (2) sin checklist previo
+        if ($vehiculo->isDirty('estatus') && $vehiculo->estatus == 2) {
+            
+            // Buscamos el viaje programado para este vehículo hoy
+            $viaje = Viaje::where('vehiculo_id', $vehiculo->id)
+                ->where('status', 'Programado')
+                ->latest()
+                ->first();
+
+            if ($viaje) {
+                $hasChecklist = Inspeccion::where('viaje_id', $viaje->id)
+                    ->whereNull('respuesta_in')
+                    ->exists();
+
+                if (!$hasChecklist) {
+                    $usuariosNotificar = [1, 2, 5];
+                    foreach ($usuariosNotificar as $userId) {
+                        FcmNotificationService::enviarNotification(
+                            "INCUMPLIMIENTO DE PROCESO",
+                            "El vehículo {$vehiculo->flota} pasó a estado EN RUTA sin completar el checklist de salida para el viaje #{$viaje->id}.",
+                            ['viaje_id' => $viaje->id],
+                            $userId
+                        );
+                    }
                 }
             }
         }
-        
     }
 
     /**
