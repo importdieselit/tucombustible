@@ -29,7 +29,13 @@ class CheckAlertasViajes extends Command
                 ->exists();
 
             if (!$hasChecklist) {
-                $this->enviarAlerta("ALERTA SALIDA: El viaje #{$viaje->id} a {$viaje->destino_ciudad} no tiene checklist de salida tras 30 min de su hora programada.", $usuariosNotificar, $viaje);
+                $hasChecklist2= Inspeccion::where('vehiculo_id', $viaje->vehiculo_id)
+                ->whereNull('respuesta_in')->whereDate('created_at', '>=', $ahora->subMinutes(30))->exists();
+                if(!$hasChecklist2){ 
+
+                    $this->enviarAlerta("ALERTA SALIDA: El viaje #{$viaje->id} a {$viaje->destino_ciudad} no tiene checklist de salida tras 30 min de su hora programada.", $usuariosNotificar, $viaje);
+            
+                }
             }
         }
 
@@ -48,7 +54,12 @@ class CheckAlertasViajes extends Command
                 ->exists();
 
             if (!$hasCheckIn) {
-                $this->enviarAlerta("ALERTA RETORNO: El vehículo {$viaje->vehiculo->flota} está disponible pero el viaje #{$viaje->id} sigue 'EN RUTA' sin checklist de entrada (1h de retraso).", $usuariosNotificar, $viaje);
+                $hasCheckIn2 = Inspeccion::where('vehiculo_id', $viaje->vehiculo_id)
+                ->whereNotNull('respuesta_in')->whereDate('created_at', '>=', $ahora->subHour())->exists();
+                if(!$hasCheckIn2){
+                    $this->enviarAlerta("ALERTA RETORNO: El vehículo {$viaje->vehiculo->flota} está disponible pero el viaje #{$viaje->id} sigue 'EN RUTA' sin checklist de entrada (1h de retraso).", $usuariosNotificar, $viaje);
+            
+                }
             }
         }
     }
