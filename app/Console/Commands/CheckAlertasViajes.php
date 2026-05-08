@@ -16,7 +16,7 @@ class CheckAlertasViajes extends Command
     public function handle()
     {
         $ahora = Carbon::now();
-        $usuariosNotificar = [1, 2, 5]; // IDs de usuarios específicos (Gerencia/Seguridad)
+        $usuariosNotificar = [1, 3,9, 504,495]; // IDs de usuarios específicos (Gerencia/Seguridad)
 
         // CASO 1: Programado + 30 min sin Checklist de Salida
         $viajesRetrasados = Viaje::where('status', 'Programado')
