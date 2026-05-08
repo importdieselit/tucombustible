@@ -34,12 +34,6 @@ class ViajeObserver
             $vehiculo->save();
         }
         
-        if(!is_null($viaje->cisterna)){
-                Vehiculo::where('acoplado_id', $viaje->cisterna)->update(['acoplado_id' => null]);
-                $vehiculo->acoplado_id = $viaje->cisterna;
-                $vehiculo->save();
-        }
-
         
     }
 

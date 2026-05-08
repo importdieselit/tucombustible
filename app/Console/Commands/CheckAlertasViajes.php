@@ -59,9 +59,7 @@ class CheckAlertasViajes extends Command
             FcmNotificationService::enviarNotification(
                 "Seguridad Operativa",
                 $mensaje,
-                ['viaje_id' => $viaje->id,
-                'tipo' => 'ALERTA_OPERATIVA'],
-                $userId
+                ['viaje_id' => $viaje->id,'tipo' => 'ALERTA_OPERATIVA','user_id' => $userId]
             );
         }
     }
