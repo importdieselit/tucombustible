@@ -82,15 +82,13 @@ class SendReporteDiarioOperacionesCommand extends Command
                 $apiUrl = "https://api.screenshotone.com/take?" . http_build_query([
                     'access_key' => $accessKey,
                     'url' => $urlInterna,
-                    'format' => 'pdf',
+                    'format' => 'png',
                     'block_ads' => 'true',
                     'block_cookie_banners' => 'true',
-                    'print_background' => 'true',
-                    'page_size'=> 'Letter',
                     'delay' => 2, // Un pequeño delay para asegurar carga de JS/CSS
                     'timeout' => 60,
-                    'selector' => $reporte['selector']
-                    //'image_quality' => 80
+                    'selector' => $reporte['selector'],
+                    'image_quality' => 80
                 ]);
 
                 // 4. Generar la imagen localmente
