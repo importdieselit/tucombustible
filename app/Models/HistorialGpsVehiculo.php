@@ -21,7 +21,7 @@ class HistorialGpsVehiculo extends Model
      * @var string
      */
     protected $primaryKey = 'id';
-
+    public $audit = false;
 
     protected $fillable = [
         'vehiculo_id',

@@ -21,6 +21,19 @@ class TrazabilidadMiddleware
             // CAPTURA EL MENSAJE PERSONALIZADO SI EXISTE
             $customMsg = $request->attributes->get('bitacora_msg');
 
+            $omitir = [
+                //'GpsController',             // Omite todo el controlador
+                //'NotificacionController',    // Omite todo el controlador
+                //'ViajesController@getUpdate' // Omite solo una función específica de refresco visual
+            ];
+
+            if (in_array($controller, $omitir) || in_array($controller.'@'.$method, $omitir)) {
+                return $response;
+            }
+
+            // Si el request tiene un flag de omitir (para llamadas AJAX pesadas)
+            if ($request->has('skip_log')) return $response;
+
             BitacoraSistema::create([
                 'id_usuario'       => Auth::id(),
                 'tipo'             => 'CONTROLLER',

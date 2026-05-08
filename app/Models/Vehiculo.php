@@ -166,6 +166,8 @@ class Vehiculo extends Model
         'chofer_id' => 'integer', // bigint unsigned
     ];
 
+    public $ignorarEnBitacora = ['latitud', 'longitud'];
+
     // Relaciones (si es necesario y tienes los modelos correspondientes)
 
     /**

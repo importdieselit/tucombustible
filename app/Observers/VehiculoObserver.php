@@ -92,13 +92,12 @@ class VehiculoObserver
                     ->exists();
 
                 if (!$hasChecklist) {
-                    $usuariosNotificar = [1, 2, 5];
+                    $usuariosNotificar = [1, 2];
                     foreach ($usuariosNotificar as $userId) {
                         FcmNotificationService::enviarNotification(
                             "INCUMPLIMIENTO DE PROCESO",
                             "El vehículo {$vehiculo->flota} pasó a estado EN RUTA sin completar el checklist de salida para el viaje #{$viaje->id}.",
-                            ['viaje_id' => $viaje->id],
-                            $userId
+                            ['viaje_id' => $viaje->id,'user_id' => $userId]
                         );
                     }
                 }

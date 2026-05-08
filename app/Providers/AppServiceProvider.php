@@ -73,15 +73,35 @@ class AppServiceProvider extends ServiceProvider
 
     private function shouldSkip($model)
     {
+        $modelName = class_basename($model);
+
         $exclude = [
             'BitacoraSistema', // Evita bucle infinito
             'Session',         // Tablas de sesión de Laravel
             'Notification',    // Notificaciones masivas
-            'PersonalAccessToken', // Tokens de Sanctum/API
+            'PersonalAccessToken',             // Tokens de Sanctum/API
+            'HistorialGpsVehiculo',
             'Migration', 
             'Alerta'      // Registros de migraciones
         ];
 
-        return in_array(class_basename($model), $exclude);
+        if (in_array($modelName, $exclude)) {
+            return true;
+        }
+
+        // 2. Omisión dinámica: Si el modelo tiene una propiedad pública $audit = false
+        if (isset($model->audit) && $model->audit === false) {
+            return true;
+        }
+
+        if (isset($model->ignorarEnBitacora)) {
+            $cambios = array_keys($model->getChanges()); 
+            $cambiosRelevantes = array_diff($cambios, $model->ignorarEnBitacora);
+            if (empty($cambiosRelevantes)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
