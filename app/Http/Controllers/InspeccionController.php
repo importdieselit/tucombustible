@@ -183,6 +183,8 @@ public function store(Request $request)
             // Función auxiliar para procesar los items, ya sea directamente o dentro de subsecciones
             $processItems = function ($items) use (&$estatusGeneral, &$warningFound, &$fail,&$vehiculo,&$chofer,&$isCriticalFailure,&$criticalItems) {
                 foreach ($items as $item) {
+                    $value=$item['value'];
+
                     if($item['label']=='Nombre'){
                         $chofer=$item['value'];
                     }
@@ -194,7 +196,6 @@ public function store(Request $request)
                     }
                     
                     if ($item['label'] == 'Km. Recorridos' ) {
-                        $value=$item['value'];
                         $kmRecorridos = is_numeric($value) ? (int)$value : 0;
                         $kmVehiculo = $vehiculo->kilometraje ?? 0;
                                 

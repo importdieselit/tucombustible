@@ -13,19 +13,17 @@ class CreateBitacora extends Migration
      */
     public function up()
     {
-        Schema::create('bitacora', function (Blueprint $table) {
+        Schema::create('bitacora_sistema', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('usuario_id')->nullable();
-            $table->string('evento'); 
-            $table->string('modelo')->nullable();
-            $table->unsignedBigInteger('modelo_id')->nullable();
-            $table->string('accion')->nullable();
-            $table->json('datos')->nullable();
-            $table->json('antes')->nullable();
-            $table->json('despues')->nullable();
+            $table->unsignedBigInteger('id_usuario')->nullable();
+            $table->string('tipo'); 
+            $table->string('actividad'); 
+            $table->string('metodo_accion'); 
+            $table->json('parametros_request')->nullable();
+            $table->json('data_antes')->nullable(); 
+            $table->json('data_despues')->nullable();
             $table->string('ip')->nullable();
             $table->text('user_agent')->nullable();
-            $table->text('descripcion')->nullable();
             $table->timestamps();
         });
     }
@@ -37,6 +35,6 @@ class CreateBitacora extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('bitacora');
+        Schema::dropIfExists('bitacora_sistema');
     }
 }

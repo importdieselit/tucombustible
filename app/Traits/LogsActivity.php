@@ -1,14 +1,14 @@
 <?php
 namespace App\Traits;
 
-use App\Models\Bitacora;
+use App\Models\BitacoraSistema;
 use Illuminate\Support\Facades\Auth;
 
 trait LogsActivity {
     protected static function bootLogsActivity() {
         foreach (['created', 'updated', 'deleted'] as $event) {
             static::$event(function ($model) use ($event) {
-                Bitacora::create([
+                BitacoraSistema::create([
                     'id_usuario' => Auth::id(),
                     'evento'     => $event,
                     'modelo'     => get_class($model),
@@ -26,7 +26,7 @@ trait LogsActivity {
 
     // Función para logs personalizados manuales
     public static function logCustom($descripcion, $evento = 'personalizado') {
-        Bitacora::create([
+        BitacoraSistema::create([
             'id_usuario'  => Auth::id(),
             'evento'      => $evento,
             'descripcion' => $descripcion,

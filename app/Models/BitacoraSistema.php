@@ -5,25 +5,24 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Bitacora extends Model
+class BitacoraSistema extends Model
 {
     use HasFactory;
-    protected $table = 'bitacora';
+    protected $table = 'bitacora_sistema';
     protected $primaryKey = 'id';
     public $timestamps = true;
     public $increments = true;
     public $fillable = [
-        'usuario_id',
-        'evento',
-        'modelo',
-        'modelo_id',
-        'accion',
-        'datos',
-        'antes',
-        'despues',
+        'id_usuario',
+        'tipo',
+        'actividad',
+        'metodo_accion',
+        'parametros_request',
+        'data_antes',
+        'data_despues',
         'ip',
         'user_agent',
-        'descripcion',
+        'mensaje'
     ];
 
 }
