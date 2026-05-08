@@ -89,8 +89,8 @@ class SendReporteDiarioOperacionesCommand extends Command
                     'page_size'=> 'Letter',
                     'delay' => 2, // Un pequeño delay para asegurar carga de JS/CSS
                     'timeout' => 60,
-                    'selector' => $reporte['selector'],
-                    'image_quality' => 80
+                    'selector' => $reporte['selector']
+                    //'image_quality' => 80
                 ]);
 
                 // 4. Generar la imagen localmente
