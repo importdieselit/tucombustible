@@ -15,9 +15,12 @@ class CheckAlertasViajes extends Command
 
     public function handle()
     {
+        // Evitar que el comando se ejecute si ya hay una instancia activa (Previene duplicidad por tiempo)
+        // Nota: Requiere cache driver configurado en Laravel
         $this->info("Iniciando verificación de alertas operativas: " . now()->toDateTimeString());
         
-        $usuariosNotificar = [1, 3, 9, 504, 495];
+        // IDs de usuarios a notificar
+        $usuariosNotificar = [1, 504, 495]; 
         $reporte = ['salidas' => 0, 'notificadas_salida' => 0, 'retornos' => 0, 'notificadas_retorno' => 0];
 
         // --- CASO 1: SALIDAS RETRASADAS ---
@@ -27,83 +30,66 @@ class CheckAlertasViajes extends Command
             ->where('fecha_salida', '<=', now()->subMinutes(30))
             ->get();
 
-        $this->info("Unidades en mora de salida encontrada: " . $viajesRetrasados->count());
+        $this->info("Viajes en mora encontrados: " . $viajesRetrasados->count());
 
         foreach ($viajesRetrasados as $viaje) {
             $reporte['salidas']++;
             
-            // Verificamos si existe inspección ligada al viaje o al vehículo recientemente
-            $hasChecklist = Inspeccion::where('viaje_id', $viaje->id)
-                ->whereNull('respuesta_in')
-                ->exists();
+            // Verificamos inspección específica del viaje o general del vehículo reciente
+            $hasChecklist = Inspeccion::where(function($query) use ($viaje) {
+                $query->where('viaje_id', $viaje->id)
+                      ->orWhere(function($q) use ($viaje) {
+                          $q->where('vehiculo_id', $viaje->vehiculo_id)
+                            ->where('created_at', '>=', now()->subMinutes(30));
+                      });
+            })
+            ->whereNull('respuesta_in')
+            ->exists();
 
             if (!$hasChecklist) {
-                $hasChecklist2 = Inspeccion::where('vehiculo_id', $viaje->vehiculo_id)
-                    ->whereNull('respuesta_in')
-                    ->where('created_at', '>=', now()->subMinutes(30))
-                    ->exists();
-
-                if (!$hasChecklist2) {
-                    $this->warn(" > Notificando: Viaje #{$viaje->id} - Sin Checklist de Salida.");
-                    $this->enviarAlerta("ALERTA SALIDA: El viaje #{$viaje->id} a {$viaje->destino_ciudad} no tiene checklist de salida tras 30 min.", $usuariosNotificar, $viaje);
-                    $reporte['notificadas_salida']++;
-                } else {
-                    $this->line("   - Viaje #{$viaje->id}: Se encontró inspección reciente de vehículo, omitiendo alerta.");
-                }
+                $this->warn(" > Enviando alerta: Viaje #{$viaje->id}");
+                $this->enviarAlerta("ALERTA SALIDA: El viaje #{$viaje->id} a {$viaje->destino_ciudad} no tiene checklist tras 30 min.", $usuariosNotificar, $viaje);
+                $reporte['notificadas_salida']++;
             }
         }
 
         $this->newLine();
 
         // --- CASO 3: RETORNOS SIN CERRAR ---
-        $this->comment("Verificando viajes 'EN RUTA' con vehículo disponible (1h de retraso)...");
+        $this->comment("Verificando retornos inconsistentes (1h de retraso)...");
 
         $viajesSinCerrar = Viaje::where('status', 'EN RUTA')
-            ->whereHas('vehiculo', function($q) {
-                $q->where('estatus', 1);
-            })
+            ->whereHas('vehiculo', function($q) { $q->where('estatus', 1); })
             ->where('updated_at', '<=', now()->subHour())
             ->get();
-
-        $this->info("Unidades con inconsistencia de retorno encontradas: " . $viajesSinCerrar->count());
 
         foreach ($viajesSinCerrar as $viaje) {
             $reporte['retornos']++;
 
-            $hasCheckIn = Inspeccion::where('viaje_id', $viaje->id)
-                ->whereNotNull('respuesta_in')
-                ->exists();
+            $hasCheckIn = Inspeccion::where(function($query) use ($viaje) {
+                $query->where('viaje_id', $viaje->id)
+                      ->orWhere(function($q) use ($viaje) {
+                          $q->where('vehiculo_id', $viaje->vehiculo_id)
+                            ->where('created_at', '>=', now()->subHour());
+                      });
+            })
+            ->whereNotNull('respuesta_in')
+            ->exists();
 
             if (!$hasCheckIn) {
-                $hasCheckIn2 = Inspeccion::where('vehiculo_id', $viaje->vehiculo_id)
-                    ->whereNotNull('respuesta_in')
-                    ->where('created_at', '>=', now()->subHour())
-                    ->exists();
-
-                if (!$hasCheckIn2) {
-                    $this->warn(" > Notificando: Viaje #{$viaje->id} - Vehículo {$viaje->vehiculo->flota} liberado pero viaje activo.");
-                    $this->enviarAlerta("ALERTA RETORNO: El vehículo {$viaje->vehiculo->flota} está disponible pero el viaje #{$viaje->id} sigue 'EN RUTA'.", $usuariosNotificar, $viaje);
-                    $reporte['notificadas_retorno']++;
-                } else {
-                    $this->line("   - Viaje #{$viaje->id}: Inspección de entrada detectada, omitiendo alerta.");
-                }
+                $this->warn(" > Enviando alerta: Vehículo {$viaje->vehiculo->flota} inconsistente.");
+                $this->enviarAlerta("ALERTA RETORNO: El vehículo {$viaje->vehiculo->flota} está libre pero el viaje #{$viaje->id} sigue 'EN RUTA'.", $usuariosNotificar, $viaje);
+                $reporte['notificadas_retorno']++;
             }
         }
 
-        // --- RESUMEN FINAL ---
-        $this->newLine();
-        $this->info("PROCESO FINALIZADO");
-        $this->table(
-            ['Categoría', 'Encontrados', 'Notificaciones Enviadas'],
-            [
-                ['Salidas Retrasadas', $reporte['salidas'], $reporte['notificadas_salida']],
-                ['Retornos Inconsistentes', $reporte['retornos'], $reporte['notificadas_retorno']],
-            ]
-        );
+        $this->renderResumen($reporte);
     }
 
     private function enviarAlerta($mensaje, $usuarios, $viaje)
     {
+        // IMPORTANTE: Verifica si tu Service ya acepta un array de IDs 
+        // para evitar el foreach aquí, que es lo que multiplica los envíos.
         foreach ($usuarios as $userId) {
             FcmNotificationService::enviarNotification(
                 "Seguridad Operativa",
@@ -111,5 +97,18 @@ class CheckAlertasViajes extends Command
                 ['viaje_id' => $viaje->id, 'tipo' => 'ALERTA_OPERATIVA', 'user_id' => $userId]
             );
         }
+    }
+
+    private function renderResumen($reporte)
+    {
+        $this->newLine();
+        $this->info("PROCESO FINALIZADO");
+        $this->table(
+            ['Categoría', 'Encontrados', 'Alertas Disparadas'],
+            [
+                ['Salidas Retrasadas', $reporte['salidas'], $reporte['notificadas_salida']],
+                ['Retornos Inconsistentes', $reporte['retornos'], $reporte['notificadas_retorno']],
+            ]
+        );
     }
 }
