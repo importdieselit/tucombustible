@@ -52,6 +52,7 @@ class CheckAlertasViajes extends Command
             ->exists();
 
             if (!$hasChecklist) {
+
                 $this->warn(" > Enviando alerta: Viaje #{$viaje->id}");
                 $tiempoRetraso = now()->diffInMinutes($viaje->fecha_salida);
                 
@@ -65,6 +66,7 @@ class CheckAlertasViajes extends Command
 
                 // Envío de alertas Push
                 $this->enviarAlerta($mensajeSalida, $usuariosNotificar, $viaje);
+
                 $reporte['notificadas_salida']++;
 
                 // Notificación única al grupo de operaciones de WhatsApp (Fuera de bucles redundantes)
@@ -111,21 +113,13 @@ class CheckAlertasViajes extends Command
                 "• *Conductor:* {$viaje->chofer->persona->nombre}\n\n" .
                 "*Acción Requerida:* Exigir la ejecución inmediata del checklist de entrada para cerrar el ciclo de auditoría.";
 
-            $this->warn(" > Enviando alerta: Check-in pendiente para el viaje #{$viaje->id}");
-            
-            // Envío de alertas Push
-            $this->enviarAlerta($mensajeRetorno, $usuariosNotificar, $viaje);
-            $reporte['notificadas_retorno']++;
 
-            // Notificación única al grupo de operaciones de WhatsApp
-            Http::asForm()
-                ->withoutVerifying()
-                ->post($endpoint, [
-                    'token'    => $tokenWA,
-                    'to'       => config('services.whatsapp.group_operaciones'),
-                    'body'     => $mensajeRetorno,
-                    'priority' => 1,
-                ]);
+            if (!$hasCheckIn) {
+                $this->warn(" > Enviando alerta: Vehículo {$viaje->vehiculo->placa} inconsistente.");
+                $this->enviarAlerta("ALERTA RETORNO: El vehículo {$viaje->vehiculo->flota} [{$viaje->vehiculo->placa}] está libre pero el viaje #{$viaje->id} a {$viaje->destino_ciudad} sigue 'EN RUTA'.", $usuariosNotificar, $viaje);
+                $reporte['notificadas_retorno']++;
+            }
+
         }
 
         $this->renderResumen($reporte);
