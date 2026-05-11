@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddIdTipoReqToOrdenes extends Migration
+class AddPedidoIdToDespachosViajesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,8 +13,9 @@ class AddIdTipoReqToOrdenes extends Migration
      */
     public function up()
     {
-        Schema::table('ordenes', function (Blueprint $table) {
-            $table->integer('id_tipo_req')->nullable();
+        Schema::table('despachos_viajes', function (Blueprint $table) {
+            $table->unsignedBigInteger('pedido_id')->nullable()->after('cliente_id');
+            $table->foreign('pedido_id')->references('id')->on('pedidos');
         });
     }
 
@@ -25,8 +26,8 @@ class AddIdTipoReqToOrdenes extends Migration
      */
     public function down()
     {
-        Schema::table('ordenes', function (Blueprint $table) {
-            $table->dropColumn('id_tipo_req');
+        Schema::table('despachos_viajes', function (Blueprint $table) {
+            //
         });
     }
 }

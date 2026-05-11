@@ -6,38 +6,42 @@ use App\Models\Cliente;
 use App\Models\ClienteCupo;
 use App\Repositories\ClienteRepository;
 use App\Repositories\UserRepository;
-use App\Repositories\VehicleRepository;
+use App\Repositories\VehiculoRepository;
 use App\Repositories\OrderRepository;
 use App\Repositories\TankRepository;
 use App\Repositories\MaintenanceRepository;
 use App\Repositories\PurchaseRepository;
+use App\Services\GascoCupoService;
 
 class DashboardService
 {
-    protected $vehicleRepo;
+    protected $vehiculoRepo;
     protected $orderRepo;
     protected $userRepo;
     protected $tankRepo;
     protected $maintenanceRepo;
     protected $purchaseRepo;
     protected $clientRepo;
+    protected $gascoCupoService;
 
     public function __construct(
-        VehicleRepository     $vehicleRepo,
+        VehiculoRepository    $vehiculoRepo,
         OrderRepository       $orderRepo,
         UserRepository        $userRepo,
         TankRepository        $tankRepo,
         MaintenanceRepository $maintenanceRepo,
         PurchaseRepository    $purchaseRepo,
-        ClienteRepository     $clientRepo
+        ClienteRepository     $clientRepo,
+        GascoCupoService      $gascoCupoService
     ) {
-        $this->vehicleRepo     = $vehicleRepo;
+        $this->vehiculoRepo    = $vehiculoRepo;
         $this->orderRepo       = $orderRepo;
         $this->userRepo        = $userRepo;
         $this->tankRepo        = $tankRepo;
         $this->maintenanceRepo = $maintenanceRepo;
         $this->purchaseRepo    = $purchaseRepo;
         $this->clientRepo      = $clientRepo;
+        $this->gascoCupoService = $gascoCupoService;
     }
 
     public function getDashboardData($user, $sucursalId = null): array
@@ -102,11 +106,17 @@ class DashboardService
             }
 
             // Cliente aprobado
+            // NUEVO: Consultamos el saldo GASCO usando el servicio
+            $saldoGasco = $this->gascoCupoService->obtenerSaldoActual($cliente->id);
+
             return [
                 'perfil'     => $cliente->es_padre ? 'cliente_padre' : 'cliente_sucursal',
                 'cliente'    => $cliente,
                 'es_padre'   => $cliente->es_padre,
                 'cupos'      => $cliente->cupos,
+                // Agregamos la data de GASCO para la vista del cliente:
+                'cupo_gasco' => $saldoGasco['autorizados'],
+                'saldo_gasco'=> $saldoGasco['disponible'],
                 'placas'     => $cliente->placas()->activas()->get(),
                 'choferes'   => $cliente->choferes()->activos()->get(),
                 'sucursales' => $cliente->es_padre
@@ -121,7 +131,7 @@ class DashboardService
         return [
             'perfil' => 'admin_sistema',
             'stats'  => [
-                'totalVehiculos'       => $this->vehicleRepo->countAll(),
+                'totalVehiculos'       => $this->vehiculoRepo->getAll(),
                 'totalUsuarios'        => $this->userRepo->countAll(),
                 'totalOrdenesAbiertas' => $this->orderRepo->countAbiertas(),
                 'totalTanques'         => $this->tankRepo->countAll(),
@@ -138,6 +148,24 @@ class DashboardService
     {
         $pasos = $this->clientRepo->getPasos();
         return $pasos->firstWhere('id', $pasoId)?->nombre ?? 'Estatus Pendiente';
+    }
+
+    /**
+     * Obtiene las estadísticas para el Dashboard Administrativo
+     */
+    public function getAdminStats(): array
+    {
+        return [
+            'totalVehiculos'       => $this->vehiculoRepo->getAll(),
+            'totalUsuarios'        => $this->userRepo->countAll(),
+            'totalOrdenesAbiertas' => $this->orderRepo->countAbiertas(),
+            'totalTanques'         => $this->tankRepo->countAll(),
+            'programadosHoy'       => $this->maintenanceRepo->countHoy(),
+            // Estos nombres deben coincidir con lo que usa tu Blade
+            'clientes_activos'     => Cliente::aprobados()->count(), 
+            'clientes_en_registro' => Cliente::enRegistro()->count(),
+            'clientes_rechazados'  => Cliente::rechazados()->count(),
+        ];
     }
     
 }

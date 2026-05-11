@@ -14,10 +14,9 @@ class AddVehiculoAcoplado extends Migration
     public function up()
     {
         Schema::table('vehiculos', function (Blueprint $table) {
-            // Usamos unsignedBigInteger para que coincida con el estándar de Laravel
-            $table->unsignedBigInteger('acoplado_id')->nullable()->after('id_cliente');
+            // Quitamos el 'unsigned' para que sea BIGINT igual que el ID
+            $table->bigInteger('acoplado_id')->nullable()->after('id_cliente');
 
-            // Ahora definimos la relación
             $table->foreign('acoplado_id')
                 ->references('id')
                 ->on('vehiculos')

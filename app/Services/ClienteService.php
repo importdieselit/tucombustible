@@ -22,20 +22,7 @@ class ClienteService
 
     public function registrarCliente(array $data): Cliente
     {
-        $tipoCombustibleId = $data['tipo_combustible_id'] ?? null;
-
-        if (!$tipoCombustibleId) {
-            throw new \Exception('Debe seleccionar el tipo de combustible.');
-        }
-
-        if ($this->repository->existeClienteConTipoCombustible($data['rif'], $tipoCombustibleId)) {
-            throw new \Exception(
-                'Ya existe un cliente registrado con este RIF para el tipo de combustible seleccionado. ' .
-                'Si desea registrar un cupo de otro combustible, debe crear un nuevo registro.'
-            );
-        }
-
-        return DB::transaction(function () use ($data, $tipoCombustibleId) {
+        return DB::transaction(function () use ($data) {
 
             $rifOficial = strtoupper($data['rif']);
             $rifLimpio  = str_replace(['-', ' '], '', $rifOficial);
@@ -84,13 +71,6 @@ class ClienteService
                 'status_usuario' => 'en_registro',
             ]);
 
-            $this->repository->registrarCupo([
-                'cliente_id'          => $cliente->id,
-                'tipo_combustible_id' => $tipoCombustibleId,
-                'litros_solicitados'  => $data['litros_solicitados'] ?? 0,
-                'litros_aprobados'    => 0,
-            ]);
-
             return $cliente;
         });
     }
@@ -101,7 +81,16 @@ class ClienteService
 
     public function obtenerExpediente($id): Cliente
     {
-        return $this->repository->find($id);
+        $cliente = $this->repository->find($id);
+
+        // Extraemos los litros del cupo de GASCO cargado en el 'with' del Repo
+        // Buscamos el primero que coincida con el mes/año actual o simplemente el primero de la relación
+        $cupoActual = $cliente->cuposGasco->first(); 
+
+        // Creamos un atributo dinámico para que el Blade lo vea directo
+        $cliente->cupo_gasco_informativo = $cupoActual ? $cupoActual->litros_autorizados : 0;
+
+        return $cliente;
     }
 
     public function obtenerDashboardAdmin(array $filtros): array

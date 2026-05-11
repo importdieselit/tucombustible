@@ -98,6 +98,14 @@
                             <label class="text-muted text-uppercase fw-bold d-block small mb-1">Teléfono Principal</label>
                             <span class="fw-bold text-dark">{{ $cliente->telefono ?? 'N/A' }}</span>
                         </div>
+                        <div class="col-md-6">
+                            <label class="text-muted text-uppercase fw-bold d-block small mb-1">Contacto Alternativo</label>
+                            <span class="fw-bold text-dark uppercase">{{ $cliente->contacto_alt ?? 'N/A' }}</span>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-muted text-uppercase fw-bold d-block small mb-1">Teléfono Alternativo</label>
+                            <span class="fw-bold text-dark">{{ $cliente->telefono_alt ?? 'N/A' }}</span>
+                        </div>
                         <div class="col-md-6 border-top pt-3">
                             <label class="text-muted text-uppercase fw-bold d-block small mb-1">Correo Electrónico</label>
                             <span class="fw-bold text-dark">{{ $cliente->email ?? 'N/A' }}</span>
@@ -279,17 +287,41 @@
         {{-- COLUMNA DERECHA: PANEL DE CONTROL --}}
         <div class="col-lg-4">
             
-            {{-- TOKEN SUCURSALES --}}
-            @if($cliente->es_padre)
-            <div class="card shadow-sm border-orange mb-4 bg-light">
-                <div class="card-body">
-                    <h6 class="fw-bold text-uppercase border-bottom pb-2 mb-3"><i class="fas fa-key me-2 text-orange"></i>Token Sucursales</h6>
-                    <div class="d-flex align-items-center justify-content-between bg-white border rounded p-3">
-                        <span id="tokenAdmin" class="h4 mb-0 fw-bold tracking-widest text-dark">{{ $cliente->token_registro ?? 'SIN TOKEN' }}</span>
-                        <button onclick="copyTokenAdmin()" class="btn btn-link text-orange"><i class="fas fa-copy fa-lg"></i></button>
+            {{-- ÁREA DEL TOKEN (AHORA SÍ DENTRO DE UNA CARD) --}}
+            @if($cliente->parent == 0)
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-uppercase small text-dark mb-3 border-bottom pb-1">
+                            <i class="fas fa-link me-2 text-orange"></i>Token de Vinculación
+                        </h6>
+                        
+                        @if($cliente->token_registro)
+                            {{-- ESTADO CON TOKEN: Tu diseño original intacto --}}
+                            <div class="d-flex align-items-center">
+                                <span id="tokenAdmin" class="badge bg-light text-dark border p-2 fw-black fs-6 me-2">
+                                    {{ $cliente->token_registro }}
+                                </span>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="copyTokenAdmin()" title="Copiar Token">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted d-block mt-2" style="font-size: 10px;">
+                                Código para registro de sucursales.
+                            </small>
+                        @else
+                            {{-- ESTADO SIN TOKEN: Botón de asignación --}}
+                            <form action="{{ route('clientes.generar-token', $cliente->id) }}" method="POST" class="m-0">
+                                @csrf
+                                <button type="submit" class="btn btn-sm btn-dark fw-bold px-3 shadow-sm w-100">
+                                    <i class="fas fa-key me-1"></i> ASIGNAR TOKEN
+                                </button>
+                            </form>
+                            <small class="text-danger d-block mt-2 fw-bold text-center" style="font-size: 10px;">
+                                <i class="fas fa-exclamation-circle"></i> Cliente antiguo sin token generado.
+                            </small>
+                        @endif
                     </div>
                 </div>
-            </div>
             @endif
 
             {{-- PANEL DE ACCIONES DINÁMICAS --}}
@@ -313,37 +345,168 @@
                             <button type="submit" class="btn btn-dark w-100 btn-sm fw-bold">ACTUALIZAR ETAPA</button>
                         </form>
 
-                        {{-- APROBAR --}}
+                        {{-- BLOQUE APROBAR --}}
+                        @if($cliente->status == \App\Models\Cliente::STATUS_EN_REGISTRO)
                         <div class="p-3 border-2 border-success rounded mb-3 bg-light">
-                            <h6 class="text-success fw-bold text-uppercase small mb-3"><i class="fas fa-check-circle me-1"></i>Aprobar Cliente</h6>
+                            <h6 class="text-success fw-bold text-uppercase small mb-3">
+                                <i class="fas fa-check-circle me-1"></i>Aprobar Cliente
+                            </h6>
+                            <p class="text-muted mb-3" style="font-size: 11px;">
+                                Al aprobar, el cliente podrá solicitar <strong>MGO</strong> por los canales regulares. 
+                                Si requiere <strong>Diesel</strong>, use la sección de "Cupo General" abajo.
+                            </p>
                             <form action="{{ route('clientes.aprobar', $cliente->id) }}" method="POST">
                                 @csrf
-                                <select name="tipo_combustible_id" required class="form-select form-select-sm mb-2">
-                                    <option value="" disabled selected>Combustible...</option>
-                                    @foreach($tiposCombustible as $tipo)
-                                        <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
-                                    @endforeach
-                                </select>
-                                <input type="number" name="litros_aprobados" required class="form-control form-control-sm mb-2" placeholder="Litros / Mes">
-                                <button type="submit" class="btn btn-success w-100 btn-sm fw-bold shadow-sm" onclick="return confirm('¿Aprobar?')">APROBAR Y ASIGNAR CUPO</button>
+                                <button type="submit" class="btn btn-success w-100 btn-sm fw-bold shadow-sm">
+                                    CONFIRMAR APROBACIÓN
+                                </button>
                             </form>
+                        </div>
+                        @endif
+                    @endif
+
+                    {{-- GESTIÓN DE CUPO GENERAL (SIAVCOM) --}}
+                    @if($cliente->status == \App\Models\Cliente::STATUS_APROBADO)
+                        <div class="card shadow-sm border-orange mb-4">
+                            <div class="card-body">
+                                <h6 class="fw-bold text-uppercase small text-dark mb-3 border-bottom pb-1">
+                                    <i class="fas fa-shield-alt me-2 text-orange"></i>Cupo General (SIAVCOM)
+                                </h6>
+                                
+                                {{-- Visualización de Valores Actuales (Simétrico a GASCO) --}}
+                                <div class="row mb-3">
+                                    <div class="col-6 border-end text-center">
+                                        <span class="text-[10px] text-muted text-uppercase fw-bold d-block">Cupo Aprobado</span>
+                                        <span class="fs-5 fw-black text-dark">{{ number_format($cliente->cupo ?? 0, 0) }} L</span>
+                                    </div>
+                                    <div class="col-6 text-center">
+                                        <span class="text-[10px] text-muted text-uppercase fw-bold d-block">Saldo Disponible</span>
+                                        <span class="fs-5 fw-black text-orange">{{ number_format($cliente->disponible ?? 0, 0) }} L</span>
+                                    </div>
+                                </div>
+
+                                <form action="{{ route('clientes.ajustarCupo', $cliente->id) }}" method="POST">
+                                    @csrf
+                                    <div class="mb-2">
+                                        <label class="small fw-bold text-muted uppercase">Configurar Producto y Cantidad</label>
+                                        <div class="row g-1"> {{-- Uso de row pequeña para alinear select e input --}}
+                                            <div class="col-5">
+                                                <select name="tipo_combustible_id" required class="form-select form-select-sm fw-bold border-orange h-100">
+                                                    <option value="" disabled {{ !$cliente->cupo ? 'selected' : '' }}>Producto...</option>
+                                                    @foreach($tiposCombustible as $tipo)
+                                                        @if($tipo->id != 2) {{-- Excluir MGO --}}
+                                                            <option value="{{ $tipo->id }}" {{ ($cliente->cupo > 0 && $tipo->id == 1) ? 'selected' : '' }}>
+                                                                {{ $tipo->nombre }}
+                                                            </option>
+                                                        @endif
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="col-7">
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" name="litros_aprobados" 
+                                                        class="form-control fw-bold border-orange" 
+                                                        placeholder="Cant. Litros" 
+                                                        value="{{ $cliente->cupo }}"
+                                                        required>
+                                                    <button class="btn btn-dark fw-bold" type="submit">
+                                                        <i class="fas fa-save me-1"></i> GUARDAR
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <small class="text-muted italic" style="font-size: 10px;">
+                                                <i class="fas fa-info-circle me-1"></i> Este cupo define el límite máximo para la asignación de GASCO.
+                                            </small>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     @endif
 
-                    {{-- AJUSTAR CUPO --}}
+                    {{-- GESTIÓN DE CUPO GASCO --}}
                     @if($cliente->status == \App\Models\Cliente::STATUS_APROBADO)
-                        <h6 class="fw-bold text-uppercase small text-orange mb-3 border-bottom pb-1">Ajuste de Cupos</h6>
-                        @foreach($cliente->cupos as $cupo)
-                            <form action="{{ route('clientes.ajustarCupo', $cliente->id) }}" method="POST" class="mb-3 p-2 border rounded">
-                                @csrf
-                                <input type="hidden" name="tipo_combustible_id" value="{{ $cupo->tipo_combustible_id }}">
-                                <p class="mb-1 fw-bold small text-muted text-uppercase">{{ $cupo->tipoCombustible->nombre }}</p>
-                                <div class="input-group input-group-sm">
-                                    <input type="number" name="litros_aprobados" value="{{ $cupo->litros_aprobados }}" class="form-control fw-bold border-orange">
-                                    <button class="btn-orange text-white fw-bold" type="submit"><i class="fas fa-sync-alt"></i></button>
+                        @php
+                            $cupoGeneralLimit = $cliente->cupo ?? 0;
+                        @endphp
+
+                        {{-- Inicializamos Alpine.js en la Card --}}
+                        <div class="card shadow-sm border-orange mb-4" 
+                             x-data="{ 
+                                 cupoSiavcom: {{ $cupoGeneralLimit }}, 
+                                 cupoGasco: {{ $infoGasco['autorizados'] ?? 0 }},
+                                 get errorCupo() {
+                                     // Solo hay error si SIAVCOM >= 1 Y Gasco lo supera
+                                     if (this.cupoSiavcom >= 1) {
+                                         return parseFloat(this.cupoGasco) > parseFloat(this.cupoSiavcom);
+                                     }
+                                     return false; // Si SIAVCOM es 0, es libre
+                                 }
+                             }">
+                            <div class="card-body">
+                                <h6 class="fw-bold text-uppercase small text-dark mb-3 border-bottom pb-1">
+                                    <i class="fas fa-gas-pump me-2 text-orange"></i>Cupo Mensual GASCO
+                                </h6>
+                                 
+                                {{-- Visualización de Valores Actuales --}}
+                                <div class="row mb-3">
+                                    <div class="col-6 border-end text-center">
+                                        <span class="text-[10px] text-muted text-uppercase fw-bold d-block">Asignado Mes</span>
+                                        <span class="fs-5 fw-black text-dark">{{ number_format($infoGasco['autorizados'], 0) }} L</span>
+                                    </div>
+                                    <div class="col-6 text-center">
+                                        <span class="text-[10px] text-muted text-uppercase fw-bold d-block">Disponible</span>
+                                        <span class="fs-5 fw-black text-success">{{ number_format($infoGasco['disponible'], 0) }} L</span>
+                                    </div>
                                 </div>
-                            </form>
-                        @endforeach
+
+                                <form action="{{ route('clientes.gasco.asignar', $cliente->id) }}" method="POST">
+                                    @csrf
+                                    <div class="mb-2">
+                                        <label class="small fw-bold text-muted uppercase">Actualizar Cantidad</label>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" name="litros_autorizados" 
+                                                class="form-control fw-bold border-orange @error('litros_autorizados') is-invalid @enderror" 
+                                                :class="errorCupo ? 'is-invalid text-danger' : ''"
+                                                placeholder="Ej: 5000" 
+                                                x-model.number="cupoGasco"
+                                                required>
+                                            {{-- El botón se desactiva si hay error --}}
+                                            <button class="btn btn-dark fw-bold" type="submit" :disabled="errorCupo">
+                                                <i class="fas fa-save me-1"></i> GUARDAR
+                                            </button>
+                                        </div>
+                                        
+                                        {{-- Alerta en tiempo real de Alpine.js --}}
+                                        <template x-if="errorCupo">
+                                            <span class="text-danger d-block mt-1 fw-bold" style="font-size: 10px;">
+                                                El cupo GASCO no puede superar el Cupo SIAVCOM (<span x-text="cupoSiavcom"></span> L).
+                                            </span>
+                                        </template>
+
+                                        {{-- Alerta del backend de Laravel (por si acaso) --}}
+                                        @error('litros_autorizados')
+                                            <span class="invalid-feedback d-block mt-1 fw-bold" style="font-size: 10px;">{{ $message }}</span>
+                                        @enderror
+
+                                        <div class="mt-1">
+                                            <small class="text-muted italic" style="font-size: 10px;">
+                                                Límite: >= 100 
+                                                {{-- Texto dinámico para explicar la regla al usuario --}}
+                                                <template x-if="cupoSiavcom >= 1">
+                                                    <span>y máx. {{ number_format($cupoGeneralLimit, 0) }} L (SIAVCOM)</span>
+                                                </template>
+                                                <template x-if="cupoSiavcom < 1">
+                                                    <span class="text-success fw-bold">(Sin límite superior)</span>
+                                                </template>
+                                            </small>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     @endif
 
                     {{-- REGISTRO RÁPIDO PLACA/CHOFER --}}
@@ -367,9 +530,49 @@
                             </form>
                         </div>
                     @endif
-
                 </div>
             </div>
+            {{-- ========================================== --}}
+            {{-- BOTONES DE HABILITAR / INHABILITAR CLIENTE --}}
+            {{-- ========================================== --}}
+
+            @if($cliente->status == \App\Models\Cliente::STATUS_APROBADO)
+                <div class="card shadow-sm border-danger mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-uppercase small text-danger mb-3 border-bottom pb-1">
+                            <i class="fas fa-ban me-2"></i>Inhabilitar Cliente
+                        </h6>
+                        <p class="text-muted mb-3" style="font-size: 11px;">
+                            Al inhabilitar, este cliente <strong>{{ $cliente->es_padre ? 'y TODAS sus sucursales vinculadas perderán' : 'perderá' }}</strong> el acceso para realizar nuevos pedidos de combustible.
+                        </p>
+                        <form action="{{ route('clientes.inactivar', $cliente->id) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="btn btn-danger w-100 btn-sm fw-bold shadow-sm" 
+                                    onclick="return confirm('¿Estás seguro de inhabilitar a este cliente?')">
+                                INHABILITAR
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            @elseif($cliente->status == \App\Models\Cliente::STATUS_INACTIVO)
+                <div class="card shadow-sm border-success mb-4">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-uppercase small text-success mb-3 border-bottom pb-1">
+                            <i class="fas fa-check-circle me-2"></i>Reactivar Cliente
+                        </h6>
+                        <p class="text-muted mb-3" style="font-size: 11px;">
+                            Restaura el acceso para que el cliente pueda volver a operar y solicitar pedidos en la plataforma.
+                        </p>
+                        <form action="{{ route('clientes.reactivar', $cliente->id) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="btn btn-success w-100 btn-sm fw-bold shadow-sm" 
+                                    onclick="return confirm('¿Estás seguro de habilitar nuevamente a este cliente?')">
+                                HABILITAR / REACTIVAR
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 </div>

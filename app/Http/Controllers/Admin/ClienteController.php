@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Repositories\PedidoRepository;
 use App\Services\ClienteService;
 use App\Services\ClienteLubricanteService;
+use App\Services\GascoCupoService;
 use App\Models\Cliente;
 use App\Models\TipoCombustible;
 use Illuminate\Http\Request;
@@ -16,15 +17,18 @@ class ClienteController extends Controller
     protected ClienteService $clienteService;
     protected ClienteLubricanteService $lubricanteService;
     protected PedidoRepository $repository;
+    protected GascoCupoService $gascoCupoService;
 
     public function __construct(
         ClienteService $clienteService,
         ClienteLubricanteService $lubricanteService,
-        PedidoRepository $repository
+        PedidoRepository $repository,
+        GascoCupoService $gascoCupoService
     ) {
         $this->clienteService    = $clienteService;
         $this->lubricanteService = $lubricanteService;
         $this->repository        = $repository;
+        $this->gascoCupoService  = $gascoCupoService;
     }
 
     // -------------------------------------------------------
@@ -69,25 +73,18 @@ class ClienteController extends Controller
         $cliente          = $this->clienteService->obtenerExpediente($id);
         $tiposCombustible = TipoCombustible::all();
         $pedidos = $this->repository->getPedidosPorClientes([$id]);
+        $infoGasco = $this->gascoCupoService->obtenerSaldoActual($id);
 
-        return view('admin.cliente.show', compact('cliente', 'tiposCombustible', 'pedidos'));
+        return view('admin.cliente.show', compact('cliente', 'tiposCombustible', 'pedidos', 'infoGasco'));
     }
-
-    // -------------------------------------------------------
-    // LISTADO GENERAL DE PEDIDOS (ADMIN)
-    // -------------------------------------------------------
 
     public function listaGeneralPedidos()
     {
         // Usamos el método que ya tienes en el repositorio
-        $pedidos = $this->repository->getAllPedidosAdmin(30);
+        $pedidos = $this->repository->getAllPedidosAdmin();
 
         return view('admin.cliente.pedidos_general', compact('pedidos'));
     }
-
-    // -------------------------------------------------------
-    // REGISTRO DE NUEVO CLIENTE (ADMIN)
-    // -------------------------------------------------------
 
     public function create()
     {
@@ -117,7 +114,6 @@ class ClienteController extends Controller
             'ciudad_id'           => 'required|exists:ciudades,id',
             'direccion'           => 'nullable|string',
             'direccion_operativa' => 'required|string',
-            'tipo_combustible_id' => 'required|exists:tipos_combustible,id',
             'tipo_cliente'        => 'nullable|in:padre,sucursal',
             'token_padre'         => 'nullable|string|exists:clientes,token_registro',
         ], [
@@ -126,7 +122,6 @@ class ClienteController extends Controller
             'telefono.digits_between' => 'El teléfono debe tener entre 10 y 11 dígitos.',
             'telefono_alt.digits_between' => 'El teléfono alternativo debe tener entre 10 y 11 dígitos.',
             'token_padre.exists'      => 'El Token de la empresa principal no es válido.',
-            'tipo_combustible_id.exists' => 'El tipo de combustible seleccionado no es válido.',
         ]);
 
         try {
@@ -138,10 +133,6 @@ class ClienteController extends Controller
             return Redirect::back()->withInput()->with('error', $e->getMessage());
         }
     }
-
-    // -------------------------------------------------------
-    // EDICIÓN DE DATOS DEL CLIENTE
-    // -------------------------------------------------------
 
     public function edit($id)
     {
@@ -197,10 +188,6 @@ class ClienteController extends Controller
         }
     }
 
-    // -------------------------------------------------------
-    // AVANCE DE PASOS DEL REGISTRO
-    // -------------------------------------------------------
-
     public function avanzarPaso(Request $request, $id)
     {
         $request->validate([
@@ -217,28 +204,12 @@ class ClienteController extends Controller
         }
     }
 
-    // -------------------------------------------------------
-    // APROBACIÓN Y RECHAZO
-    // -------------------------------------------------------
-
     public function aprobar(Request $request, $id)
     {
-        $request->validate([
-            'tipo_combustible_id' => 'required|exists:tipos_combustible,id',
-            'litros_aprobados'    => 'required|numeric|min:1',
-        ], [
-            'litros_aprobados.min' => 'El cupo aprobado debe ser mayor a 0.',
-        ]);
-
         try {
             $this->clienteService->aprobarCliente($id);
-            $this->clienteService->ajustarCupo(
-                $id,
-                (int) $request->tipo_combustible_id,
-                (float) $request->litros_aprobados
-            );
 
-            Session::flash('success', 'Cliente aprobado y cupo asignado correctamente.');
+            Session::flash('success', 'Cliente aprobado.');
             return Redirect::back();
         } catch (\Exception $e) {
             Log::error('Error al aprobar cliente: ' . $e->getMessage());
@@ -257,10 +228,6 @@ class ClienteController extends Controller
             return Redirect::back()->with('error', $e->getMessage());
         }
     }
-
-    // -------------------------------------------------------
-    // INACTIVAR Y REACTIVAR
-    // -------------------------------------------------------
 
     public function inactivar($id)
     {
@@ -285,10 +252,6 @@ class ClienteController extends Controller
             return Redirect::back()->with('error', $e->getMessage());
         }
     }
-
-    // -------------------------------------------------------
-    // AJUSTE DE CUPO
-    // -------------------------------------------------------
 
     public function ajustarCupo(Request $request, $id)
     {
@@ -419,6 +382,78 @@ class ClienteController extends Controller
             return Redirect::back();
         } catch (\Exception $e) {
             return Redirect::back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function asignarCupoGasco(Request $request, $id)
+    {
+        $cliente = Cliente::findOrFail($id);
+        
+        // Tomamos el valor de la columna 'cupo' (SIAVCOM)
+        $cupoGeneral = $cliente->cupo ?? 0;
+
+        // Reglas base (siempre debe ser mayor a 100)
+        $rules = [
+            'litros_autorizados' => ['required', 'numeric', 'min:100']
+        ];
+
+        // LÓGICA NUEVA: Solo limitamos si el Cupo SIAVCOM es mayor o igual a 1
+        if ($cupoGeneral >= 1) {
+            $rules['litros_autorizados'][] = 'max:' . $cupoGeneral;
+        }
+
+        $messages = [
+            'litros_autorizados.min' => 'La cantidad a asignar debe ser mayor a 100 litros.',
+            'litros_autorizados.max' => 'No puede asignar más del Cupo SIAVCOM general (' . number_format($cupoGeneral, 0) . ' Ltrs).',
+        ];
+
+        $request->validate($rules, $messages);
+
+        try {
+            $this->gascoCupoService->asignarCupoMensual($id, $request->litros_autorizados);
+            
+            Session::flash('success', 'Cupo GASCO del mes actualizado correctamente.');
+            return Redirect::back();
+        } catch (\Exception $e) {
+            Log::error('Error al asignar cupo GASCO: ' . $e->getMessage());
+            return Redirect::back()->with('error', 'Error técnico: ' . $e->getMessage());
+        }
+    }
+
+    public function generarToken($id)
+    {
+        $cliente = Cliente::findOrFail($id);
+
+        // Seguridad: Solo los padres (parent == 0) deben tener token
+        if ($cliente->parent != 0) {
+            return Redirect::back()->with('error', 'Solo los Clientes Padres pueden poseer un token de vinculación.');
+        }
+
+        // Evitar sobreescritura si ya existe uno
+        if (!empty($cliente->token_registro)) {
+            return Redirect::back()->with('error', 'Este cliente ya tiene un token asignado.');
+        }
+
+        try {
+            // Generamos el token de 10 caracteres (Alfanumérico)
+            // Str::random genera una cadena aleatoria alfanumérica
+            $nuevoToken = strtoupper(\Illuminate\Support\Str::random(10));
+
+            // Verificación de unicidad en la base de datos
+            while (Cliente::where('token_registro', $nuevoToken)->exists()) {
+                $nuevoToken = strtoupper(\Illuminate\Support\Str::random(10));
+            }
+
+            $cliente->update([
+                'token_registro' => $nuevoToken
+            ]);
+
+            Session::flash('success', 'Token de 10 caracteres generado: ' . $nuevoToken);
+            return Redirect::back();
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error al generar token: ' . $e->getMessage());
+            return Redirect::back()->with('error', 'No se pudo generar el token por un error técnico.');
         }
     }
 }

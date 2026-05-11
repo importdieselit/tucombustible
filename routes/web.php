@@ -19,7 +19,7 @@ use App\Http\Controllers\{
     AlertaController, AccesoController, InspeccionController, PedidoController,
     ReporteController, AforoController, SearchController, DataDeletionController,
     ViajesController, TelegramController, PlanificacionMantenimientoController,
-    ReportController, ClienteActivosController,NotificationController
+    ReportController, ClienteActivosController,NotificationController,LogisticaController
 };
 
 /* --- Rutas Públicas y Auth --- */
@@ -270,6 +270,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/send-telegram-message', [TelegramController::class, 'sendMessage'])->name('telegram.send.message');
   
 
+        Route::get('/admin/principal', [DashboardController::class, 'adminPrincipal'])->name('dashboard.admin');
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         /**
@@ -311,6 +312,18 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/search', [SearchController::class, 'query'])->name('search');
         });
 
+        // --- MÓDULO DE LOGÍSTICA ---
+        Route::middleware(['auth', 'role:1,2,6,11,12,18'])->prefix('logistica')->name('logistica.')->group(function () {
+            
+            Route::get('/planificacion', [LogisticaController::class, 'index'])->name('index');
+            Route::get('/crear/{tipo?}', [LogisticaController::class, 'create'])->name('create');
+            Route::post('/guardar', [LogisticaController::class, 'store'])->name('store');
+            // Rutas para Edición
+            Route::get('/{id}', [LogisticaController::class, 'show'])->name('show');
+            Route::get('/{id}/editar', [LogisticaController::class, 'edit'])->name('edit');
+            Route::put('/{id}/actualizar', [LogisticaController::class, 'update'])->name('update');
+            Route::post('/{id}/cancelar', [LogisticaController::class, 'cancelar'])->name('cancelar');
+        });
 
         // --- MÓDULO CLIENTES COMBUSTIBLE ---
         Route::prefix('admin-clientes')->name('clientes.')->group(function () {
@@ -320,6 +333,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}/expediente',     [AdminClienteController::class, 'show'])->name('show');
             Route::get('/{id}/editar',         [AdminClienteController::class, 'edit'])->name('edit');
             Route::put('/{id}',                [AdminClienteController::class, 'update'])->name('update');
+            Route::post('/clientes/{id}/generar-token', [AdminClienteController::class, 'generarToken'])->name('generar-token');
 
             // Flujo de registro
             Route::post('/{id}/avanzar-paso',  [AdminClienteController::class, 'avanzarPaso'])->name('avanzarPaso');
@@ -332,6 +346,7 @@ Route::middleware(['auth'])->group(function () {
 
             // Cupos
             Route::post('/{id}/ajustar-cupo',  [AdminClienteController::class, 'ajustarCupo'])->name('ajustarCupo');
+            Route::post('/{id}/gasco-cupo', [AdminClienteController::class, 'asignarCupoGasco'])->name('gasco.asignar');
 
             // Placas
             Route::post('/{id}/placas',                    [AdminClienteController::class, 'registrarPlaca'])->name('placas.store');
@@ -355,5 +370,9 @@ Route::middleware(['auth'])->group(function () {
         Route::middleware(['role:3'])->prefix('mi-cuenta')->name('portal.clientes.')->group(function () {
             Route::get('/resumen',   [PortalClienteController::class, 'index'])->name('index');
             Route::get('/mi-perfil', [PortalClienteController::class, 'perfil'])->name('perfil');
+            Route::get('/pedidos',           [PedidoController::class, 'index'])->name('pedidos.index');
+            Route::get('/pedidos/nuevo',     [PedidoController::class, 'create'])->name('pedidos.create');
+            Route::post('/pedidos/guardar',  [PedidoController::class, 'store'])->name('pedidos.store');
+            Route::put('/pedidos/{id}/cancelar', [PedidoController::class, 'cancelar'])->name('pedidos.cancelar');
         });
 });
