@@ -47,8 +47,8 @@ class CheckAlertasViajes extends Command
             ->exists();
 
             if (!$hasChecklist) {
-                $this->warn(" > Enviando alerta: Viaje #{$viaje->id}");
-                $this->enviarAlerta("ALERTA SALIDA: El viaje #{$viaje->id} a {$viaje->destino_ciudad} no tiene checklist tras 30 min.", $usuariosNotificar, $viaje);
+                $this->warn(" > Enviando alerta: Viaje #{$viaje->id} [{$viaje->vehiculo->placa}]");
+                $this->enviarAlerta("ALERTA SALIDA: El viaje #{$viaje->id}. Unidad {$viaje->vehiculo->flota} [{$viaje->vehiculo->placa}] a {$viaje->destino_ciudad} no tiene checklist tras 30 min.", $usuariosNotificar, $viaje);
                 $reporte['notificadas_salida']++;
             }
         }
@@ -77,8 +77,8 @@ class CheckAlertasViajes extends Command
             ->exists();
 
             if (!$hasCheckIn) {
-                $this->warn(" > Enviando alerta: Vehículo {$viaje->vehiculo->flota} inconsistente.");
-                $this->enviarAlerta("ALERTA RETORNO: El vehículo {$viaje->vehiculo->flota} está libre pero el viaje #{$viaje->id} sigue 'EN RUTA'.", $usuariosNotificar, $viaje);
+                $this->warn(" > Enviando alerta: Vehículo {$viaje->vehiculo->placa} inconsistente.");
+                $this->enviarAlerta("ALERTA RETORNO: El vehículo {$viaje->vehiculo->flota} [{$viaje->vehiculo->placa}] está libre pero el viaje #{$viaje->id} a {$viaje->destino_ciudad} sigue 'EN RUTA'.", $usuariosNotificar, $viaje);
                 $reporte['notificadas_retorno']++;
             }
         }
