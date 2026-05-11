@@ -52,6 +52,9 @@ class TrazabilidadMiddleware
                 'ip'                 => $request->ip(),
                 'user_agent'         => $request->userAgent(),
             ]);
+
+
+            
         }
 
         return $response;
