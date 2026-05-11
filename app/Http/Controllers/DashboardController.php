@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\DashboardService;
+use App\Services\PedidoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,13 +23,17 @@ class DashboardController extends Controller
         // 1. DASHBOARD PRINCIPAL (Admin / SuperUser)
         // Redirigimos antes de tocar cualquier Servicio
         if (in_array($user->id_perfil, [1, 2,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18])) {
-            return redirect()->route('vehiculos.index');
+            return redirect()->route('dashboard.admin');
         }
 
         // -------------------------------------------------------
         // LÓGICA DEL CLIENTE (perfil 3)
         // -------------------------------------------------------
         
+        if ($user->id_perfil == 3) {
+            return redirect()->route('portal.clientes.index');
+        }
+
         // 1. Capturamos el ID de sucursal si viene en la URL
         $sucursalId = $request->query('sucursal_id');
 
@@ -38,7 +43,7 @@ class DashboardController extends Controller
         // 3. Cargamos los pedidos usando el cliente correcto (Padre o Sucursal)
         // Validamos que exista 'cliente' en el array por si el perfil es 'cliente_sin_vincular'
         if (isset($data['cliente'])) {
-            $data['pedidos'] = app(\App\Services\PedidoService::class)
+            $data['pedidos'] = app(PedidoService::class)
                                 ->listarPedidosParaUsuario($data['cliente']);
         }
 
@@ -54,5 +59,14 @@ class DashboardController extends Controller
             'cliente_sucursal'    => view('cliente.index', $data),
             default               => abort(403, 'Perfil de usuario no reconocido o expediente no vinculado.'),
         };
+    }
+
+    public function adminPrincipal()
+    {
+        // Ahora sí existe el método en el Service
+        $stats = $this->dashboardService->getAdminStats();
+        
+        // Cargamos la vista profesional que está en resources/views/dashboard/admin_principal.blade.php
+        return view('dashboard.admin_principal', compact('stats'));
     }
 }

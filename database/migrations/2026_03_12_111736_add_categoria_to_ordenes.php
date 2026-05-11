@@ -14,7 +14,8 @@ class AddCategoriaToOrdenes extends Migration
     public function up()
     {
         Schema::table('ordenes', function (Blueprint $table) {
-            $table->unsignedBigInteger('id_tipo_req')->nullable()->after('id_cliente');
+            // Cambiamos 'id_cliente' por 'id_usuario' que sí existe en la tabla
+            $table->bigInteger('id_tipo_req')->unsigned()->nullable()->after('id_usuario');
         });
     }
 

@@ -59,8 +59,10 @@
                 </thead>
                 <tbody>
                     @php($TotalLitros=0)
-                    @forelse($viajes as $viaje)
+                    @php($TotalLitrosC=0)
                     
+                    @forelse($viajes as $viaje)
+                        @php($TotalLitrosC += $viaje->litros)
 
                       <tr style="border-bottom: 1px solid #01050a; background-color:white"   >
                         <td colspan="2" class="text-black text-bold" style="font-weight: bold; font-size: 20px;">Salida: {{ \Carbon\Carbon::parse($viaje->fecha_salida)->locale('es')->isoFormat('DD/MM/YYYY [ Hora de Salida: ]hh:mm a') }}<br>
@@ -80,21 +82,24 @@
                       </tr>
 
                       @foreach($viaje->despachos as $index => $despacho)
-                      @php($TotalLitros += $despacho->litros ?? 0)
-                        <tr style="font-size: 17px; font-weight: 600;">
-                            <td>{{$despacho->cliente->alias  ?? $despacho->cliente->nombre  ?? $despacho->otro_cliente ?? 'Cliente Null' }} @if(!is_null($despacho->observacion)) <br> [{{$despacho->observacion}}] @endif</td>
-                            <td>{{ number_format($despacho->litros, 0)}} Lts</td>
-                        </tr>
+                        @if($despacho)
+                            @php($TotalLitros += $despacho->litros ?? 0)
+                            <tr style="font-size: 17px; font-weight: 600;">
+                                <td>{{$despacho->cliente->alias  ?? $despacho->cliente->nombre  ?? $despacho->otro_cliente ?? 'Cliente Null' }} @if(!is_null($despacho->observacion)) <br> [{{$despacho->observacion}}] @endif</td>
+                                <td>{{ number_format($despacho->litros, 0)}} Lts</td>
+                            </tr>
+                        @endif
                       @endforeach
-
+                        
                     @empty
                     <tr>
                         <td colspan="7" class="text-center text-muted">No hay viajes programados o en curso.</td>
                     </tr>
                     @endforelse
+                    
                     <tr style="font-weight: 700; font-size:19px; border-top: 2px solid #01050a; background-color: #d1ecf1;">
                         <td class="py-1">Total Litros</td>
-                        <td class="py-1">{{ $TotalLitros }}</td>
+                        <td class="py-1">{{ $TotalLitros > 0? $TotalLitros : $TotalLitrosC }}</td>
                         <td class="py-1"></td>
                         <td class="py-1"></td>
                 </tbody>

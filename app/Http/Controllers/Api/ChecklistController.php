@@ -110,6 +110,7 @@ class ChecklistController extends Controller
                 if ($vehiculoId) {
                     // Consultar datos completos del vehículo
                     $vehiculo = $this->getVehiculoCompleto($vehiculoId);
+                    
                     $viajes = Viaje::where('vehiculo_id', $vehiculoId)
                                 ->whereDate('fecha_salida', '>=', now())
                                 ->get();
@@ -132,10 +133,9 @@ class ChecklistController extends Controller
                         ];
                         // Lo insertamos al final de la primera sección
                         $dataResponse['sections'][0]['items'][] = $campoViaje;
-                        Log::info("Checklist ID {$id}: Se inyectó campo de selección de ruta con " . count($opcionesViajes) . " opciones para Vehículo ID {$vehiculoId}.");
+                      //  Log::info("Checklist ID {$id}: Se inyectó campo de selección de ruta con " . count($opcionesViajes) . " opciones para Vehículo ID {$vehiculoId}.");
                     }
-                    Log::info("Checklist data ". json_encode($dataResponse) . " para Checklist ID {$id} y Vehículo ID {$vehiculoId} después de inyectar rutas.");
-
+                    
                     // --- BLOQUE 2: Auto-completar "Datos del Vehículo" ---
                     foreach ($dataResponse['sections'][1]['items'] as &$item) {
                         if (isset($item['data_source'])) {
@@ -171,7 +171,6 @@ class ChecklistController extends Controller
                     }
                 }
 
-            Log::info("Checklist ID {$id} solicitado por Usuario ID " . auth()->id() . ". Vehículo ID en cache: " . ($vehiculoId ?? 'No encontrado') . ". Intentos de polling: {$intentos}");
 
             return response()->json([
                 'success' => true,
@@ -180,7 +179,6 @@ class ChecklistController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Error al obtener checklist: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener checklist: ' . $e->getMessage()
@@ -216,9 +214,10 @@ class ChecklistController extends Controller
 
             // 2. AHORA: Procesar lógica de negocio con respuestas ya decodificadas
             $vehiculo = Vehiculo::find($request->vehiculo_id);
-
-
-            $old_inspeccion = Inspeccion::where('vehiculo_id', $request->vehiculo_id)->where('checklist_id',1)
+            $km = 0;
+            $horasDuracion = 0;
+            
+            $old_inspeccion = Inspeccion::where('vehiculo_id', $request->vehiculo_id)->whereIn('checklist_id',[1,3])
                             ->whereNull('respuesta_in')
                             ->orderByDesc('created_at')
                             ->first();
@@ -280,16 +279,12 @@ class ChecklistController extends Controller
                 && (empty($old_inspeccion->respuesta_in) || empty($old_inspeccion->respuesta_json));
             
            if (is_null($old_inspeccion)) {
-                // Nunca ha salido → primera salida
+                // No ha salido → primera salida
                 $tipoCheck = 'OUT'; // salida
-            } elseif (is_null($old_inspeccion->respuesta_in)) {
+            } else {
                 // Tiene OUT pendiente → ahora está entrando
                 $tipoCheck = 'IN'; // entrada
-            } else {
-                // Tiene OUT e IN → próximo movimiento: salida
-                $tipoCheck = 'OUT'; 
             }
-
             if($tipoCheck == 'OUT'){
                 $inspeccion = Inspeccion::create([
                     'vehiculo_id' => $request->vehiculo_id,
@@ -309,7 +304,7 @@ class ChecklistController extends Controller
 
             }else{
                 $old_inspeccion->respuesta_in = $payloadJson;
-                $old_inspeccion->respuesta_json = $payloadJson;
+                //$old_inspeccion->respuesta_json = $payloadJson;
                 $old_inspeccion->estatus_general = $request->estatus_general ?? 'OK';
                 $old_inspeccion->save();
                 $createdAt = $old_inspeccion->created_at; 
@@ -377,23 +372,31 @@ class ChecklistController extends Controller
 
 
             // 3. Aplicar el cambio de estatus (Solo si el estatus cambia)
-            if ($vehiculo->estatus != $nuevoEstatus) {
+            if ($nuevoEstatus == 5) {
                 $vehiculo->estatus = $nuevoEstatus;
-                $vehiculo->save();
+                
             }
+
+            $vehiculo->save();
+
             if(!is_null($condicion)){
                 $viaje = Viaje::where('vehiculo_id', $vehiculo->id)
                         ->where('status', $condicion)
                         ->first();
-                if ($viaje) {
+                if ($viaje && $viaje->status != $nuevoEstatusViaje) {
                     $viaje->status = $nuevoEstatusViaje;
                     $viaje->save();
                     $cisterna= $viaje->cisterna;
                     if(!is_null($cisterna)){
-                        $vehiculoCisterna=Vehiculo::find($cisterna->id_vehiculo);
+                        $vehiculoCisterna=Vehiculo::find($cisterna);
                         $vehiculoCisterna->estatus=$nuevoEstatus;
-                        $vehiculoCisterna->save();
-                        
+                        $vehiculoCisterna->kilometraje+=$km;
+                        $vehiculoCisterna->horas_trabajo+=$horasDuracion;
+                        $vehiculoCisterna->hrs_trabajo+=$horasDuracion;
+                        $vehiculoCisterna->hrs_contador+=$horasDuracion;
+                        $vehiculoCisterna->km_contador+=$km;
+                        $vehiculoCisterna->km_mantt+=$km;
+                        $vehiculoCisterna->save();         
                     }
                 }
             }
@@ -418,13 +421,11 @@ class ChecklistController extends Controller
                     'accion' => "/inspecciones/{$inspeccion->id}" // Ruta al detalle de la inspección
                 ];
                 
-                 FcmNotificationService::enviarNotification(
-                        "Unidad {$vehiculo->flota} requiere Mantenimiento",  
-                        "Unidad {$vehiculo->flota} requiere planificacion para Servicio de Mantenimiento. presenta acumulados {$vehiculo->km_mantt}km y {$vehiculo->hrs_mantt} horas de trabajo",
-                        $data
-                    );
-                    
-                    
+                FcmNotificationService::enviarNotification(
+                    "Unidad {$vehiculo->flota} requiere Mantenimiento",  
+                    "Unidad {$vehiculo->flota} requiere planificacion para Servicio de Mantenimiento. presenta acumulados {$vehiculo->km_mantt}km y {$vehiculo->hrs_mantt} horas de trabajo",
+                    $data
+                );    
             }
 
                         // 4. Crear los datos de la Alerta/Notificación (Estructura centralizada)

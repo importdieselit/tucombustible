@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddIdTipoReqToOrdenes extends Migration
+class CreateInventarioEquivalentes extends Migration
 {
     /**
      * Run the migrations.
@@ -13,8 +13,11 @@ class AddIdTipoReqToOrdenes extends Migration
      */
     public function up()
     {
-        Schema::table('ordenes', function (Blueprint $table) {
-            $table->integer('id_tipo_req')->nullable();
+        Schema::create('inventario_equivalentes', function (Blueprint $table) {
+            $table->id();
+            $table->bigInteger('id_inventario');
+            $table->bigInteger('id_equivalente');
+            $table->timestamps();
         });
     }
 
@@ -25,8 +28,6 @@ class AddIdTipoReqToOrdenes extends Migration
      */
     public function down()
     {
-        Schema::table('ordenes', function (Blueprint $table) {
-            $table->dropColumn('id_tipo_req');
-        });
+        Schema::dropIfExists('inventario_equivalentes');
     }
 }

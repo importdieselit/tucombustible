@@ -53,10 +53,10 @@ class TelegramNotificationService
             if ($response->successful() && $response->json('ok') === true) {
                 return true;
             } else {
-                Log::error('Error al enviar mensaje de texto a Telegram:', [
-                    'response_body' => $response->body(),
-                    'status' => $response->status()
-                ]);
+                // Log::error('Error al enviar mensaje de texto a Telegram:', [
+                //     'response_body' => $response->body(),
+                //     'status' => $response->status()
+                // ]);
                 return false;
             }
 
@@ -110,10 +110,10 @@ class TelegramNotificationService
                 return response()->json(['message' => 'Reporte enviado a Telegram con éxito.'], 200);
             } else {
                 // Registrar el error detallado de la API de Telegram para debugging
-                Log::error('Error al enviar reporte a Telegram:', [
-                    'response' => $response->body(),
-                    'status' => $response->status()
-                ]);
+                // Log::error('Error al enviar reporte a Telegram:', [
+                //     'response' => $response->body(),
+                //     'status' => $response->status()
+                // ]);
                 return response()->json([
                     'message' => 'Error al enviar el reporte a Telegram.', 
                     'telegram_error' => $response->json('description', 'Error desconocido del API')
@@ -122,10 +122,10 @@ class TelegramNotificationService
 
         } catch (\Exception $e) {
             // Manejo de excepciones generales (ej. error de I/O, problema de red, etc.)
-            Log::error('Excepción al manejar el envío a Telegram:', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            // Log::error('Excepción al manejar el envío a Telegram:', [
+            //     'error' => $e->getMessage(),
+            //     'trace' => $e->getTraceAsString()
+            // ]);
             return response()->json([
                 'message' => 'Error interno del servidor al procesar la solicitud.', 
                 'error' => $e->getMessage()
@@ -152,11 +152,11 @@ class TelegramNotificationService
                 return true;
             }
 
-            Log::error("Error al enviar foto a Telegram", ['response' => $response->body()]);
+//            Log::error("Error al enviar foto a Telegram", ['response' => $response->body()]);
             return false;
 
         } catch (\Exception $e) {
-            Log::error('Excepción al enviar foto a Telegram:', ['error' => $e->getMessage()]);
+  //          Log::error('Excepción al enviar foto a Telegram:', ['error' => $e->getMessage()]);
             return false;
         }
     }
@@ -208,15 +208,15 @@ class TelegramNotificationService
             }
 
             // Si no sale el botón, este log te dirá POR QUÉ (ej: error en la estructura del botón)
-            Log::error("Fallo al enviar mensaje a Telegram", [
-                'status'   => $response->status(),
-                'response' => $response->json()
-            ]);
+            // Log::error("Fallo al enviar mensaje a Telegram", [
+            //     'status'   => $response->status(),
+            //     'response' => $response->json()
+            // ]);
 
             return false;
 
         } catch (\Exception $e) {
-            Log::error("Excepción en sendSimpleMessage: " . $e->getMessage());
+//            Log::error("Excepción en sendSimpleMessage: " . $e->getMessage());
             return false;
         }
     }

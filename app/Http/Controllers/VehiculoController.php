@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Vehiculo; // El modelo sigue siendo necesario para las vistas
@@ -11,165 +10,55 @@ use App\Models\Orden;
 use App\Models\ResumenDiario;
 use App\Models\Cliente;
 use App\Models\MantenimientoProgramado;
+use App\Models\DocumentosVehiculo;
 use App\Models\InventarioSuministro;
 use App\Models\DespachoViaje;
+use App\Models\Viaje;
+use App\Models\EstatusData;
+use App\Models\VehiculoFoto;
+use App\Models\TipoDocumento;
+use App\Models\HistorialGpsVehiculo;
 use Illuminate\Http\Request;
+use App\Services\VehiculoService;
+use App\Repositories\VehiculoRepository;
 use App\Http\Requests\VehiculoStoreRequest;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Str; 
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Support\Str; // Es necesario para la función Str::plural()
-use Illuminate\Support\Facades\DB;
-use App\Models\TipoDocumento;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Schema;
 use App\Traits\GenerateAlerts;
 use App\Traits\PluralizaEnEspanol;
-use App\Models\VehiculoFoto;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
-use App\Models\Viaje;
-use App\Models\EstatusData;
-use Illuminate\Support\Facades\Storage;
 
 
 class VehiculoController extends BaseController
 {
-    /**
-     * Sobrescribe el método create para pasar datos adicionales a la vista.
-     * @return \Illuminate\View\View
-     */
-    
-    public function filter(Request $request)
-            {
-            // 1. Inicializar el Query Builder del modelo correcto
-            $query = Vehiculo::query(); 
-            
-            // 2. Llamar al list() del padre, que ejecutará el applyBusinessFilters(si existe)
-            // y luego el filtro de seguridad de cliente.
-            return $this->list($query); 
-        }
+    protected $service;
+    protected $repo;
 
-    protected function getDetailsForView($item)
+    public function __construct(VehiculoService $service, VehiculoRepository $repo)
     {
-        
+        parent::__construct(); 
+        $this->service = $service;
+        $this->repo = $repo;
+    }
 
-        $orden=false;
-        $insumos_usados=false;
+    public function index()
+    {
+        $vehiculos = $this->repo->getAll();
+        return view('vehiculo.index', compact('vehiculos'));
+    }
 
-     // NOTA: En una aplicación real, estos datos vendrían de la base de datos.
-            $rutas = collect([
-                // ['fecha' => '2024-05-15', 'origen' => 'Caracas', 'destino' => 'Valencia', 'km' => 170, 'conductor' => 'Pedro Pérez'],
-                // ['fecha' => '2024-05-12', 'origen' => 'Valencia', 'destino' => 'Maracay', 'km' => 60, 'conductor' => 'Ana López'],
-                // ['fecha' => '2024-05-10', 'origen' => 'Maracay', 'destino' => 'Caracas', 'km' => 120, 'conductor' => 'Juan Rivas'],
-                // ['fecha' => '2024-05-08', 'origen' => 'Caracas', 'destino' => 'La Guaira', 'km' => 40, 'conductor' => 'Pedro Pérez'],
-                // ['fecha' => '2024-05-05', 'origen' => 'La Guaira', 'destino' => 'Caracas', 'km' => 45, 'conductor' => 'Ana López'],
-            ]);
-
-            $historialMensual = collect([
-                // ['mes' => 'Mayo 2024', 'km' => 1500, 'consumo' => 120.5],
-                // ['mes' => 'Abril 2024', 'km' => 1800, 'consumo' => 145.7],
-                // ['mes' => 'Marzo 2024', 'km' => 2100, 'consumo' => 170.3],
-                // ['mes' => 'Febrero 2024', 'km' => 1950, 'consumo' => 155.0],
-                // ['mes' => 'Enero 2024', 'km' => 1750, 'consumo' => 135.2],
-            ]);
-
-            // Cálculo de indicadores económicos (con datos simulados)
-            $precioLitroCombustible = 0.5; // Precio ficticio por litro en USD
-            $consumoTotalLitros = $historialMensual->sum('consumo');
-            $gastoCombustible = $consumoTotalLitros * $precioLitroCombustible;
-            $kmTotales = $historialMensual->sum('km');
-            $costoPorKm = $kmTotales > 0 ? $gastoCombustible / $kmTotales : 0;
-            $planes=
-   
-            // 1. Foto Principal
-            $foto = VehiculoFoto::where('vehiculo_id', $item->id)
-                ->where('es_principal', true)
-                ->first();
-
-            // 2. Historial de Viajes y Despachos (Optimizado con relaciones)
-            $viajes = DespachoViaje::query()
-                ->join('viajes', 'despachos_viajes.viaje_id', '=', 'viajes.id')
-                ->with([
-                    'viaje.chofer.persona', 
-                    'viaje.ayudante_chofer.persona',
-                    'cliente',
-                    'viaje.vehiculo'
-                ])
-                ->where('viajes.vehiculo_id', $item->id)
-                ->orderBy('viajes.fecha_salida', 'desc')
-                ->select('despachos_viajes.*') 
-                ->get()
-                ->map(function ($v) {
-                    return [
-                        'id'       => $v->id,
-                        'fecha'    => $v->viaje->fecha_salida ? $v->viaje->fecha_salida->format('d/m/Y H:i') : 'N/D',
-                        'destino'  => $v->viaje->destino_ciudad ?? 'Sin datos',
-                        'chofer'   => $v->viaje->chofer->persona->nombre ?? 'N/D',
-                        'ayudante' => $v->viaje->ayudante_chofer->persona->nombre ?? 'N/D',        
-                        'cliente'  => $v->cliente->nombre ?? $v->otro_cliente ?? 'N/D',
-                        'litros'   => number_format($v->litros, 2, ',', '.')
-                    ];
-                });
-
-            // 3. Lógica de Orden Abierta (Si está en Taller o Fuera de Servicio)
-            if (in_array($item->estatus, [2, 3, 5])) { // Estatus que implican taller o revisión
-                $ordenD = Orden::where('id_vehiculo', $item->id)
-                    ->where('estatus', 2) // Asumiendo 2 como 'En Proceso/Abierta'
-                    ->first();
-
-                if ($ordenD) {
-                    $orden = [
-                        'id'             => $ordenD->id,
-                        'fecha_ingreso'  => $ordenD->fecha_in,
-                        'dias_parada'    => Carbon::parse($ordenD->fecha_in)->diffInDays(now()),
-                        'insumos'        => InventarioSuministro::with('inventario')
-                                            ->where('id_orden', $ordenD->id)->get()
-                    ];
-                }
-            }
-
-            $mantenimientos = Orden::where('id_vehiculo', $item->id)
-                    //->where('tipo', 'mantenimiento')
-                    ->orderBy('created_at', 'desc')
-                    //->limit(5)
-                    ->get();
-            
-            $estatus = EstatusData::where('id_estatus', $item->estatus)->first();
-            $tipo = TipoVehiculo::where('id', $item->tipo)->first()->tipo ?? 'N/D';
-            $esChuto = $item->tipo == 3; // Asumiendo tipo 3 es Chuto
-            $esCisterna = in_array($item->tipo, [2, 5]); // Asumiendo tipo 2 y 5 son Cisterna/Tanque
-            $acoples = [];
-            if($esCisterna){
-                $acoples = Vehiculo::where('es_flota', true)->whereIn('tipo', [3])->whereNull('acoplado_id')->get();
-            
-            }
-            if($esChuto){
-                $acoples = Vehiculo::where('es_flota', true)->whereIn('tipo', [2,5])->whereNull('acoplado_id')->get();
-            
-            }
-
-            $docsV = TipoDocumento::where('tipo', 'V')->get();
-        return [
-            'foto'   => $foto,
-            'viajes' => $viajes,
-            'orden'  => $orden,
-            'indicadores' => [
-                'gasto_combustible' => number_format($gastoCombustible, 2, ',', '.'),
-                'costo_por_km' => number_format($costoPorKm, 4, ',', '.'),
-            ],
-            'historialMensual' => $historialMensual,
-            'rutas' => $rutas,
-            'estatus' => $estatus,
-            'esChuto' => $esChuto,
-            'esCisterna' => $esCisterna,
-            'tipo' => $tipo,
-            'acoples' => $acoples,
-             'mantenimientos' => $mantenimientos,
-             'docsV' => $docsV
-        ];
+    public function filter(Request $request)
+    {
+        return $this->list(\App\Models\Vehiculo::query()); 
     }
 
     protected function getAdditionalData()
@@ -187,7 +76,7 @@ class VehiculoController extends BaseController
         $unidades_en_servicio = Vehiculo::EnServicio()->count();
         $historicoEficiencia = ResumenDiario::orderBy('fecha', 'desc')->limit(15)->get()->sortBy('fecha')->toArray();
         $mantenimientos = MantenimientoProgramado::with('vehiculo')
-                ->whereIn('estatus', [3, 2])
+                ->whereIn('estatus', [1, 2]) // Solo pendientes o en proceso
                 ->orderBy('fecha', 'desc') // o por km si lo deseas
                 ->limit(7)
                 ->get();
@@ -342,9 +231,6 @@ class VehiculoController extends BaseController
       
     }
 
-    
-
-
     public function controlDocumentacion(Request $request)
     {
         $query = Vehiculo::query();
@@ -365,8 +251,10 @@ class VehiculoController extends BaseController
 
         $vehiculos = $query->orderBy('placa', 'asc')->paginate(20);
         $clientes = Cliente::orderBy('nombre', 'asc')->get();
+        $docsV = TipoDocumento::where('tipo', 'V')->get();
 
-        return view('vehiculo.documentacion', compact('vehiculos', 'clientes'));
+        return view('vehiculo.documentacion', compact('vehiculos', 'clientes', 'docsV'));
+
     }
 
      protected function applyBusinessFilters(Builder $query): Builder
@@ -395,10 +283,28 @@ class VehiculoController extends BaseController
                 case 'con_orden_abierta':
                     $query->VehiculosConOrdenAbierta();
                     break;
+                case 'en_mantenimiento':
+                    $query->VehiculosEnMantenimiento();
+                    break;
                 case 'flota':
                     $query->EsFlota();
                     break;
-                
+                case 'chutos_camiones':
+                    $query->whereIn('tipo', [1,3])->where('es_flota', true);
+                    break;
+                case 'cisternas':
+                    $query->whereIn('tipo', [2,5])->where('es_flota', true);
+                    break;
+                case 'chutos_disponibles':
+                    $query->where('tipo', 3)->where('estatus', 1)->where('es_flota', true);
+                    break;
+                case 'camiones_disponibles':
+                    $query->where('tipo', 1)->where('estatus', 1)->where('es_flota', true);
+                    break;
+                case 'cisternas_disponibles':
+                    $query->whereIn('tipo', [2,5])->where('estatus', 1)->where('es_flota', true);
+                    break;
+
             }
         }
 
@@ -407,60 +313,30 @@ class VehiculoController extends BaseController
 
     public function create()
     {
-        $marcas = Marca::pluck('marca', 'id');
-        $modelos = Modelo::pluck('modelo', 'id');
-        $clientes = Cliente::pluck('nombre', 'id');
-        $tiposVehiculo = TipoVehiculo::pluck('tipo', 'id');
-        $documentosRequeridos = TipoDocumento::where('tipo', 'V')->get();
-
-        $counts = [
-            'T' => Vehiculo::where('tipo', 2)->count(), // Tipo 2: Tanques
-            'L' => Vehiculo::where('tipo', 6)->count(), // Tipo 6: Livianos
-            'C' => Vehiculo::whereNotIn('tipo', [2, 6])->count(),
-        ];
+        $marcas = $this->repo->getMarcas();
+        $modelos = $this->repo->getModelos();
+        $clientes = $this->repo->getClientes();
+        $tiposVehiculo = $this->repo->getTiposVehiculo();
+        $documentosRequeridos = $this->repo->getDocumentosRequeridosV();
         
-        // La lógica de la vista se hereda del BaseController, pero con los datos adicionales.
-        return view($this->getModelNameLowerCase() . '.create', compact('marcas', 'modelos', 'clientes', 'tiposVehiculo','documentosRequeridos', 'counts'));
+        return view('vehiculo.create', compact('marcas', 'modelos', 'clientes', 'tiposVehiculo','documentosRequeridos'));
     }
-
-    /**
-     * Sobrescribe el método edit para pasar datos adicionales a la vista.
-     * @param int $id
-     * @return \Illuminate\View\View
-     */
-    public function edit($id)
-    {
-        // Se obtiene el vehículo usando la lógica del BaseController.
-        $item = $this->model->findOrFail($id);
-
-        $marcas = Marca::pluck('marca', 'id');
-        $modelos = Modelo::pluck('modelo', 'id');
-        $clientes = Cliente::pluck('nombre', 'id');
-        $tiposVehiculo = TipoVehiculo::pluck('tipo', 'id');
-        $documentosRequeridos = TipoDocumento::where('tipo', 'V')->get();
-
-        // Se pasa el vehículo y los datos adicionales a la vista.
-        return view($this->getModelNameLowerCase() . '.edit', compact('item', 'marcas', 'modelos', 'clientes', 'tiposVehiculo','documentosRequeridos'));
-    }
-
 
     public function store(Request $request)
     {
-        // Creamos una instancia de nuestro Form Request y validamos los datos.
-        // Esto lanzará una excepción y redirigirá si la validación falla.
-        app(VehiculoStoreRequest::class);
+        app(VehiculoStoreRequest::class); 
         try {
             $marcaId = $request->marca;
             if ($marcaId === 'otro') {
-                $nuevaMarca = Marca::create(['nombre' => $request->nueva_marca]);
+                $nuevaMarca = Marca::create(['marca' => $request->nueva_marca]);
                 $request->marca = $nuevaMarca->id;
             }
 
             $modeloId = $request->modelo;
             if ($modeloId === 'otro') {
                 $nuevoModelo = Modelo::create([
-                    'nombre' => $request->nuevo_modelo,
-                    'marca_id' => $request->marca, // Usamos el ID de la marca recién creada o seleccionada
+                    'modelo' => $request->nuevo_modelo,
+                    'id_marca' => $request->marca, // Usamos el ID de la marca recién creada o seleccionada
                 ]);
                 $request->modelo = $nuevoModelo->id;
             }
@@ -497,66 +373,129 @@ class VehiculoController extends BaseController
 
             Session::flash('success', 'Vehiculo creado exitosamente.');
         } catch (\Exception $e) {
-            Log::info('Error al crear el registro: ' . $e->getMessage());
-            Session::flash('error', 'Error al crear el registro: ' . $e->getMessage());
+            Log::error('Error Store Vehiculo: ' . $e->getMessage());
+            Session::flash('error', 'Error al crear el registro.');
+        }
+        return Redirect::route('vehiculos.list');
+    }
 
+    public function edit($id)
+    {
+        $item = $this->repo->findById($id);
+        $marcas = $this->repo->getMarcas();
+        $modelos = $this->repo->getModelos();
+        $clientes = $this->repo->getClientes();
+        $tiposVehiculo = $this->repo->getTiposVehiculo();
+        $documentosRequeridos = $this->repo->getDocumentosRequeridosV();
+
+        return view('vehiculo.edit', compact('item', 'marcas', 'modelos', 'clientes', 'tiposVehiculo','documentosRequeridos'));
+    }
+
+    public function getDocumentoDetalle($vehiculo_id, $tipo_id)
+    {
+        $vehiculo = Vehiculo::findOrFail($vehiculo_id);
+        $tipoDoc = TipoDocumento::findOrFail($tipo_id);
+
+        // 1. Obtener el valor del campo dinámico si existe (ej: rcv, racda)
+        $valorCampoDestino = null;
+        if ($tipoDoc->campo_destino && isset($vehiculo->{$tipoDoc->campo_destino})) {
+            $valorCampoDestino = $vehiculo->{$tipoDoc->campo_destino};
         }
 
-        return Redirect::route('vehiculos.list');
+        // 2. Obtener el registro detallado (el último subido)
+        $registro = DocumentosVehiculo::where('vehiculo_id', $vehiculo_id)
+                                    ->where('tipo', $tipo_id)
+                                    ->first();
 
+        // 3. Verificar si el archivo físico existe (PDF, JPG o PNG)
+        $finalPath = null;
+        $extensions = ['pdf', 'jpg', 'png', 'jpeg'];
+        foreach ($extensions as $ext) {
+            $path = "storage/vehiculos/{$vehiculo_id}/documentos/{$tipoDoc->abreviatura}_{$vehiculo_id}.{$ext}";
+            if (file_exists(public_path($path))) {
+                $finalPath = asset($path);
+                break;
+            }
+        }
+
+        return response()->json([
+            'success'      => true,
+            'label'        => $tipoDoc->nombre,
+            'abreviatura'  => $tipoDoc->abreviatura,
+            'valor_actual' => $valorCampoDestino ?? ($registro->fecha_venc ?? ''),
+            'nro_registro' => $registro->nro ?? '',
+            'file_url'     => $finalPath,
+            'tiene_campo'  => !empty($tipoDoc->campo_destino)
+        ]);
+    }
+
+
+    
+    public function updateDocumento(Request $request)
+    {
+        $tipoDoc = TipoDocumento::findOrFail($request->doc_id);
+        
+        // Validación dinámica: si el documento tiene campo_destino, la fecha es obligatoria.
+        // Si no (como el Certificado), la fecha puede ser opcional.
+        $rules = [
+            'vehiculo_id' => 'required',
+            'doc_id'      => 'required',
+            'archivo'     => 'nullable|file|mimes:pdf,jpg,png|max:5120'
+        ];
+        
+        if ($tipoDoc->campo_destino) {
+            $rules['valor_texto'] = 'required';
+        }
+
+        $request->validate($rules);
+
+        $vehiculo = Vehiculo::findOrFail($request->vehiculo_id);
+
+        // 1. Gestión del Archivo (Ruta Estándar)
+        if ($request->hasFile('archivo')) {
+            $extension = $request->file('archivo')->getClientOriginalExtension();
+            $fileName = "{$tipoDoc->abreviatura}_{$vehiculo->id}.{$extension}";
+            $folder = "public/vehiculos/{$vehiculo->id}/documentos";
+            
+            // Borrar archivos viejos con otras extensiones para evitar duplicados (estándar)
+            foreach(['pdf','jpg','png'] as $ext) {
+                Storage::delete("{$folder}/{$tipoDoc->abreviatura}_{$vehiculo->id}.{$ext}");
+            }
+            
+            $request->file('archivo')->storeAs($folder, $fileName);
+        }
+
+        // 2. Actualización en Tabla Principal (Solo si aplica)
+        if ($tipoDoc->tabla_destino == 'vehiculos' && $tipoDoc->campo_destino) {
+            $campo = $tipoDoc->campo_destino;
+            $vehiculo->$campo = $request->valor_texto;
+            $vehiculo->save();
+        }
+
+        // 3. Registro en Tabla de Documentos (Auditoría/Histórico)
+        // Esto se hace SIEMPRE para tener el rastro de quién subió qué y cuándo
+        DocumentosVehiculo::updateOrCreate(
+            ['vehiculo_id' => $vehiculo->id, 'tipo' => $tipoDoc->id],
+            [
+                'fecha_venc' => $request->fecha_venc ?? null,
+                'nro'        => $request->nro ?? null,
+                'doc'        => "vehiculos/{$vehiculo->id}/documentos/{$tipoDoc->abreviatura}_{$vehiculo->id}", // nombre base
+                'fecha_ing' => now(),
+            ]
+        );
+
+        return back()->with('success', "{$tipoDoc->nombre} gestionado correctamente.");
     }
 
     public function updateV(Request $request)
     {
-        $vehiculo=Vehiculo::findOrFail($request->id);
-        
-        //app(VehiculoStoreRequest::class);
-        DB::beginTransaction();
         try {
-            // 1. Actualizar datos del vehículo
-            $vehiculo->update($request->all());
-
-             // 2. Manejar la carga de imágenes (nuevas imágenes)
-             $this->handleFotoUpload($request, $vehiculo);
-            
-             // 3. Manejar eliminación de fotos si se enviaron IDs a eliminar
-             if ($request->has('fotos_a_eliminar')) {
-                 $idsParaEliminar = explode(',', $request->input('fotos_a_eliminar'));
-                 VehiculoFoto::whereIn('id', $idsParaEliminar)
-                             ->where('vehiculo_id', $vehiculo->id)
-                             ->delete();
-                 // Opcionalmente, eliminar los archivos físicos del disco aquí
-             }
-
-             if ($request->has('documentos')) {
-                foreach ($request->file('documentos') as $tipoId => $file) {
-                    $tipoDoc = TipoDocumento::find($tipoId);
-                    if ($tipoDoc && $file->isValid()) {
-                        $extension = $file->getClientOriginalExtension();
-                        $nombreArchivo = "{$tipoDoc->abreviatura}_{$vehiculo->id}.{$extension}";
-                        $rutaDestino = "vehiculos/{$vehiculo->id}/documentos";
-
-                        // Opcional: Limpiar archivos viejos con diferentes extensiones para evitar duplicados
-                        $formatos = ['pdf', 'jpg', 'jpeg', 'png'];
-                        foreach ($formatos as $f) {
-                            $viejo = "public/{$rutaDestino}/{$tipoDoc->abreviatura}_{$vehiculo->id}.{$f}";
-                            if (Storage::exists($viejo)) Storage::delete($viejo);
-                        }
-
-                        $file->storeAs("public/{$rutaDestino}", $nombreArchivo);
-                    }
-                }
-            }
-
-            DB::commit();
-            Session::flash('success', 'Vehículo actualizado exitosamente!');
+            $this->service->actualizarVehiculo($request->id, $request->all(), $request->file('documentos'), $request->file('fotos'), $request->input('fotos_a_eliminar'));
+            Session::flash('success', '¡Vehículo actualizado!');
             return Redirect::route('vehiculos.index');
-
         } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error("Error al actualizar vehículo: " . $e->getMessage());
-            Session::flash('error', 'Hubo un error al actualizar el vehículo.');
-            return Redirect::back()->withInput();
+            Log::error("Error Update Vehiculo: " . $e->getMessage());
+            return Redirect::back()->with('error', 'Error al actualizar.');
         }
     }
 
@@ -629,7 +568,76 @@ class VehiculoController extends BaseController
         return view('vehiculo.import');
     }
 
-    public function reporteDisponibilidad()
+    public function reporteDisponibilidad(Request $request)
+{
+    $tokenValido = config('services.reporte.internal_token');
+    // Si no está logueado Y el token no coincide, entonces al login
+    if (!auth()->check() && $request->get('token') !== $tokenValido) {
+       // abort(403, 'Acceso no autorizado');
+    }
+    $today = now();
+    $data = Vehiculo::miFlota()->with(['tipoVehiculo', 'cisternaAcoplada', 'ordenActiva'])->get();
+
+    $vehiculosEnRuta = $data->where('estatus', 2);
+    $enRuta = $vehiculosEnRuta->count();
+
+    $total = $data->count();
+    $operativosCount = $data->where('estatus', 1)->count();
+    
+    $cisternas= $data->where('tipo', 2);
+    $totalCisternas= $cisternas->count();
+    $camiones = $data->whereIn('tipoVehiculo.tipo', ['CAMION','CAMION CISTERNA']);
+    $chutos = $data->whereIn('tipoVehiculo.tipo', ['CHUTO']);
+    $totalCamiones= $camiones->count();
+    $totalChutos= $chutos->count();
+
+    $fallaCount = $data->whereIn('estatus', [3,4,5])->count();
+    $porcentajeDisponibilidad = $total > 0 ? round(($operativosCount / $total) * 100) : 0;
+    $ligero=Vehiculo::misVehiculos()->with(['tipoVehiculo', 'ordenActiva'])->where('tipo', 6)->get();
+    $totalLivianos= $ligero->count();
+    
+    $cisternasFalla = $cisternas->where('estatus', '>', 2);
+    $camionesFalla = $camiones->where('estatus', '>', 2);
+    $chutosFalla = $chutos->where('estatus', '>', 2);
+    $camionetasFalla = $ligero->where('estatus', '>', 2);
+    $cisternasOperativas = $cisternas->where('estatus', 1);
+    $camionetasOperativas = $ligero->where('estatus', 1);
+    $camionesOperativos = $camiones->where('estatus', 1);
+    $chutosOperativos = $chutos->where('estatus', 1);
+    $chutosEnRuta = $chutos->where('estatus', 2);
+    $camionetasEnRuta = $ligero->where('estatus', 2);
+    $camionesEnRuta = $camiones->where('estatus', 2);
+    $cisternasEnRuta = $cisternas->where('estatus', 2);
+
+   $today = Carbon::parse($today);
+   $queryViajesHoy = Viaje::whereDate('fecha_salida', now()->format('Y-m-d'));
+
+    // 2. Obtener el conteo de vehículos únicos (usando el nombre real de la columna: id_vehiculo)
+    $vehiculosEnUsoHoy = (clone $queryViajesHoy)->distinct()->count('vehiculo_id');
+
+
+    // 3. Cálculo de la tasa de utilización
+    // Evitamos división por cero si no hay flota operativa configurada
+    $utilizacionFlota = $operativosCount > 0 
+        ? round(($vehiculosEnUsoHoy / $operativosCount) * 100, 1) 
+        : 0;
+
+    // Obtenemos los viajes activos de esos vehículos
+    $despachosHoy = $queryViajesHoy->with(['vehiculo', 'chofer'])->get();
+    // ------------------------------------
+    
+
+    return view('vehiculo.reporte_disponibilidad', compact(
+        'today', 'cisternasFalla', 'enRuta', 'totalCisternas','camionesFalla', 'despachosHoy', 
+        'camionetasFalla', 'camionetasOperativas', 'totalLivianos','totalCamiones', 'totalChutos',
+        'chutosFalla', 'chutosOperativos', 'camionesOperativos', 
+        'total', 'operativosCount', 'fallaCount', 'porcentajeDisponibilidad','cisternasOperativas','utilizacionFlota',
+        'chutosEnRuta', 'camionetasEnRuta', 'camionesEnRuta', 'cisternasEnRuta'
+
+    ));
+}
+
+  public function refreshDisponibilidad()
 {
     $today = now();
     $data = Vehiculo::miFlota()->with(['tipoVehiculo', 'cisternaAcoplada', 'ordenActiva'])->get();
@@ -652,31 +660,24 @@ class VehiculoController extends BaseController
     $ligero=Vehiculo::misVehiculos()->with(['tipoVehiculo', 'ordenActiva'])->where('tipo', 6)->get();
     $totalLivianos= $ligero->count();
     
-    $cisternasFalla = $cisternas->where('estatus', '!=', 1);
-    $cisternasOperativas = $cisternas->where('estatus', 1);
+    $cisternasFalla = $cisternas->where('estatus', '>', 2);
     $camionesFalla = $camiones->where('estatus', '>', 2);
     $chutosFalla = $chutos->where('estatus', '>', 2);
-    $camionetasFalla = $ligero->where('estatus', '!=', 1);
+    $camionetasFalla = $ligero->where('estatus', '>', 2);
+    $cisternasOperativas = $cisternas->where('estatus', 1);
     $camionetasOperativas = $ligero->where('estatus', 1);
     $camionesOperativos = $camiones->where('estatus', 1);
+    $chutosOperativos = $chutos->where('estatus', 1);
     $chutosEnRuta = $chutos->where('estatus', 2);
     $camionetasEnRuta = $ligero->where('estatus', 2);
     $camionesEnRuta = $camiones->where('estatus', 2);
     $cisternasEnRuta = $cisternas->where('estatus', 2);
-    $chutosOperativos = $chutos->where('estatus', 1);
 
    $today = Carbon::parse($today);
    $queryViajesHoy = Viaje::whereDate('fecha_salida', now()->format('Y-m-d'));
 
     // 2. Obtener el conteo de vehículos únicos (usando el nombre real de la columna: id_vehiculo)
-    $vehiculosEnUsoHoy = $queryViajesHoy->distinct()->count('vehiculo_id');
-
-    // 3. Obtener la lista de IDs de esos vehículos
-    // Usamos pluck para obtener un array simple de IDs, que es más ligero que objetos completos
-    $vehiculosIds = $queryViajesHoy->distinct()->pluck('vehiculo_id')->toArray();
-    $viajesId=$queryViajesHoy->distinct()->pluck('id')->toArray();
-    // 4. Si necesitas los OBJETOS Vehiculo con su data:
-    $vehiculosCompletos = Vehiculo::whereIn('id', $vehiculosIds)->get();
+    $vehiculosEnUsoHoy = (clone $queryViajesHoy)->distinct()->count('vehiculo_id');
 
 
     // 3. Cálculo de la tasa de utilización
@@ -686,20 +687,18 @@ class VehiculoController extends BaseController
         : 0;
 
     // Obtenemos los viajes activos de esos vehículos
-    $despachosHoy = $vehiculosCompletos->map(function($v) use ($viajesId) {
-        return $v->viajes->whereIn('id', $viajesId)->first(); // Tomamos el último viaje cargado por el eager loading
-    })->filter(); // Eliminamos nulos si algún vehículo no tiene viaje asignado
+    $despachosHoy = $queryViajesHoy->with(['vehiculo', 'chofer'])->get();
     // ------------------------------------
     
 
-    return view('vehiculo.reporte_disponibilidad', compact(
+    return view('vehiculo.partials._tabla_disponibilidad', compact(
         'today', 'cisternasFalla', 'enRuta', 'totalCisternas','camionesFalla', 'despachosHoy', 
         'camionetasFalla', 'camionetasOperativas', 'totalLivianos','totalCamiones', 'totalChutos',
         'chutosFalla', 'chutosOperativos', 'camionesOperativos', 
         'total', 'operativosCount', 'fallaCount', 'porcentajeDisponibilidad','cisternasOperativas','utilizacionFlota',
         'chutosEnRuta', 'camionetasEnRuta', 'camionesEnRuta', 'cisternasEnRuta'
 
-    ));
+    ))->render();
 }
 
     /**
@@ -710,144 +709,57 @@ class VehiculoController extends BaseController
      */
     public function importSave(Request $request)
     {
-        // 1. Validar que se ha subido un archivo
-        $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv'
-        ]);
-        
+        $request->validate(['file' => 'required|mimes:xlsx,xls,csv']);
         try {
-            $rows = Excel::toArray(null, $request->file('file'))[1];
-            $header = array_map('trim', array_change_key_case($rows[0], CASE_LOWER));
-            $dataRows = array_slice($rows, 1);
-            
-            foreach ($dataRows as $row) {
-                // Si la fila está vacía, la ignoramos para evitar errores
-                if (empty(array_filter($row))) {
-                    continue;
-                }
-
-                $rotc_venc=null;
-                $rowData = array_combine($header, $row);
-
-                // // Lógica de búsqueda y creación de marca y modelo
-                $marcaNombre = $rowData['marca'] ?? null;
-                $modeloNombre = $rowData['modelo'] ?? null;
-                $marcaId = null;
-                $modeloId = null;
-                $flota = $rowData['flota'];
-
-                if ($marcaNombre) {
-                    $marca = Marca::firstOrCreate(
-                        ['marca' => trim(strtoupper($marcaNombre))]
-                    );
-                    $marcaId = $marca->id;
-
-                    if ($modeloNombre && $marcaId) {
-                        $modelo = Modelo::firstOrCreate(
-                            [
-                                'modelo' => trim(strtoupper($modeloNombre)),
-                                'id_marca' => $marcaId
-                            ]
-                        );
-                        $modeloId = $modelo->id;
-                    }
-                }
-
-                $poliza = $rowData['POLIZA DE SEGURO'];
-                if (strtoupper($poliza) === 'PENDIENTE' || !strtotime($poliza)) {
-                    $poliza = null;
-                }else{
-                    $poliza= \Carbon\Carbon::parse($poliza)->format('Y-m-d');
-                }
-
-                $RCV = $rowData['POLIZA DE SEGURO'];
-                if (strtoupper($RCV) === 'PENDIENTE' || !strtotime($RCV)) {
-                    $RCV = null;
-                }else{
-                    $RCV= \Carbon\Carbon::parse($RCV)->format('Y-m-d');
-                }
-
-                $rotc = $rowData['ROTC'];
-                if (strtoupper($rotc) === 'PENDIENTE') {
-                    $rotc = null;
-                    $rotc_venc=null;
-                }else{
-                    $rotc= explode('- AL ',$rotc);
-                    $rotc_venc= (!empty($rotc[1]) && $rotc[1] !== 'PENDIENTE') 
-                        ? \Carbon\Carbon::createFromFormat('d/m/Y', $rotc[1])->format('Y-m-d'):null;
-                    $rotc=trim($rotc[0]);
-                }
-               // dd($rowData);    
-                
-                $tiposVehiculo= TipoVehiculo::where('tipo', $rowData['tipo'])->first();
-               // if(is_null($tiposVehiculo)){ dd( $rowData['tipo']);}
-                $vehiculo=Vehiculo::where('placa', $rowData['placa'])->first();
-                if($vehiculo){
-                    $vehiculo->flota = $flota;
-                    $vehiculo->placa = $rowData['placa'];
-                    $vehiculo->color = $rowData['color'] ?? $vehiculo->color;
-                    $vehiculo->tipo = $tiposVehiculo->id ?? $vehiculo->tipo;
-                    //$vehiculo->kilometraje = $rowData['KILOMETRAJE'] ?? $vehiculo->kilometraje;
-                    $vehiculo->observacion = $rowData['OBSERVACION'].' - '.$rowData['DETALLES'] ?? $vehiculo->observacion;
-                    $vehiculo->serial_motor = $rowData['serial_motor'] ?? $vehiculo->serial_motor;
-                    $vehiculo->serial_carroceria = $rowData['serial_carroceria'] ?? $vehiculo->serial_carroceria;
-                    $vehiculo->tipo = $tiposVehiculo->id ?? $vehiculo->tipo;
-                    $vehiculo->poliza_fecha_out = $poliza;
-                    $vehiculo->rcv=  trim($RCV);
-                    $vehiculo->rotc=  !is_null($rotc)?$rotc:'PENDIENTE';
-                    $vehiculo->rotc_venc=  $rotc_venc;
-                    $vehiculo->racda=  $rowData['racda'];
-                    //$vehiculo->anno = $rowData['AÑO'] ?? $vehiculo->anno;
-                    $vehiculo->agencia = $rowData['EMPRESA'] ?? $vehiculo->agencia;
-                    $vehiculo->carga_max = $rowData['ALMACENAMIENTO'] ?? 0;
-                    //$vehiculo->consumo = $rowData['AUTONOMIA'] ?? 0;
-                //  $vehiculo->gps = $rowData['GPS']== 'SI' ? true : false;
-                    $vehiculo->marca= $marcaId;
-                    $vehiculo->semcamer = $rowData['semcamer'];
-                    $vehiculo->homologacion_intt= $rowData['homologacion_intt'];
-                    $vehiculo->modelo= $modeloId;
-                    $vehiculo->es_flota = true;
-                    $vehiculo->save();
-                }else{
-
-                   // // Preparar los datos del vehículo
-                    $vehiculoData = [
-                        'flota' =>$flota,
-                        'color' => $rowData['color'],
-                        'placa' => $rowData['placa'],
-                        //'kilometraje' => $rowData['KILOMETRAJE'],
-                        'observacion' => $rowData['OBSERVACION'].' - '.$rowData['DETALLES'],
-                        'serial_motor' => $rowData['serial_motor'],
-                        'serial_carroceria' => $rowData['serial_carroceria'],
-                        'tipo' => $tiposVehiculo->id,
-                        'poliza_fecha_out' => $poliza,
-                        'rcv'=>  trim($RCV),
-                        'rotc'=>  !is_null($rotc)?$rotc:'PENDIENTE',
-                        'rotc_venc'=>  $rotc_venc,
-                        'racda'=>  $rowData['racda'],
-                       // 'anno' => $rowData['AÑO'],
-                        'agencia' => $rowData['EMPRESA'],
-                        'carga_max' => $rowData['ALMACENAMIENTO'],
-                        //'consumo' => $rowData['AUTONOMIA'],
-                        'marca'=> $marcaId,
-                        'semcamer' => $rowData['semcamer'],
-                        'homologacion_intt'=> $rowData['homologacion_intt'],
-                        'modelo'=> $modeloId,
-                        'es_flota' => true,
-                        'estatus' => 1
-                    ];
-                    Vehiculo::create($vehiculoData);
-                }
-                
-            }
-           // 4. Mensaje de éxito
-            Session::flash('success', '¡Vehículos importados exitosamente!');
+            $this->service->procesarImportacion($request->file('file'));
+            Session::flash('success', 'Importación completada.');
         } catch (\Exception $e) {
-            // 5. Manejo de errores
-            Session::flash('error', 'Hubo un error al importar los vehículos: ' . $e->getMessage());
+            Session::flash('error', 'Error en importación: ' . $e->getMessage());
         }
-
         return Redirect::back();
+    }
+
+    public function ubicacionGeneral()
+    {
+        // Filtramos unidades que tengan GPS (evitamos lat/lng en 0 o null)
+        $unidades = Vehiculo::with(['isMarca','isModelo'])->whereNotNull('latitud')
+            ->whereNotNull('longitud')
+            ->where('latitud', '!=', 0)
+            ->get(['id', 'placa', 'marca', 'modelo', 'tipo', 'estatus', 'latitud', 'longitud', 'updated_at']);
+
+        return view('vehiculo.ubicacion_general', compact('unidades'));
+    }
+
+    public function apiUbicaciones()
+    {
+        $unidades = Vehiculo::with(['isMarca','isModelo'])->whereNotNull('latitud')
+            ->whereNotNull('longitud')
+            ->where('latitud', '!=', 0)
+            ->get(['id', 'placa', 'marca', 'modelo', 'tipo', 'estatus', 'latitud', 'longitud', 'updated_at']);
+        return response()->json($unidades);
+    }
+
+    public function vistaHistorial(Request $request, $id = null)
+    {
+        // Obtenemos los vehículos para el select del buscador
+        $vehiculos = Vehiculo::with(['isMarca','isModelo'])->whereNotNull('latitud')
+            ->whereNotNull('longitud')
+            ->where('latitud', '!=', 0)->orderBy('placa', 'asc')->get();
+        $desde = $request->get('desde', now()->subDay()->format('Y-m-d\TH:i'));
+        $hasta = $request->get('hasta', now()->format('Y-m-d\TH:i'));
+
+        return view('vehiculo.historial', compact('vehiculos', 'id', 'desde', 'hasta'));
+    }
+    
+    public function historial(Request $request, $id)
+    {
+        $vehiculo = Vehiculo::findOrFail($id);
+        
+        // Si no vienen fechas en el GET, usamos las de las últimas 24h por defecto
+        $desde = $request->get('desde', now()->subDay()->format('Y-m-d\TH:i'));
+        $hasta = $request->get('hasta', now()->format('Y-m-d\TH:i'));
+
+        return view('vehiculo.historial', compact('vehiculo', 'id', 'desde', 'hasta'));
     }
     
 }

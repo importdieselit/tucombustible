@@ -64,12 +64,18 @@
                         }
                         switch ($po->estatus) {
                             case 1:
-                                $estatus='Solicitados';
+                                $estatus='Despachado';
                                 break;
                             case 2:
-                                $estatus='Aprobado';
+                                $estatus='Solicitado';
                                 break;
                             case 3:
+                                $estatus='Aprobado';
+                                break;
+                            case 4:
+                                $estatus='En Observación';
+                                break;
+                            case 5:
                                 $estatus='Rechazado'; 
                                 break;
                             
@@ -83,13 +89,9 @@
                         <td>{{ $orden->nro_orden }}</td>
                         <td>{{ $orden->vehiculo()?$orden->vehiculo()->flota.' '.$orden->vehiculo()->placa:null }}</td>
                         <td>{{ $orden->tipo }}</td>
-                        <td>
-                                {{ $orden->created_at->format('d/m/Y') }}
-                        </td>
+                        <td>{{ $orden->created_at->format('d/m/Y') }}</td>
                         <td>{{$po->created_at->diffForHumans(now())}}</td>
-                        <td>
-                            {{$estatus}}
-                        </td>
+                        <td>{{$estatus}}</td>
                     </tr>
                     @endforeach
                 </tbody>

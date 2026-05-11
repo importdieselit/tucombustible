@@ -146,21 +146,36 @@
 
 <div class="sidebar d-md-block">
     <div class="d-flex flex-column align-items-center mb-3">
+        <a href="{{ route('dashboard') }}" class="d-flex flex-column align-items-center text-decoration-none">
         <img src="{{ asset('img/logomini.png') }}" alt="Logo" class="img-fluid rounded-circle border border-3 border-secondary" style="max-width: 80px; background: white; padding: 5px;">
         <span class="mt-2 text-white"><strong>TuCombustible</strong></span>
         <small class="text-muted">Impordiesel</small>
+        </a>
     </div>
 
     <ul class="nav flex-column px-2">
         {{-- Dashboard Principal --}}
         <li class="nav-item">
-            <a href="{{ route('dashboard') }}" class="nav-link {{ Request::routeIs('dashboard') ? 'active' : '' }}">
+            <a href="{{ route('dashboard.admin') }}" class="nav-link {{ Request::routeIs('dashboard.admin') ? 'active' : '' }}">
                 <span><i class="fas fa-tachometer-alt nav-icon"></i> Dashboard</span>
             </a>
         </li>
 
         <hr class="text-muted my-2">
 
+        {{-- INICIO DE MÓDULOS EN DESARROLLO (SOLO ADMINS) --}}
+        @if(in_array($user->id_perfil, [1, 2])) 
+             
+{{-- 
+            <li class="nav-item">
+                <a href="{{ route('combustible.estadisticas') }}" class="nav-link {{ Request::routeIs('combustible.*') ? 'active' : '' }}">
+                    <span><i class="fas fa-gas-pump nav-icon"></i> Módulo Combustible</span>
+                </a>
+            </li> --}}
+        @endif
+        {{-- FIN DE MÓDULOS EN DESARROLLO --}}
+
+        {{-- RENDERIZADO DINÁMICO (MÓDULOS ANTIGUOS) --}}
         @foreach($modulos as $modulo)
             @php
                 // Obtener sub-módulos
@@ -205,22 +220,24 @@
             </li>
         @endforeach
     </ul>
+    
     <button id="install-button" class="btn btn-orange shadow-sm px-4 text-white fw-bold" style="display:none;">
             <i class="fa fa-download me-2"></i> INSTALAR APP
     </button>
+    
     <div class="card mt-3">
-    <div class="card-body text-center p-2">
-        <div id="push-container" class="d-flex flex-column align-items-center justify-content-center" style="min-height: 20px;">
-            
-            <h5 id="push-title" class="card-title h6 mb-2">Notificaciones en tiempo real</h5>
-            
-            <button id="btn-push" class="btn btn-primary shadow-sm px-4">
-                <i class="bi bi-bell"></i> <span id="btn-text">Activar Notificaciones</span>
-            </button>
-            
-            <div id="push-status" class="mt-2"></div>
+        <div class="card-body text-center p-2">
+            <div id="push-container" class="d-flex flex-column align-items-center justify-content-center" style="min-height: 20px;">
+                
+                <h5 id="push-title" class="card-title h6 mb-2">Notificaciones en tiempo real</h5>
+                
+                <button id="btn-push" class="btn btn-primary shadow-sm px-4">
+                    <i class="bi bi-bell"></i> <span id="btn-text">Activar Notificaciones</span>
+                </button>
+                
+                <div id="push-status" class="mt-2"></div>
+            </div>
         </div>
-    </div>
     </div>
 </div>
 

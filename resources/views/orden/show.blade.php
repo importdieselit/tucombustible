@@ -164,7 +164,12 @@
                             @php($totalManoObra += $trabajo->costo)
                             <tr>
                                 <td class="ps-3">
-                                    <div class="fw-bold">{{ $trabajo->descripcion }}</div>
+                                    <div class="fw-bold">
+                                        @if($trabajo->id_tempario_servicio == null || $trabajo->es_manual) 
+                                            <span class="badge bg-info x-small" title="Servicio no catalogado">NUEVO</span>
+                                        @endif
+                                        {{ $trabajo->descripcion }}
+                                    </div>
                                     <div class="text-muted x-small text-uppercase">{{ $trabajo->tempario->categoria->categoria ?? 'General' }}</div>
                                     @if(!is_null($trabajo->fecha_fin))
                                         <span class="badge bg-success x-small">
@@ -410,7 +415,7 @@
             </div>
                       
 
-            <div class="card bg-corporate text-white shadow-sm">
+            <div class="card bg-corporate text-dark shadow-sm">
                 <div class="card-body">
                     <div class="d-flex justify-content-between mb-2 small">
                         <span>SUBTOTAL SERVICIOS:</span>
@@ -508,48 +513,64 @@
 
 {{-- MODALES --}}
 
-<div class="modal fade" id="modalTrabajo" data-bs-backdrop="false" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg"> {{-- Cambiado a lg para mejor visión en móvil --}}
+<div class="modal fade mt-5" id="modalTrabajo" data-bs-backdrop="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title small text-uppercase">Registrar Trabajo Realizado</h5>
+                <div class="d-flex justify-content-between align-items-center w-100">
+                    <h5 class="modal-title small text-uppercase mb-0">Registrar Trabajo Realizado</h5>
+                    <div class="form-check form-switch me-3">
+                        <input class="form-check-input" type="checkbox" id="switch-servicio-manual-show">
+                        <label class="form-check-label small fw-bold text-white" for="switch-servicio-manual-show">Servicio no catalogado</label>
+                    </div>
+                </div>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <div class="row g-2 mb-3">
-                            <div class="col-md-4">
-                                <label class="small fw-bold">Categoría</label>
-                              
-                                <select id="select-categoria" name="id_categoria" class="form-select form-select-sm select2 s2">
-                                    <option value="">Seleccione...</option>
-                                    @foreach ($categorias_tempario as $cat)
+                <div class="row g-3 mb-3">
+                    <div class="col-md-12">
+                        <label class="small fw-bold text-muted text-uppercase">Categoría del Servicio</label>
+                        <select id="select-categoria" name="id_categoria" class="form-select form-select-sm select2">
+                            <option value="">Seleccione...</option>
+                            @foreach ($categorias_tempario as $cat)
+                                <option value="{{ $cat->id_tempario_categoria }}">[{{ $cat->codigo }}] {{ $cat->categoria }}</option>
+                            @endforeach
+                        </select>
+                    </div>
 
-                                        
-                                        <option value="{{ $cat->id_tempario_categoria }}">[{{ $cat->codigo }}] {{ $cat->categoria }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="small fw-bold">Servicio / Trabajo</label>
-                                <select id="select-servicio" name="id_servicio" class="form-select form-select-sm select2 s2">
-                                    <option value="">Seleccione categoría primero</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="small fw-bold">Mecánico(s)</label>
-                                <select id="select-mecanicos" name="mecanicos[]" class="form-select form-select-sm s2" multiple>
-                                    @foreach ($personal as $p)
-                                        <option value="{{ $p->id_personal }}">{{ $p->persona->nombre }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+                    {{-- Buscador de Catálogo --}}
+                    <div class="col-md-8" id="container-select-servicio">
+                        <label class="small fw-bold text-muted text-uppercase">Servicio / Trabajo</label>
+                        <select id="select-servicio" name="id_servicio" class="form-select form-select-sm select2">
+                            <option value="">Seleccione categoría primero</option>
+                        </select>
+                    </div>
+
+                    {{-- Entrada Manual (Oculta por defecto) --}}
+                    <div class="col-md-8" id="container-input-servicio" style="display: none;">
+                        <label class="small fw-bold text-primary text-uppercase">Nombre del Nuevo Servicio</label>
+                        <input type="text" id="input-servicio-manual-show" class="form-control form-control-sm border-primary" placeholder="Ej: Rectificación de pieza especial">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="small fw-bold text-muted text-uppercase">Mano de Obra ($)</label>
+                        <input type="number" id="input-costo-trabajo-show" class="form-control form-control-sm fw-bold text-end" value="0.00" step="0.01">
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="small fw-bold text-muted text-uppercase">Mecánico(s) Asignado(s)</label>
+                        <select id="select-mecanicos" name="mecanicos[]" class="form-select form-select-sm" multiple>
+                            @foreach ($personal as $p)
+                                <option value="{{ $p->id_personal }}">{{ $p->persona->nombre }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
-                
             </div>
             <div class="modal-footer bg-light">
                 <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-success btn-sm fw-bold" id="btn-guardar-todo">
-                    <i class="fas fa-save me-1"></i> GUARDAR CAMBIOS
+                <button type="button" class="btn btn-success btn-sm fw-bold px-4" id="btn-guardar-todo">
+                    <i class="fas fa-save me-1"></i> GUARDAR TRABAJO
                 </button>
             </div>
         </div>
@@ -621,7 +642,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalFoto" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+<div class="modal fade" id="modalFoto" tabindex="-1" aria-hidden="true" data-bs-backdrop="false">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-dark text-white">
@@ -649,7 +670,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="modalTrabajoExterno" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalTrabajoExterno" tabindex="-1" data-bs-backdrop="false" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
             <form id="formTrabajoExterno" action="{{ route('ordenes.addTrabajoExterno', $orden->id) }}" method="POST">
@@ -669,11 +690,11 @@
                             <select class="form-select select2-proveedor" name="id_proveedor" id="select-proveedor" required>
                                 <option value="">Seleccione un proveedor...</option>
                                 @foreach($proveedores as $prov)
-                                    <option value="{{ $prov->id }}">{{ $prov->nombre_proveedor }}</option>
+                                    <option value="{{ $prov->id }}">{{ $prov->nombre }}</option>
                                 @endforeach
                             </select>
                             <button class="btn btn-outline-primary" type="button" id="btn-nuevo-proveedor" title="Agregar nuevo proveedor">
-                                <i class="bi bi-plus-circle-fill"></i>
+                                <i class="fa fa-plus"> Nuevo Proveedor</i>
                             </button>
                         </div>
                     </div>
@@ -766,7 +787,14 @@
                     text: res.message || 'Operación exitosa',
                     timer: 1500,
                     showConfirmButton: false
-                }).then(() => window.location.reload());
+                }).then(() => {
+                    // Evaluamos el método para decidir el destino
+                    if (method === 'DELETE') {
+                        window.location.href = '/ordenes/';
+                    } else {
+                        window.location.reload();
+                    }
+                });
             } else {
                 Swal.fire('Error', res.message || 'Error en el servidor', 'error');
             }
@@ -793,21 +821,50 @@
             });
         });
 
-        // Botón "Guardar" del Modal de Trabajo (Directo a DB)
+        $('#select-servicio').on('change', function() {
+            const costo = $(this).find(':selected').data('costo') || 0; // Si tu select2 trae data-costo
+            if (!$('#switch-servicio-manual-show').is(':checked')) {
+                $('#input-costo-trabajo-show').val(parseFloat(costo).toFixed(2));
+            }
+        });
+
+
         $('#btn-guardar-todo').on('click', function() {
+            const isManual = $('#switch-servicio-manual-show').is(':checked');
+            const orderId = '{{ $orden->id }}';
+            
             const data = {
-                id_tempario: $('#select-servicio').val(),
                 id_categoria: $('#select-categoria').val(),
                 mecanicos: $('#select-mecanicos').val(),
-                descripcion: $('#select-servicio option:selected').text(),
-                costo: 0 // El controlador lo calcula por Eager Loading si lo configuraste
+                costo: $('#input-costo-trabajo-show').val(),
+                es_nuevo_servicio: isManual
             };
 
-            if (!data.id_tempario || !data.mecanicos || data.mecanicos.length === 0) {
-                return Swal.fire('Atención', 'Seleccione servicio y mecánicos responsables.', 'warning');
+            if (isManual) {
+                data.id_tempario = 'MANUAL';
+                data.descripcion = $('#input-servicio-manual-show').val().trim();
+            } else {
+                data.id_tempario = $('#select-servicio').val();
+                data.descripcion = $('#select-servicio option:selected').text();
+            }
+
+            if (!data.id_categoria || !data.descripcion || !data.mecanicos || data.mecanicos.length === 0) {
+                return Swal.fire('Atención', 'Complete categoría, descripción del servicio y mecánicos.', 'warning');
             }
 
             apiCall(`/ordenes/${orderId}/trabajos/add`, 'POST', data);
+        });
+
+        $('#switch-servicio-manual-show').on('change', function() {
+            const isManual = $(this).is(':checked');
+            if (isManual) {
+                $('#container-select-servicio').hide();
+                $('#container-input-servicio').fadeIn();    
+                $('#input-costo-trabajo-show').val('0.00').focus();
+            } else {
+                $('#container-input-servicio').hide();
+                $('#container-select-servicio').fadeIn();
+            }
         });
 
         // Finalizar Trabajo (Botón en tabla)

@@ -14,6 +14,8 @@ class Alerta extends Model
     
     // Define la llave primaria si no es 'id'.
     protected $primaryKey = 'id_alerta';
+
+    public $audit = false;
     
     // Campos que pueden ser asignados masivamente.
     protected $fillable = [

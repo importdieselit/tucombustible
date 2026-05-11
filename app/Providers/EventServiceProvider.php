@@ -14,6 +14,13 @@ use App\Models\Deposito;
 use App\Observers\DepositoObserver;
 use App\Models\Pedido;
 use App\Observers\PedidoObserver;
+use App\Models\Viaje;
+use App\Observers\ViajeObserver;
+use App\Models\Inspeccion;
+use App\Observers\InspeccionObserver;
+use App\Models\Orden;
+use App\Observers\OrdenObserver;
+
 
 
 class EventServiceProvider extends ServiceProvider
@@ -43,5 +50,9 @@ class EventServiceProvider extends ServiceProvider
         Cliente::observe(ClienteObserver::class);
         Deposito::observe(DepositoObserver::class);
         Pedido::observe(PedidoObserver::class);
+        Viaje::observe(ViajeObserver::class);
+        Inspeccion::observe(InspeccionObserver::class);
+        Orden::observe(OrdenObserver::class);
+
     }
 }

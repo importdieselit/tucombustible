@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Reporte;
 use App\Models\TipoReporte;
 use App\Models\ReporteEstatusHistorial;
+use App\Models\Vehiculo;
+use App\Models\Orden;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -29,10 +31,12 @@ class ReporteController extends BaseController
     {
         // Aquí se aplicaría la validación de permisos:
         // if (!auth()->user()->canAccess('create', $this->moduloIdReportes)) { abort(403); } 
+        $vehiculos = Vehiculo::with(['isMarca', 'isModelo'])->orderBy('placa', 'asc')
+        ->get(['id', 'placa', 'marca', 'modelo']);
 
         $tiposReporte = TipoReporte::where('activo', true)->pluck('tipo', 'id');
         
-        return view('reporte.create', compact('tiposReporte'));
+        return view('reporte.create', compact('tiposReporte', 'vehiculos'));
     }
 
     // El método index puede ser heredado o modificado para añadir filtros por estatus.

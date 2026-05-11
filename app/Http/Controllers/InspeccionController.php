@@ -31,25 +31,112 @@ class InspeccionController extends Controller
         $this->telegramService = $telegramService;
     }
 
-    public function create($vehiculo_id)
-    {
+    public function create($vehiculo_id, $tipo='salida'){
         // Obtener el blueprint del checklist
         $checklist = Checklist::find(self::CHECKLIST_VEHICULOS_ID);
         if (!$checklist) {
             abort(404, 'Checklist de vehículos no encontrado.');
         }
+
+        $viajePrevioId = null;
         $inspeccion = Inspeccion::where('vehiculo_id', $vehiculo_id)
                          ->whereNull('respuesta_in') // <-- CORRECCIÓN AQUÍ
                          ->first();
+        if($inspeccion){
+            $tipo='entrada';
+            $dataResponse = is_array($inspeccion->respuesta_json) 
+                    ? $inspeccion->respuesta_json 
+                    : json_decode($inspeccion->respuesta_json, true);
+
+            if(isset($dataResponse['sections'][0]['items'])) {
+                // Buscamos si ya existe el campo de ruta en el JSON guardado de la salida
+                foreach($dataResponse['sections'][0]['items'] as $item) {
+                    if($item['label'] == 'Seleccione Ruta a Cubrir') {
+                        $viajePrevioId = $item['value'];
+                        break;
+                    }
+                }
+            }
+        } else {
+            // Lo mismo para el objeto $checklist
+            $dataResponse = is_array($checklist->checklist) 
+                            ? $checklist->checklist 
+                            : json_decode($checklist->checklist, true);
+          //  $tipo='salida';
+        }
+
+            
+
 
         // Obtener datos del vehículo (para pre-rellenar el formulario)
         $vehiculo = Vehiculo::with(['tipoVehiculo', 'isMarca', 'isModelo'])->findOrFail($vehiculo_id);
-        if($inspeccion){
-            $tipo='entrada';
-            $checklist=json_decode($inspeccion->respuesta_json);
-        }else{
-            $tipo='salida';
-        }
+        $viajes = Viaje::where('vehiculo_id', $vehiculo_id)
+                                ->whereDate('fecha_salida', '>=', now())
+                                ->get();
+
+                    // --- BLOQUE 1: Inyectar Rutas/Viajes en "Información General" ---
+                    if ($viajes->count() > 0 && is_null($viajePrevioId)) {
+                        // IMPORTANTE: Flutter espera List<String>, así que aplanamos a un string simple
+                        $opcionesViajes = $viajes->map(function($v) {
+                            return "ID-{$v->id} | Ruta: " . ($v->destino_ciudad ?? 'Sin Destino');
+                        })->toArray();
+
+                        $valorInicial = $opcionesViajes[0] ?? "";
+
+                        $campoViaje = [
+                            "label" => "Seleccione Ruta a Cubrir",
+                            "response_type" => "radio",
+                            "options" => $opcionesViajes, // Esto es ["String1", "String2"]
+                            "value" => (string)$valorInicial, // Forzamos cast a string
+                            "col_width" => 12,
+                            "readonly" => $tipo === 'entrada' // Solo editable en salida
+                        ];
+                        // Lo insertamos al final de la primera sección
+                        $dataResponse['sections'][0]['items'][] = $campoViaje;
+                    } elseif (!is_null($viajePrevioId)) {
+                        // Si ya hay un viaje (Entrada), lo dejamos como texto estático o radio deshabilitado
+                        foreach($dataResponse['sections'][0]['items'] as &$item) {
+                            if($item['label'] == 'Seleccione Ruta a Cubrir') {
+                                $item['readonly'] = true; // El JS debe manejar este atributo
+                            }
+                        }
+                    }
+
+                    foreach ($dataResponse['sections'][1]['items'] as &$item) {
+                        if (isset($item['data_source'])) {
+                            // Caso para campos simples (Vehiculo.placa, etc)
+                            if (is_string($item['data_source'])) {
+                                $campo = str_replace('Vehiculo.', '', $item['data_source']);
+                                
+                                // Mapeo manual de nombres si los de la API difieren del JSON
+                                $mapaAtributos = [
+                                    'marca' => 'marca_nombre',
+                                    'modelo' => 'modelo_nombre',
+                                    'tipo_vehiculo' => 'tipo_nombre',
+                                    'version' => 'modelo_nombre', // O el campo que uses para versión
+                                    'serial_motor' => 'serial_motor',
+                                    'serial_carroceria' => 'serial_carroceria'
+                                ];
+
+                                $key = $mapaAtributos[$campo] ?? $campo;
+                                $item['value'] = $vehiculo->$key ?? "";
+                            }
+                        
+                            // Caso para campos compuestos (Seguros, Verificación)
+                            // if (is_array($item['data_source']) && $item['data_source']['model'] == 'Vehiculo') {
+                            //     $statusField = $item['data_source']['status_field'];
+                            //     $dateField = $item['data_source']['date_field'];
+                                
+                            //     $item['value'] = [
+                            //         "status" => $vehiculo->$statusField ?? false,
+                            //         "vigencia" => $vehiculo->$dateField ?? ""
+                            //     ];
+                            // }
+                        }
+                    }
+                    $checklist->checklist=$dataResponse;
+                
+       
 
         return view('checklist.salida', [
             'checklist' => $checklist,
@@ -68,6 +155,7 @@ public function store(Request $request)
         
         //$chofer= 'n/a';
         $respuestaJson = $data['respuesta_json'];
+        $viajeIdSeleccionado = null;
         $checklistId = self::CHECKLIST_VEHICULOS_ID;
         $estatusGeneral = 'OK';
         $warningFound = false;
@@ -95,12 +183,19 @@ public function store(Request $request)
             // Función auxiliar para procesar los items, ya sea directamente o dentro de subsecciones
             $processItems = function ($items) use (&$estatusGeneral, &$warningFound, &$fail,&$vehiculo,&$chofer,&$isCriticalFailure,&$criticalItems) {
                 foreach ($items as $item) {
+                    $value=$item['value'];
+
                     if($item['label']=='Nombre'){
                         $chofer=$item['value'];
                     }
+
+                    if ($item['label'] == 'Seleccione Ruta a Cubrir' && !empty($item['value'])) {
+                        // El valor viene como "ID-45 | Ruta: Caracas"
+                        preg_match('/ID-(\d+)/', $item['value'], $matches);
+                        $viajeIdSeleccionado = $matches[1] ?? null;
+                    }
                     
                     if ($item['label'] == 'Km. Recorridos' ) {
-                        $value=$item['value'];
                         $kmRecorridos = is_numeric($value) ? (int)$value : 0;
                         $kmVehiculo = $vehiculo->kilometraje ?? 0;
                                 
@@ -169,6 +264,14 @@ public function store(Request $request)
                 'estatus_general' => $estatusGeneral,
                 'respuesta_json' => json_encode($respuestaJson), 
             ]);
+            if ($viajeIdSeleccionado) {
+                        $viaje = Viaje::find($viajeIdSeleccionado);
+                        if ($viaje) {
+                            $viaje->status = 'EN RUTA';
+                            $viaje->save();
+                        }
+                    }
+
             $tipoCheck='OUT';
             $vehiculo->estatus=2;
         }else{
@@ -184,7 +287,12 @@ public function store(Request $request)
             $vehiculo->hrs_contador   += $horasDuracion;    
             $vehiculo->estatus = 1;
 
-            $viaje=Viaje::where('id_vehiculo',$vehiculo->id)->where('estatus',2)->first();
+            $viaje=Viaje::where('vehiculo_id',$vehiculo->id)->where('status', 'EN RUTA')->first();
+            if($viaje){
+                $viaje->status='COMPLETADO';
+                $viaje->save();
+                
+            }
         }
 
         if ($isCriticalFailure) {
@@ -423,10 +531,14 @@ public function store(Request $request)
             'ordenes_abiertas' => Orden::where('estatus', 2)->count(),
             'vehiculos_mantenimiento' => Vehiculo::where('estatus', 3)->count(),
         ];
+        $inspeccionesRecientes = Inspeccion::with('vehiculo')->whereNull('respuesta_in')
+                                        ->orderBy('created_at', 'desc')
+                                        ->get();
         $user = auth()->user();
-        $vehiculosDisponibles = Vehiculo::where('es_flota',true)->get();
-      
-        return view('checklist.index', compact('resumenAlertas','vehiculosDisponibles'));
+        $vehiculosDisponibles = Vehiculo::where('es_flota',true)->get()->mapWithKeys(function ($v) {
+            return [$v->id => "{$v->flota} - {$v->placa}"];
+        });
+        return view('checklist.index', compact('resumenAlertas','vehiculosDisponibles', 'inspeccionesRecientes','user'));
     }
 
 }

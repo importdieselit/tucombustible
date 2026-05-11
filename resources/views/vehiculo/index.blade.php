@@ -23,6 +23,16 @@
                     </a>
                 </div>
                 <div class="col">
+                    <a href="{{ route('vehiculos.ubicacion') }}" class="btn btn-sm text-white w-100 h-100 d-flex align-items-center justify-content-center" style="background-color: #f2A435;">
+                        <i class="fas fa-map-marker-alt me-1 me-md-2"></i> Ubicacion
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="{{ route('vehiculos.documentacion') }}" class="btn btn-sm btn-outline-dark w-100 h-100 d-flex align-items-center justify-content-center">
+                        <i class="fas fa-file-alt me-1 me-md-2"></i> <span class="d-none d-sm-inline">Documentación</span>
+                    </a>
+                </div>
+                <div class="col">
                     <a href="{{ route('mantenimiento.planificacion.index') }}" class="btn btn-sm btn-dark w-100 h-100 d-flex align-items-center justify-content-center">
                         <i class="fas fa-wrench me-1 me-md-2"></i> Planificar
                     </a>
@@ -46,8 +56,8 @@
                 'icon' => 'fa-chart-line',
                 'color' => 'success', // Mantiene el verde para éxito
                 'details' => [
-                    'Chutos/Camiones' => ($m_dis ?? 0) + ($ch_dis ?? 0) . ' / ' . ($m_tot ?? 0),
-                    'Cisternas' => ($c_dis ?? 0) . ' / ' . ($t_tot ?? 0)
+                    'Chutos/Camiones' => ['count' => ($m_dis ?? 0) + ($ch_dis ?? 0), 'filter' => 'chutos_camiones'],
+                    'Cisternas' => ['count' => ($c_dis ?? 0), 'filter' => 'cisternas']
                 ],
                 'link' => '#'
             ],
@@ -58,9 +68,9 @@
                 'icon' => 'fa-check-circle',
                 'color' => 'orange', // Aplicamos el color corporativo naranja
                 'details' => [
-                    'Camiones' => $m_dis ?? 0,
-                    'Chutos' => $ch_dis ?? 0,
-                    'Cisternas' => $c_dis ?? 0
+                    'Camiones' => ['count' => $m_dis ?? 0, 'filter' => 'camiones_disponibles'],
+                    'Chutos' => ['count' => $ch_dis ?? 0, 'filter' => 'chutos_disponibles'],
+                    'Cisternas' => ['count' => $c_dis ?? 0, 'filter' => 'cisternas_disponibles']
                 ],
                 'link' => route('vehiculos.list', ['filter' => 'disponibles'])
             ],
@@ -71,9 +81,9 @@
                 'icon' => 'fa-ban',
                 'color' => 'corporate-emphasis', // Aplicamos el gris oscuro corporativo
                 'details' => [
-                    'En Ruta' => $unidades_en_servicio ?? 0,
-                    'Con Falla' => $unidades_con_falla ?? 0,
-                    'En Taller' => $unidades_en_mantenimiento ?? 0
+                    'En Ruta' => ['count' => $unidades_en_servicio ?? 0, 'filter' => 'en_servicio'],
+                    'Con Falla' => ['count' => $unidades_con_orden_abierta ?? 0, 'filter' => 'con_orden_abierta'],
+                    'En Taller' => ['count' => $unidades_en_mantenimiento ?? 0, 'filter' => 'en_mantenimiento']
                 ],
                 'link' => route('vehiculos.list', ['filter' => 'no_disponibles'])
             ],
@@ -89,44 +99,50 @@
         ];
     @endphp
 
-    @foreach($stats as $s)
-    <div class="col-xl-3 col-md-6">
-        <a href="{{ $s['link'] }}" class="text-decoration-none">
-            {{-- Aplicación de card-kpi y border dinámico según el estándar --}}
+   @foreach($stats as $s)
+        <div class="col-xl-3 col-md-6 mb-4">
             <div class="card card-kpi border-b-{{ $s['color'] }} shadow-sm h-100">
                 <div class="card-body">
-                    <div class="row align-items-center">
-                        {{-- Cabecera del KPI: Texto en mayúsculas pequeñas --}}
-                        <div class="col-12 text-xs font-weight-bold text-uppercase mb-1" style="color: {{ $s['color'] == 'orange' ? '#f2A435' : ($s['color'] == 'corporate' ? '#4C474F' : '') }};">
-                            {{ $s['label'] }} 
-                            <i class="fa {{ $s['icon'] }} text-{{ $s['color'] }} float-end text-gray-300"></i>
-                        </div>
-                        
-                        <div class="col">
-                            <div class="h4 mb-0 font-weight-bold text-gray-800">{{ $s['val'] }}</div>
-                        </div>
-
-                        @if(!empty($s['details']))
-                            @php $cont = count($s['details']) > 2 ? 6 : 12; @endphp
-                            <div class="col-8 row p-0">
-                                @foreach($s['details'] as $name => $count)
-                                    <div class="col-{{ $cont }} rounded text-truncate" title="{{ $name }}">
-                                        <span class="text-dark fw-bold small">{{ $count }}</span>
-                                        <span class="text-muted" style="font-size: 0.65rem;">{{ $name }}</span>
-                                    </div>
-                                @endforeach
+                    {{-- Enlace Global en la Cabecera y Valor Principal --}}
+                    
+                        <div class="row align-items-center">
+                            <div class="col-12 text-xs font-weight-bold text-uppercase mb-1" style="color: {{ $s['color'] == 'orange' ? '#f2A435' : ($s['color'] == 'corporate-emphasis' ? '#4C474F' : '') }};">
+                                {{ $s['label'] }} 
+                                <i class="fa {{ $s['icon'] }} text-{{ $s['color'] }} float-end text-gray-300"></i>
                             </div>
-                        @endif
-                    </div>
+                             
+                            <div class="col-4">
+                                <a href="{{ $s['link'] }}" class="text-decoration-none ">
+                                    <div class="h3 mb-0 font-weight-bold text-gray-800">{{ $s['val'] }}</div>
+                                </a>
+                            </div>
+                            
+                            @if(!empty($s['details']))
+                                @php $cont = count($s['details']) > 2 ? 6 : 12; @endphp
+                                <div class="col-8 row p-0 m-0">
+                                    @foreach($s['details'] as $name => $data)
+                                        <div class="col-{{ $cont }} p-1">
+                                            {{-- Enlace independiente por detalle --}}
+                                            <a href="{{ route('vehiculos.list', ['filter' => $data['filter']]) }}" 
+                                            class="d-block p-1 text-decoration-none hover-shadow-sm transition-all" 
+                                            title="Ver {{ $name }}">
+                                                <span class="text-dark fw-bold small">{{ $data['count'] }}</span>
+                                                <span class="text-muted text-truncate" style="font-size: 0.8rem;">{{ $name }}</span>
+                                            </a>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                    
                     
                     <div class="mt-2 pt-2 border-top">
                         <div class="text-muted small" style="font-size: 0.75rem;">{{ $s['sub'] }}</div>
                     </div>
                 </div>
             </div>
-        </a>
-    </div>
-    @endforeach
+        </div>
+@endforeach
 </div>
 
 <div class="row g-4 mb-4">
@@ -243,13 +259,13 @@
                 <ul class="list-group list-group-flush timeline-list">
                     @foreach($mantenimientos as $item)
                         @php
-                            $atrasado = $item->fecha->isPast() && $item->estatus != '3';
+                            $atrasado = $item->fecha->isPast();
                             
                             // Definir clase de borde según estatus
                             $borderClass = 'border-timeline-primary';
                             if($atrasado) $borderClass = 'border-timeline-danger';
                             elseif($item->estatus == '1') $borderClass = 'border-timeline-warning';
-                            elseif($item->estatus == '3') $borderClass = 'border-timeline-success';
+                            elseif($item->estatus == '2') $borderClass = 'border-timeline-success';
                         @endphp
 
                         <li class="list-group-item shadow-sm {{ $borderClass }}">
@@ -271,8 +287,7 @@
                                         @else
                                             @switch($item->estatus)
                                                 @case('1') <span class="badge bg-warning text-dark">Pendiente</span> @break
-                                                @case('2') <span class="badge bg-info text-white">Programado</span> @break
-                                                @case('3') <span class="badge bg-success">Realizado</span> @break
+                                                @case('2') <span class="badge bg-info text-white">Iniciado</span> @break
                                             @endswitch
                                         @endif
                                     </div>

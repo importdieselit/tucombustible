@@ -3,7 +3,9 @@
 namespace App\Repositories;
 
 use App\Models\GascoCupoMensual;
+use App\Models\Cliente;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class GascoCupoRepository
 {
@@ -36,31 +38,26 @@ class GascoCupoRepository
         }
 
         // 3. Creamos el registro del nuevo mes heredando los litros_autorizados
-        return GascoCupoMensual::create([
-            'cliente_id' => $clienteId,
-            'mes' => $ahora->month,
-            'anio' => $ahora->year,
+        $nuevoCupo = GascoCupoMensual::create([
+            'cliente_id'         => $clienteId,
+            'mes'                => $ahora->month,
+            'anio'               => $ahora->year,
             'litros_autorizados' => $ultimoCupo->litros_autorizados,
-            'litros_consumidos' => 0 // Reinicio automático de mes
+            'litros_consumidos'  => 0 // Reinicio automático de mes
         ]);
+
+        // NUEVO: Como es un mes nuevo (consumo = 0), el disponible de la tabla cliente 
+        // vuelve a estar completo igual al autorizado heredado.
+        \App\Models\Cliente::where('id', $clienteId)->update([
+            'disponible' => $nuevoCupo->litros_autorizados
+        ]);
+
+        return $nuevoCupo;
     }
 
-    /**
-     * Crea o actualiza el cupo operativo enviado por GASCO (Uso exclusivo del Admin).
-     * Si ya existe un registro en el mes, actualiza el autorizado sin tocar el consumo.
-     */
-    public function updateOrCreateQuota(array $data)
+    public function updateOrCreateQuota(array $search, array $values) // <-- Cambiado a dos parámetros
     {
-        return GascoCupoMensual::updateOrCreate(
-            [
-                'cliente_id' => $data['cliente_id'],
-                'mes'        => $data['mes'] ?? Carbon::now()->month,
-                'anio'       => $data['anio'] ?? Carbon::now()->year,
-            ],
-            [
-                'litros_autorizados' => $data['litros_autorizados']
-            ]
-        );
+        return GascoCupoMensual::updateOrCreate($search, $values);
     }
 
     /**
@@ -76,8 +73,18 @@ class GascoCupoRepository
      */
     public function updateConsumed(int $id, float $cantidad)
     {
-        $cupo = GascoCupoMensual::findOrFail($id);
-        $cupo->increment('litros_consumidos', $cantidad);
-        return $cupo;
+        return DB::transaction(function () use ($id, $cantidad) {
+            $cupo = GascoCupoMensual::findOrFail($id);
+            
+            // 1. Incrementamos el consumo en la tabla mensual
+            $cupo->increment('litros_consumidos', $cantidad);
+
+            // 2. Restamos la misma cantidad del disponible en la tabla clientes
+            // Usamos decrement para que sea una operación atómica en la DB
+            Cliente::where('id', $cupo->cliente_id)
+                ->decrement('disponible', $cantidad);
+
+            return $cupo;
+        });
     }
 }

@@ -19,12 +19,17 @@ use App\Http\Controllers\{
     AlertaController, AccesoController, InspeccionController, PedidoController,
     ReporteController, AforoController, SearchController, DataDeletionController,
     ViajesController, TelegramController, PlanificacionMantenimientoController,
-    ReportController, ClienteActivosController,NotificationController
+    ReportController, ClienteActivosController,NotificationController,LogisticaController
 };
 
 /* --- Rutas Públicas y Auth --- */
 Auth::routes(['reset' => false]);
 Route::get('/', function () { return redirect()->route('login'); });
+Route::get('/viajes/reporte-interno', [ViajesController::class, 'reporteDiario'])
+    ->name('reporte.operaciones.interno');
+Route::get('/reporte/flota-interno', [VehiculoController::class, 'reporteDisponibilidad'])->name('reporte.flota.interno');
+Route::get('/reporte/mantenimiento-interno', [OrdenController::class, 'reporteGerencial'])->name('reporte.mantenimiento.interno');
+Route::get('/vehiculos/disponibilidad/refresh', [VehiculoController::class, 'refreshDisponibilidad'])->name('vehiculos.disponibilidad.refresh');
 
 Route::get('/test-push', function () {
     $user = User::find(1); // Tu usuario
@@ -81,10 +86,16 @@ Route::middleware(['auth'])->group(function () {
     Route::put('vehiculos/updatev/{id}', [VehiculoController::class, 'updateV'])->name('vehiculos.updatev');
     Route::get('/inspecciones/{inspeccion_id}/pdf', [InspeccionController::class, 'exportPdf'])->name('inspecciones.pdf');
     Route::get('/reporte/vehiculos-disponibilidad', [VehiculoController::class, 'reporteDisponibilidad'])->name('vehiculos.reporte.disponibilidad');
+    Route::get('/vehiculos/disponibilidad/print', [VehiculoController::class, 'printDisponibilidad'])->name('vehiculos.disponibilidad.print');
+
     Route::get('/vehiculos/report/pdf', [VehiculoController::class, 'reportPdf'])->name('vehiculos.report.pdf');
     Route::get('/documentacion/vehiculos/', [VehiculoController::class, 'controlDocumentacion'])->name('vehiculos.documentacion');
+    Route::post('/vehiculos/documentacion/update', [VehiculoController::class, 'updateDocumento'])->name('vehiculos.documentacion.update');
+    Route::get('/vehiculos/documento-detalle/{vehiculo_id}/{tipo_id}', [VehiculoController::class, 'getDocumentoDetalle'])->name('vehiculos.documentacion.detalle');
     Route::post('vehiculos/acoplar', [VehiculoController::class, 'acoplar'])->name('vehiculos.acoplar');
     Route::get('/vehiculos/desacoplar/{id}', [VehiculoController::class, 'desacoplar'])->name('vehiculos.desacoplar');
+    Route::get('/vehiculos/ubicacion', [VehiculoController::class, 'ubicacionGeneral'])->name('vehiculos.ubicacion');
+    Route::get('/vehiculos/historial/{id?}', [VehiculoController::class, 'vistaHistorial'])->name('vehiculos.historial');
     
 
     Route::get('search/global', [SearchController::class, 'globalSearch'])->name('search.global');
@@ -153,6 +164,7 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/ordenes/purchase/{id}/delete', [OrdenController::class, 'deleteManualSupply'])->name('ordenes.deleteManualSupply');
         Route::post('/ordenes/{id}/habilitar-unidad', [OrdenController::class, 'habilitarUnidad'])->name('vehiculos.habilitarUnidad');
         Route::get('/planes-mantenimiento/api/{id}', [OrdenController::class, 'getPlanApi'])->name('planes.api');
+        Route::get('/ordenes/reporte-gerencial', [OrdenController::class, 'reporteGerencial'])->name('ordenes.reporte_gerencial');
         // Rutas para Evidencias Fotográficas
         Route::post('/ordenes/{id}/fotos/add', [OrdenController::class, 'addFotos'])->name('ordenes.fotos.add');
         Route::delete('/ordenes/fotos/{id}/delete', [OrdenController::class, 'destroyFoto'])->name('ordenes.fotos.destroy');
@@ -230,6 +242,9 @@ Route::middleware(['auth'])->group(function () {
         Route::put('viaticos/tabulador/update', [ViajesController::class, 'tabuladorUpdate'])->name('viaticos.tabulador.update');
         Route::put('viaticos/parametros/update', [ViajesController::class, 'parametrosUpdate'])->name('viaticos.parametros.update');
         Route::get('eventos', [ViajesController::class, 'getCombinedEventos'])->name('eventos');
+        Route::get('/viajes/reporte/{fecha?}', [ViajesController::class, 'reporteDiario'])->name('viajes.reporteDiario');
+        Route::get('/viajes/reporte/print/{fecha?}', [ViajesController::class, 'reporteDiarioPrint'])->name('viajes.reporteDiario.print');
+
 
         // Boletas y Nominaciones
         Route::get('/despachos/guia-distribucion/{viajeId}', [ViajesController::class, 'printGuiaDistribucion'])->name('despachos.guia_distribucion');
@@ -255,6 +270,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/send-telegram-message', [TelegramController::class, 'sendMessage'])->name('telegram.send.message');
   
 
+        Route::get('/admin/principal', [DashboardController::class, 'adminPrincipal'])->name('dashboard.admin');
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         /**
@@ -296,6 +312,18 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/search', [SearchController::class, 'query'])->name('search');
         });
 
+        // --- MÓDULO DE LOGÍSTICA ---
+        Route::middleware(['auth', 'role:1,2,6,11,12,18'])->prefix('logistica')->name('logistica.')->group(function () {
+            
+            Route::get('/planificacion', [LogisticaController::class, 'index'])->name('index');
+            Route::get('/crear/{tipo?}', [LogisticaController::class, 'create'])->name('create');
+            Route::post('/guardar', [LogisticaController::class, 'store'])->name('store');
+            // Rutas para Edición
+            Route::get('/{id}', [LogisticaController::class, 'show'])->name('show');
+            Route::get('/{id}/editar', [LogisticaController::class, 'edit'])->name('edit');
+            Route::put('/{id}/actualizar', [LogisticaController::class, 'update'])->name('update');
+            Route::post('/{id}/cancelar', [LogisticaController::class, 'cancelar'])->name('cancelar');
+        });
 
         // --- MÓDULO CLIENTES COMBUSTIBLE ---
         Route::prefix('admin-clientes')->name('clientes.')->group(function () {
@@ -305,6 +333,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}/expediente',     [AdminClienteController::class, 'show'])->name('show');
             Route::get('/{id}/editar',         [AdminClienteController::class, 'edit'])->name('edit');
             Route::put('/{id}',                [AdminClienteController::class, 'update'])->name('update');
+            Route::post('/clientes/{id}/generar-token', [AdminClienteController::class, 'generarToken'])->name('generar-token');
 
             // Flujo de registro
             Route::post('/{id}/avanzar-paso',  [AdminClienteController::class, 'avanzarPaso'])->name('avanzarPaso');
@@ -317,6 +346,7 @@ Route::middleware(['auth'])->group(function () {
 
             // Cupos
             Route::post('/{id}/ajustar-cupo',  [AdminClienteController::class, 'ajustarCupo'])->name('ajustarCupo');
+            Route::post('/{id}/gasco-cupo', [AdminClienteController::class, 'asignarCupoGasco'])->name('gasco.asignar');
 
             // Placas
             Route::post('/{id}/placas',                    [AdminClienteController::class, 'registrarPlaca'])->name('placas.store');
@@ -340,5 +370,9 @@ Route::middleware(['auth'])->group(function () {
         Route::middleware(['role:3'])->prefix('mi-cuenta')->name('portal.clientes.')->group(function () {
             Route::get('/resumen',   [PortalClienteController::class, 'index'])->name('index');
             Route::get('/mi-perfil', [PortalClienteController::class, 'perfil'])->name('perfil');
+            Route::get('/pedidos',           [PedidoController::class, 'index'])->name('pedidos.index');
+            Route::get('/pedidos/nuevo',     [PedidoController::class, 'create'])->name('pedidos.create');
+            Route::post('/pedidos/guardar',  [PedidoController::class, 'store'])->name('pedidos.store');
+            Route::put('/pedidos/{id}/cancelar', [PedidoController::class, 'cancelar'])->name('pedidos.cancelar');
         });
 });

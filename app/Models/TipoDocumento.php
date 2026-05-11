@@ -13,7 +13,7 @@ class TipoDocumento extends Model
     public $incrementing = true;
     protected $keyType = 'int';
     public $timestamps = true; // La tabla 'ordenes' no tiene 'created_at' ni 'updated_at' en tu SQL
-    public $fillable = ['nombre', 'descripcion', 'abreviatura', 'tipo'];
+    public $fillable = ['nombre', 'descripcion', 'abreviatura', 'tipo','tabla_destino','campo_destino','campo_fecha_vencimiento','campo_ruta'];
     
     public function doc_vehiculos()
     {

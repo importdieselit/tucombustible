@@ -17,14 +17,15 @@
         "laravel-mix": "^6.0.6",
         "lodash": "^4.17.19",
         "postcss": "^8.5.6",
+        "puppeteer": "^24.41.0",
         "resolve-url-loader": "^5.0.0",
         "sass": "^1.32.11",
         "sass-loader": "^11.0.1"
     },
     "dependencies": {
+        "sass-loader": "^11.0.1",
+        "tailwindcss": "^4.2.1",
         "workbox-routing": "^7.4.0",
         "workbox-strategies": "^7.4.0"
-        "sass-loader": "^11.0.1",
-        "tailwindcss": "^4.2.1"
     }
 }

@@ -29,8 +29,6 @@ use App\Http\Controllers\ViajesController;
 use App\Http\Controllers\Apis\SearchController;
 use App\Http\Controllers\TelegramController;
 
-
-
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -43,9 +41,7 @@ use App\Http\Controllers\TelegramController;
 */
 
 //Route para Daily Summary (Resumen Diario)
-    Route::get('/vehiculos/daily-summary', [VehiculoController::class, 'daily'])->name('api.vehiculos.daily-summary');
-
-    
+Route::get('/vehiculos/daily-summary', [VehiculoController::class, 'daily'])->name('api.vehiculos.daily-summary');
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
@@ -54,7 +50,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::post('/ia/webhook', [IntegracionIAController::class, 'handleWebhook']);
 Route::post('/telegram/webhook/logistica', [TelegramController::class, 'handleLogisticaWebhook']);
-
+Route::get('/vehiculos/ubicacion', [VehiculoController::class, 'apiUbicaciones'])->name('api.vehiculos.ubicacion');
+Route::get('/vehiculos/{id}/puntos', [VehiculoController::class, 'getHistorialRuta'])->name('api.vehiculos.puntos');
 // Rutas de autenticación (públicas)
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/preregister', [AuthController::class, 'preregister']);

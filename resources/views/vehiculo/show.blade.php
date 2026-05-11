@@ -3,9 +3,95 @@
 @section('title', 'Hoja de Vida del Vehículo')
 
 @push('styles')
-    <style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/leaflet.fullscreen.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
 
-    </style>
+    <style>
+        #map {
+            height: 300px;
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+            z-index: 1; /* Para que no se superponga a los menús desplegables */
+        }
+    /* Efecto de Radar para la unidad */
+    .map-marker-container {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: white;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        border: 2px solid #002d72; /* Color corporativo */
+        box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    
+    .marker-pulse {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 2px solid #002d72;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+        opacity: 0;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); opacity: 0.5; }
+        100% { transform: scale(2.5); opacity: 0; }
+    }
+
+    /* Eliminar borde azul de Leaflet al hacer click */
+    .leaflet-container { outline: 0; }
+
+    /* Pantalla completa manual (si no quieres usar plugins) */
+    #map:fullscreen {
+        width: 100vw;
+        height: 100vh;
+    }
+ .custom-tooltip {
+        background: rgba(0, 45, 114, 0.9); /* Azul corporativo con transparencia */
+        color: white !important;
+        border: none !important;
+        border-radius: 20px !important;
+        padding: 5px 12px !important;
+        font-family: 'Inter', sans-serif;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+        font-size: 11px !important;
+        pointer-events: none; /* No interfiere con clics en el mapa */
+    }
+
+    /* Eliminar la flecha clásica de Leaflet si prefieres algo más limpio */
+    .leaflet-tooltip-top:before {
+        border-top-color: rgba(0, 45, 114, 0.9) !important;
+    }
+
+    /* Contenedor de texto dentro de la burbuja */
+    .tooltip-content b { color: #ffc107; text-transform: uppercase; }
+    .location-text { display: block; opacity: 0.9; margin-top: 2px; }
+
+    .leaflet-control-fullscreen-button {
+        background-color: #ffffff !important;
+        border: 2px solid rgba(0,0,0,0.2) !important;
+        border-radius: 4px !important;
+        width: 34px !important;
+        height: 34px !important;
+        background-size: 18px 18px !important; /* Ajustar icono interno */
+    }
+
+    .leaflet-control-fullscreen-button:hover {
+        background-color: #f4f4f4 !important;
+    }
+
+    /* Ajuste para que el Tooltip (burbuja) no se pierda en fullscreen */
+    .leaflet-fullscreen-on .custom-tooltip {
+        font-size: 14px !important; /* Un poco más grande en pantalla completa */
+        padding: 8px 15px !important;
+    }
+</style>
 @endpush
 
 
@@ -122,9 +208,32 @@
 
                 <div class="tab-pane fade show active" id="resumen" role="tabpanel">
                     <div class="row">
-                        <h6 class="mb-3">Historial de Kilometraje y Consumo Mensual <span class="text-danger">(MODO DEMO)</span></h6>
+                        <h6 class="mb-3">Historial de Kilometraje y Consumo Mensual</h6>
+                        @php
+                            // Calculamos las fechas para que el input datetime-local las reconozca
+                            $fechaFin = now()->format('Y-m-d\TH:i');
+                            $fechaInicio = now()->subDay()->format('Y-m-d\TH:i');
+                        @endphp
                     {{-- Contenedor del gráfico --}}
-                    <div class="col-md-8" id="monthly-chart" style="height: 300px; margin-bottom: 20px;"></div>
+                    <div class="col-md-8 d-none" id="monthly-chart" style="height: 300px; margin-bottom: 20px;"></div>
+                    <div class="card border-0 shadow-sm mt-3">
+                        <div class="card-header bg-light py-2">
+                            <h6 class="mb-0 text-uppercase small fw-bold">
+                                <i class="fa-solid fa-location-dot text-danger me-1"></i> Ubicación en Tiempo Real
+                            </h6>
+                            <a href="{{ route('vehiculos.historial', [
+                                    'id' => $item->id, 
+                                    'desde' => $fechaInicio, 
+                                    'hasta' => $fechaFin
+                                ]) }}" 
+                            class="btn btn-primary w-100 mb-2">
+                                <i class="fa-solid fa-clock-rotate-left me-2"></i> Ver Historial (Últimas 24h)
+                            </a>
+                        </div>
+                        <div class="card-body p-0">
+                            <div id="map"></div>
+                        </div>
+                    </div>
                         <div class="col-md-4 border-start ps-4 bg-white rounded shadow-sm p-2">
                             <h6 class="text-uppercase fw-bold border-bottom pb-2">Datos Técnicos</h6>
                             <table class="table table-white table-sm table-borderless bg-white">
@@ -145,77 +254,77 @@
 
                 <div class="tab-pane fade" id="docs" role="tabpanel">
                    <div class="card-header bg-dark py-3 d-flex justify-content-between align-items-center">
-        <h6 class="text-white mb-0 fw-black text-uppercase small">
-            <i class="fas fa-file-signature me-2 text-orange"></i> Visor de Documentación Digital
-        </h6>
-    </div>
-    <div class="card-body p-0">
-        <div class="row g-0">
-            {{-- Listado de Pestañas Lateral --}}
-            <div class="col-md-3 border-end bg-light">
-                <div class="nav flex-column nav-pills p-2" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-                    @foreach($docsV as $index => $doc)
-                        @php
-                            // Buscamos si existe el archivo (probamos con pdf y jpg)
-                            $pathPdf = "storage/vehiculos/{$item->id}/documentos/{$doc->abreviatura}_{$item->id}.pdf";
-                            $pathJpg = "storage/vehiculos/{$item->id}/documentos/{$doc->abreviatura}_{$item->id}.jpg";
-                            $pathPng = "storage/vehiculos/{$item->id}/documentos/{$doc->abreviatura}_{$item->id}.png";
-                            
-                            $finalPath = null;
-                            if(file_exists(public_path($pathPdf))) $finalPath = asset($pathPdf);
-                            elseif(file_exists(public_path($pathJpg))) $finalPath = asset($pathJpg);
-                            elseif(file_exists(public_path($pathPng))) $finalPath = asset($pathPng);
-                        @endphp
-
-                        <button class="nav-link {{ $index === 0 ? 'active' : '' }} d-flex justify-content-between align-items-center text-uppercase fw-bold mb-1 py-2 px-3 small shadow-sm" 
-                                id="tab-{{ $doc->abreviatura }}" 
-                                data-bs-toggle="pill" 
-                                data-bs-target="#content-{{ $doc->abreviatura }}" 
-                                type="button" role="tab" style="font-size: 11px;">
-                            <span>{{ $doc->nombre }}</span>
-                            @if($finalPath)
-                                <i class="fas fa-check-circle text-success"></i>
-                            @else
-                                <i class="fas fa-times-circle text-muted"></i>
-                            @endif
-                        </button>
-                    @endforeach
+                    <h6 class="text-white mb-0 fw-black text-uppercase small">
+                        <i class="fas fa-file-signature me-2 text-orange"></i> Visor de Documentación Digital
+                    </h6>
                 </div>
-            </div>
+                    <div class="card-body p-0">
+                        <div class="row g-0">
+                            {{-- Listado de Pestañas Lateral --}}
+                            <div class="col-md-3 border-end bg-light">
+                                <div class="nav flex-column nav-pills p-2" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                                    @foreach($docsV as $index => $doc)
+                                        @php
+                                            // Buscamos si existe el archivo (probamos con pdf y jpg)
+                                            $pathPdf = "storage/vehiculos/{$item->id}/documentos/{$doc->abreviatura}_{$item->id}.pdf";
+                                            $pathJpg = "storage/vehiculos/{$item->id}/documentos/{$doc->abreviatura}_{$item->id}.jpg";
+                                            $pathPng = "storage/vehiculos/{$item->id}/documentos/{$doc->abreviatura}_{$item->id}.png";
+                                            
+                                            $finalPath = null;
+                                            if(file_exists(public_path($pathPdf))) $finalPath = asset($pathPdf);
+                                            elseif(file_exists(public_path($pathJpg))) $finalPath = asset($pathJpg);
+                                            elseif(file_exists(public_path($pathPng))) $finalPath = asset($pathPng);
+                                        @endphp
 
-            {{-- Visor del Documento --}}
-            <div class="col-md-9 bg-secondary bg-opacity-10" style="min-height: 500px;">
-                <div class="tab-content p-3 h-100" id="v-pills-tabContent">
-                    @foreach($docsV as $index => $doc)
-                        @php
-                            $pathPdf = "storage/vehiculos/{$item->id}/documentos/{$doc->abreviatura}_{$item->id}.pdf";
-                            $pathImgJ = "storage/vehiculos/{$item->id}/documentos/{$doc->abreviatura}_{$item->id}.jpg";
-                            $pathImgP = "storage/vehiculos/{$item->id}/documentos/{$doc->abreviatura}_{$item->id}.png";
-                        @endphp
+                                        <button class="nav-link {{ $index === 0 ? 'active' : '' }} d-flex justify-content-between align-items-center text-uppercase fw-bold mb-1 py-2 px-3 small shadow-sm" 
+                                                id="tab-{{ $doc->abreviatura }}" 
+                                                data-bs-toggle="pill" 
+                                                data-bs-target="#content-{{ $doc->abreviatura }}" 
+                                                type="button" role="tab" style="font-size: 11px;">
+                                            <span>{{ $doc->nombre }}</span>
+                                            @if($finalPath)
+                                                <i class="fas fa-check-circle text-success"></i>
+                                            @else
+                                                <i class="fas fa-times-circle text-muted"></i>
+                                            @endif
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </div>
 
-                        <div class="tab-pane fade {{ $index === 0 ? 'show active' : '' }} h-100" 
-                             id="content-{{ $doc->abreviatura }}" role="tabpanel">
-                            
-                            @if(file_exists(public_path($pathPdf)))
-                                <iframe src="{{ asset($pathPdf) }}#toolbar=0" width="100%" height="600px" class="rounded shadow-sm border-0"></iframe>
-                            @elseif(file_exists(public_path($pathImgJ)) || file_exists(public_path($pathImgP)))
-                                @php $img = file_exists(public_path($pathImgJ)) ? $pathImgJ : $pathImgP; @endphp
-                                <div class="text-center bg-white p-2 rounded shadow-sm">
-                                    <img src="{{ asset($img) }}" class="img-fluid rounded">
+                            {{-- Visor del Documento --}}
+                            <div class="col-md-9 bg-secondary bg-opacity-10" style="min-height: 500px;">
+                                <div class="tab-content p-3 h-100" id="v-pills-tabContent">
+                                    @foreach($docsV as $index => $doc)
+                                        @php
+                                            $pathPdf = "storage/vehiculos/{$item->id}/documentos/{$doc->abreviatura}_{$item->id}.pdf";
+                                            $pathImgJ = "storage/vehiculos/{$item->id}/documentos/{$doc->abreviatura}_{$item->id}.jpg";
+                                            $pathImgP = "storage/vehiculos/{$item->id}/documentos/{$doc->abreviatura}_{$item->id}.png";
+                                        @endphp
+
+                                        <div class="tab-pane fade {{ $index === 0 ? 'show active' : '' }} h-100" 
+                                            id="content-{{ $doc->abreviatura }}" role="tabpanel">
+                                            
+                                            @if(file_exists(public_path($pathPdf)))
+                                                <iframe src="{{ asset($pathPdf) }}#toolbar=0" width="100%" height="600px" class="rounded shadow-sm border-0"></iframe>
+                                            @elseif(file_exists(public_path($pathImgJ)) || file_exists(public_path($pathImgP)))
+                                                @php $img = file_exists(public_path($pathImgJ)) ? $pathImgJ : $pathImgP; @endphp
+                                                <div class="text-center bg-white p-2 rounded shadow-sm">
+                                                    <img src="{{ asset($img) }}" class="img-fluid rounded">
+                                                </div>
+                                            @else
+                                                <div class="d-flex flex-column align-items-center justify-content-center h-100 py-5 text-muted">
+                                                    <i class="fas fa-file-upload fa-3x mb-3 opacity-20"></i>
+                                                    <h6 class="fw-black text-uppercase small">Documento no cargado</h6>
+                                                    <p class="small mb-0">No se encontró el archivo: {{ $doc->abreviatura }}_{{ $item->id }}</p>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endforeach
                                 </div>
-                            @else
-                                <div class="d-flex flex-column align-items-center justify-content-center h-100 py-5 text-muted">
-                                    <i class="fas fa-file-upload fa-3x mb-3 opacity-20"></i>
-                                    <h6 class="fw-black text-uppercase small">Documento no cargado</h6>
-                                    <p class="small mb-0">No se encontró el archivo: {{ $doc->abreviatura }}_{{ $item->id }}</p>
-                                </div>
-                            @endif
+                            </div>
                         </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-    </div>
+                    </div>
                 </div>
 
                 <div class="tab-pane fade" id="mantenimiento" role="tabpanel">
@@ -335,7 +444,7 @@
                 <input type="hidden" name="vehiculo_id" value="{{ $item->id }}">
                 
                 <div class="modal-header bg-corporate text-white">
-                    <h5 class="modal-title"><i class="fas fa-tools me-2"></i>Planificar Rutina Preventiva</h5>
+                <h5 class="modal-title"><i class="fas fa-tools me-2"></i>Planificar Rutina Preventiva</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
 
@@ -411,8 +520,100 @@
         </div>
     </div>
 </div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script src="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/Leaflet.fullscreen.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+
+        // Coordenadas desde el modelo $item
+        const lat = {{ $item->latitud ?? 0 }};
+        const lng = {{ $item->longitud ?? 0 }};
+        const placa = "{{ $item->placa }}";
+
+        // Verificar si hay coordenadas válidas (si no, poner una por defecto o no mostrar)
+        if (lat !== 0 && lng !== 0) {
+            const map = L.map('map', { 
+                attributionControl: false,
+                dragging: false,
+                fullscreenControl: true,
+                fullscreenControlOptions: {
+                    position: 'topleft',
+                    title: 'Ver en pantalla completa',
+                    titleExit: 'Salir de pantalla completa'
+                }
+            }).setView([lat, lng], 16);
+
+            // EVENTO: Detectar cambio a pantalla completa
+            map.on('enterFullscreen', function(){
+                console.log('Mapa en pantalla completa');
+                // Opcional: Podrías aumentar el zoom automáticamente
+                map.setZoom(18);
+            });
+
+            map.on('exitFullscreen', function(){
+                console.log('Salida de pantalla completa');
+                map.setZoom(16);
+                map.invalidateSize(); // Crucial para recalcular dimensiones
+            });
+            
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+            const truckIcon = L.divIcon({
+                html: `<div class="map-marker-container"><div class="marker-pulse"></div><i class="fa-solid fa-truck-moving text-corporate"></i></div>`,
+                iconSize: [40, 40],
+                className: 'custom-truck-icon'
+            });
+
+            // Creamos el marcador
+            const marker = L.marker([lat, lng], { icon: truckIcon }).addTo(map);
+
+            // 1. Colocamos un contenido temporal mientras carga la dirección
+            marker.bindTooltip(`
+                <div class="tooltip-content">
+                    <b>${placa}</b>
+                    <span id="geo-loader" class="location-text"><i class="fas fa-spinner fa-spin"></i> Traduciendo ubicación...</span>
+                </div>`, {
+                permanent: true,       // Para que siempre esté visible
+                direction: 'top',      // Que aparezca arriba
+                offset: [0, -20],      // SUBE la burbuja 20px para que NO tape el camión
+                className: 'custom-tooltip'
+            }).openTooltip();
+
+            // 2. Llamada asíncrona para actualizar el texto
+            obtenerDireccion(lat, lng).then(direccion => {
+                const content = `
+                    <div class="tooltip-content">
+                        <b>${placa}</b><a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" class="w-100 text-white">
+                                    <i class="fas fa-external-link-alt me-1"></i> Ver en Google Maps
+                                </a>
+        
+                        <span class="location-text"><i class="fas fa-map-marker-alt"></i> ${direccion}</span>
+                    </div>`;
+                marker.setTooltipContent(content);
+            });
+            
+
+
+            const centerBtn = L.control({position: 'topleft'});
+            centerBtn.onAdd = function() {
+                const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+                div.innerHTML = `
+                    <a class="leaflet-control-center" href="#" title="Centrar en Unidad" 
+                    style="background: white; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; text-decoration: none; color: #002d72;">
+                        <i class="fas fa-crosshairs"></i>
+                    </a>`;
+                div.onclick = function(e) {
+                    e.preventDefault();
+                    map.flyTo([lat, lng], 17); // Efecto de vuelo suave
+                };
+                return div;
+            };
+            centerBtn.addTo(map);
+        }
+    
+
+
 
 // Lógica de recomendación de rutina
     const kmAcumulado = {{ $item->km_contador ?? 0 }};
@@ -587,6 +788,22 @@
                     btn.html('<i class="fas fa-chevron-down me-1"></i>Ver más');
                 }
             }
+
+            async function obtenerDireccion(lat, lng) {
+    try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`);
+        const data = await response.json();
+        
+        // Estructuramos la dirección: Calle, Población/Municipio, Estado.
+        const calle = data.address.road || data.address.pedestrian || 'Vía innominada';
+        const poblacion = data.address.city || data.address.town || data.address.village || 'N/D';
+        const estado = data.address.state || '';
+        
+        return `${calle}, ${poblacion}, ${estado}`;
+    } catch (error) {
+        return "Dirección no disponible";
+    }
+}
 
 
 </script>

@@ -1352,8 +1352,7 @@ public function storeDespachoIndustrial(Request $request)
                                       ->get();
         $destino = TabuladorViatico::where('id','>',5)->orderBy('destino','asc')->pluck('destino')->unique();
 
-        $ayudantes = Chofer:://whereNull('documento_vialidad_numero')-> 
-                            where('cargo', 'like','%AYUDANTE%')->with('persona')->get();
+        $ayudantes = Chofer::with('persona')->get();
         
         $vehiculos = Vehiculo::where('es_flota', 1)->whereIn('tipo', [5,3,2])->get();
         
@@ -1386,7 +1385,7 @@ public function storeDespachoIndustrial(Request $request)
                 'cantidad_litros' => $request->litros,
                 'planta_destino_id' => $request->planta_destino_id,
                 'fecha' => $request->fecha,
-                'estatus' => 'PENDIENTE_ASIGNACION',
+                'estatus' => 'Programado',
                 'tipo' => $request->tipo,
                 'flete' => $flete,
                 'vehiculo_id' => $request->vehiculo_id,
@@ -1411,6 +1410,7 @@ public function storeDespachoIndustrial(Request $request)
             $viaje = Viaje::create([
                 'solicitud_combustible_id' => $solicitud->id,
                 'vehiculo_id' => $request->vehiculo_id,
+                'cisterna' => $request->cisterna_id,
                 'chofer_id' => $request->chofer_id,
                 'ayudante' => $request->ayudante ?? null, // Ayudante es opcional
                 'destino_ciudad' => $destino->destino ?? 'N/A', 
@@ -1424,8 +1424,10 @@ public function storeDespachoIndustrial(Request $request)
                 'usuario_id' => $userId
                 
             ]);
-                $chofer=Chofer::find($request->chofer_id);
-                $ayudante=Chofer::find($request->ayudante);
+            
+            
+            $chofer=Chofer::find($request->chofer_id);
+            $ayudante=Chofer::find($request->ayudante);
             
            // dd($viaje);
            switch ($request->tipo) {
@@ -1527,6 +1529,7 @@ public function storeDespachoIndustrial(Request $request)
                 'cisterna' => $request->cisterna_id
                 
             ]);
+
 
 
            foreach ($request->despachos as $index => $despacho) {
