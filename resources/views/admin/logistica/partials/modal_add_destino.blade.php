@@ -63,7 +63,7 @@
                         <div class="row g-3" x-data="{ manual: { cliente_id: '', litros: 0, buque: '' } }">
                             <div class="col-md-12">
                                 <label class="small fw-bold text-muted uppercase">Cliente</label>
-                                <select class="form-select border-orange fw-bold" x-model="manual.cliente_id" id="selectManual">
+                                <select class="form-select border-orange select2-basic fw-bold" x-model="manual.cliente_id" id="selectManual">
                                     <option value="">-- Buscar Empresa --</option>
                                     @foreach($clientes as $cli)
                                         <option value="{{ $cli->id }}" data-nombre="{{ $cli->nombre }}" data-rif="{{ $cli->rif }}" data-cupo="{{ $cli->cupo ?? 0 }}">
@@ -118,3 +118,6 @@
         </div>
     </div>
 </div>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>

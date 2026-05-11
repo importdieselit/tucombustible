@@ -165,29 +165,13 @@
 
         {{-- INICIO DE MÓDULOS EN DESARROLLO (SOLO ADMINS) --}}
         @if(in_array($user->id_perfil, [1, 2])) 
-            <li class="nav-item px-3 mb-1">
-                <small class="text-muted text-uppercase" style="font-size: 0.7rem; font-weight: bold;">Operaciones Principales</small>
-            </li>
-
-            <li class="nav-item">
-                <a href="{{ route('clientes.index') }}" class="nav-link {{ Request::routeIs('clientes.*') ? 'active' : '' }}">
-                    <span><i class="fas fa-users nav-icon"></i> Módulo Clientes</span>
-                </a>
-            </li>
-
+             
+{{-- 
             <li class="nav-item">
                 <a href="{{ route('combustible.estadisticas') }}" class="nav-link {{ Request::routeIs('combustible.*') ? 'active' : '' }}">
                     <span><i class="fas fa-gas-pump nav-icon"></i> Módulo Combustible</span>
                 </a>
-            </li>
-
-            <li class="nav-item">
-                <a href="{{ route('logistica.index') }}" class="nav-link {{ Request::routeIs('logistica.*') ? 'active' : '' }}">
-                    <span><i class="fas fa-truck-loading nav-icon"></i> Módulo Logística</span>
-                </a>
-            </li>
-
-            <hr class="text-muted my-2">
+            </li> --}}
         @endif
         {{-- FIN DE MÓDULOS EN DESARROLLO --}}
 

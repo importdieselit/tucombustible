@@ -9,12 +9,10 @@ use App\Models\BitacoraSistema;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 
-
 class AppServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.
-     *
      * @return void
      */
     public function register()
@@ -41,7 +39,6 @@ class AppServiceProvider extends ServiceProvider
         // Escuchar CUALQUIER actualización en CUALQUIER modelo
         Event::listen('eloquent.updated: *', function ($eventName, array $data) {
             $model = $data[0];
-
             if ($this->shouldSkip($model)) return;
 
             BitacoraSistema::create([
@@ -59,7 +56,6 @@ class AppServiceProvider extends ServiceProvider
         Event::listen('eloquent.created: *', function ($eventName, array $data) {
             $model = $data[0];            
             if ($this->shouldSkip($model)) return;
-
             BitacoraSistema::create([
                 'id_usuario'    => Auth::id(),
                 'tipo'          => 'DATABASE',
@@ -74,7 +70,6 @@ class AppServiceProvider extends ServiceProvider
     private function shouldSkip($model)
     {
         $modelName = class_basename($model);
-
         $exclude = [
             'BitacoraSistema', // Evita bucle infinito
             'Session',         // Tablas de sesión de Laravel

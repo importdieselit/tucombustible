@@ -88,7 +88,9 @@
                                 <select name="vehiculo_id" class="form-select form-select-sm fw-bold" x-model="vehiculoId" @change="cambioVehiculo($event)">
                                     <option value="">Seleccione...</option>
                                     @foreach($vehiculos as $v)
-                                        <option value="{{ $v->id }}" data-capacidad="{{ $v->carga_max }}">{{ $v->placa }} ({{ $v->tipo }})</option>
+                                        @if($v->tipo !== '2')
+                                            <option value="{{ $v->id }}" data-capacidad="{{ $v->carga_max }}">{{ $v->flota }} - {{ $v->placa }} ({{ $v->tipoVehiculo->tipo }})</option>        
+                                        @endif
                                     @endforeach
                                 </select>
                             </div>
@@ -98,8 +100,8 @@
                                 <select name="cisterna_id" class="form-select form-select-sm fw-bold border-danger" x-model="cisternaId" @change="cambioCisterna($event)">
                                     <option value="">Seleccione acople...</option>
                                     @foreach($vehiculos as $v)
-                                        @if($v->carga_max > 0)
-                                            <option value="{{ $v->id }}" data-capacidad="{{ $v->carga_max }}">{{ $v->placa }} - Cap: {{ number_format($v->carga_max) }}L</option>
+                                        @if($v->tipo == 2)
+                                            <option value="{{ $v->id }}" data-capacidad="{{ $v->carga_max }}">{{ $v->flota }} {{ $v->placa }} - Cap: {{ number_format($v->carga_max) }}L</option>
                                         @endif
                                     @endforeach
                                 </select>

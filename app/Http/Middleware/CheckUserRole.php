@@ -19,13 +19,7 @@ class CheckUserRole
         }
 
         $user = Auth::user();
-        if ($user->status_usuario === 'prospecto') {
-            if (!$request->routeIs('captacion.completar')) {
-                return redirect()->route('captacion.completar');
-            }
-            return $next($request);
-        }
-
+        
         if ($user->id_perfil == 1) {
             return $next($request);
         }

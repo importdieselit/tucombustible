@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Vehiculo; // El modelo sigue siendo necesario para las vistas
