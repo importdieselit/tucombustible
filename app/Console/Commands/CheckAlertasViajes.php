@@ -22,8 +22,10 @@ class CheckAlertasViajes extends Command
         
         $this->info("Iniciando verificación de alertas operativas: " . now()->toDateTimeString());
         
+
         // IDs de usuarios a notificar de forma individual vía Push (FCM)
         $usuariosNotificar = [1, 504, 495]; 
+
         $reporte = ['salidas' => 0, 'notificadas_salida' => 0, 'retornos' => 0, 'notificadas_retorno' => 0];
 
         // --- CASO 1: SALIDAS RETRASADAS ---

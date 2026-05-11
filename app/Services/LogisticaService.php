@@ -151,10 +151,10 @@ class LogisticaService
         if ($esPropio) {
             if (!empty($data['cisterna_id'])) {
                 $c = Vehiculo::find($data['cisterna_id']);
-                $cisternaValor = $c ? $c->placa : null;
+                $cisternaValor = $c ? $c->id : null;
             }
         } else {
-            $cisternaValor = $data['externo_cisterna_placa'] ?? null;
+            $cisternaValor =  null;
         }
 
         return [

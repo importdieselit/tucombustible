@@ -12,6 +12,7 @@ class BitacoraSistema extends Model
     protected $primaryKey = 'id';
     public $timestamps = true;
     public $increments = true;
+    public $audit = false;
     public $fillable = [
         'id_usuario',
         'tipo',

@@ -49,13 +49,13 @@ class VehiculoController extends BaseController
         $this->service = $service;
         $this->repo = $repo;
     }
-
+/*
     public function index()
     {
         $vehiculos = $this->repo->getAll();
         return view('vehiculo.index', compact('vehiculos'));
     }
-
+*/
     public function filter(Request $request)
     {
         return $this->list(\App\Models\Vehiculo::query()); 

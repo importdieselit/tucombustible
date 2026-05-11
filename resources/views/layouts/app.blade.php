@@ -105,6 +105,11 @@
 
     
     @stack('styles')
+    <style>
+        .modal-backdrop.show{
+            z-index: 0 !important;
+        }
+    </style>
 </head>
 <body class="bg-gray-50">
 
@@ -115,10 +120,13 @@
             <div class="container-fluid">
                 <div class="row">
                     @php($user = Auth::user())
+
                     @if($user->id_perfil !=4)
                         @php($sidebar = 'admin_sidebar')
                     @endif
-                    @include('layouts.sidebar')
+                    @if($user->id_perfil!=3)
+                        @include('layouts.sidebar')
+                    @endif
             @include('layouts.header')
 
                     <main class="col ms-sm-auto col-lg-12 px-md-4 py-4 z-1">
