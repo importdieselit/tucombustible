@@ -9,6 +9,8 @@ use App\Services\WhatsAppApiService;
 use App\Models\Vehiculo;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Output;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
 class ActualizarUbicacionUnidadesCommand extends Command
@@ -22,6 +24,9 @@ class ActualizarUbicacionUnidadesCommand extends Command
     $latSede = 10.48834308128781;
     $lngSede = -66.82329619185627;
     $radioSede = 0.150; // 150 metros en km (aprox)
+    $baseUrl = rtrim(config('services.whatsapp.url'), '/');
+    $tokenWA = config('services.whatsapp.key');
+    $endpoint = "{$baseUrl}/messages/image?token={$tokenWA}";
     //$this->output->title('Monitoreo de Sincronización GPS');
 
     //$this->comment('1/3 -> Solicitando Token...');
@@ -73,20 +78,32 @@ class ActualizarUbicacionUnidadesCommand extends Command
                     if ($distancia > $radioSede && $vehiculo->estatus == 1) {
                         $estatus = 2;
                         // --- NOTIFICACIÓN SELECTIVA WHATSAPP ---
-                        $wa = new WhatsAppApiService();
-                        $wa->enviarMensaje(
-                            config('services.whatsapp.group_operaciones'), 
-                            "🚀 *SALIDA DETECTADA*: La unidad {$vehiculo->flota} - {$vehiculo->placa} ha salido de la sede."
-                        );
-                        
+                        $mensaje= "🚀 *SALIDA DETECTADA*: La unidad {$vehiculo->flota} - {$vehiculo->placa} ha salido de la sede.";
+                         // 6. Enviar vía UltraMsg
+                        $response = Http::asForm()->post($endpoint, [
+                            'token' => $tokenWA,
+                            'to' => config('services.whatsapp.group_id'),
+                            'body' => $mensaje
+                        ]);
+                        if ($response->successful() && ($response->json()['sent'] ?? '') == 'true') {
+                            $this->info("✅ notificacion enviada.");
+                        } else {
+                            $this->error("❌ Error enviando  " . $response->body());
+                        }
                     }elseif ($distancia <= $radioSede && $vehiculo->estatus == 2) {
                         $estatus = 1;  
                         // --- NOTIFICACIÓN SELECTIVA WHATSAPP ---
-                        $wa = new WhatsAppApiService();
-                        $wa->enviarMensaje(
-                            config('services.whatsapp.group_operaciones'), 
-                            "🏠 *RETORNO DETECTADO*: La unidad {$vehiculo->flota} - {$vehiculo->placa} ha ingresado a la sede."
-                        );          
+                        $mensaje= "🏠 *RETORNO DETECTADO*: La unidad {$vehiculo->flota} - {$vehiculo->placa} ha ingresado a la sede.";
+                        $response = Http::asForm()->post($endpoint, [
+                            'token' => $tokenWA,
+                            'to' => config('services.whatsapp.group_id'),
+                            'body' => $mensaje
+                        ]);
+                        if ($response->successful() && ($response->json()['sent'] ?? '') == 'true') {
+                            $this->info("✅ notificacion enviada.");
+                        } else {
+                            $this->error("❌ Error enviando " . $response->body());
+                        }
                     }
                 }
                 $vehiculo->latitud = $lat;
