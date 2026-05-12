@@ -67,7 +67,7 @@ class ActualizarUbicacionUnidadesCommand extends Command
 
                 $distancia = $this->calcularDistancia($latSede, $lngSede, $lat, $lng);
                 $estatus = $vehiculo->estatus;
-                // 2. LÓGICA DE AUTOMATIZACIÓN DE ESTATUS (Solo para estatus 1 y 2)
+                // 2. LÓGICA DE AUTOMATIZACIÓN DE ESTATUS (Solo pa  ra estatus 1 y 2)
                 if (in_array($vehiculo->estatus, [1, 2])) {
                     // Si está fuera de los 100m y está Disponible (1) -> Pasa a En Ruta (2)
                     if ($distancia > $radioSede && $vehiculo->estatus == 1) {
