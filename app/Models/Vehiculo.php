@@ -166,7 +166,7 @@ class Vehiculo extends Model
         'chofer_id' => 'integer', // bigint unsigned
     ];
 
-    public $ignorarEnBitacora = ['latitud', 'longitud'];
+    public $ignorarEnBitacora = ['latitud', 'longitud','updated_at'];
 
     // Relaciones (si es necesario y tienes los modelos correspondientes)
 
@@ -191,11 +191,11 @@ class Vehiculo extends Model
         return $this->belongsTo(Marca::class, 'marca', 'id'); // Ajusta 'App\Marca::class' al nombre de tu modelo de Marca
     }
 
-        public function ordenes()
-        {
-            // Ajusta 'id_vehiculo' si el nombre de la llave foránea en la tabla 'ordenes' es diferente
-            return $this->hasMany(Orden::class, 'id_vehiculo'); 
-        }
+    public function ordenes()
+    {
+        // Ajusta 'id_vehiculo' si el nombre de la llave foránea en la tabla 'ordenes' es diferente
+        return $this->hasMany(Orden::class, 'id_vehiculo'); 
+    }
 
     public function getDiasFueraServicioAttribute()
     {
