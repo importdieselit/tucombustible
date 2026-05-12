@@ -23,7 +23,7 @@ class TrazabilidadMiddleware
 
             $omitir = [
                 //'GpsController',             // Omite todo el controlador
-                //'NotificacionController',    // Omite todo el controlador
+                'NotificacionController',    // Omite todo el controlador
                 //'ViajesController@getUpdate' // Omite solo una función específica de refresco visual
             ];
 

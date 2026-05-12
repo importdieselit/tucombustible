@@ -109,6 +109,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/depositos/{deposito}/aforo/exportar', [AforoController::class, 'exportAforoTable'])->name('depositos.aforo.export');
     Route::put('/depositos/ajustedinamic', [DepositoController::class, 'ajusteDinamic'])->name('deposito.ajusteD');
     Route::put('/depositos/ajusteresguardo', [DepositoController::class, 'ajusteResguardo'])->name('deposito.ajusteR');
+    
+    Route::get('/reportes/gerencial', [ReportController::class, 'reporteGerencial'])->name('reportes.gerencial');
 
     // Inventario y Almacén
     Route::get('inventario/entry', [InventarioController::class, 'entry'])->name('inventario.entry');
