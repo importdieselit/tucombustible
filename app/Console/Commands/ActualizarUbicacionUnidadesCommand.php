@@ -75,7 +75,7 @@ class ActualizarUbicacionUnidadesCommand extends Command
                         // --- NOTIFICACIÓN SELECTIVA WHATSAPP ---
                         $wa = new WhatsAppApiService();
                         $wa->enviarMensaje(
-                            config('services.whatsapp.group_id'), 
+                            config('services.whatsapp.group_operaciones'), 
                             "🚀 *SALIDA DETECTADA*: La unidad {$vehiculo->flota} - {$vehiculo->placa} ha salido de la sede."
                         );
                         
@@ -84,7 +84,7 @@ class ActualizarUbicacionUnidadesCommand extends Command
                         // --- NOTIFICACIÓN SELECTIVA WHATSAPP ---
                         $wa = new WhatsAppApiService();
                         $wa->enviarMensaje(
-                            config('services.whatsapp.group_id'), 
+                            config('services.whatsapp.group_operaciones'), 
                             "🏠 *RETORNO DETECTADO*: La unidad {$vehiculo->flota} - {$vehiculo->placa} ha ingresado a la sede."
                         );          
                     }

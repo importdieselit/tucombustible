@@ -38,6 +38,7 @@ return [
         'url' => env('WHATSAPP_API_URL'),
         'key' => env('WHATSAPP_API_KEY'),
         'group_id' => env('WHATSAPP_GROUP_ID'),
+        'group_operaciones' => env('WS_OPERACIONES_GROUP_ID'),
     ],
     's24' => [
         'apikey'   => env('S24_APIKEY'),
