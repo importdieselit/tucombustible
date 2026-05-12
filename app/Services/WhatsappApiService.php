@@ -6,8 +6,8 @@ use Illuminate\Support\Facades\Http;
 
 class WhatsAppApiService 
 {
-    protected $url;
-    protected $key;
+    protected string $url;
+    protected string $key;
 
     public function __construct() {
         // Configuras esto en tu .env
@@ -15,7 +15,7 @@ class WhatsAppApiService
         $this->key = config('services.whatsapp.key');
     }
 
-    public function enviarMensaje($idDestino, $mensaje) {
+    public function enviarMensaje(string $idDestino, string $mensaje) {
         
         // Endpoint específico para mensajes de texto (chat)
         $endpoint = "{$this->url}/messages/chat";
@@ -27,7 +27,7 @@ class WhatsAppApiService
         ]);
     }
 
-    public function enviarImagen($idDestino, $caption, $rutaImagen) {
+    public function enviarImagen(string $idDestino, string $caption, string $rutaImagen) {
         // Útil para enviar el gráfico del reporte de disponibilidad
         return Http::withHeaders(['apikey' => $this->key])
             ->post("{$this->url}/message/sendMedia", [
