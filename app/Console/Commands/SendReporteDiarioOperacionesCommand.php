@@ -64,6 +64,12 @@ class SendReporteDiarioOperacionesCommand extends Command
                 'titulo' => '🔧 *Reporte de Mantenimiento*',
                 'selector' => '#reporte-container'
             ],
+            [
+                'ruta_web' => 'reportes.gerencial',
+                'nombre_archivo' => 'RESUMEN_GERENCIAL',
+                'titulo' => '📊 *Resumen Gerencial*',
+                'selector' => '#reporteOperaciones'
+            ]
         ];
 
         $this->info('Iniciando secuencia de reportes...');
