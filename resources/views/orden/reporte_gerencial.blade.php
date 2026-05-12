@@ -357,54 +357,60 @@ document.addEventListener('DOMContentLoaded', function() {
     const timelineData = @json($reporte['timeline']);
 
     Highcharts.chart('container-timeline-mantenimiento', {
-        chart: {
-            type: 'areaspline', // Curvas suaves con relleno
-            backgroundColor: 'transparent'
-        },
-        title: { text: null },
-        xAxis: {
-            categories: timelineData.labels,
-            gridLineWidth: 1,
-            gridLineDashStyle: 'Dot'
-        },
-        yAxis: {
-            title: { text: 'Cantidad de Órdenes' },
-            min: 0,
-            allowDecimals: false
-        },
-        tooltip: {
-            shared: true,
-            crosshairs: true
-        },
-        plotOptions: {
-            areaspline: {
-                fillOpacity: 0.1,
-                marker: {
-                    radius: 4,
-                    symbol: 'circle'
-                },
-                lineWidth: 3
-            }
-        },
-        series: [{
-            name: 'Órdenes Abiertas',
-            data: timelineData.abiertas,
-            color: '#ff6600', // Tu color de Chutos/Naranja
-        }, {
-            name: 'Órdenes Cerradas',
-            data: timelineData.cerradas,
-            color: '#198754', // Verde Cisternas/Éxito
-        }],
-        credits: { enabled: false },
-        responsive: {
-            rules: [{
-                condition: { maxWidth: 500 },
-                chartOptions: {
-                    legend: { layout: 'horizontal', align: 'center', verticalAlign: 'bottom' }
+    chart: {
+        type: 'column', // Cambiado de areaspline a column
+        backgroundColor: 'transparent',
+        marginTop: 30
+    },
+    title: { text: null },
+    xAxis: {
+        categories: timelineData.labels,
+        crosshair: true, // Resalta la columna al pasar el mouse
+        gridLineWidth: 0 // Limpiamos el fondo para que resalten las barras
+    },
+    yAxis: {
+        title: { text: 'Cantidad de Órdenes' },
+        min: 0,
+        allowDecimals: false,
+        gridLineDashStyle: 'Dot'
+    },
+    tooltip: {
+        shared: true,
+        headerFormat: '<span style="font-size:12px; font-weight:bold">{point.key}</span><br/>',
+        borderWidth: 0,
+        shadow: true,
+        backgroundColor: '#ffffff'
+    },
+    plotOptions: {
+        column: {
+            pointPadding: 0.2, // Espacio entre barras del mismo día
+            borderWidth: 0,
+            borderRadius: 5,   // Bordes redondeados para un look moderno
+            dataLabels: {
+                enabled: true, // Muestra el número arriba de la barra para lectura rápida
+                style: {
+                    fontSize: '10px'
                 }
-            }]
+            }
         }
-    });
+    },
+    series: [{
+        name: 'Órdenes Abiertas',
+        data: timelineData.abiertas,
+        color: '#ff6600', // Naranja Estándar
+    }, {
+        name: 'Órdenes Cerradas',
+        data: timelineData.cerradas,
+        color: '#198754', // Verde Estándar
+    }],
+    credits: { enabled: false },
+    legend: {
+        itemStyle: {
+            fontWeight: 'bold',
+            color: '#333'
+        }
+    }
+});
     
     // 1. Obtenemos la data real que mostraste en el dd()
     const dataFromLaravel = @json($reporte['operativo']['por_tipo']);
