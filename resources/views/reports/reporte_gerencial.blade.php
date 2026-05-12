@@ -270,97 +270,76 @@
                                 </div>
                             </div>
                         </div>
-                       <table class="table table-bordered align-top mb-0 table-sm">
-    <thead class="table-light text-uppercase" style="font-size: 0.85rem;">
-        <tr>
-            <th class="ps-3 bg-light" style="width: 120px;">Unidad</th>
-            @foreach($rangoDias as $dia)
-                <th class="text-center" style="min-width: 220px;">
-                    {{ \Carbon\Carbon::parse($dia)->locale('es')->dayName }} 
-                    {{ \Carbon\Carbon::parse($dia)->format('d/m') }}
-                </th>
-            @endforeach
-        </tr>
-    </thead>
-    <tbody>
-        @forelse($viajesPorUnidad as $vehiculoId => $viajesUnidad)
-            @php 
-                $viajesActivos = $viajesUnidad->whereIn('status', ['Programado', 'EN RUTA']);
-                if($viajesActivos->isEmpty()) continue; 
-                $primerViaje = $viajesUnidad->first(); 
-            @endphp
-            
-            <tr>
-                <td class="ps-3 bg-light border-end align-middle">
-                    <div class="fw-bold text-dark fs-6">
-                        {{ $primerViaje->vehiculo->flota ?? 'N/A' }}
-                    </div>
-                    <div class="text-muted" style="font-size: 0.75rem;">
-                        {{ $primerViaje->vehiculo->placa ?? $primerViaje->otro_vehiculo ?? 'N/A' }}
-                    </div>
-                </td>
-
-                @foreach($rangoDias as $dia)
-                    @php
-                        // Filtramos solo los de este día y que sean Programado o EN RUTA
-                        $viajesEseDia = $viajesActivos->filter(fn($v) => \Carbon\Carbon::parse($v->fecha_salida)->format('Y-m-d') === $dia)->sortBy('fecha_salida');
+        <div class="card card-master border-top border-4 border-info">
+    <div class="card-header bg-white fw-bold py-2">
+        <i class="fas fa-route me-2 text-info"></i> SEGUIMIENTO EN RUTA Y PROGRAMADOS
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm table-borderless align-middle mb-0">
+            <thead class="table-light" style="font-size: 0.75rem;">
+                <tr>
+                    <th style="width: 20%;" class="ps-3">UNIDAD</th>
+                    <th style="width: 80%;">ACTIVIDAD CRONOLÓGICA</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($viajesPorUnidad as $vehiculoId => $viajesUnidad)
+                    @php 
+                        // Filtramos y ordenamos chronológicamente
+                        $viajesActivos = $viajesUnidad->whereIn('status', ['Programado', 'EN RUTA'])->sortBy('fecha_salida');
+                        if($viajesActivos->isEmpty()) continue; 
+                        $primerViaje = $viajesUnidad->first(); 
                     @endphp
+                    
+                    <tr class="border-bottom">
+                        <td class="ps-3 py-2 border-end">
+                            <div class="fw-bolder text-dark" style="font-size: 0.95rem;">
+                                {{ $primerViaje->vehiculo->flota ?? 'N/A' }}
+                            </div>
+                            <div class="text-muted" style="font-size: 0.7rem;">
+                                {{ $primerViaje->vehiculo->placa ?? '' }}
+                            </div>
+                        </td>
 
-                    <td class="p-2" style="background-color: #fdfdfd; vertical-align: top;">
-                        <div class="d-flex flex-column gap-2">
-                            @forelse($viajesEseDia as $v)
-                                @php
-                                    // Configuración visual súper simple por estatus
-                                    $isEnRuta = $v->status === 'EN RUTA';
-                                    $color = $isEnRuta ? 'warning' : 'info';
-                                    $textColor = $isEnRuta ? 'text-dark' : 'text-white';
-                                    $icon = $isEnRuta ? 'fa-truck-moving' : 'fa-clock';
-                                @endphp
+                        <td class="py-2">
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach($viajesActivos as $v)
+                                    @php
+                                        $isEnRuta = $v->status === 'EN RUTA';
+                                        $color = $isEnRuta ? 'warning' : 'info';
+                                        $text = $isEnRuta ? 'text-dark' : 'text-white';
+                                        
+                                        // Formato de fecha inteligente (HOY vs Otro día)
+                                        $fecha = \Carbon\Carbon::parse($v->fecha_salida);
+                                        $diaHora = $fecha->isToday() ? 'HOY ' . $fecha->format('H:i') : $fecha->format('d/m H:i');
+                                    @endphp
 
-                                <div class="p-2 border-start border-4 border-{{ $color }} bg-white shadow-sm rounded">
-                                    
-                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <span class="fw-bolder text-dark">
-                                            {{ \Carbon\Carbon::parse($v->fecha_salida)->format('H:i') }}
+                                    <div class="border border-{{ $color }} rounded shadow-sm bg-white d-inline-flex align-items-center" style="font-size: 0.8rem;">
+                                        <span class="badge bg-{{ $color }} {{ $text }} rounded-start px-2 py-2" style="border-radius: 0;">
+                                            <i class="fas {{ $isEnRuta ? 'fa-truck-moving' : 'fa-clock' }} me-1"></i> {{ $diaHora }}
                                         </span>
-                                        <span class="badge bg-{{ $color }} {{ $textColor }}" style="font-size: 0.65rem; letter-spacing: 0.5px;">
-                                            <i class="fas {{ $icon }} me-1"></i> {{ $v->status }}
+                                        <span class="fw-bold text-dark px-2 text-truncate" style="max-width: 180px;" title="{{ $v->destino_limpio }}">
+                                            {{ $v->destino_limpio }}
                                         </span>
-                                    </div>
-
-                                    <div class="fw-bold text-uppercase text-truncate mb-1" style="font-size: 0.8rem; color: #333;" title="{{ $v->destino_limpio }}">
-                                        {{ $v->destino_limpio ?? 'N/A' }}
-                                    </div>
-
-                                    <div class="d-flex justify-content-between align-items-center text-muted" style="font-size: 0.75rem;">
-                                        <span class="text-truncate" style="max-width: 120px;">
-                                            <i class="fas fa-user-circle me-1"></i> 
-                                            {{ explode(' ', $v->chofer->persona->nombre ?? $v->otro_chofer ?? 'S/N')[0] }}
-                                        </span>
-                                        <span class="fw-bold text-primary">
+                                        <span class="badge bg-light text-primary border-start px-2 py-2" style="border-radius: 0;">
                                             {{ number_format($v->litros_totales, 0) }} L
                                         </span>
                                     </div>
-
-                                </div>
-                            @empty
-                                <div class="text-center text-black-50 p-2" style="font-size: 0.75rem;">
-                                    -
-                                </div>
-                            @endforelse
-                        </div>
-                    </td>
-                @endforeach                              
-            </tr>
-        @empty
-            <tr>
-                <td colspan="{{ count($rangoDias) + 1 }}" class="text-center p-4 text-muted fw-bold">
-                    No hay viajes Programados ni En Ruta para los próximos días.
-                </td>
-            </tr>
-        @endforelse
-    </tbody>
-</table>
+                                @endforeach
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="2" class="text-center text-muted py-3 fw-bold" style="font-size: 0.85rem;">
+                            No hay unidades en ruta ni viajes programados en este momento.
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
                     </div>
                     <div class="card border-0 shadow-sm mt-4 mb-4 mx-3">
                         <table class="table table-striped table-hover align-middle mb-0">
