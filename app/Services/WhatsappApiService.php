@@ -16,12 +16,14 @@ class WhatsAppApiService
     }
 
     public function enviarMensaje($idDestino, $mensaje) {
-        return Http::withHeaders([
-            'apikey' => $this->key
-        ])->post("{$this->url}/message/sendText", [
-            'number' => $idDestino, // Aquí va el ID del grupo o comunidad
-            'text' => $mensaje,
-            'linkPreview' => true
+        
+        // Endpoint específico para mensajes de texto (chat)
+        $endpoint = "{$this->url}/messages/chat";
+
+        return Http::asForm()->post($endpoint, [
+            'token' => $this->key,
+            'to'    => $idDestino,
+            'body'  => $mensaje, // En UltraMsg para texto se usa 'body'
         ]);
     }
 
