@@ -89,10 +89,6 @@
                             <div class="card-body p-2 text-center">
                                 <small class="text-muted fw-bold d-block text-uppercase" style="font-size: 0.65rem;">DISPONIBILIDAD FLOTA</small>
                                 <h2 class="text-primary font-bold">{{ round(($statsFlota['operativos'] / $statsFlota['total']) * 100) }}%</h2>
-                                <div class="progress mb-2" style="height: 12px; border-radius: 10px;">
-                                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
-                                        style="width: {{ ($statsFlota['operativos'] / $statsFlota['total']) * 100 }}%"></div>
-                                </div>
                                 <span class=" text-dark">{{ $statsFlota['operativos'] }} / {{ $statsFlota['total'] }} UNIDADES</span>
                             </div>
                         </div>
@@ -186,10 +182,8 @@
                                 <th rowspan="2" class="text-start ps-3 bg-white-clean">CATEGORÍA</th>
                                     <th colspan="2" class="bg-camionetas border-camionetas">1. PROGRAMADOS</th>
                                     <th colspan="2" class="bg-camiones border-camiones">2. EN RUTA</th>
-                                    <th colspan="2" class="bg-cisternas border-cisternas">3. COMPLETADOS</th>
                                 </tr>
                                 <tr class="bg-light x-small">
-                                    <th width="12%">DIESEL</th><th width="12%">MGO</th>
                                     <th width="12%">DIESEL</th><th width="12%">MGO</th>
                                     <th width="12%">DIESEL</th><th width="12%">MGO</th>
                                 </tr>
@@ -203,8 +197,6 @@
                                     <td class="fw-bold">{{ $reporte['despachos']['programados']['mgo'] }}</td>
                                     <td class="bg-warning bg-opacity-10 fw-bold">{{ $reporte['despachos']['en_ruta']['ind'] }}</td>
                                     <td class="bg-warning bg-opacity-10 fw-bold">{{ $reporte['despachos']['en_ruta']['mgo'] }}</td>
-                                    <td class="bg-success bg-opacity-10 fw-bold text-success">{{ $reporte['despachos']['completados']['ind'] }}</td>
-                                    <td class="bg-success bg-opacity-10 fw-bold text-success">{{ $reporte['despachos']['completados']['mgo'] }}</td>
                                 </tr>
                                 <tr class="bg-white-clean">
                                     <td class="text-start ps-3 fw-bold border-start border-4 border-camionetas" style="border-left-color: #ff6600 !important;">
@@ -214,20 +206,8 @@
                                     <td class="fw-bold">{{ $reporte['cargas']['programados']['mgo'] }}</td>
                                     <td class="bg-warning bg-opacity-10 fw-bold">{{ $reporte['cargas']['en_ruta']['ind'] }}</td>
                                     <td class="bg-warning bg-opacity-10 fw-bold">{{ $reporte['cargas']['en_ruta']['mgo'] }}</td>
-                                    <td class="bg-success bg-opacity-10 fw-bold text-success">{{ $reporte['cargas']['completados']['ind'] }}</td>
-                                    <td class="bg-success bg-opacity-10 fw-bold text-success">{{ $reporte['cargas']['completados']['mgo'] }}</td>
                                 </tr>
-                                <tr class="bg-white-clean">
-                                    <td class="text-start ps-3 fw-bold border-start border-4 border-camionetas" style="border-left-color: #6f42c1 !important;">
-                                        <i class="fas fa-truck-loading text-purple me-2"></i> FLETES
-                                    </td>
-                                    <td class="fw-bold">{{ $reporte['fletes']['programados']['ind'] }}</td>
-                                    <td class="fw-bold">{{ $reporte['fletes']['programados']['mgo'] }}</td>
-                                    <td class="bg-warning bg-opacity-10 fw-bold">{{ $reporte['fletes']['en_ruta']['ind'] }}</td>
-                                    <td class="bg-warning bg-opacity-10 fw-bold">{{ $reporte['fletes']['en_ruta']['mgo'] }}</td>
-                                    <td class="bg-success bg-opacity-10 fw-bold text-success">{{ $reporte['fletes']['completados']['ind'] }}</td>
-                                    <td class="bg-success bg-opacity-10 fw-bold text-success">{{ $reporte['fletes']['completados']['mgo'] }}</td>
-                                </tr>
+                                
                             </tbody>
                         </table>
                     </div>
@@ -244,10 +224,7 @@
                         <div class=" p-3 mb-3 shadow-sm border-light">
                             <h6 class="text-muted mb-3"><i class="fa fa-info-circle me-2"></i> Leyenda de Estatus y Tipo de Servicio</h6>
                             <div class="d-flex flex-wrap gap-3 small">
-                                <div class="d-flex align-items-center me-4">
-                                    <div class="rounded-circle bg-cisternas me-2" style="width: 15px; height: 15px; border: 1px solid #0002;"></div>
-                                    <span class="small">COMPLETADOS</span>
-                                </div>
+                                
                                 <div class="d-flex align-items-center me-4">
                                     <div class="rounded-circle bg-camiones me-2" style="width: 15px; height: 15px; border: 1px solid #0002;"></div>
                                     <span class="small">EN RUTA</span>

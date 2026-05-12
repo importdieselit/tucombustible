@@ -81,7 +81,7 @@ class ActualizarUbicacionUnidadesCommand extends Command
                          // 6. Enviar vía UltraMsg
                         $response = Http::asForm()->post($endpoint, [
                             'token' => $tokenWA,
-                            'to' => config('services.whatsapp.group_id'),
+                            'to' => config('services.whatsapp.group_operaciones'),
                             'body' => $mensaje
                         ]);
                         if ($response->successful() && ($response->json()['sent'] ?? '') == 'true') {
@@ -95,7 +95,7 @@ class ActualizarUbicacionUnidadesCommand extends Command
                         $mensaje= "🏠 *RETORNO DETECTADO*: La unidad {$vehiculo->flota} - {$vehiculo->placa} ha ingresado a la sede.";
                         $response = Http::asForm()->post($endpoint, [
                             'token' => $tokenWA,
-                            'to' => config('services.whatsapp.group_id'),
+                            'to' => config('services.whatsapp.group_operaciones'),
                             'body' => $mensaje
                         ]);
                         if ($response->successful() && ($response->json()['sent'] ?? '') == 'true') {
