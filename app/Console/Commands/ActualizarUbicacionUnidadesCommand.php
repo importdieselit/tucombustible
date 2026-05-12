@@ -5,7 +5,6 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Services\Service24GPSService;
 use App\Models\HistorialGpsVehiculo;
-use App\Services\WhatsAppApiService;
 use App\Models\Vehiculo;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Output;
