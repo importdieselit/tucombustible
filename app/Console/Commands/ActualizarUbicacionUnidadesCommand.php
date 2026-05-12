@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Services\Service24GPSService;
 use App\Models\HistorialGpsVehiculo;
+use App\Services\WhatsAppApiService;
 use App\Models\Vehiculo;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Output;
@@ -71,9 +72,21 @@ class ActualizarUbicacionUnidadesCommand extends Command
                     // Si está fuera de los 100m y está Disponible (1) -> Pasa a En Ruta (2)
                     if ($distancia > $radioSede && $vehiculo->estatus == 1) {
                         $estatus = 2;
+                        // --- NOTIFICACIÓN SELECTIVA WHATSAPP ---
+                        $wa = new WhatsAppApiService();
+                        $wa->enviarMensaje(
+                            config('services.whatsapp.group_id'), 
+                            "🚀 *SALIDA DETECTADA*: La unidad {$vehiculo->flota} - {$vehiculo->placa} ha salido de la sede."
+                        );
                         
                     }elseif ($distancia <= $radioSede && $vehiculo->estatus == 2) {
-                        $estatus = 1;            
+                        $estatus = 1;  
+                        // --- NOTIFICACIÓN SELECTIVA WHATSAPP ---
+                        $wa = new WhatsAppApiService();
+                        $wa->enviarMensaje(
+                            config('services.whatsapp.group_id'), 
+                            "🏠 *RETORNO DETECTADO*: La unidad {$vehiculo->flota} - {$vehiculo->placa} ha ingresado a la sede."
+                        );          
                     }
                 }
                 $vehiculo->latitud = $lat;
