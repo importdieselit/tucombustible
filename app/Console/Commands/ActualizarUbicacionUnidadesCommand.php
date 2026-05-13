@@ -109,12 +109,13 @@ class ActualizarUbicacionUnidadesCommand extends Command
                         $viaje = $vehiculo->viajes()->where('status', 'EN RUTA')->first();
                             $chofer = $viaje ? $viaje->chofer()->persona()->first() : null;
                             $nombre = $chofer ? $chofer->nombre.' con ' : null;
+
                         $mensaje= "🏠 *RETORNO DETECTADO*: {$nombre}La unidad {$vehiculo->flota} - {$vehiculo->placa} ha ingresado a la sede.";
                         $response = Http::asForm()->withoutVerifying()->post($endpoint, [
                             'token' => $tokenWA,
                             'to' => config('services.whatsapp.group_operaciones'),
                             'body' => $mensaje,
-                            'priority' => 10,
+                            'priority' => 1,
                             'referenceId' => '',
                         ]);
                         if ($response->successful() && ($response->json()['sent'] ?? '') == 'true') {
