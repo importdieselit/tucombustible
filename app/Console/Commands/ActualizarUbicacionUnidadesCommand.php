@@ -131,7 +131,6 @@ class ActualizarUbicacionUnidadesCommand extends Command
                 $vehiculo->km_contador += $distanciaDelta;
                 $vehiculo->km_mantt += $distanciaDelta;
 
-                $vehiculo->save();
 
                 if ($vehiculo->tipo_id == 3 && !is_null($vehiculo->acoplado_id)) {
                     $cisterna = Vehiculo::find($vehiculo->acoplado_id);
@@ -147,7 +146,11 @@ class ActualizarUbicacionUnidadesCommand extends Command
                             $this->actualizarHistorialPorHora($cisterna->id, $lat, $lng, $distanciaDelta);
                         }
                     }
-                }      
+                }
+
+                $vehiculo->save();
+
+                      
                 
                 if($distancia > $radioSede || $vehiculo->estatus == 2){
                     $this->actualizarHistorialPorHora($vehiculo->id, $lat, $lng, $distanciaDelta);
