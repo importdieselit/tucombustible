@@ -25,7 +25,7 @@ class ActualizarUbicacionUnidadesCommand extends Command
     $radioSede = 0.150; // 150 metros en km (aprox)
     $baseUrl = rtrim(config('services.whatsapp.url'), '/');
     $tokenWA = config('services.whatsapp.key');
-    $endpoint = "{$baseUrl}/messages/image?token={$tokenWA}";
+    $endpoint = "{$baseUrl}/messages/chat?token={$tokenWA}";
     //$this->output->title('Monitoreo de Sincronización GPS');
 
     //$this->comment('1/3 -> Solicitando Token...');
@@ -79,24 +79,36 @@ class ActualizarUbicacionUnidadesCommand extends Command
                         // --- NOTIFICACIÓN SELECTIVA WHATSAPP ---
                         $mensaje= "🚀 *SALIDA DETECTADA*: La unidad {$vehiculo->flota} - {$vehiculo->placa} ha salido de la sede.";
                          // 6. Enviar vía UltraMsg
-                        $response = Http::asForm()->post($endpoint, [
-                            'token' => $tokenWA,
-                            'to' => config('services.whatsapp.group_operaciones'),
-                            'body' => $mensaje
-                        ]);
-                        if ($response->successful() && ($response->json()['sent'] ?? '') == 'true') {
-                            $this->info("✅ notificacion enviada.");
+                        $response = Http::asForm()
+                            ->withoutVerifying() // Equivalente a CURLOPT_SSL_VERIFYPEER => 0
+                            ->post($endpoint, [
+                                'token'      => $tokenWA,
+                                'to'         => config('services.whatsapp.group_operaciones'),
+                                'body'       => $mensaje,
+                                'priority'   => 1, // Importante si lo tenías en el script original
+                                'referenceId' => '',
+                            ]);
+
+                        // 3. Validación robusta
+                        // UltraMsg a veces devuelve el campo 'sent' como string "true" o como booleano true
+                        $resultado = $response->json();
+                        $isSent = isset($resultado['sent']) && ($resultado['sent'] == 'true' || $resultado['sent'] === true);
+
+                        if ($response->successful() && $isSent) {
+                            $this->info("✅ Notificación enviada. ID: " . ($resultado['id'] ?? 'N/A'));
                         } else {
-                            $this->error("❌ Error enviando  " . $response->body());
+                            $this->error("❌ Error UltraMsg: " . $response->body());
                         }
                     }elseif ($distancia <= $radioSede && $vehiculo->estatus == 2) {
                         $estatus = 1;  
                         // --- NOTIFICACIÓN SELECTIVA WHATSAPP ---
                         $mensaje= "🏠 *RETORNO DETECTADO*: La unidad {$vehiculo->flota} - {$vehiculo->placa} ha ingresado a la sede.";
-                        $response = Http::asForm()->post($endpoint, [
+                        $response = Http::asForm()->withoutVerifying()->post($endpoint, [
                             'token' => $tokenWA,
                             'to' => config('services.whatsapp.group_operaciones'),
-                            'body' => $mensaje
+                            'body' => $mensaje,
+                            'priority' => 10,
+                            'referenceId' => '',
                         ]);
                         if ($response->successful() && ($response->json()['sent'] ?? '') == 'true') {
                             $this->info("✅ notificacion enviada.");
