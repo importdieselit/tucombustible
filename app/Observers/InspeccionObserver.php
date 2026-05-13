@@ -5,6 +5,7 @@ namespace App\Observers;
 use App\Models\Inspeccion;
 use App\Models\Vehiculo;
 use App\Models\Viaje;
+use Illuminate\Support\Facades\Http;
 
 class InspeccionObserver
 {
@@ -17,6 +18,9 @@ class InspeccionObserver
     public function created(Inspeccion $inspeccion)
     {
         $vehiculo = Vehiculo::find($inspeccion->vehiculo_id);
+        $baseUrl = rtrim(config('services.whatsapp.url'), '/');
+        $tokenWA = config('services.whatsapp.key');
+        $endpoint = "{$baseUrl}/messages/chat?token={$tokenWA}";
         
         if ($vehiculo) {
             // Pasar vehículo a estatus 2
@@ -30,6 +34,22 @@ class InspeccionObserver
                                       ->where('status', 'Programado')->orderBy('fecha_salida', 'asc')
                                       ->get();
             if ($viajesProgramados->isNotEmpty()) {
+                if (!$inspeccion->viaje_id) {
+                    $inspeccion->viaje_id = $viajesProgramados->first()->id;
+                    $inspeccion->save();
+                }
+
+                $mensaje =" CHECKOUT: Se ha registrado el checklist de salida para la unidad {$vehiculo->flota} - {$vehiculo->placa}. Salida #{$viajesProgramados->first()->id} a {$viajesProgramados->first()->destino_ciudad}.";
+                $response = Http::asForm()
+                            ->withoutVerifying() // Equivalente a CURLOPT_SSL_VERIFYPEER => 0
+                            ->post($endpoint, [
+                                'token'      => $tokenWA,
+                                'to'         => config('services.whatsapp.group_operaciones'),
+                                'body'       => $mensaje,
+                                'priority'   => 1, // Importante si lo tenías en el script original
+                                'referenceId' => '',
+                            ]);
+                
                 $viaje = $viajesProgramados->first();
                 $viaje->status = 'EN RUTA';
                 $viaje->save(); // ¡Esto disparará el ViajeObserver automáticamente!
@@ -45,6 +65,9 @@ class InspeccionObserver
      */
     public function updated(Inspeccion $inspeccion)
     {
+        $baseUrl = rtrim(config('services.whatsapp.url'), '/');
+        $tokenWA = config('services.whatsapp.key');
+        $endpoint = "{$baseUrl}/messages/chat?token={$tokenWA}";
         // Verificamos si respuesta_in cambió de Null a algo con contenido
         $respuestaInCambio = $inspeccion->isDirty('respuesta_in');
         $eraNull = is_null($inspeccion->getOriginal('respuesta_in'));
@@ -65,8 +88,16 @@ class InspeccionObserver
                                      ->where('status', 'EN RUTA')
                                      ->update(['status' => 'COMPLETADO']);
                                     // ->get();
-
-
+                $mensaje = "CHECKIN: Se ha registrado el checklist de llegada para la unidad {$vehiculo->flota} - {$vehiculo->placa}. El viaje #{$inspeccion->viaje_id} ha sido marcado como COMPLETADO.";
+                $response = Http::asForm()
+                            ->withoutVerifying() // Equivalente a CURLOPT_SSL_VERIFYPEER => 0
+                            ->post($endpoint, [
+                                'token'      => $tokenWA,
+                                'to'         => config('services.whatsapp.group_operaciones'),
+                                'body'       => $mensaje,
+                                'priority'   => 1, // Importante si lo tenías en el script original
+                                'referenceId' => '',
+                            ]);
                 // Si hay exactamente 1, pasarlo a COMPLETADO
                 // if ($viajesEnRuta->count() === 1) {
                 //     $viaje = $viajesEnRuta->first();
