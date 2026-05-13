@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use App\Services\Service24GPSService;
 use App\Models\HistorialGpsVehiculo;
 use App\Models\Vehiculo;
+
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Output;
 use Illuminate\Support\Facades\Http;
@@ -76,8 +77,11 @@ class ActualizarUbicacionUnidadesCommand extends Command
                     // Si está fuera de los 100m y está Disponible (1) -> Pasa a En Ruta (2)
                     if ($distancia > $radioSede && $vehiculo->estatus == 1) {
                         $estatus = 2;
+                        $viaje = $vehiculo->viajes()->where('status', 'Programado')->first();
+                        $chofer = $viaje ? $viaje->chofer()->persona()->first() : null;
+                        $nombre = $chofer ? $chofer->nombre.' con ' : null;
                         // --- NOTIFICACIÓN SELECTIVA WHATSAPP ---
-                        $mensaje= "🚀 *SALIDA DETECTADA*: La unidad {$vehiculo->flota} - {$vehiculo->placa} ha salido de la sede.";
+                        $mensaje= "🚀 *SALIDA DETECTADA*: {$nombre}La Unidad {$vehiculo->flota} - {$vehiculo->placa} ha salido de la sede.";
                          // 6. Enviar vía UltraMsg
                         $response = Http::asForm()
                             ->withoutVerifying() // Equivalente a CURLOPT_SSL_VERIFYPEER => 0
@@ -102,7 +106,10 @@ class ActualizarUbicacionUnidadesCommand extends Command
                     }elseif ($distancia <= $radioSede && $vehiculo->estatus == 2) {
                         $estatus = 1;  
                         // --- NOTIFICACIÓN SELECTIVA WHATSAPP ---
-                        $mensaje= "🏠 *RETORNO DETECTADO*: La unidad {$vehiculo->flota} - {$vehiculo->placa} ha ingresado a la sede.";
+                        $viaje = $vehiculo->viajes()->where('status', 'EN RUTA')->first();
+                            $chofer = $viaje ? $viaje->chofer()->persona()->first() : null;
+                            $nombre = $chofer ? $chofer->nombre.' con ' : null;
+                        $mensaje= "🏠 *RETORNO DETECTADO*: {$nombre}La unidad {$vehiculo->flota} - {$vehiculo->placa} ha ingresado a la sede.";
                         $response = Http::asForm()->withoutVerifying()->post($endpoint, [
                             'token' => $tokenWA,
                             'to' => config('services.whatsapp.group_operaciones'),

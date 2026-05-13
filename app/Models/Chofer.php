@@ -52,7 +52,7 @@ class Chofer extends Model
     /**
      * Define la relación con el modelo Persona.
      */
-    public function persona()
+    public function persona() 
     {
         return $this->belongsTo(Persona::class);
     }
