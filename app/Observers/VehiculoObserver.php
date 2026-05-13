@@ -39,17 +39,14 @@ class VehiculoObserver
            
             // 2. Verificar la condición: el nuevo KM supera el límite Y el KM anterior NO lo superaba.
             if ($newKm >= self::LIMITE_KM_MANTENIMIENTO && $oldKm < self::LIMITE_KM_MANTENIMIENTO) {
-             
                 $message = 
                     "*⚠️ ALERTA DE MANTENIMIENTO PREVENTIVO ⚠️*\n\n" .
                     "La unidad: {$vehiculo->flota} *{$vehiculo->placa}* ha cruzado el umbral de los " . self::LIMITE_KM_MANTENIMIENTO . " Km.\n" .
                     "• *Km Actual:* `{$newKm}` Km\n" .
                     //"• *Tipo:* {$vehiculo->tipo}\n\n" .
                     "*Acción:* Requiere revisión inmediata para mantenimiento preventivo.";
-
-                // 3. Enviar la notificación de forma asíncrona (opcional) o síncrona
-                $this->telegramService->sendMessage($message);
-
+                    // 3. Enviar la notificación de forma asíncrona (opcional) o síncrona
+                    $this->telegramService->sendMessage($message);
             } 
         } 
 
@@ -91,7 +88,21 @@ class VehiculoObserver
                     ->whereNull('respuesta_in')
                     ->exists();
 
+                $hasChecklist2 = Inspeccion::where('vehiculo_id', $viaje->vehiculo_id)
+                    ->where('created_at', '>=', now()->subHours(2))
+                    ->whereNull('respuesta_in')
+                    ->first();
+                
+                if($hasChecklist2){
+                    $hasChecklist->viaje_id = $viaje->id;
+                    $hasChecklist->save();
+                    $hasChecklist = true;
+
+                }
+
+                 // Si no tiene checklist de salida ni checkin, es un incumplimiento claro
                 if (!$hasChecklist) {
+
                     $usuariosNotificar = [1, 2];
                     foreach ($usuariosNotificar as $userId) {
                         FcmNotificationService::enviarNotification(

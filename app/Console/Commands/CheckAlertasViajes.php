@@ -20,7 +20,7 @@ class CheckAlertasViajes extends Command
         $this->info("Iniciando verificación de alertas operativas: " . now()->toDateTimeString());
         
         // IDs de usuarios a notificar
-        $usuariosNotificar = [504]; 
+        $usuariosNotificar = [1, 504, 495]; 
         $reporte = ['salidas' => 0, 'notificadas_salida' => 0, 'retornos' => 0, 'notificadas_retorno' => 0];
 
         // --- CASO 1: SALIDAS RETRASADAS ---
@@ -40,7 +40,7 @@ class CheckAlertasViajes extends Command
                 $query->where('viaje_id', $viaje->id)
                       ->orWhere(function($q) use ($viaje) {
                           $q->where('vehiculo_id', $viaje->vehiculo_id)
-                            ->where('created_at', '>=', now()->subMinutes(30));
+                            ->where('created_at', '<=', now()->subMinutes(30));
                       });
             })
             ->whereNull('respuesta_in')

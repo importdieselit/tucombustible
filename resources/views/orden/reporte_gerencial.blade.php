@@ -1,8 +1,7 @@
 @extends('layouts.app')
 @push('styles')
 <style>
-
-    .badge {
+.badge {
   /* Alineación */
   display: inline-flex;
   align-items: center;
@@ -16,7 +15,6 @@
   font-family: sans-serif;
   font-size: 12px;
 }
-
 .icon {
   display: flex;
   align-items: center;
@@ -24,30 +22,29 @@
      esto asegura que no haya desfases */
 }
 .bg-chutos {
-        background-color: #ff6600 !important;
-    }
-    .bg-camiones {
-        background-color: #ffc107 !important;
-    }
-    .bg-cisternas {
-        background-color: #198754 !important;
-    }
-    .bg-camionetas {
-        background-color: #2c3e50 !important;
-    }
-
-    .border-chutos {
-        border-color: #ff6600 !important;
-    }
-    .border-camiones {
-        border-color: #ffc107 !important;
-        }
-    .border-cisternas {
-        border-color: #198754 !important;
-    }
-    .border-camionetas {
-        border-color: #2c3e50 !important
-    }
+    background-color: #ff6600 !important;
+}
+.bg-camiones {
+    background-color: #ffc107 !important;
+}
+.bg-cisternas {
+    background-color: #198754 !important;
+}
+.bg-camionetas {
+    background-color: #2c3e50 !important;
+}
+.border-chutos {
+    border-color: #ff6600 !important;
+}
+.border-camiones {
+    border-color: #ffc107 !important;
+}
+.border-cisternas {
+    border-color: #198754 !important;
+}
+.border-camionetas {
+    border-color: #2c3e50 !important
+}
 
 @media print {
     /* Configuración de la página */
@@ -236,16 +233,6 @@
                         <h4 class="fw-bold text-danger mt-1">${{ number_format($reporte['financiero']['total'], 2) }}</h4>
                     </div>
                 </div>
-            </div>
-        </div>
-        <div class="card border-0 shadow-sm mt-4">
-            <div class="card-header bg-white py-3">
-                <h6 class="fw-bold text-dark mb-0">
-                    <i class="fas fa-chart-line me-2 text-primary"></i> FLUJO DIARIO: ÓRDENES ABIERTAS VS. CERRADAS
-                </h6>
-            </div>
-            <div class="card-body">
-                <div id="container-timeline-mantenimiento" style="width:100%; height:350px;"></div>
             </div>
         </div>
         <div class="row g-3 mb-4">
