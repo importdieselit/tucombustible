@@ -80,7 +80,7 @@ class VehiculoObserver
             // Buscamos el viaje programado para este vehículo hoy
             $viaje = Viaje::where('vehiculo_id', $vehiculo->id)
                 ->where('status', 'Programado')
-                ->latest()
+                ->whereDate('fecha_salida', now()->toDateString())
                 ->first();
 
             if ($viaje) {
@@ -94,8 +94,8 @@ class VehiculoObserver
                     ->first();
                 
                 if($hasChecklist2){
-                    $hasChecklist->viaje_id = $viaje->id;
-                    $hasChecklist->save();
+                    $hasChecklist2->viaje_id = $viaje->id;
+                    $hasChecklist2->save();
                     $hasChecklist = true;
 
                 }
