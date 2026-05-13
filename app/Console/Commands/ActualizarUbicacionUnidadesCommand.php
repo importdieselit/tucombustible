@@ -149,9 +149,7 @@ class ActualizarUbicacionUnidadesCommand extends Command
                 }
 
                 $vehiculo->save();
-
-                      
-                
+          
                 if($distancia > $radioSede || $vehiculo->estatus == 2){
                     $this->actualizarHistorialPorHora($vehiculo->id, $lat, $lng, $distanciaDelta);
                 }

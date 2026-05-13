@@ -6,15 +6,20 @@ use Illuminate\Console\Command;
 use App\Models\Viaje;
 use App\Models\Inspeccion;
 use App\Services\FcmNotificationService;
+use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
 
 class CheckAlertasViajes extends Command
 {
     protected $signature = 'viajes:check-alertas';
     protected $description = 'Evalúa retrasos en salidas y retornos de viajes con reporte en consola';
+    
 
     public function handle()
     {
+         $baseUrl = rtrim(config('services.whatsapp.url'), '/');
+        $tokenWA = config('services.whatsapp.key');
+        $endpoint = "{$baseUrl}/messages/chat?token={$tokenWA}";
         // Evitar que el comando se ejecute si ya hay una instancia activa (Previene duplicidad por tiempo)
         // Nota: Requiere cache driver configurado en Laravel
         $this->info("Iniciando verificación de alertas operativas: " . now()->toDateTimeString());
@@ -48,8 +53,30 @@ class CheckAlertasViajes extends Command
 
             if (!$hasChecklist) {
                 $this->warn(" > Enviando alerta: Viaje #{$viaje->id}");
-                $this->enviarAlerta("ALERTA SALIDA: El viaje #{$viaje->id} a {$viaje->destino_ciudad} no tiene checklist tras 30 min.", $usuariosNotificar, $viaje);
+                $tiempoRetraso = Carbon::now()->diffInMinutes($viaje->fecha_salida);
+                 $mensaje = "ALERTA SALIDA: El viaje #{$viaje->id} a {$viaje->destino_ciudad} no tiene checklist tras {$tiempoRetraso} min.\n" .
+                    "• *Vehículo:* {$viaje->vehiculo->flota}\n" .
+                    "• *Destino:* {$viaje->destino_ciudad}\n" .
+                    "• *Fecha Salida:* {$viaje->fecha_salida->format('Y-m-d H:i')}\n" .
+                    "• *Conductor:* {$viaje->chofer->nombre}\n";
+
+                $this->enviarAlerta($mensaje, $usuariosNotificar, $viaje);
                 $reporte['notificadas_salida']++;
+
+                $response = Http::asForm()
+                            ->withoutVerifying() // Equivalente a CURLOPT_SSL_VERIFYPEER => 0
+                            ->post($endpoint, [
+                                'token'      => $tokenWA,
+                                'to'         => config('services.whatsapp.group_operaciones'),
+                                'body'       => $mensaje,
+                                'priority'   => 1, // Importante si lo tenías en el script original
+                                'referenceId' => '',
+                            ]);
+                if ($response->successful() && ($response->json()['sent'] ?? '') == 'true') {
+                    $this->info("✅ notificacion enviada.");
+                } else {
+                    $this->error("❌ Error enviando " . $response->body());
+                }
             }
         }
 
@@ -77,8 +104,14 @@ class CheckAlertasViajes extends Command
             ->exists();
 
             if (!$hasCheckIn) {
+                $tiempoRetraso = Carbon::now()->diffInMinutes($viaje->updated_at);
+                 $mensaje = "ALERTA RETORNO: El vehículo {$viaje->vehiculo->flota} Ingreso a la Sede pero el viaje #{$viaje->id} sigue 'EN RUTA' tras {$tiempoRetraso} min.\n" .
+                    "• *Destino:* {$viaje->destino_ciudad}\n" .
+                    "• *Fecha ingreso:* {$viaje->vehiculo->updated_at->format('Y-m-d H:i')}\n" .
+                    "• *Conductor:* {$viaje->chofer->nombre}\n";
+
                 $this->warn(" > Enviando alerta: Vehículo {$viaje->vehiculo->flota} inconsistente.");
-                $this->enviarAlerta("ALERTA RETORNO: El vehículo {$viaje->vehiculo->flota} está libre pero el viaje #{$viaje->id} sigue 'EN RUTA'.", $usuariosNotificar, $viaje);
+                $this->enviarAlerta($mensaje, $usuariosNotificar, $viaje);
                 $reporte['notificadas_retorno']++;
             }
         }
