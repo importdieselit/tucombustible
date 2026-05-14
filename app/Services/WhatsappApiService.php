@@ -24,7 +24,7 @@ class WhatsappApiService
         return Http::asForm()->post($endpoint, [
             'token' => $this->key,
             'to'    => $idDestino,
-            'body'  => $mensaje, 
+            'body'  => $mensaje
         ]);
     }
 
@@ -36,7 +36,7 @@ class WhatsappApiService
             'token' => $this->key,
             'to' => $idDestino,
             'image' => $rutaImagen, 
-            'caption' => $caption . " - " . date('d/m/Y'),
+            'caption' => $caption . " - " . date('d/m/Y')
         ]);
     }
 }
