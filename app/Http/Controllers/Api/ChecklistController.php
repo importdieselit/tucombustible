@@ -221,6 +221,38 @@ class ChecklistController extends Controller
                             ->whereNull('respuesta_in')
                             ->orderByDesc('created_at')
                             ->first();
+
+            if (is_null($old_inspeccion)) {
+                // No ha salido → primera salida
+                $tipoCheck = 'OUT'; // salida
+            } else {
+
+                $tiempoTranscurrido = $old_inspeccion->created_at->diffInMinutes(now());
+                if ($tiempoTranscurrido < 60) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "No se puede registrar la llegada todavía. Debe esperar al menos 1 hora desde la salida (Han pasado {$tiempoTranscurrido} min)."
+                    ], 422);
+                }
+
+                $latSede = 10.48834308128781;
+                $lngSede = -66.82329619185627;
+                $radioSede = 0.150; // 150 metros en km (aprox)
+
+                if (isset($vehiculo->latitud) && isset($vehiculo->longitud)) {
+                    $distancia = $this->calcularDistancia($vehiculo->latitud, $vehiculo->longitud, $latSede, $lngSede);
+                    
+                    if ($distancia > $radioSede) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => "Validación GPS fallida: El vehículo se encuentra a " . round($distancia, 2) . " km. Debe estar en la sede para cerrar el checklist."
+                        ], 422);
+                    }
+                }
+                // Tiene OUT pendiente → ahora está entrando
+                $tipoCheck = 'IN'; // entrada
+            }
+
             $isCriticalFailure = false;
             
             // Nombres de los ítems críticos a verificar
@@ -278,13 +310,7 @@ class ChecklistController extends Controller
             $shouldUpdateExisting = $old_inspeccion 
                 && (empty($old_inspeccion->respuesta_in) || empty($old_inspeccion->respuesta_json));
             
-           if (is_null($old_inspeccion)) {
-                // No ha salido → primera salida
-                $tipoCheck = 'OUT'; // salida
-            } else {
-                // Tiene OUT pendiente → ahora está entrando
-                $tipoCheck = 'IN'; // entrada
-            }
+           
             if($tipoCheck == 'OUT'){
                 $inspeccion = Inspeccion::create([
                     'vehiculo_id' => $request->vehiculo_id,
