@@ -7,7 +7,7 @@ use App\Services\FcmNotificationService;
 use App\Models\Viaje;
 use App\Models\Inspeccion;
 use App\Services\TelegramNotificationService;
-use App\Services\WhatsAppApiService;
+use App\Services\WhatsappApiService;
 use Illuminate\Support\Facades\Log;
 
 class VehiculoObserver
@@ -18,7 +18,7 @@ class VehiculoObserver
     const LIMITE_HRS_MANTENIMIENTO = 200;
 
     // Inyectamos el servicio de notificaciones
-    public function __construct(TelegramNotificationService $telegramService, WhatsAppApiService $whatsappService)
+    public function __construct(TelegramNotificationService $telegramService, WhatsappApiService $whatsappService)
     {
         $this->telegramService = $telegramService;
         $this->whatsappService = $whatsappService;
