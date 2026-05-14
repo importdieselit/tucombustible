@@ -15,7 +15,7 @@ use App\Models\Orden;
 use App\Models\User;
 use App\Services\FcmNotificationService;
 use App\Services\TelegramNotificationService;  
-use App\Services\WhatsAppApiService;
+//use App\Services\WhatsAppApiService;
 
 class InspeccionController extends Controller
 {
@@ -23,17 +23,17 @@ class InspeccionController extends Controller
     const CHECKLIST_VEHICULOS_ID = 1;
     protected $fcmService;
     protected $telegramService;
-    protected $whatsappService;
+  //  protected $whatsappService;
 
 
     public function __construct(
         FcmNotificationService $fcmService, 
         TelegramNotificationService $telegramService,
-        WhatsAppApiService $whatsappService
+       // WhatsAppApiService $whatsappService
     ) {
         $this->fcmService = $fcmService;
         $this->telegramService = $telegramService;
-        $this->whatsappService = $whatsappService;
+        //$this->whatsappService = $whatsappService;
     }
 
     public function create($vehiculo_id, $tipo='salida'){
