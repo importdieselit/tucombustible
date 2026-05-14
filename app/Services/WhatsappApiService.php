@@ -1,42 +1,68 @@
-<?php 
+<?php
 
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
-class WhatsappApiService 
+class WhatsAppApiService 
 {
-    protected string $url;
-    protected string $key;
-    protected string $destiny;
+    protected $url;
+    protected $key;
+    protected $destiny;
 
-    public function __construct() {
-        // Configuras esto en tu .env
-        $this->url = config('services.whatsapp.url');
+    public function __construct() 
+    {
+        // Asegúrate de que coincidan con tu config/services.php
+        $this->url = rtrim(config('services.whatsapp.url'), '/');
         $this->key = config('services.whatsapp.key');
         $this->destiny = config('services.whatsapp.group_id');
     }
 
-    public function enviarMensaje(string $mensaje, string|null $idDestino) {
-        $idDestino = $idDestino ?? $this->destiny;
-        $endpoint = "{$this->url}/messages/chat?token={$this->key}";
+    /**
+     * Enviar mensaje de texto
+     */
+    public function enviarMensaje($mensaje, $idDestino = null) 
+    {
+        $target = $idDestino ?? $this->destiny;
+        $endpoint = "{$this->url}/messages/chat";
 
-        return Http::asForm()->post($endpoint, [
-            'token' => $this->key,
-            'to'    => $idDestino,
-            'body'  => $mensaje
-        ]);
+        try {
+            return Http::asForm()
+                ->withoutVerifying() // Evita fallos de certificados SSL
+                ->post($endpoint, [
+                    'token' => $this->key,
+                    'to'    => $target,
+                    'body'  => $mensaje,
+                    'priority' => 1
+                ]);
+        } catch (\Exception $e) {
+            Log::error("Error WhatsApp EnviarMensaje: " . $e->getMessage());
+            return false;
+        }
     }
 
-    public function enviarImagen(string $caption, string $rutaImagen, string|null $idDestino) {
-        $idDestino = $idDestino ?? $this->destiny;
-        $endpoint = "{$this->url}/messages/image?token={$this->key}";
+    /**
+     * Enviar imagen con pie de foto
+     */
+    public function enviarImagen($caption, $rutaImagen, $idDestino = null) 
+    {
+        $target = $idDestino ?? $this->destiny;
+        $endpoint = "{$this->url}/messages/image";
 
-        return Http::asForm()->post($endpoint, [
-            'token' => $this->key,
-            'to' => $idDestino,
-            'image' => $rutaImagen, 
-            'caption' => $caption . " - " . date('d/m/Y')
-        ]);
+        try {
+            return Http::asForm()
+                ->withoutVerifying()
+                ->post($endpoint, [
+                    'token'   => $this->key,
+                    'to'      => $target,
+                    'image'   => $rutaImagen, 
+                    'caption' => $caption . " - " . date('d/m/Y'),
+                    'priority' => 1
+                ]);
+        } catch (\Exception $e) {
+            Log::error("Error WhatsApp EnviarImagen: " . $e->getMessage());
+            return false;
+        }
     }
 }
