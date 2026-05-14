@@ -171,7 +171,7 @@ public function store(Request $request)
 
         $vehiculo = Vehiculo::find($data['vehiculo_id']);
         $old_inspeccion = Inspeccion::where('vehiculo_id', $data['vehiculo_id'])
-            ->where('checklist_id',1)
+            ->whereIn('checklist_id', [1,3])
             ->whereNull('respuesta_in')
             ->first();
 
@@ -373,7 +373,7 @@ public function store(Request $request)
 
         $vehiculo = Vehiculo::find($data['vehiculo_id']);
         $old_inspeccion = Inspeccion::where('vehiculo_id', $data['vehiculo_id'])
-            ->where('checklist_id',2)
+            ->whereIn('checklist_id',2)
             ->whereNull('respuesta_in')
             ->first();
 

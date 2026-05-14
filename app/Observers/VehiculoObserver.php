@@ -7,18 +7,21 @@ use App\Services\FcmNotificationService;
 use App\Models\Viaje;
 use App\Models\Inspeccion;
 use App\Services\TelegramNotificationService;
+use App\Services\WhatsappApiService;
 use Illuminate\Support\Facades\Log;
 
 class VehiculoObserver
 {
     protected $telegramService;
+    protected $whatsappService;
     const LIMITE_KM_MANTENIMIENTO = 5000;
     const LIMITE_HRS_MANTENIMIENTO = 200;
 
     // Inyectamos el servicio de notificaciones
-    public function __construct(TelegramNotificationService $telegramService)
+    public function __construct(TelegramNotificationService $telegramService, WhatsappApiService $whatsappService)
     {
         $this->telegramService = $telegramService;
+        $this->whatsappService = $whatsappService;
     }
 
     /**
@@ -47,6 +50,7 @@ class VehiculoObserver
                     "*Acción:* Requiere revisión inmediata para mantenimiento preventivo.";
                     // 3. Enviar la notificación de forma asíncrona (opcional) o síncrona
                     $this->telegramService->sendMessage($message);
+                    $this->whatsappService->enviarMensaje($message, config('services.whatsapp.group_operaciones'));
             } 
         } 
 
@@ -78,7 +82,8 @@ class VehiculoObserver
         if ($vehiculo->isDirty('estatus') && $vehiculo->estatus == 2) {
             
             // Buscamos el viaje programado para este vehículo hoy
-            $viaje = Viaje::where('vehiculo_id', $vehiculo->id)
+            $viaje = Viaje::with('chofer', 'vehiculo', 'chofer.persona','despachos.cliente')
+                ->where('vehiculo_id', $vehiculo->id)
                 ->where('status', 'Programado')
                 ->whereDate('fecha_salida', now()->toDateString())
                 ->first();
@@ -97,12 +102,10 @@ class VehiculoObserver
                     $hasChecklist2->viaje_id = $viaje->id;
                     $hasChecklist2->save();
                     $hasChecklist = true;
-
                 }
 
                  // Si no tiene checklist de salida ni checkin, es un incumplimiento claro
                 if (!$hasChecklist) {
-
                     $usuariosNotificar = [1, 2];
                     foreach ($usuariosNotificar as $userId) {
                         FcmNotificationService::enviarNotification(
@@ -110,6 +113,15 @@ class VehiculoObserver
                             "El vehículo {$vehiculo->flota} pasó a estado EN RUTA sin completar el checklist de salida para el viaje #{$viaje->id}.",
                             ['viaje_id' => $viaje->id,'user_id' => $userId]
                         );
+                        // whatsapp
+                        $message = 
+                            "*⚠️ INCUMPLIMIENTO DE PROCESO ⚠️*\n\n" .
+                            "El vehículo {$vehiculo->flota} {$vehiculo->placa} pasó a estado EN RUTA sin completar el checklist de salida para el viaje #{$viaje->id}.\n" .
+                            "• *Destino:* {$viaje->destino_ciudad}\n" .
+                            "• *Chofer:* {$viaje->chofer->persona->nombre}\n" .
+                            "• *Fecha de Salida:* {$viaje->fecha_salida->format('d/m/Y H:i')}\n\n" .
+                            "*Acción Requerida:* Revisar el proceso con el conductor y asegurar cumplimiento en futuros viajes.";
+                        $this->whatsappService->enviarMensaje($message, config('services.whatsapp.group_operaciones'));
                     }
                 }
             }

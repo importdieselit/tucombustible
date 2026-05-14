@@ -17,6 +17,8 @@ class InspeccionObserver
      */
     public function created(Inspeccion $inspeccion)
     {
+        $user = auth()->user();
+        $nombre = $user->persona->nombre ?? 'Usuario'.$user->id;
         $vehiculo = Vehiculo::find($inspeccion->vehiculo_id);
         $baseUrl = rtrim(config('services.whatsapp.url'), '/');
         $tokenWA = config('services.whatsapp.key');
@@ -39,7 +41,7 @@ class InspeccionObserver
                     $inspeccion->save();
                 }
 
-                $mensaje =" CHECKOUT: Se ha registrado el checklist de salida para la unidad {$vehiculo->flota} - {$vehiculo->placa}. Salida #{$viajesProgramados->first()->id} a {$viajesProgramados->first()->destino_ciudad}.";
+                $mensaje =" CHECKOUT: {$nombre} ha registrado el checklist de salida para la unidad {$vehiculo->flota} - {$vehiculo->placa}. Salida #{$viajesProgramados->first()->id} a {$viajesProgramados->first()->destino_ciudad}.";
                 $response = Http::asForm()
                             ->withoutVerifying() // Equivalente a CURLOPT_SSL_VERIFYPEER => 0
                             ->post($endpoint, [
@@ -65,6 +67,9 @@ class InspeccionObserver
      */
     public function updated(Inspeccion $inspeccion)
     {
+        $user = auth()->user();
+        $nombre = $user->persona->nombre ?? 'Usuario'.$user->id;
+
         $baseUrl = rtrim(config('services.whatsapp.url'), '/');
         $tokenWA = config('services.whatsapp.key');
         $endpoint = "{$baseUrl}/messages/chat?token={$tokenWA}";
@@ -88,7 +93,7 @@ class InspeccionObserver
                                      ->where('status', 'EN RUTA')
                                      ->update(['status' => 'COMPLETADO']);
                                     // ->get();
-                $mensaje = "CHECKIN: Se ha registrado el checklist de llegada para la unidad {$vehiculo->flota} - {$vehiculo->placa}. El viaje #{$inspeccion->viaje_id} ha sido marcado como COMPLETADO.";
+                $mensaje = "CHECKIN: {$nombre} ha registrado el checklist de llegada para la unidad {$vehiculo->flota} - {$vehiculo->placa}. El viaje #{$inspeccion->viaje_id} ha sido marcado como COMPLETADO.";
                 $response = Http::asForm()
                             ->withoutVerifying() // Equivalente a CURLOPT_SSL_VERIFYPEER => 0
                             ->post($endpoint, [

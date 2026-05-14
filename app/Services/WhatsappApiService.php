@@ -8,32 +8,35 @@ class WhatsAppApiService
 {
     protected string $url;
     protected string $key;
+    protected string $destiny;
 
     public function __construct() {
         // Configuras esto en tu .env
         $this->url = config('services.whatsapp.url');
         $this->key = config('services.whatsapp.key');
+        $this->destiny = config('services.whatsapp.group_id');
     }
 
-    public function enviarMensaje(string $idDestino, string $mensaje) {
-        
-        // Endpoint específico para mensajes de texto (chat)
-        $endpoint = "{$this->url}/messages/chat";
+    public function enviarMensaje(string $mensaje, string|null $idDestino) {
+        $idDestino = $idDestino ?? $this->destiny;
+        $endpoint = "{$this->url}/messages/chat?token={$this->key}";
 
         return Http::asForm()->post($endpoint, [
             'token' => $this->key,
             'to'    => $idDestino,
-            'body'  => $mensaje, // En UltraMsg para texto se usa 'body'
+            'body'  => $mensaje, 
         ]);
     }
 
-    public function enviarImagen(string $idDestino, string $caption, string $rutaImagen) {
-        // Útil para enviar el gráfico del reporte de disponibilidad
-        return Http::withHeaders(['apikey' => $this->key])
-            ->post("{$this->url}/message/sendMedia", [
-                'number' => $idDestino,
-                'media' => $rutaImagen,
-                'caption' => $caption
-            ]);
+    public function enviarImagen(string $caption, string $rutaImagen, string|null $idDestino) {
+        $idDestino = $idDestino ?? $this->destiny;
+        $endpoint = "{$this->url}/messages/image?token={$this->key}";
+
+        return Http::asForm()->post($endpoint, [
+            'token' => $this->key,
+            'to' => $idDestino,
+            'image' => $rutaImagen, 
+            'caption' => $caption . " - " . date('d/m/Y'),
+        ]);
     }
 }
