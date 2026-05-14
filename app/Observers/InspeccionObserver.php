@@ -6,6 +6,13 @@ use App\Models\Inspeccion;
 use App\Models\Vehiculo;
 use App\Models\Viaje;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Config;
+use App\Services\TelegramNotificationService;
+use App\Services\WhatsAppApiService;
+use App\Services\FcmNotificationService;
+
+
 
 class InspeccionObserver
 {
