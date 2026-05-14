@@ -26,13 +26,13 @@ class PedidoService
         $this->depositoRepository = $depositoRepository;
     }
 
-    public function listarPedidosParaUsuario($cliente)
+    public function listarPedidosParaUsuario($cliente, $limit = 50)
     {
         $ids = [$cliente->id];
         if ($cliente->es_padre) {
             $ids = array_merge($ids, $cliente->sucursales()->pluck('id')->toArray());
         }
-        return $this->repository->getPedidosPorClientes($ids);
+        return $this->repository->getPedidosPorClientes($ids, $limit);
     }
 
     public function listarPedidosParaAdmin()

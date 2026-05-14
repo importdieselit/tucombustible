@@ -69,4 +69,9 @@ class Pedido extends Model
     {
         return $this->hasMany(MovimientoCombustible::class, 'pedido_id');
     }
+
+    public function tipoCombustible() 
+    { 
+        return $this->belongsTo(TipoCombustible::class, 'tipo_combustible_id'); 
+    }
 }

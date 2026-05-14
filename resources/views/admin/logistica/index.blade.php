@@ -124,57 +124,57 @@
         </div>
     </div>
 
-    {{-- BARRA DE FILTROS --}}
-    <div class="card shadow-sm border-orange mb-4">
-        <div class="card-body bg-light py-2">
-            <form action="{{ route('logistica.index') }}" method="GET" class="row g-2 align-items-end">
-                <div class="col-md-3">
-                    <label class="small fw-bold text-uppercase text-muted mb-1">Tipo de Planificación</label>
-                    <select name="tipo" class="form-select form-select-sm fw-bold">
-                        <option value="">TODAS</option>
-                        <option value="1" {{ request('tipo') == '1' ? 'selected' : '' }}>Despacho Diesel</option>
-                        <option value="2" {{ request('tipo') == '2' ? 'selected' : '' }}>Despacho MGO</option>
-                        <option value="3" {{ request('tipo') == '3' ? 'selected' : '' }}>Fletes</option>
-                        <option value="4" {{ request('tipo') == '4' ? 'selected' : '' }}>Compras</option>
-                    </select>
-                </div>
-
-                <div class="col-md-3">
-                    <label class="small fw-bold text-uppercase text-muted mb-1">Estatus</label>
-                    <select name="estado" class="form-select form-select-sm fw-bold">
-                        <option value="">TODOS</option>
-                        <option value="PROGRAMADO" {{ request('estado') == 'PROGRAMADO' ? 'selected' : '' }}>Programado</option>
-                        <option value="EN RUTA" {{ request('estado') == 'EN RUTA' ? 'selected' : '' }}>En Ruta</option>
-                        <option value="COMPLETADO" {{ request('estado') == 'COMPLETADO' ? 'selected' : '' }}>Completado</option>
-                    </select>
-                </div>
-
-                <div class="col-md-3">
-                    <label class="small fw-bold text-uppercase text-muted mb-1">Fecha</label>
-                    <input type="date" name="fecha" value="{{ request('fecha') }}" class="form-control form-control-sm fw-bold">
-                </div>
-
-                <div class="col-md-3 d-flex gap-2">
-                    <button type="submit" class="btn btn-dark btn-sm fw-bold text-uppercase w-100">
-                        <i class="fas fa-search me-1"></i> Buscar
-                    </button>
-                    <a href="{{ route('logistica.index') }}" class="btn btn-outline-secondary btn-sm w-100 fw-bold">
-                        Limpiar
-                    </a>
-                </div>
-            </form>
+    {{-- BARRA DE FILTROS ACTUALIZADA --}}
+    <form action="{{ route('logistica.index') }}" method="GET" class="row g-2 align-items-end">
+        {{-- Nuevo: Buscador de Cliente --}}
+        <div class="col-md-2">
+            <label class="small fw-bold text-uppercase text-muted mb-1">Cliente / RIF</label>
+            <input type="text" name="search_viaje" value="{{ request('search_viaje') }}" 
+                class="form-control form-control-sm fw-bold uppercase" placeholder="Buscar...">
         </div>
-    </div>
 
-    {{-- TABLA DE VIAJES / PLANIFICACIONES --}}
+        <div class="col-md-2">
+            <label class="small fw-bold text-uppercase text-muted mb-1">Tipo</label>
+            <select name="tipo" class="form-select form-select-sm fw-bold">
+                <option value="">TODAS</option>
+                <option value="1" {{ request('tipo') == '1' ? 'selected' : '' }}>Diesel</option>
+                <option value="2" {{ request('tipo') == '2' ? 'selected' : '' }}>MGO</option>
+                <option value="3" {{ request('tipo') == '3' ? 'selected' : '' }}>Fletes</option>
+                <option value="4" {{ request('tipo') == '4' ? 'selected' : '' }}>Compras</option>
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label class="small fw-bold text-uppercase text-muted mb-1">Desde</label>
+            <input type="date" name="fecha_desde" value="{{ request('fecha_desde') }}" class="form-control form-control-sm fw-bold">
+        </div>
+
+        <div class="col-md-2">
+            <label class="small fw-bold text-uppercase text-muted mb-1">Hasta</label>
+            <input type="date" name="fecha_hasta" value="{{ request('fecha_hasta') }}" class="form-control form-control-sm fw-bold">
+        </div>
+
+        <div class="col-md-4 d-flex gap-2">
+            <button type="submit" class="btn btn-dark btn-sm fw-bold text-uppercase w-100">
+                <i class="fas fa-search me-1"></i> Filtrar
+            </button>
+            <a href="{{ route('logistica.index') }}" class="btn btn-outline-secondary btn-sm w-100 fw-bold">
+                Limpiar
+            </a>
+        </div>
+    </form>
+
+    {{-- TABLA DE VIAJES / PLANIFICACIONES CON SCROLL --}}
     <div class="card shadow-sm border-0">
         <div class="card-header bg-white border-bottom py-3">
             <h6 class="mb-0 fw-black text-uppercase small"><i class="fas fa-list me-2"></i>Historial de Planificaciones</h6>
         </div>
         <div class="card-body p-0">
-            <div class="table-responsive">
+            {{-- Agregamos el contenedor con altura máxima y scroll --}}
+            <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
+                    {{-- El sticky-top asegura que el encabezado no se mueva --}}
+                    <thead class="bg-light sticky-top" style="z-index: 10;">
                         <tr class="text-uppercase text-muted" style="font-size: 11px;">
                             <th class="ps-3">ID / Fecha</th>
                             <th>Tipo Planificación</th>

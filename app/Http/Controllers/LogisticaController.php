@@ -26,22 +26,40 @@ class LogisticaController extends Controller
 
     public function index(Request $request)
     {
+        // 1. Iniciamos la consulta con las relaciones necesarias
         $query = Viaje::with(['tipoCombustible', 'detalles.cliente', 'sede']);
 
-        // Filtros de la tabla de viajes
-        if ($request->has('tipo') && $request->tipo != '') {
+        // --- NUEVO: Filtro de Búsqueda por Cliente o RIF ---
+        if ($request->filled('search_viaje')) {
+            $search = $request->search_viaje;
+            $query->whereHas('detalles.cliente', function($q) use ($search) {
+                $q->where('nombre', 'LIKE', "%{$search}%")
+                ->orWhere('rif', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // --- FILTROS EXISTENTES ---
+        if ($request->filled('tipo')) {
             $query->where('tipo_planificacion', $request->tipo);
         }
-        if ($request->has('estado') && $request->estado != '') {
+        
+        if ($request->filled('estado')) {
             $query->where('status', $request->estado);
         }
-        if ($request->has('fecha') && $request->fecha != '') {
-            $query->whereDate('fecha_salida', $request->fecha);
+
+        // --- MEJORA: Filtro por Rango de Fechas ---
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('fecha_salida', '>=', $request->fecha_desde);
+        }
+        
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('fecha_salida', '<=', $request->fecha_hasta);
         }
 
-        $viajes = $query->orderBy('created_at', 'desc')->paginate(15);
+        // 2. Paginación Real (Paginamos de 20 en 20 para que sea cómodo)
+        $viajes = $query->orderBy('created_at', 'desc')->paginate(20);
 
-        // NUEVO: Consultar Pedidos Pendientes de Diesel (->where('estado', 'pendiente'))
+        // 3. Consulta de Pedidos Pendientes (Esta se mantiene igual para el bloque superior)
         $pedidosPendientes = Pedido::with('cliente')
             ->where('estado', 'pendiente') 
             ->orderBy('fecha_solicitud', 'asc')

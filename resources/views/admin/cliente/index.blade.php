@@ -40,32 +40,64 @@
         </div>
     </div>
 
-    {{-- SECCIÓN DE PEDIDOS GLOBALES (SIMÉTRICA A TABLA CLIENTES) --}}
+    {{-- SECCIÓN DE PEDIDOS GLOBALES --}}
     <div class="bg-white rounded-lg shadow-sm border border-gray-300 overflow-hidden mb-8">
         <div class="p-6 border-b border-gray-200 bg-gray-50">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex flex-col gap-4">
                 <h5 class="text-lg font-black uppercase tracking-tight text-gray-800 italic">
                     <span class="text-orange-impordiesel">|</span> Gestión Global de Pedidos
                 </h5>
                 
-                <div class="flex items-center gap-2">
-                    <form action="{{ route('clientes.index') }}" method="GET" class="flex items-center gap-2">
-                        {{-- Mantenemos filtros de clientes activos --}}
-                        <input type="hidden" name="search" value="{{ request('search') }}">
-                        <input type="hidden" name="status" value="{{ request('status') }}">
-                        
+                {{-- TOOLBAR DE FILTROS --}}
+                <form action="{{ route('clientes.index') }}" method="GET" class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                    {{-- Filtro: Buscador Cliente/RIF --}}
+                    <div class="flex flex-col">
+                        <label class="text-[10px] font-black uppercase text-gray-500 mb-1 ml-1">Cliente / RIF</label>
+                        <input type="text" name="search_pedido" value="{{ request('search_pedido') }}"
+                            class="text-xs font-black border-2 border-gray-300 rounded p-2 outline-none focus:border-orange-impordiesel bg-white uppercase"
+                            placeholder="Buscar cliente...">
+                    </div>
+
+                    {{-- Filtro: Estatus --}}
+                    <div class="flex flex-col">
+                        <label class="text-[10px] font-black uppercase text-gray-500 mb-1 ml-1">Estatus</label>
                         <select name="status_pedido" onchange="this.form.submit()"
-                                class="text-xs font-black border-2 border-gray-300 rounded p-2.5 outline-none focus:border-orange-impordiesel bg-white uppercase">
-                            <option value="">Todos los Pedidos</option>
+                                class="text-xs font-black border-2 border-gray-300 rounded p-2 outline-none focus:border-orange-impordiesel bg-white uppercase">
+                            <option value="">Todos los Estatus</option>
                             <option value="pendiente" {{ request('status_pedido') == 'pendiente' ? 'selected' : '' }}>Pendientes</option>
                             <option value="aprobado" {{ request('status_pedido') == 'aprobado' ? 'selected' : '' }}>Aprobados</option>
                             <option value="en_proceso" {{ request('status_pedido') == 'en_proceso' ? 'selected' : '' }}>En Proceso</option>
                             <option value="completado" {{ request('status_pedido') == 'completado' ? 'selected' : '' }}>Completados</option>
                             <option value="rechazado" {{ request('status_pedido') == 'rechazado' ? 'selected' : '' }}>Rechazados</option>
-                            <option value="cancelado" {{ request('status_pedido') == 'cancelado' ? 'selected' : '' }}>Cancelados</option>
                         </select>
-                    </form>
-                </div>
+                    </div>
+
+                    {{-- Filtro: Fecha Desde --}}
+                    <div class="flex flex-col">
+                        <label class="text-[10px] font-black uppercase text-gray-500 mb-1 ml-1">Desde</label>
+                        <input type="date" name="fecha_desde" value="{{ request('fecha_desde') }}"
+                            class="text-xs font-black border-2 border-gray-300 rounded p-1.5 outline-none focus:border-orange-impordiesel bg-white uppercase">
+                    </div>
+
+                    {{-- Filtro: Fecha Hasta --}}
+                    <div class="flex flex-col">
+                        <label class="text-[10px] font-black uppercase text-gray-500 mb-1 ml-1">Hasta</label>
+                        <input type="date" name="fecha_hasta" value="{{ request('fecha_hasta') }}"
+                            class="text-xs font-black border-2 border-gray-300 rounded p-1.5 outline-none focus:border-orange-impordiesel bg-white uppercase">
+                    </div>
+
+                    {{-- Botones de Acción --}}
+                    <div class="flex items-end gap-2">
+                        <button type="submit" class="bg-gray-800 text-white px-4 py-2 rounded text-xs font-black uppercase hover:bg-black transition shadow-md flex-1">
+                            <i class="fas fa-filter mr-1"></i> Filtrar
+                        </button>
+                        @if(request('search_pedido') || request('status_pedido') || request('fecha_desde') || request('fecha_hasta'))
+                            <a href="{{ route('clientes.index') }}" class="bg-red-600 text-white px-3 py-2 rounded text-xs font-black uppercase hover:bg-red-700 transition shadow-md">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        @endif
+                    </div>
+                </form>
             </div>
         </div>
 
@@ -103,7 +135,7 @@
                         </td>
                         <td class="px-6 py-4 text-center">
                             <span class="px-3 py-1 rounded text-[10px] font-black uppercase border shadow-sm" 
-                                  style="background-color: {{ $pedido->estado_color }}20; color: {{ $pedido->estado_color }}; border-color: {{ $pedido->estado_color }}40;">
+                                style="background-color: {{ $pedido->estado_color }}20; color: {{ $pedido->estado_color }}; border-color: {{ $pedido->estado_color }}40;">
                                 {{ $pedido->estado_text }}
                             </span>
                         </td>
@@ -114,7 +146,7 @@
                         </td>
                         <td class="px-6 py-4 text-right">
                             <a href="{{ route('clientes.show', $pedido->cliente_id) }}"
-                               class="inline-block bg-orange-impordiesel text-white px-5 py-2 rounded text-xs font-black uppercase hover:bg-orange-700 transition shadow-md border-b-2 border-orange-900">
+                            class="inline-block bg-orange-impordiesel text-white px-5 py-2 rounded text-xs font-black uppercase hover:bg-orange-700 transition shadow-md border-b-2 border-orange-900">
                                 <i class="fas fa-folder-open mr-1"></i> Expediente
                             </a>
                         </td>
@@ -134,35 +166,34 @@
         </div>
     </div>
 
-    {{-- LISTADO --}}
+    <div class="p-4 bg-gray-50 border-t border-gray-200">
+        {{ $ultimosPedidos->appends(request()->query())->links() }}
+        <div class="mt-2 text-[10px] font-black uppercase text-gray-400">
+            Mostrando {{ $ultimosPedidos->firstItem() }} al {{ $ultimosPedidos->lastItem() }} de {{ $ultimosPedidos->total() }} pedidos
+        </div>
+    </div>
+
+    {{-- LISTADO DE CLIENTES (GEMELO DE PEDIDOS) --}}
     <div class="bg-white rounded-lg shadow-sm border border-gray-300 overflow-hidden mb-8">
-        <div class="card-header bg-white border-bottom py-3">
-            <div class="d-flex flex-column md-flex-row align-items-md-center justify-content-between gap-3">
-                <h5 class="mb-0 fw-black text-uppercase italic tracking-tighter text-dark">
-                    <span class="text-orange">|</span> Listado de Clientes — Combustible
+        <div class="p-6 border-b border-gray-200 bg-gray-50">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <h5 class="text-lg font-black uppercase tracking-tight text-gray-800 italic">
+                    <span class="text-orange-impordiesel">|</span> Listado de Clientes — Combustible
                 </h5>
 
-                <div class="d-flex align-items-center gap-2 flex-wrap">
-                    <form action="{{ route('clientes.index') }}" method="GET" class="d-flex align-items-center mb-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <form action="{{ route('clientes.index') }}" method="GET" class="flex items-center">
                         <input type="text" name="search" value="{{ request('search') }}"
-                               class="form-control form-control-sm fw-bold text-uppercase border-2 border-end-0 rounded-0 rounded-start border-light-gray shadow-none"
-                               style="width: 220px; outline: none;"
-                               placeholder="RIF o nombre...">
-                        <button type="submit" 
-                                class="btn btn-corporate btn-sm rounded-0 fw-black text-uppercase px-3 border-2 border-dark rounded-end ">
-                            <i class="fas fa-search"></i>
+                            class="text-xs font-black border-2 border-gray-300 border-e-0 rounded-s p-2.5 outline-none focus:border-orange-impordiesel bg-white uppercase w-48"
+                            placeholder="RIF o nombre...">
+                        <button type="submit" class="bg-gray-800 text-white p-3 rounded-e border-2 border-gray-800 hover:bg-black transition">
+                            <i class="fas fa-search text-xs"></i>
                         </button>
-                        @if(request('search'))
-                            <a href="{{ route('clientes.index') }}" 
-                               class="btn-danger btn-sm rounded-0 rounded-end fw-black text-uppercase px-3 border-2 border-danger">
-                                <i class="fas fa-times"></i>
-                            </a>
-                        @endif
                     </form>
 
-                    <form action="{{ route('clientes.index') }}" method="GET" class="mb-0">
+                    <form action="{{ route('clientes.index') }}" method="GET">
                         <select name="status" onchange="this.form.submit()"
-                                class="form-select form-select-sm fw-black text-uppercase border-2 border-light-gray shadow-none cursor-pointer">
+                                class="text-xs font-black border-2 border-gray-300 rounded p-2.5 outline-none focus:border-orange-impordiesel bg-white uppercase">
                             <option value="">Todos los status</option>
                             <option value="1" {{ request('status') == '1' ? 'selected' : '' }}>En Registro</option>
                             <option value="2" {{ request('status') == '2' ? 'selected' : '' }}>Aprobados</option>
@@ -172,112 +203,105 @@
                     </form>
 
                     <a href="{{ route('clientes.create') }}" 
-                       class="btn-orange text-white btn-sm fw-black text-uppercase px-3 shadow-sm border-bottom border-dark border-1 rounded">
-                        <i class="fas fa-plus me-1"></i> Nuevo Cliente
+                    class="bg-orange-impordiesel text-white px-4 py-2.5 rounded text-xs font-black uppercase hover:bg-orange-700 transition shadow-md border-b-2 border-orange-900">
+                        <i class="fas fa-plus mr-1"></i> Nuevo Cliente
                     </a>
                 </div>
             </div>
         </div>
 
-        <div class="overflow-x-auto">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle border-collapse mb-0">
-                    <thead class="bg-dark text-white">
-                        <tr class="text-uppercase fw-black small" style="letter-spacing: 1px;">
-                            <th class="px-4 py-3 border-0">Cliente / Identificación</th>
-                            <th class="px-3 py-3 text-center border-0">Tipo</th>
-                            <th class="px-3 py-3 text-center border-0">Estatus</th>
-                            <th class="px-3 py-3 text-center border-0">Cupo SIAVCOM</th>
-                            <th class="px-3 py-3 text-center border-0">Cupo GASCO</th>
-                            <th class="px-3 py-3 text-center border-0">Disponible</th>
-                            <th class="px-3 py-3 text-center border-0">Registro</th>
-                            <th class="px-3 py-3 text-center border-0">Aprobación</th>
-                            <th class="px-4 py-3 text-end border-0">Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody class="border-top-0">
-                        @forelse($clientes as $c)
-                        <tr class="{{ !$c->es_padre ? 'bg-light bg-opacity-50' : '' }} transition-all">
-                            <td class="px-4 py-3">
-                                @if(!$c->es_padre)
-                                    <div class="d-flex align-items-start">
-                                        <span class="text-muted me-2 mt-1 fw-bold" style="font-size: 14px;">└</span>
-                                        <div>
-                                            <div class="fw-black text-dark text-uppercase small lh-sm">{{ $c->nombre }}</div>
-                                            <div class="fw-bold text-muted mt-1" style="font-size: 10px;">RIF: {{ $c->rif }}</div>
-                                            @if($c->padre)
-                                                <div class="fw-bold text-orange text-uppercase mt-1" style="font-size: 9px;">
-                                                    <i class="fas fa-sitemap me-1"></i> {{ $c->padre->nombre }}
-                                                </div>
-                                            @endif
-                                        </div>
+        {{-- CONTENEDOR DE SCROLL FORZADO --}}
+        <div class="overflow-x-auto overflow-y-auto max-h-[450px]">
+            <table class="w-full text-left border-collapse" style="min-width: 1100px;">
+                <thead class="sticky top-0 z-20">
+                    <tr class="bg-gray-industrial text-white text-xs font-black uppercase tracking-widest">
+                        <th class="px-6 py-4">Cliente / Identificación</th>
+                        <th class="px-4 py-4 text-center">Tipo</th>
+                        <th class="px-4 py-4 text-center">Estatus</th>
+                        <th class="px-4 py-4 text-center">Cupo SIAVCOM</th>
+                        <th class="px-4 py-4 text-center">Cupo GASCO</th>
+                        <th class="px-4 py-4 text-center">Disponible</th>
+                        <th class="px-6 py-4 text-right">Acción</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    @forelse($clientes as $c)
+                    <tr class="hover:bg-gray-50 transition {{ !$c->es_padre ? 'bg-gray-50/50' : '' }}">
+                        <td class="px-6 py-4">
+                            @if(!$c->es_padre)
+                                <div class="flex items-start">
+                                    <span class="text-gray-400 mr-2 font-bold" style="font-size: 16px;">└</span>
+                                    <div>
+                                        <div class="font-black text-gray-800 uppercase text-sm leading-tight">{{ $c->nombre }}</div>
+                                        <div class="text-[10px] font-bold text-gray-500 mt-1">RIF: {{ $c->rif }}</div>
+                                        @if($c->padre)
+                                            <div class="text-[9px] font-black text-orange-impordiesel uppercase mt-1">
+                                                <i class="fas fa-sitemap mr-1"></i> {{ $c->padre->nombre }}
+                                            </div>
+                                        @endif
                                     </div>
-                                @else
-                                    <div class="fw-black text-dark text-uppercase small lh-sm">{{ $c->nombre }}</div>
-                                    <div class="fw-bold text-muted mt-1" style="font-size: 10px;">RIF: {{ $c->rif }}</div>
-                                @endif
-                            </td>
-                            <td class="px-3 py-3 text-center">
-                                @if($c->es_padre)
-                                    <span class="badge bg-dark text-white text-uppercase px-2 py-1" style="font-size: 9px;">Padre</span>
-                                @else
-                                    <span class="badge bg-orange-light text-orange border border-orange-subtle text-uppercase px-2 py-1" style="font-size: 9px;">Sucursal</span>
-                                @endif
-                            </td>
-                            <td class="px-3 py-3 text-center">
-                                <span class="badge {{ $c->color_status }} text-white text-uppercase shadow-sm px-3 py-1" style="font-size: 10px; letter-spacing: -0.3px;">
-                                    {{ $c->label_status }}
-                                </span>
-                            </td>
-                            <td class="px-3 py-3 text-center">
-                                <div class="fw-black text-dark small">
-                                    {{ number_format($c->cupo_siavcom ?? 0, 0, ',', '.') }}
-                                    <span class="text-[9px] text-muted">LTS</span>
                                 </div>
-                            </td>
-                            <td class="px-3 py-3 text-center">
-                                <div class="fw-black text-dark small">
-                                    {{ number_format($c->cupo_gasco ?? 0, 0, ',', '.') }}
-                                    <span class="text-[9px] text-muted">LTS</span>
-                                </div>
-                            </td>
-                            <td class="px-3 py-3 text-center">
-                                <div class="fw-black text-dark small">
-                                    {{ number_format($c->disponible ?? 0, 0, ',', '.') }}
-                                    <span class="text-[9px] text-muted">LTS</span>
-                                </div>
-                            </td>
-                            <td class="px-3 py-3 text-center">
-                                <div class="fw-bold text-dark small">
-                                    {{ $c->created_at?->format('d/m/Y') ?? 'N/A' }}
-                                </div>
-                            </td>
-                            <td class="px-3 py-3 text-center">
-                                <div class="fw-bold text-dark small">
-                                    {{ $c->fecha_aprobacion?->format('d/m/Y') ?? '—' }}
-                                </div>
-                            </td>
-                            <td class="px-4 py-3 text-end">
-                                <a href="{{ route('clientes.show', $c->id) }}"
-                                   class="btn-orange btn-sm text-white fw-black text-uppercase shadow-sm border-bottom border-dark border-2 px-3 rounded">
-                                    <i class="fas fa-folder-open me-1"></i> Expediente
-                                </a>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="8" class="px-6 py-5 text-center text-muted fw-black text-uppercase small tracking-widest">
-                                No se encontraron registros en la base de datos.
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                            @else
+                                <div class="font-black text-gray-800 uppercase text-sm leading-tight">{{ $c->nombre }}</div>
+                                <div class="text-[10px] font-bold text-gray-500 mt-1">RIF: {{ $c->rif }}</div>
+                            @endif
+                        </td>
+                        <td class="px-4 py-4 text-center">
+                            @if($c->es_padre)
+                                <span class="bg-gray-800 text-white text-[9px] font-black uppercase px-2 py-1 rounded">Padre</span>
+                            @else
+                                <span class="bg-orange-100 text-orange-700 border border-orange-200 text-[9px] font-black uppercase px-2 py-1 rounded">Sucursal</span>
+                            @endif
+                        </td>
+                        <td class="px-4 py-4 text-center">
+                            <span class="px-3 py-1 rounded text-[10px] font-black uppercase border shadow-sm {{ $c->color_status_tailwind ?? 'bg-gray-100' }}">
+                                {{ $c->label_status }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-4 text-center">
+                            <div class="text-sm font-black text-gray-700">
+                                {{ number_format($c->cupo_siavcom ?? 0, 0, ',', '.') }}
+                                <span class="text-[9px] text-gray-400">LTS</span>
+                            </div>
+                        </td>
+                        <td class="px-4 py-4 text-center">
+                            <div class="text-sm font-black text-gray-700">
+                                {{ number_format($c->cupo_gasco ?? 0, 0, ',', '.') }}
+                                <span class="text-[9px] text-gray-400">LTS</span>
+                            </div>
+                        </td>
+                        <td class="px-4 py-4 text-center">
+                            <div class="text-sm font-black text-orange-impordiesel">
+                                {{ number_format($c->disponible ?? 0, 0, ',', '.') }}
+                                <span class="text-[9px] opacity-70">LTS</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <a href="{{ route('clientes.show', $c->id) }}"
+                            class="inline-block bg-orange-impordiesel text-white px-5 py-2 rounded text-xs font-black uppercase hover:bg-orange-700 transition shadow-md border-b-2 border-orange-900">
+                                <i class="fas fa-folder-open mr-1"></i> Expediente
+                            </a>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-gray-400 font-black uppercase text-xs tracking-widest">
+                            No se encontraron clientes en la base de datos.
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
-
-        <div class="p-4 bg-gray-50 border-t">
+        <div class="p-4 bg-gray-50 border-t border-gray-200">
             {{ $clientes->appends(request()->query())->links() }}
+        </div>
+    </div>
+
+    <div class="p-4 bg-gray-50 border-t border-gray-200">
+        {{ $clientes->appends(request()->query())->links() }}
+        <div class="mt-2 text-[10px] font-black uppercase text-gray-400">
+            Total en base de datos: {{ $clientes->total() }} clientes registrados
         </div>
     </div>
 

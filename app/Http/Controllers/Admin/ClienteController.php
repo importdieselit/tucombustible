@@ -9,6 +9,7 @@ use App\Services\ClienteLubricanteService;
 use App\Services\GascoCupoService;
 use App\Models\Cliente;
 use App\Models\TipoCombustible;
+use App\Models\Pedido;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Redirect, Session, Log, Auth};
 
@@ -42,15 +43,36 @@ class ClienteController extends Controller
 
         // NUEVO: Filtro para la lista de pedidos
         $statusPedido = $request->query('status_pedido');
+        $searchPedido = $request->query('search_pedido');
+        $fechaDesde   = $request->query('fecha_desde');
+        $fechaHasta   = $request->query('fecha_hasta');
         
-        $queryPedidos = \App\Models\Pedido::with(['cliente'])
+        $queryPedidos = Pedido::with(['cliente'])
             ->orderBy('fecha_solicitud', 'desc');
 
         if ($statusPedido !== null && $statusPedido !== '') {
             $queryPedidos->where('estado', $statusPedido);
         }
 
-        $ultimosPedidos = $queryPedidos->get(); // Traemos todos para el scroll o paginate(50)
+        // 2. Filtro por Nombre de Cliente o RIF
+        if ($searchPedido !== null && $searchPedido !== '') {
+            $queryPedidos->whereHas('cliente', function($q) use ($searchPedido) {
+                $q->where('nombre', 'LIKE', '%' . $searchPedido . '%')
+                ->orWhere('rif', 'LIKE', '%' . $searchPedido . '%');
+            });
+        }
+
+        // 3. Filtro por Rango de Fechas (Desde)
+        if ($fechaDesde !== null && $fechaDesde !== '') {
+            $queryPedidos->whereDate('fecha_solicitud', '>=', $fechaDesde);
+        }
+
+        // 4. Filtro por Rango de Fechas (Hasta)
+        if ($fechaHasta !== null && $fechaHasta !== '') {
+            $queryPedidos->whereDate('fecha_solicitud', '<=', $fechaHasta);
+        }
+
+        $ultimosPedidos = $queryPedidos->paginate(20, ['*'], 'pedidos_page');
 
         return view('admin.cliente.index', [
             'clientes'       => $data['clientes'],
@@ -61,6 +83,9 @@ class ClienteController extends Controller
             'rankingMenores' => $this->clienteService->getRankingCuposMenores(),
             'ultimosPedidos' => $ultimosPedidos,
             'statusPedido'   => $statusPedido,
+            'searchPedido'   => $searchPedido,
+            'fechaDesde'     => $fechaDesde,
+            'fechaHasta'     => $fechaHasta,
         ]);
     }
 
@@ -70,12 +95,28 @@ class ClienteController extends Controller
 
     public function show($id)
     {
+        // Mantenemos tus servicios originales
         $cliente          = $this->clienteService->obtenerExpediente($id);
         $tiposCombustible = TipoCombustible::all();
-        $pedidos = $this->repository->getPedidosPorClientes([$id]);
-        $infoGasco = $this->gascoCupoService->obtenerSaldoActual($id);
+        $infoGasco        = $this->gascoCupoService->obtenerSaldoActual($id);
 
-        return view('admin.cliente.show', compact('cliente', 'tiposCombustible', 'pedidos', 'infoGasco'));
+        // NUEVO: Pedidos paginados (reemplaza tu llamada al repository para que sea paginada)
+        $pedidos = Pedido::where('cliente_id', $id)
+            ->orderBy('fecha_solicitud', 'desc')
+            ->paginate(20, ['*'], 'pedidos_page');
+
+        // NUEVO: Sucursales paginadas (solo si es padre)
+        $sucursales = $cliente->es_padre 
+            ? $cliente->sucursales()->paginate(15, ['*'], 'sucursales_page') 
+            : collect();
+
+        return view('admin.cliente.show', compact(
+            'cliente', 
+            'tiposCombustible', 
+            'pedidos', 
+            'infoGasco', 
+            'sucursales'
+        ));
     }
 
     public function listaGeneralPedidos()
