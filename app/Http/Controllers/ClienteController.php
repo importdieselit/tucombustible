@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Viaje;
+use App\Models\Pedido;
 use App\Services\{ClienteService, DashboardService};
 use App\Services\GascoCupoService;
 use App\Services\PedidoService;
@@ -89,36 +91,72 @@ class ClienteController extends Controller
         }
 
         $sucursalId = $request->query('sucursal_id');
-        
-        // 1. Cargamos la data base (Aquí viene el cliente con sus relaciones)
         $data = $this->dashboardService->getDashboardData($user, $sucursalId);
         $cliente = $data['cliente'];
 
-        // 2. Consulta de GASCO
-        // IMPORTANTE: Este método debe llamar internamente a 'getOrCreateMonthlyQuota' 
-        // del repositorio para asegurar que si es un mes nuevo, se cree el registro.
+        // 1. FILTROS PARA PEDIDOS
+        $p_search = $request->query('p_search');
+        $p_status = $request->query('p_status');
+        $p_desde  = $request->query('p_desde');
+        $p_hasta  = $request->query('p_hasta');
+        
+        $queryPedidos = Pedido::where('cliente_id', $cliente->id)
+            ->with(['tipoCombustible'])
+            ->orderBy('fecha_solicitud', 'desc');
+
+        if ($p_search) {
+            $queryPedidos->where('id', 'LIKE', "%{$p_search}%");
+        }
+        if ($p_status) {
+            $queryPedidos->where('estado', $p_status);
+        }
+        if ($p_desde && $p_hasta) {
+            // Se agrega la hora para cubrir el día completo
+            $queryPedidos->whereBetween('fecha_solicitud', [$p_desde . ' 00:00:00', $p_hasta . ' 23:59:59']);
+        }
+        
+        $data['pedidos'] = $queryPedidos->paginate(10, ['*'], 'pedidos_page')->appends($request->all());
+
+        // 2. FILTROS PARA PLANIFICACIONES (Viajes)
+        $v_search = $request->query('v_search');
+        $v_status = $request->query('v_status');
+        $v_desde  = $request->query('v_desde');
+        $v_hasta  = $request->query('v_hasta');
+
+        $queryPlan = Viaje::where('status', '!=', 'BORRADOR')
+            ->where(function($query) use ($cliente) {
+                $query->where('cliente_id', $cliente->id)
+                    ->orWhereHas('detalles', function($q) use ($cliente) {
+                        $q->where('cliente_id', $cliente->id);
+                    });
+            })
+            ->with(['vehiculo', 'chofer.persona', 'ayudante.persona', 'sede', 'detalles.cliente', 'detalles.buques', 'tipoCombustible'])
+            ->orderBy('fecha_salida', 'desc');
+
+        if ($v_search) {
+            $queryPlan->where(function($q) use ($v_search) {
+                $q->where('id', 'LIKE', "%{$v_search}%")
+                ->orWhere('vehiculo_externo', 'LIKE', "%{$v_search}%")
+                ->orWhereHas('vehiculo', function($qv) use ($v_search) { 
+                    $qv->where('placa', 'LIKE', "%{$v_search}%"); 
+                });
+            });
+        }
+        if ($v_status) {
+            $queryPlan->where('status', $v_status);
+        }
+        if ($v_desde && $v_hasta) {
+            $queryPlan->whereBetween('fecha_salida', [$v_desde . ' 00:00:00', $v_hasta . ' 23:59:59']);
+        }
+
+        $data['planificaciones'] = $queryPlan->paginate(10, ['*'], 'planificaciones_page')->appends($request->all());
+
+        // Lógica de Gasco y Perfiles
         $infoGasco = $this->gascoCupoService->obtenerSaldoActual($cliente->id);
-        
-        // 3. REFRESH DEL MODELO
-        // Si el paso anterior creó un registro de mes nuevo, actualizó la DB pero NO esta instancia.
-        // Con refresh() nos aseguramos que $cliente->disponible sea el valor real de la DB.
         $cliente->refresh();
-
-        // 4. MAPEO DE LÓGICA RESTAURADA PARA LA VISTA
-        
-        // Cupo SIAVCOM: Ahora lo sacamos de la tabla relacional (cliente_cupos)
         $data['cupoSiavcom'] = $cliente->cupos->first()->litros_aprobados ?? 0;
-
-        // Cupo GASCO: El autorizado para el mes actual
         $data['cupoGasco'] = $infoGasco['autorizados'] ?? 0;
-
-        // Disponible: El campo que el Repo mantiene (Reset mensual - Despachos)
         $data['disponible'] = $cliente->disponible;
-
-        // 5. Carga de Pedidos y resto de la lógica
-        $data['pedidos'] = app(PedidoService::class)
-                            ->listarPedidosParaUsuario($cliente);
-
         $data['viendoSucursal'] = $request->filled('sucursal_id');
 
         if (in_array($data['perfil'], ['cliente_en_registro', 'cliente_rechazado', 'cliente_inactivo'])) {

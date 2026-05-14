@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateBitacora extends Migration
+class CreateBitacoraTable extends Migration
 {
     /**
      * Run the migrations.
@@ -19,6 +19,7 @@ class CreateBitacora extends Migration
             $table->string('tipo'); 
             $table->string('actividad'); 
             $table->string('metodo_accion'); 
+            $table->string('mensaje');
             $table->json('parametros_request')->nullable();
             $table->json('data_antes')->nullable(); 
             $table->json('data_despues')->nullable();

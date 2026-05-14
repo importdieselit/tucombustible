@@ -14,8 +14,8 @@ class AddViajeIdToInspecciones extends Migration
     public function up()
     {
         Schema::table('inspecciones', function (Blueprint $table) {
-            $table->integer('viaje_id')->unsigned();
-            $table->foreign('viaje_id')->references('id')->on('viajes');
+            $table->unsignedBigInteger('viaje_id')->after('id');
+            $table->foreign('viaje_id')->references('id')->on('viajes')->onDelete('cascade');
         });
     }
 

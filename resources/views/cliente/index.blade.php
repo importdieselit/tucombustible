@@ -265,65 +265,225 @@
         </div>
         @endif
 
-        {{-- HISTORIAL DE PEDIDOS --}}
-        <div class="mb-8">
-            <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
-                <h2 class="text-sm font-black uppercase text-gray-700 tracking-widest">
-                    <span class="text-orange-impordiesel">|</span> Historial de Pedidos Recientes
-                </h2>
-                <button onclick="openModalPedido()" 
-                        class="bg-orange-impordiesel text-white px-6 py-2.5 rounded shadow-lg font-black text-[11px] uppercase hover:bg-black transition-all flex items-center">
-                    <i class="fas fa-gas-pump mr-2"></i> Solicitar Combustible
-                </button>
+        <button onclick="openModalPedido()" 
+                class="bg-orange-impordiesel text-white px-6 py-3 rounded shadow-lg font-black text-xs uppercase hover:bg-black transition-all flex items-center">
+            <i class="fas fa-gas-pump mr-2"></i> Solicitar Combustible
+        </button>
+
+        {{-- CONTENEDOR DE TABLAS CON SCROLL Y FILTROS DEFINITIVO --}}
+        <div class="grid grid-cols-1 gap-10">
+
+            {{-- 1. HISTORIAL DE PEDIDOS RECIENTES --}}
+            <div>
+                <div class="flex flex-col xl:flex-row justify-between items-center mb-4 gap-4">
+                    <h2 class="text-base font-black uppercase text-gray-700 tracking-widest">
+                        <span class="text-orange-impordiesel">|</span> Historial de Pedidos Recientes
+                    </h2>
+                    
+                    <form action="{{ route('portal.clientes.index') }}" method="GET" class="flex flex-wrap items-center gap-2 bg-gray-50 p-2 rounded-lg border border-gray-200">
+                        {{-- Mantener sucursal si existe --}}
+                        @if(request('sucursal_id')) <input type="hidden" name="sucursal_id" value="{{ request('sucursal_id') }}"> @endif
+
+                        <input type="text" name="p_search" value="{{ request('p_search') }}" placeholder="ID PEDIDO..." 
+                            class="text-[10px] border-gray-300 rounded-md p-2 w-28 uppercase font-black shadow-sm">
+                        
+                        <select name="p_status" class="text-[10px] border-gray-300 rounded-md p-2 font-black uppercase shadow-sm">
+                            <option value="">ESTATUS (TODOS)</option>
+                            <option value="1" {{ request('p_status') == '1' ? 'selected' : '' }}>PENDIENTE</option>
+                            <option value="2" {{ request('p_status') == '2' ? 'selected' : '' }}>APROBADO</option>
+                            <option value="3" {{ request('p_status') == '3' ? 'selected' : '' }}>DESPACHADO</option>
+                            <option value="4" {{ request('p_status') == '4' ? 'selected' : '' }}>CANCELADO</option>
+                        </select>
+
+                        <div class="flex items-center gap-1 bg-white border border-gray-300 rounded px-2 py-1 shadow-sm">
+                            <span class="text-[10px] font-black text-gray-400">DESDE:</span>
+                            <input type="date" name="p_desde" value="{{ request('p_desde') }}" class="text-[10px] border-none p-1 focus:ring-0 font-black">
+                            <span class="text-[10px] font-black text-gray-400">HASTA:</span>
+                            <input type="date" name="p_hasta" value="{{ request('p_hasta') }}" class="text-[10px] border-none p-1 focus:ring-0 font-black">
+                        </div>
+                        
+                        <button type="submit" class="bg-gray-800 text-white px-3 py-2 rounded-md hover:bg-black transition shadow-md">
+                            <i class="fas fa-search text-[10px]"></i>
+                        </button>
+                        <a href="{{ route('portal.clientes.index') }}" class="bg-gray-200 text-gray-600 px-3 py-2 rounded-md hover:bg-gray-300 transition">
+                            <i class="fas fa-undo text-[10px]"></i>
+                        </a>
+                    </form>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-md border border-gray-300 overflow-hidden">
+                    <div class="max-h-[450px] overflow-y-auto scrollbar-thin">
+                        <table class="w-full text-left text-sm border-collapse">
+                            <thead class="sticky top-0 z-10">
+                                <tr class="bg-gray-800 text-white text-xs font-black uppercase tracking-widest">
+                                    <th class="px-6 py-4 border-r border-gray-700">ID Pedido</th>
+                                    <th class="px-6 py-4 border-r border-gray-700">Combustible</th>
+                                    <th class="px-6 py-4 text-center border-r border-gray-700">Litros</th>
+                                    <th class="px-6 py-4 text-center border-r border-gray-700">Estatus</th>
+                                    <th class="px-6 py-4 text-center">Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y-2 divide-gray-200 bg-white">
+                                @forelse($pedidos as $pedido)
+                                <tr class="hover:bg-gray-50 transition border-b border-gray-200">
+                                    <td class="px-6 py-5 font-black text-gray-800 border-r border-gray-100">
+                                        #{{ str_pad($pedido->id, 5, '0', STR_PAD_LEFT) }}
+                                    </td>
+                                    <td class="px-6 py-5 font-bold text-gray-600 uppercase border-r border-gray-100">
+                                        {{ $pedido->tipoCombustible->nombre ?? 'DIESEL' }}
+                                    </td>
+                                    <td class="px-6 py-5 text-center font-black text-gray-900 border-r border-gray-100">
+                                        {{ number_format($pedido->cantidad_solicitada, 0, ',', '.') }} Lts
+                                    </td>
+                                    <td class="px-6 py-5 text-center border-r border-gray-100">
+                                        <span class="px-3 py-1.5 rounded text-[11px] font-black uppercase border shadow-sm" 
+                                            style="background-color: {{ $pedido->estado_color }}15; color: {{ $pedido->estado_color }}; border-color: {{ $pedido->estado_color }}50;">
+                                            {{ $pedido->estado_text }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-5 text-center text-gray-600 font-bold">
+                                        {{ $pedido->fecha_solicitud ? $pedido->fecha_solicitud->format('d/m/Y') : 'N/A' }}
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="5" class="px-6 py-16 text-center text-gray-400 font-black uppercase text-xs">
+                                        No hay pedidos registrados.
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                    @if($pedidos->hasPages())
+                    <div class="p-4 bg-gray-50 border-t border-gray-200">
+                        {{ $pedidos->links() }}
+                    </div>
+                    @endif
+                </div>
             </div>
 
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <table class="w-full text-left text-xs">
-                    <thead>
-                        <tr class="bg-gray-800 text-white text-[10px] font-black uppercase tracking-widest">
-                            <th class="px-6 py-3">ID Pedido</th>
-                            <th class="px-6 py-3">Tipo de Combustible</th>
-                            <th class="px-6 py-3 text-center">Litros Solicitados</th>
-                            <th class="px-6 py-3 text-center">Estatus</th>
-                            <th class="px-6 py-3 text-center">Fecha</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        @forelse($pedidos as $pedido)
-                        <tr class="hover:bg-gray-50 transition">
-                            <td class="px-6 py-3 font-black text-gray-700">
-                                #{{ str_pad($pedido->id, 5, '0', STR_PAD_LEFT) }}
-                            </td>
-                            <td class="px-6 py-3 font-bold text-gray-600 uppercase text-[10px]">
-                                DIESEL
-                            </td>
-                            <td class="px-6 py-3 text-center font-black text-gray-800">
-                                {{ number_format($pedido->cantidad_solicitada, 0, ',', '.') }} Lts
-                            </td>
-                            <td class="px-6 py-3 text-center">
-                                <span class="px-2 py-1 rounded text-[9px] font-black uppercase border" 
-                                    style="background-color: {{ $pedido->estado_color }}20; color: {{ $pedido->estado_color }}; border-color: {{ $pedido->estado_color }}40;">
-                                    {{ $pedido->estado_text }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-3 text-center text-gray-500 font-bold">
-                                {{ $pedido->fecha_solicitud ? $pedido->fecha_solicitud->format('d/m/Y') : 'N/A' }}
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="5" class="px-6 py-12 text-center">
-                                <i class="fas fa-box-open text-gray-200 fa-3x mb-3"></i>
-                                <p class="text-gray-400 font-black uppercase text-[10px] tracking-widest">
-                                    No se encontraron pedidos registrados.
-                                </p>
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+            {{-- 2. PLANIFICACIONES LOGÍSTICAS --}}
+            <div class="mb-12">
+                <div class="flex flex-col xl:flex-row justify-between items-center mb-4 gap-4">
+                    <h2 class="text-base font-black uppercase text-gray-700 tracking-widest">
+                        <span class="text-orange-impordiesel">|</span> Mis Despachos Programados
+                    </h2>
+
+                    <form action="{{ route('portal.clientes.index') }}" method="GET" class="flex flex-wrap items-center gap-2 bg-gray-50 p-2 rounded-lg border border-gray-200">
+                        @if(request('sucursal_id')) <input type="hidden" name="sucursal_id" value="{{ request('sucursal_id') }}"> @endif
+
+                        <input type="text" name="v_search" value="{{ request('v_search') }}" placeholder="ID VIAJE / PLACA..." 
+                            class="text-[10px] border-gray-300 rounded-md p-2 w-40 uppercase font-black shadow-sm">
+                        
+                        <select name="v_status" class="text-[10px] border-gray-300 rounded-md p-2 font-black uppercase shadow-sm">
+                            <option value="">ESTATUS (TODOS)</option>
+                            <option value="PROGRAMADO" {{ request('v_status') == 'PROGRAMADO' ? 'selected' : '' }}>PROGRAMADO</option>
+                            <option value="EN TRANSITO" {{ request('v_status') == 'EN TRANSITO' ? 'selected' : '' }}>EN TRANSITO</option>
+                            <option value="COMPLETADO" {{ request('v_status') == 'COMPLETADO' ? 'selected' : '' }}>COMPLETADO</option>
+                        </select>
+
+                        <div class="flex items-center gap-1 bg-white border border-gray-300 rounded px-2 py-1 shadow-sm">
+                            <span class="text-[10px] font-black text-gray-400">DESDE:</span>
+                            <input type="date" name="v_desde" value="{{ request('v_desde') }}" class="text-[10px] border-none p-1 focus:ring-0 font-black">
+                            <span class="text-[10px] font-black text-gray-400">HASTA:</span>
+                            <input type="date" name="v_hasta" value="{{ request('v_hasta') }}" class="text-[10px] border-none p-1 focus:ring-0 font-black">
+                        </div>
+                        
+                        <button type="submit" class="bg-gray-800 text-white px-3 py-2 rounded-md hover:bg-black transition shadow-md">
+                            <i class="fas fa-search text-[10px]"></i>
+                        </button>
+                        <a href="{{ route('portal.clientes.index') }}" class="bg-gray-200 text-gray-600 px-3 py-2 rounded-md hover:bg-gray-300 transition">
+                            <i class="fas fa-undo text-[10px]"></i>
+                        </a>
+                    </form>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-md border border-gray-300 overflow-hidden">
+                    <div class="max-h-[600px] overflow-y-auto scrollbar-thin">
+                        <table class="w-full text-left text-sm border-collapse">
+                            <thead class="sticky top-0 z-10">
+                                <tr class="bg-gray-800 text-white text-xs font-black uppercase tracking-widest">
+                                    <th class="px-6 py-4 border-r border-gray-700">Info. Viaje / Sede</th>
+                                    <th class="px-6 py-4 border-r border-gray-700">Transporte</th>
+                                    <th class="px-6 py-4 border-r border-gray-700">Hoja de Ruta (Destinos)</th>
+                                    <th class="px-6 py-4 text-center">Estatus</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y-2 divide-gray-200 bg-white">
+                                @forelse($planificaciones as $viaje)
+                                <tr class="hover:bg-orange-50/30 transition border-b border-gray-200">
+                                    {{-- Info Viaje --}}
+                                    <td class="px-6 py-6 border-r border-gray-100 align-top">
+                                        <span class="block font-black text-gray-900 text-base mb-1">V-{{ str_pad($viaje->id, 5, '0', STR_PAD_LEFT) }}</span>
+                                        @if($viaje->tipo_planificacion == 2)
+                                            <span class="inline-block px-3 py-1 mb-2 bg-blue-600 text-white rounded text-[11px] font-black uppercase shadow-sm">MGO (MARINO)</span>
+                                        @else
+                                            <span class="inline-block px-3 py-1 mb-2 bg-gray-800 text-white rounded text-[11px] font-black uppercase shadow-sm">DIESEL</span>
+                                        @endif
+                                        <span class="block text-xs font-bold text-gray-500 mb-2 italic">Fecha: {{ $viaje->fecha_salida->format('d/m/Y') }}</span>
+                                    </td>
+
+                                    {{-- Transporte --}}
+                                    <td class="px-6 py-6 border-r border-gray-100 align-top text-xs">
+                                        <div class="space-y-2">
+                                            <p><span class="text-[10px] font-bold text-gray-400 block">UNIDAD:</span> <span class="font-black">{{ $viaje->vehiculo->placa ?? $viaje->vehiculo_externo }}</span></p>
+                                            <p><span class="text-[10px] font-bold text-gray-400 block">CHÓFER:</span> <span class="font-black uppercase">{{ $viaje->chofer->persona->nombre ?? $viaje->chofer_externo }}</span></p>
+                                        </div>
+                                    </td>
+
+                                    {{-- Hoja de Ruta --}}
+                                    <td class="px-6 py-6 border-r border-gray-100">
+                                        <div class="flex flex-col gap-3">
+                                            @foreach($viaje->detalles as $det)
+                                            <div class="p-3 rounded-lg border-2 {{ $det->cliente_id == $cliente->id ? 'bg-orange-50 border-orange-300 shadow-sm' : 'bg-gray-50 border-gray-200 opacity-75' }}">
+                                                <div class="flex justify-between items-start">
+                                                    <div>
+                                                        <p class="font-black text-gray-900 uppercase text-xs">{{ $det->cliente->nombre }}</p>
+                                                        <p class="text-[11px] font-black text-blue-600">RIF: {{ $det->cliente->rif }}</p>
+                                                    </div>
+                                                    <span class="font-black text-orange-impordiesel text-sm">{{ number_format($det->litros, 0, ',', '.') }} Lts</span>
+                                                </div>
+                                            </div>
+                                            @endforeach
+                                        </div>
+                                    </td>
+
+                                    {{-- Estatus --}}
+                                    <td class="px-6 py-6 text-center align-top">
+                                        <span class="px-4 py-2 rounded-full font-black text-xs uppercase shadow-md
+                                            @if($viaje->status == 'PROGRAMADO') bg-blue-100 text-blue-700
+                                            @elseif($viaje->status == 'EN TRANSITO') bg-orange-100 text-orange-700
+                                            @elseif($viaje->status == 'COMPLETADO') bg-green-100 text-green-700
+                                            @else bg-gray-100 text-gray-600 @endif">
+                                            {{ $viaje->status }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="4" class="px-6 py-20 text-center text-gray-400 font-black uppercase text-xs">
+                                        No hay despachos programados en su ruta.
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                    @if($planificaciones->hasPages())
+                    <div class="p-4 bg-gray-50 border-t border-gray-200">
+                        {{ $planificaciones->links() }}
+                    </div>
+                    @endif
+                </div>
             </div>
         </div>
+
+        <style>
+            .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+            .scrollbar-thin::-webkit-scrollbar-track { background: #f1f1f1; }
+            .scrollbar-thin::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+        </style>
 
     </div> {{-- FIN CONTENEDOR PRINCIPAL --}}
 
