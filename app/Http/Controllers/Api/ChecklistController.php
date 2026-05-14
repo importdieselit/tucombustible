@@ -17,7 +17,6 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use App\Services\FcmNotificationService;
 use App\Services\TelegramNotificationService;
-use App\Services\WhatsAppApiService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 
@@ -27,17 +26,14 @@ class ChecklistController extends Controller
 
     protected $fcmService;
     protected $telegramService;
-    protected $whatsappService;
 
 
     public function __construct(
         FcmNotificationService $fcmService, 
-        TelegramNotificationService $telegramService,
-        WhatsAppApiService $whatsappService
+        TelegramNotificationService $telegramService
     ) {
         $this->fcmService = $fcmService;
         $this->telegramService = $telegramService;
-        $this->whatsappService = $whatsappService;
     }
 
     /**
