@@ -237,7 +237,7 @@
         </div>
         <div class="row g-3 mb-4">
             
-            <div class="col-md-6 d-none">
+            <div class="col-md-6">
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-header bg-white py-2 border-bottom">
                         <h6 class="mb-0 small fw-bold text-dark"><i class="fas fa-chart-bar me-1"></i> DISTRIBUCIÓN POR CATEGORÍA (Top 5)</h6>
@@ -260,9 +260,9 @@
                 </div>
             </div>
 
-            <div class="col-md-12">
+            <div class="col-md-6">
                 <div class="row g-3 h-100">
-                    <div class="col-6">
+                    <div class="col-12">
                         <div class="card border-0 shadow-sm">
                             <div class="card-header bg-white py-3">
                                 <h6 class="fw-bold text-dark mb-0">
@@ -294,7 +294,7 @@
                         </div>
                     </div>
 
-                    <div class="col-6">
+                    <div class="col-12">
                         <div class="card border-0 shadow-sm border-danger border-2">
                             <div class="card-body p-3 d-flex align-items-center">
                                 <div class="rounded-circle bg-danger bg-opacity-10 p-3 me-3">

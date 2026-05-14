@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use App\Services\TelegramNotificationService;
-use App\Services\WhatsAppApiService;
+use App\Services\WhatsappApiService;
 use App\Services\FcmNotificationService;
 
 
