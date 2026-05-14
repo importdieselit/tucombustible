@@ -31,10 +31,7 @@ class TrazabilidadMiddleware
 
             // CAPTURA EL MENSAJE PERSONALIZADO SI EXISTE
             $customMsg = $request->attributes->get('bitacora_msg');
-
-            $omitir = [
-                'NotificacionController',
-            ];
+            $omitir = ['NotificacionController'];
 
             // Verificamos omisión
             if (in_array($controller, $omitir) || in_array($controller.'@'.$method, $omitir)) {

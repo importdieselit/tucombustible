@@ -15,6 +15,7 @@ use App\Models\Orden;
 use App\Models\User;
 use App\Services\FcmNotificationService;
 use App\Services\TelegramNotificationService;  
+use App\Services\WhatsAppApiService;
 
 class InspeccionController extends Controller
 {
@@ -22,13 +23,17 @@ class InspeccionController extends Controller
     const CHECKLIST_VEHICULOS_ID = 1;
     protected $fcmService;
     protected $telegramService;
+    protected $whatsappService;
+
 
     public function __construct(
         FcmNotificationService $fcmService, 
-        TelegramNotificationService $telegramService
+        TelegramNotificationService $telegramService,
+        WhatsAppApiService $whatsappService
     ) {
         $this->fcmService = $fcmService;
         $this->telegramService = $telegramService;
+        $this->whatsappService = $whatsappService;
     }
 
     public function create($vehiculo_id, $tipo='salida'){
@@ -121,23 +126,10 @@ class InspeccionController extends Controller
                                 $key = $mapaAtributos[$campo] ?? $campo;
                                 $item['value'] = $vehiculo->$key ?? "";
                             }
-                        
-                            // Caso para campos compuestos (Seguros, Verificación)
-                            // if (is_array($item['data_source']) && $item['data_source']['model'] == 'Vehiculo') {
-                            //     $statusField = $item['data_source']['status_field'];
-                            //     $dateField = $item['data_source']['date_field'];
-                                
-                            //     $item['value'] = [
-                            //         "status" => $vehiculo->$statusField ?? false,
-                            //         "vigencia" => $vehiculo->$dateField ?? ""
-                            //     ];
-                            // }
                         }
                     }
                     $checklist->checklist=$dataResponse;
-                
-       
-
+    
         return view('checklist.salida', [
             'checklist' => $checklist,
             'vehiculo' => $vehiculo,
@@ -160,14 +152,15 @@ public function store(Request $request)
         $estatusGeneral = 'OK';
         $warningFound = false;
         $fail=0;
+        $user = auth()->user();
+        $nombre = $user->persona->nombre ?? 'Usuario'.$user->id;
 
         $isCriticalFailure = false;
             
-            // Nombres de los ítems críticos a verificar
-            $criticalItems = [
-                'Vehiculo Operativo?',
-                'Apto para Carga de Combustible?'
-            ];
+        $criticalItems = [
+            'Vehiculo Operativo?',
+            'Apto para Carga de Combustible?'
+        ];
 
         $vehiculo = Vehiculo::find($data['vehiculo_id']);
         $old_inspeccion = Inspeccion::where('vehiculo_id', $data['vehiculo_id'])
@@ -175,11 +168,12 @@ public function store(Request $request)
             ->whereNull('respuesta_in')
             ->first();
 
+        
+
         $chofer = $respuestaJson['sections'][2]['items'][0]['value'] ?? null;
         $observaciones=$respuestas['sections'][13]['items'][0]['value'] ?? null;
         // 1. Determinar el Estatus General
         foreach ($respuestaJson['sections'] as $section) {
-           
             // Función auxiliar para procesar los items, ya sea directamente o dentro de subsecciones
             $processItems = function ($items) use (&$estatusGeneral, &$warningFound, &$fail,&$vehiculo,&$chofer,&$isCriticalFailure,&$criticalItems) {
                 foreach ($items as $item) {
@@ -275,6 +269,30 @@ public function store(Request $request)
             $tipoCheck='OUT';
             $vehiculo->estatus=2;
         }else{
+            
+            $tiempoTranscurrido = $old_inspeccion->created_at->diffInMinutes(now());
+            if ($tiempoTranscurrido < 60) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "No se puede registrar la llegada todavía. Debe esperar al menos 1 hora desde la salida (Han pasado {$tiempoTranscurrido} min)."
+                ], 422);
+            }
+
+            $latSede = 10.48834308128781;
+            $lngSede = -66.82329619185627;
+            $radioSede = 0.150; // 150 metros en km (aprox)
+
+            if (isset($vehiculo->latitud) && isset($vehiculo->longitud)) {
+                $distancia = $this->calcularDistancia($vehiculo->latitud, $vehiculo->longitud, $latSede, $lngSede);
+                
+                if ($distancia > $radioSede) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Validación GPS fallida: El vehículo se encuentra a " . round($distancia, 2) . " km. Debe estar en la sede para cerrar el checklist."
+                    ], 422);
+                }
+            }
+
             $old_inspeccion->respuesta_in=json_encode($respuestaJson);
             $old_inspeccion->estatus_general=$estatusGeneral;
             $old_inspeccion->save();
@@ -290,8 +308,7 @@ public function store(Request $request)
             $viaje=Viaje::where('vehiculo_id',$vehiculo->id)->where('status', 'EN RUTA')->first();
             if($viaje){
                 $viaje->status='COMPLETADO';
-                $viaje->save();
-                
+                $viaje->save();         
             }
         }
 
@@ -320,14 +337,14 @@ public function store(Request $request)
                 $observacionAlerta = "Ingreso de Unidad {$vehiculo->flota} {$vehiculo->placa} a Patio. Inspección completada.";
                 $notifTitle = "Unidad {$vehiculo->flota} Ingresando a Patio";
                 $notifBody = "Unidad {$vehiculo->flota} ingresando a Patio con {$chofer}.";
-                $telegramMessage = "📥 *INGRESO* - Unidad: **{$vehiculo->placa}** ({$vehiculo->flota}) ingresa a patio. Nuevo Estatus: **Operativo**. Chofer: {$chofer}. Revisar: {$alertaAction} \n OBSERVACIONES: {$observaciones}";
+                $telegramMessage = "📥 *CHECKIN* REALIZADO POR: {$nombre} - Unidad: **{$vehiculo->placa}** ({$vehiculo->flota}) ingresa a patio. Nuevo Estatus: **Operativo**. Chofer: {$chofer}. Revisar: {$alertaAction} \n OBSERVACIONES: {$observaciones}";
                 
             } else {
                 // 🟡 UNIDAD SALIENDO: No está en ruta (probablemente 1 - Operativo) y pasa a En Ruta (2)
                 $observacionAlerta = "Salida de vehículo {$vehiculo->placa}. Inspección completada.";
                 $notifTitle = "Salida de Unidad {$vehiculo->flota} en Inspeccion";
                 $notifBody = "Unidad {$vehiculo->flota} Saliendo a Ruta con {$chofer}.";
-                $telegramMessage = "📤 *SALIDA* - Unidad: **{$vehiculo->placa}** ({$vehiculo->flota}) saliendo a ruta . Nuevo Estatus: **En Ruta**  Chofer: {$chofer}. Revisar: {$alertaAction} \n OBSERVACIONES: {$observaciones}";
+                $telegramMessage = "📤 *CHECKOUT* REALIZADO POR: {$nombre} * - Unidad: **{$vehiculo->placa}** ({$vehiculo->flota}) saliendo a ruta . Nuevo Estatus: **En Ruta**  Chofer: {$chofer}. Revisar: {$alertaAction} \n OBSERVACIONES: {$observaciones}";
             }
 
             $alertaData = [
@@ -347,7 +364,8 @@ public function store(Request $request)
                 $alertaData 
             );
 
-            $this->telegramService->sendMessage($telegramMessage); 
+            $this->telegramService->sendMessage($telegramMessage);
+
 
 
         return response()->json([
@@ -475,7 +493,7 @@ public function store(Request $request)
     }
 
 
-    public function show($inspeccion_id)
+    public function show(int $inspeccion_id)
     {
         // Carga la inspección y el vehículo relacionado
         $inspeccion = Inspeccion::with('vehiculo')->findOrFail($inspeccion_id);
@@ -490,7 +508,7 @@ public function store(Request $request)
         return view('checklist.show', compact('inspeccion', 'imagenes','respuesta', 'titulo'));
     }
 
-    public function exportPdf($inspeccion_id)
+    public function exportPdf(int $inspeccion_id)
     {
         $inspeccion = Inspeccion::with('vehiculo')->findOrFail($inspeccion_id);
         
@@ -539,6 +557,16 @@ public function store(Request $request)
             return [$v->id => "{$v->flota} - {$v->placa}"];
         });
         return view('checklist.index', compact('resumenAlertas','vehiculosDisponibles', 'inspeccionesRecientes','user'));
+    }
+
+    private function calcularDistancia(mixed $lat1, mixed $lon1, mixed $lat2, mixed $lon2)
+    {
+        $earthRadius = 6371; // Radio de la tierra en km
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+        $a = sin($dLat/2) * sin($dLat/2) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon/2) * sin($dLon/2);
+        $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+        return $earthRadius * $c;
     }
 
 }
