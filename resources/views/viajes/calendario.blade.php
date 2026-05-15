@@ -74,6 +74,20 @@
             transform: none !important; 
             transition: none !important;
         }
+
+        /* Forzar el truncado de texto en los eventos de FullCalendar */
+        .fc-event-title, .fc-event-main {
+            display: block !important;
+            white-space: nowrap !important;    /* Evita saltos de línea */
+            overflow: hidden !important;       /* Esconde lo que se sale */
+            text-overflow: ellipsis !important; /* Agrega los puntos suspensivos (...) */
+        }
+
+        /* Para que el evento tenga una altura fija y no se estire */
+        .fc-v-event, .fc-h-event {
+            max-height: 25px !important;
+            overflow: hidden !important;
+        }
     </style>
 @endpush
 

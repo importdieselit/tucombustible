@@ -123,22 +123,39 @@ class LogisticaService
 
     private function validarCapacidadYRequisitos(array $data, float $totalLitros, array $items)
     {
+        // 1. Validación de destinos (intacta)
         if (in_array($data['tipo_planificacion'], [1, 2]) && empty($items)) {
             throw new Exception("No hay destinos o clientes agregados a la carga.");
         }
 
         $esPropio = ($data['es_transporte_propio'] ?? '1') == '1';
+        
         if ($esPropio && $totalLitros > 0) {
             $vehiculo = Vehiculo::findOrFail($data['vehiculo_id']);
+            
+            // Capacidad inicial asumiendo que es un camión rígido (Tipo 1)
             $capacidadReal = $vehiculo->carga_max > 0 ? $vehiculo->carga_max : 0;
             
-            if (!empty($data['cisterna_id'])) {
-                $cisterna = Vehiculo::find($data['cisterna_id']);
-                $capacidadReal = $cisterna ? $cisterna->carga_max : $capacidadReal;
+            // 2. Buscamos el ID de la cisterna (Cubrimos ambos nombres por seguridad)
+            $idCisterna = $data['cisterna'] ?? $data['cisterna_id'] ?? null;
+
+            // 3. Validar si es Chuto (Tipo 3) y no mandaron cisterna
+            if ($vehiculo->tipo == '3' && empty($idCisterna)) {
+                throw new Exception("El vehículo seleccionado (Tipo 3) requiere una cisterna acoplada.");
+            }
+            
+            // 4. Si hay cisterna, reemplazamos la capacidad por la de la cisterna
+            if (!empty($idCisterna)) {
+                $cisterna = Vehiculo::find($idCisterna);
+                if ($cisterna) {
+                    // Priorizamos el campo 'vol' (volumen real) y si está vacío usamos 'carga_max'
+                    $capacidadReal = $cisterna->vol > 0 ? $cisterna->vol : $cisterna->carga_max;
+                }
             }
 
+            // 5. Verificamos el exceso de carga (intacto)
             if ($totalLitros > $capacidadReal) {
-                throw new Exception("Capacidad excedida. Carga: {$totalLitros}L / Capacidad: {$capacidadReal}L.");
+                throw new Exception("Capacidad excedida. Carga: {$totalLitros}L / Capacidad permitida: {$capacidadReal}L.");
             }
         }
     }

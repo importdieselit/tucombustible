@@ -85,31 +85,47 @@
                         <div x-show="esPropio == '1'" x-transition>
                             <div class="mb-3">
                                 <label class="small fw-bold text-muted text-uppercase">Vehículo / Chuto</label>
-                                <select name="vehiculo_id" class="form-select form-select-sm fw-bold" x-model="vehiculoId" @change="cambioVehiculo($event)">
+                                <select name="vehiculo_id" 
+                                        class="form-select form-select-sm fw-bold" 
+                                        x-model="vehiculoId" 
+                                        @change="cambioVehiculo($event)"
+                                        :required="esPropio == '1'">
                                     <option value="">Seleccione...</option>
                                     @foreach($vehiculos as $v)
-                                        @if($v->tipo !== '2')
-                                            <option value="{{ $v->id }}" data-capacidad="{{ $v->carga_max }}">{{ $v->flota }} - {{ $v->placa }} ({{ $v->tipoVehiculo->tipo }})</option>        
-                                        @endif
+                                        <option value="{{ $v->id }}" 
+                                                data-tipo="{{ $v->tipo }}" 
+                                                data-capacidad="{{ $v->carga_max }}">
+                                            {{ $v->flota }} - {{ $v->placa }} ({{ number_format($v->carga_max, 0, ',', '.') }} Lts)
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
 
-                            <div class="mb-3 p-2 bg-light rounded border-orange" x-show="necesitaCisterna">
+                            {{-- Se muestra solo si el tipo seleccionado es 3 (Chuto) --}}
+                            <div class="mb-3 p-2 bg-light rounded border-orange" 
+                                x-show="tipoVehiculoSeleccionado == '3'" 
+                                x-transition>
                                 <label class="small fw-bold text-danger text-uppercase">Cisterna / Remolque</label>
-                                <select name="cisterna_id" class="form-select form-select-sm fw-bold border-danger" x-model="cisternaId" @change="cambioCisterna($event)">
+                                <select name="cisterna" 
+                                        class="form-select form-select-sm fw-bold border-danger" 
+                                        x-model="cisternaId" 
+                                        @change="cambioCisterna($event)"
+                                        :required="esPropio == '1' && tipoVehiculoSeleccionado == '3'">
                                     <option value="">Seleccione acople...</option>
-                                    @foreach($vehiculos as $v)
-                                        @if($v->tipo == 2)
-                                            <option value="{{ $v->id }}" data-capacidad="{{ $v->carga_max }}">{{ $v->flota }} {{ $v->placa }} - Cap: {{ number_format($v->carga_max) }}L</option>
-                                        @endif
+                                    @foreach($cisternas as $c)
+                                        <option value="{{ $c->id }}" 
+                                                data-capacidad="{{ $c->vol ?? $c->carga_max }}">
+                                            {{ $c->flota }} {{ $c->placa }} - Cap: {{ number_format($c->vol ?? $c->carga_max, 0, ',', '.') }} Lts
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
 
                             <div class="mb-3">
                                 <label class="small fw-bold text-muted text-uppercase">Chofer</label>
-                                <select name="chofer_id" class="form-select form-select-sm fw-bold">
+                                <select name="chofer_id" 
+                                        class="form-select form-select-sm fw-bold" 
+                                        :required="esPropio == '1'">
                                     <option value="">Seleccione...</option>
                                     @foreach($personal as $p)
                                         <option value="{{ $p->id }}">{{ $p->persona->nombre }} {{ $p->persona->apellido }}</option>
@@ -133,20 +149,30 @@
                             <div class="row g-2">
                                 <div class="col-6 mb-2">
                                     <label class="small fw-bold text-muted text-uppercase">Placa Vehículo</label>
-                                    <input type="text" name="externo_vehiculo_placa" class="form-control form-control-sm border-orange" placeholder="ABC-123" style="text-transform: uppercase;">
+                                    <input type="text" name="vehiculo_externo" x-model="externo_vehiculo" 
+                                        class="form-control form-control-sm border-orange" 
+                                        placeholder="ABC-123" style="text-transform: uppercase;"
+                                        :required="esPropio == '0'">
                                 </div>
                                 <div class="col-6 mb-2">
                                     <label class="small fw-bold text-muted text-uppercase">Placa Cisterna</label>
-                                    <input type="text" name="externo_cisterna_placa" class="form-control form-control-sm border-orange" placeholder="Opcional" style="text-transform: uppercase;">
+                                    <input type="text" name="cisterna_externo" x-model="externo_cisterna" 
+                                        class="form-control form-control-sm border-orange" 
+                                        placeholder="Opcional" style="text-transform: uppercase;">
                                 </div>
                                 <div class="col-12">
                                     <div class="input-group input-group-sm mb-1">
                                         <span class="input-group-text">Chofer</span>
-                                        <input type="text" name="externo_chofer_nombre" class="form-control" placeholder="Nombre completo" style="text-transform: uppercase;">
+                                        <input type="text" name="chofer_externo" x-model="externo_chofer" 
+                                            class="form-control" placeholder="Nombre completo" 
+                                            style="text-transform: uppercase;"
+                                            :required="esPropio == '0'">
                                     </div>
                                     <div class="input-group input-group-sm mb-1">
                                         <span class="input-group-text">Ayudante</span>
-                                        <input type="text" name="externo_ayudante_nombre" class="form-control" placeholder="Nombre completo" style="text-transform: uppercase;">
+                                        <input type="text" name="ayudante_externo" x-model="externo_ayudante" 
+                                            class="form-control" placeholder="Nombre completo" 
+                                            style="text-transform: uppercase;">
                                     </div>
                                 </div>
                             </div>
@@ -294,7 +320,7 @@
                     </div>
                 </template>
 
-                {{-- MODO FLETE (RESTAURADO) --}}
+                {{-- MODO FLETE (AJUSTADO CON CLIENTE OPCIONAL) --}}
                 <template x-if="modo === 'flete'">
                     <div class="card shadow-sm border-0">
                         <div class="card-header bg-white py-3 border-bottom">
@@ -302,17 +328,34 @@
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
+                                {{-- NUEVO: SELECT DE CLIENTE (OPCIONAL) --}}
+                                <div class="col-md-12 mb-2">
+                                    <label class="small fw-bold text-muted uppercase">Cliente (Opcional)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-orange"><i class="fas fa-user-tie text-orange"></i></span>
+                                        <select name="cliente_id" class="form-select border-orange fw-black text-uppercase" style="font-size: 12px;">
+                                            <option value="">-- MOVIMIENTO INTERNO (SIN CLIENTE) --</option>
+                                            @foreach($clientes as $cliente)
+                                                <option value="{{ $cliente->id }}" {{ old('cliente_id') == $cliente->id ? 'selected' : '' }}>
+                                                    {{ $cliente->nombre }} - {{ $cliente->rif }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <small class="text-muted italic" style="font-size: 14px;">Si es un flete interno de ImporDiesel, deje este campo en blanco.</small>
+                                </div>
+
                                 <div class="col-md-6">
                                     <label class="small fw-bold text-muted uppercase">Punto Salida</label>
-                                    <input type="text" name="punto_salida" class="form-control border-orange">
+                                    <input type="text" name="punto_salida" class="form-control border-orange uppercase fw-bold" style="font-size: 12px;" placeholder="EJ: Planta PDVSA El Palito">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="small fw-bold text-muted uppercase">Punto Llegada</label>
-                                    <input type="text" name="punto_llegada" class="form-control border-orange">
+                                    <input type="text" name="punto_llegada" class="form-control border-orange uppercase fw-bold" style="font-size: 12px;" placeholder="EJ: Sede Caracas, Boleíta">
                                 </div>
                                 <div class="col-12 mt-3">
-                                    <label class="small fw-bold text-muted uppercase">Observaciones</label>
-                                    <textarea name="observaciones" class="form-control border-light" rows="3"></textarea>
+                                    <label class="small fw-bold text-muted uppercase">Observaciones del Flete</label>
+                                    <textarea name="observaciones" class="form-control border-light" rows="3" placeholder="Detalles adicionales sobre el movimiento..."></textarea>
                                 </div>
                             </div>
                         </div>
@@ -336,7 +379,12 @@
     function constructorDeCarga(tipoModo) {
         return {
             modo: tipoModo,
+            tipoVehiculoSeleccionado: '',
             esPropio: '1',
+            vehiculo_externo: '',
+            cisterna_externo: '',
+            chofer_externo: '',
+            ayudante_externo: '',
             vehiculoId: '',
             cisternaId: '',
             capacidadMaxima: 0,
@@ -361,15 +409,37 @@
 
             cambioVehiculo(e) {
                 const opt = e.target.options[e.target.selectedIndex];
-                const cap = parseFloat(opt.dataset.capacidad || 0);
-                this.necesitaCisterna = (cap === 0);
-                this.capacidadMaxima = cap;
-                this.cisternaId = '';
+                if (!opt.value) {
+                    this.tipoVehiculoSeleccionado = '';
+                    this.capacidadMaxima = 0;
+                    this.necesitaCisterna = false;
+                    return;
+                }
+
+                this.tipoVehiculoSeleccionado = opt.dataset.tipo; 
+                const capVehiculo = parseFloat(opt.dataset.capacidad || 0);
+
+                if (this.tipoVehiculoSeleccionado == '3') {
+                    // ES CHUTO: La capacidad la dará la cisterna, no el chuto
+                    this.necesitaCisterna = true;
+                    this.capacidadMaxima = 0; 
+                } else {
+                    // ES TIPO 1: Es un camión rígido, usamos su propia capacidad
+                    this.necesitaCisterna = false;
+                    this.capacidadMaxima = capVehiculo;
+                }
+                
+                this.cisternaId = ''; // Resetear cisterna siempre que cambie el vehículo principal
             },
 
             cambioCisterna(e) {
                 const opt = e.target.options[e.target.selectedIndex];
-                this.capacidadMaxima = parseFloat(opt.dataset.capacidad || 0);
+                if (opt.value) {
+                    // Al seleccionar la cisterna, actualizamos la capacidad máxima con el valor de la cisterna
+                    this.capacidadMaxima = parseFloat(opt.dataset.capacidad || 0);
+                } else {
+                    this.capacidadMaxima = 0;
+                }
             },
 
             abrirModal() {

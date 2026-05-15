@@ -23,6 +23,7 @@ class ViajeRepository
             'tipoCombustible', 
             'detalles.cliente', 
             'vehiculo', 
+            'cisternaAcoplada',
             'chofer.persona',
             'ayudante.persona',
             'sede',
@@ -37,7 +38,7 @@ class ViajeRepository
 
     public function getPlanificacionesFiltradas($tipoPlanificacion = null)
     {
-        $query = Viaje::with(['sede', 'vehiculo', 'chofer']);
+        $query = Viaje::with(['sede', 'vehiculo', 'chofer', 'cisternaAcoplada']);
 
         if ($tipoPlanificacion) {
             $query->where('tipo_planificacion', $tipoPlanificacion);

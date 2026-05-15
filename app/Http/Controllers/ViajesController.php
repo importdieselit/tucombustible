@@ -665,7 +665,7 @@ public function update(Request $request, $id)
     {
 
        // 1. Consulta con las relaciones necesarias para el calendario
-        $query = Viaje::with(['chofer.persona', 'ayudante_chofer.persona', 'vehiculo', 'despachos.cliente', 'viaticos']);
+        $query = Viaje::with(['chofer.persona', 'ayudante.persona', 'vehiculo', 'despachos.cliente', 'viaticos']);
         $query->where('status', '!=', 'CANCELADO');
         
         $viajes = $query->get();
