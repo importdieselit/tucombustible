@@ -115,7 +115,7 @@ function renderDocMixto($valor) {
     </div>
 </div>
 
-<div class="modal fade" id="modalDoc" tabindex="-1" aria-hidden="true" style="z-index: 999999; margin-top:5%">
+<div class="modal fade ba" id="modalDoc" data-bs-backdrop="false"  tabindex="-1" aria-hidden="true" style="z-index: 100; margin-top:5%">
     <div class="modal-dialog modal-xl"> 
         <div class="modal-content">
             <div class="modal-header bg-dark text-white">
