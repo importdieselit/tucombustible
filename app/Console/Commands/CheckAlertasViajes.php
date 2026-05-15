@@ -55,10 +55,10 @@ class CheckAlertasViajes extends Command
                 $this->warn(" > Enviando alerta: Viaje #{$viaje->id}");
                 $tiempoRetraso = Carbon::now()->diffInMinutes($viaje->fecha_salida);
                  $mensaje = "ALERTA SALIDA: El viaje #{$viaje->id} a {$viaje->destino_ciudad} no tiene checklist tras {$tiempoRetraso} min.\n" .
-                    "• *Vehículo:* {$viaje->vehiculo->flota}\n" .
+                    "• *Vehículo:* {$viaje->vehiculo->flota} {$viaje->vehiculo->placa}\n" .
                     "• *Destino:* {$viaje->destino_ciudad}\n" .
                     "• *Fecha Salida:* {$viaje->fecha_salida->format('Y-m-d H:i')}\n" .
-                    "• *Conductor:* {$viaje->chofer->nombre}\n";
+                    "• *Conductor:* {$viaje->chofer->persona->nombre}\n";
 
                 $this->enviarAlerta($mensaje, $usuariosNotificar, $viaje);
                 $reporte['notificadas_salida']++;
@@ -105,12 +105,12 @@ class CheckAlertasViajes extends Command
 
             if (!$hasCheckIn) {
                 $tiempoRetraso = Carbon::now()->diffInMinutes($viaje->updated_at);
-                 $mensaje = "ALERTA RETORNO: El vehículo {$viaje->vehiculo->flota} Ingreso a la Sede pero el viaje #{$viaje->id} sigue 'EN RUTA' tras {$tiempoRetraso} min.\n" .
+                 $mensaje = "ALERTA RETORNO: El vehículo {$viaje->vehiculo->flota} {$viaje->vehiculo->placa} Ingreso a la Sede pero el viaje #{$viaje->id} sigue 'EN RUTA' tras {$tiempoRetraso} min.\n" .
                     "• *Destino:* {$viaje->destino_ciudad}\n" .
                     "• *Fecha ingreso:* {$viaje->vehiculo->updated_at->format('Y-m-d H:i')}\n" .
-                    "• *Conductor:* {$viaje->chofer->nombre}\n";
+                    "• *Conductor:* {$viaje->chofer->persona->nombre}\n";
 
-                $this->warn(" > Enviando alerta: Vehículo {$viaje->vehiculo->flota} inconsistente.");
+                $this->warn(" > Enviando alerta: Vehículo {$viaje->vehiculo->flota} {$viaje->vehiculo->placa} con viaje #{$viaje->id} inconsistente.");
                 $this->enviarAlerta($mensaje, $usuariosNotificar, $viaje);
                 $reporte['notificadas_retorno']++;
             }

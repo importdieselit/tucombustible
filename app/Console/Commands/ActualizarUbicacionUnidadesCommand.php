@@ -78,7 +78,7 @@ class ActualizarUbicacionUnidadesCommand extends Command
                     if ($distancia > $radioSede && $vehiculo->estatus == 1) {
                         $estatus = 2;
                         $viaje = $vehiculo->viajes()->where('status', 'Programado')->first();
-                        $chofer = $viaje ? $viaje->chofer()->persona()->first() : null;
+                        $chofer = $viaje ? $viaje->chofer()->first()->persona()->first() : null;
                         $nombre = $chofer ? $chofer->nombre.' con ' : null;
                         // --- NOTIFICACIÓN SELECTIVA WHATSAPP ---
                         $mensaje= "🚀 *SALIDA DETECTADA*: {$nombre}La Unidad {$vehiculo->flota} - {$vehiculo->placa} ha salido de la sede.";
