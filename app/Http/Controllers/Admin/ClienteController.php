@@ -10,6 +10,7 @@ use App\Services\GascoCupoService;
 use App\Models\Cliente;
 use App\Models\TipoCombustible;
 use App\Models\Pedido;
+use App\Models\Estado;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Redirect, Session, Log, Auth};
 
@@ -130,7 +131,7 @@ class ClienteController extends Controller
     public function create()
     {
         $tiposCombustible = TipoCombustible::all();
-        $estados          = \App\Models\Estado::orderBy('nombre')->get();
+        $estados          = Estado::orderBy('nombre')->get();
 
         return view('admin.cliente.create', compact('tiposCombustible', 'estados'));
     }
@@ -178,7 +179,7 @@ class ClienteController extends Controller
     public function edit($id)
     {
         $cliente = $this->clienteService->obtenerExpediente($id);
-        $estados = \App\Models\Estado::orderBy('nombre')->get();
+        $estados = Estado::orderBy('nombre')->get();
 
         return view('admin.cliente.edit', compact('cliente', 'estados'));
     }

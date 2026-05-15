@@ -27,7 +27,7 @@ class LogisticaController extends Controller
     public function index(Request $request)
     {
         // 1. Iniciamos la consulta con las relaciones necesarias
-        $query = Viaje::with(['tipoCombustible', 'detalles.cliente', 'sede']);
+        $query = Viaje::with(['tipoCombustible', 'detalles.cliente', 'sede', 'cisternaAcoplada', 'vehiculo']);
 
         // --- NUEVO: Filtro de Búsqueda por Cliente o RIF ---
         if ($request->filled('search_viaje')) {
@@ -83,14 +83,17 @@ class LogisticaController extends Controller
         // 2. Datasources comunes
         $tipos = TipoCombustible::all();
         $sedes = Sedes::where('estatus', true)->get();
-        $vehiculos = Vehiculo::select('id', 'placa', 'flota', 'carga_max', 'tipo')->get();
+        $vehiculos = Vehiculo::whereIn('tipo', ['1', '3'])
+            ->get();
+        $cisternas = Vehiculo::whereIn('tipo', ['2', '5'])
+            ->get();
         
         $personal = Chofer::with('persona')->get()->sortBy(function($chofer) {
             return $chofer->persona->nombre ?? '';
         });
 
         // 3. Inicializar colecciones
-        $clientes = collect();
+        $clientes = Cliente::orderBy('nombre', 'asc')->get();
         $pedidosPendientes = Pedido::where('estado', 'pendiente')->with('cliente')->get();
         $proveedores = collect();
         $muelles = DB::table('muelles')->orderBy('nombre')->get();
@@ -129,6 +132,7 @@ class LogisticaController extends Controller
             'tipos', 
             'sedes', 
             'vehiculos', 
+            'cisternas',
             'personal', 
             'clientes', 
             'pedidosPendientes', 

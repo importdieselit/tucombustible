@@ -12,8 +12,13 @@
         <div class="col-md-4">
             <label class="small text-muted fw-bold d-block text-uppercase">Vehículo / Cisterna</label>
             <span class="fw-bold">{{ $viaje->vehiculo->placa ?? $viaje->vehiculo_externo ?? 'S/A' }}</span>
+            
+            {{-- Cambiamos el acceso directo por la relación --}}
             @if($viaje->cisterna || $viaje->cisterna_externo)
-                <br><small class="text-muted">Cisterna: {{ $viaje->cisterna ?? $viaje->cisterna_externo }}</small>
+                <br>
+                <small class="text-muted">
+                    Cisterna: {{ $viaje->cisternaAcoplada->placa ?? $viaje->cisterna_externo ?? 'S/R' }}
+                </small>
             @endif
         </div>
         <div class="col-md-4">
