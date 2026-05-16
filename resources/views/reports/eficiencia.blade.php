@@ -13,7 +13,7 @@
     </div>
 
     <div class="card shadow mb-4">
-        <div class="card-header bg-primary text-white">Resumen Mes en Curso</div>
+        <div class="card-header bg-primary text-dark">Resumen Mes en Curso</div>
         <div class="card-body">
             <table class="table table-hover">
                 <thead>
@@ -42,7 +42,7 @@
     </div>
 
     <div class="card shadow">
-        <div class="card-header bg-secondary text-white">Histórico de Cierres</div>
+        <div class="card-header bg-secondary text-dark">Histórico de Cierres</div>
         <div class="card-body p-0">
             <table class="table mb-0">
                 <thead class="thead-light">
