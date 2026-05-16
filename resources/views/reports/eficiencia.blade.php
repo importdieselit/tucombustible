@@ -1,5 +1,57 @@
     @extends('layouts.app')
 
+  @push('styles')
+<style>
+    /* Estándar Visual TuCombustible - Versión High-Visibility */
+    .bg-chutos { background-color: #ff6600 !important; color: white; }
+    .bg-camiones { background-color: #ffc107 !important; color: #212529; }
+    .bg-cisternas { background-color: #198754 !important; color: white; }
+    .bg-camionetas { background-color: #2c3e50 !important; color: white; }
+    
+    .badge-std {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 16px; /* Más grande */
+        border-radius: 20px;
+        font-size: 14px; /* Aumentado */
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .card-master {
+        border-radius: 20px; /* Más redondeado */
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        border: none;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Tipografía de Lectura Rápida */
+    .mega-text {
+        font-size: 3.5rem !important; /* Impacto total */
+        font-weight: 900 !important;
+        line-height: 1;
+        margin: 10px 0;
+    }
+
+    .kpi-label {
+        font-size: 1.1rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .sub-kpi {
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    .table-text {
+        font-size: 1.1rem !important;
+    }
+</style>
+@endpush
+
 
     @section('content')
 
