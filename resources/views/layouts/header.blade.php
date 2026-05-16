@@ -6,7 +6,13 @@
         </button>
 
         <button type="button" id="backOneStepButton" class="btn btn-outline-primary me-2 border-0" title="Volver a la página anterior" onclick="window.history.back();">
-            <i class="fa fa-back fs-3"></i>
+            <i class="fa fa-arrow-left fs-3"></i>
+        </button>
+        <button type="button" id="reloadButton" class="btn btn-outline-primary me-2 border-0" title="Recargar página" onclick="window.location.reload();">
+            <i class="fa fa-sync fs-3"></i>
+        </button>
+        <button type="button" id="forwardOneStepButton" class="btn btn-outline-primary me-2 border-0" title="Avanzar a la página siguiente" onclick="window.history.forward();">
+            <i class="fa fa-forward fs-3"></i>
         </button>
 
         <a class="navbar-brand d-flex align-items-center d-md-none" href="{{ route('dashboard') }}">
