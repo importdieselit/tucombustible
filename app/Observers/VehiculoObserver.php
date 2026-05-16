@@ -78,73 +78,124 @@ class VehiculoObserver
 
     public function updated(Vehiculo $vehiculo)
     {
-        // CASO 2: Cambio a EN RUTA (2) sin checklist previo
-        if ($vehiculo->isDirty('estatus')) {
-            if ($vehiculo->estatus == 2) { // Si el nuevo estatus es "En Ruta"
-                Log::info("Vehículo {$vehiculo->id} ha cambiado a EN RUTA. Verificando checklist...");
-                if($vehiculo->acoplado_id) {
-                    Log::info("Vehículo {$vehiculo->id} tiene acoplado ID {$vehiculo->acoplado_id}. Verificando checklist para ambos...");
-                    $vehiculoAcoplado = Vehiculo::find($vehiculo->acoplado_id);
-                    if ($vehiculoAcoplado) {
-                        $vehiculoAcoplado->estatus = 2;
-                        $vehiculoAcoplado->save();
-                    }
-                }
+        if (!$vehiculo->isDirty('estatus')) {
+            return;
+        }
+
+        // CASO 2: Cambio a EN RUTA (2)
+        if ($vehiculo->estatus == 2) {
+            Log::info("Vehículo {$vehiculo->id} ha cambiado a EN RUTA. Verificando checklist...");
             
-                // Buscamos el viaje programado para este vehículo hoy
-                $viaje = Viaje::with('chofer', 'vehiculo', 'chofer.persona','despachos.cliente')
-                    ->where('vehiculo_id', $vehiculo->id)
-                    ->where('status', 'Programado')
-                    ->whereDate('fecha_salida', now()->toDateString())
-                    ->first();
+            // Sincronizar acoplado si existe
+            if ($vehiculo->acoplado_id) {
+                $vehiculoAcoplado = Vehiculo::find($vehiculo->acoplado_id);
+                if ($vehiculoAcoplado) {
+                    $vehiculoAcoplado->estatus = 2;
+                    $vehiculoAcoplado->saveQuietly(); // Disparará el observer del acoplado de forma aislada para evitar loops
+                }
+            }
 
-                if ($viaje) {
-                    $viaje->status = 'EN RUTA';
-                    $viaje->save();
+            // Buscamos el viaje programado más próximo (eliminamos restricciones rígidas de fecha y relaciones huérfanas)
+            $viaje = Viaje::with(['chofer.persona'])
+                ->where('vehiculo_id', $vehiculo->id)
+                ->where('status', 'Programado')
+                ->orderBy('fecha_salida', 'asc') // El más antiguo o próximo a salir primero
+                ->first();
 
-                    $hasChecklist = Inspeccion::where('viaje_id', $viaje->id)
-                        ->whereNull('respuesta_in')
-                        ->exists();
+            if ($viaje) {
+                $viaje->status = 'EN RUTA';
+                $viaje->fecha_salida_real = now();
+                $viaje->save();
 
+                // Validar Checklists
+                $hasChecklist = Inspeccion::where('viaje_id', $viaje->id)
+                    ->whereNull('respuesta_in')
+                    ->exists();
+
+                if (!$hasChecklist) {
                     $hasChecklist2 = Inspeccion::where('vehiculo_id', $viaje->vehiculo_id)
                         ->where('created_at', '>=', now()->subHours(2))
                         ->whereNull('respuesta_in')
                         ->first();
                     
-                    if($hasChecklist2){
+                    if ($hasChecklist2) {
                         $hasChecklist2->viaje_id = $viaje->id;
                         $hasChecklist2->save();
                         $hasChecklist = true;
                     }
+                }
 
-                    // Si no tiene checklist de salida ni checkin, es un incumplimiento claro
-                    if (!$hasChecklist) {
-                        $usuariosNotificar = [1, 2];
-                        foreach ($usuariosNotificar as $userId) {
-                            FcmNotificationService::enviarNotification(
-                                "INCUMPLIMIENTO DE PROCESO",
-                                "El vehículo {$vehiculo->flota} pasó a estado EN RUTA sin completar el checklist de salida para el viaje #{$viaje->id}.",
-                                ['viaje_id' => $viaje->id,'user_id' => $userId]
-                            );
-                            // whatsapp
-                            $message = 
-                                "*⚠️ INCUMPLIMIENTO DE PROCESO ⚠️*\n\n" .
-                                "El vehículo {$vehiculo->flota} {$vehiculo->placa} pasó a estado EN RUTA sin completar el checklist de salida para el viaje #{$viaje->id}.\n" .
-                                "• *Destino:* {$viaje->destino_ciudad}\n" .
-                                "• *Chofer:* {$viaje->chofer->persona->nombre}\n" .
-                                "• *Fecha de Salida:* {$viaje->fecha_salida->format('d/m/Y H:i')}\n\n" .
-                                "*Acción Requerida:* Revisar el proceso con el conductor y asegurar cumplimiento en futuros viajes.";
-                            $this->whatsappService->enviarMensaje($message, config('services.whatsapp.group_operaciones'));
-                        }
+                // Si se confirma el incumplimiento
+                if (!$hasChecklist) {
+                    $usuariosNotificar = [1, 2];
+                    
+                    // 1. Notificaciones push individuales (van dentro del bucle)
+                    foreach ($usuariosNotificar as $userId) {
+                        FcmNotificationService::enviarNotification(
+                            "INCUMPLIMIENTO DE PROCESO",
+                            "El vehículo {$vehiculo->flota} pasó a estado EN RUTA sin completar el checklist de salida para el viaje #{$viaje->id}.",
+                            ['viaje_id' => $viaje->id, 'user_id' => $userId]
+                        );
                     }
+
+                    // 2. Notificación única al grupo de WhatsApp (VA FUERA DEL BUCLE)
+                    $message = "*⚠️ INCUMPLIMIENTO DE PROCESO ⚠️*\n\n" .
+                        "El vehículo *{$vehiculo->flota}* ({$vehiculo->placa}) pasó a estado EN RUTA sin completar el checklist de salida para el viaje #{$viaje->id}.\n" .
+                        "• *Destino:* {$viaje->destino_ciudad}\n" .
+                        "• *Chofer:* {$viaje->chofer->persona->nombre}\n" .
+                        "• *Fecha Programada:* {$viaje->fecha_salida->format('d/m/Y H:i')}\n\n" .
+                        "*Acción Requerida:* Revisar el proceso con el conductor y asegurar cumplimiento.";
+                    
+                    $this->whatsappService->enviarMensaje($message, config('services.whatsapp.group_operaciones'));
                 }
-            } elseif ($vehiculo->estatus == 1) { // Si el nuevo estatus es "Disponible"
-                // Desacoplar cualquier cisterna asociada
-                if($vehiculo->acoplado_id) {
-                    Vehiculo::where('id', $vehiculo->acoplado_id)->update(['estatus' => 1, 'acoplado_id' => null]);
-                    $vehiculo->acoplado_id = null;
-                    $vehiculo->save();
+            }
+        } 
+        
+        // CASO 1: Cambio a Disponible (1)
+        elseif ($vehiculo->estatus == 1 && $vehiculo->getOriginal('estatus') == 2) {
+    
+            Log::info("Vehículo {$vehiculo->id} regresó de ruta. Procesando cierre operativo...");
+
+            // 1. Procesar vehículo acoplado disparando su propio ciclo de eventos y observers
+            if ($vehiculo->acoplado_id) {
+                $vehiculoAcoplado = Vehiculo::find($vehiculo->acoplado_id);
+                
+                if ($vehiculoAcoplado) {
+                    Log::info("Desacoplando y liberando cisterna ID {$vehiculoAcoplado->id}. Disparando eventos de validación...");
+                    
+                    $vehiculoAcoplado->estatus = 1;
+                    $vehiculoAcoplado->acoplado_id = null;
+                    $vehiculoAcoplado->saveQuietly(); 
                 }
+
+                // Limpiamos la relación en el vehículo principal
+                $vehiculo->acoplado_id = null;
+                $vehiculo->saveQuietly(); // Evita bucles infinitos en el modelo actual
+            }
+
+            // 2. Buscar el viaje activo 'EN RUTA' cargando chofer y persona para la notificación
+            $viajeEnRuta = Viaje::with(['chofer.persona'])
+                ->where('vehiculo_id', $vehiculo->id)
+                ->where('status', 'EN RUTA')
+                ->first();
+
+            if ($viajeEnRuta) {
+                $viajeEnRuta->status = 'COMPLETADO';
+                $viajeEnRuta->fecha_llegada = now();
+                $viajeEnRuta->save();
+
+                Log::info("Viaje #{$viajeEnRuta->id} completado automáticamente por liberación de unidad.");
+
+                // 3. Notificación única al grupo de WhatsApp (Formato Corporativo)
+                $message = "*✅ RETORNO Y CIERRE DE VIAJE ✅*\n\n" .
+                    "El vehículo *{$vehiculo->flota}* ({$vehiculo->placa}) ha retornado a la Sede de forma segura.\n\n" .
+                    "• *Viaje Cerrado:* #{$viajeEnRuta->id}\n" .
+                    "• *Procedencia:* {$viajeEnRuta->destino_ciudad}\n" .
+                    "• *Chofer:* {$viajeEnRuta->chofer->persona->nombre}\n" .
+                    "• *Hora de Llegada:* {$viajeEnRuta->fecha_llegada->format('d/m/Y H:i A')}\n\n" .
+                    "*Estatus Actual:* El viaje ha sido consolidado como *Completado* Atencion Chofer Realizar Checklist de Llegada para cerrar el proceso operativo.";
+                
+                $this->whatsappService->enviarMensaje($message, config('services.whatsapp.group_operaciones'));
             }
         }
     }

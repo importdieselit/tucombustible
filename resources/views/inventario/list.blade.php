@@ -36,9 +36,6 @@
                         @foreach($almacenes ?? [] as $almacen)
                             <option value="{{ $almacen->nombre }}">{{ $almacen->nombre }}</option>
                         @endforeach
-                        {{-- Opciones estáticas si no vienen del controller --}}
-                        <option value="Principal - Boleita">Principal - Boleita</option>
-                        <option value="Taller Externo">Taller Externo</option>
                     </select>
                 </div>
                 <div class="col-md-8 text-end pt-4">

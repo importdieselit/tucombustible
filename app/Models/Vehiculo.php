@@ -122,7 +122,9 @@ class Vehiculo extends Model
         'acoplado_id',
         'chofer_id',
         'latitud',
-        'longitud'
+        'longitud',
+        'fecha_salida_real',
+        'fecha_llegada',
     ];
     /**
      * The attributes that should be cast to native types.
@@ -164,6 +166,8 @@ class Vehiculo extends Model
         'facturacion_completa' => 'boolean', // Si aplicara, basado en otro contexto si no fuera booleano nativo
         'acoplado_id' => 'integer', // bigint unsigned
         'chofer_id' => 'integer', // bigint unsigned
+        'fecha_salida_real' => 'datetime',
+        'fecha_llegada' => 'datetime',
     ];
 
     public $ignorarEnBitacora = ['latitud', 'longitud','updated_at'];
