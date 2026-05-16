@@ -1,3 +1,8 @@
+    @extends('layouts.app')
+
+
+    @section('content')
+
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Reporte de Eficiencia - Checklist</h2>
@@ -62,3 +67,4 @@
         </div>
     </div>
 </div>
+@endsection
