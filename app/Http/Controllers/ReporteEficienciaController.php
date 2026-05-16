@@ -19,13 +19,13 @@ class ReporteEficienciaController extends Controller {
 
         $reporteActual = DB::table('reporte_eficiencia_actual as r')
             ->join('users as u', 'r.usuario_id', '=', 'u.id')
-            ->join('personas as p', 'u.persona_id', '=', 'p.id')
+            ->join('personas as p', 'u.id_persona', '=', 'p.id')
             ->select('p.nombre as name', 'r.*')
             ->get();
 
         $historico = DB::table('historico_eficiencia_checklist as h')
             ->join('users as u', 'h.usuario_id', '=', 'u.id')
-            ->join('personas as p', 'u.persona_id', '=', 'p.id')
+            ->join('personas as p', 'u.id_persona', '=', 'p.id')
             ->select('p.nombre as name', 'h.*')
             ->orderBy('h.periodo', 'desc')
             ->get();
