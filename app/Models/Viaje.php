@@ -102,4 +102,8 @@ class Viaje extends Model
     {
         return $this->hasMany(CompraCombustible::class, 'viaje_id');
     }
+    public function inspecciones(): HasMany
+    {
+        return $this->hasMany(Inspeccion::class, 'viaje_id');
+    }
 }

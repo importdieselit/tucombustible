@@ -13,25 +13,25 @@ class CheckAlertasViajes extends Command
 {
     protected $signature = 'viajes:check-alertas';
     protected $description = 'Evalúa retrasos en salidas y retornos de viajes con reporte en consola';
-    
 
     public function handle()
     {
-         $baseUrl = rtrim(config('services.whatsapp.url'), '/');
+        $baseUrl = rtrim(config('services.whatsapp.url'), '/');
         $tokenWA = config('services.whatsapp.key');
         $endpoint = "{$baseUrl}/messages/chat?token={$tokenWA}";
-        // Evitar que el comando se ejecute si ya hay una instancia activa (Previene duplicidad por tiempo)
-        // Nota: Requiere cache driver configurado en Laravel
+        
         $this->info("Iniciando verificación de alertas operativas: " . now()->toDateTimeString());
         
-        // IDs de usuarios a notificar
+        // IDs de usuarios a notificar de forma individual vía Push (FCM)
         $usuariosNotificar = [1, 504, 495]; 
         $reporte = ['salidas' => 0, 'notificadas_salida' => 0, 'retornos' => 0, 'notificadas_retorno' => 0];
 
         // --- CASO 1: SALIDAS RETRASADAS ---
         $this->comment("Verificando salidas programadas (30 min de tolerancia)...");
         
-        $viajesRetrasados = Viaje::where('status', 'Programado')
+        // Optimización: Incorporación de Eager Loading para prevenir fugas de rendimiento en el ciclo foreach
+        $viajesRetrasados = Viaje::with(['vehiculo', 'chofer.persona'])
+            ->where('status', 'Programado')
             ->where('fecha_salida', '<=', now()->subMinutes(30))
             ->get();
 
@@ -53,67 +53,79 @@ class CheckAlertasViajes extends Command
 
             if (!$hasChecklist) {
                 $this->warn(" > Enviando alerta: Viaje #{$viaje->id}");
-                $tiempoRetraso = Carbon::now()->diffInMinutes($viaje->fecha_salida);
-                 $mensaje = "ALERTA SALIDA: El viaje #{$viaje->id} a {$viaje->destino_ciudad} no tiene checklist tras {$tiempoRetraso} min.\n" .
-                    "• *Vehículo:* {$viaje->vehiculo->flota} {$viaje->vehiculo->placa}\n" .
+                $tiempoRetraso = now()->diffInMinutes($viaje->fecha_salida);
+                
+                $mensajeSalida = "*🚨 ALERTA SALIDA RETRASADA 🚨*\n\n" .
+                    "El viaje *#{$viaje->id}* con destino a *{$viaje->destino_ciudad}* no registra checklist Ni ha salido de las instalaciones tras *{$tiempoRetraso} min* de retraso.\n\n" .
+                    "• *Vehículo:* {$viaje->vehiculo->flota} ({$viaje->vehiculo->placa})\n" .
                     "• *Destino:* {$viaje->destino_ciudad}\n" .
-                    "• *Fecha Salida:* {$viaje->fecha_salida->format('Y-m-d H:i')}\n" .
-                    "• *Conductor:* {$viaje->chofer->persona->nombre}\n";
+                    "• *Fecha Salida Programada:* {$viaje->fecha_salida->format('d/m/Y H:i A')}\n" .
+                    "• *Conductor:* {$viaje->chofer->persona->nombre}\n".
+                    "• *ACCION RECOMENDADAS:* Verificar motivo del retraso y Exigir la ejecución inmediata del checklist de salida y la partida física de la Unidad o realizar las correcciones necesarias en la planificacion para evitar impactos en la cadena logística.";
 
-                $this->enviarAlerta($mensaje, $usuariosNotificar, $viaje);
+                // Envío de alertas Push
+                $this->enviarAlerta($mensajeSalida, $usuariosNotificar, $viaje);
                 $reporte['notificadas_salida']++;
 
-                $response = Http::asForm()
-                            ->withoutVerifying() // Equivalente a CURLOPT_SSL_VERIFYPEER => 0
-                            ->post($endpoint, [
-                                'token'      => $tokenWA,
-                                'to'         => config('services.whatsapp.group_operaciones'),
-                                'body'       => $mensaje,
-                                'priority'   => 1, // Importante si lo tenías en el script original
-                                'referenceId' => '',
-                            ]);
-                if ($response->successful() && ($response->json()['sent'] ?? '') == 'true') {
-                    $this->info("✅ notificacion enviada.");
-                } else {
-                    $this->error("❌ Error enviando " . $response->body());
-                }
+                // Notificación única al grupo de operaciones de WhatsApp (Fuera de bucles redundantes)
+                Http::asForm()
+                    ->withoutVerifying()
+                    ->post($endpoint, [
+                        'token'       => $tokenWA,
+                        'to'          => config('services.whatsapp.group_operaciones'),
+                        'body'        => $mensajeSalida,
+                        'priority'    => 1,
+                        'referenceId' => '',
+                    ]);
             }
         }
 
         $this->newLine();
 
-        // --- CASO 3: RETORNOS SIN CERRAR ---
-        $this->comment("Verificando retornos inconsistentes (1h de retraso)...");
+        // --- CASO 3: RETORNOS COMPLETADOS SIN CHECK-IN ---
+        $this->comment("Verificando viajes COMPLETADOS sin Checklist de Entrada (1h de tolerancia)...");
 
-        $viajesSinCerrar = Viaje::where('status', 'EN RUTA')
-            ->whereHas('vehiculo', function($q) { $q->where('estatus', 1); })
-            ->where('updated_at', '<=', now()->subHour())
+        // Optimización: Filtrado masivo desde base de datos. Se eliminó la doble consulta interna por registro.
+        $viajesSinCheckIn = Viaje::with(['vehiculo', 'chofer.persona'])
+            ->where('status', 'COMPLETADO')
+            ->whereNotNull('fecha_llegada')
+            ->where('fecha_llegada', '<=', now()->subHour())
+            ->whereHas('inspecciones', function($q) {
+                $q->whereNull('respuesta_in');
+            })
             ->get();
 
-        foreach ($viajesSinCerrar as $viaje) {
+        $this->info("Viajes completados sin check-in encontrados: " . $viajesSinCheckIn->count());
+
+        foreach ($viajesSinCheckIn as $viaje) {
             $reporte['retornos']++;
 
-            $hasCheckIn = Inspeccion::where(function($query) use ($viaje) {
-                $query->where('viaje_id', $viaje->id)
-                      ->orWhere(function($q) use ($viaje) {
-                          $q->where('vehiculo_id', $viaje->vehiculo_id)
-                            ->where('created_at', '>=', now()->subHour());
-                      });
-            })
-            ->whereNotNull('respuesta_in')
-            ->exists();
+            // Uso estricto de la fecha inmutable registrada por el Observer o la Telemetría
+            $tiempoRetraso = now()->diffInMinutes($viaje->fecha_llegada);
+            
+            $mensajeRetorno = "*🚨 ALERTA: RETORNO SIN CHECK-IN 🚨*\n\n" .
+                "El viaje *#{$viaje->id}* fue marcado como *COMPLETADO* (Unidad Liberada), pero el conductor aún no ha realizado el Checklist de Entrada tras *{$tiempoRetraso} min* desde su llegada física.\n\n" .
+                "• *Vehículo:* {$viaje->vehiculo->flota} ({$viaje->vehiculo->placa})\n" .
+                "• *Procedencia:* {$viaje->destino_ciudad}\n" .
+                "• *Hora de Llegada Real:* {$viaje->fecha_llegada->format('d/m/Y H:i A')}\n" .
+                "• *Conductor:* {$viaje->chofer->persona->nombre}\n\n" .
+                "*Acción Requerida:* Exigir la ejecución inmediata del checklist de entrada para cerrar el ciclo de auditoría.";
 
-            if (!$hasCheckIn) {
-                $tiempoRetraso = Carbon::now()->diffInMinutes($viaje->updated_at);
-                 $mensaje = "ALERTA RETORNO: El vehículo {$viaje->vehiculo->flota} {$viaje->vehiculo->placa} Ingreso a la Sede pero el viaje #{$viaje->id} sigue 'EN RUTA' tras {$tiempoRetraso} min.\n" .
-                    "• *Destino:* {$viaje->destino_ciudad}\n" .
-                    "• *Fecha ingreso:* {$viaje->vehiculo->updated_at->format('Y-m-d H:i')}\n" .
-                    "• *Conductor:* {$viaje->chofer->persona->nombre}\n";
+            $this->warn(" > Enviando alerta: Check-in pendiente para el viaje #{$viaje->id}");
+            
+            // Envío de alertas Push
+            $this->enviarAlerta($mensajeRetorno, $usuariosNotificar, $viaje);
+            $reporte['notificadas_retorno']++;
 
-                $this->warn(" > Enviando alerta: Vehículo {$viaje->vehiculo->flota} {$viaje->vehiculo->placa} con viaje #{$viaje->id} inconsistente.");
-                $this->enviarAlerta($mensaje, $usuariosNotificar, $viaje);
-                $reporte['notificadas_retorno']++;
-            }
+            // Notificación única al grupo de operaciones de WhatsApp
+            Http::asForm()
+                ->withoutVerifying()
+                ->post($endpoint, [
+                    'token'    => $tokenWA,
+                    'to'       => config('services.whatsapp.group_operaciones'),
+                    'body'     => $mensajeRetorno,
+                    'priority' => 1,
+                ]);
         }
 
         $this->renderResumen($reporte);
@@ -121,8 +133,6 @@ class CheckAlertasViajes extends Command
 
     private function enviarAlerta($mensaje, $usuarios, $viaje)
     {
-        // IMPORTANTE: Verifica si tu Service ya acepta un array de IDs 
-        // para evitar el foreach aquí, que es lo que multiplica los envíos.
         foreach ($usuarios as $userId) {
             FcmNotificationService::enviarNotification(
                 "Seguridad Operativa",
@@ -140,7 +150,7 @@ class CheckAlertasViajes extends Command
             ['Categoría', 'Encontrados', 'Alertas Disparadas'],
             [
                 ['Salidas Retrasadas', $reporte['salidas'], $reporte['notificadas_salida']],
-                ['Retornos Inconsistentes', $reporte['retornos'], $reporte['notificadas_retorno']],
+                ['Retornos Inconsistentes (Sin Check-In)', $reporte['retornos'], $reporte['notificadas_retorno']],
             ]
         );
     }
