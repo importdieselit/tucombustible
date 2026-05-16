@@ -11,6 +11,7 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Notifications\OrdenTrabajoCreada;
 use App\Models\User;
 use App\Models\Orden;
+use App\Http\Controllers\ReporteEficienciaController;
 use App\Http\Controllers\{
     DashboardController, VehiculoController, MarcaController, ModeloController,
     OrdenController, TanqueController, MovimientoCombustibleController,
@@ -102,7 +103,12 @@ Route::middleware(['auth'])->group(function () {
 
     // Reportes y OT
     Route::put('reportes/{reporte}/estatus', [ReporteController::class, 'updateStatus'])->name('reportes.update.estatus'); 
-    Route::post('reportes/{reporte}/generarot', [ReporteController::class, 'generarOT'])->name('reportes.generarot');   
+    Route::post('reportes/{reporte}/generarot', [ReporteController::class, 'generarOT'])->name('reportes.generarot');  
+    
+    Route::prefix('reportes/eficiencia')->group(function () {
+        Route::get('/', [ReporteEficienciaController::class, 'index'])->name('reporte.eficiencia');
+        Route::post('/cerrar', [ReporteEficienciaController::class, 'cerrarMes'])->name('reporte.eficiencia.cerrar');
+    });
         
     // Depósitos y Aforo
     Route::get('/depositos/{deposito}/aforo', [AforoController::class, 'showAforoTable'])->name('depositos.aforo.show');
