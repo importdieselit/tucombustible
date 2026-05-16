@@ -12,7 +12,7 @@
             <i class="fa fa-sync fs-3"></i>
         </button>
         <button type="button" id="forwardOneStepButton" class="btn btn-outline-primary me-2 border-0" title="Avanzar a la página siguiente" onclick="window.history.forward();">
-            <i class="fa fa-forward fs-3"></i>
+            <i class="fa fa-arrow-right fs-3"></i>
         </button>
 
         <a class="navbar-brand d-flex align-items-center d-md-none" href="{{ route('dashboard') }}">
