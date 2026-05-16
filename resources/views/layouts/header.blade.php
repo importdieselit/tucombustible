@@ -8,6 +8,9 @@
         <button type="button" id="backOneStepButton" class="btn btn-outline-primary me-2 border-0" title="Volver a la página anterior" onclick="window.history.back();">
             <i class="fa fa-arrow-left fs-3"></i>
         </button>
+        <button type="button" id="goHomeButton" class="btn btn-outline-primary me-2 border-0" title="Ir a la página de inicio" onclick="window.location.href = '{{ route('dashboard') }}';">
+            <i class="fa fa-home fs-3"></i>
+        </button>
         <button type="button" id="reloadButton" class="btn btn-outline-primary me-2 border-0" title="Recargar página" onclick="window.location.reload();">
             <i class="fa fa-sync fs-3"></i>
         </button>
