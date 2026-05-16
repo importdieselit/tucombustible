@@ -273,7 +273,7 @@ class InspeccionController extends Controller
 
             $latSede = 10.48834308128781;
             $lngSede = -66.82329619185627;
-            $radioSede = 0.150; // 150 metros en km (aprox)
+            $radioSede = 0.200; // 200 metros en km (aprox)
 
             if (isset($vehiculo->latitud) && isset($vehiculo->longitud)) {
                 $distancia = $this->calcularDistancia($vehiculo->latitud, $vehiculo->longitud, $latSede, $lngSede);

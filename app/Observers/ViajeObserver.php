@@ -53,8 +53,8 @@ class ViajeObserver
             if ($viejoStatus === 'Programado' && $nuevoStatus === 'EN RUTA') {
                 $this->actualizarEstatusFlota($viaje, 2);
             } elseif ($nuevoStatus === 'COMPLETADO') {
-                Vehiculo::where('id', $viaje->vehiculo_id)->update(['acoplado_id' => null]);
                 $this->actualizarEstatusFlota($viaje, 1);
+                Vehiculo::where('id', $viaje->vehiculo_id)->update(['acoplado_id' => null]);
             }
         }
     }

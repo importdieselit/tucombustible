@@ -23,7 +23,7 @@ class ActualizarUbicacionUnidadesCommand extends Command
 
     $latSede = 10.48834308128781;
     $lngSede = -66.82329619185627;
-    $radioSede = 0.150; // 150 metros en km (aprox)
+    $radioSede = 0.200; // 200 metros en km (aprox)
     $baseUrl = rtrim(config('services.whatsapp.url'), '/');
     $tokenWA = config('services.whatsapp.key');
     $endpoint = "{$baseUrl}/messages/chat?token={$tokenWA}";

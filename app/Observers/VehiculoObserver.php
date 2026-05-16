@@ -82,6 +82,14 @@ class VehiculoObserver
         if ($vehiculo->isDirty('estatus')) {
             if ($vehiculo->estatus == 2) { // Si el nuevo estatus es "En Ruta"
                 Log::info("Vehículo {$vehiculo->id} ha cambiado a EN RUTA. Verificando checklist...");
+                if($vehiculo->acoplado_id) {
+                    Log::info("Vehículo {$vehiculo->id} tiene acoplado ID {$vehiculo->acoplado_id}. Verificando checklist para ambos...");
+                    $vehiculoAcoplado = Vehiculo::find($vehiculo->acoplado_id);
+                    if ($vehiculoAcoplado) {
+                        $vehiculoAcoplado->estatus = 2;
+                        $vehiculoAcoplado->save();
+                    }
+                }
             
                 // Buscamos el viaje programado para este vehículo hoy
                 $viaje = Viaje::with('chofer', 'vehiculo', 'chofer.persona','despachos.cliente')
@@ -130,8 +138,13 @@ class VehiculoObserver
                         }
                     }
                 }
-            } else {
-                return; // Si no es cambio a En Ruta, no hacemos nada
+            } elseif ($vehiculo->estatus == 1) { // Si el nuevo estatus es "Disponible"
+                // Desacoplar cualquier cisterna asociada
+                if($vehiculo->acoplado_id) {
+                    Vehiculo::where('id', $vehiculo->acoplado_id)->update(['estatus' => 1, 'acoplado_id' => null]);
+                    $vehiculo->acoplado_id = null;
+                    $vehiculo->save();
+                }
             }
         }
     }

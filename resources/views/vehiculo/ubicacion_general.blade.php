@@ -148,7 +148,7 @@
 
         // COORDENADAS DE LA SEDE
         const sedeCoords = L.latLng(10.48834308128781, -66.82329619185627);
-        const RADIO_SEDE_METROS = 100;
+        const RADIO_SEDE_METROS = 200;
 
         function initMap() {
             map = L.map('map', { attributionControl: false, fullscreenControl: true })
