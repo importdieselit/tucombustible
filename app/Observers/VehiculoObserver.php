@@ -79,51 +79,59 @@ class VehiculoObserver
     public function updated(Vehiculo $vehiculo)
     {
         // CASO 2: Cambio a EN RUTA (2) sin checklist previo
-        if ($vehiculo->isDirty('estatus') && $vehiculo->estatus == 2) {
+        if ($vehiculo->isDirty('estatus')) {
+            if ($vehiculo->estatus == 2) { // Si el nuevo estatus es "En Ruta"
+                Log::info("Vehículo {$vehiculo->id} ha cambiado a EN RUTA. Verificando checklist...");
             
-            // Buscamos el viaje programado para este vehículo hoy
-            $viaje = Viaje::with('chofer', 'vehiculo', 'chofer.persona','despachos.cliente')
-                ->where('vehiculo_id', $vehiculo->id)
-                ->where('status', 'Programado')
-                ->whereDate('fecha_salida', now()->toDateString())
-                ->first();
-
-            if ($viaje) {
-                $hasChecklist = Inspeccion::where('viaje_id', $viaje->id)
-                    ->whereNull('respuesta_in')
-                    ->exists();
-
-                $hasChecklist2 = Inspeccion::where('vehiculo_id', $viaje->vehiculo_id)
-                    ->where('created_at', '>=', now()->subHours(2))
-                    ->whereNull('respuesta_in')
+                // Buscamos el viaje programado para este vehículo hoy
+                $viaje = Viaje::with('chofer', 'vehiculo', 'chofer.persona','despachos.cliente')
+                    ->where('vehiculo_id', $vehiculo->id)
+                    ->where('status', 'Programado')
+                    ->whereDate('fecha_salida', now()->toDateString())
                     ->first();
-                
-                if($hasChecklist2){
-                    $hasChecklist2->viaje_id = $viaje->id;
-                    $hasChecklist2->save();
-                    $hasChecklist = true;
-                }
 
-                 // Si no tiene checklist de salida ni checkin, es un incumplimiento claro
-                if (!$hasChecklist) {
-                    $usuariosNotificar = [1, 2];
-                    foreach ($usuariosNotificar as $userId) {
-                        FcmNotificationService::enviarNotification(
-                            "INCUMPLIMIENTO DE PROCESO",
-                            "El vehículo {$vehiculo->flota} pasó a estado EN RUTA sin completar el checklist de salida para el viaje #{$viaje->id}.",
-                            ['viaje_id' => $viaje->id,'user_id' => $userId]
-                        );
-                        // whatsapp
-                        $message = 
-                            "*⚠️ INCUMPLIMIENTO DE PROCESO ⚠️*\n\n" .
-                            "El vehículo {$vehiculo->flota} {$vehiculo->placa} pasó a estado EN RUTA sin completar el checklist de salida para el viaje #{$viaje->id}.\n" .
-                            "• *Destino:* {$viaje->destino_ciudad}\n" .
-                            "• *Chofer:* {$viaje->chofer->persona->nombre}\n" .
-                            "• *Fecha de Salida:* {$viaje->fecha_salida->format('d/m/Y H:i')}\n\n" .
-                            "*Acción Requerida:* Revisar el proceso con el conductor y asegurar cumplimiento en futuros viajes.";
-                        $this->whatsappService->enviarMensaje($message, config('services.whatsapp.group_operaciones'));
+                if ($viaje) {
+                    $viaje->status = 'EN RUTA';
+                    $viaje->save();
+
+                    $hasChecklist = Inspeccion::where('viaje_id', $viaje->id)
+                        ->whereNull('respuesta_in')
+                        ->exists();
+
+                    $hasChecklist2 = Inspeccion::where('vehiculo_id', $viaje->vehiculo_id)
+                        ->where('created_at', '>=', now()->subHours(2))
+                        ->whereNull('respuesta_in')
+                        ->first();
+                    
+                    if($hasChecklist2){
+                        $hasChecklist2->viaje_id = $viaje->id;
+                        $hasChecklist2->save();
+                        $hasChecklist = true;
+                    }
+
+                    // Si no tiene checklist de salida ni checkin, es un incumplimiento claro
+                    if (!$hasChecklist) {
+                        $usuariosNotificar = [1, 2];
+                        foreach ($usuariosNotificar as $userId) {
+                            FcmNotificationService::enviarNotification(
+                                "INCUMPLIMIENTO DE PROCESO",
+                                "El vehículo {$vehiculo->flota} pasó a estado EN RUTA sin completar el checklist de salida para el viaje #{$viaje->id}.",
+                                ['viaje_id' => $viaje->id,'user_id' => $userId]
+                            );
+                            // whatsapp
+                            $message = 
+                                "*⚠️ INCUMPLIMIENTO DE PROCESO ⚠️*\n\n" .
+                                "El vehículo {$vehiculo->flota} {$vehiculo->placa} pasó a estado EN RUTA sin completar el checklist de salida para el viaje #{$viaje->id}.\n" .
+                                "• *Destino:* {$viaje->destino_ciudad}\n" .
+                                "• *Chofer:* {$viaje->chofer->persona->nombre}\n" .
+                                "• *Fecha de Salida:* {$viaje->fecha_salida->format('d/m/Y H:i')}\n\n" .
+                                "*Acción Requerida:* Revisar el proceso con el conductor y asegurar cumplimiento en futuros viajes.";
+                            $this->whatsappService->enviarMensaje($message, config('services.whatsapp.group_operaciones'));
+                        }
                     }
                 }
+            } else {
+                return; // Si no es cambio a En Ruta, no hacemos nada
             }
         }
     }
