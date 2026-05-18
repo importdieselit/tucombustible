@@ -69,8 +69,11 @@ class InspeccionController extends Controller
         // Obtener datos del vehículo (para pre-rellenar el formulario)
         $vehiculo = Vehiculo::with(['tipoVehiculo', 'isMarca', 'isModelo'])->findOrFail($vehiculo_id);
         $viajes = Viaje::where('vehiculo_id', $vehiculo_id)
-                ->whereDate('fecha_salida', '>=', now())
-                ->get();
+            ->where(function ($query) {
+                $query->whereDate('fecha_salida', '>=', now())
+                    ->orWhere('status', 'Programado');
+            })
+            ->get();
 
                     // --- BLOQUE 1: Inyectar Rutas/Viajes en "Información General" ---
                     if ($viajes->count() > 0 && is_null($viajePrevioId)) {

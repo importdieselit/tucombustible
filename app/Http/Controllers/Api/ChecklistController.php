@@ -113,8 +113,11 @@ class ChecklistController extends Controller
                     $vehiculo = $this->getVehiculoCompleto($vehiculoId);
                     
                     $viajes = Viaje::where('vehiculo_id', $vehiculoId)
-                                ->whereDate('fecha_salida', '>=', now())
-                                ->get();
+                        ->where(function ($query) {
+                            $query->whereDate('fecha_salida', '>=', now())
+                                ->orWhere('status', 'Programado');
+                        })
+                        ->get();
 
                     // --- BLOQUE 1: Inyectar Rutas/Viajes en "Información General" ---
                     if ($viajes->count() > 0) {

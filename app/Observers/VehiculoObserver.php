@@ -106,10 +106,11 @@ class VehiculoObserver
             }
 
             $viaje = Viaje::with(['chofer.persona'])
-                ->where('vehiculo_id', $vehiculo->id)
-                ->where('status', 'Programado')
-                ->orderBy('fecha_salida', 'asc')
-                ->first();
+            ->where(function ($query) {
+                $query->whereDate('fecha_salida', '>=', now())
+                    ->orWhere('status', 'Programado');
+            })
+            ->first();
 
             if ($viaje) {
                 $viaje->status = 'EN RUTA';
@@ -121,7 +122,7 @@ class VehiculoObserver
 
                 if (!$hasChecklist) {
                     $hasChecklist2 = Inspeccion::where('vehiculo_id', $viaje->vehiculo_id)
-                        ->where('created_at', '>=', now()->subHours(2))
+                        ->where('created_at', '>=', now()->subMinutes(90)) // Permitir un margen de 90 minutos para completar el checklist
                         ->whereNull('respuesta_in')
                         ->first();
                     
