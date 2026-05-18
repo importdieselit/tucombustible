@@ -114,6 +114,9 @@
             <div class="container-fluid">
                 <div class="row">
                     @php($user = Auth::user())
+                    @if($user->id_perfil !=4)
+                        @php($sidebar = 'admin_sidebar')
+                    @endif
                     @include('layouts.sidebar')
             @include('layouts.header')
 
