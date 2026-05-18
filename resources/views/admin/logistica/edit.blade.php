@@ -7,9 +7,9 @@
         <div class="col-12 d-flex justify-content-between align-items-center bg-white p-3 shadow-sm rounded border-left-orange">
             <div>
                 <h3 class="text-orange mb-0 fw-black text-uppercase">
-                    <i class="fas fa-file-signature me-2"></i>Nueva Planificación: <span x-text="getTitulo()" class="text-uppercase"></span>
+                    <i class="fas fa-file-signature me-2"></i>Editar Planificación de <span x-text="getTitulo()" class="text-uppercase"></span>
                 </h3>
-                <p class="text-muted small mb-0">Gestión logística de despacho y transporte de combustible.</p>
+                <p class="text-muted mb-0">Modificando el viaje: <strong class="text-dark">#{{ $viaje->id }}</strong></p>
             </div>
             <div class="text-right">
                 <a href="{{ route('logistica.index') }}" class="btn btn-sm btn-outline-secondary fw-bold">
@@ -19,8 +19,11 @@
         </div>
     </div>
 
-    <form action="{{ route('logistica.store') }}" method="POST">
+    {{-- FORMULARIO DE ACTUALIZACIÓN --}}
+    <form action="{{ route('logistica.update', $viaje->id) }}" method="POST">
         @csrf
+        @method('PUT') {{-- ESTO ES OBLIGATORIO PARA EDITAR EN LARAVEL --}}
+        
         <input type="hidden" name="tipo_planificacion" value="{{ $tipoPlanificacionId }}">
 
         <div class="row">
@@ -35,7 +38,8 @@
                         <template x-if="modo === 'flete'">
                             <div class="mb-3">
                                 <label class="small fw-bold text-muted text-uppercase">Producto a Transportar</label>
-                                <input type="text" name="producto_flete" class="form-control fw-bold border-orange" placeholder="Ej: Tuberías, Lubricantes, etc." required>
+                                <input type="text" name="producto_flete" class="form-control fw-bold border-orange" 
+                                       value="{{ old('producto_flete', $viaje->producto_flete ?? '') }}" placeholder="Ej: Tuberías, Lubricantes, etc." required>
                             </div>
                         </template>
 
@@ -46,7 +50,9 @@
                                 <select name="tipo_combustible_id" class="form-select fw-bold border-orange" required>
                                     <option value="">Seleccione...</option>
                                     @foreach($tipos as $tc)
-                                        <option value="{{ $tc->id }}">{{ $tc->nombre }}</option>
+                                        <option value="{{ $tc->id }}" {{ old('tipo_combustible_id', $viaje->compraCombustible->tipo_combustible_id ?? $viaje->tipo) == $tc->id ? 'selected' : '' }}>
+                                            {{ $tc->nombre }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -58,13 +64,8 @@
 
                         <div class="mb-3" x-data="{ hoy: '{{ date('Y-m-d') }}' }">
                             <label class="small fw-bold text-muted text-uppercase">Fecha Programada</label>
-                            <input type="date" 
-                                name="fecha_programada" 
-                                class="form-control fw-bold" 
-                                value="{{ date('Y-m-d') }}" 
-                                min="{{ date('Y-m-d') }}"
-                                {{-- Si intentan cambiar a una fecha menor que hoy, se resetea automáticamente al día actual --}}
-                                @change="if($el.value < hoy) { alert('No puedes seleccionar una fecha pasada.'); $el.value = hoy; }"
+                            <input type="date" name="fecha_programada" class="form-control fw-bold" 
+                                value="{{ old('fecha_programada', \Carbon\Carbon::parse($viaje->fecha_salida ?? now())->format('Y-m-d')) }}" 
                                 required>
                         </div>
 
@@ -73,7 +74,7 @@
                             <select name="sede_id" class="form-select fw-bold border-orange" :required="modo !== 'flete' && modo !== 'compra'">
                                 <option value="">Seleccione sede...</option>
                                 @foreach($sedes as $s)
-                                    <option value="{{ $s->id }}">{{ $s->nombre }}</option>
+                                    <option value="{{ $s->id }}" {{ old('sede_id', $viaje->sede_id) == $s->id ? 'selected' : '' }}>{{ $s->nombre }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -92,36 +93,30 @@
                         <div x-show="esPropio == '1'" x-transition>
                             <div class="mb-3">
                                 <label class="small fw-bold text-muted text-uppercase">Vehículo / Chuto</label>
-                                <select name="vehiculo_id" 
+                                <select name="vehiculo_id" id="vehiculo_select"
                                         class="form-select form-select-sm fw-bold" 
                                         x-model="vehiculoId" 
                                         @change="cambioVehiculo($event)"
                                         :required="esPropio == '1'">
                                     <option value="">Seleccione...</option>
                                     @foreach($vehiculos as $v)
-                                        <option value="{{ $v->id }}" 
-                                                data-tipo="{{ $v->tipo }}" 
-                                                data-capacidad="{{ $v->carga_max }}">
+                                        <option value="{{ $v->id }}" data-tipo="{{ $v->tipo }}" data-capacidad="{{ $v->carga_max }}">
                                             {{ $v->flota }} - {{ $v->placa }} ({{ number_format($v->carga_max, 0, ',', '.') }} Lts)
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
 
-                            {{-- Se muestra solo si el tipo seleccionado es 3 (Chuto) --}}
-                            <div class="mb-3 p-2 bg-light rounded border-orange" 
-                                x-show="tipoVehiculoSeleccionado == '3'" 
-                                x-transition>
+                            <div class="mb-3 p-2 bg-light rounded border-orange" x-show="tipoVehiculoSeleccionado == '3'" x-transition>
                                 <label class="small fw-bold text-danger text-uppercase">Cisterna / Remolque</label>
-                                <select name="cisterna" 
+                                <select name="cisterna" id="cisterna_select"
                                         class="form-select form-select-sm fw-bold border-danger" 
                                         x-model="cisternaId" 
                                         @change="cambioCisterna($event)"
                                         :required="esPropio == '1' && tipoVehiculoSeleccionado == '3'">
                                     <option value="">Seleccione acople...</option>
                                     @foreach($cisternas as $c)
-                                        <option value="{{ $c->id }}" 
-                                                data-capacidad="{{ $c->vol ?? $c->carga_max }}">
+                                        <option value="{{ $c->id }}" data-capacidad="{{ $c->vol ?? $c->carga_max }}">
                                             {{ $c->flota }} {{ $c->placa }} - Cap: {{ number_format($c->vol ?? $c->carga_max, 0, ',', '.') }} Lts
                                         </option>
                                     @endforeach
@@ -130,12 +125,12 @@
 
                             <div class="mb-3">
                                 <label class="small fw-bold text-muted text-uppercase">Chofer</label>
-                                <select name="chofer_id" 
-                                        class="form-select form-select-sm fw-bold" 
-                                        :required="esPropio == '1'">
+                                <select name="chofer_id" class="form-select form-select-sm fw-bold" :required="esPropio == '1'">
                                     <option value="">Seleccione...</option>
                                     @foreach($personal as $p)
-                                        <option value="{{ $p->id }}">{{ $p->persona->nombre }} {{ $p->persona->apellido }}</option>
+                                        <option value="{{ $p->id }}" {{ old('chofer_id', $viaje->chofer_id) == $p->id ? 'selected' : '' }}>
+                                            {{ $p->persona->nombre }} {{ $p->persona->apellido }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -145,7 +140,9 @@
                                 <select name="ayudante_id" class="form-select form-select-sm fw-bold">
                                     <option value="">Seleccione...</option>
                                     @foreach($personal as $p)
-                                        <option value="{{ $p->id }}">{{ $p->persona->nombre }} {{ $p->persona->apellido }}</option>
+                                        <option value="{{ $p->id }}" {{ old('ayudante_id', $viaje->ayudante_id) == $p->id ? 'selected' : '' }}>
+                                            {{ $p->persona->nombre }} {{ $p->persona->apellido }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -157,29 +154,24 @@
                                 <div class="col-6 mb-2">
                                     <label class="small fw-bold text-muted text-uppercase">Placa Vehículo</label>
                                     <input type="text" name="vehiculo_externo" x-model="externo_vehiculo" 
-                                        class="form-control form-control-sm border-orange" 
-                                        placeholder="ABC-123" style="text-transform: uppercase;"
-                                        :required="esPropio == '0'">
+                                        class="form-control form-control-sm border-orange uppercase" 
+                                        placeholder="ABC-123" :required="esPropio == '0'">
                                 </div>
                                 <div class="col-6 mb-2">
                                     <label class="small fw-bold text-muted text-uppercase">Placa Cisterna</label>
                                     <input type="text" name="cisterna_externo" x-model="externo_cisterna" 
-                                        class="form-control form-control-sm border-orange" 
-                                        placeholder="Opcional" style="text-transform: uppercase;">
+                                        class="form-control form-control-sm border-orange uppercase" placeholder="Opcional">
                                 </div>
                                 <div class="col-12">
                                     <div class="input-group input-group-sm mb-1">
                                         <span class="input-group-text">Chofer</span>
                                         <input type="text" name="chofer_externo" x-model="externo_chofer" 
-                                            class="form-control" placeholder="Nombre completo" 
-                                            style="text-transform: uppercase;"
-                                            :required="esPropio == '0'">
+                                            class="form-control uppercase" placeholder="Nombre completo" :required="esPropio == '0'">
                                     </div>
                                     <div class="input-group input-group-sm mb-1">
                                         <span class="input-group-text">Ayudante</span>
                                         <input type="text" name="ayudante_externo" x-model="externo_ayudante" 
-                                            class="form-control" placeholder="Nombre completo" 
-                                            style="text-transform: uppercase;">
+                                            class="form-control uppercase" placeholder="Nombre completo">
                                     </div>
                                 </div>
                             </div>
@@ -227,7 +219,9 @@
                                     <select name="proveedor_id" class="form-select border-orange fw-bold" required>
                                         <option value="">-- Seleccione --</option>
                                         @foreach($proveedores as $prov)
-                                            <option value="{{ $prov->id }}">{{ $prov->nombre }}</option>
+                                            <option value="{{ $prov->id }}" {{ old('proveedor_id', $viaje->compraCombustible->proveedor_id ?? '') == $prov->id ? 'selected' : '' }}>
+                                                {{ $prov->nombre }}
+                                            </option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -236,13 +230,15 @@
                                     <select name="sede_id" class="form-select border-orange fw-bold" required>
                                         <option value="">-- Seleccione --</option>
                                         @foreach($sedes as $s)
-                                            <option value="{{ $s->id }}">{{ $s->nombre }}</option>
+                                            <option value="{{ $s->id }}" {{ old('sede_id', $viaje->compraCombustible->planta_destino_id ?? $viaje->sede_id) == $s->id ? 'selected' : '' }}>
+                                                {{ $s->nombre }}
+                                            </option>
                                         @endforeach
                                     </select>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="small fw-bold text-muted text-uppercase">Código SAP</label>
-                                    <input type="text" name="codigo_sap" class="form-control border-orange fw-bold">
+                                    <input type="text" name="codigo_sap" class="form-control border-orange fw-bold" value="{{ old('codigo_sap', $viaje->compraCombustible->sap ?? $viaje->codigo_sap) }}">
                                 </div>
                                 <div class="col-md-4">
                                     <label class="small fw-bold text-muted text-uppercase">Litros a Comprar</label>
@@ -253,14 +249,14 @@
                                 </div>
                                 <div class="col-12 mt-3">
                                     <label class="small fw-bold text-muted text-uppercase">Observaciones</label>
-                                    <textarea name="observaciones" class="form-control border-light" rows="3"></textarea>
+                                    <textarea name="observaciones" class="form-control border-light" rows="3">{{ old('observaciones', $viaje->compraCombustible->observaciones ?? $viaje->observaciones) }}</textarea>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </template>
 
-                {{-- MODO DIESEL / MGO (RESTAURADO) --}}
+                {{-- MODO DIESEL / MGO --}}
                 <template x-if="modo === 'diesel' || modo === 'mgo'">
                     <div class="card shadow-sm border-0">
                         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
@@ -295,39 +291,18 @@
                                                 </td>
                                                 <td x-show="modo === 'mgo'">
                                                     <div class="d-flex flex-column gap-1">
-                                                        
-                                                        <select class="form-select form-select-sm mb-1" 
-                                                                x-model="item.buque_id" 
-                                                                @change="onBuqueChange(item)">
+                                                        <select class="form-select form-select-sm mb-1" x-model="item.buque_id" @change="onBuqueChange(item)">
                                                             <option value="">-- Seleccione Buque --</option>
-                                                            
                                                             <template x-for="b in buques.filter(x => x.cliente_id == item.cliente_id)" :key="b.id">
                                                                 <option :value="b.id" x-text="b.nombre"></option>
                                                             </template>
-                                                            
                                                             <option value="manual" class="text-primary fw-bold">+ Agregar Manualmente</option>
                                                         </select>
-
                                                         <input type="hidden" :name="'items['+index+'][buque_id]'" x-model="item.buque_id">
-
-                                                        <input type="text" :name="'items['+index+'][buque_nombre]'" 
-                                                            class="form-control form-control-sm fw-bold border-primary text-uppercase" 
-                                                            placeholder="Nombre del Buque" 
-                                                            x-model="item.buque_nombre"
-                                                            x-show="item.buque_id === 'manual'">
-                                                        
+                                                        <input type="text" :name="'items['+index+'][buque_nombre]'" class="form-control form-control-sm fw-bold border-primary text-uppercase" placeholder="Nombre del Buque" x-model="item.buque_nombre" x-show="item.buque_id === 'manual'">
                                                         <div class="d-flex gap-1">
-                                                            <input type="text" :name="'items['+index+'][buque_imo]'" 
-                                                                class="form-control form-control-sm" 
-                                                                placeholder="IMO" 
-                                                                x-model="item.buque_imo"
-                                                                :readonly="item.buque_id !== 'manual' && item.buque_id !== ''">
-                                                            
-                                                            <input type="text" :name="'items['+index+'][buque_bandera]'" 
-                                                                class="form-control form-control-sm" 
-                                                                placeholder="Bandera" 
-                                                                x-model="item.buque_bandera"
-                                                                :readonly="item.buque_id !== 'manual' && item.buque_id !== ''">
+                                                            <input type="text" :name="'items['+index+'][buque_imo]'" class="form-control form-control-sm" placeholder="IMO" x-model="item.buque_imo" :readonly="item.buque_id !== 'manual' && item.buque_id !== ''">
+                                                            <input type="text" :name="'items['+index+'][buque_bandera]'" class="form-control form-control-sm" placeholder="Bandera" x-model="item.buque_bandera" :readonly="item.buque_id !== 'manual' && item.buque_id !== ''">
                                                         </div>
                                                     </div>
                                                 </td>
@@ -348,7 +323,7 @@
                     </div>
                 </template>
 
-                {{-- MODO FLETE (AJUSTADO CON CLIENTE OPCIONAL) --}}
+                {{-- MODO FLETE --}}
                 <template x-if="modo === 'flete'">
                     <div class="card shadow-sm border-0">
                         <div class="card-header bg-white py-3 border-bottom">
@@ -356,7 +331,6 @@
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
-                                {{-- NUEVO: SELECT DE CLIENTE (OPCIONAL) --}}
                                 <div class="col-md-12 mb-2">
                                     <label class="small fw-bold text-muted uppercase">Cliente (Opcional)</label>
                                     <div class="input-group">
@@ -364,7 +338,7 @@
                                         <select name="cliente_id" class="form-select border-orange fw-black text-uppercase" style="font-size: 12px;">
                                             <option value="">-- MOVIMIENTO INTERNO (SIN CLIENTE) --</option>
                                             @foreach($clientes as $cliente)
-                                                <option value="{{ $cliente->id }}" {{ old('cliente_id') == $cliente->id ? 'selected' : '' }}>
+                                                <option value="{{ $cliente->id }}" {{ old('cliente_id', $viaje->cliente_id) == $cliente->id ? 'selected' : '' }}>
                                                     {{ $cliente->nombre }} - {{ $cliente->rif }}
                                                 </option>
                                             @endforeach
@@ -372,18 +346,17 @@
                                     </div>
                                     <small class="text-muted italic" style="font-size: 14px;">Si es un flete interno de ImporDiesel, deje este campo en blanco.</small>
                                 </div>
-
                                 <div class="col-md-6">
                                     <label class="small fw-bold text-muted uppercase">Punto Salida</label>
-                                    <input type="text" name="punto_salida" class="form-control border-orange uppercase fw-bold" style="font-size: 12px;" placeholder="EJ: Planta PDVSA El Palito">
+                                    <input type="text" name="punto_salida" class="form-control border-orange uppercase fw-bold" style="font-size: 12px;" placeholder="EJ: Planta PDVSA El Palito" value="{{ old('punto_salida', $viaje->punto_salida) }}">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="small fw-bold text-muted uppercase">Punto Llegada</label>
-                                    <input type="text" name="punto_llegada" class="form-control border-orange uppercase fw-bold" style="font-size: 12px;" placeholder="EJ: Sede Caracas, Boleíta">
+                                    <input type="text" name="punto_llegada" class="form-control border-orange uppercase fw-bold" style="font-size: 12px;" placeholder="EJ: Sede Caracas, Boleíta" value="{{ old('punto_llegada', $viaje->punto_llegada) }}">
                                 </div>
                                 <div class="col-12 mt-3">
                                     <label class="small fw-bold text-muted uppercase">Observaciones del Flete</label>
-                                    <textarea name="observaciones" class="form-control border-light" rows="3" placeholder="Detalles adicionales sobre el movimiento..."></textarea>
+                                    <textarea name="observaciones" class="form-control border-light" rows="3" placeholder="Detalles adicionales sobre el movimiento...">{{ old('observaciones', $viaje->observaciones) }}</textarea>
                                 </div>
                             </div>
                         </div>
@@ -392,7 +365,7 @@
 
                 <div class="mt-4 text-end">
                     <button type="submit" class="btn btn-orange btn-lg px-5 text-white fw-black shadow" :disabled="excesoCarga">
-                        GUARDAR PLANIFICACIÓN
+                        ACTUALIZAR PLANIFICACIÓN
                     </button>
                 </div>
             </div>
@@ -421,6 +394,69 @@
             totalLitros: 0,
             items: [],
             
+            init() {
+                // HIDRATACIÓN DE DATOS AL EDITAR
+                const viaje = @json($viaje);
+                const detalles = @json($viaje->detalles ?? []);
+                const compra = @json($viaje->compraCombustible ?? null);
+
+                // 1. Transporte
+                this.esPropio = viaje.es_transporte_externo ? '0' : '1';
+
+                if (this.esPropio === '0') {
+                    this.vehiculo_externo = viaje.vehiculo_externo || '';
+                    this.cisterna_externo = viaje.cisterna_externa || ''; 
+                    this.chofer_externo = viaje.chofer_externo || '';
+                    this.ayudante_externo = viaje.ayudante_externo || '';
+                }
+
+                // 2. Compras
+                if (this.modo === 'compra' && compra) {
+                    this.totalLitros = parseFloat(compra.cantidad_litros || 0);
+                }
+
+                // 3. Destinos (Diesel/MGO)
+                if (this.modo === 'diesel' || this.modo === 'mgo') {
+                    this.items = detalles.map(d => ({
+                        pedido_id: d.pedido_id || '',
+                        cliente_id: d.cliente_id || '',
+                        cliente_nombre: d.cliente ? d.cliente.nombre : 'Cliente',
+                        cliente_rif: d.cliente ? d.cliente.rif : '',
+                        litros: parseFloat(d.litros || 0),
+                        buque_id: d.buque_id || '',
+                        buque_nombre: d.buque_nombre || '',
+                        buque_imo: d.buque_imo || '',
+                        buque_bandera: d.buque_bandera || '',
+                        observaciones: d.observaciones || ''
+                    }));
+                    this.calcularTotal();
+                }
+
+                // 4. Forzar selección de vehículos propios para activar cálculos de capacidad
+                this.$nextTick(() => {
+                    if (this.esPropio === '1') {
+                        this.vehiculoId = viaje.vehiculo_id || '';
+                        let elVehiculo = document.getElementById('vehiculo_select');
+                        if(elVehiculo && this.vehiculoId) {
+                            elVehiculo.value = this.vehiculoId;
+                            elVehiculo.dispatchEvent(new Event('change'));
+                        }
+
+                        setTimeout(() => {
+                            if (this.tipoVehiculoSeleccionado == '3') {
+                                // Ajusta el campo de la bd si es cisterna_id o cisterna_acoplada_id
+                                this.cisternaId = viaje.cisterna_acoplada_id || viaje.cisterna_id || ''; 
+                                let elCisterna = document.getElementById('cisterna_select');
+                                if(elCisterna && this.cisternaId) {
+                                    elCisterna.value = this.cisternaId;
+                                    elCisterna.dispatchEvent(new Event('change'));
+                                }
+                            }
+                        }, 150);
+                    }
+                });
+            },
+
             getTitulo() {
                 const titulos = { 'diesel': 'Diesel', 'mgo': 'MGO', 'flete': 'Flete', 'compra': 'Compra' };
                 return titulos[this.modo] || 'Planificación';
@@ -445,26 +481,23 @@
                     return;
                 }
 
-                this.tipoVehiculoSeleccionado = opt.dataset.tipo; 
+                this.tipoVehiculoSeleccionado = opt.dataset.tipo;
                 const capVehiculo = parseFloat(opt.dataset.capacidad || 0);
 
                 if (this.tipoVehiculoSeleccionado == '3') {
-                    // ES CHUTO: La capacidad la dará la cisterna, no el chuto
                     this.necesitaCisterna = true;
                     this.capacidadMaxima = 0; 
                 } else {
-                    // ES TIPO 1: Es un camión rígido, usamos su propia capacidad
                     this.necesitaCisterna = false;
                     this.capacidadMaxima = capVehiculo;
                 }
                 
-                this.cisternaId = ''; // Resetear cisterna siempre que cambie el vehículo principal
+                this.cisternaId = '';
             },
 
             cambioCisterna(e) {
                 const opt = e.target.options[e.target.selectedIndex];
                 if (opt.value) {
-                    // Al seleccionar la cisterna, actualizamos la capacidad máxima con el valor de la cisterna
                     this.capacidadMaxima = parseFloat(opt.dataset.capacidad || 0);
                 } else {
                     this.capacidadMaxima = 0;
@@ -494,10 +527,8 @@
                 modal.hide();
             },
 
-            // --- NUEVO MÉTODO INTERNO PARA MANEJAR EL CAMBIO DE SELECT ---
             onBuqueChange(item) {
                 if (item.buque_id && item.buque_id !== 'manual') {
-                    // Si selecciona uno existente, buscamos sus datos y autorrellenamos
                     const buqueSeleccionado = this.buques.find(b => b.id == item.buque_id);
                     if (buqueSeleccionado) {
                         item.buque_nombre = buqueSeleccionado.nombre;
@@ -505,7 +536,6 @@
                         item.buque_bandera = buqueSeleccionado.bandera || '';
                     }
                 } else {
-                    // Si elige manual o deselecciona, limpiamos campos
                     item.buque_nombre = '';
                     item.buque_imo = '';
                     item.buque_bandera = '';
@@ -530,6 +560,7 @@
 </script>
 
 <style>
+    .uppercase { text-transform: uppercase; }
     .btn-orange { background-color: #ff6600 !important; color: white !important; }
     .text-orange { color: #ff6600 !important; }
     .fw-black { font-weight: 900 !important; }

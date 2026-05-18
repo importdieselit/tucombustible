@@ -9,6 +9,7 @@ use App\Models\Vehiculo;
 use App\Models\Chofer; 
 use App\Models\Cliente;
 use App\Models\Muelles;
+use App\Models\Buques;
 use App\Models\TipoCombustible;
 use App\Models\Pedido;
 use App\Models\Viaje;
@@ -27,7 +28,7 @@ class LogisticaController extends Controller
     public function index(Request $request)
     {
         // 1. Iniciamos la consulta con las relaciones necesarias
-        $query = Viaje::with(['tipoCombustible', 'detalles.cliente', 'sede', 'cisternaAcoplada', 'vehiculo']);
+        $query = Viaje::with(['tipoCombustible', 'detalles.cliente', 'sede', 'cisternaAcoplada', 'vehiculo', 'compraCombustible.proveedor']);
 
         // --- NUEVO: Filtro de Búsqueda por Cliente o RIF ---
         if ($request->filled('search_viaje')) {
@@ -40,7 +41,21 @@ class LogisticaController extends Controller
 
         // --- FILTROS EXISTENTES ---
         if ($request->filled('tipo')) {
-            $query->where('tipo_planificacion', $request->tipo);
+            $tipoFiltro = $request->tipo;
+
+            // Si viene una compra específica (ej: 4_diesel o 4_mgo)
+            if (str_contains($tipoFiltro, '_')) {
+                [$tipoPlanificacion, $combustible] = explode('_', $tipoFiltro);
+                
+                $query->where('tipo_planificacion', $tipoPlanificacion);
+                
+                // Mapeamos el string al entero correspondiente de tu tabla viajes (1 = Diesel, 2 = MGO)
+                $idCombustible = ($combustible === 'diesel') ? 1 : 2;
+                $query->where('tipo', $idCombustible);
+            } else {
+                // Filtro tradicional plano (Despachos y Fletes)
+                $query->where('tipo_planificacion', $tipoFiltro);
+            }
         }
         
         if ($request->filled('estado')) {
@@ -124,7 +139,7 @@ class LogisticaController extends Controller
 
         $muelles = DB::table('muelles')->orderBy('nombre')->get();
 
-        $buques = DB::table('buques')->orderBy('nombre')->get();
+        $buques = Buques::orderBy('nombre', 'asc')->get();
 
         return view('admin.logistica.create', compact(
             'tipo', 
@@ -145,10 +160,29 @@ class LogisticaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            // Validaciones base
             'tipo_planificacion'  => 'required|in:1,2,3,4',
+            'producto_flete'       => 'required_if:tipo_planificacion,3|string|max:255',
             'tipo_combustible_id' => 'required_unless:tipo_planificacion,3|nullable|exists:tipos_combustible,id',
             'fecha_programada'    => 'required|date',
             'items'               => 'required_if:tipo_planificacion,1,2|array', 
+
+            // --- NUEVAS VALIDACIONES CONDICIONALES ---
+            
+            // El switch que define la lógica del transporte (1 = Propio, 0 = Externo)
+            'es_transporte_propio' => 'required|in:0,1',
+
+            // CASO 1: Si es transporte PROPIO (es_transporte_propio es 1)
+            'vehiculo_id'          => 'required_if:es_transporte_propio,1|nullable|exists:vehiculos,id',
+            'chofer_id'            => 'required_if:es_transporte_propio,1|nullable|exists:choferes,id',
+            'cisterna'             => 'required_if:es_transporte_propio,1|nullable|exists:vehiculos,id',
+            'ayudante_id'          => 'nullable|exists:choferes,id',
+
+            // CASO 2: Si es transporte EXTERNO (es_transporte_propio es 0)
+            'vehiculo_externo'     => 'required_if:es_transporte_propio,0|nullable|string|max:255',
+            'cisterna_externo'     => 'required_if:es_transporte_propio,0|nullable|string|max:255',
+            'chofer_externo'       => 'required_if:es_transporte_propio,0|nullable|string|max:255',
+            'ayudante_externo'     => 'nullable|string|max:255',
         ]);
 
         try {
@@ -201,43 +235,46 @@ class LogisticaController extends Controller
 
     public function edit($id)
     {
-        $viaje = Viaje::with(['detalles', 'vehiculo', 'chofer'])->findOrFail($id);
+        // 1. Cargamos el viaje con todas las relaciones que necesita el formulario para hidratarse
+        $viaje = Viaje::with(['detalles.cliente', 'compraCombustible.proveedor', 'vehiculo'])->findOrFail($id);
         
-        // Mapeo inverso para obtener el slug del tipo (diesel, mgo, flete, compra)
+        // 2. Mapeo inverso para obtener el slug del tipo (diesel, mgo, flete, compra)
         $tipoSlugs = [1 => 'diesel', 2 => 'mgo', 3 => 'flete', 4 => 'compra'];
         $tipo = $tipoSlugs[$viaje->tipo_planificacion];
         $tipoPlanificacionId = $viaje->tipo_planificacion;
 
-        // Datasources comunes (Reutilizando lógica de create[cite: 11])
+        // 3. Datasources comunes
         $tipos = TipoCombustible::all();
         $sedes = Sedes::where('estatus', true)->get();
-        $vehiculos = Vehiculo::where('estatus', 1)->get(['id', 'placa', 'carga_max', 'tipo']);
+        $vehiculos = Vehiculo::where('estatus', 1)->get(['id', 'placa', 'carga_max', 'tipo', 'flota']);
+        // Extraemos las cisternas (Ajusta el where según cómo identifiques tus cisternas en la BD)
+        $cisternas = Vehiculo::whereIn('tipo', [2, 4])->where('estatus', 1)->get(['id', 'flota', 'placa', 'carga_max', 'vol']); 
         $personal = Chofer::with('persona')->get();
         $muelles = DB::table('muelles')->orderBy('nombre')->get();
+        $buques = Buques::orderBy('nombre', 'asc')->get();
         
-        // Datos específicos por tipo
+        // 4. Datos específicos por tipo
         $clientes = (in_array($tipoPlanificacionId, [1, 2, 3])) ? Cliente::where('status', Cliente::STATUS_APROBADO)->orderBy('nombre')->get() : collect();
         $proveedores = ($tipoPlanificacionId == 4) ? DB::table('proveedores')->get() : collect();
         $pedidosPendientes = ($tipoPlanificacionId == 1) ? Pedido::where('estado', 'pendiente')->with('cliente')->get() : collect();
 
         return view('admin.logistica.edit', compact(
             'viaje', 'tipo', 'tipoPlanificacionId', 'tipos', 'sedes', 
-            'vehiculos', 'personal', 'clientes', 'muelles', 'proveedores', 'pedidosPendientes'
+            'vehiculos', 'cisternas', 'personal', 'clientes', 'muelles', 'proveedores', 'pedidosPendientes', 'buques'
         ));
     }
 
     public function update(Request $request, $id)
     {
-        // Mismas validaciones que store[cite: 11]
         $request->validate([
             'tipo_planificacion'  => 'required|in:1,2,3,4',
             'fecha_programada'    => 'required|date',
         ]);
-
+        
         try {
             $this->logisticaService->actualizarPlanificacion($id, $request->all());
             return redirect()->route('logistica.index')->with('success', 'Planificación actualizada correctamente.');
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return back()->withInput()->with('error', $e->getMessage());
         }
     }    

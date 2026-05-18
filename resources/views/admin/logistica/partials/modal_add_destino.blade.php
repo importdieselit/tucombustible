@@ -78,11 +78,11 @@
                                 <input type="number" class="form-control border-orange fw-black" x-model.number="manual.litros">
                             </div>
                             
-                            {{-- CONDICIONAL: Solo aparece si es MGO --}}
+                            {{-- CONDICIONAL: Solo aparece si es MGO
                             <div class="col-md-8" x-show="modo === 'mgo'">
                                 <label class="small fw-bold text-muted uppercase">Nombre del Buque</label>
                                 <input type="text" class="form-control" x-model="manual.buque" placeholder="Ej: MV Clipper">
-                            </div>
+                            </div> --}}
 
                             <div class="col-12 mt-4">
                                 <button type="button" class="btn btn-orange text-white fw-black btn-lg w-100 shadow-sm" 
