@@ -98,8 +98,7 @@
             </div>
             <div class="col-md-6 text-end">
                 <label class="small text-muted fw-bold text-uppercase">Carga</label>
-                <p class="mb-1"><strong>Producto:</strong> {{ $viaje->producto->nombre ?? 'Combustible' }}</p>
-                <p><strong>Litros:</strong> {{ number_format($viaje->litros, 0) }} L</p>
+                <p class="mb-1"><strong>Producto:</strong> {{ $viaje->producto_flete ?? 'No especificado' }}</p>
             </div>
 
         {{-- COMPRAS --}}

@@ -124,37 +124,55 @@
         </div>
     </div>
 
-    {{-- BARRA DE FILTROS ACTUALIZADA --}}
+    {{-- BARRA DE FILTROS ACTUALIZADA CON ESTATUS --}}
     <form action="{{ route('logistica.index') }}" method="GET" class="row g-2 align-items-end">
-        {{-- Nuevo: Buscador de Cliente --}}
+        {{-- Buscador de Cliente --}}
         <div class="col-md-2">
             <label class="small fw-bold text-uppercase text-muted mb-1">Cliente / RIF</label>
             <input type="text" name="search_viaje" value="{{ request('search_viaje') }}" 
                 class="form-control form-control-sm fw-bold uppercase" placeholder="Buscar...">
         </div>
 
+        {{-- Selector de Tipo --}}
         <div class="col-md-2">
             <label class="small fw-bold text-uppercase text-muted mb-1">Tipo</label>
             <select name="tipo" class="form-select form-select-sm fw-bold">
                 <option value="">TODAS</option>
-                <option value="1" {{ request('tipo') == '1' ? 'selected' : '' }}>Diesel</option>
-                <option value="2" {{ request('tipo') == '2' ? 'selected' : '' }}>MGO</option>
+                <option value="1" {{ request('tipo') == '1' ? 'selected' : '' }}>Despacho Diesel</option>
+                <option value="2" {{ request('tipo') == '2' ? 'selected' : '' }}>Despacho MGO</option>
                 <option value="3" {{ request('tipo') == '3' ? 'selected' : '' }}>Fletes</option>
-                <option value="4" {{ request('tipo') == '4' ? 'selected' : '' }}>Compras</option>
+                {{-- Abrimos las compras en dos opciones independientes --}}
+                <option value="4_diesel" {{ request('tipo') == '4_diesel' ? 'selected' : '' }}>Compras Diesel</option>
+                <option value="4_mgo" {{ request('tipo') == '4_mgo' ? 'selected' : '' }}>Compras MGO</option>
             </select>
         </div>
 
+        {{-- NUEVO: Selector de Estatus (Engancha directo con tu controlador) --}}
+        <div class="col-md-2">
+            <label class="small fw-bold text-uppercase text-muted mb-1">Estatus</label>
+            <select name="estado" class="form-select form-select-sm fw-bold">
+                <option value="">TODOS</option>
+                <option value="PROGRAMADO" {{ request('estado') == 'PROGRAMADO' ? 'selected' : '' }}>PROGRAMADO</option>
+                <option value="EN RUTA" {{ request('estado') == 'EN RUTA' ? 'selected' : '' }}>EN RUTA</option>
+                <option value="COMPLETADO" {{ request('estado') == 'COMPLETADO' ? 'selected' : '' }}>COMPLETADO</option>
+                <option value="CANCELADO" {{ request('estado') == 'CANCELADO' ? 'selected' : '' }}>CANCELADO</option>
+            </select>
+        </div>
+
+        {{-- Fecha Desde --}}
         <div class="col-md-2">
             <label class="small fw-bold text-uppercase text-muted mb-1">Desde</label>
             <input type="date" name="fecha_desde" value="{{ request('fecha_desde') }}" class="form-control form-control-sm fw-bold">
         </div>
 
+        {{-- Fecha Hasta --}}
         <div class="col-md-2">
             <label class="small fw-bold text-uppercase text-muted mb-1">Hasta</label>
             <input type="date" name="fecha_hasta" value="{{ request('fecha_hasta') }}" class="form-control form-control-sm fw-bold">
         </div>
 
-        <div class="col-md-4 d-flex gap-2">
+        {{-- Botones de Acción --}}
+        <div class="col-md-2 d-flex gap-2">
             <button type="submit" class="btn btn-dark btn-sm fw-bold text-uppercase w-100">
                 <i class="fas fa-search me-1"></i> Filtrar
             </button>
@@ -170,14 +188,12 @@
             <h6 class="mb-0 fw-black text-uppercase small"><i class="fas fa-list me-2"></i>Historial de Planificaciones</h6>
         </div>
         <div class="card-body p-0">
-            {{-- Agregamos el contenedor con altura máxima y scroll --}}
             <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
                 <table class="table table-hover align-middle mb-0">
-                    {{-- El sticky-top asegura que el encabezado no se mueva --}}
                     <thead class="bg-light sticky-top" style="z-index: 10;">
                         <tr class="text-uppercase text-muted" style="font-size: 11px;">
                             <th class="ps-3">ID / Fecha</th>
-                            <th>Tipo Planificación</th>
+                            <th>Movimiento / Producto</th> 
                             <th>Transporte</th>
                             <th>Origen / Destino</th>
                             <th>Volumen (L)</th>
@@ -194,17 +210,36 @@
                                 </td>
                                 <td>
                                     @php
-                                        $tipoData = match($viaje->tipo_planificacion) {
-                                            1 => ['text' => 'DIESEL', 'color' => 'bg-orange'],
-                                            2 => ['text' => 'MGO', 'color' => 'bg-dark'],
-                                            3 => ['text' => 'FLETE', 'color' => 'bg-secondary'],
-                                            4 => ['text' => 'COMPRA', 'color' => 'bg-info'],
+                                        // 1. Identificamos el tipo de movimiento general
+                                        $movimiento = match($viaje->tipo_planificacion) {
+                                            1, 2    => ['text' => 'DESPACHO', 'color' => 'bg-success'],
+                                            3       => ['text' => 'FLETE', 'color' => 'bg-secondary'],
+                                            4       => ['text' => 'COMPRA', 'color' => 'bg-info'],
                                             default => ['text' => 'OTRO', 'color' => 'bg-light text-dark']
                                         };
+
+                                        // 2. Identificamos el producto o combustible específico
+                                        $productoEspecifico = match($viaje->tipo_planificacion) {
+                                            1       => 'DIESEL',
+                                            2       => 'MGO',
+                                            3       => $viaje->producto_flete ?? 'Sin Especificar',
+                                            // Evaluamos directamente el campo entero 'tipo' de la tabla viajes
+                                            4       => match((int)$viaje->tipo) {
+                                                        1 => 'DIESEL',
+                                                        2 => 'MGO'
+                                                    },
+                                            default => 'Sin especificar'
+                                        };
                                     @endphp
-                                    <span class="badge {{ $tipoData['color'] }} text-white text-uppercase" style="font-size: 10px;">
-                                        {{ $tipoData['text'] }}
+                                    
+                                    {{-- Badge del Movimiento --}}
+                                    <span class="badge {{ $movimiento['color'] }} text-white text-uppercase" style="font-size: 10px; letter-spacing: 0.5px;">
+                                        {{ $movimiento['text'] }}
                                     </span>
+                                    {{-- Subtexto con el combustible o producto --}}
+                                    <small class="d-block fw-black text-dark mt-1 text-uppercase" style="font-size: 11px;">
+                                        {{ $productoEspecifico }}
+                                    </small>
                                 </td>
                                 <td>
                                     @if($viaje->es_transporte_externo)
@@ -217,12 +252,14 @@
                                 </td>
                                 <td>
                                     @if($viaje->tipo_planificacion == 4) {{-- Compra --}}
+                                        {{-- Muestra el Proveedor en las Compras --}}
+                                        <small class="d-block fw-black text-primary text-uppercase"><i class="fas fa-handshake me-1"></i> Proveedor: {{ $viaje->compraCombustible->first()->proveedor->nombre ?? 'Sin especificar' }}</small>
                                         <small class="d-block fw-bold text-muted">A: {{ $viaje->sede->nombre ?? 'Planta' }}</small>
-                                        <small class="d-block text-info">SAP: {{ $viaje->codigo_sap ?? 'N/A' }}</small>
+                                        <small class="d-block text-dark fw-bold" style="font-size: 10px;">SAP: {{ $viaje->codigo_sap ?? 'N/A' }}</small>
                                     @elseif($viaje->tipo_planificacion == 3) {{-- Flete --}}
                                         <small class="d-block fw-bold">De: {{ Str::limit($viaje->punto_salida, 15) }}</small>
                                         <small class="d-block text-muted">A: {{ Str::limit($viaje->punto_llegada, 15) }}</small>
-                                    @else {{-- Diesel o MGO --}}
+                                    @else {{-- Diesel o MGO (Despachos) --}}
                                         <small class="d-block fw-bold">De: {{ $viaje->sede->nombre ?? 'Planta' }}</small>
                                         <small class="d-block text-muted">Destinos: {{ $viaje->detalles->count() }}</small>
                                     @endif
@@ -238,20 +275,23 @@
                                             default => 'secondary'
                                         };
                                     @endphp
-                                    <span class="badge bg-{{ $statusColor }} text-uppercase" style="font-size: 9px;">{{ $viaje->status }}</span>
+                                    <span class="badge bg-{{ $statusColor }} text-uppercase" style="font-size: 10px;">{{ $viaje->status }}</span>
                                 </td>
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center gap-2">
+                                        {{-- Botón Ver Detalles (Siempre Visible) --}}
                                         <button class="btn btn-sm btn-light border shadow-sm" onclick="verDetalles({{ $viaje->id }})" title="Ver Detalles">
                                             <i class="fas fa-eye text-primary"></i>
                                         </button>
 
-                                        @if($viaje->status == 'PROGRAMADO')
+                                        {{-- Botón Editar (SOLO si está PROGRAMADO) --}}
+                                        @if($viaje->status === 'PROGRAMADO')
                                             <a href="{{ route('logistica.edit', $viaje->id) }}" class="btn btn-sm btn-light border shadow-sm" title="Editar">
                                                 <i class="fas fa-edit text-warning"></i>
                                             </a>
                                         @endif
 
+                                        {{-- Botón Cancelar (Visible en PROGRAMADO y EN RUTA / Oculto en CANCELADO y COMPLETADO) --}}
                                         @if($viaje->status !== 'CANCELADO' && $viaje->status !== 'COMPLETADO')
                                             <button class="btn btn-sm btn-light border shadow-sm" onclick="cancelarPlanificacion({{ $viaje->id }})" title="Cancelar">
                                                 <i class="fas fa-times-circle text-danger"></i>

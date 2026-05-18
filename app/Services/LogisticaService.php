@@ -8,6 +8,7 @@ use App\Models\Vehiculo;
 use App\Models\GascoCupoMensual;
 use App\Models\Cliente;
 use App\Models\Viaje;
+use App\Models\Buques;
 use App\Models\Pedido;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -166,16 +167,17 @@ class LogisticaService
         $cisternaValor = null;
 
         if ($esPropio) {
-            if (!empty($data['cisterna_id'])) {
-                $c = Vehiculo::find($data['cisterna_id']);
+            // Corregido: Se busca 'cisterna' que es la llave real enviada por la Vista
+            $idCisterna = $data['cisterna'] ?? $data['cisterna_id'] ?? null;
+            if (!empty($idCisterna)) {
+                $c = Vehiculo::find($idCisterna);
                 $cisternaValor = $c ? $c->id : null;
             }
-        } else {
-            $cisternaValor =  null;
         }
 
         return [
             'tipo_planificacion'   => $data['tipo_planificacion'],
+            'producto_flete'       => $data['tipo_planificacion'] == 3 ? ($data['producto_flete'] ?? null) : null,
             'sede_id'              => $data['sede_id'] ?? null,
             'tipo'                 => $data['tipo_combustible_id'] ?? null, 
             'fecha_salida'         => $data['fecha_programada'],
@@ -183,15 +185,20 @@ class LogisticaService
             'status'               => 'PROGRAMADO',
             'litros'               => $totalLitros, 
             'vehiculo_id'          => $esPropio ? $data['vehiculo_id'] : null,
-            'observacion'        => $data['observaciones'] ?? null,
+            'observacion'          => $data['observaciones'] ?? null,
             'cisterna'             => $cisternaValor,
             'chofer_id'            => $esPropio ? $data['chofer_id'] : null,
             'ayudante_id'          => $esPropio ? ($data['ayudante_id'] ?? null) : null,
+            
+            // Flags de Transporte Externo
             'es_transporte_externo'=> !$esPropio,
-            'vehiculo_externo'     => !$esPropio ? ($data['externo_vehiculo_placa'] ?? null) : null,
-            'cisterna_externo'     => !$esPropio ? ($data['externo_cisterna_placa'] ?? null) : null,
-            'chofer_externo'       => !$esPropio ? ($data['externo_chofer_nombre'] ?? null) : null,
-            'ayudante_externo'     => !$esPropio ? ($data['externo_ayudante_nombre'] ?? null) : null,
+            
+            // Corregido: Mapeo directo con los nombres reales de los inputs de la Vista
+            'vehiculo_externo'     => !$esPropio ? ($data['vehiculo_externo'] ?? null) : null,
+            'cisterna_externo'     => !$esPropio ? ($data['cisterna_externo'] ?? null) : null,
+            'chofer_externo'       => !$esPropio ? ($data['chofer_externo'] ?? null) : null,
+            'ayudante_externo'     => !$esPropio ? ($data['ayudante_externo'] ?? null) : null,
+            
             'tipo_remolque'        => $data['tipo_remolque'] ?? null,
             'codigo_sap'           => $data['tipo_planificacion'] == 4 ? ($data['codigo_sap'] ?? null) : null,
             'cliente_id'           => $data['cliente_id'] ?? null, 
@@ -222,17 +229,50 @@ class LogisticaService
                     ->where('anio', now()->year)
                     ->increment('litros_consumidos', $item['litros']);
             }
+
+            // --- NUEVA LÓGICA DE AUTO-REGISTRO COMPATIBLE ---
+            $buqueId = (isset($item['buque_id']) && is_numeric($item['buque_id'])) ? $item['buque_id'] : null;
+            $buqueNombreManual = $item['buque_nombre'] ?? null;
+            $imo = $item['buque_imo'] ?? null;
+            $bandera = $item['buque_bandera'] ?? null;
+
+            // Si es una planificación MGO y se intentó escribir/seleccionar un buque
+            if ($viaje->tipo_planificacion == 2 && !empty($item['buque_nombre'])) {
+                $nombreFormateado = trim(strtoupper($item['buque_nombre']));
+
+                // Validamos si ya existe un buque registrado con ese nombre exacto en mayúsculas
+                $buqueExistente = Buques::where('nombre', $nombreFormateado)->first();
+
+                if ($buqueExistente) {
+                    // Si ya existía, usamos su ID y sus datos reales para blindar la consistencia
+                    $buqueId = $buqueExistente->id;
+                    $imo = $buqueExistente->imo;
+                    $bandera = $buqueExistente->bandera;
+                    $buqueNombreManual = null; // Al estar registrado, no hace falta marcarlo como manual puro
+                } elseif ($item['buque_id'] === 'manual') {
+                    // Si de verdad es nuevo y seleccionaron "Agregar Manualmente", lo creamos al vuelo casado con el cliente_id
+                    $nuevoBuque = Buques::create([
+                        'nombre'     => $nombreFormateado,
+                        'cliente_id' => $item['cliente_id'],
+                        'bandera'    => trim(strtoupper($item['buque_bandera'] ?? 'S/R')),
+                        'imo'        => $item['buque_imo'] ?? null,
+                    ]);
+                    $buqueId = $nuevoBuque->id;
+                    $buqueNombreManual = $nombreFormateado;
+                }
+            }
             
+            // Ejecución exacta de tu repositorio conservando tus mapeos
             $this->viajeRepo->createDetalle([
                 'viaje_id'            => $viaje->id,
                 'cliente_id'          => $item['cliente_id'] ?? null,
                 'pedido_id'           => $pedidoId,
                 'litros'              => $item['litros'] ?? 0,
                 'muelle_atraque'      => $item['muelle_id'] ?? null,
-                'buque_id'            => (isset($item['buque_id']) && is_numeric($item['buque_id'])) ? $item['buque_id'] : null,
-                'buque_nombre_manual' => $item['buque_nombre'] ?? null,
-                'imo'                 => $item['buque_imo'] ?? null,
-                'bandera'             => $item['buque_bandera'] ?? null,
+                'buque_id'            => $buqueId, // ID Real (existente o creado al vuelo)
+                'buque_nombre_manual' => $buqueNombreManual,
+                'imo'                 => $imo,
+                'bandera'             => $bandera,
                 'observacion'         => $item['observaciones'] ?? null,
             ]);
 

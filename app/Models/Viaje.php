@@ -27,7 +27,7 @@ class Viaje extends Model
         'fecha_salida', 'status', 'vehiculo_id', 'litros', 'has_viatico', 
         'cliente_id', 'otro_cliente', 'usuario_id', 'otro_vehiculo', 
         'otro_chofer', 'otro_ayudante', 'tipo', 'cisterna', 'tipo_combustible_id', 'proveedor_id',
-        'observacion',
+        'observacion', 'producto_flete',
 
         // Campos de Logística
         'tipo_planificacion', 'sede_id', 'ayudante_id', 'tipo_remolque', 
