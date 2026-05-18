@@ -20,10 +20,9 @@ class ActualizarUbicacionUnidadesCommand extends Command
 
     public function handle(Service24GPSService $gpsService)
 {
-
-    $latSede = 10.48834308128781;
-    $lngSede = -66.82329619185627;
-    $radioSede = 0.200; // 200 metros en km (aprox)
+    $latSede = 10.488249123497356;
+    $lngSede = -66.8234169941792;
+    $radioSede = 0.180; // 180   metros en km (aprox)
     $baseUrl = rtrim(config('services.whatsapp.url'), '/');
     $tokenWA = config('services.whatsapp.key');
     $endpoint = "{$baseUrl}/messages/chat?token={$tokenWA}";

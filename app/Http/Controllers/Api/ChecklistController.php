@@ -236,9 +236,9 @@ class ChecklistController extends Controller
                     ], 422);
                 }
 
-                $latSede = 10.48834308128781;
-                $lngSede = -66.82329619185627;
-                $radioSede = 0.200; // 200 metros en km (aprox)
+                $latSede = 10.488249123497356;
+                $lngSede = -66.8234169941792;
+                $radioSede = 0.180; // 180 metros en km (aprox)
 
                 if (isset($vehiculo->latitud) && isset($vehiculo->longitud)) {
                     $distancia = $this->calcularDistancia($vehiculo->latitud, $vehiculo->longitud, $latSede, $lngSede);
