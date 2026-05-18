@@ -16,6 +16,9 @@ class AccesoController extends Controller
      */
     public function index()
     {
+        if (!Auth::check()) {
+            return redirect()->route('login')->with('error', 'Debes iniciar sesión para acceder a esta sección.');
+        }
         // Solo permitir el acceso a super usuarios (id_perfil = 1)
         if (Auth::user()->id_perfil != 1) {
             return redirect()->route('dashboard')->with('error', 'No tienes permiso para acceder a esta sección.');

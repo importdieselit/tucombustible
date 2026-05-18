@@ -99,6 +99,9 @@ class LoginController extends Controller
         if (in_array($user->id_perfil, [1, 2, 3])) {
             return redirect()->route('dashboard');
         }
+        if ($user->id_perfil == 4) {
+            return redirect()->route('inspecciones.index');
+        }
 
         // Para el resto de perfiles (Conductores, Mecánicos, etc.) 
         // mantenemos la ruta por defecto o la que definas luego.
