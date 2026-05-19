@@ -410,5 +410,10 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/pedidos/nuevo',     [PedidoController::class, 'create'])->name('pedidos.create');
             Route::post('/pedidos/guardar',  [PedidoController::class, 'store'])->name('pedidos.store');
             Route::put('/pedidos/{id}/cancelar', [PedidoController::class, 'cancelar'])->name('pedidos.cancelar');
+            Route::post('/perfil/actualizar', [PortalClienteController::class, 'updatePerfil'])->name('perfil.update');
+            Route::post('/placas/registrar', [PortalClienteController::class, 'registrarPlaca'])->name('placas.store');
+            Route::delete('/placas/{id}/inactivar', [PortalClienteController::class, 'inactivarPlaca'])->name('placas.destroy');
+            Route::post('/choferes/registrar', [PortalClienteController::class, 'registrarChofer'])->name('choferes.store');
+            Route::delete('/choferes/{id}/inactivar', [PortalClienteController::class, 'inactivarChofer'])->name('choferes.destroy');
         });
 });

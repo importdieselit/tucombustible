@@ -7,369 +7,22 @@
         <div class="col-12 d-flex justify-content-between align-items-center bg-white p-3 shadow-sm rounded border-left-orange">
             <div>
                 <h3 class="text-orange mb-0 fw-black text-uppercase">
-                    <i class="fas fa-file-signature me-2"></i>Editar Planificación de <span x-text="getTitulo()" class="text-uppercase"></span>
+                    <i class="fas fa-file-signature me-2"></i>Editar Planificación: <span x-text="getTitulo()" class="text-uppercase"></span>
                 </h3>
-                <p class="text-muted mb-0">Modificando el viaje: <strong class="text-dark">#{{ $viaje->id }}</strong></p>
             </div>
             <div class="text-right">
-                <a href="{{ route('logistica.index') }}" class="btn btn-sm btn-outline-secondary fw-bold">
-                    <i class="fas fa-arrow-left me-1"></i> VOLVER
-                </a>
+                <a href="{{ route('logistica.index') }}" class="btn btn-sm btn-outline-secondary fw-bold">VOLVER</a>
             </div>
         </div>
     </div>
 
-    {{-- FORMULARIO DE ACTUALIZACIÓN --}}
     <form action="{{ route('logistica.update', $viaje->id) }}" method="POST">
         @csrf
-        @method('PUT') {{-- ESTO ES OBLIGATORIO PARA EDITAR EN LARAVEL --}}
-        
+        @method('PUT')
         <input type="hidden" name="tipo_planificacion" value="{{ $tipoPlanificacionId }}">
-
-        <div class="row">
-            {{-- COLUMNA IZQUIERDA: VEHÍCULOS Y PERSONAL --}}
-            <div class="col-md-4">
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header bg-dark text-white py-3">
-                        <h6 class="mb-0 fw-bold text-uppercase small">1. Datos del Vehículo y Personal</h6>
-                    </div>
-                    <div class="card-body">
-                        
-                        <template x-if="modo === 'flete'">
-                            <div class="mb-3">
-                                <label class="small fw-bold text-muted text-uppercase">Producto a Transportar</label>
-                                <input type="text" name="producto_flete" class="form-control fw-bold border-orange" 
-                                       value="{{ old('producto_flete', $viaje->producto_flete ?? '') }}" placeholder="Ej: Tuberías, Lubricantes, etc." required>
-                            </div>
-                        </template>
-
-                        {{-- PARA COMPRA: ELIGE COMBUSTIBLE --}}
-                        <template x-if="modo === 'compra'">
-                            <div class="mb-3">
-                                <label class="small fw-bold text-muted text-uppercase">Tipo de Combustible</label>
-                                <select name="tipo_combustible_id" class="form-select fw-bold border-orange" required>
-                                    <option value="">Seleccione...</option>
-                                    @foreach($tipos as $tc)
-                                        <option value="{{ $tc->id }}" {{ old('tipo_combustible_id', $viaje->compraCombustible->tipo_combustible_id ?? $viaje->tipo) == $tc->id ? 'selected' : '' }}>
-                                            {{ $tc->nombre }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </template>
-
-                        <template x-if="modo !== 'flete' && modo !== 'compra'">
-                            <input type="hidden" name="tipo_combustible_id" value="{{ $tipoPlanificacionId }}">
-                        </template>
-
-                        <div class="mb-3" x-data="{ hoy: '{{ date('Y-m-d') }}' }">
-                            <label class="small fw-bold text-muted text-uppercase">Fecha Programada</label>
-                            <input type="date" name="fecha_programada" class="form-control fw-bold" 
-                                value="{{ old('fecha_programada', \Carbon\Carbon::parse($viaje->fecha_salida ?? now())->format('Y-m-d')) }}" 
-                                required>
-                        </div>
-
-                        <div class="mb-3" x-show="modo !== 'flete' && modo !== 'compra'">
-                            <label class="small fw-bold text-muted text-uppercase">Sede de Despacho</label>
-                            <select name="sede_id" class="form-select fw-bold border-orange" :required="modo !== 'flete' && modo !== 'compra'">
-                                <option value="">Seleccione sede...</option>
-                                @foreach($sedes as $s)
-                                    <option value="{{ $s->id }}" {{ old('sede_id', $viaje->sede_id) == $s->id ? 'selected' : '' }}>{{ $s->nombre }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="mb-3 border-top pt-3">
-                            <label class="small fw-bold text-muted text-uppercase">Tipo de Transporte (Vehículo)</label>
-                            <div class="btn-group w-100 mb-3">
-                                <input type="radio" class="btn-check" name="es_transporte_propio" id="propio1" value="1" x-model="esPropio">
-                                <label class="btn btn-outline-dark btn-sm fw-bold" for="propio1">IMPORDIESEL</label>
-                                <input type="radio" class="btn-check" name="es_transporte_propio" id="propio0" value="0" x-model="esPropio">
-                                <label class="btn btn-outline-dark btn-sm fw-bold" for="propio0">EXTERNO</label>
-                            </div>
-                        </div>
-
-                        {{-- Lógica de Vehículo Propio --}}
-                        <div x-show="esPropio == '1'" x-transition>
-                            <div class="mb-3">
-                                <label class="small fw-bold text-muted text-uppercase">Vehículo / Chuto</label>
-                                <select name="vehiculo_id" id="vehiculo_select"
-                                        class="form-select form-select-sm fw-bold" 
-                                        x-model="vehiculoId" 
-                                        @change="cambioVehiculo($event)"
-                                        :required="esPropio == '1'">
-                                    <option value="">Seleccione...</option>
-                                    @foreach($vehiculos as $v)
-                                        <option value="{{ $v->id }}" data-tipo="{{ $v->tipo }}" data-capacidad="{{ $v->carga_max }}">
-                                            {{ $v->flota }} - {{ $v->placa }} ({{ number_format($v->carga_max, 0, ',', '.') }} Lts)
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div class="mb-3 p-2 bg-light rounded border-orange" x-show="tipoVehiculoSeleccionado == '3'" x-transition>
-                                <label class="small fw-bold text-danger text-uppercase">Cisterna / Remolque</label>
-                                <select name="cisterna" id="cisterna_select"
-                                        class="form-select form-select-sm fw-bold border-danger" 
-                                        x-model="cisternaId" 
-                                        @change="cambioCisterna($event)"
-                                        :required="esPropio == '1' && tipoVehiculoSeleccionado == '3'">
-                                    <option value="">Seleccione acople...</option>
-                                    @foreach($cisternas as $c)
-                                        <option value="{{ $c->id }}" data-capacidad="{{ $c->vol ?? $c->carga_max }}">
-                                            {{ $c->flota }} {{ $c->placa }} - Cap: {{ number_format($c->vol ?? $c->carga_max, 0, ',', '.') }} Lts
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="small fw-bold text-muted text-uppercase">Chofer</label>
-                                <select name="chofer_id" class="form-select form-select-sm fw-bold" :required="esPropio == '1'">
-                                    <option value="">Seleccione...</option>
-                                    @foreach($personal as $p)
-                                        <option value="{{ $p->id }}" {{ old('chofer_id', $viaje->chofer_id) == $p->id ? 'selected' : '' }}>
-                                            {{ $p->persona->nombre }} {{ $p->persona->apellido }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="small fw-bold text-muted text-uppercase">Ayudante</label>
-                                <select name="ayudante_id" class="form-select form-select-sm fw-bold">
-                                    <option value="">Seleccione...</option>
-                                    @foreach($personal as $p)
-                                        <option value="{{ $p->id }}" {{ old('ayudante_id', $viaje->ayudante_id) == $p->id ? 'selected' : '' }}>
-                                            {{ $p->persona->nombre }} {{ $p->persona->apellido }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-
-                        {{-- Transporte Externo --}}
-                        <div x-show="esPropio == '0'" x-transition class="p-2 border rounded bg-light">
-                            <div class="row g-2">
-                                <div class="col-6 mb-2">
-                                    <label class="small fw-bold text-muted text-uppercase">Placa Vehículo</label>
-                                    <input type="text" name="vehiculo_externo" x-model="externo_vehiculo" 
-                                        class="form-control form-control-sm border-orange uppercase" 
-                                        placeholder="ABC-123" :required="esPropio == '0'">
-                                </div>
-                                <div class="col-6 mb-2">
-                                    <label class="small fw-bold text-muted text-uppercase">Placa Cisterna</label>
-                                    <input type="text" name="cisterna_externo" x-model="externo_cisterna" 
-                                        class="form-control form-control-sm border-orange uppercase" placeholder="Opcional">
-                                </div>
-                                <div class="col-12">
-                                    <div class="input-group input-group-sm mb-1">
-                                        <span class="input-group-text">Chofer</span>
-                                        <input type="text" name="chofer_externo" x-model="externo_chofer" 
-                                            class="form-control uppercase" placeholder="Nombre completo" :required="esPropio == '0'">
-                                    </div>
-                                    <div class="input-group input-group-sm mb-1">
-                                        <span class="input-group-text">Ayudante</span>
-                                        <input type="text" name="ayudante_externo" x-model="externo_ayudante" 
-                                            class="form-control uppercase" placeholder="Nombre completo">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- INDICADOR DE CARGA --}}
-                <div x-show="modo !== 'flete'" class="card shadow-sm sticky-top border-0" style="top: 20px;">
-                    <div class="card-body text-center p-3" :class="excesoCarga ? 'bg-danger text-white rounded' : 'bg-light rounded'">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span class="small fw-bold text-uppercase">Ocupación</span>
-                            <span class="small fw-bold" x-text="porcentajeCarga + '%'"></span>
-                        </div>
-                        <div class="progress mb-3" style="height: 8px;">
-                            <div class="progress-bar progress-bar-striped progress-bar-animated" :class="excesoCarga ? 'bg-white' : 'bg-orange'" role="progressbar" :style="'width: ' + porcentajeCarga + '%'"></div>
-                        </div>
-                        <div class="row g-0 border-top pt-2">
-                            <div class="col-6 border-end">
-                                <small class="d-block text-[9px] uppercase">Planificado</small>
-                                <span class="fw-black fs-5" x-text="formatoNumero(totalLitros)"></span>
-                            </div>
-                            <div class="col-6">
-                                <small class="d-block text-[9px] uppercase">Capacidad</small>
-                                <span class="fw-black fs-5" x-text="formatoNumero(capacidadMaxima)"></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- COLUMNA DERECHA: DINÁMICA POR MODO --}}
-            <div class="col-md-8">
-
-                {{-- MODO COMPRA --}}
-                <template x-if="modo === 'compra'">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-header bg-white py-3 border-bottom">
-                            <h6 class="mb-0 fw-black text-uppercase small text-dark">2. Detalle de la Compra</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="small fw-bold text-muted text-uppercase">Proveedor</label>
-                                    <select name="proveedor_id" class="form-select border-orange fw-bold" required>
-                                        <option value="">-- Seleccione --</option>
-                                        @foreach($proveedores as $prov)
-                                            <option value="{{ $prov->id }}" {{ old('proveedor_id', $viaje->compraCombustible->proveedor_id ?? '') == $prov->id ? 'selected' : '' }}>
-                                                {{ $prov->nombre }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="small fw-bold text-muted text-uppercase">Sede de Recepción</label>
-                                    <select name="sede_id" class="form-select border-orange fw-bold" required>
-                                        <option value="">-- Seleccione --</option>
-                                        @foreach($sedes as $s)
-                                            <option value="{{ $s->id }}" {{ old('sede_id', $viaje->compraCombustible->planta_destino_id ?? $viaje->sede_id) == $s->id ? 'selected' : '' }}>
-                                                {{ $s->nombre }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="small fw-bold text-muted text-uppercase">Código SAP</label>
-                                    <input type="text" name="codigo_sap" class="form-control border-orange fw-bold" value="{{ old('codigo_sap', $viaje->compraCombustible->sap ?? $viaje->codigo_sap) }}">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="small fw-bold text-muted text-uppercase">Litros a Comprar</label>
-                                    <div class="input-group">
-                                        <input type="number" name="cantidad_litros" class="form-control border-orange fw-black text-orange" x-model.number="totalLitros" required>
-                                        <span class="input-group-text bg-white border-orange">L</span>
-                                    </div>
-                                </div>
-                                <div class="col-12 mt-3">
-                                    <label class="small fw-bold text-muted text-uppercase">Observaciones</label>
-                                    <textarea name="observaciones" class="form-control border-light" rows="3">{{ old('observaciones', $viaje->compraCombustible->observaciones ?? $viaje->observaciones) }}</textarea>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </template>
-
-                {{-- MODO DIESEL / MGO --}}
-                <template x-if="modo === 'diesel' || modo === 'mgo'">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom">
-                            <h6 class="mb-0 fw-black text-uppercase small">2. Plan de Despacho (Destinos)</h6>
-                            <button type="button" class="btn btn-dark btn-sm fw-bold" @click="abrirModal()">
-                                <i class="fas fa-plus-circle me-1"></i> AGREGAR DESTINO
-                            </button>
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0">
-                                    <thead class="bg-light text-muted small uppercase">
-                                        <tr>
-                                            <th class="ps-3">Cliente</th>
-                                            <th width="150">Litros</th>
-                                            <th x-show="modo === 'mgo'" width="250">Logística Buque</th>
-                                            <th>Notas</th>
-                                            <th width="50"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <template x-for="(item, index) in items" :key="index">
-                                            <tr>
-                                                <td class="ps-3 small">
-                                                    <b x-text="item.cliente_nombre"></b><br>
-                                                    <span class="text-muted" x-text="'RIF: ' + item.cliente_rif"></span>
-                                                    <input type="hidden" :name="'items['+index+'][cliente_id]'" :value="item.cliente_id">
-                                                    <input type="hidden" :name="'items['+index+'][pedido_id]'" :value="item.pedido_id">
-                                                </td>
-                                                <td>
-                                                    <input type="number" :name="'items['+index+'][litros]'" class="form-control form-control-sm fw-bold border-orange" x-model.number="item.litros" @input="calcularTotal()">
-                                                </td>
-                                                <td x-show="modo === 'mgo'">
-                                                    <div class="d-flex flex-column gap-1">
-                                                        <select class="form-select form-select-sm mb-1" x-model="item.buque_id" @change="onBuqueChange(item)">
-                                                            <option value="">-- Seleccione Buque --</option>
-                                                            <template x-for="b in buques.filter(x => x.cliente_id == item.cliente_id)" :key="b.id">
-                                                                <option :value="b.id" x-text="b.nombre"></option>
-                                                            </template>
-                                                            <option value="manual" class="text-primary fw-bold">+ Agregar Manualmente</option>
-                                                        </select>
-                                                        <input type="hidden" :name="'items['+index+'][buque_id]'" x-model="item.buque_id">
-                                                        <input type="text" :name="'items['+index+'][buque_nombre]'" class="form-control form-control-sm fw-bold border-primary text-uppercase" placeholder="Nombre del Buque" x-model="item.buque_nombre" x-show="item.buque_id === 'manual'">
-                                                        <div class="d-flex gap-1">
-                                                            <input type="text" :name="'items['+index+'][buque_imo]'" class="form-control form-control-sm" placeholder="IMO" x-model="item.buque_imo" :readonly="item.buque_id !== 'manual' && item.buque_id !== ''">
-                                                            <input type="text" :name="'items['+index+'][buque_bandera]'" class="form-control form-control-sm" placeholder="Bandera" x-model="item.buque_bandera" :readonly="item.buque_id !== 'manual' && item.buque_id !== ''">
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <textarea :name="'items['+index+'][observaciones]'" class="form-control form-control-sm" rows="1" x-model="item.observaciones"></textarea>
-                                                </td>
-                                                <td>
-                                                    <button type="button" class="btn btn-link text-danger" @click="removerItem(index)">
-                                                        <i class="fas fa-times"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        </template>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </template>
-
-                {{-- MODO FLETE --}}
-                <template x-if="modo === 'flete'">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-header bg-white py-3 border-bottom">
-                            <h6 class="mb-0 fw-black text-uppercase small text-dark">2. Detalles del Flete</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-12 mb-2">
-                                    <label class="small fw-bold text-muted uppercase">Cliente (Opcional)</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-orange"><i class="fas fa-user-tie text-orange"></i></span>
-                                        <select name="cliente_id" class="form-select border-orange fw-black text-uppercase" style="font-size: 12px;">
-                                            <option value="">-- MOVIMIENTO INTERNO (SIN CLIENTE) --</option>
-                                            @foreach($clientes as $cliente)
-                                                <option value="{{ $cliente->id }}" {{ old('cliente_id', $viaje->cliente_id) == $cliente->id ? 'selected' : '' }}>
-                                                    {{ $cliente->nombre }} - {{ $cliente->rif }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <small class="text-muted italic" style="font-size: 14px;">Si es un flete interno de ImporDiesel, deje este campo en blanco.</small>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="small fw-bold text-muted uppercase">Punto Salida</label>
-                                    <input type="text" name="punto_salida" class="form-control border-orange uppercase fw-bold" style="font-size: 12px;" placeholder="EJ: Planta PDVSA El Palito" value="{{ old('punto_salida', $viaje->punto_salida) }}">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="small fw-bold text-muted uppercase">Punto Llegada</label>
-                                    <input type="text" name="punto_llegada" class="form-control border-orange uppercase fw-bold" style="font-size: 12px;" placeholder="EJ: Sede Caracas, Boleíta" value="{{ old('punto_llegada', $viaje->punto_llegada) }}">
-                                </div>
-                                <div class="col-12 mt-3">
-                                    <label class="small fw-bold text-muted uppercase">Observaciones del Flete</label>
-                                    <textarea name="observaciones" class="form-control border-light" rows="3" placeholder="Detalles adicionales sobre el movimiento...">{{ old('observaciones', $viaje->observaciones) }}</textarea>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </template>
-
-                <div class="mt-4 text-end">
-                    <button type="submit" class="btn btn-orange btn-lg px-5 text-white fw-black shadow" :disabled="excesoCarga">
-                        ACTUALIZAR PLANIFICACIÓN
-                    </button>
-                </div>
-            </div>
-        </div>
+        
+        {{-- INYECTAMOS EL FORMULARIO CON LOS DATOS DEL VIAJE --}}
+        @include('admin.logistica.partials._form', ['viaje' => $viaje])
     </form>
 
     @include('admin.logistica.partials.modal_add_destino')
@@ -382,179 +35,54 @@
             modo: tipoModo,
             buques: buquesIniciales || [],
             tipoVehiculoSeleccionado: '',
-            esPropio: '1',
-            vehiculo_externo: '',
-            cisterna_externo: '',
-            chofer_externo: '',
-            ayudante_externo: '',
-            vehiculoId: '',
-            cisternaId: '',
-            capacidadMaxima: 0,
-            necesitaCisterna: false,
-            totalLitros: 0,
-            items: [],
+            esPropio: '1', vehiculo_externo: '', cisterna_externo: '', chofer_externo: '', ayudante_externo: '', vehiculoId: '', cisternaId: '', capacidadMaxima: 0, totalLitros: 0, items: [],
             
             init() {
-                // HIDRATACIÓN DE DATOS AL EDITAR
                 const viaje = @json($viaje);
                 const detalles = @json($viaje->detalles ?? []);
                 const compra = @json($viaje->compraCombustible ?? null);
 
-                // 1. Transporte
                 this.esPropio = viaje.es_transporte_externo ? '0' : '1';
-
                 if (this.esPropio === '0') {
-                    this.vehiculo_externo = viaje.vehiculo_externo || '';
-                    this.cisterna_externo = viaje.cisterna_externa || ''; 
-                    this.chofer_externo = viaje.chofer_externo || '';
-                    this.ayudante_externo = viaje.ayudante_externo || '';
+                    this.vehiculo_externo = viaje.vehiculo_externo || ''; this.cisterna_externo = viaje.cisterna_externa || ''; this.chofer_externo = viaje.chofer_externo || ''; this.ayudante_externo = viaje.ayudante_externo || '';
                 }
 
-                // 2. Compras
-                if (this.modo === 'compra' && compra) {
-                    this.totalLitros = parseFloat(compra.cantidad_litros || 0);
-                }
+                if (this.modo === 'compra' && compra) this.totalLitros = parseFloat(compra.cantidad_litros || 0);
 
-                // 3. Destinos (Diesel/MGO)
                 if (this.modo === 'diesel' || this.modo === 'mgo') {
                     this.items = detalles.map(d => ({
-                        pedido_id: d.pedido_id || '',
-                        cliente_id: d.cliente_id || '',
-                        cliente_nombre: d.cliente ? d.cliente.nombre : 'Cliente',
-                        cliente_rif: d.cliente ? d.cliente.rif : '',
-                        litros: parseFloat(d.litros || 0),
-                        buque_id: d.buque_id || '',
-                        buque_nombre: d.buque_nombre || '',
-                        buque_imo: d.buque_imo || '',
-                        buque_bandera: d.buque_bandera || '',
-                        observaciones: d.observaciones || ''
+                        pedido_id: d.pedido_id || '', cliente_id: d.cliente_id || '', cliente_nombre: d.cliente ? d.cliente.nombre : 'Cliente', cliente_rif: d.cliente ? d.cliente.rif : '', litros: parseFloat(d.litros || 0), buque_id: d.buque_id || '', buque_nombre: d.buque_nombre || '', buque_imo: d.buque_imo || '', buque_bandera: d.buque_bandera || '', observaciones: d.observaciones || ''
                     }));
                     this.calcularTotal();
                 }
 
-                // 4. Forzar selección de vehículos propios para activar cálculos de capacidad
                 this.$nextTick(() => {
                     if (this.esPropio === '1') {
                         this.vehiculoId = viaje.vehiculo_id || '';
                         let elVehiculo = document.getElementById('vehiculo_select');
-                        if(elVehiculo && this.vehiculoId) {
-                            elVehiculo.value = this.vehiculoId;
-                            elVehiculo.dispatchEvent(new Event('change'));
-                        }
-
+                        if(elVehiculo && this.vehiculoId) { elVehiculo.value = this.vehiculoId; elVehiculo.dispatchEvent(new Event('change')); }
                         setTimeout(() => {
                             if (this.tipoVehiculoSeleccionado == '3') {
-                                // Ajusta el campo de la bd si es cisterna_id o cisterna_acoplada_id
                                 this.cisternaId = viaje.cisterna_acoplada_id || viaje.cisterna_id || ''; 
                                 let elCisterna = document.getElementById('cisterna_select');
-                                if(elCisterna && this.cisternaId) {
-                                    elCisterna.value = this.cisternaId;
-                                    elCisterna.dispatchEvent(new Event('change'));
-                                }
+                                if(elCisterna && this.cisternaId) { elCisterna.value = this.cisternaId; elCisterna.dispatchEvent(new Event('change')); }
                             }
                         }, 150);
                     }
                 });
             },
 
-            getTitulo() {
-                const titulos = { 'diesel': 'Diesel', 'mgo': 'MGO', 'flete': 'Flete', 'compra': 'Compra' };
-                return titulos[this.modo] || 'Planificación';
-            },
-
-            get porcentajeCarga() {
-                if (this.capacidadMaxima <= 0) return 0;
-                let p = Math.round((this.totalLitros / this.capacidadMaxima) * 100);
-                return p > 100 ? 100 : p;
-            },
-
-            get excesoCarga() {
-                return (this.esPropio == '1' && this.capacidadMaxima > 0 && this.totalLitros > this.capacidadMaxima);
-            },
-
-            cambioVehiculo(e) {
-                const opt = e.target.options[e.target.selectedIndex];
-                if (!opt.value) {
-                    this.tipoVehiculoSeleccionado = '';
-                    this.capacidadMaxima = 0;
-                    this.necesitaCisterna = false;
-                    return;
-                }
-
-                this.tipoVehiculoSeleccionado = opt.dataset.tipo;
-                const capVehiculo = parseFloat(opt.dataset.capacidad || 0);
-
-                if (this.tipoVehiculoSeleccionado == '3') {
-                    this.necesitaCisterna = true;
-                    this.capacidadMaxima = 0; 
-                } else {
-                    this.necesitaCisterna = false;
-                    this.capacidadMaxima = capVehiculo;
-                }
-                
-                this.cisternaId = '';
-            },
-
-            cambioCisterna(e) {
-                const opt = e.target.options[e.target.selectedIndex];
-                if (opt.value) {
-                    this.capacidadMaxima = parseFloat(opt.dataset.capacidad || 0);
-                } else {
-                    this.capacidadMaxima = 0;
-                }
-            },
-
-            abrirModal() {
-                const modal = new bootstrap.Modal(document.getElementById('modalAdd'));
-                modal.show();
-            },
-
-            addPedido(id, clienteId, nombre, litros, rif, cupo) {
-                this.items.push({ 
-                    pedido_id: id, 
-                    cliente_id: clienteId, 
-                    cliente_nombre: nombre,
-                    cliente_rif: rif,
-                    litros: parseFloat(litros),
-                    buque_id: '',
-                    buque_nombre: '',
-                    buque_imo: '',
-                    buque_bandera: '',
-                    observaciones: ''
-                });
-                this.calcularTotal();
-                const modal = bootstrap.Modal.getInstance(document.getElementById('modalAdd'));
-                modal.hide();
-            },
-
-            onBuqueChange(item) {
-                if (item.buque_id && item.buque_id !== 'manual') {
-                    const buqueSeleccionado = this.buques.find(b => b.id == item.buque_id);
-                    if (buqueSeleccionado) {
-                        item.buque_nombre = buqueSeleccionado.nombre;
-                        item.buque_imo = buqueSeleccionado.imo || '';
-                        item.buque_bandera = buqueSeleccionado.bandera || '';
-                    }
-                } else {
-                    item.buque_nombre = '';
-                    item.buque_imo = '';
-                    item.buque_bandera = '';
-                }
-            },
-
-            removerItem(index) {
-                this.items.splice(index, 1);
-                this.calcularTotal();
-            },
-
-            calcularTotal() {
-                if(this.modo === 'compra') return;
-                this.totalLitros = this.items.reduce((sum, item) => sum + parseFloat(item.litros || 0), 0);
-            },
-
-            formatoNumero(n) {
-                return new Intl.NumberFormat('es-VE').format(n);
-            }
+            getTitulo() { const titulos = { 'diesel': 'Diesel', 'mgo': 'MGO', 'flete': 'Flete', 'compra': 'Compra' }; return titulos[this.modo] || 'Planificación'; },
+            get porcentajeCarga() { if (this.capacidadMaxima <= 0) return 0; let p = Math.round((this.totalLitros / this.capacidadMaxima) * 100); return p > 100 ? 100 : p; },
+            get excesoCarga() { return (this.esPropio == '1' && this.capacidadMaxima > 0 && this.totalLitros > this.capacidadMaxima); },
+            cambioVehiculo(e) { const opt = e.target.options[e.target.selectedIndex]; if (!opt.value) { this.tipoVehiculoSeleccionado = ''; this.capacidadMaxima = 0; return; } this.tipoVehiculoSeleccionado = opt.dataset.tipo; this.capacidadMaxima = parseFloat(opt.dataset.capacidad || 0); if (this.tipoVehiculoSeleccionado == '3') { this.capacidadMaxima = 0; } this.cisternaId = ''; },
+            cambioCisterna(e) { const opt = e.target.options[e.target.selectedIndex]; this.capacidadMaxima = opt.value ? parseFloat(opt.dataset.capacidad || 0) : 0; },
+            abrirModal() { new bootstrap.Modal(document.getElementById('modalAdd')).show(); },
+            addPedido(id, clienteId, nombre, litros, rif, cupo) { this.items.push({ pedido_id: id, cliente_id: clienteId, cliente_nombre: nombre, cliente_rif: rif, litros: parseFloat(litros), buque_id: '', buque_nombre: '', buque_imo: '', buque_bandera: '', observaciones: '' }); this.calcularTotal(); bootstrap.Modal.getInstance(document.getElementById('modalAdd')).hide(); },
+            onBuqueChange(item) { if (item.buque_id && item.buque_id !== 'manual') { const b = this.buques.find(x => x.id == item.buque_id); if (b) { item.buque_nombre = b.nombre; item.buque_imo = b.imo || ''; item.buque_bandera = b.bandera || ''; } } else { item.buque_nombre = ''; item.buque_imo = ''; item.buque_bandera = ''; } },
+            removerItem(index) { this.items.splice(index, 1); this.calcularTotal(); },
+            calcularTotal() { if(this.modo === 'compra') return; this.totalLitros = this.items.reduce((sum, item) => sum + parseFloat(item.litros || 0), 0); },
+            formatoNumero(n) { return new Intl.NumberFormat('es-VE').format(n); }
         }
     }
 </script>

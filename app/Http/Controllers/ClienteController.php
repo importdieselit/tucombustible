@@ -5,13 +5,14 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Viaje;
 use App\Models\Pedido;
+use App\Models\Cliente;
+use App\Repositories\ClienteRepository;
 use App\Services\{ClienteService, DashboardService};
 use App\Services\GascoCupoService;
-use App\Services\PedidoService;
 use App\Models\{Estado, Ciudad};
 use App\Models\TipoCombustible;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\{Auth, Log};
+use Illuminate\Support\Facades\{Redirect, Session, Auth, Log};
 
 class ClienteController extends Controller
 {
@@ -181,5 +182,159 @@ class ClienteController extends Controller
         return Ciudad::where('estado_id', $estado_id)
             ->orderBy('nombre', 'asc')
             ->get();
+    }
+
+    public function updatePerfil(Request $request)
+    {
+        // Seguridad: El ID se extrae directamente del usuario autenticado
+        $id = auth()->user()->cliente_id; 
+
+        // Normalizamos a mayúsculas antes de validar y guardar
+        $data = $request->all();
+        if ($request->filled('contacto')) $data['contacto'] = strtoupper($request->contacto);
+        if ($request->filled('contacto_alt')) $data['contacto_alt'] = strtoupper($request->contacto_alt);
+        if ($request->filled('direccion')) $data['direccion'] = strtoupper($request->direccion);
+        if ($request->filled('direccion_operativa')) $data['direccion_operativa'] = strtoupper($request->direccion_operativa);
+        $request->merge($data);
+
+        $request->validate([
+            'nombre'              => 'required|string|max:255',
+            'email'               => 'required|email:rfc,dns|max:255',
+            'contacto'            => 'required|string|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u|max:255',
+            'telefono'            => 'nullable|digits_between:10,11',
+            'contacto_alt'        => 'nullable|string|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u|max:255',
+            'telefono_alt'        => 'nullable|digits_between:10,11',
+            'estado_id'           => 'nullable|exists:estados,id',
+            'ciudad_id'           => 'nullable|exists:ciudades,id',
+            'direccion'           => 'nullable|string',
+            'direccion_operativa' => 'nullable|string',
+        ], [
+            'contacto.regex'              => 'El campo Persona de Contacto solo debe contener letras.',
+            'contacto_alt.regex'          => 'El campo Contacto Alternativo solo debe contener letras.',
+            'email.email'                 => 'El correo electrónico debe ser una dirección válida con @.',
+            'telefono.digits_between'     => 'El teléfono debe tener entre 10 y 11 dígitos.',
+            'telefono_alt.digits_between' => 'El teléfono alternativo debe tener entre 10 y 11 dígitos.',
+        ]);
+
+        try {
+            // Reutilizamos el repositorio para actualizar los datos permitidos
+            app(ClienteRepository::class)->update($id, $request->only([
+                'nombre', 'rif', 'email', 'contacto', 'telefono',
+                'contacto_alt', 'telefono_alt',
+                'estado_id', 'ciudad_id', 'direccion', 'direccion_operativa',
+            ]));
+
+            Session::flash('success', 'Tus datos han sido actualizados correctamente.');
+            return Redirect::back();
+        } catch (\Exception $e) {
+            Log::error('Error al actualizar perfil desde el portal de clientes: ' . $e->getMessage());
+            return Redirect::back()->withInput()->with('error', 'Error al procesar la actualización.');
+        }
+    }
+
+    public function registrarPlaca(Request $request)
+    {
+        $request->validate([
+            'placa'      => 'required|string|max:8',
+            'cliente_id' => 'required|integer'
+        ]);
+
+        $padreId  = auth()->user()->cliente_id;
+        $targetId = $request->cliente_id;
+
+        // Validar que el destino sea el perfil propio o una de sus sucursales
+        if ($targetId != $padreId) {
+            $esSucursal = Cliente::where('id', $targetId)->where('parent', $padreId)->exists();
+            if (!$esSucursal) abort(403, 'No tienes permiso para registrar en esta sucursal.');
+        }
+
+        $placaFormateada = strtoupper(trim($request->placa));
+
+        try {
+            $this->clienteService->registrarPlaca($targetId, $placaFormateada);
+            Session::flash('success', 'Placa registrada correctamente.');
+            return Redirect::back();
+        } catch (\Exception $e) {
+            Log::error('Error al registrar placa: ' . $e->getMessage());
+            return Redirect::back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function inactivarPlaca(Request $request, $placaId)
+    {
+        $padreId  = auth()->user()->cliente_id;
+        // Si no viene el cliente_id, asumimos el del padre por seguridad
+        $targetId = $request->input('cliente_id', $padreId); 
+
+        if ($targetId != $padreId) {
+            $esSucursal = Cliente::where('id', $targetId)->where('parent', $padreId)->exists();
+            if (!$esSucursal) abort(403, 'Acción no autorizada.');
+        }
+
+        try {
+            // Verificar que la placa pertenece al cliente que se está visualizando
+            $cliente = $this->clienteService->obtenerExpediente($targetId);
+            $poseePlaca = $cliente->placas()->where('id', $placaId)->exists();
+            
+            if (!$poseePlaca) abort(403, 'Esta placa no pertenece a este registro.');
+
+            $this->clienteService->inactivarPlaca($placaId);
+            Session::flash('success', 'Placa inactivada correctamente.');
+            return Redirect::back();
+        } catch (\Exception $e) {
+            return Redirect::back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function registrarChofer(Request $request)
+    {
+        $request->validate([
+            'nombre_completo' => 'required|string|max:255',
+            'cedula'          => 'required|string|max:15',
+            'cliente_id'      => 'required|integer'
+        ]);
+
+        $padreId  = auth()->user()->cliente_id;
+        $targetId = $request->cliente_id;
+
+        if ($targetId != $padreId) {
+            $esSucursal = Cliente::where('id', $targetId)->where('parent', $padreId)->exists();
+            if (!$esSucursal) abort(403, 'No tienes permiso para registrar en esta sucursal.');
+        }
+
+        $nombreFormateado = strtoupper(trim($request->nombre_completo));
+
+        try {
+            $this->clienteService->registrarChofer($targetId, $nombreFormateado, $request->cedula);
+            Session::flash('success', 'Personal autorizado registrado correctamente.');
+            return Redirect::back();
+        } catch (\Exception $e) {
+            Log::error('Error al registrar chofer desde cliente: ' . $e->getMessage());
+            return Redirect::back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function inactivarChofer(Request $request, $choferId)
+    {
+        $padreId  = auth()->user()->cliente_id;
+        $targetId = $request->input('cliente_id', $padreId);
+
+        if ($targetId != $padreId) {
+            $esSucursal = Cliente::where('id', $targetId)->where('parent', $padreId)->exists();
+            if (!$esSucursal) abort(403, 'Acción no autorizada.');
+        }
+
+        try {
+            $cliente = $this->clienteService->obtenerExpediente($targetId);
+            $poseeChofer = $cliente->choferes()->where('id', $choferId)->exists();
+            
+            if (!$poseeChofer) abort(403, 'Este chofer no pertenece a este registro.');
+
+            $this->clienteService->inactivarChofer($choferId);
+            Session::flash('success', 'Personal autorizado removido correctamente.');
+            return Redirect::back();
+        } catch (\Exception $e) {
+            return Redirect::back()->with('error', $e->getMessage());
+        }
     }
 }

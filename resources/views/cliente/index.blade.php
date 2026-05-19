@@ -33,20 +33,26 @@
     {{-- CONTENEDOR PRINCIPAL --}}
     <div class="space-y-6">
 
-        {{-- DATOS PRINCIPALES --}}
+        {{-- DATOS PRINCIPALES (VISTA Y EDICIÓN CON JS PURO) --}}
         <div class="bg-white rounded border-2 border-gray-300 shadow-md overflow-hidden mb-8">
-            <div class="bg-gray-800 p-5">
-                <h2 class="text-2xl font-black text-white uppercase tracking-tighter">{{ $cliente->nombre }}</h2>
-                <p class="text-orange-impordiesel text-sm font-black uppercase tracking-widest">
-                    RIF: {{ $cliente->rif }} —
-                    <span class="{{ $cliente->color_status }} text-white px-2 py-0.5 rounded text-[10px] font-black uppercase ml-1">
-                        {{ $cliente->label_status }}
-                    </span>
-                </p>
+            <div class="bg-gray-800 p-5 flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-black text-white uppercase tracking-tighter">{{ $cliente->nombre }}</h2>
+                    <p class="text-orange-impordiesel text-sm font-black uppercase tracking-widest">
+                        RIF: {{ $cliente->rif }} —
+                        <span class="{{ $cliente->color_status }} text-white px-2 py-0.5 rounded text-[10px] font-black uppercase ml-1">
+                            {{ $cliente->label_status }}
+                        </span>
+                    </p>
+                </div>
+                {{-- Botón para activar el modo edición --}}
+                <button type="button" id="btnEditPerfil" onclick="toggleEditPerfil()" class="bg-orange-impordiesel text-white font-black uppercase text-[10px] px-3 py-1.5 rounded shadow-sm hover:bg-opacity-90 transition">
+                    <i class="fas fa-edit mr-1"></i> Editar Información
+                </button>
             </div>
-            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
 
-                {{-- CONTACTO PRINCIPAL --}}
+            {{-- BLOQUE DE VISTA (SOLO LECTURA) --}}
+            <div id="perfilViewMode" class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 <div>
                     <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Contacto Principal</p>
                     <p class="font-black text-gray-700 uppercase mt-1">{{ $cliente->contacto ?? 'N/A' }}</p>
@@ -55,8 +61,6 @@
                     <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Teléfono Principal</p>
                     <p class="font-black text-gray-700 mt-1">{{ $cliente->telefono ?? 'N/A' }}</p>
                 </div>
-
-                {{-- CONTACTO ALTERNATIVO --}}
                 <div>
                     <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Contacto Alternativo</p>
                     <p class="font-black text-gray-700 uppercase mt-1">{{ $cliente->contacto_alt ?? '—' }}</p>
@@ -65,7 +69,6 @@
                     <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Teléfono Alternativo</p>
                     <p class="font-black text-gray-700 mt-1">{{ $cliente->telefono_alt ?? '—' }}</p>
                 </div>
-
                 <div>
                     <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Correo</p>
                     <p class="font-black text-gray-700 mt-1">{{ $cliente->email ?? 'N/A' }}</p>
@@ -93,6 +96,71 @@
                     <p class="font-black text-gray-700 mt-1">{{ $cliente->fecha_aprobacion?->format('d/m/Y') ?? '—' }}</p>
                 </div>
             </div>
+
+            {{-- BLOQUE DE EDICIÓN (FORMULARIO OCULTO POR DEFECTO) --}}
+            <form id="perfilEditMode" action="{{ route('portal.clientes.perfil.update') }}" method="POST" class="hidden p-6 text-xs border-t border-gray-100 bg-gray-50">
+                @csrf
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Razón Social</label>
+                        <input type="text" name="nombre" value="{{ $cliente->nombre }}" class="w-full border border-gray-300 rounded p-2 font-black text-gray-800 uppercase outline-none focus:border-orange-impordiesel" required>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">RIF</label>
+                        <input type="text" name="rif" value="{{ $cliente->rif }}" class="w-full border border-gray-300 rounded p-2 font-black text-gray-800 uppercase outline-none focus:border-orange-impordiesel" required>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Contacto Principal</label>
+                        <input type="text" name="contacto" value="{{ $cliente->contacto }}" class="w-full border border-gray-300 rounded p-2 font-black text-gray-800 uppercase outline-none focus:border-orange-impordiesel" required>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Teléfono Principal</label>
+                        <input type="text" name="telefono" value="{{ $cliente->telefono }}" class="w-full border border-gray-300 rounded p-2 font-black text-gray-800 outline-none focus:border-orange-impordiesel" maxlength="11" required>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Contacto Alternativo</label>
+                        <input type="text" name="contacto_alt" value="{{ $cliente->contacto_alt }}" class="w-full border border-gray-300 rounded p-2 font-black text-gray-800 uppercase outline-none focus:border-orange-impordiesel">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Teléfono Alternativo</label>
+                        <input type="text" name="telefono_alt" value="{{ $cliente->telefono_alt }}" class="w-full border border-gray-300 rounded p-2 font-black text-gray-800 outline-none focus:border-orange-impordiesel" maxlength="11">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Correo Electrónico</label>
+                        <input type="email" name="email" value="{{ $cliente->email }}" class="w-full border border-gray-300 rounded p-2 font-black text-gray-800 outline-none focus:border-orange-impordiesel" required>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Estado</label>
+                        <select name="estado_id" class="w-full border border-gray-300 rounded p-2 font-black text-gray-800 uppercase outline-none focus:border-orange-impordiesel" required>
+                            @foreach(\App\Models\Estado::orderBy('nombre')->get() as $est)
+                                <option value="{{ $est->id }}" {{ $cliente->estado_id == $est->id ? 'selected' : '' }}>{{ $est->nombre }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Ciudad</label>
+                        <select name="ciudad_id" class="w-full border border-gray-300 rounded p-2 font-black text-gray-800 uppercase outline-none focus:border-orange-impordiesel" required>
+                            @if($cliente->estado_id)
+                                @foreach(\App\Models\Ciudad::where('estado_id', $cliente->estado_id)->orderBy('nombre')->get() as $ciu)
+                                    <option value="{{ $ciu->id }}" {{ $cliente->ciudad_id == $ciu->id ? 'selected' : '' }}>{{ $ciu->nombre }}</option>
+                                @endforeach
+                            @endif
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Dirección Fiscal</label>
+                        <textarea name="direccion" rows="2" class="w-full border border-gray-300 rounded p-2 font-black text-gray-800 uppercase outline-none focus:border-orange-impordiesel" required>{{ $cliente->direccion }}</textarea>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-[10px] font-black text-orange-impordiesel uppercase tracking-widest mb-1">Dirección Operativa</label>
+                        <textarea name="direccion_operativa" rows="2" class="w-full border border-gray-300 rounded p-2 font-black text-gray-800 uppercase outline-none focus:border-orange-impordiesel" required>{{ $cliente->direccion_operativa }}</textarea>
+                    </div>
+                </div>
+                <div class="mt-4 flex justify-end gap-2 border-t border-gray-200 pt-4">
+                    <button type="button" onclick="toggleEditPerfil()" class="bg-gray-600 hover:bg-gray-700 text-white font-black uppercase text-[10px] px-4 py-2 rounded transition">Cancelar</button>
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-black uppercase text-[10px] px-4 py-2 rounded transition">Guardar Cambios</button>
+                </div>
+            </form>
         </div>
 
         {{-- RESUMEN DE CUPOS Y DISPONIBLE --}}
@@ -162,9 +230,14 @@
                     <h5 class="text-[10px] font-black uppercase italic tracking-widest">
                         <i class="fas fa-truck-moving mr-2"></i> Placas Autorizadas
                     </h5>
-                    <span class="bg-orange-impordiesel text-white text-[9px] px-2 py-0.5 rounded-full font-black">
-                        {{ $placas->count() }}
-                    </span>
+                    <div class="flex items-center gap-2">
+                        <span class="bg-orange-impordiesel text-white text-[10px] px-2 py-0.5 rounded-full font-black">
+                            {{ $placas->count() }}
+                        </span>
+                        <button type="button" onclick="openModalPlaca()" class="bg-green-600 hover:bg-green-700 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded transition shadow-sm">
+                            <i class="fas fa-plus mr-1"></i> Agregar
+                        </button>
+                    </div>
                 </div>
                 <div class="p-2 border-b border-gray-100">
                     <div class="relative">
@@ -178,7 +251,17 @@
                     @forelse($placas as $placa)
                         <div class="flex justify-between items-center px-6 py-3 hover:bg-gray-50">
                             <span class="text-xs font-black text-gray-700 tracking-widest">{{ $placa->placa }}</span>
-                            <i class="fas fa-check-circle text-green-500 text-[10px]"></i>
+                            <div class="flex items-center gap-3">
+                                <i class="fas fa-check-circle text-green-500 text-[10px]"></i>
+                                <form action="{{ route('portal.clientes.placas.destroy', $placa->id) }}" method="POST" onsubmit="return confirm('¿Seguro que deseas inactivar esta placa?')">
+                                    @csrf
+                                    <input type="hidden" name="cliente_id" value="{{ $cliente->id }}">
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-500 hover:text-red-700 transition p-1 outline-none">
+                                        <i class="fas fa-trash-alt text-[10px]"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     @empty
                         <p class="text-[10px] text-gray-400 text-center py-8 font-bold uppercase italic">Sin placas registradas.</p>
@@ -192,9 +275,14 @@
                     <h5 class="text-[10px] font-black uppercase italic tracking-widest">
                         <i class="fas fa-id-card mr-2"></i> Personal Autorizado
                     </h5>
-                    <span class="bg-blue-600 text-white text-[9px] px-2 py-0.5 rounded-full font-black">
-                        {{ $choferes->count() }}
-                    </span>
+                    <div class="flex items-center gap-2">
+                        <span class="bg-blue-600 text-white text-[10px] px-2 py-0.5 rounded-full font-black">
+                            {{ $choferes->count() }}
+                        </span>
+                        <button type="button" onclick="openModalChofer()" class="bg-green-600 hover:bg-green-700 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded transition shadow-sm">
+                            <i class="fas fa-plus mr-1"></i> Agregar
+                        </button>
+                    </div>
                 </div>
                 <div class="p-2 border-b border-gray-100">
                     <div class="relative">
@@ -206,9 +294,21 @@
                 </div>
                 <div class="divide-y divide-gray-100 max-h-64 overflow-y-auto" id="listaChoferes">
                     @forelse($choferes as $chofer)
-                        <div class="px-6 py-3 hover:bg-gray-50">
-                            <p class="text-[10px] font-black text-gray-800 uppercase">{{ $chofer->nombre_completo }}</p>
-                            <p class="text-[9px] text-gray-500 font-bold">C.I: {{ $chofer->cedula }}</p>
+                        <div class="flex justify-between items-center px-6 py-3 hover:bg-gray-50">
+                            <div>
+                                <p class="text-[10px] font-black text-gray-800 uppercase">{{ $chofer->nombre_completo }}</p>
+                                <p class="text-[10px] text-gray-500 font-bold">C.I: {{ $chofer->cedula }}</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <form action="{{ route('portal.clientes.choferes.destroy', $chofer->id) }}" method="POST" onsubmit="return confirm('¿Seguro que deseas inactivar a este chofer?')">
+                                    @csrf
+                                    <input type="hidden" name="cliente_id" value="{{ $cliente->id }}">
+                                    @method('DELETE')
+                                    <button type="submit" class="text-red-500 hover:text-red-700 transition p-1 outline-none">
+                                        <i class="fas fa-trash-alt text-[10px]"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     @empty
                         <p class="text-[10px] text-gray-400 text-center py-8 font-bold uppercase italic">Sin choferes registrados.</p>
@@ -238,10 +338,10 @@
                         <tr class="hover:bg-gray-50">
                             <td class="px-6 py-3 font-black text-gray-700 uppercase">
                                 {{ $suc->nombre }}<br>
-                                <span class="text-[9px] text-gray-400 font-bold">{{ $suc->rif }}</span>
+                                <span class="text-[10px] text-gray-400 font-bold">{{ $suc->rif }}</span>
                             </td>
                             <td class="px-6 py-3 text-center">
-                                <span class="{{ $suc->color_status }} text-white px-2 py-1 rounded text-[9px] font-black uppercase">
+                                <span class="{{ $suc->color_status }} text-white px-2 py-1 rounded text-[10px] font-black uppercase">
                                     {{ $suc->label_status }}
                                 </span>
                             </td>
@@ -249,7 +349,7 @@
                                 <div class="w-24 bg-gray-200 h-1.5 rounded-full overflow-hidden inline-block">
                                     <div class="bg-orange-impordiesel h-full" style="width: {{ $suc->porcentaje_registro }}%"></div>
                                 </div>
-                                <span class="text-[9px] font-black text-gray-500 block uppercase">Paso {{ $suc->registro_paso }}/5</span>
+                                <span class="text-[10px] font-black text-gray-500 block uppercase">Paso {{ $suc->registro_paso }}/5</span>
                             </td>
                             <td class="px-6 py-3 text-center">
                                 <a href="{{ route('portal.clientes.index', ['sucursal_id' => $suc->id]) }}" 
@@ -511,7 +611,6 @@
             
             <form action="{{ route('portal.clientes.pedidos.store') }}" method="POST" class="p-8">
                 @csrf
-                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     
                     <div class="md:col-span-2">
@@ -544,25 +643,25 @@
                     </div>
 
                     <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                        <label class="block text-[9px] font-black text-gray-400 uppercase mb-1">Razón Social / RIF</label>
+                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-1">Razón Social / RIF</label>
                         <p id="display_razon" class="text-[11px] font-black text-gray-800 uppercase">{{ $cliente->nombre }}</p>
                         <p id="display_rif" class="text-[10px] font-bold text-gray-500 uppercase">{{ $cliente->rif }}</p>
                     </div>
 
                     <div class="bg-gray-50 p-4 rounded-lg border border-gray-100">
-                        <label class="block text-[9px] font-black text-gray-400 uppercase mb-1">Tipo de Combustible</label>
+                        <label class="block text-[10px] font-black text-gray-400 uppercase mb-1">Tipo de Combustible</label>
                         <p id="display_combustible" class="text-[11px] font-black text-orange-impordiesel uppercase">DIESEL</p>
                     </div>
 
                     <div class="bg-orange-50 p-4 rounded-lg border border-orange-100">
-                        <label class="block text-[9px] font-black text-orange-400 uppercase mb-1">Cupo Mensual GASCO</label>
+                        <label class="block text-[10px] font-black text-orange-400 uppercase mb-1">Cupo Mensual GASCO</label>
                         <p id="display_cupo" class="text-lg font-black text-gray-800 tracking-tighter">
                             {{ number_format($cupoGasco ?? 0, 0, ',', '.') }} <span class="text-[10px]">Lts</span>
                         </p>
                     </div>
 
                     <div class="bg-green-50 p-4 rounded-lg border border-green-100">
-                        <label class="block text-[9px] font-black text-green-600 uppercase mb-1">Saldo Disponible</label>
+                        <label class="block text-[10px] font-black text-green-600 uppercase mb-1">Saldo Disponible</label>
                         <p id="display_disponible" class="text-lg font-black text-gray-800 tracking-tighter">
                             {{ number_format($cliente->disponible ?? 0, 0, ',', '.') }} <span class="text-[10px]">Lts</span>
                         </p>
@@ -599,18 +698,103 @@
     </div>
 </div>
 
+{{-- MODAL REGISTRAR PLACA --}}
+<div id="modalPlaca" class="fixed inset-0 z-50 hidden overflow-y-auto" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
+    <div class="flex items-center justify-center min-h-screen px-4 py-8">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden border-t-4 border-orange-impordiesel">
+            <div class="bg-gray-800 p-4 flex justify-between items-center">
+                <h3 class="text-white font-black uppercase text-xs tracking-widest"><i class="fas fa-truck-moving mr-2 text-orange-impordiesel"></i> Registrar Nueva Placa</h3>
+                <button onclick="closeModalPlaca()" class="text-gray-400 hover:text-white transition-colors"><i class="fas fa-times fa-lg"></i></button>
+            </div>
+            <form action="{{ route('portal.clientes.placas.store') }}" method="POST" class="p-6">
+                @csrf
+                <input type="hidden" name="cliente_id" value="{{ $cliente->id }}">
+                <label class="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2">Número de Placa</label>
+                <input type="text" name="placa" class="w-full border-2 border-gray-200 rounded-lg p-3 font-black text-xs uppercase outline-none focus:border-orange-impordiesel mb-6" placeholder="EJ: AB123CD" maxlength="8" required oninput="this.value = this.value.toUpperCase()">
+                <button type="submit" class="w-full bg-orange-impordiesel text-white py-3 rounded-xl font-black uppercase text-xs hover:bg-black transition-all shadow-md">Registrar</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- MODAL REGISTRAR CHOFER --}}
+<div id="modalChofer" class="fixed inset-0 z-50 hidden overflow-y-auto" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
+    <div class="flex items-center justify-center min-h-screen px-4 py-8">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden border-t-4 border-orange-impordiesel">
+            <div class="bg-gray-800 p-4 flex justify-between items-center">
+                <h3 class="text-white font-black uppercase text-xs tracking-widest"><i class="fas fa-user-plus mr-2 text-orange-impordiesel"></i> Registrar Personal</h3>
+                <button onclick="closeModalChofer()" class="text-gray-400 hover:text-white transition-colors"><i class="fas fa-times fa-lg"></i></button>
+            </div>
+            <form action="{{ route('portal.clientes.choferes.store') }}" method="POST" class="p-6">
+                @csrf
+                <input type="hidden" name="cliente_id" value="{{ $cliente->id }}">
+                <div class="mb-4">
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2">Nombre Completo</label>
+                    <input type="text" name="nombre_completo" class="w-full border-2 border-gray-200 rounded-lg p-3 font-black text-xs uppercase outline-none focus:border-orange-impordiesel" required oninput="this.value = this.value.toUpperCase()">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2">Cédula de Identidad</label>
+                    <input type="text" name="cedula" class="w-full border-2 border-gray-200 rounded-lg p-3 font-black text-xs outline-none focus:border-orange-impordiesel" placeholder="EJ: V-12345678" required>
+                </div>
+                <button type="submit" class="w-full bg-orange-impordiesel text-white py-3 rounded-xl font-black uppercase text-xs hover:bg-black transition-all shadow-md">Registrar</button>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
+    // Togglar Modo Edición del Perfil
+    function toggleEditPerfil() {
+        const viewMode = document.getElementById('perfilViewMode');
+        const editMode = document.getElementById('perfilEditMode');
+        const btnEdit  = document.getElementById('btnEditPerfil');
+        
+        if (viewMode.classList.contains('hidden')) {
+            viewMode.classList.remove('hidden');
+            editMode.classList.add('hidden');
+            btnEdit.classList.remove('hidden');
+        } else {
+            viewMode.classList.add('hidden');
+            editMode.classList.remove('hidden');
+            btnEdit.classList.add('hidden');
+        }
+    }
+
+    // Modal de Pedido (Original tuyo)
     function openModalPedido() { 
-        document.getElementById('modalPedido').classList.remove('hidden'); 
+        document.getElementById('modalPedido').classList.remove('hidden');
         document.body.style.overflow = 'hidden'; 
         updateModalData(document.getElementById('sucursal_select').value);
     }
     
     function closeModalPedido() { 
-        document.getElementById('modalPedido').classList.add('hidden'); 
+        document.getElementById('modalPedido').classList.add('hidden');
         document.body.style.overflow = 'auto';
     }
 
+    // Modal Placa
+    function openModalPlaca() {
+        document.getElementById('modalPlaca').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function closeModalPlaca() {
+        document.getElementById('modalPlaca').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    // Modal Chofer
+    function openModalChofer() {
+        document.getElementById('modalChofer').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+    
+    function closeModalChofer() {
+        document.getElementById('modalChofer').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    // Lógica Original
     function updateModalData(clienteId) {
         const select = document.getElementById('sucursal_select');
         const selectedOption = select.options[select.selectedIndex];
