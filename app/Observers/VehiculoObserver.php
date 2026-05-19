@@ -64,7 +64,7 @@ class VehiculoObserver
         // Si el vehículo intenta pasar de EN RUTA (2) a DISPONIBLE (1)
         if ($vehiculo->isDirty('estatus') && $vehiculo->estatus == 1 && $vehiculo->getOriginal('estatus') == 2) {
             $viajeActivo = Viaje::where('vehiculo_id', $vehiculo->id)
-           a     ->where('status', 'EN RUTA')
+                ->where('status', 'EN RUTA')
                 ->first();
 
             if ($viajeActivo) {
