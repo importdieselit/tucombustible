@@ -292,6 +292,7 @@ class InspeccionController extends Controller
             $old_inspeccion->respuesta_in=json_encode($respuestaJson);
             $old_inspeccion->estatus_general=$estatusGeneral;
             $old_inspeccion->save();
+            $inspeccion=$old_inspeccion;
             $createdAt = $old_inspeccion->created_at; 
             $updatedAt = now();
             $tipoCheck='IN';            
