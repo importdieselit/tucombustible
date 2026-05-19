@@ -16,7 +16,8 @@ class Inspeccion extends Model
         'usuario_id', 
         'estatus_general', 
         'respuesta_json',
-        'respuesta_in'
+        'respuesta_in',
+        'viaje_id'
     ];
     
     // Crucial: Almacena el resultado completo como JSON

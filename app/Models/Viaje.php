@@ -28,6 +28,8 @@ class Viaje extends Model
         'ayudante',
         'custodia_count',
         'fecha_salida',
+        'fecha_llegada',
+        'fecha_salida_real',
         'status',
         'vehiculo_id',
         'cisterna', 
@@ -39,11 +41,26 @@ class Viaje extends Model
         'otro_vehiculo',
         'otro_chofer',
         'otro_ayudante',
-        'tipo'
+        'chofer_externo',
+        'ayudante_externo',
+        'cisterna_externo',
+        'vehiculo_externo',
+        'es_transporte_externo',
+        'sede_id',
+        'tipo_planificacion',
+        'observacion',
+        'tipo',
+        'tipo_remolque',
+        'punto_salida',
+        'punto_llegada',
+        'codigo_sap',
+        'nombre_cliente_externo'
     ];
 
     protected $casts = [
         'fecha_salida' => 'datetime',
+        'fecha_llegada' => 'datetime',
+        'fecha_salida_real' => 'datetime',
     ];
 
     /**

@@ -14,6 +14,7 @@ class VehiculoObserver
 {
     protected $telegramService;
     protected $whatsappService;
+    protected static $viajesProcesados = [];
     
     const LIMITE_KM_MANTENIMIENTO = 5000;
     const LIMITE_HRS_MANTENIMIENTO = 200;
@@ -91,6 +92,7 @@ class VehiculoObserver
         if (!$vehiculo->wasChanged('estatus')) {
             return;
         }
+        
 
         // --- CASO 1: CAMBIO A EN RUTA (2) ---
         if ($vehiculo->estatus == 2) {
@@ -113,6 +115,16 @@ class VehiculoObserver
             ->first();
 
             if ($viaje) {
+
+                // 🔥 CRÍTICO: Verificar e interceptar INMEDIATAMENTE antes de guardar o alertar
+                if (isset(self::$viajesProcesados[$viaje->id])) {
+                    Log::info("🛑 Anti-Rebote Interno: El viaje #{$viaje->id} ya fue procesado en esta petición. Omitiendo duplicación.");
+                    return;
+                }
+
+                // 🔥 CRÍTICO: Registrar de inmediato en memoria antes del ($viaje->save())
+                self::$viajesProcesados[$viaje->id] = true;
+                
                 $viaje->status = 'EN RUTA';
                 $viaje->fecha_salida_real = now();
                 $viaje->save();

@@ -6,6 +6,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use App\View\Composers\AlertsComposer;
 use App\Models\BitacoraSistema;
+use App\Observers\VehiculoObserver;
+use App\Models\Vehiculo;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 
@@ -33,6 +35,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot() : void
     {
+        // Verifica usando el nombre de la clase como string para evitar errores
+        if (class_exists('App\\Observers\\VehiculoObserver')) {
+            Vehiculo::observe('App\\Observers\\VehiculoObserver');
+        }
+
         View::composer('layouts.header', AlertsComposer::class); 
         if (app()->environment('local')) {
             error_reporting(E_ALL & ~E_DEPRECATED & ~E_WARNING);
