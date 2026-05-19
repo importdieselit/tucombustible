@@ -29,6 +29,11 @@ class LogisticaService
      */
     public function procesarPlanificacion(array $data)
     {
+        if (!empty($data['vehiculo_externo'])) $data['vehiculo_externo'] = strtoupper($data['vehiculo_externo']);
+        if (!empty($data['cisterna_externo'])) $data['cisterna_externo'] = strtoupper($data['cisterna_externo']);
+        if (!empty($data['chofer_externo']))   $data['chofer_externo']   = strtoupper($data['chofer_externo']);
+        if (!empty($data['ayudante_externo'])) $data['ayudante_externo'] = strtoupper($data['ayudante_externo']);
+
         return DB::transaction(function () use ($data) {
             $tipoPlanificacion = $data['tipo_planificacion']; 
             $items = $data['items'] ?? [];
@@ -63,6 +68,11 @@ class LogisticaService
      */
     public function actualizarPlanificacion($id, array $data)
     {
+        if (!empty($data['vehiculo_externo'])) $data['vehiculo_externo'] = strtoupper($data['vehiculo_externo']);
+        if (!empty($data['cisterna_externo'])) $data['cisterna_externo'] = strtoupper($data['cisterna_externo']);
+        if (!empty($data['chofer_externo']))   $data['chofer_externo']   = strtoupper($data['chofer_externo']);
+        if (!empty($data['ayudante_externo'])) $data['ayudante_externo'] = strtoupper($data['ayudante_externo']);
+
         return DB::transaction(function () use ($id, $data) {
             $viaje = Viaje::with('detalles')->findOrFail($id);
             $itemsNuevos = $data['items'] ?? [];
