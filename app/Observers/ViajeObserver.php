@@ -35,7 +35,7 @@ class ViajeObserver
             
             $vehiculo->save();
 
-            $viaje->load(['chofer', 'ayudante']);
+            $viaje->load(['chofer', 'ayudante_chofer']);
 
             $destinatarios = collect();
 
@@ -43,7 +43,7 @@ class ViajeObserver
                 $destinatarios->push($viaje->chofer);
             }
             
-            if ($viaje->ayudante) {
+            if (!is_null($viaje->ayudante)) {
                 $destinatarios->push($viaje->ayudante_chofer);
             }
 
