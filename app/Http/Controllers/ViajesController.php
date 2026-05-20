@@ -311,17 +311,19 @@ class ViajesController extends Controller
                 $producto->stock-=$totalLitros;
                 $producto->save();
 
-                if ($request->has('chofer_id') && $request->chofer_id !== null) {
-                try {
-                    FcmNotificationService::sendPedidoAsignadoConductorNotification(
-                        $pedido->fresh(['cliente']),
-                        $request->chofer_id
-                    );
-                } catch (\Exception $e) {
-                    Log::error("Error enviando notificación FCM al conductor: " . $e->getMessage());
-                    // No fallar la operación principal por error en notificación
+                if ($request->has('chofer_id') && $request->chofer_id !== null && $pedido) {
+                    if(!is_null($pedido)){
+                        try {
+                            FcmNotificationService::sendPedidoAsignadoConductorNotification(
+                                $pedido->fresh(['cliente']),
+                                $request->chofer_id
+                            );
+                        } catch (\Exception $e) {
+                            Log::error("Error enviando notificación FCM al conductor: " . $e->getMessage());
+                            // No fallar la operación principal por error en notificación
+                        }
+                    } 
                 }
-            }
 
                             // Crear el pedido (sin depósito específico)
             
