@@ -4,11 +4,12 @@ namespace App\Notifications;
 
 use App\Models\Viaje;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 use NotificationChannels\WebPush\WebPushChannel;
 use NotificationChannels\WebPush\WebPushMessage;
 
-class ViajeCreadoNotification extends Notification
+class ViajeCreadoNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 

@@ -25,6 +25,7 @@ class Kernel extends ConsoleKernel
         $schedule->call(function () {
             app(\App\Services\ReporteEficienciaService::class)->refrescarAgregados();
         })->hourly(); // Se actualiza cada hora automáticamente
+        $schedule->command('queue:work --stop-when-empty')->everyMinute()->withoutOverlapping();
     }
 
  
