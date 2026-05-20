@@ -33,6 +33,11 @@ class Pedido extends Model
         'calificacion'        => 'integer',
     ];
 
+    public const STATUS_PENDIENTE  = 'pendiente';
+    public const STATUS_APROBADO   = 'aprobado';
+    public const STATUS_RECHAZADO  = 'rechazado';
+    public const STATUS_CANCELADO  = 'cancelado';
+
     public function cliente(): BelongsTo { return $this->belongsTo(Cliente::class, 'cliente_id'); }
     public function deposito(): BelongsTo { return $this->belongsTo(Deposito::class, 'deposito_id'); }
     public function vehiculo(): BelongsTo { return $this->belongsTo(Vehiculo::class, 'vehiculo_id'); }
@@ -42,12 +47,10 @@ class Pedido extends Model
     public function getEstadoTextAttribute(): string
     {
         $map = [
-            'pendiente'  => 'Pendiente',
-            'aprobado'   => 'Aprobado',
-            'rechazado'  => 'Rechazado',
-            'en_proceso' => 'En Proceso',
-            'completado' => 'Completado',
-            'cancelado'  => 'Cancelado',
+            self::STATUS_PENDIENTE  => 'Pendiente',
+            self::STATUS_APROBADO   => 'Aprobado',
+            self::STATUS_RECHAZADO  => 'Rechazado',
+            self::STATUS_CANCELADO  => 'Cancelado',
         ];
         return $map[$this->estado] ?? ucfirst($this->estado);
     }
@@ -55,12 +58,10 @@ class Pedido extends Model
     public function getEstadoColorAttribute(): string
     {
         switch ($this->estado) {
-            case 'pendiente': return '#FFA500';
-            case 'aprobado': return '#4CAF50';
-            case 'rechazado': return '#F44336';
-            case 'en_proceso': return '#2196F3';
-            case 'completado': return '#4CAF50';
-            case 'cancelado': return '#9E9E9E';
+            case self::STATUS_PENDIENTE: return '#FFA500'; // Naranja
+            case self::STATUS_APROBADO:  return '#4CAF50'; // Verde
+            case self::STATUS_RECHAZADO: return '#F44336'; // Rojo
+            case self::STATUS_CANCELADO: return '#4B5563'; // Gris
             default: return '#9E9E9E';
         }
     }

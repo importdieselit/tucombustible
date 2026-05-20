@@ -104,10 +104,23 @@
                                 <td class="text-center fw-black text-orange" style="font-size: 14px;">
                                     {{ number_format($pedido->cantidad_solicitada, 0, ',', '.') }}
                                 </td>
-                                <td class="text-center">
-                                    <a href="{{ route('logistica.create', 'diesel') }}" class="btn btn-sm btn-dark fw-bold text-uppercase shadow-sm" style="font-size: 10px;">
-                                        <i class="fas fa-truck-loading me-1"></i> Planificar
-                                    </a>
+                               <td class="text-center">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        {{-- Botón Planificar --}}
+                                        <a href="{{ route('logistica.create', 'diesel') }}" class="btn btn-sm btn-dark fw-bold text-uppercase shadow-sm" style="font-size: 10px;">
+                                            <i class="fas fa-truck-loading me-1"></i> Planificar
+                                        </a>
+
+                                        {{-- Formulario para Rechazar --}}
+                                        <form action="{{ route('logistica.rechazar', $pedido->id) }}" method="POST" 
+                                            onsubmit="return confirm('¿Estás seguro de que deseas RECHAZAR este pedido? Se devolverán los litros al cupo del cliente.')" 
+                                            class="m-0">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-outline-danger fw-bold text-uppercase shadow-sm" style="font-size: 10px;">
+                                                <i class="fas fa-times me-1"></i> Rechazar
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @empty

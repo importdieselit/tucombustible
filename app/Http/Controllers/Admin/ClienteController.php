@@ -11,8 +11,9 @@ use App\Models\Cliente;
 use App\Models\TipoCombustible;
 use App\Models\Pedido;
 use App\Models\Estado;
+use App\Models\ClienteDocumento;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\{Redirect, Session, Log, Auth};
+use Illuminate\Support\Facades\{Redirect, Session, Log, Auth, Storage};
 
 class ClienteController extends Controller
 {
@@ -111,12 +112,18 @@ class ClienteController extends Controller
             ? $cliente->sucursales()->paginate(15, ['*'], 'sucursales_page') 
             : collect();
 
+        $documentos = ClienteDocumento::where('cliente_id', $cliente->id)->orderBy('created_at', 'desc')->get();
+        $espacioUsadoBytes = ClienteDocumento::where('cliente_id', $cliente->id)->sum('peso_archivo');
+        $espacioUsadoMb = round($espacioUsadoBytes / (1024 * 1024), 2);
+
         return view('admin.cliente.show', compact(
             'cliente', 
             'tiposCombustible', 
             'pedidos', 
             'infoGasco', 
-            'sucursales'
+            'sucursales',
+            'documentos',
+            'espacioUsadoMb'
         ));
     }
 
@@ -497,5 +504,58 @@ class ClienteController extends Controller
             \Illuminate\Support\Facades\Log::error('Error al generar token: ' . $e->getMessage());
             return Redirect::back()->with('error', 'No se pudo generar el token por un error técnico.');
         }
+    }
+
+    // 2. Método para que el admin cargue (puedes reutilizar el mismo logic)
+    public function storeDocumento(Request $request)
+    {
+        $request->validate([
+            'cliente_id' => 'required|exists:clientes,id',
+            'archivo' => 'required|file|mimes:pdf|max:51200', 
+            'nombre_archivo' => 'required|string|max:255'
+        ]);
+
+        $archivo = $request->file('archivo');
+        $path = $archivo->store('documentos_clientes', 'local');
+
+        ClienteDocumento::create([
+            'cliente_id'     => $request->cliente_id,
+            'user_id'        => auth()->id(),
+            'nombre_archivo' => $request->nombre_archivo,
+            'ruta_archivo'   => $path,
+            'peso_archivo'   => $archivo->getSize(),
+            'mime_type'      => $archivo->getClientMimeType(),
+        ]);
+
+        return back()->with('success', 'Archivo cargado por el personal de ImporDiesel.');
+    }
+
+    // 3. Método para que el admin elimine
+    public function destroyDocumento($id)
+    {
+        $documento = ClienteDocumento::findOrFail($id);
+
+        // Eliminación física
+        if (Storage::exists($documento->ruta_archivo)) {
+            Storage::delete($documento->ruta_archivo);
+        }
+
+        $documento->delete();
+
+        return back()->with('success', 'Archivo eliminado permanentemente.');
+    }
+
+    public function downloadDocumento($id)
+    {
+        // El administrador puede buscar el documento directamente por su ID
+        $documento = ClienteDocumento::findOrFail($id);
+
+        // Verificamos que el archivo físico exista en el storage local
+        if (!Storage::exists($documento->ruta_archivo)) {
+            return back()->with('error', 'El archivo físico no se encuentra en el servidor.');
+        }
+
+        // Descarga segura
+        return Storage::download($documento->ruta_archivo, $documento->nombre_archivo . '.pdf');
     }
 }

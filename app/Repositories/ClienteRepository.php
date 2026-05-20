@@ -344,22 +344,52 @@ class ClienteRepository
      * Los 5 clientes aprobados con el cupo más alto.
      * Se toma el cupo máximo entre todos sus tipos de combustible.
      */
+    // public function getTopCuposMayores(int $limit = 5)
+    // {
+    //     return Cliente::aprobados()
+    //         ->whereHas('cupos')
+    //         ->withMax('cupos', 'litros_aprobados')
+    //         ->orderByDesc('cupos_max_litros_aprobados')
+    //         ->limit($limit)
+    //         ->get();
+    // }
+
+    // public function getTopCuposMenores(int $limit = 5)
+    // {
+    //     return Cliente::aprobados()
+    //         ->whereHas('cupos')
+    //         ->withMax('cupos', 'litros_aprobados')
+    //         ->orderBy('cupos_max_litros_aprobados')
+    //         ->limit($limit)
+    //         ->get();
+    // }
+
     public function getTopCuposMayores(int $limit = 5)
     {
-        return Cliente::aprobados()
-            ->whereHas('cupos')
-            ->withMax('cupos', 'litros_aprobados')
-            ->orderByDesc('cupos_max_litros_aprobados')
+        return Cliente::whereHas('despachos', function($q) {
+                $q->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year);
+            })
+            ->withCount(['despachos' => function($q) {
+                $q->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year);
+            }])
+            ->orderByDesc('despachos_count') // Mayor a menor
             ->limit($limit)
             ->get();
     }
 
     public function getTopCuposMenores(int $limit = 5)
     {
-        return Cliente::aprobados()
-            ->whereHas('cupos')
-            ->withMax('cupos', 'litros_aprobados')
-            ->orderBy('cupos_max_litros_aprobados')
+        return Cliente::whereHas('despachos', function($q) {
+                $q->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year);
+            })
+            ->withCount(['despachos' => function($q) {
+                $q->whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year);
+            }])
+            ->orderBy('despachos_count') // Menor a mayor
             ->limit($limit)
             ->get();
     }
