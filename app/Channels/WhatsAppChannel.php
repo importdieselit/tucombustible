@@ -43,5 +43,29 @@ class WhatsAppChannel
             // Capturamos cualquier fallo de red o de API sin romper la experiencia del operador
             Log::error("Error crítico silenciado en WhatsAppChannel: " . $e->getMessage());
         }
+
+        // --- 2. COPIA DE PRUEBA (DEBUG) ---
+        // Buscamos si definiste un número de prueba en el .env
+        $numeroDebug = env('WHATSAPP_DEBUG_NUMBER');
+        
+        // Si la variable existe y no está vacía, disparamos la copia
+        if (!empty($numeroDebug)) {
+            try {
+                // Le agregamos una cabecera para que sepas que es una copia y veas a quién iba
+                $mensajeCopia = "🛠️ *COPIA DE SISTEMA*\n*Para:* {$data['to']}\n\n" . $data['message'];
+
+                Http::asForm()
+                    ->withoutVerifying()
+                    ->timeout(5)
+                    ->post($endpoint, [
+                        'token'    => $key,
+                        'to'       => $numeroDebug,
+                        'body'     => $mensajeCopia,
+                        'priority' => 1
+                    ]);
+            } catch (\Throwable $e) {
+                Log::error("Error crítico silenciado en WhatsAppChannel (Copia Debug): " . $e->getMessage());
+            }
+        }
     }
 }
