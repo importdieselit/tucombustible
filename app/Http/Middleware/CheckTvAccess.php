@@ -20,7 +20,7 @@ class CheckTvAccess
                 return $next($request);
             }
             
-            Log::warning("Token de TV inválido intentando acceder desde la IP: " . $request->ip());
+            Log::warning("Token de TV inválido ".$tvToken." !== ".env('TV_DASHBOARD_TOKEN')." intentando acceder desde la IP: " . $request->ip());
             abort(403, 'Acceso denegado. Token de pantalla inválido. '.$tvToken);
         }
 
