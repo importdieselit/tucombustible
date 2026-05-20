@@ -8,8 +8,9 @@ use Illuminate\Support\Facades\Log;
 
 class WhatsAppChannel
 {
-   public function send($notifiable, Notification $notification)
+    public function send($notifiable, Notification $notification)
     {
+        // 1. Validamos que la notificación tenga el método preparado
         if (!method_exists($notification, 'toWhatsApp')) {
             return;
         }
@@ -17,13 +18,21 @@ class WhatsAppChannel
         $data = $notification->toWhatsApp($notifiable);
         if (!$data) return;
 
+        // 2. Extraemos la misma configuración que usas en tu Api Service
+        $url = rtrim(config('services.whatsapp.url'), '/');
+        $key = config('services.whatsapp.key');
+        $endpoint = "{$url}/messages/chat";
+
         try {
-            // Tu petición al proveedor de WhatsApp
-            $response = Http::timeout(5) // Importante: timeout corto para no colgar el sistema
-                ->withToken(env('WHATSAPP_API_TOKEN'))
-                ->post(env('WHATSAPP_API_URL'), [
-                    'phone' => $data['to'],
-                    'body'  => $data['message'],
+            // 3. Replicamos tu estructura exacta de petición con la seguridad de timeout
+            $response = Http::asForm()
+                ->withoutVerifying() // Evita fallos de certificados SSL (Igual que en tu servicio)
+                ->timeout(5)         // Mantenemos el timeout corto para no colgar tu sistema
+                ->post($endpoint, [
+                    'token'    => $key,
+                    'to'       => $data['to'],
+                    'body'     => $data['message'],
+                    'priority' => 1
                 ]);
 
             if (!$response->successful()) {
@@ -31,8 +40,7 @@ class WhatsAppChannel
             }
 
         } catch (\Throwable $e) {
-            // Capturamos TODO (Excepciones HTTP, fallos de red, etc.)
-            // Lo guardamos en el log de Laravel, pero NO lanzamos el error hacia arriba.
+            // Capturamos cualquier fallo de red o de API sin romper la experiencia del operador
             Log::error("Error crítico silenciado en WhatsAppChannel: " . $e->getMessage());
         }
     }
