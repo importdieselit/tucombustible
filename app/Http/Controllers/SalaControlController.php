@@ -16,7 +16,7 @@ class SalaControlController extends Controller
     {
         // Capturamos el token (si existe) para inyectarlo en el JavaScript
         $token = $request->header('X-TV-Token');
-        return view('sala_control', compact('token'));
+        return view('vehiculo.sala_control', compact('token'));
     }
     /**
      * Endpoint unificado: Trae las coordenadas GPS y renderiza el partial de disponibilidad.

@@ -24,12 +24,7 @@ use App\Http\Controllers\{
 };
 use App\Http\Controllers\SalaControlController;
 
-Route::get('/debug-env', function () {
-    return [
-        'token_from_env' => env('TV_DASHBOARD_TOKEN'),
-        'all_env_keys' => array_keys($_ENV),
-    ];
-});
+;
 
 Route::get('/sala-control', [SalaControlController::class, 'index'])
      ->middleware('tv.auth')->name('sala.control');
