@@ -12,11 +12,12 @@ class SalaControlController extends Controller
     /**
      * Renderiza la estructura base (pantalla dividida).
      */
-    public function index()
+    public function index(Request $request)
     {
-        return view('vehiculo.sala_control');
+        // Capturamos el token (si existe) para inyectarlo en el JavaScript
+        $token = $request->header('X-TV-Token');
+        return view('sala_control', compact('token'));
     }
-
     /**
      * Endpoint unificado: Trae las coordenadas GPS y renderiza el partial de disponibilidad.
      */

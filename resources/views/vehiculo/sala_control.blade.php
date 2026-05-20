@@ -184,13 +184,21 @@
             const btnRefresh = document.getElementById('btn-refresh');
             const iconRefresh = document.getElementById('refresh-icon');
 
+            // Capturamos el token que el controlador nos pasó desde la APK
+            const tvToken = "{{ $token ?? '' }}";
+
             if(btnRefresh) btnRefresh.disabled = true;
             if(iconRefresh) iconRefresh.classList.add('fa-spin');
 
             try {
                 const response = await fetch("{{ route('api.sala.control.stream') }}", {
                     method: 'GET',
-                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                    headers: { 
+                        'X-Requested-With': 'XMLHttpRequest', 
+                        'Accept': 'application/json',
+                        'X-TV-Token': tvToken // Inyectamos el candado de seguridad aquí
+                    },
+                    credentials: 'same-origin'
                 });
 
                 if (response.ok) {
