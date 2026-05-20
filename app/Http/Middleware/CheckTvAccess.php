@@ -21,7 +21,7 @@ class CheckTvAccess
             }
             
             Log::warning("Token de TV inválido intentando acceder desde la IP: " . $request->ip());
-            abort(403, 'Acceso denegado. Token de pantalla inválido.');
+            abort(403, 'Acceso denegado. Token de pantalla inválido. '.$tvToken);
         }
 
         // 2. CASO ALTERNATIVO: Acceso vía Navegador Web (Caso Tú auditando)
