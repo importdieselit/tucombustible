@@ -22,9 +22,18 @@ use App\Http\Controllers\{
     ViajesController, TelegramController, PlanificacionMantenimientoController,
     ReportController, ClienteActivosController,NotificationController
 };
+use App\Http\Controllers\SalaControlController;
+
+Route::get('/sala-control', [SalaControlController::class, 'index'])
+     ->middleware('tv.auth')->name('sala.control');
+Route::get('/api/sala-control/stream', [SalaControlController::class, 'getDataStream'])
+     ->middleware('tv.auth')->name('api.sala.control.stream');
+
 
 /* --- Rutas Públicas y Auth --- */
 Auth::routes(['reset' => false]);
+
+
 Route::get('/', function () { return redirect()->route('login'); });
 Route::get('/viajes/reporte-interno', [ViajesController::class, 'reporteDiario'])
     ->name('reporte.operaciones.interno');
@@ -60,6 +69,8 @@ Route::post('/password/reset/validar', [ForgotPasswordController::class, 'checkE
 Route::get('/registro-cliente', [PortalClienteController::class, 'showRegistrationForm'])->name('cliente.register');
 Route::post('/registro-cliente', [PortalClienteController::class, 'store'])->name('cliente.register.store');
 Route::get('/obtener-ciudades/{estado_id}', [PortalClienteController::class, 'getCiudades'])->name('ciudades.get');
+
+
 
 /* --- Rutas Protegidas --- */
 Route::middleware(['auth'])->group(function () {
