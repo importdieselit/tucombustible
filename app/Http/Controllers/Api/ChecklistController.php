@@ -137,11 +137,10 @@ class ChecklistController extends Controller
                         ];
                         // Lo insertamos al final de la primera sección
                         $dataResponse['sections'][0]['items'][] = $campoViaje;
-                         if($viajes->count() == 1){
+                       
                             $dataResponse['sections'][0]['items'][1]['value'] = $viajes[0]->chofer->persona->nombre ?? '';
                             $dataResponse['sections'][0]['items'][2]['value'] = $viajes[0]->ayudante_chofer->persona->nombre ?? '';
-                        }
-                      //  Log::info("Checklist ID {$id}: Se inyectó campo de selección de ruta con " . count($opcionesViajes) . " opciones para Vehículo ID {$vehiculoId}.");
+                       //  Log::info("Checklist ID {$id}: Se inyectó campo de selección de ruta con " . count($opcionesViajes) . " opciones para Vehículo ID {$vehiculoId}.");
                     }
                     
                     // --- BLOQUE 2: Auto-completar "Datos del Vehículo" ---

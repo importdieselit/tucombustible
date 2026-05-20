@@ -10,6 +10,7 @@ use App\Services\TelegramNotificationService;
 use App\Services\WhatsappApiService;
 use Illuminate\Support\Facades\Log;
 
+
 class VehiculoObserver
 {
     protected $telegramService;
@@ -32,7 +33,7 @@ class VehiculoObserver
     public function updating(Vehiculo $vehiculo)
     {
         // --- ALERTAS DE MANTENIMIENTO ---
-        if ($vehiculo->isDirty('km_mantt')) {
+        if ($vehiculo->wasChanged('km_mantt')) {
             $newKm = (int) $vehiculo->km_mantt;
             $oldKm = (int) $vehiculo->getOriginal('km_mantt');
            
@@ -47,7 +48,7 @@ class VehiculoObserver
             } 
         } 
 
-        if ($vehiculo->isDirty('hrs_mantt')) {
+        if ($vehiculo->wasChanged('hrs_mantt')) {
             $newHrs = (int) $vehiculo->hrs_mantt;
             $oldHrs = (int) $vehiculo->getOriginal('hrs_mantt');
            

@@ -94,10 +94,9 @@ class InspeccionController extends Controller
                         ];
                         // Lo insertamos al final de la primera sección
                         $dataResponse['sections'][0]['items'][] = $campoViaje;
-                        if($viajes->count() == 1){
                             $dataResponse['sections'][0]['items'][1]['value'] = $viajes[0]->chofer->persona->nombre ?? '';
                             $dataResponse['sections'][0]['items'][2]['value'] = $viajes[0]->ayudante_chofer->persona->nombre ?? '';
-                        }
+                        
                     } elseif (!is_null($viajePrevioId)) {
                         // Si ya hay un viaje (Entrada), lo dejamos como texto estático o radio deshabilitado
                         foreach($dataResponse['sections'][0]['items'] as &$item) {

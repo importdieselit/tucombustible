@@ -7,6 +7,8 @@ use App\Models\Vehiculo;
 use App\Models\Chofer;
 use App\Services\FcmNotificationService;
 use Illuminate\Support\Facades\DB;
+use App\Notifications\ViajeCreadoNotification;
+use Illuminate\Support\Facades\Notification;
 
 class ViajeObserver
 {
@@ -32,6 +34,24 @@ class ViajeObserver
             }
             
             $vehiculo->save();
+
+            $viaje->load(['chofer', 'ayudante']);
+
+            $destinatarios = collect();
+
+            if ($viaje->chofer_id) {
+                $destinatarios->push($viaje->chofer);
+            }
+            
+            if ($viaje->ayudante) {
+                $destinatarios->push($viaje->ayudante_chofer);
+            }
+
+            // Si hay personal asignado, enviamos la notificación multicanal (Push + WhatsApp)
+            if ($destinatarios->isNotEmpty()) {
+                Notification::send($destinatarios, new ViajeCreadoNotification($viaje));
+            }
+            
         }
         
         
@@ -66,7 +86,7 @@ class ViajeObserver
         $vehiculo = Vehiculo::find($viaje->vehiculo_id);
         if ($vehiculo && $vehiculo->estatus != $estatusDestino) {
             $vehiculo->estatus = $estatusDestino;
-            $vehiculo->save();
+            $vehiculo->saveQuietly();
         }
 
         // 2. Actualizar la Cisterna (Asumiendo que el ID de cisterna guarda otro Vehiculo)
@@ -74,7 +94,7 @@ class ViajeObserver
             $cisterna = Vehiculo::find($viaje->cisterna);
             if ($cisterna && $cisterna->estatus != $estatusDestino) {
                 $cisterna->estatus = $estatusDestino;
-                $cisterna->save();
+                $cisterna->saveQuietly();
             }
         }
     }
