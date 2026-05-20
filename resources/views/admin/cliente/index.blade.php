@@ -110,7 +110,7 @@
                         <th class="px-6 py-4 text-center">Cantidad</th>
                         <th class="px-6 py-4 text-center">Estatus</th>
                         <th class="px-6 py-4 text-center">Fecha Solicitud</th>
-                        <th class="px-6 py-4 text-right">Acción</th>
+                        <th class="px-6 py-4 text-center">Acción</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
@@ -144,10 +144,10 @@
                                 {{ $pedido->fecha_solicitud ? $pedido->fecha_solicitud->format('d/m/Y h:i A') : '—' }}
                             </div>
                         </td>
-                        <td class="px-6 py-4 text-right">
+                        <td class="px-6 py-4 text-center">
                             <a href="{{ route('clientes.show', $pedido->cliente_id) }}"
-                            class="inline-block bg-orange-impordiesel text-white px-5 py-2 rounded text-xs font-black uppercase hover:bg-orange-700 transition shadow-md border-b-2 border-orange-900">
-                                <i class="fas fa-folder-open mr-1"></i> Expediente
+                            class="inline-flex items-center justify-center bg-orange-impordiesel text-white px-5 py-2 rounded text-xs font-black uppercase hover:bg-orange-700 transition shadow-md border-b-2 border-orange-900">
+                                <i class="fas fa-folder-open mr-2"></i> Expediente
                             </a>
                         </td>
                     </tr>
@@ -221,7 +221,7 @@
                         <th class="px-4 py-4 text-center">Cupo SIAVCOM</th>
                         <th class="px-4 py-4 text-center">Cupo GASCO</th>
                         <th class="px-4 py-4 text-center">Disponible</th>
-                        <th class="px-6 py-4 text-right">Acción</th>
+                        <th class="px-6 py-4 text-center">Acción</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
@@ -276,10 +276,10 @@
                                 <span class="text-[9px] opacity-70">LTS</span>
                             </div>
                         </td>
-                        <td class="px-6 py-4 text-right">
+                        <td class="px-6 py-4 text-center">
                             <a href="{{ route('clientes.show', $c->id) }}"
-                            class="inline-block bg-orange-impordiesel text-white px-5 py-2 rounded text-xs font-black uppercase hover:bg-orange-700 transition shadow-md border-b-2 border-orange-900">
-                                <i class="fas fa-folder-open mr-1"></i> Expediente
+                            class="inline-flex items-center justify-center bg-orange-impordiesel text-white px-5 py-2 rounded text-xs font-black uppercase hover:bg-orange-700 transition shadow-md border-b-2 border-orange-900">
+                                <i class="fas fa-folder-open mr-2"></i> Expediente
                             </a>
                         </td>
                     </tr>
@@ -305,23 +305,23 @@
         </div>
     </div>
 
-    {{-- RANKINGS DE CUPOS --}}
+    {{-- RANKINGS DE DESPACHOS --}}
     <div class="row g-4 mb-4">
 
-        {{-- TOP 5 CUPOS MÁS GRANDES --}}
+        {{-- TOP 5 Más Despachos por Mes --}}
         <div class="col-lg-6">
             <div class="card shadow-sm border-0 h-100 overflow-hidden">
                 <div class="card-header bg-dark px-4 py-3 d-flex align-items-center justify-content-between">
-                    <h6 class="text-uppercase fw-black text-white small mb-0" style="letter-spacing: 1px;">
-                        <i class="fas fa-trophy me-2 text-orange"></i> Top 5 — Cupos Más Grandes
+                    <h6 class="text-uppercase fw-black text-white text-xs tracking-widest mb-0">
+                        <i class="fas fa-trophy me-2 text-orange"></i> Top 5 — Más Despachos por Mes
                     </h6>
-                    <span class="badge bg-orange text-white text-uppercase fw-black" style="font-size: 9px;">
-                        Litros / mes
+                    <span class="badge bg-orange text-white text-uppercase fw-black" style="font-size: 10px;">
+                        Despachos / mes
                     </span>
                 </div>
                 <div class="list-group list-group-flush">
                     @forelse($rankingMayores as $index => $cliente)
-                    <div class="list-group-item px-4 py-3 list-hover border-0 border-bottom">
+                    <div class="list-group-item px-4 py-3 list-hover border-0 border-bottom bg-white">
                         <div class="d-flex align-items-center justify-content-between">
                             <div class="d-flex align-items-center">
                                 <span class="rank-number me-3 flex-shrink-0 
@@ -329,24 +329,33 @@
                                     {{ $index + 1 }}
                                 </span>
                                 <div>
-                                    <p class="fw-black text-dark text-uppercase small mb-0 lh-1">{{ $cliente->nombre }}</p>
-                                    <small class="fw-bold text-muted" style="font-size: 10px;">RIF: {{ $cliente->rif }}</small>
+                                    {{-- Nombre con el mismo estilo de la tabla de pedidos --}}
+                                    <div class="font-black text-gray-800 uppercase text-sm leading-tight">
+                                        {{ $cliente->nombre }}
+                                    </div>
+                                    {{-- RIF con el estilo secundario de la tabla --}}
+                                    <div class="text-xs font-bold text-gray-500 mt-1">
+                                        RIF: {{ $cliente->rif }}
+                                    </div>
                                 </div>
                             </div>
                             <div class="text-right">
-                                <p class="text-lg font-black text-orange-600">
-                                    {{ number_format($cliente->cupos_max_litros_aprobados, 0, ',', '.') }}
-                                    <small class="text-[9px] text-gray-400 font-bold uppercase">L</small>
-                                </p>
-                                <a href="{{ route('clientes.show', $cliente->id) }}"
-                                   class="text-[9px] font-black uppercase text-gray-400 hover:text-orange-impordiesel transition">
-                                    Ver expediente →
-                                </a>
+                                {{-- Cantidad en litros idéntica a la tabla --}}
+                                <div class="text-sm font-black text-orange-600">
+                                    {{ number_format($cliente->despachos_count, 0, ',', '.') }}
+                                    <span class="text-[10px] text-gray-400 uppercase">Despacho (s)</span>
+                                </div>
+                                <div class="mt-1">
+                                    <a href="{{ route('clientes.show', $cliente->id) }}"
+                                    class="text-[10px] font-black uppercase text-gray-500 hover:text-orange-impordiesel transition">
+                                        Ver expediente →
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
                     @empty
-                    <div class="p-5 text-center text-muted fw-black text-uppercase small">
+                    <div class="p-5 text-center text-gray-400 font-black uppercase text-xs tracking-widest">
                         No hay clientes aprobados con cupo asignado.
                     </div>
                     @endforelse
@@ -354,20 +363,20 @@
             </div>
         </div>
 
-        {{-- TOP 5 CUPOS MÁS PEQUEÑOS --}}
+        {{-- TOP 5 Menos Despachos por Mes --}}
         <div class="col-lg-6">
             <div class="card shadow-sm border-0 h-100 overflow-hidden">
                 <div class="card-header bg-dark px-4 py-3 d-flex align-items-center justify-content-between">
-                    <h6 class="text-uppercase fw-black text-white small mb-0" style="letter-spacing: 1px;">
-                        <i class="fas fa-arrow-down me-2 text-info"></i> Top 5 — Cupos Más Pequeños
+                    <h6 class="text-uppercase fw-black text-white text-xs tracking-widest mb-0">
+                        <i class="fas fa-arrow-down me-2 text-info"></i> Top 5 — Menos Despachos por Mes
                     </h6>
-                    <span class="badge bg-info text-white text-uppercase fw-black" style="font-size: 9px;">
-                        Litros / mes
+                    <span class="badge bg-orange text-white text-uppercase fw-black" style="font-size: 10px;">
+                        Despachos / mes
                     </span>
                 </div>
                 <div class="list-group list-group-flush">
                     @forelse($rankingMenores as $index => $cliente)
-                    <div class="list-group-item px-4 py-3 list-hover border-0 border-bottom">
+                    <div class="list-group-item px-4 py-3 list-hover border-0 border-bottom bg-white">
                         <div class="d-flex align-items-center justify-content-between">
                             <div class="d-flex align-items-center">
                                 <span class="rank-number me-3 flex-shrink-0 
@@ -375,31 +384,39 @@
                                     {{ $index + 1 }}
                                 </span>
                                 <div>
-                                    <p class="fw-black text-dark text-uppercase small mb-0 lh-1">{{ $cliente->nombre }}</p>
-                                    <small class="fw-bold text-muted" style="font-size: 10px;">RIF: {{ $cliente->rif }}</small>
+                                    {{-- Nombre con el mismo estilo de la tabla de pedidos --}}
+                                    <div class="font-black text-gray-800 uppercase text-sm leading-tight">
+                                        {{ $cliente->nombre }}
+                                    </div>
+                                    {{-- RIF con el estilo secundario de la tabla --}}
+                                    <div class="text-xs font-bold text-gray-500 mt-1">
+                                        RIF: {{ $cliente->rif }}
+                                    </div>
                                 </div>
                             </div>
                             <div class="text-right">
-                                <p class="text-lg font-black text-blue-600">
-                                    {{ number_format($cliente->cupos_max_litros_aprobados, 0, ',', '.') }}
-                                    <small class="text-[9px] text-gray-400 font-bold uppercase">L</small>
-                                </p>
-                                <a href="{{ route('clientes.show', $cliente->id) }}"
-                                   class="text-[9px] font-black uppercase text-gray-400 hover:text-orange-impordiesel transition">
-                                    Ver expediente →
-                                </a>
+                                {{-- Cantidad en litros idéntica a la tabla (en azul) --}}
+                                <div class="text-sm font-black text-blue-600">
+                                    {{ number_format($cliente->despachos_count, 0, ',', '.') }}
+                                    <span class="text-[10px] text-gray-400 uppercase">Despacho (s)</span>
+                                </div>
+                                <div class="mt-1">
+                                    <a href="{{ route('clientes.show', $cliente->id) }}"
+                                    class="text-[10px] font-black uppercase text-gray-500 hover:text-orange-impordiesel transition">
+                                        Ver expediente →
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
                     @empty
-                    <div class="p-5 text-center text-muted fw-black text-uppercase small">
+                    <div class="p-5 text-center text-gray-400 font-black uppercase text-xs tracking-widest">
                         No hay clientes aprobados con cupo asignado.
                     </div>
                     @endforelse
                 </div>
             </div>
         </div>
-
     </div>
 
     {{-- ENLACE A CLIENTES LUBRICANTES --}}

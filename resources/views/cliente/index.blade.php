@@ -45,9 +45,14 @@
                         </span>
                     </p>
                 </div>
+
                 {{-- Botón para activar el modo edición --}}
-                <button type="button" id="btnEditPerfil" onclick="toggleEditPerfil()" class="bg-orange-impordiesel text-white font-black uppercase text-[10px] px-3 py-1.5 rounded shadow-sm hover:bg-opacity-90 transition">
+                <button type="button" id="btnEditPerfil" onclick="toggleEditPerfil()" class="bg-orange-impordiesel text-white font-black uppercase text-[15px] px-3 py-1.5 rounded shadow-sm hover:bg-opacity-90 transition">
                     <i class="fas fa-edit mr-1"></i> Editar Información
+                </button>
+
+                 <button type="button" class="bg-orange-impordiesel text-white font-black uppercase text-[15px] px-3 py-1.5 rounded shadow-sm hover:bg-opacity-90 transition" data-bs-toggle="modal" data-bs-target="#modalArchivero">
+                    <i class="fas fa-folder-open text-orange me-2"></i> Mi Archivero Digital
                 </button>
             </div>
 
@@ -420,7 +425,8 @@
                                     <th class="px-6 py-4 border-r border-gray-700">Combustible</th>
                                     <th class="px-6 py-4 text-center border-r border-gray-700">Litros</th>
                                     <th class="px-6 py-4 text-center border-r border-gray-700">Estatus</th>
-                                    <th class="px-6 py-4 text-center">Fecha</th>
+                                    <th class="px-6 py-4 text-center border-r border-gray-700">Fecha</th>
+                                    <th class="px-6 py-4 text-center">Acción</th> {{-- NUEVA COLUMNA --}}
                                 </tr>
                             </thead>
                             <tbody class="divide-y-2 divide-gray-200 bg-white">
@@ -441,13 +447,29 @@
                                             {{ $pedido->estado_text }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-5 text-center text-gray-600 font-bold">
+                                    <td class="px-6 py-5 text-center text-gray-600 font-bold border-r border-gray-100">
                                         {{ $pedido->fecha_solicitud ? $pedido->fecha_solicitud->format('d/m/Y') : 'N/A' }}
+                                    </td>
+                                    <td class="px-6 py-5 text-center">
+                                        @if($pedido->estado === 'pendiente')
+                                            {{-- Cambiamos el method a POST y añadimos @method('PUT') --}}
+                                            <form action="{{ route('portal.clientes.pedidos.cancelar', $pedido->id) }}" method="POST" 
+                                                onsubmit="return confirm('¿Seguro que deseas CANCELAR este pedido? Se devolverán los litros a tu cupo disponible.')">
+                                                @csrf
+                                                @method('PUT') 
+                                                
+                                                <button type="submit" class="text-red-600 hover:text-red-800 font-black text-[10px] uppercase border border-red-200 px-3 py-1 rounded-md hover:bg-red-50 transition shadow-sm">
+                                                    <i class="fas fa-times me-1"></i> Cancelar
+                                                </button>
+                                            </form>
+                                        @else
+                                            <span class="text-gray-300 font-black text-[10px] uppercase italic">N/A</span>
+                                        @endif
                                     </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="5" class="px-6 py-16 text-center text-gray-400 font-black uppercase text-xs">
+                                    <td colspan="6" class="px-6 py-16 text-center text-gray-400 font-black uppercase text-xs">
                                         No hay pedidos registrados.
                                     </td>
                                 </tr>
@@ -479,7 +501,7 @@
                         <select name="v_status" class="text-[10px] border-gray-300 rounded-md p-2 font-black uppercase shadow-sm">
                             <option value="">ESTATUS (TODOS)</option>
                             <option value="PROGRAMADO" {{ request('v_status') == 'PROGRAMADO' ? 'selected' : '' }}>PROGRAMADO</option>
-                            <option value="EN TRANSITO" {{ request('v_status') == 'EN TRANSITO' ? 'selected' : '' }}>EN TRANSITO</option>
+                            <option value="EN RUTA" {{ request('v_status') == 'EN RUTA' ? 'selected' : '' }}>EN RUTA</option>
                             <option value="COMPLETADO" {{ request('v_status') == 'COMPLETADO' ? 'selected' : '' }}>COMPLETADO</option>
                         </select>
 
@@ -499,6 +521,15 @@
                     </form>
                 </div>
 
+                {{-- CONTENEDOR DE ERROR CONTROLADO --}}
+                @if(session('error_gps_modulo'))
+                    <div class="mb-4 p-4 bg-red-50 border-l-4 border-red-600 rounded-r-lg shadow-sm flex items-center gap-3">
+                        <i class="fas fa-exclamation-triangle text-red-600 text-sm"></i>
+                        <span class="text-xs font-black uppercase text-red-800 tracking-wide">
+                            {{ session('error_gps_modulo') }}
+                        </span>
+                    </div>
+                @endif
                 <div class="bg-white rounded-xl shadow-md border border-gray-300 overflow-hidden">
                     <div class="max-h-[600px] overflow-y-auto scrollbar-thin">
                         <table class="w-full text-left text-sm border-collapse">
@@ -550,14 +581,24 @@
                                     </td>
 
                                     {{-- Estatus --}}
-                                    <td class="px-6 py-6 text-center align-top">
-                                        <span class="px-4 py-2 rounded-full font-black text-xs uppercase shadow-md
-                                            @if($viaje->status == 'PROGRAMADO') bg-blue-100 text-blue-700
-                                            @elseif($viaje->status == 'EN TRANSITO') bg-orange-100 text-orange-700
-                                            @elseif($viaje->status == 'COMPLETADO') bg-green-100 text-green-700
-                                            @else bg-gray-100 text-gray-600 @endif">
-                                            {{ $viaje->status }}
-                                        </span>
+                                    <td class="px-6 py-6 text-center align-top whitespace-nowrap">
+                                        <div class="flex flex-col items-center justify-center gap-3">
+                                            <span class="px-4 py-2 rounded-full font-black text-xs uppercase shadow-md inline-block
+                                                @if($viaje->status == 'PROGRAMADO') bg-blue-100 text-blue-700
+                                                @elseif($viaje->status == 'EN RUTA') bg-orange-100 text-orange-700
+                                                @elseif($viaje->status == 'COMPLETADO') bg-green-100 text-green-700
+                                                @else bg-gray-100 text-gray-600 @endif">
+                                                {{ $viaje->status }}
+                                            </span>
+
+                                            {{-- BOTÓN CONDICIONADO A 'EN RUTA' --}}
+                                            @if($viaje->status === 'EN RUTA')
+                                                <a href="{{ route('portal.clientes.viajes.rastreo', $viaje->id) }}" 
+                                                class="inline-flex items-center justify-center bg-gray-800 text-white px-3 py-2 rounded text-[10px] font-black uppercase tracking-wider hover:bg-orange-impordiesel transition shadow-md animate-pulse">
+                                                    <i class="fas fa-location-arrow mr-1.5 text-orange-impordiesel"></i> Rastrear Unidad →
+                                                </a>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                                 @empty
@@ -738,6 +779,89 @@
                 </div>
                 <button type="submit" class="w-full bg-orange-impordiesel text-white py-3 rounded-xl font-black uppercase text-xs hover:bg-black transition-all shadow-md">Registrar</button>
             </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalArchivero" tabindex="-1" aria-labelledby="modalArchiveroLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            
+            <div class="modal-header bg-dark text-white py-3">
+                <h5 class="modal-title h6 text-uppercase fw-black mb-0" id="modalArchiveroLabel">
+                    <i class="fas fa-archive text-orange me-2"></i> Expediente de Documentos PDF
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                
+                <div class="mb-4 bg-light p-3 rounded border">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small fw-black text-uppercase text-muted">Almacenamiento del Archivero</span>
+                        <span class="small fw-black text-dark">{{ $espacioUsadoMb }} MB / 120 MB</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-orange" role="progressbar" 
+                             style="width: {{ ($espacioUsadoMb / 120) * 100 }}%; background-color: #FFA500;" 
+                             aria-valuenow="{{ $espacioUsadoMb }}" aria-valuemin="0" aria-valuemax="120"></div>
+                    </div>
+                </div>
+
+                <form action="{{ route('portal.clientes.documentos.store') }}" method="POST" enctype="multipart/form-data" class="mb-4 p-3 border rounded border-dashed">
+                    @csrf
+                    <p class="small fw-black text-uppercase text-dark mb-2"><i class="fas fa-upload me-1 text-orange"></i> Cargar nuevo documento PDF</p>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <input type="text" name="nombre_archivo" class="form-control form-control-sm" placeholder="Nombre descriptivo del archivo (Ej: Registro Mercantil)" required>
+                        </div>
+                        <div class="col-md-4">
+                            <input type="file" name="archivo" class="form-control form-control-sm" accept="application/pdf" required>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-orange btn-sm w-100 fw-black text-uppercase text-white text-center" style="background-color: #FFA500;">
+                                Subir
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-text text-muted" style="font-size: 10px;">Solo se permiten archivos formato PDF de hasta 50MB cada uno.</div>
+                </form>
+
+                <p class="small fw-black text-uppercase text-muted mb-2"><i class="fas fa-file-pdf me-1 text-danger"></i> Archivos resguardados en tu cuenta</p>
+                <div class="table-responsive border rounded">
+                    <table class="table table-sm table-hover align-middle mb-0" style="font-size: 12px;">
+                        <thead class="table-light">
+                            <tr class="text-uppercase text-muted" style="font-size: 10px;">
+                                <th class="px-3 py-2">Documento</th>
+                                <th class="py-2">Fecha de Carga</th>
+                                <th class="py-2 text-end px-3">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($documentos as $doc)
+                                <tr>
+                                    <td class="px-3 fw-bold text-dark text-uppercase">
+                                        <i class="far fa-file-pdf text-danger me-2"></i> {{ $doc->nombre_archivo }}
+                                    </td>
+                                    <td class="text-muted">{{ $doc->created_at->format('d/m/Y h:i A') }}</td>
+                                    <td class="text-end px-3">
+                                        <a href="{{ route('portal.clientes.documentos.download', $doc->id) }}" class="btn btn-light btn-sm fw-black text-uppercase text-primary" style="font-size: 10px;">
+                                            <i class="fas fa-download me-1"></i> Descargar
+                                        </a>
+                                        </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="3" class="text-center p-4 text-muted fw-bold text-uppercase" style="font-size: 11px;">
+                                        No has cargado ningún documento en tu archivero todavía.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
         </div>
     </div>
 </div>

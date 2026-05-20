@@ -6,13 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Models\Viaje;
 use App\Models\Pedido;
 use App\Models\Cliente;
+use App\Models\ClienteDocumento;
+use App\Models\HistorialGpsVehiculo;
 use App\Repositories\ClienteRepository;
 use App\Services\{ClienteService, DashboardService};
 use App\Services\GascoCupoService;
 use App\Models\{Estado, Ciudad};
 use App\Models\TipoCombustible;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\{Redirect, Session, Auth, Log};
+use Illuminate\Support\Facades\{Redirect, Session, Auth, Log, Storage};
+use Illuminate\Support\Facades\DB;
+use \Illuminate\Validation\ValidationException;
 
 class ClienteController extends Controller
 {
@@ -159,6 +163,14 @@ class ClienteController extends Controller
         $data['cupoGasco'] = $infoGasco['autorizados'] ?? 0;
         $data['disponible'] = $cliente->disponible;
         $data['viendoSucursal'] = $request->filled('sucursal_id');
+
+        // OPERACIÓN PARA EL ARCHIVERO DIGITAL
+        $data['documentos'] = ClienteDocumento::where('cliente_id', $cliente->id)
+                                    ->orderBy('created_at', 'desc')
+                                    ->get();
+        // Sumar el peso físico guardado para el cálculo dinámico del límite de 120MB
+        $espacioUsadoBytes = ClienteDocumento::where('cliente_id', $cliente->id)->sum('peso_archivo');
+        $data['espacioUsadoMb'] = round($espacioUsadoBytes / (1024 * 1024), 2);
 
         if (in_array($data['perfil'], ['cliente_en_registro', 'cliente_rechazado', 'cliente_inactivo'])) {
             return view("cliente." . str_replace('cliente_', '', $data['perfil']), $data);
@@ -336,5 +348,95 @@ class ClienteController extends Controller
         } catch (\Exception $e) {
             return Redirect::back()->with('error', $e->getMessage());
         }
+    }
+
+    public function storeDocumento(Request $request)
+    {
+        $request->validate([
+            'archivo' => 'required|file|mimes:pdf|max:51200', // Máximo 50MB por archivo
+            'nombre_archivo' => 'required|string|max:255'
+        ]);
+
+        $cliente = auth()->user()->cliente;
+        $archivo = $request->file('archivo');
+        $pesoArchivoBytes = $archivo->getSize();
+
+        // VALIDACIÓN DE CAPACIDAD MÁXIMA (120MB)
+        $espacioUsadoBytes = ClienteDocumento::where('cliente_id', $cliente->id)->sum('peso_archivo');
+        $limiteBytes = 120 * 1024 * 1024; // 120MB en bytes
+
+        if (($espacioUsadoBytes + $pesoArchivoBytes) > $limiteBytes) {
+            return back()->with('error', 'No se pudo cargar el archivo. Has excedido el límite de almacenamiento de 120MB asignado para tu cuenta.');
+        }
+
+        // Guardar físicamente en storage privado
+        $path = $archivo->store('documentos_clientes', 'local');
+
+        ClienteDocumento::create([
+            'cliente_id'     => $cliente->id,
+            'user_id'        => auth()->id(),
+            'nombre_archivo' => $request->nombre_archivo,
+            'ruta_archivo'   => $path,
+            'peso_archivo'   => $pesoArchivoBytes, // Guardamos el peso para la suma dinámica
+            'mime_type'      => $archivo->getClientMimeType(),
+        ]);
+
+        return back()->with('success', '¡Archivo PDF cargado en tu archivero con éxito!');
+    }
+
+    public function downloadDocumento($id)
+    {
+        $cliente = auth()->user()->cliente;
+        
+        $documento = ClienteDocumento::where('id', $id)
+                                    ->where('cliente_id', $cliente->id)
+                                    ->firstOrFail();
+
+        if (!Storage::disk('local')->exists($documento->ruta_archivo)) {
+            return back()->with('error', 'El archivo físico no se encuentra en el servidor.');
+        }
+
+        return Storage::download($documento->ruta_archivo, $documento->nombre_archivo . '.pdf');
+    }
+
+    public function rastreoGps($id)
+    {
+        $clienteId = auth()->user()->cliente_id ?? auth()->user()->id_cliente;
+
+        // Verificar si el cliente pertenece a este viaje
+        $perteneceAlViaje = DB::table('despachos_viajes')
+            ->where('viaje_id', $id)
+            ->where('cliente_id', $clienteId)
+            ->exists();
+
+        if (!$perteneceAlViaje) {
+            abort(403, 'No tienes autorización para rastrear este despacho.');
+        }
+
+        $viaje = Viaje::with('vehiculo')->findOrFail($id);
+
+        // REGLA: Solo se permite si el estatus es exactamente 'EN RUTA'
+        if ($viaje->status !== 'EN RUTA') {
+            abort(403, 'El rastreo satelital solo está disponible cuando la unidad se encuentra EN RUTA.');
+        }
+
+        $vehiculo = $viaje->vehiculo;
+
+        if (!$vehiculo) {
+            return redirect()->route('portal.clientes.index')
+                ->with('error_gps_modulo', 'Esta planificación no tiene asignada una unidad de transporte interna con GPS.');
+        }
+        
+        $ultimoGps = HistorialGpsVehiculo::where('vehiculo_id', $vehiculo->id)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        $datosDespachoCliente = DB::table('despachos_viajes')
+            ->where('viaje_id', $id)
+            ->where('cliente_id', $clienteId)
+            ->first();
+
+        // VISTA CORREGIDA APUNTANDO AL MÓDULO CLIENTES
+        return view('cliente.rastreo', compact('viaje', 'vehiculo', 'ultimoGps', 'datosDespachoCliente'));
     }
 }

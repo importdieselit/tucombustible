@@ -286,11 +286,14 @@ class LogisticaService
                 'observacion'         => $item['observaciones'] ?? null,
             ]);
 
-            if ($pedidoId) {
-                $this->pedidoRepo->update($pedidoId, [
-                    'estado' => 'en_proceso',
-                    'fecha_aprobacion' => now()
-                ]);
+            if (!empty($item['pedido_id'])) {
+                $pedido = Pedido::find($item['pedido_id']);
+                if ($pedido) {
+                    $pedido->update([
+                        'estado' => Pedido::STATUS_APROBADO, 
+                        'fecha_aprobacion' => now()
+                    ]);
+                }
             }
         }
     }

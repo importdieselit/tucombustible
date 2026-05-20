@@ -359,6 +359,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}/editar', [LogisticaController::class, 'edit'])->name('edit');
             Route::put('/{id}/actualizar', [LogisticaController::class, 'update'])->name('update');
             Route::post('/{id}/cancelar', [LogisticaController::class, 'cancelar'])->name('cancelar');
+            Route::post('/pedidos/{id}/rechazar', [PedidoAdminController::class, 'rechazar'])->name('rechazar');
         });
 
         // --- MÓDULO CLIENTES COMBUSTIBLE ---
@@ -370,6 +371,9 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}/editar',         [AdminClienteController::class, 'edit'])->name('edit');
             Route::put('/{id}',                [AdminClienteController::class, 'update'])->name('update');
             Route::post('/clientes/{id}/generar-token', [AdminClienteController::class, 'generarToken'])->name('generar-token');
+            Route::post('/clientes/documentos/store', [AdminClienteController::class, 'storeDocumento'])->name('documentos.store');
+            Route::delete('/clientes/documentos/{id}/destroy', [AdminClienteController::class, 'destroyDocumento'])->name('documentos.destroy');
+            Route::get('/clientes/documentos/{id}/descargar', [AdminClienteController::class, 'downloadDocumento'])->name('documentos.download');
 
             // Flujo de registro
             Route::post('/{id}/avanzar-paso',  [AdminClienteController::class, 'avanzarPaso'])->name('avanzarPaso');
@@ -415,5 +419,8 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/placas/{id}/inactivar', [PortalClienteController::class, 'inactivarPlaca'])->name('placas.destroy');
             Route::post('/choferes/registrar', [PortalClienteController::class, 'registrarChofer'])->name('choferes.store');
             Route::delete('/choferes/{id}/inactivar', [PortalClienteController::class, 'inactivarChofer'])->name('choferes.destroy');
+            Route::post('/documentos/cargar', [PortalClienteController::class, 'storeDocumento'])->name('documentos.store');
+            Route::get('/documentos/{id}/descargar', [PortalClienteController::class, 'downloadDocumento'])->name('documentos.download');
+            Route::get('/viajes/{id}/rastreo', [PortalClienteController::class, 'rastreoGps'])->name('viajes.rastreo');
         });
 });

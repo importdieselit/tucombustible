@@ -216,4 +216,9 @@ class Cliente extends Model
     {
         return $this->cupos->sum('litros_aprobados') ?: 0;
     }
+
+    public function despachos()
+    {
+        return $this->hasMany(DespachoViaje::class, 'cliente_id');
+    }
 }

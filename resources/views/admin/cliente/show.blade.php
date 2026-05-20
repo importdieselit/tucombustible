@@ -286,6 +286,113 @@
                     </div>
                 </div>
             </div>
+            {{-- ========================================== --}}
+            {{-- BLOQUE ARCHIVERO DIGITAL --}}
+            {{-- ========================================== --}}
+           <div class="card shadow-sm border-0 mt-5 mb-4 no-print">
+                <div class="card-header bg-dark py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="text-white mb-0 fw-bold text-uppercase" style="font-size: 14px; letter-spacing: 0.5px;">
+                        <i class="fas fa-folder-open text-orange me-2"></i> Archivero Digital del Cliente
+                    </h5>
+                    <span class="badge bg-orange text-dark fw-black px-3 py-2" style="font-size: 11px;">
+                        {{ $espacioUsadoMb }} MB / 120 MB
+                    </span>
+                </div>
+                
+                <div class="card-body p-4 bg-light">
+                    
+                    {{-- SECCIÓN 1: FORMULARIO DE CARGA --}}
+                    <div class="bg-white p-3 border rounded shadow-sm mb-4">
+                        <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
+                            <i class="fas fa-upload text-orange me-2 fs-5"></i>
+                            <span class="fw-bold text-uppercase text-dark" style="font-size: 12px; letter-spacing: 0.5px;">
+                                Subir nuevo documento PDF al expediente
+                            </span>
+                        </div>
+
+                        <form action="{{ route('clientes.documentos.store') }}" method="POST" enctype="multipart/form-data" class="row g-3 align-items-center">
+                            @csrf
+                            <input type="hidden" name="cliente_id" value="{{ $cliente->id }}">
+                            
+                            <div class="col-md-5">
+                                <label class="form-label fw-bold text-muted text-uppercase mb-1" style="font-size: 10px;">Nombre descriptivo</label>
+                                <input type="text" name="nombre_archivo" class="form-control text-uppercase fw-bold" placeholder="Ej: REGISTRO MERCANTIL" style="font-size: 13px;" required>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label fw-bold text-muted text-uppercase mb-1" style="font-size: 10px;">Seleccionar archivo</label>
+                                <input type="file" name="archivo" class="form-control" accept="application/pdf" style="font-size: 13px;" required>
+                            </div>
+                            <div class="col-md-2 mt-md-4 pt-md-2">
+                                <button type="submit" class="btn btn-dark w-100 fw-bold text-uppercase" style="font-size: 12px; height: 38px;">
+                                    <i class="fas fa-plus-circle me-1 text-orange"></i> Cargar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    {{-- DIVISOR VISUAL FUERTE --}}
+                    <div class="my-4 border-top border-2 border-secondary opacity-25"></div>
+
+                    {{-- SECCIÓN 2: LISTADO DE ARCHIVOS GUARDADOS --}}
+                    <div class="bg-white border rounded shadow-sm overflow-hidden">
+                        <div class="bg-secondary bg-opacity-10 px-3 py-2 border-bottom d-flex align-items-center">
+                            <i class="fas fa-file-pdf text-danger me-2 fs-5"></i>
+                            <span class="fw-bold text-uppercase text-dark" style="font-size: 12px; letter-spacing: 0.5px;">
+                                Documentos resguardados en el sistema
+                            </span>
+                        </div>
+
+                        <div class="table-responsive" style="max-height: 350px;">
+                            <table class="table table-hover table-striped align-middle mb-0" style="font-size: 13px;">
+                                <thead class="table-dark text-uppercase" style="font-size: 11px; letter-spacing: 0.5px;">
+                                    <tr>
+                                        <th class="px-4 py-3">Nombre del Documento</th>
+                                        <th class="px-4 py-3 text-center" style="width: 150px;">Fecha de Carga</th>
+                                        <th class="px-4 py-3 text-end" style="width: 150px;">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($documentos as $doc)
+                                    <tr>
+                                        <td class="px-4 py-3 fw-bold text-dark text-uppercase">
+                                            <i class="far fa-file-pdf text-danger me-2 fs-5"></i> {{ $doc->nombre_archivo }}
+                                        </td>
+                                        <td class="px-4 py-3 text-center text-muted fw-bold">
+                                            {{ $doc->created_at->format('d/m/Y h:i A') }}
+                                        </td>
+                                        <td class="px-4 py-3 text-end">
+                                            <div class="d-flex justify-content-end gap-2" role="group">
+                                                <a href="{{ route('clientes.documentos.download', $doc->id) }}" 
+                                                class="btn btn-sm btn-outline-primary fw-bold text-uppercase px-3" 
+                                                style="font-size: 11px;" title="Descargar PDF">
+                                                    <i class="fas fa-download me-1"></i> Ver
+                                                </a>
+                                                
+                                                <form action="{{ route('clientes.documentos.destroy', $doc->id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Estás seguro de eliminar este archivo permanentemente del expediente del cliente?');">
+                                                    @csrf 
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-danger fw-bold text-uppercase px-3" 
+                                                            style="font-size: 11px;" title="Eliminar permanentemente">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    @empty
+                                    <tr>
+                                        <td colspan="3" class="px-4 py-5 text-center text-muted fw-bold text-uppercase" style="font-size: 12px; letter-spacing: 0.5px;">
+                                            <i class="fas fa-info-circle me-1 text-info"></i> No hay documentos digitales anexados a este expediente.
+                                        </td>
+                                    </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
         </div>
 
         {{-- COLUMNA DERECHA: PANEL DE CONTROL --}}
