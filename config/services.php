@@ -47,6 +47,9 @@ return [
         'url'      => env('S24_URL'),
         'token'    => env('S24_TOKEN')
     ],
+    'tv' => [
+        'token' => env('TV_DASHBOARD_TOKEN'),
+    ],
     'reporte' => [
         'internal_token' => env('REPORTE_INTERNAL_TOKEN'),
     ],

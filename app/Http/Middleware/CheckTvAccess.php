@@ -15,13 +15,15 @@ class CheckTvAccess
         // 1. PRIORIDAD ABSOLUTA: Si la petición trae el Token de la TV (Caso APK)
         $tvToken = $request->header('X-TV-Token');
 
+        $tokenConfigurado = config('services.tv.token');
+
         if ($tvToken) {
-            if ($tvToken === env('TV_DASHBOARD_TOKEN')) {
+            if ($tvToken === $tokenConfigurado) {
                 return $next($request);
             }
             
-            Log::warning("Token de TV inválido ".$tvToken." !== ".env('TV_DASHBOARD_TOKEN')." intentando acceder desde la IP: " . $request->ip());
-            abort(403, 'Acceso denegado. Token de pantalla inválido. '.$tvToken." !== ".env('TV_DASHBOARD_TOKEN'));
+            Log::warning("Token de TV inválido ".$tvToken." !== ".$tokenConfigurado." intentando acceder desde la IP: " . $request->ip());
+            abort(403, 'Acceso denegado. Token de pantalla inválido. '.$tvToken." !== ".$tokenConfigurado);
         }
 
         // 2. CASO ALTERNATIVO: Acceso vía Navegador Web (Caso Tú auditando)
