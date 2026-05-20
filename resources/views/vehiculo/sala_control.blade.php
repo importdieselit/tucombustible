@@ -106,11 +106,11 @@
 <div class="container-fluid p-0">
     <div class="row g-0 main-control-wrapper">
         
-        <div class="col-md-5 col-lg-6" id="map-panel">
+        <div class="col-sm-5 col-md-5 col-lg-6" id="map-panel">
             <div id="map"></div>
         </div>
 
-        <div class="col-md-7 col-lg-6" id="dashboard-panel">
+        <div class="col-sm-7 col-md-7 col-lg-6" id="dashboard-panel">
             <div class="dashboard-container-scaled fade-smooth" id="reporte-container">
                 <div class="text-center mt-5 text-muted">
                     <i class="fas fa-circle-notch fa-spin fa-3x mb-3 text-primary"></i>
