@@ -164,7 +164,7 @@
                             </div>
                         -->
 
-<h3 class="w-100 text-center"><strong>  UNIDADES EN RUTA</strong></h3>
+                            <h3 class="w-100 text-center"><strong>  UNIDADES EN RUTA</strong></h3>
                             <div class="col-12 col-md-6 col-lg-3">
                                 <div class="card h-100 shadow-sm border-0 border-top border-4 border-chutos">
                                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
@@ -176,9 +176,6 @@
                                             @forelse($chutosEnRuta as $v)
                                                 <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
                                                     <i class="fa-solid fa-truck-pickup text-muted"></i> {{ $v->flota }} <span class="text-muted">|</span> {{ $v->placa }}
-                                                </span>
-                                                <span class="badge {{ $v->dias_fuera_servicio > 7 ? 'bg-danger' : 'bg-warning text-dark' }}" style="font-size: 0.7rem;">
-                                                    {{ $v->dias_fuera_servicio }} DÍAS
                                                 </span>
                                             @empty
                                                 <span class="text-muted x-small ps-1">Sin unidades operativas</span>
@@ -200,9 +197,6 @@
                                                 <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
                                                     <i class="fas fa-truck text-muted"></i> {{ $v->flota }} <span class="font-weight-bold text-muted">|</span> {{ $v->placa }}
                                                 </span>
-                                                <span class="badge {{ $v->dias_fuera_servicio > 7 ? 'bg-danger' : 'bg-warning text-dark' }}" style="font-size: 0.7rem;">
-                                                    {{ $v->dias_fuera_servicio }} DÍAS
-                                                </span>
                                             @empty
                                                 <span class="text-muted x-small ps-1">Sin unidades operativas</span>
                                             @endforelse
@@ -223,9 +217,6 @@
                                                 <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
                                                     <i class="fas fa-trailer text-muted"></i> {{ $v->nro_flota }} <span class="text-muted">|</span> {{ $v->placa }}
                                                 </span>
-                                                <span class="badge {{ $v->dias_fuera_servicio > 7 ? 'bg-danger' : 'bg-warning text-dark' }}" style="font-size: 0.7rem;">
-                                                    {{ $v->dias_fuera_servicio }} DÍAS
-                                                </span>
                                             @empty
                                                 <span class="text-muted x-small ps-1">Sin unidades operativas</span>
                                             @endforelse
@@ -245,9 +236,6 @@
                                             @forelse($camionetasEnRuta as $v)
                                                 <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
                                                     <i class="fas fa-car text-muted"></i>{{ $v->nro_flota }} <span class="text-muted">|</span> {{ $v->placa }}
-                                                </span>
-                                                <span class="badge {{ $v->dias_fuera_servicio > 7 ? 'bg-danger' : 'bg-warning text-dark' }}" style="font-size: 0.7rem;">
-                                                    <i class="bi bi-clock-history"></i> {{ $v->dias_fuera_servicio }} DÍAS
                                                 </span>
                                             @empty
                                                 <span class="text-muted x-small ps-1">Sin unidades operativas</span>
