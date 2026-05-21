@@ -337,7 +337,7 @@
                         } 
                     },
                     legend: { enabled: true, itemStyle: { fontSize: '11px' } },
-                    colors: ['#002d72', '#ff6600', '#e74a3b'], /* Estándar de color NOC unificado */
+                    colors: ['#198754', '#ffc107', '#dc3545'], /* Estándar de color NOC unificado */
                     series: [
                         { name: 'Operativos', data: chartData.segmentos.operativos },
                         { name: 'En Ruta', data: chartData.segmentos.enRuta },
