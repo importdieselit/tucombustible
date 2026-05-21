@@ -57,13 +57,13 @@
         {{-- SECCIÓN GERENCIAL --}}
 
         <div class="row mb-4 no-print">
-            <div class="col-lg-5">
+            <div class="col-lg-5 d-none">
                 <div class="card shadow-sm border-0" style="border-radius: 15px;">
                     <div id="chart-disponibilidad" style="width:100%; height:300px;"></div>
                 </div>
             </div>
 
-            <div class="col-lg-7">
+            <div class="col-lg-12">
                 <div class="card shadow-sm border-0 h-100" style="border-radius: 15px;">
                     <div class="card-body">
                         <h6 class="fw-black text-uppercase small text-muted mb-4">Análisis de Flota por Segmento</h6>
