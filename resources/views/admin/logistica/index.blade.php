@@ -305,7 +305,7 @@
                                         @endif
 
                                         {{-- Botón Cancelar (Visible en PROGRAMADO y EN RUTA / Oculto en CANCELADO y COMPLETADO) --}}
-                                        @if($viaje->status !== 'CANCELADO' && $viaje->status !== 'COMPLETADO')
+                                        @if($viaje->status !== 'CANCELADO' && $viaje->status !== 'COMPLETADO' && $viaje->status !== 'EN RUTA')
                                             <button class="btn btn-sm btn-light border shadow-sm" onclick="cancelarPlanificacion({{ $viaje->id }})" title="Cancelar">
                                                 <i class="fas fa-times-circle text-danger"></i>
                                             </button>
