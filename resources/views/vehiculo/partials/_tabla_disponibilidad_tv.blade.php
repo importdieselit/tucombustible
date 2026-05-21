@@ -257,10 +257,7 @@
                                         <div class="d-flex flex-wrap gap-1">
                                             @forelse($chutosFalla as $v)
                                                 <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
-                                                    <i class="fa-solid fa-truck-pickup text-muted"></i> {{ $v->flota }} <span class="text-muted">|</span> {{ $v->placa }}
-                                                </span>
-                                                <span class="badge {{ $v->dias_fuera_servicio > 7 ? 'bg-danger' : 'bg-warning text-dark' }}" style="font-size: 0.7rem;">
-                                                    {{ $v->dias_fuera_servicio }} DÍAS
+                                                    {{ $v->flota }} <span class="text-muted">|</span> {{ $v->placa }}
                                                 </span>
                                             @empty
                                                 <span class="text-muted x-small ps-1">Sin unidades operativas</span>
@@ -280,10 +277,7 @@
                                         <div class="d-flex flex-wrap gap-1">
                                             @forelse($camionesFalla as $v)
                                                 <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
-                                                    <i class="fas fa-truck text-muted"></i> {{ $v->flota }} <span class="font-weight-bold text-muted">|</span> {{ $v->placa }}
-                                                </span>
-                                                <span class="badge {{ $v->dias_fuera_servicio > 7 ? 'bg-danger' : 'bg-warning text-dark' }}" style="font-size: 0.7rem;">
-                                                    {{ $v->dias_fuera_servicio }} DÍAS
+                                                    {{ $v->flota }} <span class="font-weight-bold text-muted">|</span> {{ $v->placa }}
                                                 </span>
                                             @empty
                                                 <span class="text-muted x-small ps-1">Sin unidades operativas</span>
@@ -303,10 +297,7 @@
                                         <div class="d-flex flex-wrap gap-1">
                                             @forelse($cisternasFalla as $v)
                                                 <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
-                                                    <i class="fas fa-trailer text-muted"></i> {{ $v->nro_flota }} <span class="text-muted">|</span> {{ $v->placa }}
-                                                </span>
-                                                <span class="badge {{ $v->dias_fuera_servicio > 7 ? 'bg-danger' : 'bg-warning text-dark' }}" style="font-size: 0.7rem;">
-                                                    {{ $v->dias_fuera_servicio }} DÍAS
+                                                    {{ $v->nro_flota }} <span class="text-muted">|</span> {{ $v->placa }}
                                                 </span>
                                             @empty
                                                 <span class="text-muted x-small ps-1">Sin unidades operativas</span>
@@ -326,10 +317,7 @@
                                         <div class="d-flex flex-wrap gap-1">
                                             @forelse($camionetasFalla as $v)
                                                 <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
-                                                    <i class="fas fa-car text-muted"></i>{{ $v->nro_flota }} <span class="text-muted">|</span> {{ $v->placa }}
-                                                </span>
-                                                <span class="badge {{ $v->dias_fuera_servicio > 7 ? 'bg-danger' : 'bg-warning text-dark' }}" style="font-size: 0.7rem;">
-                                                    <i class="bi bi-clock-history"></i> {{ $v->dias_fuera_servicio }} DÍAS
+                                                    {{ $v->nro_flota }} <span class="text-muted">|</span> {{ $v->placa }}
                                                 </span>
                                             @empty
                                                 <span class="text-muted x-small ps-1">Sin unidades operativas</span>
@@ -338,10 +326,6 @@
                                     </div>
                                 </div>
                             </div>
-
-
-                        
-
                         </div>
                     </div>     
                 </div>
