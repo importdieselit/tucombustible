@@ -47,7 +47,7 @@
         </div>
 
         <!-- Tabla de Detalle Simplificada -->
-        <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+        <div class="table-responsive" style="">
             <table class="table table-sm" style="font-size: 0.75rem;">  
                 <thead class="bg-primary text-white">
                     <tr style="font-weight: 700">
