@@ -311,28 +311,6 @@ class ViajesController extends Controller
                 $producto->stock-=$totalLitros;
                 $producto->save();
 
-                if ($request->has('chofer_id') && $request->chofer_id !== null && $pedido) {
-                    if(!is_null($pedido)){
-                        try {
-                            FcmNotificationService::sendPedidoAsignadoConductorNotification(
-                                $pedido->fresh(['cliente']),
-                                $request->chofer_id
-                            );
-                        } catch (\Exception $e) {
-                            Log::error("Error enviando notificación FCM al conductor: " . $e->getMessage());
-                            // No fallar la operación principal por error en notificación
-                        }
-                    } 
-                }
-
-                            // Crear el pedido (sin depósito específico)
-            
-
-                 FcmNotificationService::enviarNotification(
-                        "Nuevo viaje creado a {$viaje->destino_ciudad} con {$cantidadDespachos} despachos. Total Litros: {$totalLitros}",  
-                        "Nuevo viaje creado a {$viaje->destino_ciudad} con {$cantidadDespachos} despachos. Total Litros: {$totalLitros}",
-                        $data
-                    );
             // 5. Generar el Cuadro de Viáticos automáticamente (con correcciones y desglose)
             $this->generarCuadroViaticos($viaje, $tabulador, $cantidadDespachos);
             
