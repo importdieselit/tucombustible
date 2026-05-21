@@ -47,10 +47,13 @@ class ViajeCreadoNotification extends Notification implements ShouldQueue
 
         $mensaje = "*TuCombustible - Nuevo Viaje Asignado*\n\n"
                  . "Hola, se te ha asignado un nuevo viaje.\n"
-                 . "📍 *Destino:* " . ($this->viaje->destino_ciudad ?? 'N/A') . "\n";
+                 . "📍 *Destino:* " . ($this->viaje->destino_ciudad ?? 'N/A') . "\n"
+                 . " *Unidad:* ".($this->viaje->vehiculo->flota ?? 'N/A')." [" . ($this->viaje->vehiculo->placa ?? 'N/A') . "]\n";
+
         if (!is_null($this->viaje->cisterna)) {
-            $mensaje .= "🛢️ *Cisterna:* " . $this->viaje->cisterna . "\n\n";
+            $mensaje .= "🛢️ *Cisterna:* " . $this->viaje->cisternaAcoplada->flota . " [" . $this->viaje->cisternaAcoplada->placa . "]\n\n";
         } 
+        $mensaje .= "📅 *Fecha:* " . $this->viaje->fecha_salida->format('d/m/Y H:i') . "\n\n";
         $mensaje .= "Por favor, Recuerda realizar el Checklist de Salida antes de partir. Puedes revisar los detalles del viaje aquí: " . url("/viajes/resumen-programacion/{$this->viaje->id}") . "\n\n"
                  . "¡Buen viaje y maneja con seguridad!";
 

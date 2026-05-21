@@ -35,7 +35,7 @@ class ViajeObserver
             
             $vehiculo->save();
 
-            $viaje->load(['chofer', 'ayudante_chofer']);
+            $viaje->load(['chofer', 'ayudante_chofer','vehiculo', 'cisternaAcoplada']);
 
             $destinatarios = collect();
 
