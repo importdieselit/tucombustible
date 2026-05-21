@@ -312,23 +312,6 @@
         function renderCharts(chartData) {
             if (!chartData) return;
 
-            // Gráfico 1: Disponibilidad Global (Pie)
-            if (document.getElementById('chart-disponibilidad')) {
-                Highcharts.chart('chart-disponibilidad', {
-                    chart: { type: 'pie', backgroundColor: 'transparent', height: 260 },
-                    title: { text: null },
-                    plotOptions: { pie: { innerSize: '65%', dataLabels: { enabled: false }, showInLegend: true } },
-                    legend: { itemStyle: { fontSize: '13px' } },
-                    series: [{
-                        name: 'Unidades',
-                        data: [
-                            { name: 'Disponibles', y: chartData.global.operativos, color: '#002d72' },
-                            { name: 'En Ruta', y: chartData.global.enRuta, color: '#ff6600' },
-                            { name: 'En Falla', y: chartData.global.fallas, color: '#e74a3b' }
-                        ]
-                    }], credits: { enabled: false }
-                });
-            }
 
             // Gráfico 2: Segmentos Detallados de Flota (3 Columnas por Tipo)
             if (document.getElementById('chart-segmentos')) {
@@ -343,8 +326,14 @@
                     plotOptions: { 
                         column: { 
                             borderRadius: 4, 
-                            colorByPoint: false, // Desactivado para que use el set de series de forma corporativa
-                            dataLabels: { enabled: true, style: { fontSize: '11px', fontWeight: 'bold' } } 
+                            colorByPoint: false, 
+                            pointWidth: 14, // 👈 AQUÍ: Define el grosor en píxeles de cada barra (bájalo a 12 o sube a 16 según veas la TV)
+                            dataLabels: { 
+                                enabled: true, 
+                                inside: false, // Fuerza a que el número quede arriba de la barra si es muy delgada
+                                y: -5, // Ajusta la posición vertical del número para que no se monte
+                                style: { fontSize: '10px', fontWeight: 'bold' } 
+                            } 
                         } 
                     },
                     legend: { enabled: true, itemStyle: { fontSize: '11px' } },
