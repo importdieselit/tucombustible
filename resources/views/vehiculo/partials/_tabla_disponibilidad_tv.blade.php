@@ -4,7 +4,7 @@
                 <h3 class="mb-0 fw-bold">TUCOMBUSTIBLE</h3>
             </div>
             <div>
-                <h1 class="fw-bold">REPORTE DIARIO DE FLOTA</h1>
+                <h1 class="fw-bold">REPORTE DIARIO 22 DE FLOTA</h1>
             </div>
             <div class="text-end">
                 <div class="h4 mb-0">{{ $today->translatedFormat('d M, Y') }}</div>
