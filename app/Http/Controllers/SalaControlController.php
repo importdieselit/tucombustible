@@ -83,7 +83,7 @@ class SalaControlController extends Controller
         // 3. RENDERIZADO DEL PARTIAL Y RESPUESTA JSON
         // =========================================================
         // Usamos la misma vista que ya maquetaste para no duplicar código
-        $htmlDashboard = view('vehiculo.partials._tabla_disponibilidad', compact(
+        $htmlDashboard = view('vehiculo.partials._tabla_disponibilidad_tv', compact(
             'today', 'cisternasFalla', 'enRuta', 'totalCisternas','camionesFalla', 'despachosHoy', 
             'camionetasFalla', 'camionetasOperativas', 'totalLivianos','totalCamiones', 'totalChutos',
             'chutosFalla', 'chutosOperativos', 'camionesOperativos', 

@@ -5,44 +5,47 @@
     <link href="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/leaflet.fullscreen.css" rel="stylesheet" />
 
     <style>
-        body { background-color: #f4f6f9; overflow-x: hidden; }
+        /* -------------------------- */
+        /* ESTÁNDAR NOC SMART TV      */
+        /* -------------------------- */
+        body { 
+            background-color: #000000; /* Fondo negro profundo para TV */
+            overflow: hidden; /* ESTRICTAMENTE PROHIBIDO EL SCROLL EN TV */
+            cursor: none !important; /* Oculta el cursor del mouse nativo */
+            margin: 0;
+            padding: 0;
+        }
         
-        .main-control-wrapper {
-            height: calc(100vh - 20px);
-            margin: 10px;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            overflow: hidden;
+        .tv-grid-container {
+            display: grid;
+            grid-template-columns: 55% 45%; /* Distribución fija 16:9 */
+            height: 100vh;
+            width: 100vw;
+            background: #f4f6f9; /* Mantiene el color original de tu reporte */
         }
 
         /* -------------------------- */
         /* MAPA EN TIEMPO REAL (IZQ)  */
         /* -------------------------- */
-        #map-panel { height: 100%; position: relative; border-right: 2px solid #e2e8f0; }
-        #map { height: 100%; width: 100%; z-index: 1; }
+        #map-panel { 
+            height: 100vh; 
+            position: relative; 
+            border-right: 4px solid #002d72; /* Borde corporativo reforzado */
+            box-shadow: 10px 0 30px rgba(0,0,0,0.15);
+            z-index: 10;
+        }
+        #map { height: 100%; width: 100%; z-index: 1; background: #e5e7eb; }
 
         .map-marker-container {
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: white;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            border: 2px solid #002d72;
-            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            position: relative; display: flex; justify-content: center; align-items: center;
+            background: white; border-radius: 50%; width: 40px; height: 40px;
+            border: 2px solid #002d72; box-shadow: 0 0 10px rgba(0,0,0,0.2);
         }
         
         .marker-pulse {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border: 2px solid #002d72;
-            border-radius: 50%;
-            animation: radarPulse 2s infinite;
-            opacity: 0;
+            position: absolute; width: 100%; height: 100%;
+            border: 2px solid #002d72; border-radius: 50%;
+            animation: radarPulse 2s infinite; opacity: 0;
         }
 
         @keyframes radarPulse {
@@ -50,35 +53,41 @@
             100% { transform: scale(2.3); opacity: 0; }
         }
 
-        /* Transición fluida para el movimiento de los camiones en el mapa */
         .leaflet-marker-icon {
             transition: transform 2.0s cubic-bezier(0.25, 1, 0.5, 1) !important;
         }
 
         .custom-tooltip {
-            background: rgba(0, 45, 114, 0.95) !important;
-            color: white !important;
-            border: none !important;
-            border-radius: 8px !important;
-            padding: 5px 12px !important;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
-            font-size: 11px !important;
+            background: rgba(0, 45, 114, 0.95) !important; color: white !important;
+            border: none !important; border-radius: 8px !important;
+            padding: 5px 12px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+            font-size: 13px !important; /* Textos de mapa más grandes para TV */
         }
-        .tooltip-content b { color: #ffc107; text-transform: uppercase; }
+        .tooltip-content b { color: #ffc107; text-transform: uppercase; font-size: 15px; }
 
         /* ---------------------------------- */
-        /* EFECTO DE DESPLAZAMIENTO Y REORDEN */
+        /* PANEL DERECHO Y ANTIDESBORDE TV    */
         /* ---------------------------------- */
         #dashboard-panel {
-            height: 100%;
-            overflow-y: auto;
+            height: 100vh;
+            overflow: hidden; /* Cero scroll */
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Centra tu reporte verticalmente */
+            padding: 0 15px;
             background-color: #f4f6f9;
-            scroll-behavior: smooth;
         }
         
-        .dashboard-container-scaled { padding: 15px; }
+        #reporte-container {
+            /* Magia de TV: Escala dinámicamente tu partial completo al 85% para que todo quepa en la pantalla 1080p sin cortarse por debajo */
+            transform: scale(0.85); 
+            transform-origin: center center;
+            width: 115%; /* Compensa el escalado */
+            margin-left: -7.5%;
+            transition: opacity 0.4s ease-in-out;
+        }
 
-        /* Animación suave cuando los elementos se renderizan o cambian de zona */
+        /* Animación suave para cuando tu partial llega por AJAX */
         #reporte-container table tbody tr, 
         #reporte-container .card {
             animation: slideInRow 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -89,41 +98,49 @@
             100% { opacity: 1; transform: translateY(0); }
         }
 
-        /* Suavizado general para evitar saltos bruscos en el contenedor global */
-        .fade-smooth {
-            transition: opacity 0.3s ease-in-out;
-        }
-
-        /* Clases de Flota */
+        /* Clases de Flota Originales */
         .bg-chutos { background-color: #ff6600 !important; color: white;}
         .bg-camiones { background-color: #ffc107 !important; color: #212529;}
         .bg-cisternas { background-color: #198754 !important; color: white;}
         .bg-camionetas { background-color: #2c3e50 !important; color: white;}
+        
+        /* Banner Offline */
+        .offline-alert {
+            display: none; position: absolute; top: 0; left: 0; width: 100vw;
+            background: #dc3545; color: white; text-align: center; z-index: 9999;
+            font-weight: bold; padding: 10px; font-size: 20px; text-transform: uppercase;
+        }
     </style>
 @endpush
 
 @section('content')
-<div class="container-fluid p-0">
-    <div class="row g-0 main-control-wrapper">
-        
-        <div class="col-sm-5 col-md-5 col-lg-6" id="map-panel">
-            <div id="map"></div>
-        </div>
 
-        <div class="col-sm-7 col-md-7 col-lg-6" id="dashboard-panel">
-            <div class="dashboard-container-scaled fade-smooth" id="reporte-container">
-                <div class="text-center mt-5 text-muted">
-                    <i class="fas fa-circle-notch fa-spin fa-3x mb-3 text-primary"></i>
-                    <h5>Inicializando Sala de Control...</h5>
-                </div>
+<div id="offline-banner" class="offline-alert">
+    ⚠️ ALERTA DE SISTEMA: PÉRDIDA DE SEÑAL DE RED - RECONECTANDO...
+</div>
+
+<div class="tv-grid-container">
+    
+    <div id="map-panel">
+        <div id="map"></div>
+    </div>
+
+    <div id="dashboard-panel">
+        <div id="reporte-container">
+            <div class="text-center mt-5 text-muted">
+                <i class="fas fa-circle-notch fa-spin fa-4x mb-3 text-primary"></i>
+                <h2 style="font-weight: 900; color:#002d72;">INICIALIZANDO CONSOLA NOC...</h2>
+                <p>Estableciendo conexión encriptada con la central...</p>
             </div>
         </div>
     </div>
+
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/Leaflet.fullscreen.min.js"></script>
 <script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://js.pusher.com/8.0.1/pusher.min.js"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -132,63 +149,86 @@
         let map;
         let markers = {}; 
         let countdownInterval;
-        let fetchInterval;
-        const REFRESH_SECONDS = 60;
+        const REFRESH_SECONDS = 60; // Watchdog de seguridad
         let timeLeft = REFRESH_SECONDS;
         
         const sedeCoords = L.latLng(10.488249123497356, -66.8234169941792);
         const RADIO_SEDE_METROS = 180;
 
-        // --- 1. INICIALIZACIÓN DEL MAPA ---
+        // --- 1. DETECCIÓN DE CONTINGENCIA OFFLINE ---
+        window.addEventListener('offline', () => {
+            document.getElementById('offline-banner').style.display = 'block';
+            document.getElementById('reporte-container').style.opacity = '0.4';
+        });
+
+        window.addEventListener('online', () => {
+            document.getElementById('offline-banner').style.display = 'none';
+            document.getElementById('reporte-container').style.opacity = '1';
+            fetchSalaData(); // Recarga inmediata al volver el internet
+        });
+
+        // --- 2. INICIALIZACIÓN DEL MAPA ---
         function initMap() {
-            map = L.map('map', { attributionControl: false, fullscreenControl: true })
-                   .setView([10.488249123497356, -66.8234169941792], 8); 
+            // Desactivamos controles táctiles/scroll del mapa para TV
+            map = L.map('map', { 
+                attributionControl: false, 
+                fullscreenControl: false,
+                zoomControl: false, 
+                scrollWheelZoom: false,
+                dragging: false
+            }).setView([10.488249123497356, -66.8234169941792], 8); 
 
             L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
             
             L.circle(sedeCoords, {
-                color: '#002d72',
-                fillColor: '#002d72',
-                fillOpacity: 0.1,
-                radius: RADIO_SEDE_METROS
+                color: '#002d72', fillOpacity: 0.1, radius: RADIO_SEDE_METROS
             }).addTo(map);
 
-            // Carga inicial inmediata
-            fetchSalaData();
-            
-            // Iniciar los hilos de temporizadores automáticos
-            startTimers();
+            fetchSalaData(); // Carga inicial
+            startWatchdog(); // Inicia respaldo
+            initWebSockets(); // Inicia escucha en tiempo real
         }
 
-        // --- 2. CONTROLADORES DE TIEMPO AUTOMÁTICOS ---
-        function startTimers() {
-            // Hilo 1: Descuento del reloj segundo a segundo (Sincronizado con tu partial)
+        // --- 3. SOCKETS Y WATCHDOG ---
+        function initWebSockets() {
+            // Configuración estándar de Laravel Reverb / Pusher
+            const pusher = new Pusher('{{ env("PUSHER_APP_KEY") }}', {
+                cluster: '{{ env("PUSHER_APP_CLUSTER", "mt1") }}',
+                wsHost: window.location.hostname,
+                wsPort: 8080,
+                forceTLS: false,
+                disableStats: true
+            });
+
+            const channel = pusher.subscribe('sala-control');
+            
+            // Cuando Laravel dispare un evento, ejecutamos la actualización limpia
+            channel.bind('tv.refresh', function(payload) {
+                console.log("Evento en caliente recibido. Refrescando consola...");
+                document.getElementById('reporte-container').style.opacity = '0.7';
+                fetchSalaData().then(() => {
+                    document.getElementById('reporte-container').style.opacity = '1';
+                });
+            });
+        }
+
+        function startWatchdog() {
+            // Respaldo silencioso en caso de que los Sockets fallen
             countdownInterval = setInterval(() => {
                 timeLeft--;
-                
                 const timerDisplay = document.getElementById('countdown-timer');
-                if (timerDisplay) {
-                    timerDisplay.textContent = timeLeft + 's';
-                }
+                if (timerDisplay) timerDisplay.textContent = timeLeft + 's';
 
                 if (timeLeft <= 0) {
-                    timeLeft = REFRESH_SECONDS; // Reset local inmediato
                     fetchSalaData();
                 }
             }, 1000);
         }
 
-        // --- 3. ADQUISICIÓN DE DATOS (AJAX) ---
+        // --- 4. ADQUISICIÓN DE DATOS (AJAX) ---
         async function fetchSalaData() {
             const container = document.getElementById('reporte-container');
-            const btnRefresh = document.getElementById('btn-refresh');
-            const iconRefresh = document.getElementById('refresh-icon');
-
-            // Capturamos el token que el controlador nos pasó desde la APK
             const tvToken = "{{ $token ?? '' }}";
-
-            if(btnRefresh) btnRefresh.disabled = true;
-            if(iconRefresh) iconRefresh.classList.add('fa-spin');
 
             try {
                 const response = await fetch("{{ route('api.sala.control.stream') }}", {
@@ -196,7 +236,7 @@
                     headers: { 
                         'X-Requested-With': 'XMLHttpRequest', 
                         'Accept': 'application/json',
-                        'X-TV-Token': tvToken // Inyectamos el candado de seguridad aquí
+                        'X-TV-Token': tvToken 
                     },
                     credentials: 'same-origin'
                 });
@@ -204,44 +244,34 @@
                 if (response.ok) {
                     const data = await response.json();
                     
-                    // Inyección limpia del contenido
+                    // Inyección de tu partial
                     container.innerHTML = data.html_dashboard;
                     
-                    // Re-dibujar gráficos sobre la nueva estructura
+                    // Renderizado original de tu código
                     renderCharts();
-
-                    // Mapeo e interpolación de posiciones
                     updateMapMarkers(data.unidades);
                     
-                    // Forzar actualización del reloj de sincronización real
-                    const lastSync = document.getElementById('last-sync-time');
-                    if(lastSync) lastSync.textContent = new Date().toLocaleTimeString();
-                    
-                    timeLeft = REFRESH_SECONDS; // Garantizar sincronía post-stream
+                    timeLeft = REFRESH_SECONDS; // Reseteamos el watchdog
                 }
             } catch (error) {
-                console.error('Error de comunicación con el flujo de datos:', error);
-            } finally {
-                if(btnRefresh) btnRefresh.disabled = false;
-                if(iconRefresh) iconRefresh.classList.remove('fa-spin');
+                console.error('Error de comunicación:', error);
             }
         }
 
-        // --- 4. ACTUALIZACIÓN DINÁMICA DEL MAPA Y ZOOM EN CUADRANTE ---
+        // --- 5. ACTUALIZACIÓN DEL MAPA ---
         function updateMapMarkers(unidades) {
             const currentIds = unidades.map(u => u.id);
-            const group = L.featureGroup(); // Contenedor para calcular las fronteras geométricas exactas
+            const group = L.featureGroup();
 
             unidades.forEach(u => {
                 const newLatLng = [u.latitud, u.longitud];
                 const colorStatus = obtenerColorPorEstatus(u.estatus);
                 const contentTooltip = generarHtmlTooltip(u);
                 
-                // Criterio operativo de visualización de tooltips permanentes
-                const mostrarSiempre = (u.estatus == 2 || L.latLng(newLatLng).distanceTo(sedeCoords) > RADIO_SEDE_METROS);
+                // En TV mostraremos siempre los tooltips de los que estén en falla(>2) o lejos de sede
+                const mostrarSiempre = (u.estatus > 2 || L.latLng(newLatLng).distanceTo(sedeCoords) > RADIO_SEDE_METROS);
 
                 if (markers[u.id]) {
-                    // SI YA EXISTE: Se desplaza dinámicamente con la transición CSS
                     markers[u.id].setLatLng(newLatLng);
                     markers[u.id].setIcon(generarIcono(colorStatus));
                     markers[u.id].getTooltip().setContent(contentTooltip);
@@ -249,14 +279,11 @@
                     if (mostrarSiempre) { markers[u.id].openTooltip(); } 
                     else { markers[u.id].closeTooltip(); }
                 } else {
-                    // SI ES NUEVO: Se instancia en el mapa
                     const m = L.marker(newLatLng, { 
                         icon: generarIcono(colorStatus) 
                     }).bindTooltip(contentTooltip, {
-                        direction: 'top',
-                        offset: [0, -15],
-                        className: 'custom-tooltip',
-                        permanent: mostrarSiempre
+                        direction: 'top', offset: [0, -15],
+                        className: 'custom-tooltip', permanent: mostrarSiempre
                     });
 
                     m.addTo(map);
@@ -265,7 +292,6 @@
                 group.addLayer(markers[u.id]);
             });
 
-            // Limpieza de unidades que salieron de línea
             Object.keys(markers).forEach(id => {
                 if (!currentIds.includes(parseInt(id))) {
                     map.removeLayer(markers[id]);
@@ -273,23 +299,18 @@
                 }
             });
 
-            // AJUSTE AUTOMÁTICO DE ZOOM (Abarca la posición de todos los vehículos)
             if (group.getLayers().length > 0) {
-                // El padding evita que los marcadores queden pegados a los bordes de la pantalla de la TV
                 map.fitBounds(group.getBounds(), { 
-                    padding: [60, 60], 
-                    maxZoom: 13,
-                    animate: true,
-                    duration: 1.5
+                    padding: [80, 80], maxZoom: 14, animate: true, duration: 2.0
                 });
             }
         }
 
-        // --- 5. FUNCIONES AUXILIARES ---
+        // --- FUNCIONES AUXILIARES Y HIGHCHARTS (Tu código original intacto) ---
         function obtenerColorPorEstatus(estatus) {
-            if(estatus == 2) return '#ff6600'; // En Ruta (Naranja Chuto)
-            if(estatus == 3 || estatus == 4 || estatus == 5) return '#e74a3b'; // Falla / Incidencia
-            return '#002d72'; // Disponible / Operativo (Azul Corporativo)
+            if(estatus == 2) return '#ff6600'; 
+            if(estatus == 3 || estatus == 4 || estatus == 5) return '#e74a3b'; 
+            return '#002d72'; 
         }
 
         function generarIcono(color) {
@@ -297,10 +318,9 @@
                 html: `
                     <div class="map-marker-container" style="border-color: ${color}">
                         <div class="marker-pulse" style="border-color: ${color}"></div>
-                        <i class="fa-solid fa-truck-moving" style="color: ${color}; font-size: 14px;"></i>
+                        <i class="fa-solid fa-truck-moving" style="color: ${color}; font-size: 16px;"></i>
                     </div>`,
-                iconSize: [40, 40],
-                className: 'custom-marker'
+                iconSize: [40, 40], className: 'custom-marker'
             });
         }
 
@@ -313,32 +333,28 @@
             return `
                 <div class="tooltip-content">
                     <b>${u.placa || 'S/P'}</b><br>
-                    <small>${u.is_marca?.marca || ''} ${u.is_modelo?.modelo || ''}</small><br>
+                    <small>${u.is_marca?.marca || ''}</small><br>
                     <small style="opacity:0.85;"><i class="far fa-clock"></i> ${tiempo}</small>
                 </div>`;
         }
 
-        // --- 6. RENDERIZADO DE HIGHCHARTS SOBRE EL PARTIAL ---
         function renderCharts() {
             const meta = document.getElementById('chart-data-meta');
             if (!meta) return;
 
             const data = {
-                operativos: parseInt(meta.dataset.operativos),
-                enRuta: parseInt(meta.dataset.enruta),
-                fallas: parseInt(meta.dataset.fallas),
-                chutos: parseInt(meta.dataset.chutos),
-                camiones: parseInt(meta.dataset.camiones),
-                tanques: parseInt(meta.dataset.tanques),
+                operativos: parseInt(meta.dataset.operativos), enRuta: parseInt(meta.dataset.enruta),
+                fallas: parseInt(meta.dataset.fallas), chutos: parseInt(meta.dataset.chutos),
+                camiones: parseInt(meta.dataset.camiones), tanques: parseInt(meta.dataset.tanques),
                 livianos: parseInt(meta.dataset.livianos)
             };
 
             if (document.getElementById('chart-disponibilidad')) {
                 Highcharts.chart('chart-disponibilidad', {
-                    chart: { type: 'pie', backgroundColor: 'transparent', height: 220 },
+                    chart: { type: 'pie', backgroundColor: 'transparent', height: 260 },
                     title: { text: null },
                     plotOptions: { pie: { innerSize: '65%', dataLabels: { enabled: false }, showInLegend: true } },
-                    legend: { itemStyle: { fontSize: '11px' } },
+                    legend: { itemStyle: { fontSize: '13px' } }, // Texto más grande para TV
                     series: [{
                         name: 'Unidades',
                         data: [
@@ -346,29 +362,23 @@
                             { name: 'En Ruta', y: data.enRuta, color: '#ff6600' },
                             { name: 'En Falla', y: data.fallas, color: '#e74a3b' }
                         ]
-                    }],
-                    credits: { enabled: false }
+                    }], credits: { enabled: false }
                 });
             }
 
             if (document.getElementById('chart-segmentos')) {
                 Highcharts.chart('chart-segmentos', {
-                    chart: { type: 'column', backgroundColor: 'transparent', height: 220 },
+                    chart: { type: 'column', backgroundColor: 'transparent', height: 260 },
                     title: { text: null },
-                    xAxis: { categories: ['Chutos', 'Camiones', 'Cisternas', 'Livianos'], labels: { style: { fontSize: '10px' } } },
+                    xAxis: { categories: ['Chutos', 'Camiones', 'Cisternas', 'Livianos'], labels: { style: { fontSize: '13px', fontWeight:'bold' } } },
                     yAxis: { min: 0, title: { text: null } },
-                    plotOptions: { column: { borderRadius: 4, colorByPoint: true, dataLabels: { enabled: true, style: { fontSize: '10px' } } } },
+                    plotOptions: { column: { borderRadius: 4, colorByPoint: true, dataLabels: { enabled: true, style: { fontSize: '12px' } } } },
                     colors: ['#ff6600', '#ffc107', '#198754', '#2c3e50'],
                     series: [{ name: 'Unidades', showInLegend: false, data: [data.chutos, data.camiones, data.tanques, data.livianos] }],
                     credits: { enabled: false }
                 });
             }
         }
-
-        // Vincular la acción del botón manual del partial al flujo controlado global
-        window.manualRefresh = function() {
-            fetchSalaData();
-        };
 
         initMap();
     });
