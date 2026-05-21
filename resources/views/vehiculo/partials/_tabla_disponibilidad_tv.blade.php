@@ -174,8 +174,8 @@
                                     <div class="card-body p-2">
                                         <div class="d-flex flex-wrap gap-1">
                                             @forelse($chutosEnRuta as $v)
-                                                <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
-                                                    <i class="fa-solid fa-truck-pickup text-muted"></i> {{ $v->flota }} <span class="text-muted">|</span> {{ $v->placa }}
+                                                <span class="badge border text-dark fw-bold bg-light" style="font-size: 0.7rem;">
+                                                    {{ $v->flota }} <span class="text-muted">|</span> {{ $v->placa }}
                                                 </span>
                                             @empty
                                                 <span class="text-muted x-small ps-1">Sin unidades operativas</span>
@@ -195,7 +195,7 @@
                                         <div class="d-flex flex-wrap gap-1">
                                             @forelse($camionesEnRuta as $v)
                                                 <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
-                                                    <i class="fas fa-truck text-muted"></i> {{ $v->flota }} <span class="font-weight-bold text-muted">|</span> {{ $v->placa }}
+                                                 {{ $v->flota }} <span class="font-weight-bold text-muted">|</span> {{ $v->placa }}
                                                 </span>
                                             @empty
                                                 <span class="text-muted x-small ps-1">Sin unidades operativas</span>
@@ -215,7 +215,7 @@
                                         <div class="d-flex flex-wrap gap-1">
                                             @forelse($cisternasEnRuta as $v)
                                                 <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
-                                                    <i class="fas fa-trailer text-muted"></i> {{ $v->nro_flota }} <span class="text-muted">|</span> {{ $v->placa }}
+                                                    {{ $v->nro_flota }} <span class="text-muted">|</span> {{ $v->placa }}
                                                 </span>
                                             @empty
                                                 <span class="text-muted x-small ps-1">Sin unidades operativas</span>
@@ -235,7 +235,7 @@
                                         <div class="d-flex flex-wrap gap-1">
                                             @forelse($camionetasEnRuta as $v)
                                                 <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
-                                                    <i class="fas fa-car text-muted"></i>{{ $v->nro_flota }} <span class="text-muted">|</span> {{ $v->placa }}
+                                                    {{ $v->nro_flota }} <span class="text-dark">|</span> {{ $v->placa }}
                                                 </span>
                                             @empty
                                                 <span class="text-muted x-small ps-1">Sin unidades operativas</span>
