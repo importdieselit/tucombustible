@@ -62,7 +62,7 @@
                 <div class="card shadow-sm border-0 h-100" style="border-radius: 15px;">
                     <div class="card-body">
                         <h6 class="fw-black text-uppercase small text-muted mb-4">Análisis de Flota por Segmento</h6>
-                        <div id="chart-segmentos" style="width:100%; height:200px;"></div>
+                        <div id="chart-segmentos" style="width:100%; height:150px;"></div>
                         
                 
                     </div>
