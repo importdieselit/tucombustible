@@ -68,22 +68,25 @@
         /* ---------------------------------- */
         /* PANEL DERECHO Y ANTIDESBORDE TV    */
         /* ---------------------------------- */
+
         #dashboard-panel {
             height: 100vh;
-            overflow: hidden; /* Cero scroll */
+            overflow: hidden; /* Mantiene la limpieza del diseño */
             display: flex;
             flex-direction: column;
-            justify-content: center; /* Centra tu reporte verticalmente */
-            padding: 0 15px;
+            padding: 10px;
             background-color: #f4f6f9;
         }
         
         #reporte-container {
             /* Magia de TV: Escala dinámicamente tu partial completo al 85% para que todo quepa en la pantalla 1080p sin cortarse por debajo */
-            transform: scale(0.85); 
+            transform: scale(0.75); 
             transform-origin: center center;
             width: 115%; /* Compensa el escalado */
             margin-left: -7.5%;
+            flex: 1; /* Esto obliga al contenedor a ocupar el espacio disponible */
+            flex-direction: column;
+            /* Quitamos el transform fijo y dejamos que el navegador gestione el espacio */
             transition: opacity 0.4s ease-in-out;
         }
 
@@ -109,6 +112,11 @@
             display: none; position: absolute; top: 0; left: 0; width: 100vw;
             background: #dc3545; color: white; text-align: center; z-index: 9999;
             font-weight: bold; padding: 10px; font-size: 20px; text-transform: uppercase;
+        }
+
+        .table td, .table th {
+            padding: 0.5rem 0.75rem !important; 
+            white-space: nowrap; /* Evita que los textos largos salten de línea */
         }
     </style>
 @endpush
