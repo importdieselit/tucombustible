@@ -327,7 +327,7 @@
                         column: { 
                             borderRadius: 4, 
                             colorByPoint: false, 
-                            pointWidth: 10, // 👈 AQUÍ: Define el grosor en píxeles de cada barra (bájalo a 12 o sube a 16 según veas la TV)
+                            pointWidth: 14, // 👈 AQUÍ: Define el grosor en píxeles de cada barra (bájalo a 12 o sube a 16 según veas la TV)
                             dataLabels: { 
                                 enabled: true, 
                                 inside: false, // Fuerza a que el número quede arriba de la barra si es muy delgada
