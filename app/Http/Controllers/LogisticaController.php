@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 use App\Services\LogisticaService;
 use App\Models\Vehiculo;
 use App\Models\Chofer; 
@@ -278,4 +279,134 @@ class LogisticaController extends Controller
             return back()->withInput()->with('error', $e->getMessage());
         }
     }    
+
+    public function dashboardLogistica(Request $request)
+    {
+        // ==========================================
+        // CAPTURA DE FILTROS UNIFICADOS
+        // ==========================================
+        $search = $request->input('search'); // RIF o Razón Social
+        $fechaDesde = $request->input('fecha_desde');
+        $fechaHasta = $request->input('fecha_hasta');
+        $statusPlanificacion = $request->input('status_planificacion');
+        $statusPedido = $request->input('status_pedido');
+
+        // ==========================================
+        // 1. DATA DE PLANIFICACIONES (VIAJES)
+        // ==========================================
+        $viajesQuery = Viaje::with(['tipoCombustible', 'detalles.cliente', 'sede'])
+            ->when($search, function($q) use ($search) {
+                $q->whereHas('detalles.cliente', function($sub) use ($search) {
+                    $sub->where('nombre', 'LIKE', "%{$search}%")
+                        ->orWhere('rif', 'LIKE', "%{$search}%");
+                });
+            })
+            ->when($statusPlanificacion, function($q) use ($statusPlanificacion) {
+                $q->where('status', $statusPlanificacion);
+            })
+            ->when($fechaDesde, function($q) use ($fechaDesde) {
+                $q->whereDate('fecha_salida', '>=', $fechaDesde);
+            })
+            ->when($fechaHasta, function($q) use ($fechaHasta) {
+                $q->whereDate('fecha_salida', '<=', $fechaHasta);
+            });
+
+        // Clonamos para la tabla detallada (Paginada)
+        $tablaPlanificaciones = (clone $viajesQuery)->orderBy('created_at', 'desc')->paginate(10, ['*'], 'planif_page');
+
+        // Agrupación para el Gráfico de Planificaciones
+        $graficoPlanificaciones = (clone $viajesQuery)
+            ->select('status', DB::raw('count(*) as total'))
+            ->groupBy('status')
+            ->get();
+
+        // ==========================================
+        // 2. DATA DE PEDIDOS
+        // ==========================================
+        $pedidosQuery = Pedido::with(['cliente'])
+            ->when($search, function($q) use ($search) {
+                $q->whereHas('cliente', function($sub) use ($search) {
+                    $sub->where('nombre', 'LIKE', "%{$search}%")
+                        ->orWhere('rif', 'LIKE', "%{$search}%");
+                });
+            })
+            ->when($statusPedido, function($q) use ($statusPedido) {
+                $q->where('estado', $statusPedido);
+            })
+            ->when($fechaDesde, function($q) use ($fechaDesde) {
+                $q->whereDate('fecha_solicitud', '>=', $fechaDesde);
+            })
+            ->when($fechaHasta, function($q) use ($fechaHasta) {
+                $q->whereDate('fecha_solicitud', '<=', $fechaHasta);
+            });
+
+        // Clonamos para la tabla detallada (Paginada)
+        $tablaPedidos = (clone $pedidosQuery)->orderBy('fecha_solicitud', 'desc')->paginate(10, ['*'], 'pedidos_page');
+
+        // Agrupación para el Gráfico de Pedidos
+        $graficoPedidos = (clone $pedidosQuery)
+            ->select('estado', DB::raw('count(*) as total'))
+            ->groupBy('estado')
+            ->get();
+
+        // ==========================================
+        // 3. PARETO DE CLIENTES (LITROS DIESEL vs MGO)
+        // ==========================================
+        // Filtro nativo en Query Builder para velocidad de respuesta
+        $paretoQuery = DB::table('despachos_viajes')
+            ->join('viajes', 'despachos_viajes.viaje_id', '=', 'viajes.id')
+            ->join('clientes', 'despachos_viajes.cliente_id', '=', 'clientes.id')
+            ->select(
+                'clientes.nombre as cliente_nombre',
+                'clientes.rif as cliente_rif',
+                DB::raw("SUM(CASE WHEN viajes.tipo = 1 THEN despachos_viajes.litros ELSE 0 END) as litros_diesel"),
+                DB::raw("SUM(CASE WHEN viajes.tipo = 2 THEN despachos_viajes.litros ELSE 0 END) as litros_mgo"),
+                DB::raw("SUM(despachos_viajes.litros) as total_litros")
+            )
+            ->when($search, function($q) use ($search) {
+                $q->where(function($sub) use ($search) {
+                    $sub->where('clientes.nombre', 'LIKE', "%{$search}%")
+                        ->orWhere('clientes.rif', 'LIKE', "%{$search}%");
+                });
+            })
+            ->when($fechaDesde, function($q) use ($fechaDesde) {
+                $q->whereDate('viajes.fecha_salida', '>=', $fechaDesde);
+            })
+            ->when($fechaHasta, function($q) use ($fechaHasta) {
+                $q->whereDate('viajes.fecha_salida', '<=', $fechaHasta);
+            })
+            ->groupBy('clientes.id', 'clientes.nombre', 'clientes.rif');
+
+        // Obtenemos los clientes ordenados por mayor despacho para los gráficos
+        $clientesPareto = (clone $paretoQuery)->orderBy('total_litros', 'desc')->get();
+
+        // ==========================================
+        // 4. TASA DE CUMPLIMIENTO (SERVICE LEVEL) & COMPARATIVA PRODUCTO
+        // ==========================================
+        $viajesTotales = (clone $viajesQuery)->count();
+        $viajesCompletados = (clone $viajesQuery)->where('status', 'COMPLETADO')->count();
+        
+        $tasaCumplimiento = $viajesTotales > 0 ? round(($viajesCompletados / $viajesTotales) * 100, 2) : 100;
+
+        $volumenTotalProducto = DB::table('despachos_viajes')
+            ->join('viajes', 'despachos_viajes.viaje_id', '=', 'viajes.id')
+            ->select(
+                DB::raw("SUM(CASE WHEN viajes.tipo = 1 THEN despachos_viajes.litros ELSE 0 END) as total_diesel"),
+                DB::raw("SUM(CASE WHEN viajes.tipo = 2 THEN despachos_viajes.litros ELSE 0 END) as total_mgo")
+            )
+            ->when($fechaDesde, function($q) use ($fechaDesde) {
+                $q->whereDate('viajes.fecha_salida', '>=', $fechaDesde);
+            })
+            ->when($fechaHasta, function($q) use ($fechaHasta) {
+                $q->whereDate('viajes.fecha_salida', '<=', $fechaHasta);
+            })
+            ->first();
+
+        return view('admin.logistica.dashboard', compact(
+            'tablaPlanificaciones', 'graficoPlanificaciones',
+            'tablaPedidos', 'graficoPedidos',
+            'clientesPareto', 'tasaCumplimiento', 'viajesTotales', 'viajesCompletados',
+            'volumenTotalProducto', 'search', 'fechaDesde', 'fechaHasta', 'statusPlanificacion', 'statusPedido'
+        ));
+    }
 }
