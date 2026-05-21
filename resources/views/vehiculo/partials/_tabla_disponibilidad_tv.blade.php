@@ -168,7 +168,7 @@
                             <div class="col-12 col-md-6 col-lg-3">
                                 <div class="card h-100 shadow-sm border-0 border-top border-4 border-chutos">
                                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
-                                        <span class="fw-bold small text-uppercase"><i class="fas fa-truck-pickup me-1 text-corporate"></i> Chutos</span>
+                                        <span class="fw-bold small text-uppercase">Chutos</span>
                                         <span class="badge bg-chutos rounded-pill">{{ $chutosEnRuta->count() }}</span>
                                     </div>
                                     <div class="card-body p-2">
@@ -188,13 +188,13 @@
                             <div class="col-12 col-md-6 col-lg-3">
                                 <div class="card h-100 shadow-sm border-0 border-top border-4 border-warning">
                                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
-                                        <span class="fw-bold small text-uppercase"><i class="fas fa-truck me-1 text-warning"></i> Camiones</span>
+                                        <span class="fw-bold small text-uppercase"> Camiones</span>
                                         <span class="badge bg-warning rounded-pill">{{ $camionesEnRuta->count() }}</span>
                                     </div>
                                     <div class="card-body p-2">
                                         <div class="d-flex flex-wrap gap-1">
                                             @forelse($camionesEnRuta as $v)
-                                                <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
+                                                <span class="badge border text-dark fw-bold bg-light" style="font-size: 0.7rem;">
                                                  {{ $v->flota }} <span class="font-weight-bold text-muted">|</span> {{ $v->placa }}
                                                 </span>
                                             @empty
@@ -208,14 +208,14 @@
                             <div class="col-12 col-md-6 col-lg-3">
                                 <div class="card h-100 shadow-sm border-0 border-top border-4 border-success">
                                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
-                                        <span class="fw-bold small text-uppercase"><i class="fas fa-trailer me-1 text-success"></i> Cisternas</span>
+                                        <span class="fw-bold small text-uppercase">Cisternas</span>
                                         <span class="badge bg-success rounded-pill">{{ $cisternasEnRuta->count() }}</span>
                                     </div>
                                     <div class="card-body p-2">
                                         <div class="d-flex flex-wrap gap-1">
                                             @forelse($cisternasEnRuta as $v)
-                                                <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
-                                                    {{ $v->nro_flota }} <span class="text-muted">|</span> {{ $v->placa }}
+                                                <span class="badge border text-dark fw-bold bg-light" style="font-size: 0.7rem;">
+                                                    {{ $v->flota }} <span class="text-muted">|</span> {{ $v->placa }}
                                                 </span>
                                             @empty
                                                 <span class="text-muted x-small ps-1">Sin unidades operativas</span>
@@ -228,14 +228,14 @@
                             <div class="col-12 col-md-6 col-lg-3">
                                 <div class="card h-100 shadow-sm border-0 border-top border-4 border-secondary">
                                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
-                                        <span class="fw-bold small text-uppercase"><i class="fas fa-car me-1 text-secondary"></i> Livianos</span>
+                                        <span class="fw-bold small text-uppercase"> Livianos</span>
                                         <span class="badge bg-secondary text-dark rounded-pill">{{ $camionetasEnRuta->count() }}</span>
                                     </div>
                                     <div class="card-body p-2">
                                         <div class="d-flex flex-wrap gap-1">
                                             @forelse($camionetasEnRuta as $v)
-                                                <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
-                                                    {{ $v->nro_flota }} <span class="text-dark">|</span> {{ $v->placa }}
+                                                <span class="badge border text-dark fw-bold bg-light" style="font-size: 0.7rem;">
+                                                    {{ $v->flota }} <span class="text-dark">|</span> {{ $v->placa }}
                                                 </span>
                                             @empty
                                                 <span class="text-muted x-small ps-1">Sin unidades operativas</span>
@@ -250,13 +250,13 @@
                             <div class="col-12 col-md-6 col-lg-3">
                                 <div class="card h-100 shadow-sm border-0 border-top border-4 border-chutos">
                                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
-                                        <span class="fw-bold small text-uppercase"><i class="fas fa-truck-pickup me-1 text-corporate"></i> Chutos</span>
+                                        <span class="fw-bold small text-uppercase"> Chutos</span>
                                         <span class="badge bg-chutos rounded-pill">{{ $chutosFalla->count() }}</span>
                                     </div>
                                     <div class="card-body p-2">
                                         <div class="d-flex flex-wrap gap-1">
                                             @forelse($chutosFalla as $v)
-                                                <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
+                                                <span class="badge border text-dark fw-bold bg-light" style="font-size: 0.7rem;">
                                                     {{ $v->flota }} <span class="text-muted">|</span> {{ $v->placa }}
                                                 </span>
                                             @empty
@@ -270,13 +270,13 @@
                             <div class="col-12 col-md-6 col-lg-3">
                                 <div class="card h-100 shadow-sm border-0 border-top border-4 border-warning">
                                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
-                                        <span class="fw-bold small text-uppercase"><i class="fas fa-truck me-1 text-warning"></i> Camiones</span>
+                                        <span class="fw-bold small text-uppercase">Camiones</span>
                                         <span class="badge bg-warning rounded-pill">{{ $camionesFalla->count() }}</span>
                                     </div>
                                     <div class="card-body p-2">
                                         <div class="d-flex flex-wrap gap-1">
                                             @forelse($camionesFalla as $v)
-                                                <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
+                                                <span class="badge border text-dark fw-bold bg-light" style="font-size: 0.7rem;">
                                                     {{ $v->flota }} <span class="font-weight-bold text-muted">|</span> {{ $v->placa }}
                                                 </span>
                                             @empty
@@ -290,14 +290,14 @@
                             <div class="col-12 col-md-6 col-lg-3">
                                 <div class="card h-100 shadow-sm border-0 border-top border-4 border-success">
                                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
-                                        <span class="fw-bold small text-uppercase"><i class="fas fa-trailer me-1 text-success"></i> Cisternas</span>
+                                        <span class="fw-bold small text-uppercase"> Cisternas</span>
                                         <span class="badge bg-success rounded-pill">{{ $cisternasFalla->count() }}</span>
                                     </div>
                                     <div class="card-body p-2">
                                         <div class="d-flex flex-wrap gap-1">
                                             @forelse($cisternasFalla as $v)
-                                                <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
-                                                    {{ $v->nro_flota }} <span class="text-muted">|</span> {{ $v->placa }}
+                                                <span class="badge border text-dark fw-bold bg-light" style="font-size: 0.7rem;">
+                                                    {{ $v->flota }} <span class="text-muted">|</span> {{ $v->placa }}
                                                 </span>
                                             @empty
                                                 <span class="text-muted x-small ps-1">Sin unidades operativas</span>
@@ -310,14 +310,14 @@
                             <div class="col-12 col-md-6 col-lg-3">
                                 <div class="card h-100 shadow-sm border-0 border-top border-4 border-secondary">
                                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
-                                        <span class="fw-bold small text-uppercase"><i class="fas fa-car me-1 text-secondary"></i> Livianos</span>
+                                        <span class="fw-bold small text-uppercase">Livianos</span>
                                         <span class="badge bg-secondary text-dark rounded-pill">{{ $camionetasFalla->count() }}</span>
                                     </div>
                                     <div class="card-body p-2">
                                         <div class="d-flex flex-wrap gap-1">
                                             @forelse($camionetasFalla as $v)
-                                                <span class="badge border text-dark fw-normal bg-light" style="font-size: 0.7rem;">
-                                                    {{ $v->nro_flota }} <span class="text-muted">|</span> {{ $v->placa }}
+                                                <span class="badge border text-dark fw-bold bg-light" style="font-size: 0.7rem;">
+                                                    {{ $v->flota }} <span class="text-muted">|</span> {{ $v->placa }}
                                                 </span>
                                             @empty
                                                 <span class="text-muted x-small ps-1">Sin unidades operativas</span>

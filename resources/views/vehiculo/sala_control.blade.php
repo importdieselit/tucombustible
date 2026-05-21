@@ -157,7 +157,7 @@
         let map;
         let markers = {}; 
         let countdownInterval;
-        const REFRESH_SECONDS = 60; // Watchdog de seguridad
+        const REFRESH_SECONDS = 20; // Watchdog de seguridad
         let timeLeft = REFRESH_SECONDS;
         
         const sedeCoords = L.latLng(10.488249123497356, -66.8234169941792);
