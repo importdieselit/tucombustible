@@ -1,5 +1,5 @@
      
-        <div class="bg-dark p-4 text-white d-flex justify-content-between align-items-center">
+        <div class="bg-dark p-4 text-white d-flex justify-content-between align-items-center d-none">
             <div>
                 <h3 class="mb-0 fw-bold">TUCOMBUSTIBLE</h3>
             </div>
