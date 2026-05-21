@@ -41,6 +41,10 @@ class Trabajos extends Model
             return $this->belongsTo(Personal::class, 'id_mecanico');
         }
 
+        public function persona(){
+            return $this->personal->persona();
+        }
+
         public function getMecanicosAsignadosAttribute()
         {
             // Si se guarda como string "1,2,3", primero lo convertimos
