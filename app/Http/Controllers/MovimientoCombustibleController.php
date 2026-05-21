@@ -1643,7 +1643,7 @@ public function storeDespachoIndustrial(Request $request)
         // 2. Notificación FCM (Alertas y fcmNotification)
         // Podrías enviar la notificación al token del chofer y a los usuarios de logística
          try {
-            $logisticaTokens=User::whereIn('perfil_id', [1,2,6,7,8,11,12,18] )->whereNotNull('fcm_token')->pluck('fcm_token')->toArray();
+            $logisticaTokens=User::whereIn('id_perfil', [1,2,6,7,8,11,12,18] )->whereNotNull('fcm_token')->pluck('fcm_token')->toArray();
              $tokens = [];
              // Asume que el modelo Chofer tiene el token_fcm relacionado con su usuario
              if ($choferU && $choferU->token_fcm) {
