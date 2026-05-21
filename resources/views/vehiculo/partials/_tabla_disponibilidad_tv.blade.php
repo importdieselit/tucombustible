@@ -11,7 +11,7 @@
             </div>
             
         </div>
-<div class="row w-100 align-items-center bg-light p-0 m-0 border noPrint no-print">
+<div class="row w-100 align-items-center bg-light p-0 m-0 border noPrint no-print d-none">
                 <div class="col-4 text-muted small">
                     <i class="fas fa-clock me-1"></i> Última actualización: 
                     <span id="last-sync-time" class="fw-bold">--:--:--</span>
@@ -27,23 +27,23 @@
                 </div>
             </div>
         <div class="row g-0 border-bottom">
-            <div class="col-md-3 p-4 text-center border-end">
+            <div class="col-md-3 p-3 text-center border-end">
                 <div class="display-5 fw-bold text-primary">{{ $total }}</div>
                 <div class="text-uppercase small fw-bold text-muted">Total Flota</div>
             </div>
-            <div class="col-md-2 p-4 text-center border-end">
+            <div class="col-md-2 p-3 text-center border-end">
                 <div class="display-5 fw-bold text-success">{{ $operativosCount }}</div>
                 <div class="text-uppercase small fw-bold text-muted">Activas</div>
             </div>
-            <div class="col-md-2 p-4 text-center border-end">
+            <div class="col-md-2 p-3 text-center border-end">
                 <div class="display-5 fw-bold text-danger">{{ $fallaCount }}</div>
                 <div class="text-uppercase small fw-bold text-muted">Inoperativas</div>
             </div>
-            <div class="col-md-2 p-4 text-center border-end">
+            <div class="col-md-2 p-3 text-center border-end">
                 <div class="display-5 fw-bold text-warning">{{ $enRuta }}</div>
                 <div class="text-uppercase small fw-bold text-muted">En Ruta</div>
             </div>
-            <div class="col-md-3 p-4 text-center">
+            <div class="col-md-3 p-3 text-center">
                 <div class="h2 mb-1 fw-bold {{ $porcentajeDisponibilidad > 80 ? 'text-success' : 'text-warning' }}">
                     {{ $porcentajeDisponibilidad }}%
                 </div>
