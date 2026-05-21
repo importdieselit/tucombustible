@@ -246,7 +246,14 @@
                     
                     // Inyección de tu partial
                     container.innerHTML = data.html_dashboard;
-                    
+                    setTimeout(() => {
+                        const lastSync = document.getElementById('last-sync-time');
+                        if (lastSync) {
+                            lastSync.textContent = new Date().toLocaleTimeString();
+                        } else {
+                            console.warn('El ID "last-sync-time" no se encontró en el partial.');
+                        }
+                    }, 10);
                     // Renderizado original de tu código
                     renderCharts();
                     updateMapMarkers(data.unidades);
