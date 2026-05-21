@@ -80,7 +80,7 @@
         
         #reporte-container {
             /* Magia de TV: Escala dinámicamente tu partial completo al 85% para que todo quepa en la pantalla 1080p sin cortarse por debajo */
-            transform: scale(0.75); 
+            transform: scale(0.70); 
             transform-origin: center center;
             width: 115%; /* Compensa el escalado */
             margin-left: -7.5%;
