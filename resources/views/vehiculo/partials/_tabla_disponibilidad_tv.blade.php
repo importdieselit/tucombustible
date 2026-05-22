@@ -1,31 +1,24 @@
      
-        <div class="bg-dark p-4 text-white d-flex justify-content-between align-items-center d-none">
-            <div>
-                <h3 class="mb-0 fw-bold">TUCOMBUSTIBLE</h3>
+     <div class="row g-0 border-bottom">
+            <div class="col-md-8 p-3 text-center">
+                @php($porcentajeDisponibilidad = $disponiblidadCombustible->capacidad_total > 0 ? round(($disponiblidadCombustible->total_combustible / $disponiblidadCombustible->capacidad_total) * 100) : 0))
+                 <div class="h2 mb-1 fw-bold {{ $porcentajeDisponibilidad > 80 ? 'text-success' : 'text-warning' }}">
+                    {{ $disponiblidadCombustible->total_combustible }} Ltrs/ {{ $disponiblidadCombustible->capacidad_total}} Ltrs
+                </div>
+                <div class="h2 mb-1 fw-bold {{ $porcentajeDisponibilidad > 80 ? 'text-success' : 'text-warning' }}">
+                    {{ $porcentajeDisponibilidad }}%
+                </div>
+                <div class="progress mx-auto" style="height: 8px; width: 100px;">
+                    <div class="progress-bar bg-success" style="width: {{ $porcentajeDisponibilidad }}%"></div>
+                </div>
+                <div class="text-uppercase small fw-bold text-muted mt-2">Disponibilidad Combustible</div>
             </div>
-            <div>
-                <h1 class="fw-bold">SALA DE CONTROL</h1>
+                <div class="col-md-4 p-3 text-center border-end"> 
+                <div class="display-5 fw-bold text-warning">{{ $tanque00 }} Ltrs</div>
+                <div class="text-uppercase small fw-bold text-muted">Tanque 00</div>
             </div>
-            <div class="text-end">
-                <div class="h4 mb-0">{{ $today->translatedFormat('d M, Y') }}</div>
-            </div>
-            
+        
         </div>
-<div class="row w-100 align-items-center bg-light p-0 m-0 border noPrint no-print d-none">
-                <div class="col-4 text-muted small">
-                    <i class="fas fa-clock me-1"></i> Última actualización: 
-                    <span id="last-sync-time" class="fw-bold">--:--:--</span>
-                </div>
-                <div class="col-4 text-muted small border-start">
-                    <i class="fas fa-hourglass-half me-1"></i> Próxima en: 
-                    <span id="countdown-timer" class="badge bg-dark">45s</span>
-                </div>
-                <div class="col-4 text-end">
-                    <button onclick="manualRefresh()" class="btn btn-sm btn-primary ms-2" id="btn-refresh">
-                        <i class="fas fa-sync-alt" id="refresh-icon"></i> Actualizar Ahora
-                    </button>
-                </div>
-            </div>
         <div class="row g-0 border-bottom">
             <div class="col-md-3 p-3 text-center border-end">
                 <div class="display-5 fw-bold text-primary">{{ $total }}</div>

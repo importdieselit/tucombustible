@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Vehiculo;
+use App\Models\Deposito;
 use App\Models\Viaje;
 use Carbon\Carbon;
 
@@ -42,6 +43,8 @@ class SalaControlController extends Controller
         $operativosCount = $data->where('estatus', 1)->count();
         $fallaCount = $data->whereIn('estatus', [3, 4, 5])->count();
         $porcentajeDisponibilidad = $total > 0 ? round(($operativosCount / $total) * 100) : 0;
+        $tanque00=Deposito::where('id', 3)->first();
+        $disponiblidadCombustible =  Deposito::where('id','!=', 3)->selectRaw('SUM(nivel_actual_litros) as total_combustible, sum(capacidad_litros) as capacidad_total')->get();
         
         // Segmentación de Flota
         $cisternas = $data->where('tipo', 2);
@@ -79,7 +82,7 @@ class SalaControlController extends Controller
             'camionetasFalla', 'camionetasOperativas', 'totalLivianos', 'totalCamiones', 'totalChutos',
             'chutosFalla', 'chutosOperativos', 'camionesOperativos', 
             'total', 'operativosCount', 'fallaCount', 'porcentajeDisponibilidad', 'cisternasOperativas',
-            'chutosEnRuta', 'camionetasEnRuta', 'camionesEnRuta', 'cisternasEnRuta'
+            'chutosEnRuta', 'camionetasEnRuta', 'camionesEnRuta', 'cisternasEnRuta', 'tanque00', 'disponiblidadCombustible'
         ))->render();
 
         return response()->json([
