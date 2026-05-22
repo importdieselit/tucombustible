@@ -5,16 +5,38 @@
     <link href="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/leaflet.fullscreen.css" rel="stylesheet" />
 
     <style>
+
+        /* Forzar a que el body no tenga scroll bajo ninguna circunstancia */
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #0b111e; /* El color de fondo oscuro de tu panel */
+            width: 100%;
+            height: 100%;
+        }
+
+        #noc-viewport {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #noc-scaler {
+            /* Definimos el lienzo base ideal en el que desarrollaste */
+            width: 1920px;
+            height: 1080px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform-origin: top left; /* Crucial para que el escalado no se desplace */
+            transition: transform 0.1s ease-out;
+        }
         /* -------------------------- */
         /* ESTÁNDAR NOC SMART TV      */
         /* -------------------------- */
-        body { 
-            background-color: #000000;
-            overflow: hidden; /* ESTRICTAMENTE PROHIBIDO EL SCROLL EN TV */
-            cursor: none !important;
-            margin: 0;
-            padding: 0;
-        }
+    
         
         .tv-grid-container {
             display: grid;
@@ -110,22 +132,26 @@
 @endpush
 
 @section('content')
+<div id="noc-viewport">
+    <div id="noc-scaler" class="container-fluid p-3">
+        
+        <div id="offline-banner" class="offline-alert">
+            ⚠️ ALERTA DE SISTEMA: PÉRDIDA DE SEÑAL DE RED - RECONECTANDO...
+        </div>
 
-<div id="offline-banner" class="offline-alert">
-    ⚠️ ALERTA DE SISTEMA: PÉRDIDA DE SEÑAL DE RED - RECONECTANDO...
-</div>
+        <div class="tv-grid-container">
+            <div id="map-panel">
+                <div id="map"></div>
+            </div>
 
-<div class="tv-grid-container">
-    <div id="map-panel">
-        <div id="map"></div>
-    </div>
-
-    <div id="dashboard-panel">
-        <div id="reporte-container">
-            <div class="text-center mt-5 text-muted">
-                <i class="fas fa-circle-notch fa-spin fa-4x mb-3 text-primary"></i>
-                <h2 style="font-weight: 900; color:#002d72;">INICIALIZANDO CONSOLA NOC...</h2>
-                <p>Estableciendo conexión encriptada con la central...</p>
+            <div id="dashboard-panel">
+                <div id="reporte-container">
+                    <div class="text-center mt-5 text-muted">
+                        <i class="fas fa-circle-notch fa-spin fa-4x mb-3 text-primary"></i>
+                        <h2 style="font-weight: 900; color:#002d72;">INICIALIZANDO CONSOLA NOC...</h2>
+                        <p>Estableciendo conexión encriptada con la central...</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -350,6 +376,49 @@
         }
 
         initMap();
+        
     });
+
+    function ajustarResolucionTV() {
+    const scaler = document.getElementById('noc-scaler');
+    if (!scaler) return;
+
+    // Dimensiones base del diseño
+    const baseWidth = 1920;
+    const baseHeight = 1080;
+
+    // Dimensiones reales de la TV actual
+    const winWidth = window.innerWidth;
+    const winHeight = window.innerHeight;
+
+    // Calculamos el factor de escala (elegimos el más estricto para que no desborde)
+    const scaleX = winWidth / baseWidth;
+    const scaleY = winHeight / baseHeight;
+    const scale = Math.min(scaleX, scaleY);
+
+    // Aplicamos el escalado por hardware usando CSS Transform
+    scaler.style.transform = `scale(${scale})`;
+
+    // Centramos el lienzo si sobra espacio en los lados (opcional)
+    const fondoX = (winWidth - (baseWidth * scale)) / 2;
+    const fondoY = (winHeight - (baseHeight * scale)) / 2;
+    scaler.style.left = `${fondoX}px`;
+    scaler.style.top = `${fondoY}px`;
+}
+
+// Escuchar eventos de carga y redimensionado
+window.addEventListener('resize', ajustarResolucionTV);
+document.addEventListener('DOMContentLoaded', () => {
+    ajustarResolucionTV();
+    
+    // Forzar a Highcharts a que se entere del tamaño final después del escalado
+    setTimeout(() => {
+        if (typeof Highcharts !== 'undefined') {
+            Highcharts.charts.forEach(chart => {
+                if (chart) chart.reflow();
+            });
+        }
+    }, 300);
+});
 </script>
 @endsection
