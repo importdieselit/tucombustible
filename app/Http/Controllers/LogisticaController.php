@@ -113,6 +113,10 @@ class LogisticaController extends Controller
         $pedidosPendientes = Pedido::where('estado', 'pendiente')->with('cliente')->get();
         $proveedores = collect();
         $muelles = DB::table('muelles')->orderBy('nombre')->get();
+        $tabuladores = DB::table('tabulador_viaticos')
+        ->select('id', 'destino', 'tipo_viaje')
+        ->orderBy('destino', 'asc')
+        ->get();
 
         // 4. Carga condicional de datos según el DDL y lógica de negocio
         
@@ -154,18 +158,20 @@ class LogisticaController extends Controller
             'pedidosPendientes', 
             'muelles',
             'proveedores',
-            'buques'
+            'buques',
+            'tabuladores'
         ));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+            $request->validate([
             // Validaciones base
             'tipo_planificacion'  => 'required|in:1,2,3,4',
             'producto_flete'       => 'required_if:tipo_planificacion,3|string|max:255',
             'tipo_combustible_id' => 'required_unless:tipo_planificacion,3|nullable|exists:tipos_combustible,id',
             'fecha_programada'    => 'required|date',
+            'destino_ciudad'      => 'required|string',
             'items'               => 'required_if:tipo_planificacion,1,2|array', 
 
             // --- NUEVAS VALIDACIONES CONDICIONALES ---
@@ -187,12 +193,57 @@ class LogisticaController extends Controller
         ]);
 
         try {
+            // 1. Tu servicio procesa y crea el viaje (guarda en la tabla 'viajes')
             $viaje = $this->logisticaService->procesarPlanificacion($request->all());
             
-            return redirect()->route('logistica.index')->with('success', 'Planificación guardada con éxito.');
-        } catch (Exception $e) {
-            return back()->withInput()->with('error', $e->getMessage());
+            // Obtenemos el ID del objeto o del array según lo devuelva tu servicio
+            $viajeId = is_object($viaje) ? $viaje->id : $viaje;
+
+            if ($viajeId) {
+                // 2. Buscamos las tarifas en el tabulador usando el string 'destino_ciudad'
+                $tabulador = DB::table('tabulador_viaticos')
+                    ->where('destino', $request->destino_ciudad)
+                    ->first();
+
+                if ($tabulador) {
+                    // 3. Estructuramos los conceptos base heredados del tabulador
+                    $conceptos = [
+                        ['concepto' => 'Pago Chofer', 'monto' => $tabulador->pago_chofer, 'cantidad' => 1],
+                        ['concepto' => 'Desayuno', 'monto' => $tabulador->viatico_desayuno, 'cantidad' => 1],
+                        ['concepto' => 'Almuerzo', 'monto' => $tabulador->viatico_almuerzo, 'cantidad' => 1],
+                        ['concepto' => 'Cena', 'monto' => $tabulador->viatico_cena, 'cantidad' => 1],
+                    ];
+
+                    // Si el tabulador registra peajes, lo agregamos con su cantidad
+                    if ($tabulador->peajes > 0) {
+                        $conceptos[] = ['concepto' => 'Peajes', 'monto' => 0.00, 'cantidad' => $tabulador->peajes];
+                    }
+
+                    // Condicional: Si viene un ayudante (ya sea propio o externo), sumamos su viático
+                    if ($request->filled('ayudante_id') || $request->filled('ayudante_externo')) {
+                        $conceptos[] = ['concepto' => 'Pago Ayudante', 'monto' => $tabulador->pago_ayudante, 'cantidad' => 1];
+                    }
+
+                    // 4. Poblamos la tabla 'viaticos_viaje' inyectando el 'viaje_id'
+                    foreach ($conceptos as $c) {
+                        DB::table('viaticos_viaje')->insert([
+                            'viaje_id'       => $viajeId,
+                            'concepto'       => $c['concepto'],
+                            'monto_base'     => $c['monto'],
+                            'cantidad'       => $c['cantidad'],
+                            'monto_ajustado' => $c['monto'], // Inicia igual al monto base
+                            'es_editable'    => 1,
+                            'created_at'     => now(),
+                            'updated_at'     => now()
+                        ]);
+                    }
+                }
         }
+        
+        return redirect()->route('logistica.index')->with('success', 'Planificación guardada con éxito.');
+    } catch (Exception $e) {
+        return back()->withInput()->with('error', $e->getMessage());
+    }
     }
 
     // Método para ver detalles
@@ -258,10 +309,14 @@ class LogisticaController extends Controller
         $clientes = (in_array($tipoPlanificacionId, [1, 2, 3])) ? Cliente::where('status', Cliente::STATUS_APROBADO)->orderBy('nombre')->get() : collect();
         $proveedores = ($tipoPlanificacionId == 4) ? DB::table('proveedores')->get() : collect();
         $pedidosPendientes = ($tipoPlanificacionId == 1) ? Pedido::where('estado', 'pendiente')->with('cliente')->get() : collect();
+        $tabuladores = DB::table('tabulador_viaticos')
+        ->select('id', 'destino', 'tipo_viaje')
+        ->orderBy('destino', 'asc')
+        ->get();
 
         return view('admin.logistica.edit', compact(
             'viaje', 'tipo', 'tipoPlanificacionId', 'tipos', 'sedes', 
-            'vehiculos', 'cisternas', 'personal', 'clientes', 'muelles', 'proveedores', 'pedidosPendientes', 'buques'
+            'vehiculos', 'cisternas', 'personal', 'clientes', 'muelles', 'proveedores', 'pedidosPendientes', 'buques', 'tabuladores'
         ));
     }
 

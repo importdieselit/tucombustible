@@ -46,6 +46,21 @@
                         value="{{ old('fecha_programada', isset($viaje) ? \Carbon\Carbon::parse($viaje->fecha_salida ?? now())->format('Y-m-d') : date('Y-m-d')) }}" required>
                 </div>
 
+                {{-- NUEVO INPUT: DESTINO PARA TABULADOR --}}
+                <div class="mb-3">
+                    <label class="small fw-bold text-muted text-uppercase text-orange">Destino para Tabulador</label>
+                    <select name="destino_ciudad" class="form-select fw-bold border-orange" required>
+                        <option value="">Seleccione destino...</option>
+                        @foreach($tabuladores as $tabulador)
+                            {{-- Usamos el texto del destino como value para guardarlo directo en viajes --}}
+                            <option value="{{ $tabulador->destino }}" 
+                                {{ old('destino_ciudad', $viaje->destino_ciudad ?? '') == $tabulador->destino ? 'selected' : '' }}>
+                                {{ $tabulador->destino }} {{ $tabulador->tipo_viaje ? "({$tabulador->tipo_viaje})" : '' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
                 <div class="mb-3" x-show="modo !== 'flete' && modo !== 'compra'">
                     <label class="small fw-bold text-muted text-uppercase">Sede de Despacho</label>
                     <select name="sede_id" class="form-select fw-bold border-orange" :required="modo !== 'flete' && modo !== 'compra'">
