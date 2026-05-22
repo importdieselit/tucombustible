@@ -14,8 +14,8 @@
                 </div>
             </div>
             <div class="col-md-4 p-3 text-center border-start"> 
-                <div class="text-uppercase small fw-bold text-muted">Tanque 00</div>
-                <div class="h2 small fw-bold text-warning">{{ $tanque00->nivel_actual_litros }} Ltrs</div>
+                <div class="text-uppercase  fw-bold text-muted">Tanque 00</div>
+                <div class="h2 fw-bold text-warning">{{ $tanque00->nivel_actual_litros }} Ltrs</div>
                 
             </div>
         
