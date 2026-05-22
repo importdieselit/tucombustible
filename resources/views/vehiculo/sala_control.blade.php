@@ -25,8 +25,8 @@
 
         #noc-scaler {
             /* Definimos el lienzo base ideal en el que desarrollaste */
-            width: 1920px;
-            height: 1080px;
+            width: 100%;
+            height: 100%;
             position: absolute;
             top: 0;
             left: 0;
