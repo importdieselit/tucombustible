@@ -1,4 +1,4 @@
-     
+     {{ dd($disponibilidadCombustible) }}
      <div class="row g-0 border-bottom">
             <div class="col-md-8 p-3 text-center">
                 @php($porcentajeDisponibilidad = $disponiblidadCombustible->capacidad_total > 0 ? round(($disponiblidadCombustible->total_combustible / $disponiblidadCombustible->capacidad_total) * 100) : 0))
