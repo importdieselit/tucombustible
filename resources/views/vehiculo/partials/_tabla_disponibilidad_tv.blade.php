@@ -10,11 +10,11 @@
                     <div class="progress-bar bg-success" style="width: {{ $porcentajeDisponibilidad }}%"></div>
                 </div>
                 <div class="h2 mb-1 fw-bold {{ $porcentajeDisponibilidad > 80 ? 'text-success' : 'text-warning' }}">
-                    {{ $disponiblidadCombustible->total_combustible }} Ltrs/ {{ $disponiblidadCombustible->capacidad_total}} Ltrs
+                    {{ $disponiblidadCombustible->total_combustible }} / <span class="text-dark">{{ $disponiblidadCombustible->capacidad_total}}</span> Ltrs
                 </div>
             </div>
             <div class="col-md-4 p-3 text-center border-end"> 
-                <div class="display-5 fw-bold text-warning">{{ $tanque00->nivel_actual_litros }} Ltrs</div>
+                <div class="display-4 fw-bold text-warning">{{ $tanque00->nivel_actual_litros }} Ltrs</div>
                 <div class="text-uppercase small fw-bold text-muted">Tanque 00</div>
             </div>
         
