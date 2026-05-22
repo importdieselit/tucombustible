@@ -14,7 +14,7 @@
                 <div class="text-uppercase small fw-bold text-muted mt-2">Disponibilidad Combustible</div>
             </div>
                 <div class="col-md-4 p-3 text-center border-end"> 
-                <div class="display-5 fw-bold text-warning">{{ $tanque00 }} Ltrs</div>
+                <div class="display-5 fw-bold text-warning">{{ $tanque00->nivel_actual_litros }} Ltrs</div>
                 <div class="text-uppercase small fw-bold text-muted">Tanque 00</div>
             </div>
         
