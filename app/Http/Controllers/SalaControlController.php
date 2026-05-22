@@ -45,7 +45,7 @@ class SalaControlController extends Controller
         $porcentajeDisponibilidad = $total > 0 ? round(($operativosCount / $total) * 100) : 0;
         $tanque00=Deposito::where('id', 3)->first();
         $disponiblidadCombustible =  Deposito::where('id','!=', 3)->selectRaw('SUM(nivel_actual_litros) as total_combustible, sum(capacidad_litros) as capacidad_total')->get();
-    
+        
         // Segmentación de Flota
         $cisternas = $data->where('tipo', 2);
         $camiones = $data->whereIn('tipoVehiculo.tipo', ['CAMION', 'CAMION CISTERNA']);
@@ -82,11 +82,13 @@ class SalaControlController extends Controller
             'camionetasFalla', 'camionetasOperativas', 'totalLivianos', 'totalCamiones', 'totalChutos',
             'chutosFalla', 'chutosOperativos', 'camionesOperativos', 
             'total', 'operativosCount', 'fallaCount', 'porcentajeDisponibilidad', 'cisternasOperativas',
-            'chutosEnRuta', 'camionetasEnRuta', 'camionesEnRuta', 'cisternasEnRuta', 'tanque00', 'disponiblidadCombustible'
+            'chutosEnRuta', 'camionetasEnRuta', 'camionesEnRuta', 'cisternasEnRuta'
         ))->render();
 
         return response()->json([
             'unidades' => $unidadesMapa,
+            'tanque00' => $tanque00, 
+            'disponiblidadCombustible' => $disponiblidadCombustible,
             'html_dashboard' => $htmlDashboard,
             'charts' => [
                 'global' => [
