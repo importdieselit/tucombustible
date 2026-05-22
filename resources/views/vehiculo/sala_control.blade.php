@@ -94,7 +94,7 @@
         }
         
         #reporte-container {
-            transform: scale(0.85); 
+            transform: scale(0.87); 
             transform-origin: center center;
             width: 115%;
             margin-left: -5%;
@@ -168,7 +168,7 @@
         let map;
         let markers = {}; 
         let countdownInterval;
-        const REFRESH_SECONDS = 30; 
+        const REFRESH_SECONDS = 300; 
         let timeLeft = REFRESH_SECONDS;
         let lastFlotaState = null;
         
