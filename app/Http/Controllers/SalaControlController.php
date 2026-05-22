@@ -45,7 +45,7 @@ class SalaControlController extends Controller
         $porcentajeDisponibilidad = $total > 0 ? round(($operativosCount / $total) * 100) : 0;
         $tanque00=Deposito::where('id', 3)->first();
         $disponiblidadCombustible =  Deposito::where('id','!=', 3)->selectRaw('SUM(nivel_actual_litros) as total_combustible, sum(capacidad_litros) as capacidad_total')->get();
-        
+    
         // Segmentación de Flota
         $cisternas = $data->where('tipo', 2);
         $camiones = $data->whereIn('tipoVehiculo.tipo', ['CAMION', 'CAMION CISTERNA']);

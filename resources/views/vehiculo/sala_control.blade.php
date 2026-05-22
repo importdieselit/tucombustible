@@ -138,7 +138,7 @@
         <div id="offline-banner" class="offline-alert">
             ⚠️ ALERTA DE SISTEMA: PÉRDIDA DE SEÑAL DE RED - RECONECTANDO...
         </div>
-
+{{ dd($disponibilidadCombustible) }}
         <div class="tv-grid-container">
             <div id="map-panel">
                 <div id="map"></div>
