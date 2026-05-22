@@ -142,8 +142,9 @@
         let map;
         let markers = {}; 
         let countdownInterval;
-        const REFRESH_SECONDS = 20; 
+        const REFRESH_SECONDS = 300; 
         let timeLeft = REFRESH_SECONDS;
+        let lastFlotaState = null;
         
         const sedeCoords = L.latLng(10.488249123497356, -66.8234169941792);
         const RADIO_SEDE_METROS = 180;
