@@ -36,34 +36,6 @@ class PedidoAdminController extends Controller
         return view('admin.pedidos.index', compact('pedidos'));
     }
 
-    public function create()
-    {
-        // Usamos el repositorio en lugar de Cliente::where(...)
-        $clientes = $this->clienteRepo->obtenerClientesActivos();
-        return view('admin.pedidos.create_manual', compact('clientes'));
-    }
-
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'cliente_id'    => 'required|exists:clientes,id',
-            'cantidad'      => 'required|numeric|min:1',
-            'observaciones' => 'nullable|string',
-        ]);
-
-        try {
-            // Simulamos el usuario basándonos en el cliente seleccionado vía Repositorio
-            $cliente = $this->clienteRepo->find($validated['cliente_id']);
-            $userPlaceholder = clone $cliente->usuario; // O como manejes la relación
-
-            $this->pedidoService->registrarSolicitud($validated, $userPlaceholder);
-
-            return redirect()->route('admin.pedidos.index')->with('success', 'Pedido manual registrado con éxito.');
-        } catch (Exception $e) {
-            return back()->with('error', $e->getMessage())->withInput();
-        }
-    }
-
     /**
      * Equivalente a despachar/planificar. 
      * Asigna el tanque físico y cambia el estado.
@@ -102,6 +74,16 @@ class PedidoAdminController extends Controller
             return back()->with('success', 'Planificación guardada. El pedido ha sido procesado.');
         } catch (Exception $e) {
             return back()->with('error', 'Error al planificar: ' . $e->getMessage());
+        }
+    }
+
+    public function rechazar(Request $request, $id)
+    {
+        try {
+            $this->pedidoService->rechazarPedido($id);
+            return back()->with('success', 'Pedido rechazado correctamente. Los litros han sido devueltos al cliente.');
+        } catch (Exception $e) {
+            return back()->with('error', $e->getMessage());
         }
     }
 }

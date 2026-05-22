@@ -315,6 +315,7 @@ Route::middleware(['auth'])->group(function () {
         // --- MÓDULO DE LOGÍSTICA ---
         Route::middleware(['auth', 'role:1,2,6,11,12,18'])->prefix('logistica')->name('logistica.')->group(function () {
             
+            Route::get('/dashboard', [LogisticaController::class, 'dashboardLogistica'])->name('dashboard');
             Route::get('/planificacion', [LogisticaController::class, 'index'])->name('index');
             Route::get('/crear/{tipo?}', [LogisticaController::class, 'create'])->name('create');
             Route::post('/guardar', [LogisticaController::class, 'store'])->name('store');
@@ -323,6 +324,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}/editar', [LogisticaController::class, 'edit'])->name('edit');
             Route::put('/{id}/actualizar', [LogisticaController::class, 'update'])->name('update');
             Route::post('/{id}/cancelar', [LogisticaController::class, 'cancelar'])->name('cancelar');
+            Route::post('/pedidos/{id}/rechazar', [PedidoAdminController::class, 'rechazar'])->name('rechazar');
         });
 
         // --- MÓDULO CLIENTES COMBUSTIBLE ---
@@ -334,6 +336,9 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}/editar',         [AdminClienteController::class, 'edit'])->name('edit');
             Route::put('/{id}',                [AdminClienteController::class, 'update'])->name('update');
             Route::post('/clientes/{id}/generar-token', [AdminClienteController::class, 'generarToken'])->name('generar-token');
+            Route::post('/clientes/documentos/store', [AdminClienteController::class, 'storeDocumento'])->name('documentos.store');
+            Route::delete('/clientes/documentos/{id}/destroy', [AdminClienteController::class, 'destroyDocumento'])->name('documentos.destroy');
+            Route::get('/clientes/documentos/{id}/descargar', [AdminClienteController::class, 'downloadDocumento'])->name('documentos.download');
 
             // Flujo de registro
             Route::post('/{id}/avanzar-paso',  [AdminClienteController::class, 'avanzarPaso'])->name('avanzarPaso');
@@ -374,5 +379,13 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/pedidos/nuevo',     [PedidoController::class, 'create'])->name('pedidos.create');
             Route::post('/pedidos/guardar',  [PedidoController::class, 'store'])->name('pedidos.store');
             Route::put('/pedidos/{id}/cancelar', [PedidoController::class, 'cancelar'])->name('pedidos.cancelar');
+            Route::post('/perfil/actualizar', [PortalClienteController::class, 'updatePerfil'])->name('perfil.update');
+            Route::post('/placas/registrar', [PortalClienteController::class, 'registrarPlaca'])->name('placas.store');
+            Route::delete('/placas/{id}/inactivar', [PortalClienteController::class, 'inactivarPlaca'])->name('placas.destroy');
+            Route::post('/choferes/registrar', [PortalClienteController::class, 'registrarChofer'])->name('choferes.store');
+            Route::delete('/choferes/{id}/inactivar', [PortalClienteController::class, 'inactivarChofer'])->name('choferes.destroy');
+            Route::post('/documentos/cargar', [PortalClienteController::class, 'storeDocumento'])->name('documentos.store');
+            Route::get('/documentos/{id}/descargar', [PortalClienteController::class, 'downloadDocumento'])->name('documentos.download');
+            Route::get('/viajes/{id}/rastreo', [PortalClienteController::class, 'rastreoGps'])->name('viajes.rastreo');
         });
 });

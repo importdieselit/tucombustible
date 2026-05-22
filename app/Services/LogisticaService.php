@@ -8,6 +8,7 @@ use App\Models\Vehiculo;
 use App\Models\GascoCupoMensual;
 use App\Models\Cliente;
 use App\Models\Viaje;
+use App\Models\Buques;
 use App\Models\Pedido;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -28,6 +29,11 @@ class LogisticaService
      */
     public function procesarPlanificacion(array $data)
     {
+        if (!empty($data['vehiculo_externo'])) $data['vehiculo_externo'] = strtoupper($data['vehiculo_externo']);
+        if (!empty($data['cisterna_externo'])) $data['cisterna_externo'] = strtoupper($data['cisterna_externo']);
+        if (!empty($data['chofer_externo']))   $data['chofer_externo']   = strtoupper($data['chofer_externo']);
+        if (!empty($data['ayudante_externo'])) $data['ayudante_externo'] = strtoupper($data['ayudante_externo']);
+
         return DB::transaction(function () use ($data) {
             $tipoPlanificacion = $data['tipo_planificacion']; 
             $items = $data['items'] ?? [];
@@ -62,6 +68,11 @@ class LogisticaService
      */
     public function actualizarPlanificacion($id, array $data)
     {
+        if (!empty($data['vehiculo_externo'])) $data['vehiculo_externo'] = strtoupper($data['vehiculo_externo']);
+        if (!empty($data['cisterna_externo'])) $data['cisterna_externo'] = strtoupper($data['cisterna_externo']);
+        if (!empty($data['chofer_externo']))   $data['chofer_externo']   = strtoupper($data['chofer_externo']);
+        if (!empty($data['ayudante_externo'])) $data['ayudante_externo'] = strtoupper($data['ayudante_externo']);
+
         return DB::transaction(function () use ($id, $data) {
             $viaje = Viaje::with('detalles')->findOrFail($id);
             $itemsNuevos = $data['items'] ?? [];
@@ -123,22 +134,39 @@ class LogisticaService
 
     private function validarCapacidadYRequisitos(array $data, float $totalLitros, array $items)
     {
+        // 1. Validación de destinos (intacta)
         if (in_array($data['tipo_planificacion'], [1, 2]) && empty($items)) {
             throw new Exception("No hay destinos o clientes agregados a la carga.");
         }
 
         $esPropio = ($data['es_transporte_propio'] ?? '1') == '1';
+        
         if ($esPropio && $totalLitros > 0) {
             $vehiculo = Vehiculo::findOrFail($data['vehiculo_id']);
+            
+            // Capacidad inicial asumiendo que es un camión rígido (Tipo 1)
             $capacidadReal = $vehiculo->carga_max > 0 ? $vehiculo->carga_max : 0;
             
-            if (!empty($data['cisterna_id'])) {
-                $cisterna = Vehiculo::find($data['cisterna_id']);
-                $capacidadReal = $cisterna ? $cisterna->carga_max : $capacidadReal;
+            // 2. Buscamos el ID de la cisterna (Cubrimos ambos nombres por seguridad)
+            $idCisterna = $data['cisterna'] ?? $data['cisterna_id'] ?? null;
+
+            // 3. Validar si es Chuto (Tipo 3) y no mandaron cisterna
+            if ($vehiculo->tipo == '3' && empty($idCisterna)) {
+                throw new Exception("El vehículo seleccionado (Tipo 3) requiere una cisterna acoplada.");
+            }
+            
+            // 4. Si hay cisterna, reemplazamos la capacidad por la de la cisterna
+            if (!empty($idCisterna)) {
+                $cisterna = Vehiculo::find($idCisterna);
+                if ($cisterna) {
+                    // Priorizamos el campo 'vol' (volumen real) y si está vacío usamos 'carga_max'
+                    $capacidadReal = $cisterna->vol > 0 ? $cisterna->vol : $cisterna->carga_max;
+                }
             }
 
+            // 5. Verificamos el exceso de carga (intacto)
             if ($totalLitros > $capacidadReal) {
-                throw new Exception("Capacidad excedida. Carga: {$totalLitros}L / Capacidad: {$capacidadReal}L.");
+                throw new Exception("Capacidad excedida. Carga: {$totalLitros}L / Capacidad permitida: {$capacidadReal}L.");
             }
         }
     }
@@ -149,16 +177,17 @@ class LogisticaService
         $cisternaValor = null;
 
         if ($esPropio) {
-            if (!empty($data['cisterna_id'])) {
-                $c = Vehiculo::find($data['cisterna_id']);
+            // Corregido: Se busca 'cisterna' que es la llave real enviada por la Vista
+            $idCisterna = $data['cisterna'] ?? $data['cisterna_id'] ?? null;
+            if (!empty($idCisterna)) {
+                $c = Vehiculo::find($idCisterna);
                 $cisternaValor = $c ? $c->id : null;
             }
-        } else {
-            $cisternaValor =  null;
         }
 
         return [
             'tipo_planificacion'   => $data['tipo_planificacion'],
+            'producto_flete'       => $data['tipo_planificacion'] == 3 ? ($data['producto_flete'] ?? null) : null,
             'sede_id'              => $data['sede_id'] ?? null,
             'tipo'                 => $data['tipo_combustible_id'] ?? null, 
             'fecha_salida'         => $data['fecha_programada'],
@@ -166,15 +195,20 @@ class LogisticaService
             'status'               => 'PROGRAMADO',
             'litros'               => $totalLitros, 
             'vehiculo_id'          => $esPropio ? $data['vehiculo_id'] : null,
-            'observacion'        => $data['observaciones'] ?? null,
+            'observacion'          => $data['observaciones'] ?? null,
             'cisterna'             => $cisternaValor,
             'chofer_id'            => $esPropio ? $data['chofer_id'] : null,
             'ayudante_id'          => $esPropio ? ($data['ayudante_id'] ?? null) : null,
+            
+            // Flags de Transporte Externo
             'es_transporte_externo'=> !$esPropio,
-            'vehiculo_externo'     => !$esPropio ? ($data['externo_vehiculo_placa'] ?? null) : null,
-            'cisterna_externo'     => !$esPropio ? ($data['externo_cisterna_placa'] ?? null) : null,
-            'chofer_externo'       => !$esPropio ? ($data['externo_chofer_nombre'] ?? null) : null,
-            'ayudante_externo'     => !$esPropio ? ($data['externo_ayudante_nombre'] ?? null) : null,
+            
+            // Corregido: Mapeo directo con los nombres reales de los inputs de la Vista
+            'vehiculo_externo'     => !$esPropio ? ($data['vehiculo_externo'] ?? null) : null,
+            'cisterna_externo'     => !$esPropio ? ($data['cisterna_externo'] ?? null) : null,
+            'chofer_externo'       => !$esPropio ? ($data['chofer_externo'] ?? null) : null,
+            'ayudante_externo'     => !$esPropio ? ($data['ayudante_externo'] ?? null) : null,
+            
             'tipo_remolque'        => $data['tipo_remolque'] ?? null,
             'codigo_sap'           => $data['tipo_planificacion'] == 4 ? ($data['codigo_sap'] ?? null) : null,
             'cliente_id'           => $data['cliente_id'] ?? null, 
@@ -205,25 +239,61 @@ class LogisticaService
                     ->where('anio', now()->year)
                     ->increment('litros_consumidos', $item['litros']);
             }
+
+            // --- NUEVA LÓGICA DE AUTO-REGISTRO COMPATIBLE ---
+            $buqueId = (isset($item['buque_id']) && is_numeric($item['buque_id'])) ? $item['buque_id'] : null;
+            $buqueNombreManual = $item['buque_nombre'] ?? null;
+            $imo = $item['buque_imo'] ?? null;
+            $bandera = $item['buque_bandera'] ?? null;
+
+            // Si es una planificación MGO y se intentó escribir/seleccionar un buque
+            if ($viaje->tipo_planificacion == 2 && !empty($item['buque_nombre'])) {
+                $nombreFormateado = trim(strtoupper($item['buque_nombre']));
+
+                // Validamos si ya existe un buque registrado con ese nombre exacto en mayúsculas
+                $buqueExistente = Buques::where('nombre', $nombreFormateado)->first();
+
+                if ($buqueExistente) {
+                    // Si ya existía, usamos su ID y sus datos reales para blindar la consistencia
+                    $buqueId = $buqueExistente->id;
+                    $imo = $buqueExistente->imo;
+                    $bandera = $buqueExistente->bandera;
+                    $buqueNombreManual = null; // Al estar registrado, no hace falta marcarlo como manual puro
+                } elseif ($item['buque_id'] === 'manual') {
+                    // Si de verdad es nuevo y seleccionaron "Agregar Manualmente", lo creamos al vuelo casado con el cliente_id
+                    $nuevoBuque = Buques::create([
+                        'nombre'     => $nombreFormateado,
+                        'cliente_id' => $item['cliente_id'],
+                        'bandera'    => trim(strtoupper($item['buque_bandera'] ?? 'S/R')),
+                        'imo'        => $item['buque_imo'] ?? null,
+                    ]);
+                    $buqueId = $nuevoBuque->id;
+                    $buqueNombreManual = $nombreFormateado;
+                }
+            }
             
+            // Ejecución exacta de tu repositorio conservando tus mapeos
             $this->viajeRepo->createDetalle([
                 'viaje_id'            => $viaje->id,
                 'cliente_id'          => $item['cliente_id'] ?? null,
                 'pedido_id'           => $pedidoId,
                 'litros'              => $item['litros'] ?? 0,
                 'muelle_atraque'      => $item['muelle_id'] ?? null,
-                'buque_id'            => (isset($item['buque_id']) && is_numeric($item['buque_id'])) ? $item['buque_id'] : null,
-                'buque_nombre_manual' => $item['buque_nombre'] ?? null,
-                'imo'                 => $item['buque_imo'] ?? null,
-                'bandera'             => $item['buque_bandera'] ?? null,
+                'buque_id'            => $buqueId, // ID Real (existente o creado al vuelo)
+                'buque_nombre_manual' => $buqueNombreManual,
+                'imo'                 => $imo,
+                'bandera'             => $bandera,
                 'observacion'         => $item['observaciones'] ?? null,
             ]);
 
-            if ($pedidoId) {
-                $this->pedidoRepo->update($pedidoId, [
-                    'estado' => 'en_proceso',
-                    'fecha_aprobacion' => now()
-                ]);
+            if (!empty($item['pedido_id'])) {
+                $pedido = Pedido::find($item['pedido_id']);
+                if ($pedido) {
+                    $pedido->update([
+                        'estado' => Pedido::STATUS_APROBADO, 
+                        'fecha_aprobacion' => now()
+                    ]);
+                }
             }
         }
     }

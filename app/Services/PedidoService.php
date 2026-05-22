@@ -7,6 +7,7 @@ use App\Repositories\GascoCupoRepository;
 use App\Repositories\DepositoRepository;
 use App\Models\Cliente; 
 use App\Models\GascoCupoMensual;
+use App\Models\Pedido;
 use Exception;
 use Illuminate\Support\Facades\DB;
 
@@ -26,13 +27,13 @@ class PedidoService
         $this->depositoRepository = $depositoRepository;
     }
 
-    public function listarPedidosParaUsuario($cliente)
+    public function listarPedidosParaUsuario($cliente, $limit = 50)
     {
         $ids = [$cliente->id];
         if ($cliente->es_padre) {
             $ids = array_merge($ids, $cliente->sucursales()->pluck('id')->toArray());
         }
-        return $this->repository->getPedidosPorClientes($ids);
+        return $this->repository->getPedidosPorClientes($ids, $limit);
     }
 
     public function listarPedidosParaAdmin()
@@ -97,8 +98,8 @@ class PedidoService
         return DB::transaction(function () use ($pedidoId) {
             $pedido = $this->repository->find($pedidoId);
 
-            if (in_array($pedido->estado, ['despachado', 'cancelado', 'en_proceso'])) {
-                throw new Exception("No se puede cancelar un pedido en estado {$pedido->estado}.");
+            if ($pedido->estado !== Pedido::STATUS_PENDIENTE) {
+                throw new Exception("Solo se pueden cancelar pedidos en estado 'Pendiente'.");
             }
 
             // Devolver litros al cliente
@@ -114,8 +115,40 @@ class PedidoService
                 $cupoGasco->decrement('litros_consumidos', $pedido->cantidad_solicitada);
             }
 
-            return $this->repository->update($pedidoId, ['estado' => 'cancelado']);
+            return $this->repository->update($pedidoId, ['estado' => Pedido::STATUS_CANCELADO]);
         });
+    }
+
+    public function rechazarPedido($pedidoId)
+    {
+        return DB::transaction(function () use ($pedidoId) {
+            $pedido = $this->repository->find($pedidoId);
+
+            if ($pedido->estado !== Pedido::STATUS_PENDIENTE) {
+                throw new Exception("Solo se pueden rechazar pedidos en estado 'Pendiente'.");
+            }
+
+            $this->devolverCupoAlCliente($pedido);
+
+            return $this->repository->update($pedidoId, ['estado' => Pedido::STATUS_RECHAZADO]);
+        });
+    }
+
+    // Método auxiliar para no repetir código (Agrégalo en este mismo servicio)
+    private function devolverCupoAlCliente($pedido)
+    {
+        // Devolver litros al cliente
+        Cliente::where('id', $pedido->cliente_id)->increment('disponible', $pedido->cantidad_solicitada);
+
+        // Devolver litros al cupo mensual
+        $cupoGasco = GascoCupoMensual::where('cliente_id', $pedido->cliente_id)
+            ->where('mes', $pedido->created_at->month)
+            ->where('anio', $pedido->created_at->year)
+            ->first();
+
+        if ($cupoGasco) {
+            $cupoGasco->decrement('litros_consumidos', $pedido->cantidad_solicitada);
+        }
     }
 
     public function calificarPedido($pedidoId, array $data, $user)

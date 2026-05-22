@@ -12,31 +12,41 @@ class PedidoRepository
     /**
      * Obtiene pedidos de un cliente o grupo de clientes
      */
-    public function getPedidosPorClientes(array $clienteIds, $limit = 15)
+    public function getPedidosPorClientes(array $clienteIds, $limit = 50)
     {
         // Importante: Asegúrate de que 'cliente_id' sea el nombre de la columna en tu tabla pedidos
         return Pedido::whereIn('cliente_id', $clienteIds)
             ->orderBy('fecha_solicitud', 'desc')
+            ->limit($limit)
             ->get(); // Cámbialo a get() para probar; si funciona, luego vuelves a paginate()
     }
 
     /**
      * Obtiene todos los pedidos para el Admin
      */
-    public function getAllPedidosAdmin(array $filters = [], $limit = 20)
+    public function getAllPedidosAdmin(array $filters = [], $perPage = 20)
     {
         return Pedido::with(['cliente', 'usuario'])
-            ->when(isset($filters['estado']), function ($query) use ($filters) {
-                return $query->where('estado', $filters['estado']);
+            // Filtro por Estatus
+            ->when(!empty($filters['status_pedido']), function ($query) use ($filters) {
+                return $query->where('estado', $filters['status_pedido']);
             })
-            ->when(isset($filters['cliente_id']), function ($query) use ($filters) {
-                return $query->where('cliente_id', $filters['cliente_id']);
+            // Filtro por Cliente o RIF (usando la relación)
+            ->when(!empty($filters['search_pedido']), function ($query) use ($filters) {
+                return $query->whereHas('cliente', function($q) use ($filters) {
+                    $q->where('nombre', 'LIKE', '%' . $filters['search_pedido'] . '%')
+                    ->orWhere('rif', 'LIKE', '%' . $filters['search_pedido'] . '%');
+                });
             })
-            ->when(isset($filters['fecha']), function ($query) use ($filters) {
-                return $query->whereDate('fecha_entrega', $filters['fecha']);
+            // Rango de Fechas
+            ->when(!empty($filters['fecha_desde']), function ($query) use ($filters) {
+                return $query->whereDate('fecha_solicitud', '>=', $filters['fecha_desde']);
+            })
+            ->when(!empty($filters['fecha_hasta']), function ($query) use ($filters) {
+                return $query->whereDate('fecha_solicitud', '<=', $filters['fecha_hasta']);
             })
             ->orderBy('fecha_solicitud', 'desc')
-            ->paginate($limit);
+            ->paginate($perPage);
     }
 
     /**

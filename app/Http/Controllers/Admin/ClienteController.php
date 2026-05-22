@@ -9,8 +9,11 @@ use App\Services\ClienteLubricanteService;
 use App\Services\GascoCupoService;
 use App\Models\Cliente;
 use App\Models\TipoCombustible;
+use App\Models\Pedido;
+use App\Models\Estado;
+use App\Models\ClienteDocumento;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\{Redirect, Session, Log, Auth};
+use Illuminate\Support\Facades\{Redirect, Session, Log, Auth, Storage};
 
 class ClienteController extends Controller
 {
@@ -42,15 +45,36 @@ class ClienteController extends Controller
 
         // NUEVO: Filtro para la lista de pedidos
         $statusPedido = $request->query('status_pedido');
+        $searchPedido = $request->query('search_pedido');
+        $fechaDesde   = $request->query('fecha_desde');
+        $fechaHasta   = $request->query('fecha_hasta');
         
-        $queryPedidos = \App\Models\Pedido::with(['cliente'])
+        $queryPedidos = Pedido::with(['cliente'])
             ->orderBy('fecha_solicitud', 'desc');
 
         if ($statusPedido !== null && $statusPedido !== '') {
             $queryPedidos->where('estado', $statusPedido);
         }
 
-        $ultimosPedidos = $queryPedidos->get(); // Traemos todos para el scroll o paginate(50)
+        // 2. Filtro por Nombre de Cliente o RIF
+        if ($searchPedido !== null && $searchPedido !== '') {
+            $queryPedidos->whereHas('cliente', function($q) use ($searchPedido) {
+                $q->where('nombre', 'LIKE', '%' . $searchPedido . '%')
+                ->orWhere('rif', 'LIKE', '%' . $searchPedido . '%');
+            });
+        }
+
+        // 3. Filtro por Rango de Fechas (Desde)
+        if ($fechaDesde !== null && $fechaDesde !== '') {
+            $queryPedidos->whereDate('fecha_solicitud', '>=', $fechaDesde);
+        }
+
+        // 4. Filtro por Rango de Fechas (Hasta)
+        if ($fechaHasta !== null && $fechaHasta !== '') {
+            $queryPedidos->whereDate('fecha_solicitud', '<=', $fechaHasta);
+        }
+
+        $ultimosPedidos = $queryPedidos->paginate(20, ['*'], 'pedidos_page');
 
         return view('admin.cliente.index', [
             'clientes'       => $data['clientes'],
@@ -61,6 +85,9 @@ class ClienteController extends Controller
             'rankingMenores' => $this->clienteService->getRankingCuposMenores(),
             'ultimosPedidos' => $ultimosPedidos,
             'statusPedido'   => $statusPedido,
+            'searchPedido'   => $searchPedido,
+            'fechaDesde'     => $fechaDesde,
+            'fechaHasta'     => $fechaHasta,
         ]);
     }
 
@@ -70,12 +97,34 @@ class ClienteController extends Controller
 
     public function show($id)
     {
+        // Mantenemos tus servicios originales
         $cliente          = $this->clienteService->obtenerExpediente($id);
         $tiposCombustible = TipoCombustible::all();
-        $pedidos = $this->repository->getPedidosPorClientes([$id]);
-        $infoGasco = $this->gascoCupoService->obtenerSaldoActual($id);
+        $infoGasco        = $this->gascoCupoService->obtenerSaldoActual($id);
 
-        return view('admin.cliente.show', compact('cliente', 'tiposCombustible', 'pedidos', 'infoGasco'));
+        // NUEVO: Pedidos paginados (reemplaza tu llamada al repository para que sea paginada)
+        $pedidos = Pedido::where('cliente_id', $id)
+            ->orderBy('fecha_solicitud', 'desc')
+            ->paginate(20, ['*'], 'pedidos_page');
+
+        // NUEVO: Sucursales paginadas (solo si es padre)
+        $sucursales = $cliente->es_padre 
+            ? $cliente->sucursales()->paginate(15, ['*'], 'sucursales_page') 
+            : collect();
+
+        $documentos = ClienteDocumento::where('cliente_id', $cliente->id)->orderBy('created_at', 'desc')->get();
+        $espacioUsadoBytes = ClienteDocumento::where('cliente_id', $cliente->id)->sum('peso_archivo');
+        $espacioUsadoMb = round($espacioUsadoBytes / (1024 * 1024), 2);
+
+        return view('admin.cliente.show', compact(
+            'cliente', 
+            'tiposCombustible', 
+            'pedidos', 
+            'infoGasco', 
+            'sucursales',
+            'documentos',
+            'espacioUsadoMb'
+        ));
     }
 
     public function listaGeneralPedidos()
@@ -89,7 +138,7 @@ class ClienteController extends Controller
     public function create()
     {
         $tiposCombustible = TipoCombustible::all();
-        $estados          = \App\Models\Estado::orderBy('nombre')->get();
+        $estados          = Estado::orderBy('nombre')->get();
 
         return view('admin.cliente.create', compact('tiposCombustible', 'estados'));
     }
@@ -137,7 +186,7 @@ class ClienteController extends Controller
     public function edit($id)
     {
         $cliente = $this->clienteService->obtenerExpediente($id);
-        $estados = \App\Models\Estado::orderBy('nombre')->get();
+        $estados = Estado::orderBy('nombre')->get();
 
         return view('admin.cliente.edit', compact('cliente', 'estados'));
     }
@@ -455,5 +504,58 @@ class ClienteController extends Controller
             \Illuminate\Support\Facades\Log::error('Error al generar token: ' . $e->getMessage());
             return Redirect::back()->with('error', 'No se pudo generar el token por un error técnico.');
         }
+    }
+
+    // 2. Método para que el admin cargue (puedes reutilizar el mismo logic)
+    public function storeDocumento(Request $request)
+    {
+        $request->validate([
+            'cliente_id' => 'required|exists:clientes,id',
+            'archivo' => 'required|file|mimes:pdf|max:51200', 
+            'nombre_archivo' => 'required|string|max:255'
+        ]);
+
+        $archivo = $request->file('archivo');
+        $path = $archivo->store('documentos_clientes', 'local');
+
+        ClienteDocumento::create([
+            'cliente_id'     => $request->cliente_id,
+            'user_id'        => auth()->id(),
+            'nombre_archivo' => $request->nombre_archivo,
+            'ruta_archivo'   => $path,
+            'peso_archivo'   => $archivo->getSize(),
+            'mime_type'      => $archivo->getClientMimeType(),
+        ]);
+
+        return back()->with('success', 'Archivo cargado por el personal de ImporDiesel.');
+    }
+
+    // 3. Método para que el admin elimine
+    public function destroyDocumento($id)
+    {
+        $documento = ClienteDocumento::findOrFail($id);
+
+        // Eliminación física
+        if (Storage::exists($documento->ruta_archivo)) {
+            Storage::delete($documento->ruta_archivo);
+        }
+
+        $documento->delete();
+
+        return back()->with('success', 'Archivo eliminado permanentemente.');
+    }
+
+    public function downloadDocumento($id)
+    {
+        // El administrador puede buscar el documento directamente por su ID
+        $documento = ClienteDocumento::findOrFail($id);
+
+        // Verificamos que el archivo físico exista en el storage local
+        if (!Storage::exists($documento->ruta_archivo)) {
+            return back()->with('error', 'El archivo físico no se encuentra en el servidor.');
+        }
+
+        // Descarga segura
+        return Storage::download($documento->ruta_archivo, $documento->nombre_archivo . '.pdf');
     }
 }
