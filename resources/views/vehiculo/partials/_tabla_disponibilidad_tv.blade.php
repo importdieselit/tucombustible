@@ -1,6 +1,6 @@
      
-     <div class="card row g-0 border-bottom">
-            <div class="col-md-8 p-3 text-center">
+     <div class="row bg-white g-0 border-bottom">
+            <div class="col-md-7 p-3 text-center">
                 <div class="text-uppercase small bg-white fw-bold text-muted mt-2">Disponibilidad Combustible</div>
                 @php($porcentajeDisponibilidad = $disponiblidadCombustible->capacidad_total > 0 ? round(($disponiblidadCombustible->total_combustible / $disponiblidadCombustible->capacidad_total) * 100) : 0)
                 <div class="h2 mb-1 fw-bold {{ $porcentajeDisponibilidad > 80 ? 'text-success' : 'text-warning' }}">
