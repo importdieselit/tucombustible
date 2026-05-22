@@ -15,12 +15,12 @@
             </div>
             <div class="col-md-4 p-3 text-center border-start"> 
                 <div class="text-uppercase small fw-bold text-muted">Tanque 00</div>
-                <div class="display-4 small fw-bold text-warning">{{ $tanque00->nivel_actual_litros }} Ltrs</div>
+                <div class="h2 small fw-bold text-warning">{{ $tanque00->nivel_actual_litros }} Ltrs</div>
                 
             </div>
         
         </div>
-        <div class="row g-0 border-bottom">
+        <div class="row bg-white g-0 border-bottom">
             <div class="col-md-3 p-3 text-center border-end">
                 <div class="display-5 fw-bold text-primary">{{ $total }}</div>
                 <div class="text-uppercase small fw-bold text-muted">Total Flota</div>
