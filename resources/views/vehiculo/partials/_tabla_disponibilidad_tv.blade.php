@@ -1,6 +1,6 @@
      
      <div class="row bg-white g-0 border-bottom">
-            <div class="col-md-7 p-3 text-center">
+            <div class="col-md-8 p-3 text-center">
                 <div class="text-uppercase small bg-white fw-bold text-muted mt-2">Disponibilidad Combustible</div>
                 @php($porcentajeDisponibilidad = $disponiblidadCombustible->capacidad_total > 0 ? round(($disponiblidadCombustible->total_combustible / $disponiblidadCombustible->capacidad_total) * 100) : 0)
                 <div class="h2 mb-1 fw-bold {{ $porcentajeDisponibilidad > 80 ? 'text-success' : 'text-warning' }}">
@@ -13,9 +13,10 @@
                     {{ $disponiblidadCombustible->total_combustible }} / <span class="text-dark">{{ $disponiblidadCombustible->capacidad_total}}</span> Ltrs
                 </div>
             </div>
-            <div class="col-md-4 p-3 text-center border-end"> 
-                <div class="display-4 fw-bold text-warning">{{ $tanque00->nivel_actual_litros }} Ltrs</div>
+            <div class="col-md-4 p-3 text-center border-start"> 
                 <div class="text-uppercase small fw-bold text-muted">Tanque 00</div>
+                <div class="display-4 small fw-bold text-warning">{{ $tanque00->nivel_actual_litros }} Ltrs</div>
+                
             </div>
         
         </div>
