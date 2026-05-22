@@ -30,6 +30,18 @@ class InspeccionObserver
         $baseUrl = rtrim(config('services.whatsapp.url'), '/');
         $tokenWA = config('services.whatsapp.key');
         $endpoint = "{$baseUrl}/messages/chat?token={$tokenWA}";
+        $data = json_decode($inspeccion->respuesta_json, true);
+        $observacion=false;
+        // Recorremos las secciones e items buscando la etiqueta específica
+        foreach ($data['sections'] as $section) {
+            foreach ($section['items'] as $item) {
+                if (isset($item['label']) && $item['label'] === 'Observaciones Generales') {
+                    // Retornamos el valor limpio de espacios
+                   $observacion = isset($item['value']) ? trim($item['value']) : false;
+                     break 2; // Salimos de ambos bucles una vez encontrada la etiqueta
+                }
+            }
+        }
         
         if ($vehiculo) {
             // Pasar vehículo a estatus 2
@@ -49,6 +61,9 @@ class InspeccionObserver
                 }
 
                 $mensaje =" CHECKOUT: {$nombre} ha registrado el checklist de salida para la unidad {$vehiculo->flota} - {$vehiculo->placa}. Salida #{$viajesProgramados->first()->id} a {$viajesProgramados->first()->destino_ciudad}.";
+                if ($observacion) {
+                    $mensaje .= " Observación: {$observacion}";
+                }
                 $response = Http::asForm()
                             ->withoutVerifying() // Equivalente a CURLOPT_SSL_VERIFYPEER => 0
                             ->post($endpoint, [
@@ -81,9 +96,11 @@ class InspeccionObserver
         $tokenWA = config('services.whatsapp.key');
         $endpoint = "{$baseUrl}/messages/chat?token={$tokenWA}";
         // Verificamos si respuesta_in cambió de Null a algo con contenido
-        $respuestaInCambio = $inspeccion->isDirty('respuesta_in');
+        $respuestaInCambio = $inspeccion->isDirty('respuesta_in')   ;
         $eraNull = is_null($inspeccion->getOriginal('respuesta_in'));
         $ahoraTieneDatos = !is_null($inspeccion->respuesta_in);
+       
+        
 
         if ($respuestaInCambio && $eraNull && $ahoraTieneDatos) {
             
@@ -100,7 +117,24 @@ class InspeccionObserver
                                      ->where('status', 'EN RUTA')
                                      ->update(['status' => 'COMPLETADO']);
                                     // ->get();
+                $data = json_decode($inspeccion->respuesta_in, true);
+                $observacion=false;
+                // Recorremos las secciones e items buscando la etiqueta específica
+                foreach ($data['sections'] as $section) {
+                    foreach ($section['items'] as $item) {
+                        if (isset($item['label']) && $item['label'] === 'Observaciones Generales') {
+                            // Retornamos el valor limpio de espacios
+                        $observacion = isset($item['value']) ? trim($item['value']) : false;
+                        break 2; // Salimos de ambos bucles una vez encontrada la etiqueta
+                        }
+                    }
+                }
+
+
                 $mensaje = "CHECKIN: {$nombre} ha registrado el checklist de llegada para la unidad {$vehiculo->flota} - {$vehiculo->placa}. El viaje #{$inspeccion->viaje_id} ha sido marcado como COMPLETADO.";
+                if ($observacion) {
+                    $mensaje .= " Observación: {$observacion}";
+                }
                 $response = Http::asForm()
                             ->withoutVerifying() // Equivalente a CURLOPT_SSL_VERIFYPEER => 0
                             ->post($endpoint, [
