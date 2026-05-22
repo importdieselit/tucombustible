@@ -1,24 +1,58 @@
      
      <div class="row bg-white g-0 border-bottom">
-            <div class="col-md-8 p-3 text-center">
-                <div class="text-uppercase small bg-white fw-bold text-muted mt-2">Disponibilidad Combustible</div>
-                @php($porcentajeDisponibilidad = $disponiblidadCombustible->capacidad_total > 0 ? round(($disponiblidadCombustible->total_combustible / $disponiblidadCombustible->capacidad_total) * 100) : 0)
-                <div class="h2 mb-1 fw-bold {{ $porcentajeDisponibilidad > 80 ? 'text-success' : 'text-warning' }}">
-                    {{ $porcentajeDisponibilidad }}%
-                </div> 
-                <div class="progress mx-auto" style="height: 8px; width: 100px;">
-                    <div class="progress-bar bg-success" style="width: {{ $porcentajeDisponibilidad }}%"></div>
-                </div>
-                <div class="h2 mb-1 fw-bold {{ $porcentajeDisponibilidad > 80 ? 'text-success' : 'text-warning' }}">
-                    {{ $disponiblidadCombustible->total_combustible }} / <span class="text-dark">{{ $disponiblidadCombustible->capacidad_total}}</span> Ltrs
+            
+        <div class="row g-2 mb-4 mx-1">
+            <div class="col-md-2 col-sm-6">
+                <div class="card border-0 shadow-sm border-start border-4 border-camionetas">
+                    <div class="card-body p-2 text-center">
+                        <small class="text-muted fw-bold d-block text-uppercase" style="font-size: 0.65rem;">Disponibles</small>
+                        <h5 class="mb-0 fw-bold text-dark">{{ number_format($stats['disponibles'], 0, ',', '.') }} <span class="small">L</span></h5>
+                        <i class="fas fa-warehouse text-muted mt-1"></i>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-4 p-3 text-center border-start"> 
-                <div class="text-uppercase  fw-bold text-muted">Tanque 00</div>
-                <div class="h2 fw-bold text-warning">{{ $tanque00->nivel_actual_litros }} Ltrs</div>
+
+            <div class="col-md-2 col-sm-6">
+                <div class="card border-0 shadow-sm border-start border-4 border-cisternas">
+                    <div class="card-body p-2 text-center">
+                        <small class="text-muted fw-bold d-block text-uppercase" style="font-size: 0.65rem;">Despachados</small>
+                        <h5 class="mb-0 fw-bold text-success">{{ number_format($stats['despachados'], 0, ',', '.') }} <span class="small">L</span></h5>
+                        <i class="fas fa-sign-out-alt text-success mt-1"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-2 col-sm-6">
+                <div class="card border-0 shadow-sm border-start border-4 border-camiones">
+                    <div class="card-body p-2 text-center">
+                        <small class="text-muted fw-bold d-block text-uppercase" style="font-size: 0.65rem;">Cargas</small>
+                        <h5 class="mb-0 fw-bold text-warning">{{ number_format($stats['cargas'], 0, ',', '.') }} <span class="small">L</span></h5>
+                        <i class="fas fa-truck-loading text-warning mt-1"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 col-sm-6">
+                <div class="card border-0 shadow-sm border-start border-4 border-chutos">
+                    <div class="card-body p-2 text-center">
+                        <small class="text-muted fw-bold d-block text-uppercase" style="font-size: 0.65rem;">Despachos Programados</small>
+                        <h5 class="mb-0 fw-bold text-chutos">{{ number_format($stats['prog_desp'], 0, ',', '.') }} <span class="small">L</span></h5>
+                        <i class="fas fa-calendar-alt text-chutos mt-1"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 col-sm-6">
                 
+                <div class="card border-0 shadow-sm border-start border-4 border-info">
+                    <div class="card-body p-2 text-center">
+                        <small class="text-muted fw-bold d-block text-uppercase" style="font-size: 0.65rem;">Carga Programada</small>
+                        <h5 class="mb-0 fw-bold text-info">{{ number_format($stats['prog_carg'], 0, ',', '.') }} <span class="small">L</span></h5>
+                        <i class="fas fa-clock text-info mt-1"></i>
+                    </div>
+                </div>
             </div>
-        
+        </div>
         </div>
         <div class="row bg-white g-0 border-bottom">
             <div class="col-md-3 p-3 text-center border-end">
@@ -51,17 +85,6 @@
         {{-- SECCIÓN GERENCIAL --}}
 
         <div class="row mb-4 no-print">
-
-            <div class="col-lg-12">
-                <div class="card shadow-sm border-0 h-100" style="border-radius: 15px;">
-                    <div class="card-body">
-                        <h6 class="fw-black text-uppercase small text-muted mb-4">Análisis de Flota por Segmento</h6>
-                        <div id="chart-segmentos" style="width:100%; height:150px;"></div>
-                        
-                
-                    </div>
-                </div>
-            </div>
             <div class="col-12">
                 <div class="card shadow-sm">
                     <div class="card-body">

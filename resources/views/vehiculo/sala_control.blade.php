@@ -94,10 +94,10 @@
         }
         
         #reporte-container {
-            transform: scale(0.70); 
+            transform: scale(0.85); 
             transform-origin: center center;
             width: 115%;
-            margin-left: -7.5%;
+            margin-left: -5%;
             flex: 1;
             flex-direction: column;
             transition: opacity 0.4s ease-in-out;
@@ -333,47 +333,7 @@
                     </div>`;
         }
 
-        // =========================================================
-        // GRÁFICOS HIGHCHARTS CON PARÁMETROS DIRECTOS DE API
-        // =========================================================
-        function renderCharts(chartData) {
-            if (!chartData) return;
-
-
-            // Gráfico 2: Segmentos Detallados de Flota (3 Columnas por Tipo)
-            if (document.getElementById('chart-segmentos')) {
-                Highcharts.chart('chart-segmentos', {
-                    chart: { type: 'column', backgroundColor: 'transparent', height: 260 },
-                    title: { text: null },
-                    xAxis: { 
-                        categories: ['Chutos', 'Camiones', 'Cisternas', 'Livianos'], 
-                        labels: { style: { fontSize: '13px', fontWeight: 'bold' } } 
-                    },
-                    yAxis: { min: 0, title: { text: null } },
-                    plotOptions: { 
-                        column: { 
-                            borderRadius: 4, 
-                            colorByPoint: false, 
-                            pointWidth: 14, // 👈 AQUÍ: Define el grosor en píxeles de cada barra (bájalo a 12 o sube a 16 según veas la TV)
-                            dataLabels: { 
-                                enabled: true, 
-                                inside: false, // Fuerza a que el número quede arriba de la barra si es muy delgada
-                                y: -5, // Ajusta la posición vertical del número para que no se monte
-                                style: { fontSize: '10px', fontWeight: 'bold' } 
-                            } 
-                        } 
-                    },
-                    legend: { enabled: true, itemStyle: { fontSize: '11px' } },
-                    colors: ['#198754', '#ffc107', '#dc3545'], /* Estándar de color NOC unificado */
-                    series: [
-                        { name: 'Operativos', data: chartData.segmentos.operativos },
-                        { name: 'En Ruta', data: chartData.segmentos.enRuta },
-                        { name: 'En Falla', data: chartData.segmentos.fallas }
-                    ],
-                    credits: { enabled: false }
-                });
-            }
-        }
+      
 
         initMap();
         

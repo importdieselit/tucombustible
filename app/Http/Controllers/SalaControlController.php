@@ -32,6 +32,14 @@ class SalaControlController extends Controller
             ->whereNotNull('longitud')
             ->get();
 
+        $fechaInicio = $request->filled('fecha_inicio') 
+        ? Carbon::parse($request->fecha_inicio)->startOfDay() 
+        : Carbon::now()->startOfDay();
+
+        $fechaFin = $request->filled('fecha_fin') 
+        ? Carbon::parse($request->fecha_fin)->endOfDay() 
+        : Carbon::now()->addDays(2)->endOfDay();
+
         // =========================================================
         // 2. DATA PARA EL REPORTE Y GRÁFICOS
         // =========================================================
@@ -74,6 +82,90 @@ class SalaControlController extends Controller
         $cisternasEnRuta = $cisternas->where('estatus', 2);
         $camionetasEnRuta = $ligero->where('estatus', 2);
 
+        // 1. Eager Loading: Traemos relaciones necesarias para evitar N+1
+    $viajesRaw = Viaje::with([
+            'vehiculo', 'chofer', 'producto', 'despachos.cliente', 
+            'cliente', 'cisternaAcoplada'
+        ])
+        ->whereBetween('fecha_salida', [$fechaInicio, $fechaFin])->orderBy('fecha_salida', 'asc')
+        ->get();
+
+    // 2. Procesamiento y Enriquecimiento de la data
+    $viajesDelDia = $viajesRaw->map(function($v) {
+        $destinoRaw = strtoupper($v->destino_ciudad);
+        $v->es_flete = str_contains($destinoRaw, 'FLETE');
+        $v->es_despacho = is_null($v->litros);
+        $v->es_carga = !$v->es_despacho && !$v->es_flete;
+
+        // Limpieza de destino
+        $v->destino_limpio = trim(str_ireplace(['FLETE', ' ->'], ['', ''], $v->destino_ciudad));
+
+        // Cálculo de Litros Totales (Centralizado)
+        $v->litros_totales = $v->es_despacho 
+            ? $v->despachos->sum('litros') 
+            : ($v->litros ?? 0);
+
+        // Lógica de Jerarquía de Cliente
+        $clienteFinal = null;
+        if (!$v->es_carga) {
+            // A. Cliente directo del viaje
+            $clienteFinal = $v->cliente ? ($v->cliente->alias ?? $v->cliente->nombre) : null;
+
+            // B. Si no hay, buscar en el primer despacho que tenga cliente
+            if (!$clienteFinal && $v->despachos->isNotEmpty()) {
+                $conCliente = $v->despachos->whereNotNull('cliente_id')->first();
+                if ($conCliente && $conCliente->cliente) {
+                    $clienteFinal = $conCliente->cliente->alias ?? $conCliente->cliente->nombre;
+                }else{
+                    // Si no hay cliente_id, pero hay otro_cliente en el despacho
+                    $conOtroCliente = $v->despachos->whereNotNull('otro_cliente')->first();
+                    if ($conOtroCliente) {
+                        $clienteFinal = $conOtroCliente->otro_cliente;
+                    }
+                }
+            }
+
+            // C. Si aún no hay, usar el campo manual
+            if (!$clienteFinal) {
+                $clienteFinal = $v->otro_cliente;
+            }
+        }
+        $v->cliente_reporte = $clienteFinal;
+
+        
+
+        return $v;
+    });
+
+         $fletes = $viajesDelDia->filter(fn($v) => $v->es_flete);
+        $operacionesBase = $viajesDelDia->reject(fn($v) => $v->es_flete);
+        $cargas = $operacionesBase->where('es_carga', true);
+        $despachos = $operacionesBase->where('es_despacho', true);
+
+
+        // 5. Estadísticas para las Cards (Usando los litros ya procesados)
+        $totalDisponibles = Deposito::sum('nivel_actual_litros');
+
+        $totalDespachados = $despachos->whereIn('status', ['EN RUTA', 'COMPLETADO'])
+            ->sum('litros_totales');
+
+        $totalCarga = $cargas->whereIn('status', ['EN RUTA', 'COMPLETADO'])
+            ->sum('litros_totales');
+
+        $totalProgDespacho = $despachos->where('status', 'Programado')
+            ->sum('litros_totales');
+
+        $totalProgCarga = $cargas->where('status', 'Programado')
+            ->sum('litros_totales');
+        
+        $stats = [
+            'disponibles' => $totalDisponibles,
+            'despachados' => $totalDespachados,
+            'cargas'      => $totalCarga,
+            'prog_desp'   => $totalProgDespacho,
+            'prog_carg'   => $totalProgCarga
+        ];
+
         // =========================================================
         // 3. RENDERIZADO Y RESPUESTA JSON
         // =========================================================
@@ -82,7 +174,9 @@ class SalaControlController extends Controller
             'camionetasFalla', 'camionetasOperativas', 'totalLivianos', 'totalCamiones', 'totalChutos',
             'chutosFalla', 'chutosOperativos', 'camionesOperativos', 
             'total', 'operativosCount', 'fallaCount', 'porcentajeDisponibilidad', 'cisternasOperativas',
-            'chutosEnRuta', 'camionetasEnRuta', 'camionesEnRuta', 'cisternasEnRuta', 'tanque00', 'disponiblidadCombustible'
+            'chutosEnRuta', 'camionetasEnRuta', 'camionesEnRuta', 'cisternasEnRuta', 'tanque00', 'disponiblidadCombustible',
+            'stats'
+
         ))->render();
 
         return response()->json([
