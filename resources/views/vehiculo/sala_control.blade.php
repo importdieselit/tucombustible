@@ -88,8 +88,8 @@
             height: 100vh;
             overflow: hidden;
             display: flex;
-            flex-direction: column;
-            padding: 10px;
+            flex-direction: row;
+            padding: 0px;
             background-color: #f4f6f9;
         }
         
@@ -99,7 +99,7 @@
             width: 115%;
             margin-left: -5%;
             flex: 1;
-            flex-direction: column;
+            flex-direction: row;
             transition: opacity 0.4s ease-in-out;
         }
 
@@ -125,7 +125,7 @@
         }
 
         .table td, .table th {
-            padding: 0.5rem 0.75rem !important; 
+            padding: 0.3rem 0.75rem !important; 
             white-space: nowrap;
         }
     </style>

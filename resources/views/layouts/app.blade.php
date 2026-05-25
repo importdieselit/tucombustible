@@ -274,21 +274,19 @@
 
     BootstrapManager.boot();
 
-    
+    document.addEventListener("DOMContentLoaded", function () {
 
-        document.addEventListener("DOMContentLoaded", function () {
-
-            const toastElList = [].slice.call(document.querySelectorAll('.toast'))
+        const toastElList = [].slice.call(document.querySelectorAll('.toast'))
         toastElList.map(function (toastEl) {
             new bootstrap.Toast(toastEl, { delay: 4500 }).show()
         })
             
-                // Toggle Sidebar
-                $('#sidebarCollapse').on('click', function() {
-                    $('.sidebar, .sidebar-overlay').toggleClass('active');
-                    // Cambiar icono de barras a X (opcional)
-                    $(this).find('i').toggleClass('bi-list bi-x-lg');
-                });
+        // Toggle Sidebar
+        $('#sidebarCollapse').on('click', function() {
+            $('.sidebar, .sidebar-overlay').toggleClass('active');
+            // Cambiar icono de barras a X (opcional)
+            $(this).find('i').toggleClass('bi-list bi-x-lg');
+        });
 
                 // Toggle Buscador en Móviles
                 $('#toggleMobileSearch').on('click', function() {
