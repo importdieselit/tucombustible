@@ -160,252 +160,251 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/Leaflet.fullscreen.min.js"></script>
 <script src="https://code.highcharts.com/highcharts.js"></script>
-<script src="https://js.pusher.com/8.0.1/pusher.min.js"></script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        
-        let map;
-        let markers = {}; 
-        let countdownInterval;
-        const REFRESH_SECONDS = 300; 
-        let timeLeft = REFRESH_SECONDS;
-        let lastFlotaState = null;
-        
-        const sedeCoords = L.latLng(10.488249123497356, -66.8234169941792);
-        const RADIO_SEDE_METROS = 180;
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            let map;
+            let markers = {}; 
+            let countdownInterval;
+            const REFRESH_SECONDS = 300; 
+            let timeLeft = REFRESH_SECONDS;
+            let lastFlotaState = null;
+            
+            const sedeCoords = L.latLng(10.488249123497356, -66.8234169941792);
+            const RADIO_SEDE_METROS = 180;
 
-        // --- 1. CONTINGENCIA OFFLINE ---
-        window.addEventListener('offline', () => {
-            document.getElementById('offline-banner').style.display = 'block';
-            document.getElementById('reporte-container').style.opacity = '0.4';
+            // --- 1. CONTINGENCIA OFFLINE ---
+            window.addEventListener('offline', () => {
+                document.getElementById('offline-banner').style.display = 'block';
+                document.getElementById('reporte-container').style.opacity = '0.4';
+            });
+
+            window.addEventListener('online', () => {
+                document.getElementById('offline-banner').style.display = 'none';
+                document.getElementById('reporte-container').style.opacity = '1';
+                fetchSalaData();
+            });
+
+            // --- 2. INICIALIZACIÓN DEL MAPA ---
+            function initMap() {
+                map = L.map('map', { 
+                    attributionControl: false, 
+                    fullscreenControl: false,
+                    zoomControl: false, 
+                    scrollWheelZoom: false,
+                    dragging: false
+                }).setView([10.488249123497356, -66.8234169941792], 8); 
+
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+                L.circle(sedeCoords, { color: '#002d72', fillOpacity: 0.1, radius: RADIO_SEDE_METROS }).addTo(map);
+
+                fetchSalaData(); 
+                startWatchdog(); 
+               // initWebSockets(); 
+            }
+
+            // --- 3. SOCKETS Y WATCHDOG ---
+            // function initWebSockets() {
+            //     const pusher = new Pusher('{{ env("PUSHER_APP_KEY") }}', {
+            //         cluster: '{{ env("PUSHER_APP_CLUSTER", "mt1") }}',
+            //         wsHost: window.location.hostname,
+            //         wsPort: 8080,
+            //         forceTLS: false,
+            //         disableStats: true
+            //     });
+
+            //     const channel = pusher.subscribe('sala-control');
+            //     channel.bind('tv.refresh', function(payload) {
+            //         document.getElementById('reporte-container').style.opacity = '0.7';
+            //         fetchSalaData().then(() => {
+            //             document.getElementById('reporte-container').style.opacity = '1';
+            //         });
+            //     });
+            // }
+
+            function startWatchdog() {
+                countdownInterval = setInterval(() => {
+                    timeLeft--;
+                    const timerDisplay = document.getElementById('countdown-timer');
+                    if (timerDisplay) timerDisplay.textContent = timeLeft + 's';
+                    if (timeLeft <= 0) { fetchSalaData(); }
+                }, 5000);
+            }
+
+            // --- 4. ADQUISICIÓN DE DATOS (AJAX) ---
+            async function fetchSalaData() {
+                const container = document.getElementById('reporte-container');
+                const tvToken = "{{ $token ?? '' }}";
+
+                try {
+                    const response = await fetch("{{ route('api.sala.control.stream') }}", {
+                        method: 'GET',
+                        headers: { 
+                            'X-Requested-With': 'XMLHttpRequest', 
+                            'Accept': 'application/json',
+                            'X-TV-Token': tvToken 
+                        },
+                        credentials: 'same-origin'
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        container.innerHTML = data.html_dashboard;
+                        
+                        // setTimeout(() => {
+                        //     const lastSync = document.getElementById('last-sync-time');
+                        //     if (lastSync) lastSync.textContent = new Date().toLocaleTimeString();
+                        // }, 10);
+
+                        renderCharts(data.charts);
+                        updateMapMarkers(data.unidades);
+                        timeLeft = REFRESH_SECONDS; 
+                    }
+                } catch (error) {
+                    console.error('Error de comunicación NOC:', error);
+                }
+            }
+
+            // --- 5. ACTUALIZACIÓN DEL MAPA ---
+            function updateMapMarkers(unidades) {
+                const currentIds = unidades.map(u => u.id);
+                const group = L.featureGroup();
+
+                unidades.forEach(u => {
+                    const newLatLng = [u.latitud, u.longitud];
+                    const colorStatus = obtenerColorPorEstatus(u.estatus);
+                    const contentTooltip = generarHtmlTooltip(u);
+                    const mostrarSiempre = (u.estatus > 2 || L.latLng(newLatLng).distanceTo(sedeCoords) > RADIO_SEDE_METROS);
+
+                    if (markers[u.id]) {
+                        markers[u.id].setLatLng(newLatLng);
+                        markers[u.id].setIcon(generarIcono(colorStatus));
+                        markers[u.id].getTooltip().setContent(contentTooltip);
+                        if (mostrarSiempre) { markers[u.id].openTooltip(); } else { markers[u.id].closeTooltip(); }
+                    } else {
+                        const m = L.marker(newLatLng, { icon: generarIcono(colorStatus) })
+                            .bindTooltip(contentTooltip, { direction: 'top', offset: [0, -15], className: 'custom-tooltip', permanent: mostrarSiempre });
+                        m.addTo(map);
+                        markers[u.id] = m;
+                    }
+                    group.addLayer(markers[u.id]);
+                });
+
+                Object.keys(markers).forEach(id => {
+                    if (!currentIds.includes(parseInt(id))) {
+                        map.removeLayer(markers[id]);
+                        delete markers[id];
+                    }
+                });
+
+                if (group.getLayers().length > 0) {
+                    map.fitBounds(group.getBounds(), { padding: [80, 80], maxZoom: 14, animate: true, duration: 2.0 });
+                }
+            }
+
+            function obtenerColorPorEstatus(estatus) {
+                if(estatus == 2) return '#ff6600'; 
+                if(estatus == 3 || estatus == 4 || estatus == 5) return '#e74a3b'; 
+                return '#002d72'; 
+            }
+
+            function generarIcono(color) {
+                return L.divIcon({
+                    html: `<div class="map-marker-container" style="border-color: ${color}">
+                            <div class="marker-pulse" style="border-color: ${color}"></div>
+                            <i class="fa-solid fa-truck-moving" style="color: ${color}; font-size: 16px;"></i>
+                        </div>`,
+                    iconSize: [40, 40], className: 'custom-marker'
+                });
+            }
+
+            function generarHtmlTooltip(u) {
+                let tiempo = 'Justo ahora';
+                if(u.updated_at) {
+                    const diffMin = Math.floor((new Date() - new Date(u.updated_at)) / 60000);
+                    tiempo = diffMin < 1 ? 'Hace segundos' : `Hace ${diffMin} min`;
+                }
+                return `<div class="tooltip-content">
+                            <b>${u.placa || 'S/P'}</b><br>
+                            <small>${u.is_marca?.marca || ''}</small><br>
+                            <small style="opacity:0.85;"><i class="far fa-clock"></i> ${tiempo}</small>
+                        </div>`;
+            }
+
+        
+
+            initMap();
+            
         });
 
-        window.addEventListener('online', () => {
-            document.getElementById('offline-banner').style.display = 'none';
-            document.getElementById('reporte-container').style.opacity = '1';
-            fetchSalaData();
-        });
+        function ajustarResolucionTV() {
+            const scaler = document.getElementById('noc-scaler');
+            if (!scaler) return;
 
-        // --- 2. INICIALIZACIÓN DEL MAPA ---
-        function initMap() {
-            map = L.map('map', { 
-                attributionControl: false, 
-                fullscreenControl: false,
-                zoomControl: false, 
-                scrollWheelZoom: false,
-                dragging: false
-            }).setView([10.488249123497356, -66.8234169941792], 8); 
+            // Dimensiones base del diseño
+            const baseWidth = 1920;
+            const baseHeight = 1080;
 
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
-            L.circle(sedeCoords, { color: '#002d72', fillOpacity: 0.1, radius: RADIO_SEDE_METROS }).addTo(map);
+            // Dimensiones reales de la TV actual
+            const winWidth = window.innerWidth;
+            const winHeight = window.innerHeight;
+            document.getElementById('div-res').innerHTML=winWidth+' x '+winHeight;
+            // Calculamos el factor de escala (elegimos el más estricto para que no desborde)
+            const scaleX = winWidth / baseWidth;
+            const scaleY = winHeight / baseHeight;
+            const scale = Math.min(scaleX, scaleY);
 
-            fetchSalaData(); 
-            startWatchdog(); 
-            initWebSockets(); 
+            // Aplicamos el escalado por hardware usando CSS Transform
+            scaler.style.transform = `scale(${scale})`;
+
+            // Centramos el lienzo si sobra espacio en los lados (opcional)
+            const fondoX = (winWidth - (baseWidth * scale)) / 2;
+            const fondoY = (winHeight - (baseHeight * scale)) / 2;
+            //scaler.style.left = `${fondoX}px`;
+            //  scaler.style.top = `${fondoY}px`;
         }
 
-        // --- 3. SOCKETS Y WATCHDOG ---
-        function initWebSockets() {
-            const pusher = new Pusher('{{ env("PUSHER_APP_KEY") }}', {
-                cluster: '{{ env("PUSHER_APP_CLUSTER", "mt1") }}',
-                wsHost: window.location.hostname,
-                wsPort: 8080,
-                forceTLS: false,
-                disableStats: true
-            });
-
-            const channel = pusher.subscribe('sala-control');
-            channel.bind('tv.refresh', function(payload) {
-                document.getElementById('reporte-container').style.opacity = '0.7';
-                fetchSalaData().then(() => {
-                    document.getElementById('reporte-container').style.opacity = '1';
-                });
-            });
-        }
-
-        function startWatchdog() {
-            countdownInterval = setInterval(() => {
-                timeLeft--;
-                const timerDisplay = document.getElementById('countdown-timer');
-                if (timerDisplay) timerDisplay.textContent = timeLeft + 's';
-                if (timeLeft <= 0) { fetchSalaData(); }
-            }, 1000);
-        }
-
-        // --- 4. ADQUISICIÓN DE DATOS (AJAX) ---
-        async function fetchSalaData() {
-            const container = document.getElementById('reporte-container');
-            const tvToken = "{{ $token ?? '' }}";
-
-            try {
-                const response = await fetch("{{ route('api.sala.control.stream') }}", {
-                    method: 'GET',
-                    headers: { 
-                        'X-Requested-With': 'XMLHttpRequest', 
-                        'Accept': 'application/json',
-                        'X-TV-Token': tvToken 
-                    },
-                    credentials: 'same-origin'
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    container.innerHTML = data.html_dashboard;
-                    
-                    // setTimeout(() => {
-                    //     const lastSync = document.getElementById('last-sync-time');
-                    //     if (lastSync) lastSync.textContent = new Date().toLocaleTimeString();
-                    // }, 10);
-
-                    renderCharts(data.charts);
-                    updateMapMarkers(data.unidades);
-                    timeLeft = REFRESH_SECONDS; 
-                }
-            } catch (error) {
-                console.error('Error de comunicación NOC:', error);
-            }
-        }
-
-        // --- 5. ACTUALIZACIÓN DEL MAPA ---
-        function updateMapMarkers(unidades) {
-            const currentIds = unidades.map(u => u.id);
-            const group = L.featureGroup();
-
-            unidades.forEach(u => {
-                const newLatLng = [u.latitud, u.longitud];
-                const colorStatus = obtenerColorPorEstatus(u.estatus);
-                const contentTooltip = generarHtmlTooltip(u);
-                const mostrarSiempre = (u.estatus > 2 || L.latLng(newLatLng).distanceTo(sedeCoords) > RADIO_SEDE_METROS);
-
-                if (markers[u.id]) {
-                    markers[u.id].setLatLng(newLatLng);
-                    markers[u.id].setIcon(generarIcono(colorStatus));
-                    markers[u.id].getTooltip().setContent(contentTooltip);
-                    if (mostrarSiempre) { markers[u.id].openTooltip(); } else { markers[u.id].closeTooltip(); }
-                } else {
-                    const m = L.marker(newLatLng, { icon: generarIcono(colorStatus) })
-                        .bindTooltip(contentTooltip, { direction: 'top', offset: [0, -15], className: 'custom-tooltip', permanent: mostrarSiempre });
-                    m.addTo(map);
-                    markers[u.id] = m;
-                }
-                group.addLayer(markers[u.id]);
-            });
-
-            Object.keys(markers).forEach(id => {
-                if (!currentIds.includes(parseInt(id))) {
-                    map.removeLayer(markers[id]);
-                    delete markers[id];
-                }
-            });
-
-            if (group.getLayers().length > 0) {
-                map.fitBounds(group.getBounds(), { padding: [80, 80], maxZoom: 14, animate: true, duration: 2.0 });
-            }
-        }
-
-        function obtenerColorPorEstatus(estatus) {
-            if(estatus == 2) return '#ff6600'; 
-            if(estatus == 3 || estatus == 4 || estatus == 5) return '#e74a3b'; 
-            return '#002d72'; 
-        }
-
-        function generarIcono(color) {
-            return L.divIcon({
-                html: `<div class="map-marker-container" style="border-color: ${color}">
-                           <div class="marker-pulse" style="border-color: ${color}"></div>
-                           <i class="fa-solid fa-truck-moving" style="color: ${color}; font-size: 16px;"></i>
-                       </div>`,
-                iconSize: [40, 40], className: 'custom-marker'
-            });
-        }
-
-        function generarHtmlTooltip(u) {
-            let tiempo = 'Justo ahora';
-            if(u.updated_at) {
-                const diffMin = Math.floor((new Date() - new Date(u.updated_at)) / 60000);
-                tiempo = diffMin < 1 ? 'Hace segundos' : `Hace ${diffMin} min`;
-            }
-            return `<div class="tooltip-content">
-                        <b>${u.placa || 'S/P'}</b><br>
-                        <small>${u.is_marca?.marca || ''}</small><br>
-                        <small style="opacity:0.85;"><i class="far fa-clock"></i> ${tiempo}</small>
-                    </div>`;
-        }
-
-      
-
-        initMap();
-        
+        // Escuchar eventos de carga y redimensionado
+        window.addEventListener('resize', ajustarResolucionTV);
+        document.addEventListener('DOMContentLoaded', () => {
+            ajustarResolucionTV();
+            
     });
 
-    function ajustarResolucionTV() {
-        const scaler = document.getElementById('noc-scaler');
-        if (!scaler) return;
+    const CURRENT_APK_VERSION = window.CURRENT_APK_VERSION || 0; 
 
-        // Dimensiones base del diseño
-        const baseWidth = 1920;
-        const baseHeight = 1080;
+        console.log("Versión actual de la APK en esta TV:", CURRENT_APK_VERSION);
 
-        // Dimensiones reales de la TV actual
-        const winWidth = window.innerWidth;
-        const winHeight = window.innerHeight;
-        document.getElementById('div-res').innerHTML=winWidth+' x '+winHeight;
-        // Calculamos el factor de escala (elegimos el más estricto para que no desborde)
-        const scaleX = winWidth / baseWidth;
-        const scaleY = winHeight / baseHeight;
-        const scale = Math.min(scaleX, scaleY);
+    async function verificarActualizacionNOC() {
+        // Lee la variable que inyectó 'onLoadStop' en Flutter
+            const versionActualAPK = window.CURRENT_APK_VERSION || 0;
 
-        // Aplicamos el escalado por hardware usando CSS Transform
-        scaler.style.transform = `scale(${scale})`;
-
-        // Centramos el lienzo si sobra espacio en los lados (opcional)
-        const fondoX = (winWidth - (baseWidth * scale)) / 2;
-        const fondoY = (winHeight - (baseHeight * scale)) / 2;
-        //scaler.style.left = `${fondoX}px`;
-        //  scaler.style.top = `${fondoY}px`;
-    }
-
-    // Escuchar eventos de carga y redimensionado
-    window.addEventListener('resize', ajustarResolucionTV);
-    document.addEventListener('DOMContentLoaded', () => {
-        ajustarResolucionTV();
-        
-   });
-
-   const CURRENT_APK_VERSION = window.CURRENT_APK_VERSION || 0; 
-
-    console.log("Versión actual de la APK en esta TV:", CURRENT_APK_VERSION);
-
-   async function verificarActualizacionNOC() {
-    // Lee la variable que inyectó 'onLoadStop' en Flutter
-        const versionActualAPK = window.CURRENT_APK_VERSION || 0;
-
-        if (versionActualAPK === 0) {
-            console.log("[Watchdog] Ejecutándose en modo web/desarrollo.");
-            return;
-        }
-
-        try {
-            const response = await fetch('/api/apk/latest');
-            const servidor = await response.json();
-
-            if (servidor.latest_version > versionActualAPK) {
-                console.log(`Nueva versión disponible: ${servidor.version_name}.`);
-                
-                // 👇 ESPECÍFICO PARA FLUTTER_INAPPWEBVIEW 👇
-                if (window.flutter_inappwebview) {
-                    window.flutter_inappwebview.callHandler('AndroidInterface', servidor.apk_url);
-                }
+            if (versionActualAPK === 0) {
+                console.log("[Watchdog] Ejecutándose en modo web/desarrollo.");
+                return;
             }
-        } catch (error) {
-            console.error("Error al procesar la actualización:", error);
+
+            try {
+                const response = await fetch('/api/apk/latest');
+                const servidor = await response.json();
+
+                if (servidor.latest_version > versionActualAPK) {
+                    console.log(`Nueva versión disponible: ${servidor.version_name}.`);
+                    
+                    // 👇 ESPECÍFICO PARA FLUTTER_INAPPWEBVIEW 👇
+                    if (window.flutter_inappwebview) {
+                        window.flutter_inappwebview.callHandler('AndroidInterface', servidor.apk_url);
+                    }
+                }
+            } catch (error) {
+                console.error("Error al procesar la actualización:", error);
+            }
         }
-    }
 
-    // Ejecutar revisión a los 5 segundos de cargar y luego cada 1 hora
-    setTimeout(verificarActualizacionNOC, 5000);
-    setInterval(verificarActualizacionNOC, 10000);
+        // Ejecutar revisión a los 5 segundos de cargar y luego cada 1 hora
+        setTimeout(verificarActualizacionNOC, 5000);
+        setInterval(verificarActualizacionNOC, 10000);
 
-</script>
+    </script>
 @endsection

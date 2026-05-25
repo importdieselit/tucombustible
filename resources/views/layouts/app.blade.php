@@ -6,6 +6,7 @@
     <link rel="icon" href="{{ asset('img/favicon.ico') }}" type="image/x-icon">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#4e73df">
+    
     <link rel="manifest" href="{{ asset('manifest.json') }}">
     <link rel="apple-touch-icon" href="{{ asset('img/icon-192x192.png') }}">
     <link rel="icon" type="image/png" sizes="192x192" href="{{ asset('img/icon-192x192.png') }}">
