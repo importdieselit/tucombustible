@@ -1,3 +1,5 @@
+const TEST_JS_VERSION = "1.0.0"; //
+
 document.addEventListener('DOMContentLoaded', function () {
     let map;
     let markers = {}; 
@@ -205,4 +207,28 @@ document.addEventListener('DOMContentLoaded', function () {
 
     setTimeout(verificarActualizacionNOC, 5000);
     setInterval(verificarActualizacionNOC, 1000 * 60 * 60);
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Evitamos duplicados si el script se llega a ejecutar dos veces
+    if (document.getElementById('debug-js-version')) return;
+
+    const debugDiv = document.createElement('div');
+    debugDiv.id = 'debug-js-version';
+    debugDiv.style.position = 'absolute';
+    debugDiv.style.top = '15px';
+    debugDiv.style.left = '15px';
+    debugDiv.style.background = '#000000';
+    debugDiv.style.color = '#00ff00'; // Verde terminal
+    debugDiv.style.zIndex = '999999';
+    debugDiv.style.padding = '8px 15px';
+    debugDiv.style.border = '2px solid #00ff00';
+    debugDiv.style.borderRadius = '8px';
+    debugDiv.style.fontWeight = 'bold';
+    debugDiv.style.fontFamily = 'monospace';
+    
+    debugDiv.innerHTML = '⚙️ JS VERSION: ' + TEST_JS_VERSION;
+    document.body.appendChild(debugDiv);
+    
+    console.log("El script JS cargado es la versión: " + TEST_JS_VERSION);
 });
