@@ -68,12 +68,24 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function startWatchdog() {
+
+        if (countdownInterval) clearInterval(countdownInterval);
+        
         countdownInterval = setInterval(() => {
+            // Si la página se está recargando o hay un error, no seguir restando
+            if (document.hidden) return; 
+
             timeLeft--;
             const timerDisplay = document.getElementById('countdown-timer');
             if (timerDisplay) timerDisplay.textContent = timeLeft + 's';
-            if (timeLeft <= 0) { fetchSalaData(); }
+            
+            if (timeLeft <= 0) { 
+                // Evitar múltiples llamadas si el fetch demora
+                clearInterval(countdownInterval); 
+                fetchSalaData(); 
+            }
         }, 1000);
+
     }
 
     // --- ADQUISICIÓN DE DATOS (AJAX) ---
@@ -90,8 +102,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 headers: { 
                     'X-Requested-With': 'XMLHttpRequest', 
                     'Accept': 'application/json',
-                    'X-TV-Token': tvToken 
+                    'X-TV-Token': tvToken,
+                    'Cache-Control': 'no-cache, no-store, must-revalidate', // <-- AGREGA ESTO
+                    'Pragma': 'no-cache'
                 },
+                cache: 'no-store', // <-- Y ESTO TAMBIÉN
                 credentials: 'same-origin'
             });
 
