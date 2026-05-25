@@ -1,7 +1,7 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom shadow-sm sticky-top">
     <div class="container-fluid">
         
-        <button type="button" id="sidebarCollapse" class="btn btn-outline-primary me-2 d-md-none border-0">
+        <button type="button" id="sidebarCollapse" name="sidebarCollapse" class="btn btn-outline-primary me-2  border-0">
             <i class="fa fa-list fs-3"></i>
         </button>
 

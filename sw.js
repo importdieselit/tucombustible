@@ -10,6 +10,7 @@ const urlsToCache = [
     appBase + 'combustible/flete/crear',
     appBase + 'combustible/index',
     appBase + 'ordenes',
+    appBase + 'ordenes/create',
     appBase + 'css/app.css',
     appBase + 'js/app.js',
     appBase + 'img/logomini.png',

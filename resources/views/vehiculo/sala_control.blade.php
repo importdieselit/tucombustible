@@ -134,7 +134,7 @@
 @section('content')
 <div id="noc-viewport">
     <div id="noc-scaler" class="container-fluid p-3">
-        
+        <div class="text-dark fw-bold" id="div-res"></div>
         <div id="offline-banner" class="offline-alert">
             ⚠️ ALERTA DE SISTEMA: PÉRDIDA DE SEÑAL DE RED - RECONECTANDO...
         </div>
@@ -340,45 +340,37 @@
     });
 
     function ajustarResolucionTV() {
-    const scaler = document.getElementById('noc-scaler');
-    if (!scaler) return;
+        const scaler = document.getElementById('noc-scaler');
+        if (!scaler) return;
 
-    // Dimensiones base del diseño
-    const baseWidth = 1920;
-    const baseHeight = 1080;
+        // Dimensiones base del diseño
+        const baseWidth = 1920;
+        const baseHeight = 1080;
 
-    // Dimensiones reales de la TV actual
-    const winWidth = window.innerWidth;
-    const winHeight = window.innerHeight;
+        // Dimensiones reales de la TV actual
+        const winWidth = window.innerWidth;
+        const winHeight = window.innerHeight;
+        document.getElementById('div-res').innerHTML=winWidth+' x '+winHeight;
+        // Calculamos el factor de escala (elegimos el más estricto para que no desborde)
+        const scaleX = winWidth / baseWidth;
+        const scaleY = winHeight / baseHeight;
+        const scale = Math.min(scaleX, scaleY);
 
-    // Calculamos el factor de escala (elegimos el más estricto para que no desborde)
-    const scaleX = winWidth / baseWidth;
-    const scaleY = winHeight / baseHeight;
-    const scale = Math.min(scaleX, scaleY);
+        // Aplicamos el escalado por hardware usando CSS Transform
+        scaler.style.transform = `scale(${scale})`;
 
-    // Aplicamos el escalado por hardware usando CSS Transform
-    scaler.style.transform = `scale(${scale})`;
+        // Centramos el lienzo si sobra espacio en los lados (opcional)
+        const fondoX = (winWidth - (baseWidth * scale)) / 2;
+        const fondoY = (winHeight - (baseHeight * scale)) / 2;
+        //scaler.style.left = `${fondoX}px`;
+        //  scaler.style.top = `${fondoY}px`;
+    }
 
-    // Centramos el lienzo si sobra espacio en los lados (opcional)
-    const fondoX = (winWidth - (baseWidth * scale)) / 2;
-    const fondoY = (winHeight - (baseHeight * scale)) / 2;
-    scaler.style.left = `${fondoX}px`;
-    scaler.style.top = `${fondoY}px`;
-}
-
-// Escuchar eventos de carga y redimensionado
-window.addEventListener('resize', ajustarResolucionTV);
-document.addEventListener('DOMContentLoaded', () => {
-    ajustarResolucionTV();
-    
-    // Forzar a Highcharts a que se entere del tamaño final después del escalado
-    setTimeout(() => {
-        if (typeof Highcharts !== 'undefined') {
-            Highcharts.charts.forEach(chart => {
-                if (chart) chart.reflow();
-            });
-        }
-    }, 300);
-});
+    // Escuchar eventos de carga y redimensionado
+    window.addEventListener('resize', ajustarResolucionTV);
+    document.addEventListener('DOMContentLoaded', () => {
+        ajustarResolucionTV();
+        
+   });
 </script>
 @endsection
