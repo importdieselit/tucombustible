@@ -136,7 +136,7 @@
     <div id="noc-scaler" class="container-fluid p-3">
         <div id="apk-version-badge" style="position: absolute; top: 15px; right: 15px; background: #002d72; color: #ffc107; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; z-index: 99999; border: 1px solid #ffc107; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
         APK v: <span id="lbl-apk-version">Detectando...</span>
-        <span class="text-dark fw-bold" id="div-res"></span>
+        <span class="text-white fw-bold" id="div-res"></span>
     </div>
         
         <div id="offline-banner" class="offline-alert">
