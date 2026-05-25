@@ -98,18 +98,35 @@ document.addEventListener('DOMContentLoaded', function () {
             if (response.ok) {
                 const data = await response.json();
 
-                if (data.css_version && data.js_version) {
-                    // Si la versión del servidor es diferente a la que cargamos inicialmente
-                    if (String(data.css_version) !== String(window.NOC_CONFIG.cssVersion) || 
-                        String(data.js_version) !== String(window.NOC_CONFIG.jsVersion)) {
-                        
-                        console.warn("⚠️ Actualización de código detectada. Recargando NOC...");
-                        // Forzamos una recarga limpia desde el servidor, ignorando el caché local
-                        window.location.reload(true); 
-                        return; // Detenemos la ejecución del script aquí
+                if (data.hasOwnProperty('css_version') && data.hasOwnProperty('js_version')) {
+    
+                    const serverCss = String(data.css_version);
+                    const serverJs  = String(data.js_version);
+                    const localCss  = String(window.NOC_CONFIG.cssVersion);
+                    const localJs   = String(window.NOC_CONFIG.jsVersion);
+
+                    // Solo recargamos si no son 'undefined', no son 'null', y son diferentes
+                    if (serverCss !== 'undefined' && serverJs !== 'undefined') {
+                        if (serverCss !== localCss || serverJs !== localJs) {
+                            
+                            // Imprimimos en consola exactamente por qué está recargando
+                            console.warn(`🔄 RECARGA FORZADA DETECTADA:`);
+                            console.warn(`CSS -> Local: ${localCss} | Servidor: ${serverCss}`);
+                            console.warn(`JS  -> Local: ${localJs} | Servidor: ${serverJs}`);
+                            
+                            // Pausamos 2 segundos antes de recargar para que te dé tiempo de leer la consola si lo necesitas
+                            setTimeout(() => {
+                                window.location.reload(true);
+                            }, 2000);
+                            
+                            return; // Detenemos la ejecución actual
+                        }
                     }
+                } else {
+                    // Si cae aquí, significa que el Controlador PHP no está enviando las variables en el JSON
+                    console.error("El servidor no envió css_version o js_version en el JSON de respuesta.");
                 }
-                
+
                 container.innerHTML = data.html_dashboard;
                 
                 setTimeout(() => {
