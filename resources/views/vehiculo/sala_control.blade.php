@@ -337,13 +337,7 @@
 
             initMap();
 
-            setTimeout(() => {
-                const versionActualAPK = window.CURRENT_APK_VERSION || 0;
-                const lbl = document.getElementById('lbl-apk-version');
-                if (lbl) {
-                    lbl.textContent = versionActualAPK === 0 ? "Modo Web (0)" : `1.0.0+${versionActualAPK}`;
-                }
-            }, 2000);
+          
             
         });
 
@@ -358,7 +352,11 @@
             // Dimensiones reales de la TV actual
             const winWidth = window.innerWidth;
             const winHeight = window.innerHeight;
-            document.getElementById('div-res').textContent =winWidth+' x '+winHeight;
+            setTimeout(() => {
+                const resDisplay = document.getElementById('div-res');
+                if (resDisplay) resDisplay.textContent = winWidth + 'x' + winHeight;
+                    
+                }, 5000);
             // Calculamos el factor de escala (elegimos el más estricto para que no desborde)
             const scaleX = winWidth / baseWidth;
             const scaleY = winHeight / baseHeight;
