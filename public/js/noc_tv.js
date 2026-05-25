@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let map;
     let markers = {}; 
     let countdownInterval;
-    const REFRESH_SECONDS = 5; 
+    const REFRESH_SECONDS = 120; 
     let timeLeft = REFRESH_SECONDS;
     
     const sedeCoords = L.latLng(10.488249123497356, -66.8234169941792);
