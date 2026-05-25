@@ -3,7 +3,7 @@
 @push('styles')
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/leaflet.fullscreen.css" rel="stylesheet" />
-    <link rel="stylesheet" href="{{ asset('css/noc_tv.css') }}?v={{ filemtime(public_path('css/tv_noc.css')) }}">
+    <link rel="stylesheet" href="{{ asset('css/noc_tv.css') }}?v={{ filemtime(public_path('css/noc_tv.css')) }}">
 @endpush
 
 @section('content')
