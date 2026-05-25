@@ -41,8 +41,8 @@
     
     @php
         // Capturamos las versiones exactas al momento de renderizar la vista
-        $cssPath = public_path('css/tv_noc.css');
-        $jsPath = public_path('js/tv_noc.js');
+        $cssPath = public_path('css/noc_tv.css');
+        $jsPath = public_path('js/noc_tv.js');
         $cssVersion = file_exists($cssPath) ? (string)filemtime($cssPath) : '1';
         $jsVersion = file_exists($jsPath) ? (string)filemtime($jsPath) : '1';
     @endphp
@@ -57,6 +57,6 @@
         };
     </script>
 
-    <script src="{{ asset('js/tv_noc.js') }}?v={{ $jsVersion }}"></script>
+    <script src="{{ asset('js/noc_tv.js') }}?v={{ $jsVersion }}"></script>
 @endpush
 @endsection
