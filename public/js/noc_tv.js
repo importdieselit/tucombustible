@@ -1,4 +1,4 @@
-const TEST_JS_VERSION = "1.0.1"; //
+const TEST_JS_VERSION = "1.0.3"; //
 
 document.addEventListener('DOMContentLoaded', function () {
     let map;

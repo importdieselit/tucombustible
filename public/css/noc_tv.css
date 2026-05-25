@@ -118,5 +118,5 @@ body, html {
 
 #noc-scaler {
     /* Cambia 'lime' por 'red', 'fuchsia' o 'blue' y guarda el archivo */
-    border: 4px dashed red !important; 
+    border: 4px dashed blue !important; 
 }
