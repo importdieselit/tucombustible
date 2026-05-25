@@ -68,24 +68,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function startWatchdog() {
-
-        if (countdownInterval) clearInterval(countdownInterval);
         
         countdownInterval = setInterval(() => {
-            // Si la página se está recargando o hay un error, no seguir restando
-            if (document.hidden) return; 
-
             timeLeft--;
             const timerDisplay = document.getElementById('countdown-timer');
             if (timerDisplay) timerDisplay.textContent = timeLeft + 's';
-            
-            if (timeLeft <= 0) { 
-                // Evitar múltiples llamadas si el fetch demora
-                clearInterval(countdownInterval); 
-                fetchSalaData(); 
-            }
+            if (timeLeft <= 0) { fetchSalaData(); }
         }, 1000);
-
     }
 
     // --- ADQUISICIÓN DE DATOS (AJAX) ---
@@ -139,7 +128,10 @@ document.addEventListener('DOMContentLoaded', function () {
                             console.warn("Recargando con destino: " + url.toString());
                             
                             // Esto obliga al WebView a tratar la URL como única y fresca
-                            window.location.href = url.toString(); 
+                            setTimeout(() => {
+                                window.location.href = url.toString(); 
+                            }, 2000);
+
                             
                         }
                     }
