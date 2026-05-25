@@ -115,8 +115,3 @@ body, html {
     padding: 0.3rem 0.75rem !important; 
     white-space: nowrap;
 }
-
-#noc-scaler {
-    /* Cambia 'lime' por 'red', 'fuchsia' o 'blue' y guarda el archivo */
-    border: 4px dashed blue !important; 
-}
