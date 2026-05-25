@@ -97,6 +97,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (response.ok) {
                 const data = await response.json();
+
+                if (data.css_version && data.js_version) {
+                    // Si la versión del servidor es diferente a la que cargamos inicialmente
+                    if (String(data.css_version) !== String(window.NOC_CONFIG.cssVersion) || 
+                        String(data.js_version) !== String(window.NOC_CONFIG.jsVersion)) {
+                        
+                        console.warn("⚠️ Actualización de código detectada. Recargando NOC...");
+                        // Forzamos una recarga limpia desde el servidor, ignorando el caché local
+                        window.location.reload(true); 
+                        return; // Detenemos la ejecución del script aquí
+                    }
+                }
+                
                 container.innerHTML = data.html_dashboard;
                 
                 setTimeout(() => {

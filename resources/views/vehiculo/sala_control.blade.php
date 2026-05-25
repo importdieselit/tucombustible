@@ -35,15 +35,28 @@
     </div>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/Leaflet.fullscreen.min.js"></script>
-<script>
-        // Declaramos una configuración global para que nuestro archivo JS externo la lea.
+@push('scripts')
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/Leaflet.fullscreen.min.js"></script>
+    
+    @php
+        // Capturamos las versiones exactas al momento de renderizar la vista
+        $cssPath = public_path('css/tv_noc.css');
+        $jsPath = public_path('js/tv_noc.js');
+        $cssVersion = file_exists($cssPath) ? (string)filemtime($cssPath) : '1';
+        $jsVersion = file_exists($jsPath) ? (string)filemtime($jsPath) : '1';
+    @endphp
+
+    <script>
+        // Le pasamos las versiones iniciales a nuestro archivo JS
         window.NOC_CONFIG = {
             tvToken: "{{ $token ?? '' }}",
-            streamUrl: "{{ route('api.sala.control.stream') }}"
+            streamUrl: "{{ route('api.sala.control.stream') }}",
+            cssVersion: "{{ $cssVersion }}",
+            jsVersion: "{{ $jsVersion }}"
         };
     </script>
 
-    <script src="{{ asset('js/noc_tv.js') }}?v={{ filemtime(public_path('js/noc_tv.js')) }}"></script>
+    <script src="{{ asset('js/tv_noc.js') }}?v={{ $jsVersion }}"></script>
+@endpush
 @endsection
