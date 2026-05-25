@@ -270,8 +270,8 @@ document.addEventListener('DOMContentLoaded', () => {
     debugDiv.style.fontWeight = 'bold';
     debugDiv.style.fontFamily = 'monospace';
     
-    debugDiv.innerHTML = '⚙️ JS VERSION: ' + TEST_JS_VERSION;
-    document.body.appendChild(debugDiv);
+    // debugDiv.innerHTML = '⚙️ JS VERSION: ' + TEST_JS_VERSION;
+   // document.body.appendChild(debugDiv);
     
     console.log("El script JS cargado es la versión: " + TEST_JS_VERSION);
 });
