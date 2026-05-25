@@ -168,7 +168,7 @@
             let map;
             let markers = {}; 
             let countdownInterval;
-            const REFRESH_SECONDS = 30; 
+            const REFRESH_SECONDS = 5; 
             let timeLeft = REFRESH_SECONDS;
             let lastFlotaState = null;
             
@@ -230,7 +230,7 @@
                     const timerDisplay = document.getElementById('countdown-timer');
                     if (timerDisplay) timerDisplay.textContent = timeLeft + 's';
                     if (timeLeft <= 0) { fetchSalaData(); }
-                }, 5000);
+                }, 1000);
             }
 
             // --- 4. ADQUISICIÓN DE DATOS (AJAX) ---
@@ -253,10 +253,10 @@
                         const data = await response.json();
                         container.innerHTML = data.html_dashboard;
                         
-                        // setTimeout(() => {
-                        //     const lastSync = document.getElementById('last-sync-time');
-                        //     if (lastSync) lastSync.textContent = new Date().toLocaleTimeString();
-                        // }, 10);
+                        setTimeout(() => {
+                             const lastSync = document.getElementById('last-sync-time');
+                             if (lastSync) lastSync.textContent = new Date().toLocaleTimeString();
+                         }, 5000);
 
                         updateMapMarkers(data.unidades);
                         timeLeft = REFRESH_SECONDS; 
