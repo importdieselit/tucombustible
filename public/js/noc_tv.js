@@ -114,10 +114,17 @@ document.addEventListener('DOMContentLoaded', function () {
                             console.warn(`CSS -> Local: ${localCss} | Servidor: ${serverCss}`);
                             console.warn(`JS  -> Local: ${localJs} | Servidor: ${serverJs}`);
                             
-                            // Pausamos 2 segundos antes de recargar para que te dé tiempo de leer la consola si lo necesitas
-                            setTimeout(() => {
-                                window.location.reload(true);
-                            }, 2000);
+                            // Agregamos un timestamp aleatorio al recargar para romper la caché del WebView de la TV
+                            const cacheBuster = new Date().getTime();
+                            
+                            // Si la URL actual ya tiene parámetros, los preservamos, si no, añadimos el timestamp
+                            const url = new URL(window.location.href);
+                            url.searchParams.set('force_reload', cacheBuster);
+                            
+                            console.warn("Recargando con destino: " + url.toString());
+                            
+                            // Esto obliga al WebView a tratar la URL como única y fresca
+                            window.location.href = url.toString(); 
                             
                             return; // Detenemos la ejecución actual
                         }
