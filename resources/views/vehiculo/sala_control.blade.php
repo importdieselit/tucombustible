@@ -372,5 +372,40 @@
         ajustarResolucionTV();
         
    });
+
+   const CURRENT_APK_VERSION = window.CURRENT_APK_VERSION || 0; 
+
+    console.log("Versión actual de la APK en esta TV:", CURRENT_APK_VERSION);
+
+   async function verificarActualizacionNOC() {
+    // Lee la variable que inyectó 'onLoadStop' en Flutter
+        const versionActualAPK = window.CURRENT_APK_VERSION || 0;
+
+        if (versionActualAPK === 0) {
+            console.log("[Watchdog] Ejecutándose en modo web/desarrollo.");
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/apk/latest');
+            const servidor = await response.json();
+
+            if (servidor.latest_version > versionActualAPK) {
+                console.log(`Nueva versión disponible: ${servidor.version_name}.`);
+                
+                // 👇 ESPECÍFICO PARA FLUTTER_INAPPWEBVIEW 👇
+                if (window.flutter_inappwebview) {
+                    window.flutter_inappwebview.callHandler('AndroidInterface', servidor.apk_url);
+                }
+            }
+        } catch (error) {
+            console.error("Error al procesar la actualización:", error);
+        }
+    }
+
+    // Ejecutar revisión a los 5 segundos de cargar y luego cada 1 hora
+    setTimeout(verificarActualizacionNOC, 5000);
+    setInterval(verificarActualizacionNOC, 3600000);
+
 </script>
 @endsection

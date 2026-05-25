@@ -32,6 +32,7 @@ Route::get('/api/sala-control/stream', [SalaControlController::class, 'getDataSt
      ->middleware('tv.auth')->name('api.sala.control.stream');
 
 
+
 /* --- Rutas Públicas y Auth --- */
 Auth::routes(['reset' => false]);
 
