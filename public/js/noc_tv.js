@@ -126,7 +126,6 @@ document.addEventListener('DOMContentLoaded', function () {
                             // Esto obliga al WebView a tratar la URL como única y fresca
                             window.location.href = url.toString(); 
                             
-                            return; // Detenemos la ejecución actual
                         }
                     }
                 } else {
