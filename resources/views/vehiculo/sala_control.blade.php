@@ -169,7 +169,7 @@
             let map;
             let markers = {}; 
             let countdownInterval;
-            const REFRESH_SECONDS = 300; 
+            const REFRESH_SECONDS = 30; 
             let timeLeft = REFRESH_SECONDS;
             let lastFlotaState = null;
             
