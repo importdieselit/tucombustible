@@ -411,7 +411,7 @@
 
         // Ejecutar revisión a los 5 segundos de cargar y luego cada 1 hora
         setTimeout(verificarActualizacionNOC, 5000);
-        setInterval(verificarActualizacionNOC, 10000);
+        setInterval(verificarActualizacionNOC, 1000 * 60 * 60); // Cada 1 hora (en milisegundos)
 
     </script>
 @endsection
