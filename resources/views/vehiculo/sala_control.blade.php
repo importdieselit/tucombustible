@@ -257,7 +257,6 @@
                         //     if (lastSync) lastSync.textContent = new Date().toLocaleTimeString();
                         // }, 10);
 
-                        renderCharts(data.charts);
                         updateMapMarkers(data.unidades);
                         timeLeft = REFRESH_SECONDS; 
                     }
