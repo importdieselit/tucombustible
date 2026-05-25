@@ -168,7 +168,7 @@
         let map;
         let markers = {}; 
         let countdownInterval;
-        const REFRESH_SECONDS = 300; 
+        const REFRESH_SECONDS = 3000; 
         let timeLeft = REFRESH_SECONDS;
         let lastFlotaState = null;
         
@@ -253,10 +253,10 @@
                     const data = await response.json();
                     container.innerHTML = data.html_dashboard;
                     
-                    setTimeout(() => {
-                        const lastSync = document.getElementById('last-sync-time');
-                        if (lastSync) lastSync.textContent = new Date().toLocaleTimeString();
-                    }, 10);
+                    // setTimeout(() => {
+                    //     const lastSync = document.getElementById('last-sync-time');
+                    //     if (lastSync) lastSync.textContent = new Date().toLocaleTimeString();
+                    // }, 10);
 
                     renderCharts(data.charts);
                     updateMapMarkers(data.unidades);
