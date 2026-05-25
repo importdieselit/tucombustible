@@ -168,7 +168,7 @@
         let map;
         let markers = {}; 
         let countdownInterval;
-        const REFRESH_SECONDS = 3000; 
+        const REFRESH_SECONDS = 300; 
         let timeLeft = REFRESH_SECONDS;
         let lastFlotaState = null;
         
@@ -405,7 +405,7 @@
 
     // Ejecutar revisión a los 5 segundos de cargar y luego cada 1 hora
     setTimeout(verificarActualizacionNOC, 5000);
-    setInterval(verificarActualizacionNOC, 3600000);
+    setInterval(verificarActualizacionNOC, 10000);
 
 </script>
 @endsection

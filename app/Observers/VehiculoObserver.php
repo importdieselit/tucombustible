@@ -74,7 +74,7 @@ class VehiculoObserver
                 $minutosEnRuta = now()->diffInMinutes($horaSalida);
 
                 if ($minutosEnRuta < 30) {
-                    Log::warning("⚠️ REBOTE GPS DETECTADO: Unidad {$vehiculo->flota} intentó marcar retorno con solo {$minutosEnRuta} min en ruta. Evitando fluctuación.");
+                   // Log::warning("⚠️ REBOTE GPS DETECTADO: Unidad {$vehiculo->flota} intentó marcar retorno con solo {$minutosEnRuta} min en ruta. Evitando fluctuación.");
                     
                     // Forzamos el estatus a mantenerlo en 2. Al no haber cambios reales, 'updated' no procesará nada.
                     $vehiculo->estatus = 2; 
@@ -97,7 +97,7 @@ class VehiculoObserver
 
         // --- CASO 1: CAMBIO A EN RUTA (2) ---
         if ($vehiculo->estatus == 2) {
-            Log::info("Vehículo {$vehiculo->id} consolidado EN RUTA. Sincronizando viaje y auditorías...");
+            // Log::info("Vehículo {$vehiculo->id} consolidado EN RUTA. Sincronizando viaje y auditorías...");
             
             // Sincronizar acoplado si existe
             if ($vehiculo->acoplado_id) {
@@ -119,7 +119,7 @@ class VehiculoObserver
 
                 // 🔥 CRÍTICO: Verificar e interceptar INMEDIATAMENTE antes de guardar o alertar
                 if (isset(self::$viajesProcesados[$viaje->id])) {
-                    Log::info("🛑 Anti-Rebote Interno: El viaje #{$viaje->id} ya fue procesado en esta petición. Omitiendo duplicación.");
+                    // Log::info("🛑 Anti-Rebote Interno: El viaje #{$viaje->id} ya fue procesado en esta petición. Omitiendo duplicación.");
                     return;
                 }
 
@@ -179,7 +179,7 @@ class VehiculoObserver
         
         // --- CASO 2: CAMBIO A DISPONIBLE / RETORNO (1) ---
         elseif ($vehiculo->estatus == 1 && $vehiculo->getOriginal('estatus') == 2) {
-            Log::info("Vehículo {$vehiculo->id} consolidado en SEDE. Procesando cierres operativos...");
+            // Log::info("Vehículo {$vehiculo->id} consolidado en SEDE. Procesando cierres operativos...");
 
             // Liberar acoplado si existe
             if ($vehiculo->acoplado_id) {
