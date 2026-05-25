@@ -40,7 +40,7 @@
         
         .tv-grid-container {
             display: grid;
-            grid-template-columns: 55% 45%;
+            grid-template-columns: 48% 48%;
             height: 100vh;
             width: 100vw;
             background: #f4f6f9;
@@ -96,7 +96,7 @@
         #reporte-container {
             transform: scale(0.87); 
             transform-origin: center center;
-            width: 115%;
+            width: 100%;
             margin-left: -5%;
             flex: 1;
             flex-direction: row;
