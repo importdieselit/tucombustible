@@ -163,8 +163,6 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-fullscreen@1.0.2/dist/Leaflet.fullscreen.min.js"></script>
-<script src="https://code.highcharts.com/highcharts.js"></script>
-
 <script>
         document.addEventListener('DOMContentLoaded', function () {
             
