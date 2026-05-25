@@ -168,7 +168,7 @@
             let map;
             let markers = {}; 
             let countdownInterval;
-            const REFRESH_SECONDS = 5; 
+            const REFRESH_SECONDS = 120; 
             let timeLeft = REFRESH_SECONDS;
             let lastFlotaState = null;
             
