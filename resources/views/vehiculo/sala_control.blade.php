@@ -352,8 +352,8 @@
             if (!scaler) return;
 
             // Dimensiones base del diseño
-            const baseWidth = 3840;
-            const baseHeight = 2160;
+            const baseWidth = 1080;
+            const baseHeight = 720;
 
             // Dimensiones reales de la TV actual
             const winWidth = window.innerWidth;
