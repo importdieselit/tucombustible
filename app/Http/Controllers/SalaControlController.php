@@ -15,10 +15,21 @@ class SalaControlController extends Controller
      */
     public function index(Request $request)
     {
-        // Capturamos el token (si existe) para inyectarlo en el JavaScript
-        $token = $request->header('X-TV-Token');
+        $token = null;
+        if ($request->has('tv_init_token')) {
+            $token = $request->query('tv_init_token');
+            // Lo guardamos en la sesión para persistencia interna
+           
+        }else{
+            // Capturamos el token (si existe) para inyectarlo en el JavaScript
+            $token = $request->header('X-TV-Token');
+        }
+        session(['tv_token' => $token]);
         return view('vehiculo.sala_control', compact('token'));
     }
+
+
+
     /**
      * Endpoint unificado: Trae las coordenadas GPS y renderiza el partial de disponibilidad.
      */
