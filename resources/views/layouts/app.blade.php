@@ -110,7 +110,7 @@
 
     <div class="container-fluid">
    
-    @if (!$isAuthPage && Auth::check())
+    @if ( Auth::check())
             <div class="container-fluid">
                 <div class="row">
                     @php($user = Auth::user())
