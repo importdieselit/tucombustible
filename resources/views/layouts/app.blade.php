@@ -109,8 +109,7 @@
 <body class="bg-gray-50">
 
     <div class="container-fluid">
-    @php($isAuthPage = Request::routeIs(['login', 'logout', 'register', 'password.*']))
-
+   
     @if (!$isAuthPage && Auth::check())
             <div class="container-fluid">
                 <div class="row">

@@ -206,6 +206,27 @@
                 @endif
             </li>
         @endforeach
+        <li class="nav-item dropdown">
+            <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="fas fa-user-cog nav-icon"></i> RRHH
+            </a>
+            <ul class="nav flex-column submenu">
+                <li class="nav-item">
+                    <a href="{{ route('evaluaciones.create', ['id' => $user->id]) }}" class="nav-link {{ Request::routeIs('evaluaciones.create') ? 'active' : '' }}">
+                        <i class="fas fa-clipboard-list nav-icon"></i> Evaluación de Desempeño
+                    </a>
+                </li>
+            </ul>
+        </li>
+        <li class="nav-item">
+            <a href="{{ route('logout') }}" class="nav-link" 
+               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                <i class="fas fa-sign-out-alt nav-icon"></i> Cerrar Sesión
+            </a>
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                @csrf
+            </form>
+        </li>
     </ul>
     <button id="install-button" class="btn btn-orange shadow-sm px-4 text-white fw-bold" style="display:none;">
             <i class="fa fa-download me-2"></i> INSTALAR APP

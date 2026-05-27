@@ -12,6 +12,7 @@ use App\Notifications\OrdenTrabajoCreada;
 use App\Models\User;
 use App\Models\Orden;
 use App\Http\Controllers\ReporteEficienciaController;
+use App\Http\Controllers\RRHH\EvaluacionesController;
 use App\Http\Controllers\{
     DashboardController, VehiculoController, MarcaController, ModeloController,
     OrdenController, TanqueController, MovimientoCombustibleController,
@@ -203,6 +204,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/api/permisos/{user}/get', [AccesoController::class, 'getPermissionsForUser'])->name('permisos.get');
         Route::post('/api/permisos/{user}/update', [AccesoController::class, 'updatePermissions'])->name('permisos.update');
         Route::post('/perfiles/{perfil}/permisos', [PerfilController::class, 'updatePermisos'])->name('perfiles.updatePermisos');
+        Route::get('/rrhh/evaluacion-form/{id}/edit', [EvaluacionesController::class, 'edit'])->name('evaluacion_form.edit');
+        Route::put('/rrhh/evaluacion-form/{id}/update', [EvaluacionesController::class, 'update'])->name('evaluacion_form.update');
+        Route::get('/rrhh/evaluacion-form/{id}', [EvaluacionesController::class, 'create'])->name('evaluacion_form.create');
+        Route::post('/rrhh/evaluacion-form/{id}', [EvaluacionesController::class, 'store'])->name('evaluacion_form.store');
     
         // Combustible (Pedidos y Despachos)
         Route::prefix('combustible')->name('combustible.')->group(function () {

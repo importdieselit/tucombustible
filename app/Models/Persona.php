@@ -23,6 +23,7 @@ class Persona extends Model
         'date_of_birth',
         'gender',
         'notes',
+        'cargo_id',
     ];
 
     protected $casts = [
@@ -42,4 +43,15 @@ class Persona extends Model
     {
         return $this->hasOne(User::class);
     }
+
+    public function personal()
+    {
+         return $this->hasOne(Personal::class, 'id_persona', 'id');
+      }
+    
+    public function cargo()
+    {
+        return $this->personal()->belongsTo(Cargo::class, 'cargo_id');
+    }
+
 }
