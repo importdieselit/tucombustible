@@ -91,22 +91,21 @@ class LoginController extends Controller
      */
     protected function authenticated(Request $request, $user)
     {
-         $request->session()->regenerate();
+        // Perfiles con acceso al Dashboard principal:
+        // 1: Superadmin
+        // 2: Administrador Sistema (Gerencias)
+        // 3: Cliente (El flujo que estamos optimizando)
+    
+        if (in_array($user->id_perfil, [1, 2, 3])) {
+            return redirect()->route('dashboard');
+        }
+        if ($user->id_perfil == 4) {
+            return redirect()->route('inspecciones.index');
+        }
 
-        return match ((int)$user->id_perfil) {
-
-            1,2,5,6,7,8,9,10,11,12,13,14,15,16,17,18
-                => redirect()->route('vehiculos.index'),
-
-            3
-                => redirect()->route('cliente.index'),
-
-            4
-                => redirect()->route('inspecciones.index'),
-
-            default
-                => abort(403)
-        };
+        // Para el resto de perfiles (Conductores, Mecánicos, etc.) 
+        // mantenemos la ruta por defecto o la que definas luego.
+        return redirect()->intended($this->redirectPath());
     }
 
 
