@@ -208,7 +208,7 @@
         @endforeach
         <li class="nav-item dropdown">
             <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-                <i class="fas fa-user-cog nav-icon"></i> RRHH
+                <i class="fas fa-user-cog nav-icon"></i> Gestion Humana
             </a>
             <ul class="nav flex-column submenu">
                 <li class="nav-item">

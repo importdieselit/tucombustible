@@ -17,9 +17,8 @@
                 <p>
                     Debe completar la evaluación correspondiente a su cargo.
                 </p>
-
                 <iframe
-                    src="{{ $formulario->google_form_url }}"
+                    src="{{ $formulario }}"
                     width="100%"
                     height="900"
                     frameborder="0">

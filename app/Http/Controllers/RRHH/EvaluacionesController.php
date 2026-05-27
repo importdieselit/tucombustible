@@ -14,6 +14,8 @@ class EvaluacionesController extends Controller
     {
         $usuario = User::find(auth()->user()->id);
         $personalData = $usuario->personalData();
+
+
         if (!$personalData) {
             return redirect()->back()->with('error', 'No se encontró información de personal para el usuario.');
         }

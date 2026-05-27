@@ -62,6 +62,7 @@ function renderDocMixto($valor) {
                         @foreach($docsV as $doc)
                             @php
                                 $campo = $doc->campo_destino;
+                                $f_venc = $doc->campo_fecha_vencimiento;
                                 $valorCrudo = $campo ? $v->$campo : null;
                                 // Si es null pero el documento existe en el histórico, podrías traer esa fecha (opcional)
                                 if(!$valorCrudo && $campo) {
@@ -90,6 +91,7 @@ function renderDocMixto($valor) {
                                 data-doc-id="{{ $doc->id }}"
                                 data-label="{{ $doc->nombre }}"
                                 data-tipo="{{ $doc->tipo }}"
+                                data-vencimiento="{{ $f_venc ? $v->$f_venc : 'false' }}"
                                 data-valor-actual="{{ $valorCrudo }}" {{-- Enviamos el texto completo --}}
                                 data-path="{{ $finalPath }}"
                                 {{-- Si no tiene campo_destino, le decimos al JS que la fecha es opcional --}}
