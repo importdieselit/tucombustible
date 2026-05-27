@@ -212,7 +212,7 @@
             </a>
             <ul class="nav flex-column submenu">
                 <li class="nav-item">
-                    <a href="{{ route('evaluaciones.create', ['id' => $user->id]) }}" class="nav-link {{ Request::routeIs('evaluaciones.create') ? 'active' : '' }}">
+                    <a href="{{ route('evaluacion_form.create', ['id' => $user->id]) }}" class="nav-link {{ Request::routeIs('evaluacion_form.create') ? 'active' : '' }}">
                         <i class="fas fa-clipboard-list nav-icon"></i> Evaluación de Desempeño
                     </a>
                 </li>
