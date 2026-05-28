@@ -6,7 +6,6 @@
         .welcome-container {
             text-align: center;
             padding: 40px;
-            max-width: 600px;
             width: 90%;
             border-radius: 16px;
             background: rgba(30, 41, 59, 0.7); /* Contenedor sutil */
@@ -27,7 +26,7 @@
         }
 
         h1 {
-            font-size: 2.5rem;
+            font-size: 3.5rem;
             font-weight: 600;
             color: #ffffff;
             margin-bottom: 15px;
@@ -35,9 +34,9 @@
         }
 
         p {
-            font-size: 1.1rem;
-            color: #94a3b8; /* Gris suave para lectura */
-            font-weight: 300;
+            font-size: 2.1rem;
+            color: #d4d4d4; /* Gris suave para lectura */
+            font-weight: 400;
             line-height: 1.6;
         }
 
