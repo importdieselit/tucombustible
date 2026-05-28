@@ -3,23 +3,6 @@
 @section('title', 'Gestión de Depósitos de Combustible')
 @push('styles')
 <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #0f172a; /* Fondo oscuro profundo */
-            color: #f8fafc;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
-
         .welcome-container {
             text-align: center;
             padding: 40px;
