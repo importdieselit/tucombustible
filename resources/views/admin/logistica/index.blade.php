@@ -371,8 +371,12 @@
         container.innerHTML = '<div class="p-5 text-center"><div class="spinner-border text-orange"></div></div>';
         modal.show();
 
+        let urlBase = "{{ route('logistica', ':id') }}";
+
+        let urlFinal = urlBase.replace(':id', id);
+
         // Usamos el helper url() de Laravel para evitar problemas de rutas relativas
-        fetch(`/logistica/${id}`)
+         fetch(urlFinal)
             .then(response => {
                 if(!response.ok) throw new Error('Error de servidor al cargar los detalles');
                 return response.text();
