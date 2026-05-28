@@ -6,7 +6,7 @@
     $user = Auth::user();
 
     // 1. Lógica de Permisos (Centralizada)
-    if ($user && $user->id_perfil == 1) {
+    if ($user && $user->id_perfil === 1) {
         $modulos = Modulo::where('id_padre', 0)
             ->where('visible', 1)
             ->orderBy('orden')
