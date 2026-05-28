@@ -24,12 +24,13 @@ class DashboardController extends Controller
         return match ($perfilId) {
             // 1. LÓGICA DEL CHOFER (Perfil 4)
             4 => redirect()->route('inspecciones.index'), // Sustituye por tu ruta real de choferes
+            19 => redirect()->route('layouts.otros'), // Sustituye por tu ruta real de choferes
 
             // 2. LÓGICA DEL CLIENTE (Perfil 3)
             3 => $this->redirigirDashboardCliente($request, $user),
 
             // 3. DASHBOARD PRINCIPAL / ADMINISTRATIVOS (Se excluyó el 4 de esta lista)
-            default => in_array($perfilId, [1, 2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,19])
+            default => in_array($perfilId, [1, 2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18])
                 ? redirect()->route('vehiculos.index')
                 : abort(403, 'Perfil de usuario no reconocido o sin privilegios de acceso.'),
         };
