@@ -326,7 +326,7 @@
                 <p class="mt-2 fw-bold text-uppercase small">Cargando información...</p>
             </div>`;
         modal.show();
-        let urlBase = "{{ route('logistica', ':id') }}";
+        let urlBase = "{{ route('logistica.show', ':id') }}";
 
         let urlFinal = urlBase.replace(':id', id);
 
