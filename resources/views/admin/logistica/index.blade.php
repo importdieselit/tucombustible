@@ -372,7 +372,7 @@
         modal.show();
 
         // Usamos el helper url() de Laravel para evitar problemas de rutas relativas
-        fetch(`{{ url('logistica') }}/${id}`)
+        fetch(`/logistica/${id}`)
             .then(response => {
                 if(!response.ok) throw new Error('Error de servidor al cargar los detalles');
                 return response.text();
@@ -386,7 +386,7 @@
             });
     }
 
-    // Función para Cancelar
+    // Función para Cancelar (en test)
     function cancelarPlanificacion(id) {
         Swal.fire({
             title: '¿ESTÁS SEGURO?',
