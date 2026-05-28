@@ -360,7 +360,7 @@
             cancelButtonText: 'NO'
         }).then((result) => {
             if (result.isConfirmed) {
-                 let urlBase = "{{ route('logistica.cancelar', ':id') }}";
+                let urlBase = "{{ route('logistica.cancelar', ':id') }}";
                 let urlFinal = urlBase.replace(':id', id);
                 // Usamos el helper url() de Laravel para evitar problemas de rutas relativas
                 fetch(urlFinal, {

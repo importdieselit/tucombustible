@@ -371,7 +371,7 @@
         container.innerHTML = '<div class="p-5 text-center"><div class="spinner-border text-orange"></div></div>';
         modal.show();
 
-        let urlBase = "{{ route('logistica', ':id') }}";
+        let urlBase = "{{ route('logistica.show', ':id') }}";
 
         let urlFinal = urlBase.replace(':id', id);
 
@@ -403,7 +403,10 @@
             cancelButtonText: 'NO'
         }).then((result) => {
             if (result.isConfirmed) {
-                fetch(`/logistica/${id}/cancelar`, {
+                let urlBase = "{{ route('logistica.cancelar', ':id') }}";
+                let urlFinal = urlBase.replace(':id', id);
+                // Usamos el helper url() de Laravel para evitar problemas de rutas relativas
+                fetch(urlFinal, {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
