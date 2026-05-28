@@ -326,8 +326,12 @@
                 <p class="mt-2 fw-bold text-uppercase small">Cargando información...</p>
             </div>`;
         modal.show();
+        let urlBase = "{{ route('logistica', ':id') }}";
 
-        fetch(`/logistica/${id}`)
+        let urlFinal = urlBase.replace(':id', id);
+
+        // Usamos el helper url() de Laravel para evitar problemas de rutas relativas
+        fetch(urlFinal)
             .then(response => {
                 if (!response.ok) throw new Error('Error al cargar datos');
                 return response.text();
@@ -356,7 +360,10 @@
             cancelButtonText: 'NO'
         }).then((result) => {
             if (result.isConfirmed) {
-                fetch(`/logistica/${id}/cancelar`, {
+                 let urlBase = "{{ route('logistica.cancelar', ':id') }}";
+                let urlFinal = urlBase.replace(':id', id);
+                // Usamos el helper url() de Laravel para evitar problemas de rutas relativas
+                fetch(urlFinal, {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
