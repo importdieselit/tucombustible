@@ -29,7 +29,7 @@ class DashboardController extends Controller
             3 => $this->redirigirDashboardCliente($request, $user),
 
             // 3. DASHBOARD PRINCIPAL / ADMINISTRATIVOS (Se excluyó el 4 de esta lista)
-            default => in_array($perfilId, [1, 2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18])
+            default => in_array($perfilId, [1, 2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,19])
                 ? redirect()->route('vehiculos.index')
                 : abort(403, 'Perfil de usuario no reconocido o sin privilegios de acceso.'),
         };
