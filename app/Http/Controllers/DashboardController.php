@@ -24,7 +24,7 @@ class DashboardController extends Controller
         return match ($perfilId) {
             // 1. LÓGICA DEL CHOFER (Perfil 4)
             4 => redirect()->route('inspecciones.index'), // Sustituye por tu ruta real de choferes
-            19 => redirect()->route('layouts.otros'), // Sustituye por tu ruta real de choferes
+            19 =>  view('layouts.otros'), // Sustituye por tu ruta real de choferes
 
             // 2. LÓGICA DEL CLIENTE (Perfil 3)
             3 => $this->redirigirDashboardCliente($request, $user),
