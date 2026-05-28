@@ -702,7 +702,13 @@ class OrdenController extends BaseController
         return response()->json(['success' => true]);
     }
 
-    
+    public function deleteTrabajoExterno($id)
+    {
+        $trabajo= TrabajoExterno::find($id);
+        $trabajo->delete();
+
+        return response()->json(['success' => true]);
+    }
     
 
     public function addInsumo(Request $request, $id)

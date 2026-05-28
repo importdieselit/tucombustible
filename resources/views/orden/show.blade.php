@@ -231,6 +231,7 @@
                                     <th class="x-small border-0">PROVEEDOR</th>
                                     <th class="x-small border-0">DESCRIPCIÓN DEL TRABAJO</th>
                                     <th class="x-small border-0 text-end">COSTO FACTURADO</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -242,10 +243,15 @@
                                         <td class="small fw-bold text-dark">{{ $trabajo->proveedor->nombre ?? 'N/A' }}</td>
                                         <td class="small text-secondary">{{ $trabajo->descripcion }}</td>
                                         <td class="small fw-bold text-end text-primary font-monospace">${{ number_format($trabajo->costo, 2) }}</td>
+                                        <td class="small text-center">
+                                             <button class="btn btn-sm btn-link text-danger p-0 delete-item" data-type="trabajo_externo" data-id="{{ $trabajo->id }}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="text-center py-4 text-muted small italic">
+                                        <td colspan="5" class="text-center py-4 text-muted small italic">
                                             <i class="bi bi-info-circle me-1"></i> No se han registrado servicios externos para esta orden.
                                         </td>
                                     </tr>
@@ -907,6 +913,7 @@
             let url = '';
 
             if(type === 'trabajo') url = `/ordenes/trabajos/${id}/delete`;
+            if(type === 'trabajo_externo') url = `/ordenes/trabajos-externos/${id}/delete`;
             if(type === 'insumo')  url = `/ordenes/supplies/${id}/delete`;
             if(type === 'compra')  url = `/ordenes/purchase/${id}/delete`;
             if(type === 'foto')    url = `/ordenes/fotos/${id}/delete`;
