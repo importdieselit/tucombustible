@@ -185,13 +185,22 @@ class LogisticaService
             }
         }
 
+        // 🔄 CAPTURA SEGURO DE DESTINOS MÚLTIPLES
+        // Si es un array (que es lo que manda la nueva vista), lo unimos con comas.
+        $destinoFinal = 'VARIOS';
+        if (!empty($data['destino_ciudad'])) {
+            $destinoFinal = is_array($data['destino_ciudad']) 
+                ? implode(', ', $data['destino_ciudad']) 
+                : $data['destino_ciudad'];
+        }
+
         return [
             'tipo_planificacion'   => $data['tipo_planificacion'],
             'producto_flete'       => $data['tipo_planificacion'] == 3 ? ($data['producto_flete'] ?? null) : null,
             'sede_id'              => $data['sede_id'] ?? null,
             'tipo'                 => $data['tipo_combustible_id'] ?? null, 
             'fecha_salida'         => $data['fecha_programada'],
-            'destino_ciudad'       => $data['destino_ciudad'] ?? 'VARIOS',
+            'destino_ciudad'       => $destinoFinal,
             'status'               => 'PROGRAMADO',
             'litros'               => $totalLitros, 
             'vehiculo_id'          => $esPropio ? $data['vehiculo_id'] : null,
