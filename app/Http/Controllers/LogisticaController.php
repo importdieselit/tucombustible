@@ -171,7 +171,8 @@ class LogisticaController extends Controller
             'producto_flete'       => 'required_if:tipo_planificacion,3|string|max:255',
             'tipo_combustible_id' => 'required_unless:tipo_planificacion,3|nullable|exists:tipos_combustible,id',
             'fecha_programada'    => 'required|date',
-            'destino_ciudad'      => 'required|string',
+            'destino_ciudad'      => 'required|array',
+            'destino_ciudad.*'    => 'required|string',
             'items'               => 'required_if:tipo_planificacion,1,2|array', 
 
             // --- NUEVAS VALIDACIONES CONDICIONALES ---
@@ -200,50 +201,60 @@ class LogisticaController extends Controller
             $viajeId = is_object($viaje) ? $viaje->id : $viaje;
 
             if ($viajeId) {
-                // 2. Buscamos las tarifas en el tabulador usando el string 'destino_ciudad'
-                $tabulador = DB::table('tabulador_viaticos')
-                    ->where('destino', $request->destino_ciudad)
-                    ->first();
+                // 🔄 ESTRUCTURA ACUMULADORA DE VIÁTICOS
+            $conceptosAcumulados = [
+                'Pago Chofer'   => ['monto' => 0.00, 'cantidad' => 1],
+                'Desayuno'      => ['monto' => 0.00, 'cantidad' => 1],
+                'Almuerzo'      => ['monto' => 0.00, 'cantidad' => 1],
+                'Cena'          => ['monto' => 0.00, 'cantidad' => 1],
+                'Peajes'        => ['monto' => 0.00, 'cantidad' => 0], // Inicia en 0 para acumular cantidades
+                'Pago Ayudante' => ['monto' => 0.00, 'cantidad' => 1],
+            ];
 
+            $tieneAyudante = $request->filled('ayudante_id') || $request->filled('ayudante_externo');
+
+            // 🔄 Recorremos todos los destinos seleccionados para acumular sus montos
+            foreach ($request->destino_ciudad as $ciudad) {
+                $tabulador = DB::table('tabulador_viaticos')->where('destino', $ciudad)->first();
+                
                 if ($tabulador) {
-                    // 3. Estructuramos los conceptos base heredados del tabulador
-                    $conceptos = [
-                        ['concepto' => 'Pago Chofer', 'monto' => $tabulador->pago_chofer, 'cantidad' => 1],
-                        ['concepto' => 'Desayuno', 'monto' => $tabulador->viatico_desayuno, 'cantidad' => 1],
-                        ['concepto' => 'Almuerzo', 'monto' => $tabulador->viatico_almuerzo, 'cantidad' => 1],
-                        ['concepto' => 'Cena', 'monto' => $tabulador->viatico_cena, 'cantidad' => 1],
-                    ];
+                    $conceptosAcumulados['Pago Chofer']['monto'] += $tabulador->pago_chofer;
+                    $conceptosAcumulados['Desayuno']['monto']    += $tabulador->viatico_desayuno;
+                    $conceptosAcumulados['Almuerzo']['monto']    += $tabulador->viatico_almuerzo;
+                    $conceptosAcumulados['Cena']['monto']        += $tabulador->viatico_cena;
+                    
+                    // Los peajes acumulan la cantidad física de casetas a pagar
+                    $conceptosAcumulados['Peajes']['cantidad']   += $tabulador->peajes;
 
-                    // Si el tabulador registra peajes, lo agregamos con su cantidad
-                    if ($tabulador->peajes > 0) {
-                        $conceptos[] = ['concepto' => 'Peajes', 'monto' => 0.00, 'cantidad' => $tabulador->peajes];
-                    }
-
-                    // Condicional: Si viene un ayudante (ya sea propio o externo), sumamos su viático
-                    if ($request->filled('ayudante_id') || $request->filled('ayudante_externo')) {
-                        $conceptos[] = ['concepto' => 'Pago Ayudante', 'monto' => $tabulador->pago_ayudante, 'cantidad' => 1];
-                    }
-
-                    // 4. Poblamos la tabla 'viaticos_viaje' inyectando el 'viaje_id'
-                    foreach ($conceptos as $c) {
-                        DB::table('viaticos_viaje')->insert([
-                            'viaje_id'       => $viajeId,
-                            'concepto'       => $c['concepto'],
-                            'monto_base'     => $c['monto'],
-                            'cantidad'       => $c['cantidad'],
-                            'monto_ajustado' => $c['monto'], // Inicia igual al monto base
-                            'es_editable'    => 1,
-                            'created_at'     => now(),
-                            'updated_at'     => now()
-                        ]);
+                    if ($tieneAyudante) {
+                        $conceptosAcumulados['Pago Ayudante']['monto'] += $tabulador->pago_ayudante;
                     }
                 }
+            }
+
+            // 2. Poblamos la tabla 'viaticos_viaje' inyectando los acumulados reales
+            foreach ($conceptosAcumulados as $concepto => $datos) {
+                // Si el concepto es 'Pago Ayudante' y no lleva ayudante, o si son 'Peajes' y dio 0 casetas, no los guardamos
+                if ($concepto === 'Pago Ayudante' && !$tieneAyudante) continue;
+                if ($concepto === 'Peajes' && $datos['cantidad'] == 0) continue;
+
+                DB::table('viaticos_viaje')->insert([
+                    'viaje_id'       => $viajeId,
+                    'concepto'       => $concepto,
+                    'monto_base'     => $datos['monto'],
+                    'cantidad'       => $datos['cantidad'],
+                    'monto_ajustado' => $datos['monto'], 
+                    'es_editable'    => 1,
+                    'created_at'     => now(),
+                    'updated_at'     => now()
+                ]);
+            }
         }
         
-        return redirect()->route('logistica.index')->with('success', 'Planificación guardada con éxito.');
-    } catch (Exception $e) {
-        return back()->withInput()->with('error', $e->getMessage());
-    }
+            return redirect()->route('logistica.index')->with('success', 'Planificación guardada con éxito.');
+        } catch (Exception $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
     }
 
     // Método para ver detalles
