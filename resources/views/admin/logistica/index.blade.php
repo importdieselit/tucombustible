@@ -219,7 +219,14 @@
                             <tr>
                                 <td class="ps-3">
                                     <span class="fw-black text-dark d-block">V-{{ str_pad($viaje->id, 5, '0', STR_PAD_LEFT) }}</span>
-                                    <small class="text-muted fw-bold">{{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y') }}</small>
+                                    {{-- Fecha de Salida --}}
+                                    <small class="text-muted fw-bold d-block" style="font-size: 11px;">
+                                        <i class="far fa-calendar-alt text-secondary me-1"></i>{{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y') }}
+                                    </small>
+                                    {{-- Hora de Salida --}}
+                                    <small class="text-orange fw-black d-block" style="font-size: 11px;">
+                                        <i class="far fa-clock me-1"></i>{{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('h:i A') }}
+                                    </small>
                                 </td>
                                 <td>
                                     @php

@@ -46,20 +46,52 @@
                         value="{{ old('fecha_programada', isset($viaje) ? \Carbon\Carbon::parse($viaje->fecha_salida ?? now())->format('Y-m-d') : date('Y-m-d')) }}" required>
                 </div>
 
-                {{-- NUEVO INPUT: DESTINO PARA TABULADOR --}}
+                {{-- ⏰ CAMBIO AQUÍ: CALENDARIO CON HORA INTEGRADA --}}
                 <div class="mb-3">
-                    <label class="small fw-bold text-muted text-uppercase text-orange">Destino para Tabulador</label>
-                    <select name="destino_ciudad" class="form-select fw-bold border-orange" required>
-                        <option value="">Seleccione destino...</option>
-                        @foreach($tabuladores as $tabulador)
-                            {{-- Usamos el texto del destino como value para guardarlo directo en viajes --}}
-                            <option value="{{ $tabulador->destino }}" 
-                                {{ old('destino_ciudad', $viaje->destino_ciudad ?? '') == $tabulador->destino ? 'selected' : '' }}>
-                                {{ $tabulador->destino }} {{ $tabulador->tipo_viaje ? "({$tabulador->tipo_viaje})" : '' }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <label class="small fw-bold text-muted text-uppercase">Fecha y Hora Programada</label>
+                    <input type="datetime-local" name="fecha_programada" class="form-control fw-bold border-orange" 
+                        @if(!isset($viaje)) min="{{ date('Y-m-d\T00:00') }}" @endif
+                        value="{{ old('fecha_programada', isset($viaje) ? \Carbon\Carbon::parse($viaje->fecha_salida)->format('Y-m-d\TH:i') : date('Y-m-d\TH:i')) }}" required>
+                    <small class="text-muted d-block mt-1" style="font-size: 11px;">Indica el día y la hora exacta en la que la unidad debe iniciar la ruta.</small>
                 </div>
+
+                {{-- DESTINO PARA TABULADOR (MULTIPLE - ESTILO CHECKBOX PREMIUM) --}}
+                <div class="mb-3">
+                    <label class="small fw-bold text-muted text-uppercase text-orange">Destinos para Tabulador de Viaticos</label>
+                    
+                    <!-- Contenedor con la misma estética de tus inputs, pero con scroll interno fijo -->
+                    <div class="form-control border-orange bg-white p-2 overflow-auto" style="max-height: 155px; scrollbar-width: thin;">
+                        @foreach($tabuladores as $tabulador)
+                            @php
+                                $seleccionados = (array) old('destino_ciudad', isset($viaje) ? explode(', ', $viaje->destino_ciudad) : []);
+                            @endphp
+                            <div class="form-check my-1">
+                                <!-- Cambiamos a tipo checkbox conservando el name array para el controlador -->
+                                <input class="form-check-input custom-check-orange" type="checkbox" name="destino_ciudad[]" 
+                                    value="{{ $tabulador->destino }}" 
+                                    id="dest_{{ $loop->index }}"
+                                    {{ in_array($tabulador->destino, $seleccionados) ? 'checked' : '' }}>
+                                
+                                <label class="form-check-label small fw-bold text-dark user-select-none" for="dest_{{ $loop->index }}" style="cursor: pointer;">
+                                    {{ $tabulador->destino }} <span class="text-muted font-normal">{{ $tabulador->tipo_viaje ? "({$tabulador->tipo_viaje})" : '' }}</span>
+                                </label>
+                            </div>
+                        @endforeach
+                    </div>
+                    <small class="text-muted d-block mt-1" style="font-size: 11px;">Selecciona todas las ciudades que componen la ruta del viaje.</small>
+                </div>
+
+                {{-- Una sola regla limpia para que el Checkbox encendido sea naranja como tu branding --}}
+                <style>
+                    .custom-check-orange:checked {
+                        background-color: #fd7e14 !important;
+                        border-color: #fd7e14 !important;
+                    }
+                    .custom-check-orange:focus {
+                        border-color: #fd7e14 !important;
+                        box-shadow: 0 0 0 0.25rem rgba(253, 126, 20, 0.25) !important;
+                    }
+                </style>
 
                 <div class="mb-3" x-show="modo !== 'flete' && modo !== 'compra'">
                     <label class="small fw-bold text-muted text-uppercase">Sede de Despacho</label>
