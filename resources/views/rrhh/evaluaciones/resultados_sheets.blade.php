@@ -39,6 +39,9 @@
         font-size: 12px;
         border-top: none;
     }
+    .is-capturing .col-acciones {
+        display: none !important;
+    }
 </style>
 @endpush
 
@@ -81,6 +84,7 @@
                                 <th class="text-center">Puntuación</th>
                                 <th>Áreas de Mejora (Alertas)</th>
                                 <th class="text-center">Fecha Evaluación</th>
+                                <th class="text-center col-acciones">Revisión</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -130,6 +134,11 @@
                                         {{ $item['fecha_evaluacion'] }}
                                         <br>
                                         <small class="text-muted font-italic" style="font-size: 10px;">{{ $item['marca_temporal'] }}</small>
+                                    </td>
+                                    <td class="text-center align-middle col-acciones">
+                                        <a href="{{ $item['link_edicion'] }}" target="_blank" class="btn btn-sm btn-outline-info rounded-pill shadow-sm" title="Revisar respuestas completas">
+                                            <i class="fas fa-external-link-alt mr-1"></i> Auditar
+                                        </a>
                                     </td>
                                 </tr>
                             @empty

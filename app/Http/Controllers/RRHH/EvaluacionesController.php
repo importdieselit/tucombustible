@@ -61,55 +61,66 @@ class EvaluacionesController extends Controller
                         // Extraemos la fila 0 que contiene las cabeceras (las preguntas del formulario)
                         $preguntas = $rawRows[0]; 
 
-                        foreach ($rawRows as $index => $row) {
-                            // Saltamos la fila 0 porque es la cabecera
-                            if ($index === 0 || empty($row) || !isset($row[3])) {
-                                continue;
-                            }
+                        foreach ($sheetsList as $sheet) {
+                            $nombrePestana = $sheet->getProperties()->getTitle();
+                            $sheetId = $sheet->getProperties()->getSheetId(); 
                             
-                            if (str_contains(strtolower($row[3]), 'nombre y apellido')) {
-                                continue;
-                            }
-
-                            // --- LÓGICA PARA DETECTAR PREGUNTAS NEGATIVAS ---
-                            $respuestasNegativas = [];
+                            $range = "'{$nombrePestana}'!A1:O100";
                             
-                            // Recorremos desde la columna 5 (índice 5) hasta el final (las respuestas)
-                            for ($i = 5; $i < count($row); $i++) {
-                                $respuestaText = $row[$i] ?? '';
-                                $respuestaLower = strtolower(trim($respuestaText));
-                                
-                                // Palabras que restan puntuación en tus evaluaciones
-                                $palabrasNegativas = ['no', 'nunca', 'casi nunca', 'rara vez', 'falso', 'en desacuerdo'];
+                            $response = $sheets->spreadsheets_values->get($spreadsheetId, $range);
+                            $rawRows = $response->getValues();
 
-                                if (in_array($respuestaLower, $palabrasNegativas) || $respuestaLower === '0' || $respuestaLower === '1') {
-                                    
-                                    $textoPregunta = $preguntas[$i] ?? 'Criterio no definido';
-                                    
-                                    // 1. Limpiamos la pregunta: quitamos los números, guiones y signos iniciales (Ej: "1.- ¿")
-                                    $textoLimpio = preg_replace('/^[\d\.\-\s¿]+/', '', $textoPregunta);
-                                    // 2. Quitamos signos de interrogación finales o comillas
-                                    $textoLimpio = str_replace(['?', '"'], '', $textoLimpio);
-                                    
-                                    // 3. Limitamos a 45 caracteres para que no desborde la tabla en el PDF/Imagen
-                                    $indicadorDebilidad = Str::limit(ucfirst(trim($textoLimpio)), 45, '...');
+                            if ($rawRows && count($rawRows) > 1) {
+                                $preguntas = $rawRows[0]; 
 
-                                    $respuestasNegativas[] = [
-                                        'indicador' => $indicadorDebilidad,
-                                        'respuesta' => $respuestaText
-                                    ];
+                                // Usamos $index => $row para saber en qué fila exacta estamos
+                                foreach ($rawRows as $index => $row) {
+                                    if ($index === 0 || empty($row) || !isset($row[3])) {
+                                        continue;
+                                    }
+                                    if (str_contains(strtolower($row[3]), 'nombre y apellido')) {
+                                        continue;
+                                    }
+
+                                    $respuestasNegativas = [];
+                                    
+                                    for ($i = 5; $i < count($row); $i++) {
+                                        $respuestaText = $row[$i] ?? '';
+                                        $respuestaLower = strtolower(trim($respuestaText));
+                                        
+                                        $palabrasNegativas = ['no', 'nunca', 'casi nunca', 'rara vez', 'falso', 'en desacuerdo'];
+
+                                        if (in_array($respuestaLower, $palabrasNegativas) || $respuestaLower === '0' || $respuestaLower === '1') {
+                                            $textoPregunta = $preguntas[$i] ?? 'Criterio no definido';
+                                            $textoLimpio = preg_replace('/^[\d\.\-\s¿]+/', '', $textoPregunta);
+                                            $textoLimpio = str_replace(['?', '"'], '', $textoLimpio);
+                                            
+                                            $indicadorDebilidad = \Illuminate\Support\Str::limit(ucfirst(trim($textoLimpio)), 45, '...');
+
+                                            $respuestasNegativas[] = [
+                                                'indicador' => $indicadorDebilidad,
+                                                'respuesta' => $respuestaText
+                                            ];
+                                        }
+                                    }
+
+                                    // NUEVO: Calculamos la fila real de Excel (índice 0 es Fila 1, índice 1 es Fila 2, etc.)
+                                    $filaExcel = $index + 1;
+                                    
+                                    // NUEVO: Construimos el link directo a la celda específica de ese empleado
+                                    $linkEdicion = "https://docs.google.com/spreadsheets/d/{$spreadsheetId}/edit#gid={$sheetId}&range=A{$filaExcel}";
+
+                                    $reporteConsolidado->push([
+                                        'fecha_evaluacion' => $row[2] ?? 'N/A',
+                                        'nombre'           => trim($row[3]),
+                                        'cargo'            => trim($row[4] ?? $nombrePestana),
+                                        'puntuacion'       => $row[1] ?? 'N/A',
+                                        'marca_temporal'   => $row[0] ?? 'N/A',
+                                        'negativas'        => $respuestasNegativas,
+                                        'link_edicion'     => $linkEdicion // Pasamos el link a la vista
+                                    ]);
                                 }
                             }
-                            // --------------------------------------------------
-
-                            $reporteConsolidado->push([
-                                'fecha_evaluacion' => $row[2] ?? 'N/A',
-                                'nombre'           => trim($row[3]),
-                                'cargo'            => trim($row[4] ?? $nombrePestana),
-                                'puntuacion'       => $row[1] ?? 'N/A',
-                                'marca_temporal'   => $row[0] ?? 'N/A',
-                                'negativas'        => $respuestasNegativas // Pasamos el array de fallas a la vista
-                            ]);
                         }
                     }
                 }
