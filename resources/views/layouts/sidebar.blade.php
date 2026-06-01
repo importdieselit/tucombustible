@@ -216,6 +216,13 @@
                         <i class="fas fa-clipboard-list nav-icon"></i> Evaluación de Desempeño
                     </a>
                 </li>
+                @if($user->id_perfil == 1)
+                    <li class="nav-item">
+                        <a href="{{ route('reportes.sheets') }}" class="nav-link {{ Request::routeIs('reportes.sheets') ? 'active' : '' }}">
+                            <i class="fas fa-chart-line nav-icon"></i> Reportes de Evaluaciones
+                        </a>
+                    </li>
+                @endif
             </ul>
         </li>
         <li class="nav-item">
