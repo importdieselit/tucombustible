@@ -209,6 +209,9 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/rrhh/evaluacion-form/{id}/update', [EvaluacionesController::class, 'update'])->name('evaluacion_form.update');
         Route::get('/rrhh/evaluacion-form/{id}', [EvaluacionesController::class, 'create'])->name('evaluacion_form.create');
         Route::post('/rrhh/evaluacion-form/{id}', [EvaluacionesController::class, 'store'])->name('evaluacion_form.store');
+
+        Route::get('/rrhh/resultados-sheets', [EvaluacionesController::class, 'generarReporte'])
+         ->name('reportes.sheets');
     
         // Combustible (Pedidos y Despachos)
         Route::prefix('combustible')->name('combustible.')->group(function () {

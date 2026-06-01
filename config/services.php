@@ -53,5 +53,9 @@ return [
     'reporte' => [
         'internal_token' => env('REPORTE_INTERNAL_TOKEN'),
     ],
+    'google' => [
+        'credentials' => storage_path('app/' . env('GOOGLE_APPLICATION_CREDENTIALS')),
+        'spreadsheet_id' => env('GOOGLE_SHEETS_SPREADSHEET_ID'),
+    ],
 
 ];

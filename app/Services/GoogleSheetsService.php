@@ -4,35 +4,34 @@ namespace App\Services;
 
 use Google\Client;
 use Google\Service\Sheets;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 
-
-class GoogleSheetService
+class GoogleSheetsService
 {
-    
     protected $sheets;
+    protected $spreadsheetId;
 
     public function __construct()
     {
+        $this->spreadsheetId = config('services.google.spreadsheet_id');
+        
         $client = new Client();
-        // Ruta al archivo JSON de credenciales de tu Service Account
-        $client->setAuthConfig(storage_path('app/google/google-service-account.json'));
+        $client->setAuthConfig(config('services.google.credentials'));
         $client->addScope(Sheets::SPREADSHEETS_READONLY);
 
         $this->sheets = new Sheets($client);
     }
 
     /**
-     * Obtiene las filas de un Sheet específico
+     * Recupera las filas de un rango específico de la hoja de cálculo activa.
      */
-    public function getSheetData(string $spreadsheetId, string $range)
+    public function getRange(string $range): ?array
     {
         try {
-            $response = $this->sheets->spreadsheets_values->get($spreadsheetId, $range);
+            $response = $this->sheets->spreadsheets_values->get($this->spreadsheetId, $range);
             return $response->getValues();
         } catch (\Exception $e) {
-            Log::error("Error consultando Google Sheets: " . $e->getMessage());
+            Log::error("Error en GoogleSheetsService@getRange: " . $e->getMessage());
             return null;
         }
     }
