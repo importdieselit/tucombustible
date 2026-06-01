@@ -9,7 +9,7 @@
         "barryvdh/laravel-dompdf": "^2.2",
         "doctrine/dbal": "^3.10",
         "fruitcake/laravel-cors": "^2.0",
-        "google/apiclient": "^2.18",
+        "google/apiclient": "^2.19",
         "guzzlehttp/guzzle": "^7.0.1",
         "kreait/laravel-firebase": "^4.2",
         "laravel-notification-channels/webpush": "^7.1",
