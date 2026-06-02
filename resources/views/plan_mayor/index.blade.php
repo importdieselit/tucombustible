@@ -215,7 +215,7 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="font-weight-bold tracking-tight m-0 text-dark">PLAN MAYOR DE LOGÍSTICA</h2>
+            <h2 class="font-weight-bold tracking-tight m-0 text-dark">PLAN MAYOR DE MANTENIMIENTO</h2>
             <p class="text-muted m-0 small">Estructura analítica de costos y asignación operativa de la flota</p>
         </div>
         <div class="card-kpi-executive p-3 d-flex align-items-center bg-white">
