@@ -1,7 +1,5 @@
 <?php
 
-// app/Models/Inspeccion.php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -50,6 +48,11 @@ class Inspeccion extends Model
     public function getRutasImagenes()
     {
         return $this->imagenes()->pluck('ruta_imagen')->toArray();
+    }
+    
+    public function viaje()
+    {
+        return $this->belongsTo(Viaje::class, 'viaje_id');
     }
 
      public function getResponsableInspeccionAttribute()

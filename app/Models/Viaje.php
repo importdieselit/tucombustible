@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\Chofer;
 use App\Models\ViaticoViaje;
 use App\Models\Vehiculo;
@@ -119,8 +120,8 @@ class Viaje extends Model
     {
         return $this->hasMany(CompraCombustible::class, 'viaje_id');
     }
-    public function inspecciones(): HasMany
+    public function inspecciones(): HasOne
     {
-        return $this->hasMany(Inspeccion::class, 'viaje_id');
+        return $this->hasOne(Inspeccion::class, 'viaje_id');
     }
 }

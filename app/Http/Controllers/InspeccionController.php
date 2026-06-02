@@ -15,7 +15,9 @@ use App\Models\Orden;
 use App\Models\User;
 use App\Services\FcmNotificationService;
 use App\Services\TelegramNotificationService;  
-
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 class InspeccionController extends Controller
 {
     // ID del checklist de vehículos (hardcodeado por tu requerimiento)
@@ -568,6 +570,117 @@ class InspeccionController extends Controller
         $a = sin($dLat/2) * sin($dLat/2) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon/2) * sin($dLon/2);
         $c = 2 * atan2(sqrt($a), sqrt(1-$a));
         return $earthRadius * $c;
+    }
+
+
+    public function reporte(Request $request)
+    {
+        // Rango de fechas por defecto (Mes actual)
+        $fechaInicio = $request->get('fecha_inicio', Carbon::now()->startOfMonth()->toDateString());
+        $fechaFin = $request->get('fecha_fin', Carbon::now()->endOfMonth()->toDateString());
+
+        // Consulta optimizada respetando tu esquema de Personas y llaves foráneas chofere/ayudante
+       $viajesAuditados = Viaje::leftJoin('inspecciones', 'viajes.id', '=', 'inspecciones.viaje_id')
+            // Joins para obtener el nombre del Chofer
+            ->leftJoin('choferes as c_principal', 'viajes.chofer_id', '=', 'c_principal.id')
+            ->leftJoin('personas as p_chofer', 'c_principal.persona_id', '=', 'p_chofer.id')
+            
+            // Joins para obtener el nombre del Ayudante
+            ->leftJoin('choferes as c_ayudante', 'viajes.ayudante', '=', 'c_ayudante.id')
+            ->leftJoin('personas as p_ayudante', 'c_ayudante.persona_id', '=', 'p_ayudante.id')
+            
+            ->whereBetween('viajes.fecha_salida_real', [$fechaInicio . ' 00:00:00', $fechaFin . ' 23:59:59'])
+            ->select(
+                'viajes.id as viaje_id',
+                'viajes.chofer_id',
+                'p_chofer.nombre as chofer_nombre',
+                'viajes.ayudante as ayudante_id',
+                'p_ayudante.nombre as ayudante_nombre',
+                'viajes.fecha_salida_real',
+                'viajes.fecha_llegada',
+                'inspecciones.created_at as checklist_salida',
+                'inspecciones.updated_at as checklist_llegada',
+                'inspecciones.respuesta_json',
+                'inspecciones.respuesta_in',
+                
+                // REGLAS DE NEGOCIO EN BASE DE DATOS:
+                // 1. Incompleto: No existe inspección o falta alguna de las dos respuestas (salida/entrada)
+                DB::raw('CASE WHEN inspecciones.id IS NULL OR inspecciones.respuesta_json IS NULL OR inspecciones.respuesta_in IS NULL THEN 1 ELSE 0 END as es_incompleto'),
+                
+                // 2. Salida Tardía: El registro se creó igual o después de la salida real del camión
+                DB::raw('CASE WHEN inspecciones.created_at >= viajes.fecha_salida_real THEN 1 ELSE 0 END as salida_tardia'),
+                
+                // 3. Llegada Tardía: El registro se cerró (update) más de 1 hora posterior a la llegada del viaje
+                DB::raw('CASE WHEN inspecciones.updated_at > DATE_ADD(viajes.fecha_llegada, INTERVAL 1 HOUR) THEN 1 ELSE 0 END as llegada_tardia')
+            )
+            ->get();
+
+        $reportePersonal = [];
+
+        foreach ($viajesAuditados as $v) {
+            // Procesar métricas si el viaje tiene un Chofer asignado
+            if ($v->chofer_id) {
+                $this->acumularMetricas($reportePersonal, $v->chofer_id, $v->chofer_nombre, 'Chofer', $v);
+            }
+            // Procesar métricas si el viaje tiene un Ayudante asignado
+            if ($v->ayudante_id) {
+                $this->acumularMetricas($reportePersonal, $v->ayudante_id, $v->ayudante_nombre, 'Ayudante', $v);
+            }
+        }
+
+        // Cálculo de Eficiencia estricto y puro (Valores completos sin redondeos)
+        foreach ($reportePersonal as $key => $personal) {
+            if ($personal['total_viajes'] > 0) {
+                $penalizados = $personal['salidas_tardias'] + $personal['llegadas_tardias'] + $personal['incompletos'];
+                $validos = $personal['total_viajes'] - $penalizados;
+                
+                // Preservamos el valor flotante analítico exacto
+                $reportePersonal[$key]['porcentaje_cumplimiento'] = ($validos / $personal['total_viajes']) * 100;
+            } else {
+                $reportePersonal[$key]['porcentaje_cumplimiento'] = 0.0000;
+            }
+        }
+
+        // Resumen ejecutivo para los indicadores KPI superiores
+        $kpisGlobales = [
+            'total_viajes'     => $viajesAuditados->count(),
+            'salidas_tardias'  => $viajesAuditados->sum('salida_tardia'),
+            'llegadas_tardias' => $viajesAuditados->sum('llegada_tardia'),
+            'incompletos'      => $viajesAuditados->sum('es_incompleto'),
+        ];
+
+        return view('checklist.performance_report', compact('reportePersonal', 'kpisGlobales', 'fechaInicio', 'fechaFin'));
+    }
+
+    private function acumularMetricas(&$arr, $id, $nombre, $rol, $viaje)
+    {
+        $compositeKey = $id . '_' . $rol;
+
+        if (!isset($arr[$compositeKey])) {
+            $arr[$compositeKey] = [
+                'id'                      => $id,
+                'nombre'                  => !empty(trim($nombre)) ? $nombre : 'Personal ID: ' . $id,
+                'rol'                     => $rol,
+                'total_viajes'            => 0,
+                'salidas_tardias'         => 0,
+                'llegadas_tardias'        => 0,
+                'incompletos'             => 0,
+                'porcentaje_cumplimiento' => 0.0000
+            ];
+        }
+
+        $arr[$compositeKey]['total_viajes']++;
+        
+        if ($viaje->es_incompleto == 1) {
+            $arr[$compositeKey]['incompletos']++;
+        } else {
+            if ($viaje->salida_tardia == 1) {
+                $arr[$compositeKey]['salidas_tardias']++;
+            }
+            if ($viaje->llegada_tardia == 1) {
+                $arr[$compositeKey]['llegadas_tardias']++;
+            }
+        }
     }
 
 }
