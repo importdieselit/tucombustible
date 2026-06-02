@@ -330,7 +330,13 @@ class Vehiculo extends Model
     public function tipoVehiculo()
     {
         return $this->belongsTo(TipoVehiculo::class, 'tipo', 'id'); // Ajusta 'App\TipoVehiculo::class' al nombre de tu modelo de TipoVehiculo
-    } 
+    }
+
+    public function planMayorItems()
+{
+    return $this->belongsToMany(MantenimientoItem::class, 'plan_mayor_controles', 'vehiculo_id', 'mantenimiento_item_id')
+                ->withTimestamps();
+}
 
     public static function misVehiculos()
     {
@@ -358,8 +364,8 @@ class Vehiculo extends Model
     /**
      * Evalúa el estatus de un documento basado en su campo de fecha o texto.
      */
-   public function getDocumentStatus(string $docName, ?string $dateField = null, ?string $textField = null): array
-{
+    public function getDocumentStatus(string $docName, ?string $dateField = null, ?string $textField = null): array
+    {
     $rawValue = $dateField ? ($this->{$dateField} ?? '') : ($this->{$textField} ?? '');
     $statusValue = trim(mb_strtoupper($rawValue));
 

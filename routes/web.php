@@ -21,7 +21,7 @@ use App\Http\Controllers\{
     AlertaController, AccesoController, InspeccionController, PedidoController,
     ReporteController, AforoController, SearchController, DataDeletionController,
     ViajesController, TelegramController, PlanificacionMantenimientoController,
-    ReportController, ClienteActivosController,NotificationController
+    ReportController, ClienteActivosController,NotificationController, PlanMayorController
 };
 use App\Http\Controllers\SalaControlController;
 
@@ -192,7 +192,11 @@ Route::middleware(['auth'])->group(function () {
         // Rutas para Evidencias Fotográficas
         Route::post('/ordenes/{id}/fotos/add', [OrdenController::class, 'addFotos'])->name('ordenes.fotos.add');
         Route::delete('/ordenes/fotos/{id}/delete', [OrdenController::class, 'destroyFoto'])->name('ordenes.fotos.destroy');
-    
+        Route::get('/plan-mayor', [PlanMayorController::class, 'index'])->name('plan_mayor.index');
+        Route::post('/plan-mayor/toggle', [PlanMayorController::class, 'toggleItem'])->name('plan_mayor.toggle');
+        Route::post('/plan-mayor/baremo/store', [PlanMayorController::class, 'storeBaremo'])->name('plan_mayor.baremo.store');
+        Route::post('/plan-mayor/baremo/update', [PlanMayorController::class, 'updateBaremo'])->name('plan_mayor.baremo.update');
+        Route::delete('/plan-mayor/baremo/{id}', [PlanMayorController::class, 'destroyBaremo'])->name('plan_mayor.baremo.destroy');
 
         // Permisos y Perfiles
         Route::get('/permisos', [AccesoController::class, 'index'])->name('permisos.index');
