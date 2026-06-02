@@ -23,8 +23,8 @@
     <div class="row mb-4" id="kpi-group-wrapper">
         <div class="col-md-3">
             <div class="card border-0 shadow-sm rounded-lg p-3 bg-white border-left-custom" style="border-left: 4px solid #1e293b;">
-                <span class="text-muted text-uppercase font-weight-bold small">Despachos Evaluados</span>
-                <h3 class="font-weight-bold text-dark mt-1 mb-0">{{ $kpisGlobales['total_viajes'] }}</h3>
+                <span class="text-muted text-uppercase font-weight-bold small">Inspecciones Evaluadas</span>
+                <h3 class="font-weight-bold text-dark mt-1 mb-0">{{ $kpisGlobales['total_viajes']*2 }}</h3>
             </div>
         </div>
         <div class="col-md-3">
