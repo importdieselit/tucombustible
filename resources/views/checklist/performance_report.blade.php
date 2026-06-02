@@ -29,13 +29,13 @@
         </div>
         <div class="col-md-3">
             <div class="card border-0 shadow-sm rounded-lg p-3 bg-white border-left-custom" style="border-left: 4px solid #ef4444;">
-                <span class="text-muted text-uppercase font-weight-bold small">Salidas Fuera de Horario</span>
+                <span class="text-muted text-uppercase font-weight-bold small">Check-Out Tardíos</span>
                 <h3 class="font-weight-bold text-danger mt-1 mb-0">{{ $kpisGlobales['salidas_tardias'] }}</h3>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card border-0 shadow-sm rounded-lg p-3 bg-white border-left-custom" style="border-left: 4px solid #f97316;">
-                <span class="text-muted text-uppercase font-weight-bold small">Llegadas Fuera de Horario</span>
+                <span class="text-muted text-uppercase font-weight-bold small">Check-In Tardios</span>
                 <h3 class="font-weight-bold mt-1 mb-0" style="color: #f97316;">{{ $kpisGlobales['llegadas_tardias'] }}</h3>
             </div>
         </div>
@@ -62,8 +62,8 @@
                         <th class="py-3 px-4">Personal Evaluado</th>
                         <th class="py-3 text-center">Rol Logístico</th>
                         <th class="py-3 text-center">Viajes Asignados</th>
-                        <th class="py-3 text-center text-danger">Salidas Tardías</th>
-                        <th class="py-3 text-center" style="color: #f97316;">Llegadas Tardías (+1h)</th>
+                        <th class="py-3 text-center text-danger">Check-Out Tardíos</th>
+                        <th class="py-3 text-center" style="color: #f97316;">Check-In Tardíos (+1h)</th>
                         <th class="py-3 text-center" style="color: #ff6600;">Checklists Incompletos</th>
                         <th class="py-3 text-right px-4">Índice de Cumplimiento</th>
                     </tr>
