@@ -632,10 +632,10 @@ class InspeccionController extends Controller
         foreach ($reportePersonal as $key => $personal) {
             if ($personal['total_viajes'] > 0) {
                 $penalizados = $personal['salidas_tardias'] + $personal['llegadas_tardias'] + $personal['incompletos'];
-                $validos = $personal['total_viajes'] - $penalizados;
+                $validos = ($personal['total_viajes']*2) - $penalizados;
                 
                 // Preservamos el valor flotante analítico exacto
-                $reportePersonal[$key]['porcentaje_cumplimiento'] = ($validos / $personal['total_viajes']) * 100;
+                $reportePersonal[$key]['porcentaje_cumplimiento'] = ($validos / ($personal['total_viajes']*2)) * 100;
             } else {
                 $reportePersonal[$key]['porcentaje_cumplimiento'] = 0.0000;
             }
