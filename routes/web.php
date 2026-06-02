@@ -103,12 +103,6 @@ Route::middleware(['auth'])->group(function () {
     // Reportes y OT
     Route::put('reportes/{reporte}/estatus', [ReporteController::class, 'updateStatus'])->name('reportes.update.estatus'); 
     Route::post('reportes/{reporte}/generarot', [ReporteController::class, 'generarOT'])->name('reportes.generarot');   
-        
-    // Depósitos y Aforo
-    Route::get('/depositos/{deposito}/aforo', [AforoController::class, 'showAforoTable'])->name('depositos.aforo.show');
-    Route::get('/depositos/{deposito}/aforo/exportar', [AforoController::class, 'exportAforoTable'])->name('depositos.aforo.export');
-    Route::put('/depositos/ajustedinamic', [DepositoController::class, 'ajusteDinamic'])->name('deposito.ajusteD');
-    Route::put('/depositos/ajusteresguardo', [DepositoController::class, 'ajusteResguardo'])->name('deposito.ajusteR');
 
     // Inventario y Almacén
     Route::get('inventario/entry', [InventarioController::class, 'entry'])->name('inventario.entry');
@@ -264,10 +258,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/reportes-sistema', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/export-pdf', [ReportController::class, 'exportPdf'])->name('reports.export_pdf');
         Route::post('/api/reports/summary', [ReportController::class, 'getSummary'])->name('reports.summary');
-
-        // Telegram
-        Route::post('/send-telegram-photo', [TelegramController::class, 'sendPhoto'])->name('telegram.send.photo');
-        Route::post('/send-telegram-message', [TelegramController::class, 'sendMessage'])->name('telegram.send.message');
   
 
         Route::get('/admin/principal', [DashboardController::class, 'adminPrincipal'])->name('dashboard.admin');
@@ -310,6 +300,26 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
             Route::get('/aforos', [AforoController::class, 'index'])->name('aforos.index');
             Route::get('/search', [SearchController::class, 'query'])->name('search');
+        });
+
+        // --- MÓDULO DE COMBUSTIBLES ---
+        Route::middleware(['auth', 'role:1,2,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18'])
+            ->prefix('combustibles')
+            ->name('combustibles.')
+            ->group(function () {
+                
+                // Dashboard Temporal: Renderiza la vista de registro mientras se desarrolla el panel principal
+                Route::get('/dashboard', [DepositoController::class, 'create'])->name('dashboard');
+
+                // Gestión de Tanques (Infraestructura de Depósitos)
+                Route::prefix('depositos')->name('depositos.')->group(function () {
+                    Route::get('/', [DepositoController::class, 'index'])->name('index');
+                    Route::get('/crear', [DepositoController::class, 'create'])->name('create');
+                    Route::post('/guardar', [DepositoController::class, 'store'])->name('store');
+                    // Tablas de Varillaje y Cubicaciones (Aforos) integradas al Tanque
+                    Route::get('/{id}/aforo', [AforoController::class, 'showAforoTable'])->name('aforo.show');
+                    Route::get('/{id}/aforo/exportar', [AforoController::class, 'exportAforoTable'])->name('aforo.export');
+                });
         });
 
         // --- MÓDULO DE LOGÍSTICA ---
