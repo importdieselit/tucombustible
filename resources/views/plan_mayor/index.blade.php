@@ -147,6 +147,59 @@
     .badge-executive { padding: 5px 10px; font-size: 11px; font-weight: 700; border-radius: 6px; text-transform: uppercase; }
     .badge-ovh { background-color: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; }
     .badge-rep { background-color: #fffbeb; color: #92400e; border: 1px solid #fef3c7; }
+
+    /* --- BOTONES DE EXPORTACIÓN EJECUTIVA --- */
+.btn-export-custom {
+    font-weight: 600;
+    font-size: 12px;
+    padding: 6px 16px;
+    border-radius: 20px;
+    transition: all 0.2s ease;
+}
+
+/* --- HOJA DE ESTILOS DE IMPRESIÓN (AISLAMIENTO ONE-PAGE PDF) --- */
+@media print {
+    /* Ocultar absolutamente toda la interfaz web, menús, barras y pestañas */
+    body *, 
+    .layouts-app-sidebar, 
+    .navbar, 
+    .plan-mayor-container > div:not(#panel-resumen),
+    #planMayorTabs,
+    .tab-pane-custom:not(#panel-resumen),
+    .border-bottom {
+        display: none !important;
+        visibility: hidden !important;
+    }
+    
+    /* Hacer visible únicamente el área limpia del reporte ejecutivo */
+    #panel-resumen,
+    #area-reporte-final, 
+    #area-reporte-final * {
+        visibility: visible !important;
+        display: block !important;
+    }
+    
+    #area-reporte-final {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        border: none !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+    }
+
+    /* Optimización de tabla en PDF para evitar saltos de página huérfanos */
+    .table-executive-matrix {
+        page-break-inside: avoid;
+        width: 100% !important;
+    }
+    
+    .table-executive-matrix thead tr th {
+        background-color: #1e293b !important;
+        color: #000000 !important; /* Algunos navegadores fuerzan texto oscuro al imprimir */
+    }
+}
 </style>
 @endpush
 
@@ -345,6 +398,14 @@
         <div class="tab-pane-custom d-none" id="panel-resumen">
             <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
                 <span class="text-muted small"><i class="fas fa-info-circle mr-1"></i> Vista limpia consolidada para exportación directa a canales corporativos.</span>
+                <div class="d-flex align-items-center">
+                    <button type="button" class="btn btn-outline-danger btn-export-custom mr-2 d-none" id="btn-exportar-pdf">
+                        <i class="fas fa-file-pdf mr-1"></i> Imprimir / PDF
+                    </button>
+                    <button type="button" class="btn btn-outline-success btn-export-custom" id="btn-exportar-excel">
+                        <i class="fas fa-file-excel mr-1"></i> Descargar Excel
+                    </button>
+                </div>
             </div>
             
             <div id="area-reporte-final" class="p-4 border rounded bg-white">
@@ -558,6 +619,52 @@ document.addEventListener('DOMContentLoaded', function() {
             inputCosto.focus();
             inputCosto.select();
         });
+    });
+
+    document.getElementById('btn-exportar-pdf').addEventListener('click', function() {
+        window.print();
+    });
+
+    // Acción 2: Parseador de Tabla a formato CSV estructurado (Sin redondeos)
+    document.getElementById('btn-exportar-excel').addEventListener('click', function() {
+        const table = document.querySelector('#area-reporte-final table');
+        let csv = [];
+        
+        // Recorrer filas de la tabla analítica
+        for (let i = 0; i < table.rows.length; i++) {
+            let row = [], cols = table.rows[i].cells;
+            
+            for (let j = 0; j < cols.length; j++) {
+                // Capturar el texto y limpiar espacios en blanco innecesarios
+                let text = cols[j].innerText.trim();
+                
+                // Si estamos en la columna de Desglose de Trabajos, normalizar separaciones de los badges
+                if (j === 1 && i > 0) {
+                    text = text.replace(/\n/g, ' | '); // Cambia saltos de línea por un separador elegante
+                }
+                
+                // Sanitizar comillas para evitar rupturas de celdas en Excel
+                row.push('"' + text.replace(/"/g, '""') + '"');
+            }
+            // Unimos con punto y coma para la lectura nativa de Excel en configuraciones regionales hispanas
+            csv.push(row.join(";")); 
+        }
+        
+        // Inyección del BOM UTF-8 (\uFEFF) para forzar a Excel a leer correctamente tildes, eñes y símbolos de dólar
+        const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + csv.join("\n");
+        const encodedUri = encodeURI(csvContent);
+        
+        // Crear disparador de descarga temporal
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        
+        // Generar nombre dinámico basado en la fecha del día
+        const fechaHoy = new Date().toISOString().slice(0, 10);
+        link.setAttribute("download", `Plan_Mayor_tuCombustible_${fechaHoy}.csv`);
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link); // Limpieza de DOM
     });
 });
 </script>
