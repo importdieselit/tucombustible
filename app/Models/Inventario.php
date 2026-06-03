@@ -96,6 +96,7 @@ class Inventario extends Model
     {
         return $this->stocks()->sum('cantidad_actual');
     }
-
     
+
+
 }
