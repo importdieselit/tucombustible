@@ -347,11 +347,7 @@
             });
     }
 
-<<<<<<< HEAD
-     function cancelarPlanificacion(id) {
-=======
     function cancelarPlanificacion(id) {
->>>>>>> modulo-clientes-diego-reestructurado
         Swal.fire({
             title: '¿ESTÁS SEGURO?',
             text: "Esta acción cancelará la planificación y no se podrá revertir.",
@@ -363,14 +359,10 @@
             cancelButtonText: 'NO'
         }).then((result) => {
             if (result.isConfirmed) {
-<<<<<<< HEAD
                 let urlBase = "{{ route('logistica.cancelar', ':id') }}";
                 let urlFinal = urlBase.replace(':id', id);
                 // Usamos el helper url() de Laravel para evitar problemas de rutas relativas
                 fetch(urlFinal, {
-=======
-                fetch(`/logistica/${id}/cancelar`, {
->>>>>>> modulo-clientes-diego-reestructurado
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
