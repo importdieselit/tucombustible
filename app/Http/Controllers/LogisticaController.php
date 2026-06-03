@@ -29,7 +29,7 @@ class LogisticaController extends Controller
     public function index(Request $request)
     {
         // 1. Iniciamos la consulta con las relaciones necesarias
-        $query = Viaje::with(['tipoCombustible', 'detalles.cliente', 'sede', 'cisternaAcoplada', 'vehiculo', 'compraCombustible.proveedor']);
+        $query = Viaje::with(['tipoCombustible', 'detalles.cliente', 'sede', 'cisternaAcoplada', 'vehiculo', 'compraCombustible.planta']);
 
         // --- NUEVO: Filtro de Búsqueda por Cliente o RIF ---
         if ($request->filled('search_viaje')) {
@@ -111,7 +111,7 @@ class LogisticaController extends Controller
         // 3. Inicializar colecciones
         $clientes = Cliente::orderBy('nombre', 'asc')->get();
         $pedidosPendientes = Pedido::where('estado', 'pendiente')->with('cliente')->get();
-        $proveedores = collect();
+        $plantasProveedor = collect();
         $muelles = DB::table('muelles')->orderBy('nombre')->get();
         $tabuladores = DB::table('tabulador_viaticos')
         ->select('id', 'destino', 'tipo_viaje')
@@ -136,8 +136,8 @@ class LogisticaController extends Controller
 
         // Proveedores: Solo para Compras (Corregido según tu DDL)
         if ($tipoPlanificacionId == 4) {
-            $proveedores = DB::table('proveedores')
-                ->select('id', 'nombre', 'rif')
+            $plantasProveedor = DB::table('plantas')
+                ->select('id', 'nombre', 'alias')
                 ->orderBy('nombre')
                 ->get();
         }
@@ -157,7 +157,7 @@ class LogisticaController extends Controller
             'clientes', 
             'pedidosPendientes', 
             'muelles',
-            'proveedores',
+            'plantasProveedor',
             'buques',
             'tabuladores'
         ));
@@ -170,6 +170,7 @@ class LogisticaController extends Controller
             'tipo_planificacion'  => 'required|in:1,2,3,4',
             'producto_flete'       => 'required_if:tipo_planificacion,3|string|max:255',
             'tipo_combustible_id' => 'required_unless:tipo_planificacion,3|nullable|exists:tipos_combustible,id',
+            'planta_proveedor_id' => 'required_if:tipo_planificacion,4|nullable|exists:plantas,id',
             'fecha_programada'    => 'required|date',
             'destino_ciudad'      => 'required|array',
             'destino_ciudad.*'    => 'required|string',
@@ -267,11 +268,10 @@ class LogisticaController extends Controller
             'sede', 
             'detalles.cliente',
             'detalles.buques',
-            'proveedor',
             'chofer.persona',
             'ayudante.persona',
             'compraCombustible',
-            'proveedor'
+            'compraCombustible.planta'
             ])->findOrFail($id);
 
         // Retornamos una vista parcial que se cargará dentro del modal
@@ -299,7 +299,7 @@ class LogisticaController extends Controller
     public function edit($id)
     {
         // 1. Cargamos el viaje con todas las relaciones que necesita el formulario para hidratarse
-        $viaje = Viaje::with(['detalles.cliente', 'compraCombustible.proveedor', 'vehiculo'])->findOrFail($id);
+        $viaje = Viaje::with(['detalles.cliente', 'compraCombustible.planta', 'vehiculo'])->findOrFail($id);
         
         // 2. Mapeo inverso para obtener el slug del tipo (diesel, mgo, flete, compra)
         $tipoSlugs = [1 => 'diesel', 2 => 'mgo', 3 => 'flete', 4 => 'compra'];
@@ -318,7 +318,7 @@ class LogisticaController extends Controller
         
         // 4. Datos específicos por tipo
         $clientes = (in_array($tipoPlanificacionId, [1, 2, 3])) ? Cliente::where('status', Cliente::STATUS_APROBADO)->orderBy('nombre')->get() : collect();
-        $proveedores = ($tipoPlanificacionId == 4) ? DB::table('proveedores')->get() : collect();
+        $plantasProveedor = ($tipoPlanificacionId == 4) ? DB::table('plantas')->get() : collect();
         $pedidosPendientes = ($tipoPlanificacionId == 1) ? Pedido::where('estado', 'pendiente')->with('cliente')->get() : collect();
         $tabuladores = DB::table('tabulador_viaticos')
         ->select('id', 'destino', 'tipo_viaje')
@@ -327,7 +327,7 @@ class LogisticaController extends Controller
 
         return view('admin.logistica.edit', compact(
             'viaje', 'tipo', 'tipoPlanificacionId', 'tipos', 'sedes', 
-            'vehiculos', 'cisternas', 'personal', 'clientes', 'muelles', 'proveedores', 'pedidosPendientes', 'buques', 'tabuladores'
+            'vehiculos', 'cisternas', 'personal', 'clientes', 'muelles', 'plantasProveedor', 'pedidosPendientes', 'buques', 'tabuladores'
         ));
     }
 

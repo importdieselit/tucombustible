@@ -10,6 +10,7 @@ use App\Models\Cliente;
 use App\Models\Viaje;
 use App\Models\Buques;
 use App\Models\Pedido;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Exception;
 
@@ -113,6 +114,19 @@ class LogisticaService
             // 4. APLICAR NUEVOS IMPACTOS
             $this->registrarDetallesConImpacto($viaje, $itemsNuevos);
 
+            // Actualizar los datos de la compra si es Tipo 4
+            if ($viaje->tipo_planificacion == 4) {
+                DB::table('compras_combustible')->where('viaje_id', $viaje->id)->update([
+                    'planta_proveedor_id' => $data['planta_proveedor_id'],
+                    'cantidad_litros'     => $totalLitrosNuevos,
+                    'planta_destino_id'   => $data['sede_id'],
+                    'fecha'               => $data['fecha_programada'],
+                    'tipo'                => $data['tipo_combustible_id'],
+                    'sap'                 => $data['codigo_sap'] ?? null,
+                    // Se asume que mantiene 'EN_TRANSITO' o el estatus que tenga actualmente
+                ]);
+            }
+
             // 5. Afectar inventario con la nueva cantidad
             if (in_array($viaje->tipo_planificacion, [1, 2]) && !empty($data['tipo_combustible_id'])) {
                 $this->afectarInventarioGlobal($data['tipo_combustible_id'], $totalLitrosNuevos, $viaje->id);
@@ -199,7 +213,7 @@ class LogisticaService
             'producto_flete'       => $data['tipo_planificacion'] == 3 ? ($data['producto_flete'] ?? null) : null,
             'sede_id'              => $data['sede_id'] ?? null,
             'tipo'                 => $data['tipo_combustible_id'] ?? null, 
-            'fecha_salida'         => $data['fecha_programada'],
+            'fecha_salida'         => Carbon::parse($data['fecha_programada']),
             'destino_ciudad'       => $destinoFinal,
             'status'               => 'PROGRAMADO',
             'litros'               => $totalLitros, 
@@ -311,7 +325,7 @@ class LogisticaService
     {
         DB::table('compras_combustible')->insert([
             'viaje_id'          => $viaje->id,
-            'proveedor_id'      => $data['proveedor_id'],
+            'planta_proveedor_id' => $data['planta_proveedor_id'],
             'cantidad_litros'   => $totalLitros,
             'planta_destino_id' => $data['sede_id'],
             'fecha'             => $data['fecha_programada'],
