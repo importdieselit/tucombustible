@@ -99,9 +99,9 @@ class LogisticaController extends Controller
         // 2. Datasources comunes
         $tipos = TipoCombustible::all();
         $sedes = Sedes::where('estatus', true)->get();
-        $vehiculos = Vehiculo::whereIn('tipo', ['1', '3'])
+        $vehiculos = Vehiculo::whereIn('tipo', ['1', '3','5','6'])
             ->get();
-        $cisternas = Vehiculo::whereIn('tipo', ['2', '5'])
+        $cisternas = Vehiculo::whereIn('tipo', ['2'])
             ->get();
         
         $personal = Chofer::with('persona')->get()->sortBy(function($chofer) {
