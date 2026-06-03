@@ -170,11 +170,11 @@
                 $compra = $viaje->compraCombustible->first(); 
             @endphp
             <div class="col-md-6">
-                <label class="small text-muted fw-bold text-uppercase d-block mb-1">Proveedor y SAP</label>
+                <label class="small text-muted fw-bold text-uppercase d-block mb-1">Planta y SAP</label>
                 <div class="bg-light p-2 rounded">
                     <p class="mb-1 text-dark">
-                        <strong>Proveedor:</strong> 
-                        {{ $compra->proveedor->nombre ?? $viaje->proveedor->nombre ?? $viaje->nombre_cliente_externo ?? 'No asignado' }}
+                        <strong>Planta:</strong> 
+                        {{ $compra->planta->nombre ?? $viaje->planta->nombre ?? $viaje->nombre_cliente_externo ?? 'No asignado' }}
                     </p>
                     <p class="mb-0"><strong>Código SAP:</strong> <span class="badge bg-info text-dark fw-bold">{{ $viaje->codigo_sap ?? 'N/A' }}</span></p>
                 </div>
