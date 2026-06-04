@@ -51,7 +51,7 @@ class LogisticaController extends Controller
                 $query->where('tipo_planificacion', $tipoPlanificacion);
                 
                 // Mapeamos el string al entero correspondiente de tu tabla viajes (1 = Diesel, 2 = MGO)
-                $idCombustible = ($combustible === 'diesel') ? 1 : 2;
+                $idCombustible = ($combustible === 'diesel') ? 2 : 1;
                 $query->where('tipo', $idCombustible);
             } else {
                 // Filtro tradicional plano (Despachos y Fletes)
@@ -90,7 +90,7 @@ class LogisticaController extends Controller
     public function create($tipo = 'diesel')
     {
         // 1. Mapeo del parámetro de la URL al ID de la Base de Datos
-        $tiposPermitidos = ['diesel' => 1, 'mgo' => 2, 'flete' => 3, 'compra' => 4];
+        $tiposPermitidos = ['diesel' => 2, 'mgo' => 1, 'flete' => 3, 'compra' => 4];
         if (!array_key_exists($tipo, $tiposPermitidos)) {
             abort(404, 'Tipo de planificación no válido.');
         }
@@ -302,7 +302,7 @@ class LogisticaController extends Controller
         $viaje = Viaje::with(['detalles.cliente', 'compraCombustible.planta', 'vehiculo'])->findOrFail($id);
         
         // 2. Mapeo inverso para obtener el slug del tipo (diesel, mgo, flete, compra)
-        $tipoSlugs = [1 => 'diesel', 2 => 'mgo', 3 => 'flete', 4 => 'compra'];
+        $tipoSlugs = [2 => 'diesel', 1 => 'mgo', 3 => 'flete', 4 => 'compra'];
         $tipo = $tipoSlugs[$viaje->tipo_planificacion];
         $tipoPlanificacionId = $viaje->tipo_planificacion;
 
@@ -425,8 +425,8 @@ class LogisticaController extends Controller
             ->select(
                 'clientes.nombre as cliente_nombre',
                 'clientes.rif as cliente_rif',
-                DB::raw("SUM(CASE WHEN viajes.tipo = 1 THEN despachos_viajes.litros ELSE 0 END) as litros_diesel"),
-                DB::raw("SUM(CASE WHEN viajes.tipo = 2 THEN despachos_viajes.litros ELSE 0 END) as litros_mgo"),
+                DB::raw("SUM(CASE WHEN viajes.tipo = 2 THEN despachos_viajes.litros ELSE 0 END) as litros_diesel"),
+                DB::raw("SUM(CASE WHEN viajes.tipo = 1 THEN despachos_viajes.litros ELSE 0 END) as litros_mgo"),
                 DB::raw("SUM(despachos_viajes.litros) as total_litros")
             )
             ->when($search, function($q) use ($search) {
@@ -457,8 +457,8 @@ class LogisticaController extends Controller
         $volumenTotalProducto = DB::table('despachos_viajes')
             ->join('viajes', 'despachos_viajes.viaje_id', '=', 'viajes.id')
             ->select(
-                DB::raw("SUM(CASE WHEN viajes.tipo = 1 THEN despachos_viajes.litros ELSE 0 END) as total_diesel"),
-                DB::raw("SUM(CASE WHEN viajes.tipo = 2 THEN despachos_viajes.litros ELSE 0 END) as total_mgo")
+                DB::raw("SUM(CASE WHEN viajes.tipo = 2 THEN despachos_viajes.litros ELSE 0 END) as total_diesel"),
+                DB::raw("SUM(CASE WHEN viajes.tipo = 1 THEN despachos_viajes.litros ELSE 0 END) as total_mgo")
             )
             ->when($fechaDesde, function($q) use ($fechaDesde) {
                 $q->whereDate('viajes.fecha_salida', '>=', $fechaDesde);

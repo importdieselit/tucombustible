@@ -151,8 +151,8 @@
             <label class="small fw-bold text-uppercase text-muted mb-1">Tipo</label>
             <select name="tipo" class="form-select form-select-sm fw-bold">
                 <option value="">TODAS</option>
-                <option value="1" {{ request('tipo') == '1' ? 'selected' : '' }}>Despacho Diesel</option>
-                <option value="2" {{ request('tipo') == '2' ? 'selected' : '' }}>Despacho MGO</option>
+                <option value="2" {{ request('tipo') == '2' ? 'selected' : '' }}>Despacho Diesel</option>
+                <option value="1" {{ request('tipo') == '1' ? 'selected' : '' }}>Despacho MGO</option>
                 <option value="3" {{ request('tipo') == '3' ? 'selected' : '' }}>Fletes</option>
                 {{-- Abrimos las compras en dos opciones independientes --}}
                 <option value="4_diesel" {{ request('tipo') == '4_diesel' ? 'selected' : '' }}>Compras Diesel</option>
