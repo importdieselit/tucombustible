@@ -31,6 +31,37 @@ class DepositoService
             $data['producto'] = $data['producto_nombre_legacy'];
         }
 
+        $data['diametro'] = $data['diametro'] ?? 0;
+        $data['longitud'] = $data['longitud'] ?? 0;
+        $data['ancho']    = $data['ancho'] ?? 0;
+        $data['alto']     = $data['alto'] ?? 0;
+
         return $this->depositoRepo->create($data);
+    }
+
+    public function actualizarDeposito($id, array $data)
+    {
+        $deposito = $this->depositoRepo->find($id);
+
+        // Regla de Negocio: Si cambia la capacidad, se recalcula el 20% de alerta estricto
+        $data['nivel_alerta_litros'] = (float) $data['capacidad_maxima'] * 0.20;
+
+        if (isset($data['producto_nombre_legacy'])) {
+            $data['producto'] = $data['producto_nombre_legacy'];
+        }
+
+        $data['diametro'] = $data['diametro'] ?? 0;
+        $data['longitud'] = $data['longitud'] ?? 0;
+        $data['ancho']    = $data['ancho'] ?? 0;
+        $data['alto']     = $data['alto'] ?? 0;
+
+        $deposito->update($data);
+        return $deposito;
+    }
+
+    public function eliminarDeposito($id): void
+    {
+        $deposito = $this->depositoRepo->find($id);
+        $deposito->delete();
     }
 }

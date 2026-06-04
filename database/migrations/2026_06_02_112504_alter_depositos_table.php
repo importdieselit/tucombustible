@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('depositos', function (Blueprint $blueprint) {
             // 1. Añadimos la relación formal con Sedes
-            $blueprint->foreignId('sede_id')->nullable()->after('id')->constrained('sedes')->nullOnDelete();
+            $blueprint->foreignId('id_sede')->nullable()->after('id')->constrained('sedes')->nullOnDelete();
             
             // 2. Añadimos la relación formal con Tipos de Combustible
             $blueprint->foreignId('tipo_combustible_id')->nullable()->after('producto')->constrained('tipos_combustible')->nullOnDelete();

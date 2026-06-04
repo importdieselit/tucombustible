@@ -309,13 +309,16 @@ Route::middleware(['auth'])->group(function () {
             ->group(function () {
                 
                 // Dashboard Temporal: Renderiza la vista de registro mientras se desarrolla el panel principal
-                Route::get('/dashboard', [DepositoController::class, 'create'])->name('dashboard');
+                Route::get('/dashboard', [DepositoController::class, 'index'])->name('dashboard');
 
                 // Gestión de Tanques (Infraestructura de Depósitos)
                 Route::prefix('depositos')->name('depositos.')->group(function () {
                     Route::get('/', [DepositoController::class, 'index'])->name('index');
                     Route::get('/crear', [DepositoController::class, 'create'])->name('create');
                     Route::post('/guardar', [DepositoController::class, 'store'])->name('store');
+                    Route::get('/{id}/editar', [DepositoController::class, 'edit'])->name('edit');
+                    Route::put('/{id}/actualizar', [DepositoController::class, 'update'])->name('update');
+                    Route::delete('/{id}/eliminar', [DepositoController::class, 'destroy'])->name('destroy');
                     // Tablas de Varillaje y Cubicaciones (Aforos) integradas al Tanque
                     Route::get('/{id}/aforo', [AforoController::class, 'showAforoTable'])->name('aforo.show');
                     Route::get('/{id}/aforo/exportar', [AforoController::class, 'exportAforoTable'])->name('aforo.export');

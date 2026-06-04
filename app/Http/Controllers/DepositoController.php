@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Sedes;
 use App\Models\TipoCombustible;
+use App\Models\Deposito;
 use App\Services\DepositoService;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Validation\Rule;
 
 class DepositoController extends Controller
 {
@@ -29,12 +31,19 @@ class DepositoController extends Controller
         return view('combustibles.depositos.create', compact('sedes', 'tiposCombustible'));
     }
 
-    /**
-     * El método index() por si quieres dejar el listado listo para después
-     */
     public function index()
     {
-        return view('combustibles.depositos.index');
+        $depositos = Deposito::with(['sedes', 'tipoCombustible'])->get();
+        return view('combustibles.depositos.index', compact('depositos'));
+    }
+
+    public function edit($id)
+    {
+        $deposito = Deposito::findOrFail($id);
+        $sedes = Sedes::all();
+        $tiposCombustible = TipoCombustible::all();
+
+        return view('combustibles.depositos.edit', compact('deposito', 'sedes', 'tiposCombustible'));
     }
 
     /**
@@ -42,9 +51,30 @@ class DepositoController extends Controller
      */
     public function store(Request $request)
     {
+        // Mensajes personalizados en español para que no salga "validation.unique"
+        $messages = [
+            'serial.required' => 'El campo Serial / Nombre es obligatorio.',
+            'serial.unique'   => 'Este Nombre ya se encuentra registrado con otro tanque del sistema.',
+            'id_sede.required' => 'Debe seleccionar una sede válida.',
+            'tipo_combustible_id.required' => 'Debe seleccionar un tipo de combustible.',
+            'capacidad_maxima.required' => 'La capacidad máxima es obligatoria.',
+            
+            // Mensajes dinámicos para la geometría física
+            'diametro.required_if' => 'El diámetro (cm) es obligatorio para la forma geométrica seleccionada.',
+            'longitud.required_if' => 'El largo (cm) es obligatoria para la forma geométrica seleccionada.',
+            'ancho.required_if'    => 'El ancho (cm) es obligatorio para la forma geométrica seleccionada.',
+            'alto.required_if'     => 'La altura (cm) es obligatorio para la forma geométrica seleccionada.',
+        ];
+
         // Validación nativa en el controlador con las reglas exigidas
         $validator = Validator::make($request->all(), [
-            'serial' => 'required|string|max:255|unique:depositos,serial',
+            'serial' => [
+                'required', 'string', 'max:255',
+                Rule::unique('depositos', 'serial')->where(function ($query) use ($request) {
+                    // No se pueden registrar dos tanques con el mismo nombre/serial en la misma sede, pero sí en sedes diferentes
+                    return $query->where('id_sede', $request->id_sede);
+                })
+            ],
             'id_sede' => 'required|exists:sedes,id', 
             'tipo_combustible_id' => 'required|exists:tipos_combustible,id',
             'capacidad_maxima' => 'required|numeric|min:0',
@@ -57,21 +87,81 @@ class DepositoController extends Controller
             'alto'     => 'required_if:forma,R,CV,OV|nullable|numeric|min:0',
             
             'producto_nombre_legacy' => 'nullable|string|max:255'
-        ]);
+        ], $messages);
 
         if ($validator->fails()) {
             return redirect()->back()
                              ->withErrors($validator)
-                             ->withInput()
-                             ->with('error', 'Error en la geometría del tanque. Verifica las dimensiones obligatorias.');
+                             ->withInput();
         }
 
         // Ejecutamos la acción a través del servicio
         $this->depositoService->registrarDeposito($validator->validated());
 
-        Session::flash('success', '¡Tanque de infraestructura registrado exitosamente!');
+        Session::flash('success', '¡Tanque registrado exitosamente!');
         
         // Redirección apuntando al nuevo namespace de rutas que estás armando
+        return redirect()->route('combustibles.dashboard');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $messages = [
+            'serial.required' => 'El campo Serial / Nombre es obligatorio.',
+            'serial.unique'   => 'Este Nombre ya se encuentra registrado para la sede seleccionada.',
+            'id_sede.required' => 'Debe seleccionar una sede válida.',
+            'tipo_combustible_id.required' => 'Debe seleccionar un tipo de combustible.',
+            'capacidad_maxima.required' => 'La capacidad máxima es obligatoria.',
+            'diametro.required_if' => 'El diámetro (cm) es obligatorio.',
+            'longitud.required_if' => 'El largo (cm) es obligatorio.',
+            'ancho.required_if'    => 'El ancho (cm) es obligatorio.',
+            'alto.required_if'     => 'La altura (cm) es obligatorio.',
+        ];
+
+        $validator = Validator::make($request->all(), [
+            'serial' => [
+                'required', 'string', 'max:255',
+                // Buscamos duplicados en la misma sede, pero IGNORANDO el ID de este tanque
+                Rule::unique('depositos', 'serial')->where(function ($query) use ($request) {
+                    return $query->where('id_sede', $request->id_sede);
+                })->ignore($id)
+            ],
+            'id_sede' => 'required|exists:sedes,id', 
+            'tipo_combustible_id' => 'required|exists:tipos_combustible,id',
+            'capacidad_maxima' => 'required|numeric|min:0',
+            'forma' => 'required|in:CH,CV,OH,OV,R,C,E',
+
+            'diametro' => 'required_if:forma,CH,CV,OH,C,E|nullable|numeric|min:0',
+            'longitud' => 'required_if:forma,CH,R,OH,OV|nullable|numeric|min:0',
+            'ancho'    => 'required_if:forma,R,OH,OV|nullable|numeric|min:0',
+            'alto'     => 'required_if:forma,R,CV,OV|nullable|numeric|min:0',
+            
+            'producto_nombre_legacy' => 'nullable|string|max:255'
+        ], $messages);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        // Llamamos al método que creamos en el servicio
+        $this->depositoService->actualizarDeposito($id, $validator->validated());
+
+        Session::flash('success', '¡Tanque actualizado correctamente!');
+        return redirect()->route('combustibles.dashboard');
+    }
+
+    public function destroy($id)
+    {
+        try {
+            // Solicitamos la eliminación al servicio
+            $this->depositoService->eliminarDeposito($id);
+            
+            Session::flash('success', '¡Tanque eliminado de la infraestructura exitosamente!');
+        } catch (\Exception $e) {
+            // Captura errores de integridad por si tiene varillajes, auditorías o registros amarrados
+            Session::flash('error', 'No se puede eliminar este tanque porque cuenta con historial operativo o registros asociados en el sistema.');
+        }
+
         return redirect()->route('combustibles.dashboard');
     }
 }

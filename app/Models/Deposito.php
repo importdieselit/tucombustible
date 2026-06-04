@@ -19,7 +19,7 @@ class Deposito extends Model
 
     protected $fillable = [
         'serial',
-        'sede_id',
+        'id_sede',
         'capacidad_litros',
         'nivel_actual_litros',
         'nivel_cm',
@@ -99,7 +99,7 @@ class Deposito extends Model
      */
     public function sedes(): BelongsTo
     {
-        return $this->belongsTo(Sedes::class, 'sede_id');
+        return $this->belongsTo(Sedes::class, 'id_sede');
     }
 
     /**
