@@ -201,7 +201,7 @@ class ClienteController extends Controller
 
         $request->validate([
             'nombre'              => 'required|string|max:255',
-            'rif'                 => 'required|string|max:15|unique:clientes,rif,' . $id,
+            'rif'                 => 'required|string|max:15,' . $id,
             'email'               => 'required|email:rfc|max:255',
             'contacto'            => 'required|string|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u|max:255',
             'telefono'            => 'nullable|digits_between:10,11',
@@ -215,7 +215,6 @@ class ClienteController extends Controller
             'contacto.regex'              => 'El campo Persona de Contacto solo debe contener letras.',
             'contacto_alt.regex'          => 'El campo Contacto Alternativo solo debe contener letras.',
             'email.email'                 => 'El correo electrónico debe ser una dirección válida con @.',
-            'rif.unique'                  => 'Este RIF ya se encuentra registrado en otro cliente.',
             'telefono.digits_between'     => 'El teléfono debe tener entre 10 y 11 dígitos.',
             'telefono_alt.digits_between' => 'El teléfono alternativo debe tener entre 10 y 11 dígitos.',
         ]);
@@ -401,13 +400,12 @@ class ClienteController extends Controller
 
         $request->validate([
             'razon_social' => 'required|string|max:255',
-            'rif'          => 'required|string|max:20|unique:clientes_lubricantes,rif',
+            'rif'          => 'required|string|max:20',
             'email'        => 'required|email|max:255',
             'telefono'     => 'nullable|digits_between:10,11',
         ], [
             'razon_social.required'   => 'La razón social es obligatoria.',
             'rif.required'            => 'El RIF es obligatorio.',
-            'rif.unique'              => 'Ya existe un cliente lubricante registrado con este RIF.',
             'email.required'          => 'El correo electrónico es obligatorio.',
             'email.email'             => 'El correo electrónico debe ser válido.',
             'telefono.digits_between' => 'El teléfono debe tener entre 10 y 11 dígitos.',
