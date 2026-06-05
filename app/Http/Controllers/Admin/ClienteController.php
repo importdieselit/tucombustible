@@ -154,7 +154,7 @@ class ClienteController extends Controller
         $request->validate([
             'nombre'              => 'required|string|max:255',
             'rif'                 => 'required|string|max:12',
-            'email'               => 'required|email:rfc,dns|max:255',
+            'email'               => 'required|email:rfc|max:255',
             'contacto'            => 'required|string|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u|max:255',
             'telefono'            => 'nullable|digits_between:10,11',
             'contacto_alt'        => 'nullable|string|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u|max:255',
@@ -171,6 +171,7 @@ class ClienteController extends Controller
             'telefono.digits_between' => 'El teléfono debe tener entre 10 y 11 dígitos.',
             'telefono_alt.digits_between' => 'El teléfono alternativo debe tener entre 10 y 11 dígitos.',
             'token_padre.exists'      => 'El Token de la empresa principal no es válido.',
+            'email.email'             => 'El correo electrónico debe ser una dirección válida con @.',
         ]);
 
         try {
@@ -202,7 +203,7 @@ class ClienteController extends Controller
         $request->validate([
             'nombre'              => 'required|string|max:255',
             'rif'                 => 'required|string|max:15|unique:clientes,rif,' . $id,
-            'email'               => 'required|email:rfc,dns|max:255',
+            'email'               => 'required|email:rfc|max:255',
             'contacto'            => 'required|string|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u|max:255',
             'telefono'            => 'nullable|digits_between:10,11',
             'contacto_alt'        => 'nullable|string|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u|max:255',

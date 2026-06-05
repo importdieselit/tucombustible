@@ -303,8 +303,7 @@ Route::middleware(['auth'])->group(function () {
         });
 
         // --- MÓDULO DE COMBUSTIBLES ---
-        Route::middleware(['auth', 'role:1,2,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18'])
-            ->prefix('combustibles')
+        Route::middleware(['auth', 'role:1,2,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18'])->prefix('combustibles')
             ->name('combustibles.')
             ->group(function () {
                 
@@ -319,6 +318,7 @@ Route::middleware(['auth'])->group(function () {
                     Route::get('/{id}/editar', [DepositoController::class, 'edit'])->name('edit');
                     Route::put('/{id}/actualizar', [DepositoController::class, 'update'])->name('update');
                     Route::delete('/{id}/eliminar', [DepositoController::class, 'destroy'])->name('destroy');
+                    Route::post('update-layout', [DepositoController::class, 'updateLayout'])->name('update-layout');
                     // Tablas de Varillaje y Cubicaciones (Aforos) integradas al Tanque
                     Route::get('/{id}/aforo', [AforoController::class, 'showAforoTable'])->name('aforo.show');
                     Route::get('/{id}/aforo/exportar', [AforoController::class, 'exportAforoTable'])->name('aforo.export');

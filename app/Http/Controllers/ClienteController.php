@@ -69,6 +69,7 @@ class ClienteController extends Controller
         $request->validate($rules, [
             'token_padre.exists'         => 'El Código de Empresa Principal (Token) ingresado no es válido.',
             'token_padre.required'       => 'Debe ingresar el Token de la empresa principal para vincular la sucursal.',
+            'email.email'                 => 'El correo electrónico debe ser una dirección válida con @.',
             'tipo_combustible_id.exists' => 'Debe seleccionar un tipo de combustible válido.',
             'litros_solicitados.min'     => 'Debe solicitar al menos 1 litro.',
         ]);
@@ -211,7 +212,7 @@ class ClienteController extends Controller
 
         $request->validate([
             'nombre'              => 'required|string|max:255',
-            'email'               => 'required|email:rfc,dns|max:255',
+            'email'               => 'required|email:rfc|max:255',
             'contacto'            => 'required|string|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u|max:255',
             'telefono'            => 'nullable|digits_between:10,11',
             'contacto_alt'        => 'nullable|string|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u|max:255',

@@ -40,20 +40,29 @@
                     <input type="hidden" name="tipo_combustible_id" value="{{ $tipoPlanificacionId }}">
                 </template>
 
-                <div class="mb-3">
-                    <label class="small fw-bold text-muted text-uppercase">Fecha Programada</label>
-                    <input type="date" name="fecha_programada" class="form-control fw-bold" @if(!isset($viaje)) min="{{ date('Y-m-d') }}" @endif
-                        value="{{ old('fecha_programada', isset($viaje) ? \Carbon\Carbon::parse($viaje->fecha_salida ?? now())->format('Y-m-d') : date('Y-m-d')) }}" required>
-                </div>
-
                 {{-- ⏰ CAMBIO AQUÍ: CALENDARIO CON HORA INTEGRADA --}}
                 <div class="mb-3">
                     <label class="small fw-bold text-muted text-uppercase">Fecha y Hora Programada</label>
-                    <input type="datetime-local" name="fecha_programada" class="form-control fw-bold border-orange" 
-                        @if(!isset($viaje)) min="{{ date('Y-m-d\T00:00') }}" @endif
-                        value="{{ old('fecha_programada', isset($viaje) ? \Carbon\Carbon::parse($viaje->fecha_salida)->format('Y-m-d\TH:i') : date('Y-m-d\TH:i')) }}" required>
+                    <input type="text" id="fecha_programada_picker" name="fecha_programada" class="form-control fw-bold border-orange" 
+                        value="{{ old('fecha_programada', isset($viaje) ? \Carbon\Carbon::parse($viaje->fecha_salida)->format('Y-m-d H:i s') : date('Y-m-d H:i s')) }}" required>
                     <small class="text-muted d-block mt-1" style="font-size: 11px;">Indica el día y la hora exacta en la que la unidad debe iniciar la ruta.</small>
                 </div>
+
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+                <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+                <script>
+                    document.addEventListener("DOMContentLoaded", function() {
+                        flatpickr("#fecha_programada_picker", {
+                            enableTime: true,
+                            time_24hr: false,          // Muestra los botones de AM/PM en el reloj del selector
+                            altInput: true,            // Esconde el input real y crea uno nuevo estético para el usuario
+                            altFormat: "d-m-Y h:i K",  // Formato que VE el usuario (12 horas con AM/PM)
+                            dateFormat: "Y-m-d H:i:s", // Formato REAL que se envía a Laravel/MySQL (24 horas obligatorio con 'H' mayúscula)
+                            @if(!isset($viaje)) minDate: "today" @endif
+                        });
+                    });
+                </script>
 
                 {{-- DESTINO PARA TABULADOR (MULTIPLE - ESTILO CHECKBOX PREMIUM) --}}
                 <div class="mb-3">

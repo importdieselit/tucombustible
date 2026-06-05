@@ -31,10 +31,16 @@ class DepositoController extends Controller
         return view('combustibles.depositos.create', compact('sedes', 'tiposCombustible'));
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $depositos = Deposito::with(['sedes', 'tipoCombustible'])->get();
-        return view('combustibles.depositos.index', compact('depositos'));
+        $sedes = Sedes::orderBy('nombre')->get();
+        $depositos = Deposito::with(['sedes', 'tipoCombustible'])
+                ->when($request->id_sede, function ($query, $id_sede) {
+                return $query->where('id_sede', $id_sede);
+            })
+            ->paginate(20);
+
+        return view('combustibles.depositos.index', compact('depositos', 'sedes'));
     }
 
     public function edit($id)
@@ -163,5 +169,26 @@ class DepositoController extends Controller
         }
 
         return redirect()->route('combustibles.dashboard');
+    }
+
+    public function updateLayout(Request $request)
+    {
+        // Validar el array entrante
+        $request->validate([
+            'tanques' => 'required|array',
+            'tanques.*.id' => 'required|exists:depositos,id',
+            'tanques.*.x' => 'required|numeric',
+            'tanques.*.z' => 'required|numeric',
+        ]);
+
+        // Actualizar uno a uno velozmente
+        foreach ($request->tanques as $datosTanque) {
+            Deposito::where('id', $datosTanque['id'])->update([
+                'orden_x' => $datosTanque['x'],
+                'orden_z' => $datosTanque['z']
+            ]);
+        }
+
+        return response()->json(['success' => true]);
     }
 }
