@@ -452,7 +452,6 @@ public function guardarEstructuraDrag(Request $request)
                 'inventario' => $inventarioEstado
             ];
         });
-        dd($mapa3d);
 
         return view('almacen.almacen_3d', compact('almacen', 'mapa3d'));
     }
