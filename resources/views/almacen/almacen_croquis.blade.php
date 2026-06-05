@@ -644,7 +644,7 @@
                     response.posiciones.forEach(p => {
                         const key = `${n}-${p}`;
                         const slot = cacheUbicacionesEstante[key];
-                        console.log(slot);
+                        //console.log(slot);
                         if (slot) {
                             const claseEstado = slot.ocupado ? 'slot-ocupado' : 'slot-libre';
                             const totalUnds = slot.ocupado ? `<br><small style="font-size:9px;">(${slot.total_articulos} unds)</small>` : '<br><small style="font-size:9px;">Libre</small>';
