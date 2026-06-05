@@ -10,7 +10,7 @@ class InventarioStock extends Model
     use HasFactory;
     protected $table = 'inventario_stock';
     protected $fillable = [
-        'item_id',
+        'inventario_id',
         'ubicacion_id',
         'cantidad_actual',
         'cantidad_reservada',
@@ -21,7 +21,7 @@ class InventarioStock extends Model
 
     public function item()
     {
-        return $this->belongsTo(Inventario::class, 'item_id');
+        return $this->belongsTo(Inventario::class, 'inventario_id');
     }
 
     public function ubicacion()

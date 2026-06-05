@@ -21,7 +21,8 @@ use App\Http\Controllers\{
     AlertaController, AccesoController, InspeccionController, PedidoController,
     ReporteController, AforoController, SearchController, DataDeletionController,
     ViajesController, TelegramController, PlanificacionMantenimientoController,
-    ReportController, ClienteActivosController,NotificationController, PlanMayorController,LogisticaController
+    ReportController, ClienteActivosController,NotificationController, PlanMayorController,LogisticaController,
+    AlmacenLayoutController
 };
 use App\Http\Controllers\SalaControlController;
 
@@ -309,6 +310,17 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/admin/principal', [DashboardController::class, 'adminPrincipal'])->name('dashboard.admin');
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+        Route::get('/logistica/almacen/{id}/disenar', [AlmacenLayoutController::class, 'disenar'])->name('almacen.layout.disenar');
+        Route::post('/logistica/almacen/layout/guardar', [AlmacenLayoutController::class, 'guardarEstructura'])->name('almacen.layout.guardar');
+        Route::post('/logistica/almacen/layout/guardar-drag', [AlmacenLayoutController::class, 'guardarEstructuraDrag'])->name('almacen.layout.guardar_drag');
+        Route::post('/logistica/almacen/layout/inspeccionar', [AlmacenLayoutController::class, 'inspeccionarEstante'])->name('almacen.layout.inspeccionar');
+        Route::post('/logistica/almacen/layout/redimensionar', [AlmacenLayoutController::class, 'redimensionarGrid'])->name('almacen.layout.redimensionar');
+        Route::get('/logistica/almacen/{id}/3d', [AlmacenLayoutController::class, 'vista3D'])->name('almacen.layout.3d');
+        // Rutas para gestión de tráfico Drag & Drop en Planta
+        Route::post('/almacen/layout/buscar-items', [AlmacenLayoutController::class, 'buscarItemsAAsignar'])->name('almacen.layout.buscar_items');
+        Route::post('/almacen/layout/asignar-item', [AlmacenLayoutController::class, 'asignarItemUbicacion'])->name('almacen.layout.asignar_item');
+        Route::post('/almacen/layout/reubicar-item', [AlmacenLayoutController::class, 'reubicarItemUbicacion'])->name('almacen.layout.reubicar_item');
+        Route::post('/almacen/layout/vaciar-slot', [AlmacenLayoutController::class, 'vaciarItemUbicacion'])->name('almacen.layout.vaciar_slot');
         /**
          * MÓDULOS DE ADMINISTRACIÓN (Perfiles 1 y 2: Admin y Super)
          */

@@ -15,7 +15,7 @@ class CreateInventarioStockTable extends Migration
     {
         Schema::create('inventario_stock', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('item_id')->constrained('mantenimiento_items');
+            $table->foreignId('inventario_id')->constrained('inventario');
             $table->foreignId('ubicacion_id')->constrained('ubicaciones');
             
             $table->decimal('cantidad_actual', 12, 4); // Soporta litros, kilos o unidades (Sin redondeo)

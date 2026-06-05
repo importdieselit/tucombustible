@@ -34,7 +34,13 @@ class Ubicacion extends Model
 
     public function inventarioItems()
     {
-        return $this->hasManyThrough(Inventario::class, InventarioStock::class, 'ubicacion_id', 'id', 'id', 'item_id');
+        return $this->hasManyThrough(Inventario::class, InventarioStock::class, 'ubicacion_id', 'id', 'id', 'inventario_id');
     }   
+
+    public function estructuraGrid()
+    {
+        return $this->belongsTo(AlmacenEstructuraGrid::class, 'estructura_grid_id');
+    }
+
     
 }
