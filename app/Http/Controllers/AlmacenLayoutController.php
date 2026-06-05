@@ -503,15 +503,18 @@ public function guardarEstructuraDrag(Request $request)
                 InventarioStock::where('id', $existenciaEnSlot->id)
                     ->update(['cantidad_actual' => $existenciaEnSlot->cantidad_actual + $request->cantidad]);
                 $cantidadFinal = $existenciaEnSlot->cantidad_actual + $request->cantidad;
+                $capacidad = $itemMaestro->existencia_maxima;
             } else {
                 InventarioStock::create([
                     'ubicacion_id' => $ubicacion->id,
                     'inventario_id' => $itemMaestro->id,
                     'cantidad_actual' => $request->cantidad,
+                    'capacidad_asignada' => $itemMaestro->existencia_maxima,
                     'created_at' => now(),
                     'updated_at' => now()
                 ]);
                 $cantidadFinal = $request->cantidad;
+                $capacidad = $itemMaestro->existencia_maxima;
             }
 
             // Cálculo de Ocupación para Alertas
