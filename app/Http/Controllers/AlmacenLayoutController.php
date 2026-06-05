@@ -431,6 +431,7 @@ public function guardarEstructuraDrag(Request $request)
             // Agrupamos el inventario por nivel para procesar la altura de forma ordenada en el 3D
             foreach ($ubis as $ubi) {
                 $cantidadTotal = $ubi->inventarioStock->first()->cantidad_actual ?? null;
+                $capacidad = $ubi->inventarioStock->first()->cantidad_asignada ?? null;
                 $primerArticulo = $ubi->inventarioStock->first();
                 $estaOcupado = $cantidadTotal > 0;
 
@@ -440,7 +441,8 @@ public function guardarEstructuraDrag(Request $request)
                     'ocupado'  => $estaOcupado,
                     'sku'      => $estaOcupado ? $primerArticulo->item->codigo : '',
                     'producto' => $estaOcupado ? $primerArticulo->item->descripcion : '',
-                    'stock'    => $estaOcupado ? $cantidadTotal : 0
+                    'stock'    => $estaOcupado ? $cantidadTotal : 0,
+                    'capacidad' => $estaOcupado ? $capacidad : 0
                 ];
             }
 
