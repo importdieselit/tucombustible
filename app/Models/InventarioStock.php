@@ -14,6 +14,7 @@ class InventarioStock extends Model
         'ubicacion_id',
         'cantidad_actual',
         'cantidad_reservada',
+        'capacidad_asignada',
         'lote',
         'fecha_vencimiento'
     ];
