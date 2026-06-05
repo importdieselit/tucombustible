@@ -227,6 +227,7 @@ public function guardarEstructuraDrag(Request $request)
                     'producto' => $stock->item->descripcion ?? 'Item sin nombre',
                     'sku'      => $stock->item->codigo ?? 'S/S',
                     'cantidad' => $stock->cantidad_actual,
+                    'capacidad_asignada' => $stock->capacidad_asignada,
                     'lote'     => $stock->lote ?? 'N/A'
                 ];
             }
@@ -500,27 +501,26 @@ public function guardarEstructuraDrag(Request $request)
                 ->first();
 
             if ($existenciaEnSlot) {
-                InventarioStock::where('id', $existenciaEnSlot->id)
-                    ->update(['cantidad_actual' => $existenciaEnSlot->cantidad_actual + $request->cantidad]);
-                $cantidadFinal = $existenciaEnSlot->cantidad_actual + $request->cantidad;
-                $capacidad = $itemMaestro->existencia_maxima;
+                $existenciaEnSlot->cantidad_actual += $request->cantidad;
+                $existenciaEnSlot->save();
+                $cantidadActual = $existenciaEnSlot->cantidad_actual;
+                $capacidad = $existenciaEnSlot->capacidad_asignada;
             } else {
-                InventarioStock::create([
+                // NUEVO REGISTRO: Aquí capturamos el "Techo"
+                $nuevo = InventarioStock::create([
                     'ubicacion_id' => $ubicacion->id,
                     'inventario_id' => $itemMaestro->id,
                     'cantidad_actual' => $request->cantidad,
-                    'capacidad_asignada' => $itemMaestro->existencia_maxima,
+                    'capacidad_asignada' => $request->cantidad, // <-- ESTE ES EL NUEVO CAMPO
                     'created_at' => now(),
                     'updated_at' => now()
                 ]);
-                $cantidadFinal = $request->cantidad;
-                $capacidad = $itemMaestro->existencia_maxima;
+                $cantidadActual = $nuevo->cantidad_actual;
+                $capacidad = $nuevo->capacidad_asignada;
             }
 
-            // Cálculo de Ocupación para Alertas
-            // Asumimos que tienes 'existencia_maxima' en tu modelo Inventario. Si no, usa un valor base 100
-            $maximo = $itemMaestro->existencia_maxima ?? 100; 
-            $porcentajeUso = ($cantidadFinal / $maximo) * 100;
+            // Si capacidad es 100 y tienes 50, uso es 50%.
+            $porcentajeUso = ($capacidad > 0) ? ($cantidadActual / $capacidad) * 100 : 0;
             
             $alerta = null;
             if ($porcentajeUso >= 90) $alerta = 'CRITICO';

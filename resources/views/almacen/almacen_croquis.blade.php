@@ -77,6 +77,13 @@
     border: 2px solid #ffffff !important;
     outline: 3px solid #0d6efd;
 }
+
+.progress {
+    background-color: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
 /* Estado cuando el Modo Reubicación está encendido */
 .modo-edicion-activo .celda-mapa[data-codigo] {
     cursor: grab !important;
@@ -639,33 +646,57 @@
                 tablaHtml += '</tr></thead><tbody>';
 
                 response.niveles.forEach(n => {
-                    tablaHtml += `<tr><td class="bg-dark text-muted font-weight-bold small">Nivel ${n}</td>`;
-                    
-                    response.posiciones.forEach(p => {
-                        const key = `${n}-${p}`;
-                        const slot = cacheUbicacionesEstante[key];
-                        //console.log(slot);
-                        if (slot) {
-                            const claseEstado = slot.ocupado ? 'slot-ocupado' : 'slot-libre';
-                            const totalUnds = slot.ocupado ? `<br><small style="font-size:9px;">(${slot.total_articulos} unds)</small>` : '<br><small style="font-size:9px;">Libre</small>';
-                            const attrDrag = slot.ocupado ? 'draggable="true"' : ''; // Solo se pueden arrastrar los llenos
-                            const descrip= slot.ocupado ? `<br><span style="font-size:9px;">${slot.inventario.producto}</span>` : '';
-                            tablaHtml += `
-                                <td class="slot-rack slot-receptor-drop ${claseEstado}" 
-                                    data-key="${key}" 
-                                    data-ubicacion-id="${slot.id}"
-                                    ${attrDrag}>
-                                    N${n}-P${p}
-                                    ${descrip}
-                                    ${totalUnds}
-                                </td>
-                            `;
-                        } else {
-                            tablaHtml += '<td class="bg-dark text-muted text-center" style="opacity:0.3;">-</td>';
-                        }
+                    tablaHtml += `<tr><td class="bg-dark text-light font-weight-bold small">Nivel ${n}</td>`;
+    
+                        response.posiciones.forEach(p => {
+                            const key = `${n}-${p}`;
+                            const slot = cacheUbicacionesEstante[key];
+                            
+                            if (slot) {
+                                const ocupado = slot.ocupado;
+                                const claseEstado = ocupado ? 'slot-ocupado' : 'slot-libre';
+                                
+                                // Lógica de visualización de capacidad dinámica
+                                let barraHtml = '';
+                                let infoAdicional = '';
+                                
+                                if (ocupado && slot.inventario) {
+                                    // Si tienes el campo capacidad_asignada en tu base de datos
+                                    const capacidad = slot.inventario.capacidad_asignada || slot.total_articulos; 
+                                    const porcentaje = (slot.total_articulos / capacidad) * 100;
+                                    const color = porcentaje > 90 ? 'bg-danger' : (porcentaje > 70 ? 'bg-warning' : 'bg-success');
+                                    
+                                    barraHtml = `
+                                        <div class="progress mt-1" style="height: 6px;">
+                                            <div class="progress-bar ${color}" style="width: ${Math.min(porcentaje, 100)}%"></div>
+                                        </div>`;
+                                    
+                                    infoAdicional = `
+                                        <div class="small text-truncate" style="font-size:9px;" title="${slot.inventario.producto}">
+                                            ${slot.inventario.sku}
+                                        </div>
+                                        <div class="font-weight-bold" style="font-size:10px;">${slot.total_articulos} / ${capacidad}</div>
+                                    `;
+                                } else {
+                                    infoAdicional = '<small style="font-size:9px;" class="text-muted">Libre</small>';
+                                }
+
+                                tablaHtml += `
+                                    <td class="slot-rack slot-receptor-drop ${claseEstado}" 
+                                        data-key="${key}" 
+                                        data-ubicacion-id="${slot.id}"
+                                        ${ocupado ? 'draggable="true"' : ''}>
+                                        N${n}-P${p}
+                                        ${infoAdicional}
+                                        ${barraHtml}
+                                    </td>
+                                `;
+                            } else {
+                                tablaHtml += '<td class="bg-dark text-muted text-center" style="opacity:0.3;">-</td>';
+                            }
+                        });
+                        tablaHtml += '</tr>';
                     });
-                    tablaHtml += '</tr>';
-                });
                 tablaHtml += '</tbody>';
 
                 $('#tablaMatrizEstante').html(tablaHtml);
