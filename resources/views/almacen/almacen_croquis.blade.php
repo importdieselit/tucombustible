@@ -84,6 +84,29 @@
     overflow: hidden;
 }
 
+/* Contenedor del track (fondo) */
+.modern-progress-track {
+    background-color: #e2e8f0; /* Gris muy claro */
+    height: 8px;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 6px;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Barra de progreso (progreso real) */
+.modern-progress-bar {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1); /* Animación suave */
+    background: linear-gradient(90deg, #3b82f6, #60a5fa); /* Gradiente azul profesional */
+}
+
+/* Variaciones de color según nivel */
+.bg-danger-gradient { background: linear-gradient(90deg, #ef4444, #f87171); }
+.bg-warning-gradient { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.bg-success-gradient { background: linear-gradient(90deg, #10b981, #34d399); }
+
 /* Estado cuando el Modo Reubicación está encendido */
 .modo-edicion-activo .celda-mapa[data-codigo] {
     cursor: grab !important;
@@ -663,13 +686,19 @@
                                 if (ocupado && slot.inventario) {
                                     // Si tienes el campo capacidad_asignada en tu base de datos
                                     const capacidad = slot.inventario.capacidad_asignada || slot.total_articulos; 
-                                    const porcentaje = (slot.total_articulos / capacidad) * 100;
                                     const color = porcentaje > 90 ? 'bg-danger' : (porcentaje > 70 ? 'bg-warning' : 'bg-success');
-                                    
+                                    const porcentaje = (slot.total_articulos / capacidad) * 100;
+                                    const colorClass = porcentaje > 90 ? 'bg-danger-gradient' : (porcentaje > 70 ? 'bg-warning-gradient' : 'bg-success-gradient');
+
                                     barraHtml = `
-                                        <div class="progress mt-1" style="height: 6px;">
-                                            <div class="progress-bar ${color}" style="width: ${Math.min(porcentaje, 100)}%"></div>
-                                        </div>`;
+                                        <div class="modern-progress-track">
+                                            <div class="modern-progress-bar ${colorClass}" style="width: ${Math.min(porcentaje, 100)}%"></div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mt-1">
+                                            <span style="font-size: 8px; font-weight: 600; color: #64748b;">OCUPACIÓN</span>
+                                            <span style="font-size: 8px; font-weight: 700; color: #1e293b;">${Math.round(porcentaje)}%</span>
+                                        </div>
+                                    `;
                                     
                                     infoAdicional = `
                                         <div class="small text-truncate" style="font-size:9px;" title="${slot.inventario.producto}">
