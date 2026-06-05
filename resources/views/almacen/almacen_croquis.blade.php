@@ -70,8 +70,8 @@
     color: #ffffff !important;
 }
 .slot-ocupado {
-    background-color: #dc3545 !important; /* Rojo Alerta */
-    color: #ffffff !important;
+    background-color: #FFFFFF !important; /* Rojo Alerta */
+    color: #000000 !important;
 }
 .slot-seleccionado {
     border: 2px solid #ffffff !important;
@@ -686,8 +686,9 @@
                                 if (ocupado && slot.inventario) {
                                     // Si tienes el campo capacidad_asignada en tu base de datos
                                     const capacidad = slot.inventario.capacidad_asignada || slot.total_articulos; 
-                                    const color = porcentaje > 90 ? 'bg-danger' : (porcentaje > 70 ? 'bg-warning' : 'bg-success');
                                     const porcentaje = (slot.total_articulos / capacidad) * 100;
+
+                                    //const color = porcentaje > 90 ? 'bg-danger' : (porcentaje > 70 ? 'bg-warning' : 'bg-success');
                                     const colorClass = porcentaje > 90 ? 'bg-danger-gradient' : (porcentaje > 70 ? 'bg-warning-gradient' : 'bg-success-gradient');
 
                                     barraHtml = `

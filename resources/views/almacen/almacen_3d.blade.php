@@ -200,14 +200,32 @@ window.addEventListener('load', function() {
         scene.add(line);
 
         // 4. Carteles identificadores (Frontal y Trasero para visibilidad total)
-        const etiquetaZPlus = crearEtiquetaPlana(sku, stock, capacidad, producto, '#0d6efd', ancho * 0.85, altoTotal * 0.4);
-        etiquetaZPlus.position.set(x + cellSize/2, y + altoTotal/2, z + cellSize/2 + prof/2 + 0.01);
-        scene.add(etiquetaZPlus);
+     // Definimos las dimensiones y el offset para que sobresalgan un poco de la caja
+        const offsetZ = cellSize / 2 + prof / 2 + 0.01;
+        const offsetX = cellSize / 2 + ancho / 2 + 0.01; // Ajusta 'ancho' si tu caja tiene un ancho distinto
 
-        const etiquetaZMinus = crearEtiquetaPlana(sku, stock, capacidad, producto, '#0d6efd', ancho * 0.85, altoTotal * 0.4);
-        etiquetaZMinus.rotation.y = Math.PI; 
-        etiquetaZMinus.position.set(x + cellSize/2, y + altoTotal/2, z + cellSize/2 - prof/2 - 0.01);
-        scene.add(etiquetaZMinus);
+        // 1. Cara Z Positiva (Frente)
+        const etiqZPos = crearEtiquetaPlana(sku, stock, capacidad, producto, '#0d6efd', ancho * 0.85, altoTotal * 0.4);
+        etiqZPos.position.set(x + cellSize/2, y + altoTotal/2, z + offsetZ);
+        scene.add(etiqZPos);
+
+        // 2. Cara Z Negativa (Atrás)
+        const etiqZNeg = crearEtiquetaPlana(sku, stock, capacidad, producto, '#0d6efd', ancho * 0.85, altoTotal * 0.4);
+        etiqZNeg.rotation.y = Math.PI; 
+        etiqZNeg.position.set(x + cellSize/2, y + altoTotal/2, z - offsetZ + cellSize);
+        scene.add(etiqZNeg);
+
+        // 3. Cara X Positiva (Derecha)
+        const etiqXPos = crearEtiquetaPlana(sku, stock, capacidad, producto, '#0d6efd', ancho * 0.85, altoTotal * 0.4);
+        etiqXPos.rotation.y = Math.PI / 2; // Rotación de 90 grados
+        etiqXPos.position.set(x + offsetX, y + altoTotal/2, z + cellSize/2);
+        scene.add(etiqXPos);
+
+        // 4. Cara X Negativa (Izquierda)
+        const etiqXNeg = crearEtiquetaPlana(sku, stock, capacidad, producto, '#0d6efd', ancho * 0.85, altoTotal * 0.4);
+        etiqXNeg.rotation.y = -Math.PI / 2; // Rotación de -90 grados
+        etiqXNeg.position.set(x - offsetX + cellSize, y + altoTotal/2, z + cellSize/2);
+        scene.add(etiqXNeg);
     }
 
     function crearTanqueGranel(x, z, estaOcupado, sku, stock, producto, capacidad) {
@@ -353,6 +371,7 @@ window.addEventListener('load', function() {
     orbitControls.enableDamping = true;
     orbitControls.dampingFactor = 0.05;
     orbitControls.maxPolarAngle = Math.PI / 2 - 0.05; 
+    orbitControls.screenSpacePanning = false;
     
     camera.position.set(offsetX * 1.5, Math.max(configFilas, configColumnas) * 1.5, offsetZ * 1.5);
     orbitControls.target.set(0, 0, 0);
