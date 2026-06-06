@@ -195,7 +195,7 @@
             </div>
         </div>
 
-        <div class="col-md-9">
+        <div class="col-md-9" style="max-height: 80vh; overflow-y: auto;">
             <div class="card shadow-sm">
                 <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3">
                     <h5 class="mb-0 text-dark font-weight-bold"><i class="fas fa-warehouse me-2"></i> Distribución de Planta: {{ $almacen->nombre }}</h5>
@@ -212,7 +212,7 @@
                         <span class="badge bg-secondary py-2 px-3">Cuadrícula: {{ $almacen->total_filas_grid }} x {{ $almacen->total_columnas_grid }}</span>
                     </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body" >
                     <div class="grid-almacen" id="gridContenedorPrincipal">
                         @for ($y = 1; $y <= $almacen->total_filas_grid; $y++)
                             @for ($x = 1; $x <= $almacen->total_columnas_grid; $x++)
