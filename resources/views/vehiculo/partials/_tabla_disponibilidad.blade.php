@@ -31,7 +31,7 @@
                 <div class="display-5 fw-bold text-primary">{{ $total }}</div>
                 <div class="text-uppercase small fw-bold text-muted">Total Flota</div>
             </div>
-            <div class="col-md-2 p-4 text-center border-end">
+            <div class="col-md-3 p-4 text-center border-end">
                 <div class="display-5 fw-bold text-success">{{ $operativosCount + $enRuta}}</div>
                 <div class="text-uppercase small fw-bold text-muted">Activas</div>
             </div>
