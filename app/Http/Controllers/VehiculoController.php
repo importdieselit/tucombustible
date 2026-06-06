@@ -717,7 +717,7 @@ class VehiculoController extends BaseController
     $totalChutos= $chutos->count();
 
     $fallaCount = $data->whereIn('estatus', [3,4,5])->count();
-    $porcentajeDisponibilidad = $total > 0 ? round(($operativosCount / $total) * 100) : 0;
+    $porcentajeDisponibilidad = $total > 0 ? round(($operativosCount + $enRuta) / $total * 100) : 0;
     $ligero=Vehiculo::misVehiculos()->with(['tipoVehiculo', 'ordenActiva'])->where('tipo', 6)->get();
     $totalLivianos= $ligero->count();
     
