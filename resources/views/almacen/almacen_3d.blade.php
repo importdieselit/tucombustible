@@ -72,8 +72,18 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
 
-<script>
+<div class="position-absolute top-5 end-2 bg-dark bg-opacity-75 text-light p-2 rounded small border border-secondary text-center" style="z-index: 100; pointer-events: auto;">
+    <div class="font-weight-bold mb-1" style="font-size: 11px; color: #38bdf8;">MODO EDICIÓN 3D</div>
+    <div class="btn-group btn-group-sm w-100 mb-1" role="group">
+        <button type="button" class="btn btn-outline-info active" id="btnModoMover"><i class="fas fa-arrows-alt"></i> Mover</button>
+        <button type="button" class="btn btn-outline-info" id="btnModoRotar"><i class="fas fa-sync-alt"></i> Girar</button>
+    </div>
+    <div class="text-muted" style="font-size: 9px;">Haz click en un objeto para seleccionarlo.<br>Presiona [Esc] para deseleccionar.</div>
+</div>
+
+<script>    
 window.addEventListener('load', function() {
     
     // --- 1. CONFIGURACIÓN INICIAL DEL MOTOR ---
@@ -90,20 +100,29 @@ window.addEventListener('load', function() {
     
     renderer.setSize(width, height);
     renderer.shadowMap.enabled = true; 
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
 
-    // --- 2. ILUMINACIÓN EJECUTIVA ---
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6); 
-    scene.add(ambientLight);
+    // --- 2. ILUMINACIÓN INDUSTRIAL PRO INDUSTRIAL PBR ---
+    const luzAmbiental = new THREE.AmbientLight(0xffffff, 0.4); 
+    scene.add(luzAmbiental);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8); 
-    dirLight.position.set(20, 40, 20);
-    dirLight.castShadow = true;
-    dirLight.shadow.mapSize.width = 2048;
-    dirLight.shadow.mapSize.height = 2048;
-    scene.add(dirLight);
+    const luzDirecional = new THREE.DirectionalLight(0xffffff, 0.8);
+    luzDirecional.position.set(50, 100, 50);
+    luzDirecional.castShadow = true; 
 
-    // --- 3. CONSTRUCCIÓN DEL ALMACÉN (GEMELO DIGITAL 3D REAL) ---
+    luzDirecional.shadow.mapSize.width = 2048;
+    luzDirecional.shadow.mapSize.height = 2048;
+    luzDirecional.shadow.camera.near = 0.5;
+    luzDirecional.shadow.camera.far = 300;
+    const d = 80;
+    luzDirecional.shadow.camera.left = -d;
+    luzDirecional.shadow.camera.right = d;
+    luzDirecional.shadow.camera.top = d;
+    luzDirecional.shadow.camera.bottom = -d;
+    scene.add(luzDirecional);
+
+    // --- 3. CONSTRUCCIÓN DEL ALMACÉN (GEMELO DIGITAL) ---
     const configFilas = {{ $almacen->total_filas_grid }};
     const configColumnas = {{ $almacen->total_columnas_grid }};
     
@@ -112,14 +131,19 @@ window.addEventListener('load', function() {
     const espacioEstructura = 0.2; 
     
     const dataAlmacen = @json($mapa3d);
+    const objetosInteractivos = []; // Registro de elementos editables en 3D
 
-    // Piso del Almacén
-    const planeGeo = new THREE.PlaneGeometry(configColumnas * cellSize, configFilas * cellSize);
-    const planeMat = new THREE.MeshStandardMaterial({ color: 0x444444, roughness: 0.8 });
-    const floor = new THREE.Mesh(planeGeo, planeMat);
-    floor.rotation.x = -Math.PI / 2; 
-    floor.receiveShadow = true;
-    scene.add(floor);
+    // Suelo Industrial de Concreto Pulido
+    const sueloGeo = new THREE.PlaneGeometry(configColumnas * cellSize * 2, configFilas * cellSize * 2);
+    const sueloMat = new THREE.MeshStandardMaterial({ 
+        color: 0x22252a, 
+        roughness: 0.4, 
+        metalness: 0.2 
+    });
+    const suelo = new THREE.Mesh(sueloGeo, sueloMat);
+    suelo.rotation.x = -Math.PI / 2;
+    suelo.receiveShadow = true; 
+    scene.add(suelo);
 
     // Grilla Técnica (AutoCAD style)
     const gridHelper = new THREE.GridHelper(Math.max(configFilas, configColumnas) * cellSize, Math.max(configFilas, configColumnas), 0x888888, 0x444444);
@@ -129,18 +153,16 @@ window.addEventListener('load', function() {
     const offsetX = (configColumnas * cellSize) / 2;
     const offsetZ = (configFilas * cellSize) / 2;
 
-    // --- FUNCIONES AUXILIARES: ETIQUETAS LEGIBLES INDEPENDIENTES ---
-    
-    // Etiqueta Plana: Ideal para pegar en el frente de los Racks sin chocar con los niveles superiores
+    // --- FUNCIONES AUXILIARES: ETIQUETAS LEGIBLES ---
     function crearEtiquetaPlana(sku, stock, cap, producto, colorHex, w, h) {
         const canvas = document.createElement('canvas');
         canvas.width = 512; canvas.height = 256;
         const ctx = canvas.getContext('2d');
         
-        ctx.fillStyle = 'rgba(20, 20, 20, 0.85)'; // Fondo oscuro semitransparente
+        ctx.fillStyle = 'rgba(20, 20, 20, 0.85)'; 
         ctx.fillRect(0, 0, 512, 256);
         ctx.fillStyle = colorHex;
-        ctx.fillRect(0, 0, 512, 12); // Línea de acento superior
+        ctx.fillRect(0, 0, 512, 12); 
 
         ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center';
         ctx.font = 'Bold 42px Arial'; ctx.fillText(sku, 256, 75);
@@ -148,14 +170,14 @@ window.addEventListener('load', function() {
         ctx.font = '26px Arial'; ctx.fillStyle = '#cccccc'; ctx.fillText(producto.substring(0, 35), 256, 195);
 
         const texture = new THREE.CanvasTexture(canvas);
-        texture.minFilter = THREE.LinearFilter; // Nitidez
-        const mat = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+        texture.minFilter = THREE.LinearFilter; 
+        const mat = new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.DoubleSide });
         return new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
     }
 
-    // --- FUNCIONES DE RENDERIZADO VOLUMÉTRICO PROPORCIONAL ---
+    // --- FUNCIONES DE RENDERIZADO MODULAR MEDIANTE GRUPOS EN EL CENTRO LOCAL (0,0,0) ---
 
-    function crearEstructuraVacia(x, y, z) {
+    function agregarNivelEstanteVacio(grupoPadre, y) {
         const ancho = cellSize - espacioEstructura;
         const alto = alturaNivel - espacioEstructura;
         const prof = cellSize - espacioEstructura;
@@ -164,95 +186,112 @@ window.addEventListener('load', function() {
         const edges = new THREE.EdgesGeometry(geometry);
         const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xb0bec5, linewidth: 2 }));
         
-        line.position.set(x + cellSize/2, y + alturaNivel/2, z + cellSize/2);
-        scene.add(line);
+        line.position.set(0, y + alturaNivel / 2, 0);
+        grupoPadre.add(line);
     }
 
-    function crearCajaSolida(x, y, z, sku, stock, producto, capacidad) {
+    function agregarNivelEstanteOcupado(grupoPadre, y, sku, stock, producto, capacidad) {
         const ancho = cellSize - espacioEstructura;
         const altoTotal = alturaNivel - espacioEstructura;
         const prof = cellSize - espacioEstructura;
 
-        // Matemática de Porcentaje de Ocupación
         const ratio = (capacidad && capacidad > 0) ? Math.min(stock / capacidad, 1) : 1;
-        const altoLleno = Math.max(altoTotal * ratio, 0.05); // Mínimo visible
+        const altoLleno = Math.max(altoTotal * ratio, 0.05); 
         const altoVacio = altoTotal - altoLleno;
 
-        // 1. Parte Solida (Stock Real)
+        // 1. Parte Solida (Stock)
         const matLleno = new THREE.MeshStandardMaterial({ color: 0x0d6efd, roughness: 0.4 });
         const meshLleno = new THREE.Mesh(new THREE.BoxGeometry(ancho, altoLleno, prof), matLleno);
-        meshLleno.position.set(x + cellSize/2, y + altoLleno/2, z + cellSize/2);
+        meshLleno.position.set(0, y + altoLleno / 2, 0);
         meshLleno.castShadow = true;
-        scene.add(meshLleno);
+        meshLleno.receiveShadow = true;
+        grupoPadre.add(meshLleno);
 
-        // 2. Parte Transparente (Espacio Libre)
+        // 2. Parte Transparente (Vacío)
         if (altoVacio > 0) {
             const matVacio = new THREE.MeshStandardMaterial({ color: 0x0d6efd, transparent: true, opacity: 0.15 });
             const meshVacio = new THREE.Mesh(new THREE.BoxGeometry(ancho, altoVacio, prof), matVacio);
-            meshVacio.position.set(x + cellSize/2, y + altoLleno + (altoVacio/2), z + cellSize/2);
-            scene.add(meshVacio);
+            meshVacio.position.set(0, y + altoLleno + (altoVacio / 2), 0);
+            grupoPadre.add(meshVacio);
         }
 
-        // 3. Jaula exterior negra para definir el volumen completo
+        // 3. Contenedor de Alambre / Jaula
         const edges = new THREE.EdgesGeometry(new THREE.BoxGeometry(ancho, altoTotal, prof));
         const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x000000 }));
-        line.position.set(x + cellSize/2, y + altoTotal/2, z + cellSize/2);
-        scene.add(line);
+        line.position.set(0, y + altoTotal / 2, 0);
+        grupoPadre.add(line);
 
-        // 4. Carteles identificadores (Frontal y Trasero para visibilidad total)
-     // Definimos las dimensiones y el offset para que sobresalgan un poco de la caja
-        const offsetZ = cellSize / 2 + prof / 2 + 0.01;
-        const offsetX = cellSize / 2 + ancho / 2 + 0.01; // Ajusta 'ancho' si tu caja tiene un ancho distinto
+        // 4. Inyección de Etiquetas Periféricas (4 Caras)
+        const offZ = prof / 2 + 0.01;
+        const offX = ancho / 2 + 0.01;
 
-        // 1. Cara Z Positiva (Frente)
         const etiqZPos = crearEtiquetaPlana(sku, stock, capacidad, producto, '#0d6efd', ancho * 0.85, altoTotal * 0.4);
-        etiqZPos.position.set(x + cellSize/2, y + altoTotal/2, z + offsetZ);
-        scene.add(etiqZPos);
+        etiqZPos.position.set(0, y + altoTotal / 2, offZ);
+        grupoPadre.add(etiqZPos);
 
-        // 2. Cara Z Negativa (Atrás)
         const etiqZNeg = crearEtiquetaPlana(sku, stock, capacidad, producto, '#0d6efd', ancho * 0.85, altoTotal * 0.4);
         etiqZNeg.rotation.y = Math.PI; 
-        etiqZNeg.position.set(x + cellSize/2, y + altoTotal/2, z - offsetZ + cellSize);
-        scene.add(etiqZNeg);
+        etiqZNeg.position.set(0, y + altoTotal / 2, -offZ);
+        grupoPadre.add(etiqZNeg);
 
-        // 3. Cara X Positiva (Derecha)
-        const etiqXPos = crearEtiquetaPlana(sku, stock, capacidad, producto, '#0d6efd', ancho * 0.85, altoTotal * 0.4);
-        etiqXPos.rotation.y = Math.PI / 2; // Rotación de 90 grados
-        etiqXPos.position.set(x + offsetX, y + altoTotal/2, z + cellSize/2);
-        scene.add(etiqXPos);
+        const etiqXPos = crearEtiquetaPlana(sku, stock, capacidad, producto, '#0d6efd', prof * 0.85, altoTotal * 0.4);
+        etiqXPos.rotation.y = Math.PI / 2;
+        etiqXPos.position.set(offX, y + altoTotal / 2, 0);
+        grupoPadre.add(etiqXPos);
 
-        // 4. Cara X Negativa (Izquierda)
-        const etiqXNeg = crearEtiquetaPlana(sku, stock, capacidad, producto, '#0d6efd', ancho * 0.85, altoTotal * 0.4);
-        etiqXNeg.rotation.y = -Math.PI / 2; // Rotación de -90 grados
-        etiqXNeg.position.set(x - offsetX + cellSize, y + altoTotal/2, z + cellSize/2);
-        scene.add(etiqXNeg);
+        const etiqXNeg = crearEtiquetaPlana(sku, stock, capacidad, producto, '#0d6efd', prof * 0.85, altoTotal * 0.4);
+        etiqXNeg.rotation.y = -Math.PI / 2;
+        etiqXNeg.position.set(-offX, y + altoTotal / 2, 0);
+        grupoPadre.add(etiqXNeg);
     }
 
-    function crearTanqueGranel(x, z, estaOcupado, sku, stock, producto, capacidad) {
+    function construirTanqueGranel(estaOcupado, sku, stock, producto, capacidad, orientacion) {
+        const grupo = new THREE.Group();
         const radio = (cellSize - espacioEstructura) / 2;
         const altoTotal = alturaNivel * 1.5; 
 
+        let altoLleno = altoTotal;
+        let altoVacio = 0;
+
+        if (estaOcupado && capacidad > 0) {
+            const ratio = Math.min(stock / capacidad, 1);
+            altoLleno = Math.max(altoTotal * ratio, 0.1);
+            altoVacio = altoTotal - altoLleno;
+        }
+
+        // Configuración estructural base del Cilindro
+        const matLleno = new THREE.MeshStandardMaterial({ color: 0xffc107, roughness: 0.3, metalness: 0.4 });
+        const meshLleno = new THREE.Mesh(new THREE.CylinderGeometry(radio, radio, estaOcupado ? altoLleno : 0.01, 32), matLleno);
+        meshLleno.castShadow = true;
+        meshLleno.receiveShadow = true;
+
+        const matVacio = new THREE.MeshStandardMaterial({ color: 0xffc107, transparent: true, opacity: 0.15 });
+        const meshVacio = new THREE.Mesh(new THREE.CylinderGeometry(radio, radio, estaOcupado ? altoVacio : altoTotal, 32), matVacio);
+
+        const edges = new THREE.EdgesGeometry(new THREE.CylinderGeometry(radio, radio, altoTotal, 16));
+        const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xffc107, opacity: 0.5, transparent: true }));
+
+        // ADAPTACIÓN DE ORIENTACIÓN (Horizontal 'H' vs Vertical 'V')
+        if (orientacion === 'H') {
+            meshLleno.rotation.z = Math.PI / 2;
+            meshVacio.rotation.z = Math.PI / 2;
+            line.rotation.z = Math.PI / 2;
+
+            meshLleno.position.set(estaOcupado ? (-altoTotal / 2 + altoLleno / 2) : 0, radio, 0);
+            meshVacio.position.set(estaOcupado ? (altoLleno / 2 + altoVacio / 2) : 0, radio, 0);
+            line.position.set(0, radio, 0);
+        } else {
+            meshLleno.position.set(0, estaOcupado ? (altoLleno / 2) : 0, 0);
+            meshVacio.position.set(0, estaOcupado ? (altoLleno + (altoVacio / 2)) : (altoTotal / 2), 0);
+            line.position.set(0, altoTotal / 2, 0);
+        }
+
+        if (estaOcupado) grupo.add(meshLleno);
+        grupo.add(meshVacio);
+        grupo.add(line);
+
+        // Cartel Flotante del Tanque
         if (estaOcupado) {
-            const ratio = (capacidad && capacidad > 0) ? Math.min(stock / capacidad, 1) : 1;
-            const altoLleno = Math.max(altoTotal * ratio, 0.1);
-            const altoVacio = altoTotal - altoLleno;
-
-            // Fluido Sólido
-            const matLleno = new THREE.MeshStandardMaterial({ color: 0xffc107, roughness: 0.3 });
-            const meshLleno = new THREE.Mesh(new THREE.CylinderGeometry(radio, radio, altoLleno, 32), matLleno);
-            meshLleno.position.set(x + cellSize/2, altoLleno/2, z + cellSize/2);
-            meshLleno.castShadow = true;
-            scene.add(meshLleno);
-
-            // Vacío Transparente
-            if (altoVacio > 0) {
-                const matVacio = new THREE.MeshStandardMaterial({ color: 0xffc107, transparent: true, opacity: 0.15 });
-                const meshVacio = new THREE.Mesh(new THREE.CylinderGeometry(radio, radio, altoVacio, 32), matVacio);
-                meshVacio.position.set(x + cellSize/2, altoLleno + (altoVacio/2), z + cellSize/2);
-                scene.add(meshVacio);
-            }
-
-            // Etiqueta Sprite Flotante (Se usa Sprite porque siempre mirará a la cámara, ideal para cilindros)
             const canvas = document.createElement('canvas');
             canvas.width = 512; canvas.height = 256;
             const ctx = canvas.getContext('2d');
@@ -265,29 +304,21 @@ window.addEventListener('load', function() {
             
             const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas) }));
             sprite.scale.set(cellSize * 1.5, cellSize * 0.75, 1);
-            sprite.position.set(x + cellSize/2, altoTotal + 0.8, z + cellSize/2);
-            scene.add(sprite);
-        } else {
-            // Cilindro 100% Vacío
-            const matVacio = new THREE.MeshStandardMaterial({ color: 0xffc107, transparent: true, opacity: 0.15 });
-            const meshVacio = new THREE.Mesh(new THREE.CylinderGeometry(radio, radio, altoTotal, 32), matVacio);
-            meshVacio.position.set(x + cellSize/2, altoTotal/2, z + cellSize/2);
-            scene.add(meshVacio);
+            sprite.position.set(0, (orientacion === 'H' ? radio * 2 : altoTotal) + 0.8, 0);
+            grupo.add(sprite);
         }
 
-        // Jaula de bordes para contener visualmente el cilindro
-        const edges = new THREE.EdgesGeometry(new THREE.CylinderGeometry(radio, radio, altoTotal, 16));
-        const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xffc107, opacity: 0.5, transparent: true }));
-        line.position.set(x + cellSize/2, altoTotal/2, z + cellSize/2);
-        scene.add(line);
+        return grupo;
     }
 
-    function crearPalletPiso(x, z, infoPallet) {
+    function construirPalletPiso(infoPallet) {
+        const grupo = new THREE.Group();
+        
         const planoMat = new THREE.MeshStandardMaterial({ color: 0x0dcaf0, side: THREE.DoubleSide, roughness: 0.8 });
         const pisoCelda = new THREE.Mesh(new THREE.PlaneGeometry(cellSize, cellSize), planoMat);
         pisoCelda.rotation.x = -Math.PI / 2;
-        pisoCelda.position.set(x + cellSize/2, 0.01, z + cellSize/2);
-        scene.add(pisoCelda);
+        pisoCelda.position.set(0, 0.01, 0);
+        grupo.add(pisoCelda);
 
         if (infoPallet && infoPallet.ocupado) {
             const anchoBox = cellSize - 0.4;
@@ -298,26 +329,24 @@ window.addEventListener('load', function() {
             const altoLleno = Math.max(altoTotal * ratio, 0.05);
             const altoVacio = altoTotal - altoLleno;
 
-            // Sólido
             const meshLleno = new THREE.Mesh(new THREE.BoxGeometry(anchoBox, altoLleno, prof), new THREE.MeshStandardMaterial({ color: 0x17a2b8, roughness: 0.5 }));
-            meshLleno.position.set(x + cellSize/2, altoLleno/2, z + cellSize/2);
+            meshLleno.position.set(0, altoLleno / 2, 0);
             meshLleno.castShadow = true;
-            scene.add(meshLleno);
+            meshLleno.receiveShadow = true;
+            grupo.add(meshLleno);
 
-            // Transparente
             if (altoVacio > 0) {
                 const meshVacio = new THREE.Mesh(new THREE.BoxGeometry(anchoBox, altoVacio, prof), new THREE.MeshStandardMaterial({ color: 0x17a2b8, transparent: true, opacity: 0.15 }));
-                meshVacio.position.set(x + cellSize/2, altoLleno + (altoVacio/2), z + cellSize/2);
-                scene.add(meshVacio);
+                meshVacio.position.set(0, altoLleno + (altoVacio / 2), 0);
+                grupo.add(meshVacio);
             }
 
-            // Bordes
             const edges = new THREE.EdgesGeometry(new THREE.BoxGeometry(anchoBox, altoTotal, prof));
             const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x000000 }));
-            line.position.set(x + cellSize/2, altoTotal/2, z + cellSize/2);
-            scene.add(line);
+            line.position.set(0, altoTotal / 2, 0);
+            grupo.add(line);
 
-            // Cartel Flotante
+            // Cartel Informativo
             const canvas = document.createElement('canvas');
             canvas.width = 512; canvas.height = 256;
             const ctx = canvas.getContext('2d');
@@ -330,43 +359,66 @@ window.addEventListener('load', function() {
 
             const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas) }));
             sprite.scale.set(cellSize * 1.5, cellSize * 0.75, 1);
-            sprite.position.set(x + cellSize/2, altoTotal + 0.8, z + cellSize/2);
-            scene.add(sprite);
+            sprite.position.set(0, altoTotal + 0.8, 0);
+            grupo.add(sprite);
         }
+
+        return grupo;
     }
 
-    // --- PROCESAMIENTO E ITERACIÓN DEL LAYOUT MATRIZ ---
+    // --- ITERACIÓN INTEGRAL DE ELEMENTOS ---
     dataAlmacen.forEach(item => {
-        const posX = (item.x * cellSize) - offsetX - (cellSize);
-        const posZ = (item.z * cellSize) - offsetZ - (cellSize);
+        const posX = (item.x * cellSize) - offsetX - (cellSize) + (cellSize / 2);
+        const posZ = (item.z * cellSize) - offsetZ - (cellSize) + (cellSize / 2);
+
+        let grupoCelda = null;
 
         if (item.tipo === 'ESTANTE') {
+            grupoCelda = new THREE.Group();
             for (let n = 1; n <= item.niveles; n++) {
                 const infoNivel = item.inventario.find(i => i.nivel === n);
                 const posY = (n - 1) * alturaNivel;
 
                 if (infoNivel && infoNivel.ocupado) {
-                    crearCajaSolida(posX, posY, posZ, infoNivel.sku, infoNivel.stock, infoNivel.producto, infoNivel.capacidad);
+                    agregarNivelEstanteOcupado(grupoCelda, posY, infoNivel.sku, infoNivel.stock, infoNivel.producto, infoNivel.capacidad);
                 } else {
-                    crearEstructuraVacia(posX, posY, posZ);
+                    agregarNivelEstanteVacio(grupoCelda, posY);
                 }
             }
         } 
         else if (item.tipo === 'GRANEL_LUBRICANTE') {
             const ubiOcupada = item.inventario.find(i => i.ocupado);
-            if (ubiOcupada) {
-                crearTanqueGranel(posX, posZ, true, ubiOcupada.sku, ubiOcupada.stock, ubiOcupada.producto, ubiOcupada.capacidad);
-            } else {
-                crearTanqueGranel(posX, posZ, false, '', 0, '', 0);
-            }
+            grupoCelda = construirTanqueGranel(
+                !!ubiOcupada, 
+                ubiOcupada ? ubiOcupada.sku : '', 
+                ubiOcupada ? ubiOcupada.stock : 0, 
+                ubiOcupada ? ubiOcupada.producto : '', 
+                item.capacidad_max || (ubiOcupada ? ubiOcupada.capacidad : 0),
+                item.orientacion || 'V'
+            );
         } 
         else if (item.tipo === 'PISO_PALLET') {
             const infoPallet = item.inventario.find(i => i.nivel === 1);
-            crearPalletPiso(posX, posZ, infoPallet);
+            grupoCelda = construirPalletPiso(infoPallet);
+        }
+
+        // Asignación de Transformaciones y Metadata Persistente
+        if (grupoCelda) {
+            grupoCelda.position.set(posX, 0, posZ);
+            grupoCelda.rotation.y = item.rotacion_radianes || 0; // Carga rotación original de la DB
+            
+            grupoCelda.userData = {
+                id: item.id,
+                tipo: item.tipo,
+                codigo: item.codigo
+            };
+
+            scene.add(grupoCelda);
+            objetosInteractivos.push(grupoCelda);
         }
     });
 
-    // --- 4. CÁMARAS Y CONTROLES ---
+    // --- 4. CÁMARAS Y CONTROLES PRO ---
     const orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
     orbitControls.enableDamping = true;
     orbitControls.dampingFactor = 0.05;
@@ -379,9 +431,92 @@ window.addEventListener('load', function() {
     const doomControls = new THREE.PointerLockControls(camera, document.body);
     let modoDoomActivo = false;
 
+    // INTERRUPTOR DE MANDOS DE TRANSFORMACIÓN (Mover/Girar en 3D)
+    const transformControls = new THREE.TransformControls(camera, renderer.domElement);
+    scene.add(transformControls);
+
+    transformControls.addEventListener('change', () => renderer.render(scene, camera));
+    transformControls.addEventListener('dragging-changed', function (event) {
+        orbitControls.enabled = !event.value;
+    });
+
+    $('#btnModoMover').on('click', function() {
+        transformControls.setMode('translate');
+        $('.btn-group .btn').removeClass('active');
+        $(this).addClass('active');
+    });
+
+    $('#btnModoRotar').on('click', function() {
+        transformControls.setMode('rotate');
+        $('.btn-group .btn').removeClass('active');
+        $(this).addClass('active');
+    });
+
+    // Raycasting para Selección Tactil/Raton en la Escena 3D
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    renderer.domElement.addEventListener('pointerdown', (event) => {
+        if (modoDoomActivo) return;
+
+        const rect = renderer.domElement.getBoundingClientRect();
+        mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(objetosInteractivos, true);
+
+        if (intersects.length > 0) {
+            let objBase = intersects[0].object;
+            while (objBase.parent && objBase.parent !== scene) {
+                objBase = objBase.parent;
+            }
+            transformControls.attach(objBase);
+        }
+    });
+
+    window.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            transformControls.detach();
+        }
+    });
+
+    // SINCRONIZACIÓN AUTOMÁTICA HACIA LARAVEL POR MEDIO DE AJAX
+    transformControls.addEventListener('objectChange', function () {
+        const obj = transformControls.object;
+        if (!obj) return;
+
+        // Ecuación Inversa Perfecta del Grid para Sincronizar Coordenadas
+        const calculadoGridX = Math.round((obj.position.x + offsetX + (cellSize / 2)) / cellSize);
+        const calculadoGridY = Math.round((obj.position.z + offsetZ + (cellSize / 2)) / cellSize);
+        const anguloRotacion = obj.rotation.y;
+
+        $.ajax({
+            url: "{{ route('almacen.layout.actualizar_posicion_3d') }}",
+            method: "POST",
+            data: {
+                _token: "{{ csrf_token() }}",
+                estructura_id: obj.userData.id,
+                coord_x: calculadoGridX,
+                coord_y: calculadoGridY,
+                rotacion: anguloRotacion
+            },
+            success: function(res) {
+                if(res.success) {
+                    console.log(`Estructura ${obj.userData.codigo} resincronizada en DB [X:${calculadoGridX}, Y:${calculadoGridY}].`);
+                }
+            },
+            error: function(err) {
+                console.error("Fallo de comunicación en persistencia espacial remota.", err);
+            }
+        });
+    });
+
+    // --- INTERRUPTORES HUD ORBIT / DOOM ---
     $('#btnOrbit').on('click', function() {
         modoDoomActivo = false;
         doomControls.unlock();
+        transformControls.detach();
         orbitControls.enabled = true;
         
         $(this).removeClass('btn-outline-primary').addClass('btn-primary');
@@ -395,6 +530,7 @@ window.addEventListener('load', function() {
     $('#btnDoom').on('click', function() {
         modoDoomActivo = true;
         orbitControls.enabled = false;
+        transformControls.detach();
         
         $(this).removeClass('btn-outline-light').addClass('btn-light');
         $('#btnOrbit').removeClass('btn-primary').addClass('btn-outline-primary');

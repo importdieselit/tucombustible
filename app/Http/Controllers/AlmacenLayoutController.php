@@ -585,5 +585,26 @@ public function guardarEstructuraDrag(Request $request)
         }
     }
 
+    public function actualizarPosicion3D(Request $request)
+    {
+        $request->validate([
+            'estructura_id' => 'required|exists:almacen_estructuras_grid,id',
+            'coord_x'       => 'required|integer|min:0',
+            'coord_y'       => 'required|integer|min:0',
+            'rotacion'      => 'required|numeric'
+        ]);
+
+        $estructura = AlmacenEstructuraGrid::findOrFail($request->estructura_id);
+        
+        // Actualizar coordenadas y el ángulo de rotación Y en radianes
+        $estructura->update([
+            'coord_x' => $request->coord_x,
+            'coord_y' => $request->coord_y,
+            'rotacion_radianes' => $request->rotacion 
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Estructura reposicionada con éxito.']);
+    }
+
     
 }
