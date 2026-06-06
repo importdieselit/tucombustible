@@ -83,6 +83,37 @@ class VehiculoObserver
         }
     }
 
+    // public function updated(Vehiculo $vehiculo)
+    // {
+    //     // CASO 2: Cambio a EN RUTA (2) sin checklist previo
+    //     if ($vehiculo->isDirty('estatus') && $vehiculo->estatus == 2) {
+            
+    //         // Buscamos el viaje programado para este vehículo hoy
+    //         $viaje = Viaje::where('vehiculo_id', $vehiculo->id)
+    //             ->where('status', 'Programado')
+    //             ->latest()
+    //             ->first();
+
+    //         if ($viaje) {
+    //             $hasChecklist = Inspeccion::where('viaje_id', $viaje->id)
+    //                 ->whereNull('respuesta_in')
+    //                 ->exists();
+
+    //             if (!$hasChecklist) {
+    //                 $usuariosNotificar = [1, 2, 5];
+    //                 foreach ($usuariosNotificar as $userId) {
+    //                     FcmNotificationService::enviarNotification(
+    //                         "INCUMPLIMIENTO DE PROCESO",
+    //                         "El vehículo {$vehiculo->flota} pasó a estado EN RUTA sin completar el checklist de salida para el viaje #{$viaje->id}.",
+    //                         ['viaje_id' => $viaje->id],
+    //                         $userId
+    //                     );
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+
     /**
      * Se ejecuta DESPUÉS de guardar en la DB.
      * Ideal para disparar efectos secundarios en cascada (Notificaciones, updates de otras tablas).

@@ -22,7 +22,7 @@ use App\Http\Controllers\{
     ReporteController, AforoController, SearchController, DataDeletionController,
     ViajesController, TelegramController, PlanificacionMantenimientoController,
     ReportController, ClienteActivosController,NotificationController, PlanMayorController,LogisticaController,
-    AlmacenLayoutController
+    AlmacenLayoutController,ConteoController
 };
 use App\Http\Controllers\SalaControlController;
 
@@ -144,12 +144,17 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/inventario/solicitudes/{id}/dispatch', [InventarioController::class, 'dispatch'])->name('inventario.requests.dispatch');
     Route::post('/inventario/import/excel', [InventarioController::class, 'import'])->name('inventario.import');
     Route::get('/inventario/export/excel', [InventarioController::class, 'export'])->name('inventario.export');
+    Route::get('inventario/compras/crear', [InventarioController::class, 'create'])->name('compras.create');
+    Route::post('inventario/compras/guardar', [InventarioController::class, 'store'])->name('compras.store');
     Route::get('/ventas/create', [InventarioController::class, 'ventaCreate'])->name('ventas.create');
     Route::post('/ventas/store', [InventarioController::class, 'ventaStore'])->name('ventas.store');
     Route::post('/clientes/store-ajax', [PortalClienteController::class, 'storeAjax'])->name('clientes.storeAjax');  
     Route::get('/ventas/list', [InventarioController::class, 'ventaList'])->name('ventas.list'); 
     Route::get('/ventas/show/{id}', [InventarioController::class, 'ventaShow'])->name('ventas.show'); 
-
+    Route::get('inventario/conteo/', [ConteoController::class, 'create'])->name('inventario.conteo');
+    Route::post('inventario/conteo/guardar', [ConteoController::class, 'store'])->name('inventario.conteo.store');
+    Route::get('inventario/conteo/estadisticas', [ConteoController::class, 'estadisticas'])->name('conteo.estadisticas');
+    
     // Importaciones
     Route::get('choferes/importar', [ChoferController::class, 'showImportForm'])->name('choferes.show-import-form');
     Route::post('choferes/importar', [ChoferController::class, 'importar'])->name('choferes.importar');

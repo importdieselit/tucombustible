@@ -20,7 +20,9 @@ class SuministroCompraDetalle extends Model
         'cantidad_solicitada',
         'costo_unitario_aprobado',
         'cantidad_aprobada',
-        'estatus'
+        'estatus',
+        'observacion',
+        'proveedor_id'
     ];
 
     /**
@@ -38,4 +40,10 @@ class SuministroCompraDetalle extends Model
     {
         return $this->belongsTo(Inventario::class, 'inventario_id');
     }
+    
+    public function proveedor(): BelongsTo
+    {
+        return $this->belongsTo(Proveedor::class, 'proveedor_id');
+    }
+    
 }
