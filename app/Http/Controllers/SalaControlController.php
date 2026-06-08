@@ -60,8 +60,7 @@ class SalaControlController extends Controller
         $total = $data->count();
         $enRuta = $data->where('estatus', 2)->count();
         $operativosCount = $data->where('estatus', 1)->count();
-        $fallaCount = $data->whereIn('estatus', [3, 4, 5])->count();
-        $porcentajeDisponibilidad = $total > 0 ? round(($operativosCount / $total) * 100) : 0;
+        $porcentajeDisponibilidad = $total > 0 ? round(($operativosCount + $enRuta) / $total * 100) : 0;
         $tanque00=Deposito::where('id', 3)->first();
         $disponiblidadCombustible =  Deposito::where('id','!=', 3)->selectRaw('SUM(nivel_actual_litros) as total_combustible, sum(capacidad_litros) as capacidad_total')->first();
         
