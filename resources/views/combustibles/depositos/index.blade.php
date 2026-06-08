@@ -37,7 +37,7 @@
         <div class="col-md-3">
             <label class="small fw-bold text-uppercase text-muted mb-1" style="font-size: 12px;">Ubicación / Sede</label>
             <select name="id_sede" class="form-select form-select-sm fw-bold" style="font-size: 13px;" onchange="this.form.submit()">
-                <option value="">AGRUPAR POR: TODAS LAS SEDES</option>
+                <option value="">SELECCIONE UNA SEDE</option>
                 @foreach($sedes as $sede)
                     <option value="{{ $sede->id }}" {{ request('id_sede') == $sede->id ? 'selected' : '' }}>
                         {{ $sede->nombre }}
@@ -83,15 +83,15 @@
                 </div>
 
                 {{-- Leyenda estática --}}
-                <div class="d-flex align-items-center gap-3">
-                    <div class="d-flex align-items-center gap-1">
+                <div class="position-absolute bottom-0 start-0 m-3 text-white p-2 rounded d-flex align-items-center gap-3 shadow-sm" 
+                    style="z-index: 10; bg-color: rgba(0,0,0,0.4); backdrop-filter: blur(2px);">
+                    <div class="d-flex align-items-center gap-2">
                         <span class="d-inline-block rounded-circle" style="width: 12px; height: 12px; background-color: #ffa500;"></span>
-                        <span class="fw-bold" style="font-size: 11px;">DIESEL</span>
+                        <span class="fw-bold text-light" style="font-size: 11px; letter-spacing: 0.5px;">DIESEL</span>
                     </div>
-                    <div class="d-flex align-items-center gap-1">
-                        {{-- Cambiado a #00a8ff para que coincida con el 3D --}}
+                    <div class="d-flex align-items-center gap-2">
                         <span class="d-inline-block rounded-circle" style="width: 12px; height: 12px; background-color: #00a8ff;"></span>
-                        <span class="fw-bold" style="font-size: 11px;">MGO</span>
+                        <span class="fw-bold text-light" style="font-size: 11px; letter-spacing: 0.5px;">MGO</span>
                     </div>
                 </div>
             </div>
@@ -260,13 +260,26 @@
 
                 mesh.position.set(inicialX, yFija, inicialZ);
 
-                // Meta-datos adjuntos
+                // Formatear el texto de medidas según la forma geométrica para la auditoría
+                let medidasTexto = '';
+                if (tanque.forma === 'R' || tanque.forma === 'C') {
+                    medidasTexto = `${tanque.ancho || 0} x ${tanque.alto || 0} x ${tanque.longitud || 0} cm`;
+                } else if (tanque.forma === 'CV') {
+                    medidasTexto = `Diametro: ${tanque.diametro || 0} cm | Alto: ${tanque.alto || 0} cm`;
+                } else if (tanque.forma === 'CH') {
+                    medidasTexto = `Diametro: ${tanque.diametro || 0} cm | Largo: ${tanque.longitud || 0} cm`;
+                } else {
+                    medidasTexto = `${tanque.diametro || 0} cm`;
+                }
+
+                // Meta-datos adjuntos completos para el panel interactivo
                 mesh.userData = {
                     id: tanque.id,
                     serial: tanque.serial,
                     capacidad: parseFloat(tanque.capacidad_maxima).toLocaleString('es-VE'),
                     combustible: relacion ? relacion.nombre : 'N/A',
-                    yFija: yFija // Guardamos el Y para que no flote al arrastrar
+                    medidas: medidasTexto, // Dimensiones agregadas para el visor técnico
+                    yFija: yFija 
                 };
 
                 scene.add(mesh);
@@ -333,6 +346,65 @@
                     camera.position.set(0, 10, 15);
                     controls.update();
                 }
+            });
+            
+            // RAYCASTER PARA MOSTRAR ESPECIFICACIONES AL HACER CLIC
+            window.addEventListener('click', function(event) {
+                // Evitar que se active si haces clic en botones o fuera del canvas interactivo
+                if (event.target.tagName !== 'CANVAS') return;
+
+                const rect = renderer.domElement.getBoundingClientRect();
+                mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+                raycaster.setFromCamera(mouse, camera);
+                const intersects = raycaster.intersectObjects(objetoTanquesMeshes);
+
+                if (intersects.length > 0) {
+                    const tanqueSeleccionado = intersects[0].object;
+                    const data = tanqueSeleccionado.userData;
+
+                    // Determinar color de etiqueta por tipo de combustible
+                    const esDiesel = data.combustible.toUpperCase().includes('DIESEL');
+                    const badgeColor = esDiesel ? 'background-color: #ffa500; color: #000;' : 'background-color: #00a8ff; color: #fff;';
+
+                    // Inyectar las especificaciones técnicas en el div flotante
+                    tooltip.innerHTML = `
+                        <div class="text-uppercase fw-bold text-muted mb-1" style="font-size: 10px; letter-spacing: 0.5px;">Ficha de Infraestructura</div>
+                        <h6 class="fw-black text-dark text-uppercase mb-2" style="font-size: 14px;">
+                            <i class="fas fa-gas-pump me-1" style="color: #ff6600;"></i> ${data.serial}
+                        </h6>
+                        <div class="mb-1" style="font-size: 12px;">
+                            <strong class="text-secondary">Combustible:</strong> 
+                            <span class="badge rounded-sm px-2 py-0.5 fw-bold text-uppercase" style="${badgeColor} font-size: 10px;">${data.combustible}</span>
+                        </div>
+                        <div class="mb-1" style="font-size: 12px;">
+                            <strong class="text-secondary">Capacidad Máx:</strong> 
+                            <span class="fw-black text-dark">${data.capacidad} Lts</span>
+                        </div>
+                        <div style="font-size: 12px;">
+                            <strong class="text-secondary">Medidas:</strong> 
+                            <span class="text-muted font-monospace fw-bold">${data.medidas}</span>
+                        </div>
+                    `;
+
+                    // Calcular la posición exacta del cursor relativa al contenedor con posición relativa
+                    const contenedorRect = container.getBoundingClientRect();
+                    const xPos = event.clientX - contenedorRect.left + 15;
+                    const yPos = event.clientY - contenedorRect.top + 15;
+
+                    tooltip.style.left = `${xPos}px`;
+                    tooltip.style.top = `${yPos}px`;
+                    tooltip.style.display = 'block';
+                } else {
+                    // Ocultar el tooltip si el operador hace clic en el piso vacío del patio
+                    tooltip.style.display = 'none';
+                }
+            });
+
+            // Ocultar el tooltip si se empieza a rotar la cámara con OrbitControls para evitar desfases visuales
+            controls.addEventListener('start', function() {
+                tooltip.style.display = 'none';
             });
 
             // ENVIAR NUEVAS COORDENADAS POR AJAX (FETCH)

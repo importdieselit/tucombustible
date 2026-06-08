@@ -344,6 +344,38 @@
             });
     }
 
+    function cancelarPlanificacion(id) {
+        Swal.fire({
+            title: '¿ESTÁS SEGURO?',
+            text: "Esta acción cancelará la planificación y no se podrá revertir.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#212529',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'SÍ, CANCELAR',
+            cancelButtonText: 'NO'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/logistica/${id}/cancelar`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('¡CANCELADO!', data.success, 'success')
+                        .then(() => location.reload());
+                    } else {
+                        Swal.fire('ERROR', data.error, 'error');
+                    }
+                });
+            }
+        });
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
         const ctxPareto = document.getElementById('chartParetoClientes').getContext('2d');
 
