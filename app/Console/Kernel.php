@@ -29,6 +29,7 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('summary:daily-report')->dailyAt('00:00');
         $schedule->command('cupos:reset')->monthlyOn(1, '00:00');
+        $schedule->command('reports:watch')->everyFiveMinutes()->between('16:40', '17:00')->timezone('America/Caracas');
     }
 
  
