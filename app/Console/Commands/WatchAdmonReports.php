@@ -46,7 +46,6 @@ class WatchAdmonReports extends Command
         // 1. Verificamos si el archivo de HOY ya fue procesado con éxito
         if (ProcessedFile::where('report_date', $todayDate)->exists()) {
             $this->info("El reporte de hoy ({$todayDateText}) ya fue procesado exitosamente. No se requiere acción.");
-            $this->sendWhatsappReport();
             return 0; // Termina la ejecución
         }
 
@@ -167,7 +166,7 @@ class WatchAdmonReports extends Command
                 $numerosDestino = [
                     '584241666291', // Jefe
                     '584241177910', // Gerente
-                    //'584245556677'  // Auditoría
+                    '584141780355'  // Leudo
                 ];
 
                 foreach ($numerosDestino as $numero) {
