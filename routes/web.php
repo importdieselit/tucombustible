@@ -45,6 +45,7 @@ Route::get('/viajes/reporte-interno', [ViajesController::class, 'reporteDiario']
 Route::get('/reporte/flota-interno', [VehiculoController::class, 'reporteDisponibilidad'])->name('reporte.flota.interno');
 Route::get('/reporte/mantenimiento-interno', [OrdenController::class, 'reporteGerencial'])->name('reporte.mantenimiento.interno');
 Route::get('/vehiculos/disponibilidad/refresh', [VehiculoController::class, 'refreshDisponibilidad'])->name('vehiculos.disponibilidad.refresh');
+Route::get('/reporte-admon', [GerentialReportController::class, 'admon'])->name('reporte.admon');
 
 Route::get('/test-push', function () {
     $user = User::find(1); // Tu usuario
@@ -135,8 +136,7 @@ Route::middleware(['auth'])->group(function () {
     
     Route::get('/reportes/gerencial', [ReportController::class, 'reporteGerencial'])->name('reportes.gerencial');
     Route::post('/whatsapp/send', [GerentialReportController::class, 'sendWhatsapp'])->name('whatsapp.send');
-    Route::get('/reporte-admon', [GerentialReportController::class, 'admon'])->name('reporte.admon');
-
+    
     // Inventario y Almacén
     Route::get('inventario/entry', [InventarioController::class, 'entry'])->name('inventario.entry');
     Route::get('inventario/adjustment', [InventarioController::class, 'adjustment'])->name('inventario.adjustment');

@@ -12,6 +12,12 @@ class GerentialReportController extends Controller
 {
     public function admon(Request $request)
     {
+
+        $tokenValido = config('services.reporte.internal_token');
+        // Si no está logueado Y el token no coincide, entonces al login
+        if (!auth()->check() && $request->get('token') !== $tokenValido) {
+        // abort(403, 'Acceso no autorizado');
+        }
         // Obtener fechas disponibles para el filtro selector
         $availableDates = ProcessedFile::orderBy('report_date', 'desc')->pluck('report_date');
         
