@@ -10,6 +10,12 @@ use App\Models\ReportRecord;
 use App\Events\ReportProcessedEvent;
 use Carbon\Carbon;
 use App\Services\WhatsappApiService; // Importamos tu servicio
+use App\Services\ReporteImagenService;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+
 
 class WatchAdmonReports extends Command
 {
@@ -25,6 +31,7 @@ class WatchAdmonReports extends Command
     {
         parent::__construct();
         $this->whatsappService = $whatsappService;
+        
     }
 
     public function handle()
@@ -39,6 +46,7 @@ class WatchAdmonReports extends Command
         // 1. Verificamos si el archivo de HOY ya fue procesado con éxito
         if (ProcessedFile::where('report_date', $todayDate)->exists()) {
             $this->info("El reporte de hoy ({$todayDateText}) ya fue procesado exitosamente. No se requiere acción.");
+            $this->sendWhatsappReport();
             return 0; // Termina la ejecución
         }
 
@@ -46,6 +54,7 @@ class WatchAdmonReports extends Command
         if (Storage::exists($filePath)) {
             $this->info("Archivo {$expectedFileName} encontrado. Iniciando procesamiento...");
             $this->processFile($filePath, $expectedFileName, $todayDate);
+            $this->sendWhatsappReport(); // Enviamos el reporte a WhatsApp después de procesar
             return 0;
         }
 
@@ -114,6 +123,80 @@ class WatchAdmonReports extends Command
         } else {
             $this->error("Fallo al enviar la alerta de WhatsApp.");
         }
+    }
+
+
+    public function sendWhatsappReport()
+    {
+
+        $tokenInterno = config('services.reporte.internal_token');
+        $reporteService = new ReporteImagenService();
+         try {
+                $this->info("Procesando: Reporte Finanzas...");
+
+                // 2. Construir URL del reporte con el token
+                $urlInterna = route('reporte.admon') . "?token=" . $tokenInterno;
+                
+                // 3. Construir URL de ScreenshotOne (Variables estandarizadas)
+                $accessKey = 'm7uxLbNHYl45Tg'; // Podrías mover esto al config o .env
+                $apiUrl = "https://api.screenshotone.com/take?" . http_build_query([
+                    'access_key' => $accessKey,
+                    'url' => $urlInterna,
+                    'format' => 'png',
+                    'block_ads' => 'true',
+                    'block_cookie_banners' => 'true',
+                    'delay' => 2, // Un pequeño delay para asegurar carga de JS/CSS
+                    'timeout' => 60,
+                    'selector' => '#reporteFinanzas',
+                    'image_quality' => 80
+                ]);
+
+                // 4. Generar la imagen localmente
+                $rutaImagen = $reporteService->generarSnapshot($apiUrl, 'reporte_finanzas');
+                
+                // 5. Preparar para WhatsApp
+                $dataImagen = file_get_contents($rutaImagen);
+                $base64 = base64_encode($dataImagen);
+                $img_ready = "data:image/png;base64," . $base64;
+
+                // 6. Enviar vía UltraMsg
+                $baseUrl = rtrim(config('services.whatsapp.url'), '/');
+                $tokenWA = config('services.whatsapp.key');
+                $endpoint = "{$baseUrl}/messages/image?token={$tokenWA}";
+
+                $numerosDestino = [
+                    '584241666291' // Jefe
+                    //'584149876543', // Gerente
+                    //'584245556677'  // Auditoría
+                ];
+
+                foreach ($numerosDestino as $numero) {
+                    // Formateamos el ID para chat privado: número + @c.us
+                    $idPrivado = $numero . '@c.us';
+
+                    // Usamos tu servicio existente. 
+                    // Como tu método recibe $idDestino como tercer parámetro, lo sobreescribimos aquí:
+
+                    $response = $this->whatsappService->enviarImagen(
+                        $caption = "📊 *Reporte de Finanzas* - " . date('d/m/Y'),
+                        $rutaImagen = $img_ready,
+                        $idDestino = $idPrivado
+                    );
+                    if ($response->successful() && ($response->json()['sent'] ?? '') == 'true') {
+                        $this->info("✅ Reporte de Finanzas enviado.");
+                    } else {
+                        $this->error("❌ Error enviando Reporte de Finanzas: " . $response->body());
+                    } 
+                }
+
+               
+
+            } catch (\Exception $e) {
+                $this->error("Hubo un fallo con el Reporte de Finanzas: " . $e->getMessage());
+                Log::error("Error reporte de Finanzas: " . $e->getMessage());
+            }
+        
+        return response()->json(['success' => false], 500);
     }
 
 }
