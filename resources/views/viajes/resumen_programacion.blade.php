@@ -65,7 +65,7 @@
                         @php($TotalLitrosC += $viaje->litros)
 
                       <tr style="border-bottom: 1px solid #01050a; background-color:white"   >
-                        <td colspan="2" class="text-black text-bold" style="font-weight: bold; font-size: 20px;">Salida: {{ \Carbon\Carbon::parse($viaje->fecha_salida)->locale('es')->isoFormat('DD/MM/YYYY [ Hora de Salida: ]hh:mm a') }}<br>
+                        <td colspan="3" class="text-black text-bold" style="font-weight: bold; font-size: 20px;">Salida: {{ \Carbon\Carbon::parse($viaje->fecha_salida)->locale('es')->isoFormat('DD/MM/YYYY [ Hora de Salida: ]hh:mm a') }}<br>
                             <strong>[{{ $viaje->destino_ciudad }}]</strong>
                         </td>
                         <td rowspan="{{$viaje->despachos->count()+1}}" style="vertical-align: middle; text-align:center; font-size: 18px;">
@@ -84,8 +84,8 @@
                       @foreach($viaje->despachos as $index => $despacho)
                         @if($despacho)
                             @php($TotalLitros += $despacho->litros ?? 0)
-                            <tr style="font-size: 17px; font-weight: 600;">
                                 <td>{{$despacho->cliente->alias  ?? $despacho->cliente->nombre  ?? $despacho->otro_cliente ?? 'Cliente Null' }} @if(!is_null($despacho->observacion)) <br> [{{$despacho->observacion}}] @endif</td>
+                                <td>{{ $despacho->cliente->contacto ? $despacho->cliente->contacto . '<br>' . $despacho->cliente->telefono : '' }}</td>
                                 <td>{{ number_format($despacho->litros, 0)}} Lts</td>
                             </tr>
                         @endif
@@ -93,12 +93,12 @@
                         
                     @empty
                     <tr>
-                        <td colspan="7" class="text-center text-muted">No hay viajes programados o en curso.</td>
+                        <td colspan="8" class="text-center text-muted">No hay viajes programados o en curso.</td>
                     </tr>
                     @endforelse
                     
                     <tr style="font-weight: 700; font-size:19px; border-top: 2px solid #01050a; background-color: #d1ecf1;">
-                        <td class="py-1">Total Litros</td>
+                        <td class="py-1" colspan="2">Total Litros</td>
                         <td class="py-1">{{ $TotalLitros > 0? $TotalLitros : $TotalLitrosC }}</td>
                         <td class="py-1"></td>
                         <td class="py-1"></td>
