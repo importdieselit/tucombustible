@@ -240,13 +240,13 @@
 
                                         // 2. Identificamos el producto o combustible específico
                                         $productoEspecifico = match($viaje->tipo_planificacion) {
-                                            1       => 'DIESEL',
-                                            2       => 'MGO',
+                                            2       => 'DIESEL',
+                                            1       => 'MGO',
                                             3       => $viaje->producto_flete ?? 'Sin Especificar',
                                             // Evaluamos directamente el campo entero 'tipo' de la tabla viajes
                                             4       => match((int)$viaje->tipo) {
-                                                        1 => 'DIESEL',
-                                                        2 => 'MGO'
+                                                        2 => 'DIESEL',
+                                                        1 => 'MGO'
                                                     },
                                             default => 'Sin especificar'
                                         };

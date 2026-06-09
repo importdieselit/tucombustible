@@ -148,12 +148,12 @@
                                                 };
 
                                                 $productoEspecifico = match($viaje->tipo_planificacion) {
-                                                    1       => 'DIESEL',
-                                                    2       => 'MGO',
+                                                    2       => 'DIESEL',
+                                                    1       => 'MGO',
                                                     3       => $viaje->producto_flete ?? 'Sin Especificar',
                                                     4       => match((int)$viaje->tipo) {
-                                                                1 => 'DIESEL',
-                                                                2 => 'MGO',
+                                                                2 => 'DIESEL',
+                                                                1 => 'MGO',
                                                                 default => 'Sin Especificar'
                                                             },
                                                     default => 'Sin especificar'
