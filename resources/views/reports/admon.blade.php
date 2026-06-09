@@ -189,7 +189,6 @@ document.addEventListener('DOMContentLoaded', function() {
    
     
     const printableArea = $("div.printableArea")[0]; 
-    const sendTelegramButton = document.querySelector('#sendTelegramButton');
     const elementToCaptureSelector = '.printableArea';
     const captureButton = document.getElementById('captureButton');
     const statusMessage = document.getElementById('statusMessage');
@@ -203,56 +202,40 @@ document.addEventListener('DOMContentLoaded', function() {
 
     statusMessage.textContent = 'Procesando...';
 
-    async function sendReportToTelegram() {
-        sendTelegramButton.disabled = true;
+   const sendWhatsappButton = document.getElementById('sendWhatsappButton');
+
+    async function sendReportToWhatsapp() {
+        statusMessage.textContent = 'Enviando imagen a WhatsApp...';
+        statusMessage.classList.remove('hidden', 'bg-red-100', 'bg-green-100');
+        statusMessage.classList.add('bg-yellow-100', 'text-yellow-800');
+        sendWhatsappButton.disabled = true;
+
         try {
-            // Buscamos el primer elemento con la clase .printableArea
-            const element = printableArea;
-            if (!element) {
-                throw new Error(`Elemento con selector '${elementToCaptureSelector}' no encontrado. ¡Verifique la clase!`);
-            }
-
-            // 1. Capturar el elemento con html2canvas
-            const canvas = await html2canvas(element, {
-                allowTaint: true, 
-                useCORS: true,
-                // Mejor calidad para la imagen
-                scale: 3, 
-            });
-
-            // 2. Obtener la imagen como un Blob (archivo binario)
+            // Capturar
+            const canvas = await html2canvas(printableArea, { scale: 2, useCORS: true });
             const imageBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
             
-            // 3. Crear FormData para enviar el archivo al servidor (POST request)
+            // Crear FormData
             const formData = new FormData();
-            formData.append('chart_image', imageBlob, 'reporte_disponibilidad.png');
-            formData.append('caption', `*Reporte de Disponibilidad*\nGenerado el: ${new Date().toLocaleString('es-VE')}`);
+            formData.append('image', imageBlob, 'reporte_whatsapp.png');
+            formData.append('caption', '📊 *Reporte Gerencial KPI* - ' + new Date().toLocaleDateString());
             
-            // 4. Enviar al endpoint de Laravel (ruta que debe existir: telegram.send.photo)
-            const response = await fetch('{{ route('telegram.send.photo') }}', {
+            // Enviar a tu ruta de Laravel
+            const response = await fetch('{{ route('whatsapp.send') }}', {
                 method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}' // Protección CSRF de Laravel
-                },
+                headers: { 'X-CSRF-TOKEN': csrfToken },
                 body: formData
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || `Error ${response.status}: Fallo en el servidor al enviar a Telegram.`);
-        }
+            if (!response.ok) throw new Error('Error al enviar el reporte.');
 
-            // 5. Éxito
-            
-
+            statusMessage.textContent = '¡Reporte enviado exitosamente a WhatsApp!';
+            statusMessage.classList.replace('bg-yellow-100', 'bg-green-100');
         } catch (error) {
-            console.error('Error al enviar a Telegram:', error);
-            // Mostrar mensaje amigable al usuario
-        //     showStatus(`Error al enviar a Telegram: ${error.message}`, 'error');
-
+            statusMessage.textContent = 'Error: ' + error.message;
+            statusMessage.classList.replace('bg-yellow-100', 'bg-red-100');
         } finally {
-            // 6. Reestablecer el botón
-            sendTelegramButton.disabled = false;
+            sendWhatsappButton.disabled = false;
         }
     }
     
@@ -378,10 +361,7 @@ document.addEventListener('DOMContentLoaded', function() {
     exportButton.addEventListener('click', exportarEImprimir);
 
 
-    // 7. Asignar evento al nuevo botón
-    if (sendTelegramButton) {
-        sendTelegramButton.addEventListener('click', sendReportToTelegram);
-    }
+    sendWhatsappButton.addEventListener('click', sendReportToWhatsapp);
 });
 </script>
 @endpush
