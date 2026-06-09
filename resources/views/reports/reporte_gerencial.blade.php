@@ -399,7 +399,7 @@ document.addEventListener('DOMContentLoaded', function() {
    
     
     const printableArea = $("div.printableArea")[0]; 
-    const sendTelegramButton = document.querySelector('#sendTelegramButton');
+   
     const elementToCaptureSelector = '.printableArea';
     const captureButton = document.getElementById('captureButton');
     const statusMessage = document.getElementById('statusMessage');
