@@ -165,8 +165,8 @@ class WatchAdmonReports extends Command
                 $endpoint = "{$baseUrl}/messages/image?token={$tokenWA}";
 
                 $numerosDestino = [
-                    '584241666291' // Jefe
-                    //'584149876543', // Gerente
+                    '584241666291', // Jefe
+                    '584241177910', // Gerente
                     //'584245556677'  // Auditoría
                 ];
 
