@@ -505,8 +505,8 @@
                                                 <select name="tipo_combustible_id" required class="form-select form-select-sm fw-bold border-orange h-100">
                                                     <option value="" disabled {{ !$cliente->cupo ? 'selected' : '' }}>Producto...</option>
                                                     @foreach($tiposCombustible as $tipo)
-                                                        @if($tipo->id != 2) {{-- Excluir MGO --}}
-                                                            <option value="{{ $tipo->id }}" {{ ($cliente->cupo > 0 && $tipo->id == 1) ? 'selected' : '' }}>
+                                                        @if($tipo->id != 1) {{-- Excluir MGO --}}
+                                                            <option value="{{ $tipo->id }}" {{ ($cliente->cupo > 0 && $tipo->id == 2) ? 'selected' : '' }}>
                                                                 {{ $tipo->nombre }}
                                                             </option>
                                                         @endif
