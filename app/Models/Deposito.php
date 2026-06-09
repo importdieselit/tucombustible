@@ -109,4 +109,9 @@ class Deposito extends Model
     {
         return $this->belongsTo(TipoCombustible::class, 'tipo_combustible_id');
     }    
+
+    public function historialChequeos()
+    {
+        return $this->hasMany(ChequeoDepositoDetalle::class, 'id_deposito');
+    }
 }

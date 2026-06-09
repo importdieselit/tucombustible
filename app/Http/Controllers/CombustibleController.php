@@ -16,6 +16,14 @@ class CombustibleController extends Controller
     }
 
     /**
+     * 🆕 Muestra la pantalla principal / Dashboard del módulo de combustibles
+     */
+    public function index()
+    {
+        return view('combustibles.dashboard');
+    }
+
+    /**
      * Almacena o actualiza el cupo mensual de GASCO para un cliente
      */
     public function registrarCupoGasco(Request $request)

@@ -19,7 +19,8 @@ use App\Http\Controllers\{
     AlertaController, AccesoController, InspeccionController, PedidoController,
     ReporteController, AforoController, SearchController, DataDeletionController,
     ViajesController, TelegramController, PlanificacionMantenimientoController,
-    ReportController, ClienteActivosController,NotificationController,LogisticaController
+    ReportController, ClienteActivosController,NotificationController,LogisticaController,
+    ChequeoDepositoController, CombustibleController
 };
 
 /* --- Rutas Públicas y Auth --- */
@@ -308,7 +309,7 @@ Route::middleware(['auth'])->group(function () {
             ->group(function () {
                 
                 // Dashboard Temporal: Renderiza la vista de registro mientras se desarrolla el panel principal
-                Route::get('/dashboard', [DepositoController::class, 'index'])->name('dashboard');
+                Route::get('/dashboard', [CombustibleController::class, 'index'])->name('dashboard');
 
                 // Gestión de Tanques (Infraestructura de Depósitos)
                 Route::prefix('depositos')->name('depositos.')->group(function () {
@@ -322,6 +323,12 @@ Route::middleware(['auth'])->group(function () {
                     // Tablas de Varillaje y Cubicaciones (Aforos) integradas al Tanque
                     Route::get('/{id}/aforo', [AforoController::class, 'showAforoTable'])->name('aforo.show');
                     Route::get('/{id}/aforo/exportar', [AforoController::class, 'exportAforoTable'])->name('aforo.export');
+                });
+
+                // 🆕 Auditoría y Registro de Varillaje (Chequeo de Tanques en Patio)
+                Route::prefix('chequeos_depositos')->name('chequeos_depositos.')->group(function () {
+                    Route::get('/crear', [ChequeoDepositoController::class, 'create'])->name('create');
+                    Route::post('/guardar', [ChequeoDepositoController::class, 'store'])->name('store');
                 });
         });
 
