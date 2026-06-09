@@ -68,6 +68,7 @@ class SalaControlController extends Controller
         $cisternas = $data->where('tipo', 2);
         $camiones = $data->whereIn('tipoVehiculo.tipo', ['CAMION', 'CAMION CISTERNA']);
         $chutos = $data->whereIn('tipoVehiculo.tipo', ['CHUTO']);
+         $fallaCount = $data->whereIn('estatus', [3,4,5])->count();
         
         $ligero = Vehiculo::misVehiculos()->with(['tipoVehiculo', 'ordenActiva'])->where('tipo', 6)->get();
 
