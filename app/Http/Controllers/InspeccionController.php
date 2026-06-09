@@ -97,7 +97,7 @@ class InspeccionController extends Controller
                         // Lo insertamos al final de la primera sección
                         $dataResponse['sections'][0]['items'][] = $campoViaje;
                             $dataResponse['sections'][0]['items'][1]['value'] = $viajes[0]->chofer->persona->nombre ?? '';
-                            $dataResponse['sections'][0]['items'][2]['value'] = $viajes[0]->ayudante_chofer->persona->nombre ?? '';
+                            $dataResponse['sections'][0]['items'][2]['value'] = $viajes[0]->ayudante()->first()->persona->nombre ?? '';
                         
                     } elseif (!is_null($viajePrevioId)) {
                         // Si ya hay un viaje (Entrada), lo dejamos como texto estático o radio deshabilitado
@@ -586,7 +586,7 @@ class InspeccionController extends Controller
             ->leftJoin('personas as p_chofer', 'c_principal.persona_id', '=', 'p_chofer.id')
             
             // Joins para obtener el nombre del Ayudante
-            ->leftJoin('choferes as c_ayudante', 'viajes.ayudante', '=', 'c_ayudante.id')
+            ->leftJoin('choferes as c_ayudante', 'viajes.ayudante_id', '=', 'c_ayudante.id')
             ->leftJoin('personas as p_ayudante', 'c_ayudante.persona_id', '=', 'p_ayudante.id')
             
             ->whereBetween('viajes.fecha_salida_real', [$fechaInicio . ' 00:00:00', $fechaFin . ' 23:59:59'])
@@ -594,7 +594,7 @@ class InspeccionController extends Controller
                 'viajes.id as viaje_id',
                 'viajes.chofer_id',
                 'p_chofer.nombre as chofer_nombre',
-                'viajes.ayudante as ayudante_id',
+                'viajes.ayudante_id',
                 'p_ayudante.nombre as ayudante_nombre',
                 'viajes.fecha_salida_real',
                 'viajes.fecha_llegada',
