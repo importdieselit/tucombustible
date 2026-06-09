@@ -413,121 +413,107 @@ document.addEventListener('DOMContentLoaded', function() {
 
     statusMessage.textContent = 'Procesando...';
 
-    async function sendReportToTelegram() {
-        sendTelegramButton.disabled = true;
+    const sendWhatsappButton = document.getElementById('sendWhatsappButton');
+
+    async function sendReportToWhatsapp() {
+        statusMessage.textContent = 'Enviando imagen a WhatsApp...';
+        statusMessage.classList.remove('hidden', 'bg-red-100', 'bg-green-100');
+        statusMessage.classList.add('bg-yellow-100', 'text-yellow-800');
+        sendWhatsappButton.disabled = true;
+
         try {
-            // Buscamos el primer elemento con la clase .printableArea
-            const element = printableArea;
-            if (!element) {
-                throw new Error(`Elemento con selector '${elementToCaptureSelector}' no encontrado. ¡Verifique la clase!`);
-            }
-
-            // 1. Capturar el elemento con html2canvas
-            const canvas = await html2canvas(element, {
-                allowTaint: true, 
-                useCORS: true,
-                // Mejor calidad para la imagen
-                scale: 3, 
-            });
-
-            // 2. Obtener la imagen como un Blob (archivo binario)
+            // Capturar
+            const canvas = await html2canvas(printableArea, { scale: 2, useCORS: true });
             const imageBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
             
-            // 3. Crear FormData para enviar el archivo al servidor (POST request)
+            // Crear FormData
             const formData = new FormData();
-            formData.append('chart_image', imageBlob, 'reporte_disponibilidad.png');
-            formData.append('caption', `*Reporte de Disponibilidad*\nGenerado el: ${new Date().toLocaleString('es-VE')}`);
+            formData.append('image', imageBlob, 'reporte_whatsapp.png');
+            formData.append('caption', '📊 *Reporte Gerencial KPI* - ' + new Date().toLocaleDateString());
             
-            // 4. Enviar al endpoint de Laravel (ruta que debe existir: telegram.send.photo)
-            const response = await fetch('{{ route('telegram.send.photo') }}', {
+            // Enviar a tu ruta de Laravel
+            const response = await fetch('{{ route('whatsapp.send.report') }}', {
                 method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}' // Protección CSRF de Laravel
-                },
+                headers: { 'X-CSRF-TOKEN': csrfToken },
                 body: formData
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || `Error ${response.status}: Fallo en el servidor al enviar a Telegram.`);
-        }
+            if (!response.ok) throw new Error('Error al enviar el reporte.');
 
-            // 5. Éxito
-            
-
+            statusMessage.textContent = '¡Reporte enviado exitosamente a WhatsApp!';
+            statusMessage.classList.replace('bg-yellow-100', 'bg-green-100');
         } catch (error) {
-            console.error('Error al enviar a Telegram:', error);
-            // Mostrar mensaje amigable al usuario
-        //     showStatus(`Error al enviar a Telegram: ${error.message}`, 'error');
-
+            statusMessage.textContent = 'Error: ' + error.message;
+            statusMessage.classList.replace('bg-yellow-100', 'bg-red-100');
         } finally {
-            // 6. Reestablecer el botón
-            sendTelegramButton.disabled = false;
+            sendWhatsappButton.disabled = false;
         }
     }
-    
-    async function captureAndCopyToClipboard() {
-        // 1. Mostrar estado de carga y deshabilitar botón
-        statusMessage.textContent = 'Generando imagen...';
-        statusMessage.classList.remove('hidden', 'bg-red-100', 'text-red-800', 'bg-green-100', 'text-green-800');
-        statusMessage.classList.add('bg-yellow-100', 'text-yellow-800');
-        captureButton.disabled = true;
-        outputContainer.innerHTML = ''; // Limpiar previsualización anterior
 
-        try {
-            // 2. Generar el Canvas a partir del elemento DOM (ya corregido a 'printableArea[0]')
-            const canvas = await html2canvas(printableArea, {
-                scale: 3, // Aumenta la escala para mejor calidad de imagen
-                logging: false, // Desactiva logs de html2canvas
-                useCORS: true, // Necesario si hay imágenes o recursos externos
-                windowWidth: 2000, // Mantenemos el estándar de ancho del Master Card
-                windowHeight: 1500, // Mantenemos el estándar de alto del Master Card
-                constraints: {
-                    width: 2000,
-                    height: 1500
+    sendWhatsappButton.addEventListener('click', sendReportToWhatsapp);
+        
+        async function captureAndCopyToClipboard() {
+            // 1. Mostrar estado de carga y deshabilitar botón
+            statusMessage.textContent = 'Generando imagen...';
+            statusMessage.classList.remove('hidden', 'bg-red-100', 'text-red-800', 'bg-green-100', 'text-green-800');
+            statusMessage.classList.add('bg-yellow-100', 'text-yellow-800');
+            captureButton.disabled = true;
+            outputContainer.innerHTML = ''; // Limpiar previsualización anterior
+
+            try {
+                // 2. Generar el Canvas a partir del elemento DOM (ya corregido a 'printableArea[0]')
+                const canvas = await html2canvas(printableArea, {
+                    scale: 3, // Aumenta la escala para mejor calidad de imagen
+                    logging: false, // Desactiva logs de html2canvas
+                    useCORS: true, // Necesario si hay imágenes o recursos externos
+                    windowWidth: 2000, // Mantenemos el estándar de ancho del Master Card
+                    windowHeight: 1500, // Mantenemos el estándar de alto del Master Card
+                    constraints: {
+                        width: 2000,
+                        height: 1500
+                    }
+
+                });
+
+                // Opcional: Mostrar el canvas generado en el DOM
+            // outputContainer.appendChild(canvas);
+
+                // 3. Convertir el Canvas a un Blob (formato de datos binarios)
+                const imageBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                
+                if (!imageBlob) {
+                    throw new Error('No se pudo generar el Blob de la imagen.');
                 }
 
-            });
+                // 4. Copiar la imagen (Blob) al portapapeles usando el Clipboard API
+                const item = new ClipboardItem({ "image/png": imageBlob });
+                await navigator.clipboard.write([item]);
 
-            // Opcional: Mostrar el canvas generado en el DOM
-           // outputContainer.appendChild(canvas);
+                // 5. Éxito
+                statusMessage.textContent = '¡Éxito! La imagen ha sido copiada al portapapeles. Ahora puedes pegarla (Ctrl+V).';
+                statusMessage.classList.replace('bg-yellow-100', 'bg-green-100');
+                statusMessage.classList.replace('text-yellow-800', 'text-green-800');
 
-            // 3. Convertir el Canvas a un Blob (formato de datos binarios)
-            const imageBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-            
-            if (!imageBlob) {
-                throw new Error('No se pudo generar el Blob de la imagen.');
+            } catch (error) {
+                // 6. Manejo de Errores
+                let errorMessage = 'Error desconocido al copiar.';
+
+                if (error.name === 'NotAllowedError' || (error.message && error.message.includes('permission'))) {
+                    errorMessage = 'Permiso denegado: El navegador requiere que la página esté en un contexto seguro (HTTPS) o que el usuario interactúe primero para usar el Clipboard API.';
+                } else {
+                    console.error('Error durante la captura o copia:', error);
+                    errorMessage = `Error al generar/copiar la imagen: ${error.message}`;
+                }
+                
+                statusMessage.textContent = errorMessage;
+                statusMessage.classList.replace('bg-yellow-100', 'bg-red-100');
+                statusMessage.classList.replace('text-yellow-800', 'text-red-800');
+
+            } finally {
+                // 7. Reestablecer el botón
+                captureButton.disabled = false;
             }
-
-            // 4. Copiar la imagen (Blob) al portapapeles usando el Clipboard API
-            const item = new ClipboardItem({ "image/png": imageBlob });
-            await navigator.clipboard.write([item]);
-
-            // 5. Éxito
-            statusMessage.textContent = '¡Éxito! La imagen ha sido copiada al portapapeles. Ahora puedes pegarla (Ctrl+V).';
-            statusMessage.classList.replace('bg-yellow-100', 'bg-green-100');
-            statusMessage.classList.replace('text-yellow-800', 'text-green-800');
-
-        } catch (error) {
-            // 6. Manejo de Errores
-            let errorMessage = 'Error desconocido al copiar.';
-
-            if (error.name === 'NotAllowedError' || (error.message && error.message.includes('permission'))) {
-                errorMessage = 'Permiso denegado: El navegador requiere que la página esté en un contexto seguro (HTTPS) o que el usuario interactúe primero para usar el Clipboard API.';
-            } else {
-                console.error('Error durante la captura o copia:', error);
-                errorMessage = `Error al generar/copiar la imagen: ${error.message}`;
-            }
-            
-            statusMessage.textContent = errorMessage;
-            statusMessage.classList.replace('bg-yellow-100', 'bg-red-100');
-            statusMessage.classList.replace('text-yellow-800', 'text-red-800');
-
-        } finally {
-            // 7. Reestablecer el botón
-            captureButton.disabled = false;
         }
-    }
 
     async function exportarEImprimir() {
 

@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\ReportRecord;
 use App\Models\ProcessedFile;
+use App\Services\WhatsappApiService;
+use Illuminate\Support\Facades\Storage;
 
 class GerentialReportController extends Controller
 {
-    public function index(Request $request)
+    public function admon(Request $request)
     {
         // Obtener fechas disponibles para el filtro selector
         $availableDates = ProcessedFile::orderBy('report_date', 'desc')->pluck('report_date');
@@ -41,5 +43,28 @@ class GerentialReportController extends Controller
             'opexRecords', 'bancosRecords', 'cajasRecords', 'totalOpex',
             'totalBancos', 'totalCajas', 'totalLiquidez', 'pctBancos', 'pctCajas'
         ));
+    }
+
+    public function sendWhatsapp(Request $request, WhatsappApiService $whatsappService)
+    {
+        if ($request->hasFile('image')) {
+            // Guardar archivo temporalmente
+            $path = $request->file('image')->store('temp', 'public');
+            $fullPath = storage_path('app/public/' . $path);
+            
+            // Usamos tu servicio
+            // NOTA: Si tu API requiere URL pública, usa: asset('storage/'.$path)
+            // Si tu servicio acepta la ruta absoluta, envíalo así:
+            $response = $whatsappService->enviarImagen($request->caption, $fullPath);
+            
+            // Limpiar archivo después de enviar
+            Storage::disk('public')->delete($path);
+
+            if ($response && $response->successful()) {
+                return response()->json(['success' => true]);
+            }
+        }
+        
+        return response()->json(['success' => false], 500);
     }
 }

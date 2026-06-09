@@ -134,6 +134,8 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/depositos/ajusteresguardo', [DepositoController::class, 'ajusteResguardo'])->name('deposito.ajusteR');
     
     Route::get('/reportes/gerencial', [ReportController::class, 'reporteGerencial'])->name('reportes.gerencial');
+    Route::post('/whatsapp/send', [GerentialReportController::class, 'sendWhatsapp'])->name('whatsapp.send');
+    Route::get('/reporte-admon', [GerentialReportController::class, 'admon'])->name('reporte.admon');
 
     // Inventario y Almacén
     Route::get('inventario/entry', [InventarioController::class, 'entry'])->name('inventario.entry');
@@ -282,7 +284,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/viajes/reporte/{fecha?}', [ViajesController::class, 'reporteDiario'])->name('viajes.reporteDiario');
         Route::get('/viajes/reporte/print/{fecha?}', [ViajesController::class, 'reporteDiarioPrint'])->name('viajes.reporteDiario.print');
 
-        Route::get('/reporte-gerencial', [GerentialReportController::class, 'index'])->name('reporte.gerencial');
+        
         // Boletas y Nominaciones
         Route::get('/despachos/guia-distribucion/{viajeId}', [ViajesController::class, 'printGuiaDistribucion'])->name('despachos.guia_distribucion');
         Route::get('/despachos/boleta/{viajeId}', [ViajesController::class, 'showBoleta'])->name('despachos.boleta');

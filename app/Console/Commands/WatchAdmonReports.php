@@ -33,7 +33,7 @@ class WatchAdmonReports extends Command
         $todayDate = Carbon::now('America/Caracas')->format('Y-d-m');
         $todayDateText = Carbon::now('America/Caracas')->format('Y-m-d');
         $expectedFileName = "Resumen_Diario_DID_{$todayDate}.csv";
-        $directory = 'Admon_reports';
+        $directory = 'Reportes_Admon';
         $filePath = "{$directory}/{$expectedFileName}";
 
         // 1. Verificamos si el archivo de HOY ya fue procesado con éxito

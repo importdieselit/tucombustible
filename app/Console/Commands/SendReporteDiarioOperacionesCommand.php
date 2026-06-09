@@ -58,6 +58,12 @@ class SendReporteDiarioOperacionesCommand extends Command
                 'titulo' => '🚛 *Reporte de Flota*',
                 'selector' => '#reporte-container'
             ],
+            [
+                'ruta_web' => 'reporte.admon',
+                'nombre_archivo' => 'reporte_finanzas',
+                'titulo' => '💰 *Reporte Financiero*',
+                'selector' => '#reporteFinanzas'
+            ],
             // [
             //     'ruta_web' => 'reporte.mantenimiento.interno',
             //     'nombre_archivo' => 'reporte_mantenimiento',
