@@ -18,5 +18,14 @@ class AlmacenEstructuraGrid extends Model
         'codigo_bloque',
         'cantidad_niveles',
         'cantidad_secciones',
+        'config_layout',
+        'rotacion',
     ];
+    protected $casts = [
+        'config_layout' => 'array',
+    ];
+    public function almacen()
+    {
+        return $this->belongsTo(Almacen::class, 'almacen_id');
+    }
 }

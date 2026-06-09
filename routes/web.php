@@ -327,7 +327,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/almacen/layout/reubicar-item', [AlmacenLayoutController::class, 'reubicarItemUbicacion'])->name('almacen.layout.reubicar_item');
         Route::post('/almacen/layout/vaciar-slot', [AlmacenLayoutController::class, 'vaciarItemUbicacion'])->name('almacen.layout.vaciar_slot');
         Route::post('/almacen/layout/actualizar-posicion-3d', [AlmacenLayoutController::class, 'actualizarPosicion3D'])->name('almacen.layout.actualizar_posicion_3d');
-        
+        Route::post('/almacen/layout/subdividir-slot', [AlmacenLayoutController::class, 'subdividirSlot'])->name('almacen.layout.subdividir_slot');
+        Route::post('/almacen/layout/combinar-slots', [AlmacenLayoutController::class, 'combinarSlots'])->name('almacen.layout.combinar_slots');
+
         /**
          * MÓDULOS DE ADMINISTRACIÓN (Perfiles 1 y 2: Admin y Super)
          */

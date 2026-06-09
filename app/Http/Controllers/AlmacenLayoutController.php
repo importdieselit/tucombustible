@@ -35,6 +35,7 @@ public function guardarEstructuraDrag(Request $request)
         'cantidad_niveles' => 'required|integer|min:1',
         'largo_secciones'  => 'required|integer|min:1',
         'orientacion'      => 'required|in:H,V',
+        'config_layout'    => 'nullable|array',
     ]);
 
     $almacen = Almacen::findOrFail($request->almacen_id);
@@ -53,18 +54,16 @@ public function guardarEstructuraDrag(Request $request)
         if ($celdaObjetivo) {
             $codigoABorrar = $celdaObjetivo->codigo_bloque;
 
-            // VALIDACIÓN DE SEGURIDAD DIRECTA: Evitar Constraint 1451
-            $ocupado =InventarioStock::whereHas('ubicacion', function ($query) use ($request, $codigoABorrar) {
-                    $query->select('id')
-                          ->from('ubicaciones')
-                          ->where('almacen_id', $request->almacen_id)
-                          ->where('estante', $codigoABorrar);
-                })
-                ->exists();
+            // VALIDACIÓN DE SEGURIDAD: Evitar Constraint 1451
+            $ocupado = InventarioStock::whereHas('ubicacion', function ($query) use ($request, $codigoABorrar) {
+                $query->select('id')
+                      ->from('ubicaciones')
+                      ->where('almacen_id', $request->almacen_id)
+                      ->where('estante', $codigoABorrar);
+            })->exists();
 
-            if ($ocupado) {
-
-                
+            if ($ocupado) {            
+                return response()->json(['success' => false, 'error' => 'No puedes borrar este bloque. Contiene inventario físico.'], 422);
             }
 
             // Celdas a limpiar en la vista gráfica
@@ -115,182 +114,158 @@ public function guardarEstructuraDrag(Request $request)
         return response()->json(['success' => false, 'error' => 'Operación cancelada: Una o más celdas destino están ocupadas.'], 422);
     }
 
-    try {
-        DB::transaction(function () use (
-                $request,
-                $celdasAAfectar,
-                $codigoBloque
-            ) {
+    // --- 4. PREPARAR MATRIZ ASIMÉTRICA ---
+    $configLayout = $request->config_layout;
+    if (empty($configLayout)) {
+        // Si no envía layout (arrastre simple), generamos uno simétrico por defecto
+        $configLayout = [];
+        for ($n = 1; $n <= $request->cantidad_niveles; $n++) {
+            $configLayout[$n] = range(1, $largo);
+        }
+    }
 
-                $estructurasActuales = AlmacenEstructuraGrid::where(
-                    'almacen_id',
-                    $request->almacen_id
-                )
-                ->where(
-                    'codigo_bloque',
-                    $codigoBloque
-                )
+    try {
+        DB::transaction(function () use ($request, $celdasAAfectar, $codigoBloque, $configLayout) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | 1. SINCRONIZACIÓN DEL GRID VISUAL (Capa Física 2D)
+            |--------------------------------------------------------------------------
+            */
+            $estructurasActuales = AlmacenEstructuraGrid::where('almacen_id', $request->almacen_id)
+                ->where('codigo_bloque', $codigoBloque)
                 ->orderBy('id')
                 ->get();
 
-                $esNuevo = $estructurasActuales->isEmpty();
+            $nuevosGridIds = [];
 
-                /*
-                |--------------------------------------------------------------------------
-                | NUEVA ESTRUCTURA
-                |--------------------------------------------------------------------------
-                */
-                if ($esNuevo) {
+            foreach ($celdasAAfectar as $index => $celda) {
+                if (isset($estructurasActuales[$index])) {
+                    // Actualizar grid existente (arrastre)
+                    $estructura = $estructurasActuales[$index];
+                    $estructura->update([
+                        'coord_x'          => $celda['x'],
+                        'coord_y'          => $celda['y'],
+                        'cantidad_niveles' => count($configLayout),
+                        'config_layout'    => $configLayout
+                    ]);
+                    $nuevosGridIds[$celda['posicion_idx']] = $estructura->id;
+                } else {
+                    // Crear grid nuevo (el estante se hizo más largo)
+                    $estructura = AlmacenEstructuraGrid::create([
+                        'almacen_id'         => $request->almacen_id,
+                        'coord_x'            => $celda['x'],
+                        'coord_y'            => $celda['y'],
+                        'tipo_estructura'    => $request->tipo_estructura,
+                        'codigo_bloque'      => $codigoBloque,
+                        'cantidad_niveles'   => count($configLayout),
+                        'cantidad_secciones' => 1,
+                        'config_layout'      => $configLayout
+                    ]);
+                    $nuevosGridIds[$celda['posicion_idx']] = $estructura->id;
+                }
+            }
 
-                    foreach ($celdasAAfectar as $celda) {
+            /*
+            |--------------------------------------------------------------------------
+            | 2. SINCRONIZACIÓN DE UBICACIONES (Capa Lógica/Inventario)
+            |--------------------------------------------------------------------------
+            */
+            // Extraer ubicaciones actuales y agruparlas por su "coordenada lógica"
+            $ubicacionesActuales = Ubicacion::where('almacen_id', $request->almacen_id)
+                ->where('estante', $codigoBloque)
+                ->get()
+                ->keyBy(function($item) {
+                    return $item->nivel . '-' . $item->posicion;
+                });
 
-                        $estructura = AlmacenEstructuraGrid::create([
-                            'almacen_id'         => $request->almacen_id,
-                            'coord_x'            => $celda['x'],
-                            'coord_y'            => $celda['y'],
-                            'tipo_estructura'    => $request->tipo_estructura,
-                            'codigo_bloque'      => $codigoBloque,
-                            'cantidad_niveles'   => $request->cantidad_niveles,
-                            'cantidad_secciones' => 1
+            $ubicacionesAprobadas = []; // Registro de celdas que se mantienen vivas
+
+            foreach ($configLayout as $nivel => $posiciones) {
+                foreach ($posiciones as $posIdx) {
+                    $posIdx = (string)$posIdx;
+                    $key = "{$nivel}-{$posIdx}";
+                    $ubicacionesAprobadas[] = $key;
+
+                    $gridId = $nuevosGridIds[$posIdx] ?? null;
+                    if (!$gridId) continue;
+
+                    $celdaGrid = collect($celdasAAfectar)->firstWhere('posicion_idx', $posIdx);
+                    $pasilloStr = sprintf("P%02d", $celdaGrid['x']);
+
+                    if ($ubicacionesActuales->has($key)) {
+                        // A. CASO: COMBINACIÓN MANTENIDA / MOVIMIENTO (Solo actualiza punteros)
+                        $ubicacionesActuales->get($key)->update([
+                            'estructura_grid_id' => $gridId,
+                            'pasillo'            => $pasilloStr
                         ]);
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | ESTANTE
-                        |--------------------------------------------------------------------------
-                        */
+                    } else {
+                        // B. CASO: SUBDIVISIÓN / EXPANSIÓN (Crea nueva ubicación física)
                         if ($request->tipo_estructura === 'ESTANTE') {
-
-                            for ($n = 1; $n <= $request->cantidad_niveles; $n++) {
-
-                                Ubicacion::create([
-                                    'almacen_id'         => $request->almacen_id,
-                                    'estructura_grid_id' => $estructura->id,
-                                    'codigo_ubicacion'   => sprintf(
-                                        "ALM%d-%s-N%d-P%d",
-                                        $request->almacen_id,
-                                        $codigoBloque,
-                                        $n,
-                                        $celda['posicion_idx']
-                                    ),
-                                    'pasillo'            => sprintf(
-                                        "P%02d",
-                                        $celda['x']
-                                    ),
-                                    'estante'            => $codigoBloque,
-                                    'nivel'              => (string)$n,
-                                    'posicion'           => (string)$celda['posicion_idx'],
-                                    'tipo'               => 'ESTANDAR',
-                                    'esta_bloqueada'     => false
-                                ]);
-                            }
-                        }
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | GRANEL
-                        |--------------------------------------------------------------------------
-                        */
-                        else if (
-                            $request->tipo_estructura ===
-                            'GRANEL_LUBRICANTE'
-                        ) {
-
                             Ubicacion::create([
                                 'almacen_id'         => $request->almacen_id,
-                                'estructura_grid_id' => $estructura->id,
-                                'codigo_ubicacion'   =>
-                                    "ALM".$request->almacen_id.
-                                    "-".$codigoBloque.
-                                    "-G".$celda['posicion_idx'],
-                                'pasillo'            =>
-                                    sprintf("P%02d",$celda['x']),
+                                'estructura_grid_id' => $gridId,
+                                'codigo_ubicacion'   => sprintf("ALM%d-%s-N%d-P%s", $request->almacen_id, $codigoBloque, $nivel, $posIdx),
+                                'pasillo'            => $pasilloStr,
+                                'estante'            => $codigoBloque,
+                                'nivel'              => (string)$nivel,
+                                'posicion'           => $posIdx,
+                                'tipo'               => 'ESTANDAR',
+                                'esta_bloqueada'     => false
+                            ]);
+                        } else if ($request->tipo_estructura === 'GRANEL_LUBRICANTE') {
+                            Ubicacion::create([
+                                'almacen_id'         => $request->almacen_id,
+                                'estructura_grid_id' => $gridId,
+                                'codigo_ubicacion'   => "ALM{$request->almacen_id}-{$codigoBloque}-G{$posIdx}",
+                                'pasillo'            => $pasilloStr,
                                 'estante'            => $codigoBloque,
                                 'nivel'              => '1',
-                                'posicion'           =>
-                                    (string)$celda['posicion_idx'],
+                                'posicion'           => $posIdx,
                                 'tipo'               => 'ZONA_GRANEL',
                                 'esta_bloqueada'     => false
                             ]);
-                        }
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | PALLET
-                        |--------------------------------------------------------------------------
-                        */
-                        else if (
-                            $request->tipo_estructura ===
-                            'PISO_PALLET'
-                        ) {
-
+                        } else if ($request->tipo_estructura === 'PISO_PALLET') {
                             Ubicacion::create([
                                 'almacen_id'         => $request->almacen_id,
-                                'estructura_grid_id' => $estructura->id,
-                                'codigo_ubicacion'   =>
-                                    "ALM".$request->almacen_id.
-                                    "-".$codigoBloque.
-                                    "-PISO",
-                                'pasillo'            =>
-                                    sprintf("P%02d",$celda['x']),
+                                'estructura_grid_id' => $gridId,
+                                'codigo_ubicacion'   => "ALM{$request->almacen_id}-{$codigoBloque}-PISO-{$posIdx}",
+                                'pasillo'            => $pasilloStr,
                                 'estante'            => $codigoBloque,
                                 'nivel'              => '1',
-                                'posicion'           =>
-                                    (string)$celda['posicion_idx'],
+                                'posicion'           => $posIdx,
                                 'tipo'               => 'PISO_PALLET',
                                 'esta_bloqueada'     => false
                             ]);
                         }
                     }
-
-                    return;
                 }
+            }
 
-                /*
-                |--------------------------------------------------------------------------
-                | MOVIMIENTO / ROTACION
-                |--------------------------------------------------------------------------
-                |
-                | NO BORRA NADA
-                | NO CREA UBICACIONES
-                | SOLO REUBICA
-                |
-                */
-
-                foreach ($celdasAAfectar as $index => $celda) {
-
-                    if (!isset($estructurasActuales[$index])) {
-                        continue;
+            /*
+            |--------------------------------------------------------------------------
+            | 3. LIMPIEZA DE RESIDUOS (Encogimiento o Fusión de celdas)
+            |--------------------------------------------------------------------------
+            */
+            // A. Limpiar Ubicaciones que ya no existen en la nueva matriz $configLayout
+            foreach ($ubicacionesActuales as $key => $ubi) {
+                if (!in_array($key, $ubicacionesAprobadas)) {
+                    // BLINDAJE: Evitar el constraint violation 1451
+                    $tieneStock = InventarioStock::where('ubicacion_id', $ubi->id)->exists();
+                    if ($tieneStock) {
+                        throw new \Exception("Restricción: La posición Nivel {$ubi->nivel} - Sección {$ubi->posicion} no puede combinarse ni eliminarse porque actualmente almacena inventario físico.");
                     }
-
-                    $estructura = $estructurasActuales[$index];
-
-                    $estructura->update([
-                        'coord_x' => $celda['x'],
-                        'coord_y' => $celda['y']
-                    ]);
-
-                    Ubicacion::where(
-                        'almacen_id',
-                        $request->almacen_id
-                    )
-                    ->where(
-                        'estante',
-                        $codigoBloque
-                    )
-                    ->where(
-                        'posicion',
-                        (string)$celda['posicion_idx']
-                    )
-                    ->update([
-                        'estructura_grid_id' => $estructura->id,
-                        'pasillo'            => sprintf(
-                            "P%02d",
-                            $celda['x']
-                        )
-                    ]);
+                    $ubi->delete();
                 }
-            });
+            }
+
+            // B. Limpiar Grids visuales sobrantes si el estante se hizo más corto
+            if (count($estructurasActuales) > count($celdasAAfectar)) {
+                for ($i = count($celdasAAfectar); $i < count($estructurasActuales); $i++) {
+                    $estructurasActuales[$i]->delete();
+                }
+            }
+        });
 
         return response()->json([
             'success'         => true,
@@ -304,79 +279,80 @@ public function guardarEstructuraDrag(Request $request)
         return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
     }
 }
-    public function inspeccionarEstante(Request $request)
-    {
-        $request->validate([
-            'almacen_id' => 'required|integer',
-            'coord_x'    => 'required|integer',
-            'coord_y'    => 'required|integer',
-        ]);
+   public function inspeccionarEstante(Request $request)
+{
+    $request->validate([
+        'almacen_id' => 'required|integer',
+        'coord_x'    => 'required|integer',
+        'coord_y'    => 'required|integer',
+    ]);
 
-        // 1. Identificar qué bloque se clickeó en la grilla
-        $estructura = AlmacenEstructuraGrid::where('almacen_id', $request->almacen_id)
-            ->where('coord_x', $request->coord_x)
-            ->where('coord_y', $request->coord_y)
-            ->first();
+    $estructura = AlmacenEstructuraGrid::where('almacen_id', $request->almacen_id)
+        ->where('coord_x', $request->coord_x)
+        ->where('coord_y', $request->coord_y)
+        ->first();
 
-        if (!$estructura || $estructura->tipo_estructura === 'PASILLO') {
-            return response()->json(['success' => false, 'error' => 'Posición vacía o pasillo.']);
-        }
+    if (!$estructura || $estructura->tipo_estructura === 'PASILLO') {
+        return response()->json(['success' => false, 'error' => 'Posición vacía o pasillo.']);
+    }
 
-        $codigoBloque = $estructura->codigo_bloque;
+    $codigoBloque = $estructura->codigo_bloque;
 
-        // 2. Traer TODAS las ubicaciones que pertenecen al estante completo
-        $ubicaciones = Ubicacion::where('almacen_id', $request->almacen_id)
-            ->where('estante', $codigoBloque)
-            ->with(['inventarioStock.item'])
-            ->get();
+    $ubicaciones = Ubicacion::where('almacen_id', $request->almacen_id)
+        ->where('estante', $codigoBloque)
+        ->with(['inventarioStock.item'])
+        ->get();
 
-        // 3. Extraer ejes únicos de la matriz ordenados correctamente
-        // Niveles de mayor a menor (Estructura real de estiba de arriba a abajo)
-        $niveles = $ubicaciones->pluck('nivel')->unique()->map(fn($n) => (int)$n)->sortDesc()->values()->all();
-        // Posiciones horizontales de menor a mayor (De izquierda a derecha)
-        $posiciones = $ubicaciones->pluck('posicion')->unique()->map(fn($p) => (int)$p)->sort()->values()->all();
+    $niveles = $ubicaciones->pluck('nivel')->unique()->map(fn($n) => (int)$n)->sortDesc()->values()->all();
+    $posiciones = $ubicaciones->pluck('posicion')->unique()->map(fn($p) => (int)$p)->sort()->values()->all();
 
-        // 4. Estructurar matriz indexada por "nivel-posicion" para lectura inmediata en JS
-        $matrizData = [];
-       foreach ($ubicaciones as $ubi) {
-            // 1. Extraemos directamente el registro único de forma segura
-            // Si usas hasMany, ->first() saca el único objeto. Si usas hasOne, omite el ->first()
-            $stock = $ubi->inventarioStock->first(); 
-            
-            // 2. Protegemos contra null por si el slot está físicamente vacío
-            $totalItems = $stock ? $stock->cantidad_actual : 0;
-            
-            // 3. Creamos el objeto plano directamente, sin bucles map
-            $detallesInventario = null;
-            
-            if ($stock) {
-                $detallesInventario = [
-                    'producto' => $stock->item->descripcion ?? 'Item sin nombre',
-                    'sku'      => $stock->item->codigo ?? 'S/S',
-                    'cantidad' => $stock->cantidad_actual,
-                    'capacidad_asignada' => $stock->capacidad_asignada,
-                    'lote'     => $stock->lote ?? 'N/A'
-                ];
-            }
+    // 4. Estructurar matriz indexada por "nivel-posicion" agrupando subdivisiones
+    $matrizData = [];
+    foreach ($ubicaciones as $ubi) {
+        $llaveMatriz = "{$ubi->nivel}-{$ubi->posicion}";
 
-            $matrizData["{$ubi->nivel}-{$ubi->posicion}"] = [
-                'id'              => $ubi->id,
-                'codigo_completo' => $ubi->codigo_ubicacion,
-                'ocupado'         => $totalItems > 0,
-                'total_articulos' => $totalItems,
-                'inventario'      => $detallesInventario // Ahora pasa como un objeto directo, no como array múltiple
+        // Inicializamos el contenedor de la coordenada si no existe
+        if (!isset($matrizData[$llaveMatriz])) {
+            $matrizData[$llaveMatriz] = [
+                'colspan' => $ubi->colspan ?? 1,
+                'slots'   => [] // Aquí vivirá 1 slot normal, o N slots si está subdividido
             ];
         }
 
-        return response()->json([
-            'success'    => true,
-            'estante'    => $codigoBloque,
-            'tipo'       => $estructura->tipo_estructura,
-            'niveles'    => $niveles,
-            'posiciones' => $posiciones,
-            'matriz'     => $matrizData
-        ]);
+        $stock = $ubi->inventarioStock->first(); 
+        $totalItems = $stock ? $stock->cantidad_actual : 0;
+        
+        $detallesInventario = null;
+        if ($stock) {
+            $detallesInventario = [
+                'producto' => $stock->item->descripcion ?? 'Item sin nombre',
+                'sku'      => $stock->item->codigo ?? 'S/S',
+                'cantidad' => $stock->cantidad_actual,
+                'capacidad_asignada' => $stock->capacidad_asignada,
+                'lote'     => $stock->lote ?? 'N/A'
+            ];
+        }
+
+        // Insertamos el sub-slot en el contenedor
+        $matrizData[$llaveMatriz]['slots'][] = [
+            'id'              => $ubi->id,
+            'codigo_completo' => $ubi->codigo_ubicacion,
+            'subposicion'     => $ubi->subposicion ?? '',
+            'ocupado'         => $totalItems > 0,
+            'total_articulos' => $totalItems,
+            'inventario'      => $detallesInventario
+        ];
     }
+
+    return response()->json([
+        'success'    => true,
+        'estante'    => $codigoBloque,
+        'tipo'       => $estructura->tipo_estructura,
+        'niveles'    => $niveles,
+        'posiciones' => $posiciones,
+        'matriz'     => $matrizData
+    ]);
+}
 
 
     public function guardarEstructura(Request $request)
@@ -538,54 +514,51 @@ public function guardarEstructuraDrag(Request $request)
     }
 
    public function vista3D($id)
-    {
-        $almacen = Almacen::findOrFail($id);
+{
+    $almacen = Almacen::findOrFail($id);
+    
+    $estructuras = AlmacenEstructuraGrid::where('almacen_id', $id)->get();
+    
+    $ubicaciones = Ubicacion::where('almacen_id', $id)
+        ->with(['inventarioStock.item'])
+        ->get()
+        ->groupBy('estructura_grid_id');
+
+    $mapa3d = $estructuras->map(function($e) use ($ubicaciones) {
+        $ubis = $ubicaciones->get($e->id) ?? collect();
         
-        // Traemos las estructuras del layout gráfico
-        $estructuras = AlmacenEstructuraGrid::where('almacen_id', $id)->get();
-        
-        // Traemos las ubicaciones físicas vinculadas con sus existencias cargadas en memoria
-        $ubicaciones = Ubicacion::where('almacen_id', $id)
-            ->with(['inventarioStock.item'])
-            ->get()
-            ->groupBy('estructura_grid_id');
+        $inventarioEstado = [];
 
-        $mapa3d = $estructuras->map(function($e) use ($ubicaciones) {
-            $ubis = $ubicaciones->get($e->id) ?? collect();
-          
-            $inventarioEstado = [];
+        foreach ($ubis as $ubi) {
+            $cantidadTotal = $ubi->inventarioStock->first()->cantidad_actual ?? null;
+            $capacidad = $ubi->inventarioStock->first()->capacidad_asignada ?? null;
+            $primerArticulo = $ubi->inventarioStock->first();
+            $estaOcupado = $cantidadTotal > 0;
 
-            // Agrupamos el inventario por nivel para procesar la altura de forma ordenada en el 3D
-            foreach ($ubis as $ubi) {
-                $cantidadTotal = $ubi->inventarioStock->first()->cantidad_actual ?? null;
-                $capacidad = $ubi->inventarioStock->first()->capacidad_asignada ?? null;
-                $primerArticulo = $ubi->inventarioStock->first();
-                $estaOcupado = $cantidadTotal > 0;
-
-                $inventarioEstado[] = [
-                    'nivel'    => intval($ubi->nivel),
-                    'posicion' => intval($ubi->posicion),
-                    'ocupado'  => $estaOcupado,
-                    'sku'      => $estaOcupado ? $primerArticulo->item->codigo : '',
-                    'producto' => $estaOcupado ? $primerArticulo->item->descripcion : '',
-                    'stock'    => $estaOcupado ? $cantidadTotal : 0,
-                    'capacidad' => $estaOcupado ? $capacidad : 0
-                ];
-            }
-
-            return [
-                'x'          => intval($e->coord_x),
-                'z'          => intval($e->coord_y), // Mapeado a eje Z en espacio 3D
-                'tipo'       => $e->tipo_estructura,
-                'codigo'     => $e->codigo_bloque,
-                'niveles'    => intval($e->cantidad_niveles),
-                'inventario' => $inventarioEstado
+            $inventarioEstado[] = [
+                'codigo_completo' => $ubi->codigo_ubicacion, // IMPORTANTE: Permite ordenar las subdivisiones
+                'nivel'    => intval($ubi->nivel),
+                'posicion' => intval($ubi->posicion),
+                'ocupado'  => $estaOcupado,
+                'sku'      => $estaOcupado ? $primerArticulo->item->codigo : '',
+                'producto' => $estaOcupado ? $primerArticulo->item->descripcion : '',
+                'stock'    => $estaOcupado ? $cantidadTotal : 0,
+                'capacidad' => $estaOcupado ? $capacidad : 0
             ];
-        });
+        }
 
-        return view('almacen.almacen_3d', compact('almacen', 'mapa3d'));
-    }
+        return [
+            'x'          => intval($e->coord_x),
+            'z'          => intval($e->coord_y), 
+            'tipo'       => $e->tipo_estructura,
+            'codigo'     => $e->codigo_bloque,
+            'niveles'    => intval($e->cantidad_niveles),
+            'inventario' => $inventarioEstado
+        ];
+    });
 
+    return view('almacen.almacen_3d', compact('almacen', 'mapa3d'));
+}
 
     public function buscarItemsAAsignar(Request $request)
     {
@@ -732,6 +705,65 @@ public function guardarEstructuraDrag(Request $request)
 
         return response()->json(['success' => true, 'message' => 'Estructura reposicionada con éxito.']);
     }
+    
+    public function subdividirSlot(Request $request)
+{
+    return DB::transaction(function () use ($request) {
+        $ubicacionOriginal = Ubicacion::findOrFail($request->ubicacion_id);
+        $cantidad = (int) $request->cantidad_divisiones;
 
+        // Si ya hay stock, NO borres el original. 
+        // Solo crea las nuevas y marca el original como A.
+        $letras = ['A', 'B', 'C', 'D', 'E'];
+        
+        // Renombrar original a A si no lo es
+        if (strpos($ubicacionOriginal->codigo_ubicacion, '-A') === false) {
+             $ubicacionOriginal->update(['codigo_ubicacion' => $ubicacionOriginal->codigo_ubicacion . '-A']);
+        }
+
+        for ($i = 1; $i < $cantidad; $i++) {
+            Ubicacion::create([
+                'almacen_id' => $ubicacionOriginal->almacen_id,
+                'estructura_grid_id' => $ubicacionOriginal->estructura_grid_id,
+                'codigo_ubicacion' => str_replace('-A', '-' . $letras[$i], $ubicacionOriginal->codigo_ubicacion),
+                'pasillo' => $ubicacionOriginal->pasillo,
+                'estante' => $ubicacionOriginal->estante,
+                'nivel' => $ubicacionOriginal->nivel,
+                'posicion' => $ubicacionOriginal->posicion,
+                'tipo' => $ubicacionOriginal->tipo,
+                'capacidad_maxima_kg' => $ubicacionOriginal->capacidad_maxima_kg / $cantidad
+            ]);
+        }
+        return response()->json(['success' => true]);
+    });
+}
+
+   public function combinarSlots(Request $request)
+{
+    return DB::transaction(function () use ($request) {
+        $ubicacionBase = Ubicacion::findOrFail($request->ubicacion_id);
+
+        // 1. Identificar todo el bloque de sub-celdas
+        $queryBloque = Ubicacion::where('estructura_grid_id', $ubicacionBase->estructura_grid_id)
+            ->where('nivel', $ubicacionBase->nivel)
+            ->where('posicion', $ubicacionBase->posicion);
+
+        $slots = $queryBloque->get();
+        
+        // 2. MIGRACIÓN: Mover el stock de todas las sub-celdas a la "base"
+        // Si hay stock en slots que vamos a borrar, lo movemos al slot que sobrevive
+        InventarioStock::whereIn('ubicacion_id', $slots->pluck('id'))
+            ->where('ubicacion_id', '!=', $ubicacionBase->id)
+            ->update(['ubicacion_id' => $ubicacionBase->id]);
+
+        // 3. Borrar el resto (ahora es seguro porque ya no hay stock asociado)
+        $queryBloque->where('id', '!=', $ubicacionBase->id)->delete();
+        
+        // 4. Limpiar nombre (opcional)
+        $ubicacionBase->update(['codigo_ubicacion' => str_replace(['-A','-B','-C','-D','-E'], '', $ubicacionBase->codigo_ubicacion)]);
+
+        return response()->json(['success' => true]);
+    });
+}
     
 }

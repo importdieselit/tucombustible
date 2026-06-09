@@ -298,15 +298,29 @@
                         </div>
 
                         <div class="card bg-white border-0 shadow-sm mt-auto">
-                            <div class="card-body p-3">
-                                <h6 class="text-uppercase font-weight-bold text-dark mb-2 small"><i class="fas fa-barcode me-1"></i> Detalle del Slot Seleccionado</h6>
-                                <div id="panelDetalleSlot">
-                                    <p class="text-muted mb-0 py-2 italic font-weight-light" style="font-size: 12px;">
-                                        <i class="fas fa-hand-pointer me-1"></i> Seleccione o arrastre sobre las celdas de arriba.
-                                    </p>
+                        <div class="card-body p-3">
+                            <h6 class="text-uppercase font-weight-bold text-dark mb-2 small">
+                                <i class="fas fa-barcode me-1"></i> Detalle y Gestión de Celda
+                            </h6>
+                            
+                            <div id="panelDetalleSlot" class="mb-3">
+                                <p class="text-muted mb-0 py-2 font-weight-light" style="font-size: 12px;">
+                                    <i class="fas fa-hand-pointer me-1"></i> Seleccione una celda arriba.
+                                </p>
+                            </div>
+
+                            <div id="controlesEstructuraCelda" class="d-none border-top pt-2 mt-2">
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-outline-primary btn-sm flex-fill" onclick="subdividirSlotActivo()" style="font-size: 10px;" title="Crear subdivisiones en esta celda">
+                                        <i class="fas fa-cut me-1"></i> Subdividir
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" onclick="combinarSlotActivo()" style="font-size: 10px;" title="Unir con la celda de la derecha">
+                                        <i class="fas fa-link me-1"></i> Combinar a la derecha
+                                    </button>
                                 </div>
                             </div>
                         </div>
+                    </div>
                     </div>
                 </div>
             </div>
@@ -352,6 +366,8 @@
 
 @push('scripts')
 <script>
+
+    let cacheUbicacionesEstante = {};
  window.addEventListener('load', function() {
     
     // --- ESTADOS GLOBALES ---
@@ -630,7 +646,7 @@
     }
 
     // --- 6. MODO AUDITORÍA: CLIC SIMPLE PARA VER EL ESTANTE ---
-    let cacheUbicacionesEstante = {};
+    
 
     $(document).on('click', '.celda-mapa', function(e) {
         // BLINDAJE: Si el modo edición está activo, no abre el modal
@@ -648,94 +664,122 @@
         const modalIns = new bootstrap.Modal(document.getElementById('modalInspector'));
 
         $.ajax({
-            url: "{{ route('almacen.layout.inspeccionar') }}",
-            method: "POST",
-            data: { almacen_id: "{{ $almacen->id }}", coord_x: x, coord_y: y },
-            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-            beforeSend: function() {
-                $('#panelDetalleSlot').html('<div class="text-muted py-2"><i class="fas fa-spinner fa-spin me-1"></i> Consultando estante completo en planta...</div>');
-                $('#tablaMatrizEstante').html('');
-            },
-            success: function(response) {
-                if (!response.success) return;
+    url: "{{ route('almacen.layout.inspeccionar') }}",
+    method: "POST",
+    data: { almacen_id: "{{ $almacen->id }}", coord_x: x, coord_y: y },
+    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+    beforeSend: function() {
+        $('#panelDetalleSlot').html('<div class="text-muted py-2"><i class="fas fa-spinner fa-spin me-1"></i> Consultando estante...</div>');
+        $('#controlesEstructuraCelda').addClass('d-none');
+        $('#tablaMatrizEstante').html('');
+    },
+    success: function(response) {
+        if (!response.success) return;
 
-                $('#insTituloEstante').text(response.estante);
-                cacheUbicacionesEstante = response.matriz; 
+        $('#insTituloEstante').text(response.estante);
+        cacheUbicacionesEstante = response.matriz; 
 
-                let tablaHtml = '<thead><tr><th class="bg-secondary text-light small" style="width:100px;">Nivel \\ Posición</th>';
-                response.posiciones.forEach(p => {
-                    tablaHtml += `<th class="bg-secondary text-light small">Posición ${p}</th>`;
-                });
-                tablaHtml += '</tr></thead><tbody>';
-
-                response.niveles.forEach(n => {
-                    tablaHtml += `<tr><td class="bg-dark text-light font-weight-bold small">Nivel ${n}</td>`;
-    
-                        response.posiciones.forEach(p => {
-                            const key = `${n}-${p}`;
-                            const slot = cacheUbicacionesEstante[key];
-                            
-                            if (slot) {
-                                const ocupado = slot.ocupado;
-                                const claseEstado = ocupado ? 'slot-ocupado' : 'slot-libre';
-                                
-                                // Lógica de visualización de capacidad dinámica
-                                let barraHtml = '';
-                                let infoAdicional = '';
-                                
-                                if (ocupado && slot.inventario) {
-                                    // Si tienes el campo capacidad_asignada en tu base de datos
-                                    const capacidad = slot.inventario.capacidad_asignada || slot.total_articulos; 
-                                    const porcentaje = (slot.total_articulos / capacidad) * 100;
-
-                                    //const color = porcentaje > 90 ? 'bg-danger' : (porcentaje > 70 ? 'bg-warning' : 'bg-success');
-                                    const colorClass = porcentaje > 90 ? 'bg-danger-gradient' : (porcentaje > 70 ? 'bg-warning-gradient' : 'bg-success-gradient');
-
-                                    barraHtml = `
-                                        <div class="modern-progress-track">
-                                            <div class="modern-progress-bar ${colorClass}" style="width: ${Math.min(porcentaje, 100)}%"></div>
-                                        </div>
-                                        <div class="d-flex justify-content-between mt-1">
-                                            <span style="font-size: 8px; font-weight: 600; color: #64748b;">OCUPACIÓN</span>
-                                            <span style="font-size: 8px; font-weight: 700; color: #1e293b;">${Math.round(porcentaje)}%</span>
-                                        </div>
-                                    `;
-                                    
-                                    infoAdicional = `
-                                        <div class="small text-truncate" style="font-size:9px;" title="${slot.inventario.producto}">
-                                            ${slot.inventario.sku}
-                                        </div>
-                                        <div class="font-weight-bold" style="font-size:10px;">${slot.total_articulos} / ${capacidad}</div>
-                                    `;
-                                } else {
-                                    infoAdicional = '<small style="font-size:9px;" class="text-muted">Libre</small>';
-                                }
-
-                                tablaHtml += `
-                                    <td class="slot-rack slot-receptor-drop ${claseEstado}" 
-                                        data-key="${key}" 
-                                        data-ubicacion-id="${slot.id}"
-                                        ${ocupado ? 'draggable="true"' : ''}>
-                                        N${n}-P${p}
-                                        ${infoAdicional}
-                                        ${barraHtml}
-                                    </td>
-                                `;
-                            } else {
-                                tablaHtml += '<td class="bg-dark text-muted text-center" style="opacity:0.3;">-</td>';
-                            }
-                        });
-                        tablaHtml += '</tr>';
-                    });
-                tablaHtml += '</tbody>';
-
-                $('#tablaMatrizEstante').html(tablaHtml);
-                modalIns.show();
-            },
-            error: function() {
-                alert('Error crítico al procesar la radiografía del estante.');
-            }
+        let tablaHtml = '<thead><tr><th class="bg-secondary text-light small" style="width:100px;">Nivel \\ Posición</th>';
+        response.posiciones.forEach(p => {
+            tablaHtml += `<th class="bg-secondary text-light small">Posición ${p}</th>`;
         });
+        tablaHtml += '</tr></thead><tbody>';
+
+        response.niveles.forEach(n => {
+            tablaHtml += `<tr><td class="bg-dark text-light font-weight-bold small align-middle">Nivel ${n}</td>`;
+            
+            let saltarColumnas = 0; // Controlador de colspan
+
+            response.posiciones.forEach(p => {
+                // Si la celda anterior ocupó este espacio (combinada), la saltamos visualmente
+                if (saltarColumnas > 0) {
+                    saltarColumnas--;
+                    return; 
+                }
+
+                const key = `${n}-${p}`;
+                const contenedorUbicacion = cacheUbicacionesEstante[key];
+                
+                if (contenedorUbicacion) {
+                    const colspan = contenedorUbicacion.colspan || 1;
+                    if (colspan > 1) saltarColumnas = colspan - 1;
+
+                    // El <td> actúa como contenedor estructural
+                    tablaHtml += `<td colspan="${colspan}" class="p-1 align-middle" style="min-width: 90px; border: 1px solid #475569;">`;
+                    
+                    // El d-flex interno maneja las subdivisiones (1 o múltiples)
+                    tablaHtml += `<div class="d-flex w-100 h-100 gap-1 justify-content-center">`;
+
+                    contenedorUbicacion.slots.forEach(slot => {
+                        const ocupado = slot.ocupado;
+                        const claseEstado = ocupado ? 'slot-ocupado border-danger' : 'slot-receptor-drop slot-libre border-success';
+                        
+                        let barraHtml = '';
+                        let infoAdicional = '';
+                        
+                        if (ocupado && slot.inventario) {
+                            const capacidad = slot.inventario.capacidad_asignada || slot.total_articulos; 
+                            const porcentaje = (slot.total_articulos / capacidad) * 100;
+                            const colorClass = porcentaje > 90 ? 'bg-danger' : (porcentaje > 70 ? 'bg-warning' : 'bg-success');
+
+                            barraHtml = `
+                                <div class="progress mt-1" style="height: 4px;">
+                                    <div class="progress-bar ${colorClass}" role="progressbar" style="width: ${Math.min(porcentaje, 100)}%"></div>
+                                </div>
+                                <div class="d-flex justify-content-between mt-1">
+                                    <span style="font-size: 8px; color: #94a3b8;">OCUPACIÓN</span>
+                                    <span style="font-size: 8px; font-weight: bold; color: #fff;">${Math.round(porcentaje)}%</span>
+                                </div>`;
+                            
+                            infoAdicional = `
+                                <div class="small text-truncate" style="font-size:9px;" title="${slot.inventario.producto}">
+                                    ${slot.inventario.sku}
+                                </div>
+                                <div class="font-weight-bold text-light" style="font-size:10px;">${slot.total_articulos} / ${capacidad}</div>`;
+                        } else {
+                            infoAdicional = '<small style="font-size:9px;" class="text-muted">Libre</small>';
+                        }
+
+                        // Etiqueta de subdivisión (Ej: A, B, C)
+                        const labelSubposicion = slot.subposicion ? `<span class="badge bg-secondary mb-1" style="font-size: 7px;">SUB: ${slot.subposicion}</span>` : '';
+
+                        // Tarjeta interactiva de cada slot
+                        tablaHtml += `
+                            <div class="slot-rack flex-fill p-1 rounded ${claseEstado} text-center" 
+                                style="background: #1e293b; border: 1px solid; cursor: pointer; transition: 0.2s;"
+                                data-key="${key}" 
+                                data-ubicacion-id="${slot.id}"
+                                onclick="cargarDetalleSlot(${slot.id}, '${key}', '${slot.subposicion}')"
+                                ${ocupado ? 'draggable="true"' : ''}>
+                                ${labelSubposicion}
+                                <div style="font-size: 10px; color: #cbd5e1; font-weight: bold;">N${n}-P${p}</div>
+                                ${infoAdicional}
+                                ${barraHtml}
+                            </div>
+                        `;
+                    });
+
+                    tablaHtml += `</div></td>`;
+                } else {
+                    tablaHtml += '<td class="bg-dark text-muted text-center align-middle" style="opacity:0.3; border: 1px dashed #334155;">-</td>';
+                }
+            });
+            tablaHtml += '</tr>';
+        });
+        tablaHtml += '</tbody>';
+
+        $('#tablaMatrizEstante').html(tablaHtml);
+        
+        // Resetear detalle
+        $('#panelDetalleSlot').html('<p class="text-muted mb-0 py-2 font-weight-light" style="font-size: 12px;"><i class="fas fa-hand-pointer me-1"></i> Seleccione una celda para ver detalles.</p>');
+        $('#controlesEstructuraCelda').addClass('d-none');
+        
+        modalIns.show();
+    },
+    error: function() {
+        alert('Error crítico al procesar la radiografía del estante.');
+    }
+});
     });
 
     $(document).on('click', '.slot-rack', function() {
@@ -944,6 +988,109 @@
     }
 
 });
+
+// Función estándar para leer la celda seleccionada y mostrarla en el inspector
+function cargarDetalleSlot(ubicacionId, matrizKey, subposicion) {
+    
+    // 1. Buscar el contenedor de la coordenada en la memoria caché actual
+    const contenedor = cacheUbicacionesEstante[matrizKey];
+    if (!contenedor) return;
+
+    // 2. Buscar el slot específico (por si esta celda está subdividida en A, B, etc.)
+    const slot = contenedor.slots.find(s => s.id === ubicacionId);
+    if (!slot) return;
+
+    // 3. Construir el diseño visual para el panel lateral derecho
+    let htmlDetalle = '';
+
+    if (slot.ocupado && slot.inventario) {
+        // Diseño si la celda tiene productos
+        htmlDetalle = `
+            <div class="alert alert-primary p-2 mb-2 border-primary" style="background-color: #f0f9ff;">
+                <h6 class="font-weight-bold mb-1 text-primary" style="font-size: 13px;">${slot.inventario.sku}</h6>
+                <p class="small mb-2 text-dark" style="font-size: 11px; line-height: 1.2;">${slot.inventario.producto}</p>
+                <hr class="my-1 border-primary" style="opacity: 0.2;">
+                <div class="d-flex justify-content-between small text-dark" style="font-size: 10px;">
+                    <span>Lote: <b>${slot.inventario.lote}</b></span>
+                    <span>Stock: <b>${slot.inventario.cantidad} / ${slot.inventario.capacidad_asignada}</b></span>
+                </div>
+            </div>
+        `;
+    } else {
+        // Diseño si la celda está vacía
+        htmlDetalle = `
+            <div class="alert alert-secondary p-3 mb-2 text-center border-secondary bg-white">
+                <i class="fas fa-box-open fa-2x text-muted mb-2"></i>
+                <h6 class="text-muted mb-0 small font-weight-bold">CELDA LIBRE</h6>
+                <p class="text-muted mb-0" style="font-size: 10px;">Lista para recibir mercancía.</p>
+            </div>
+        `;
+    }
+
+    // Agregar la huella técnica (ID Físico) debajo de la tarjeta
+    htmlDetalle += `
+        <div class="text-secondary mt-2" style="font-size: 10px;">
+            <i class="fas fa-qrcode me-1"></i> Código Físico: <b>${slot.codigo_completo}</b>
+        </div>
+    `;
+
+    // 4. Inyectar todo el diseño en tu div del HTML
+    $('#panelDetalleSlot').html(htmlDetalle);
+
+    // 5. Activar la botonera de Subdividir / Combinar
+    $('#controlesEstructuraCelda').removeClass('d-none');
+    $('#controlesEstructuraCelda').attr('data-activo-id', ubicacionId);
+    $('#controlesEstructuraCelda').attr('data-activo-key', matrizKey);
+    
+    // 6. Efecto Visual: Resaltar la celda que el usuario clickeó en la tabla
+    $('.slot-rack').css('box-shadow', 'none').css('border', '1px solid #475569'); // Limpiar las demás
+    $(`.slot-rack[data-ubicacion-id="${ubicacionId}"]`).css('box-shadow', '0 0 0 2px #0dcaf0').css('border', '1px solid #0dcaf0');
+}   
+
+ function subdividirSlotActivo() {
+    const contenedor = $('#controlesEstructuraCelda');
+    const ubicacionId = contenedor.attr('data-activo-id');
+    
+    // Pedir al usuario en cuántas partes dividir
+    const partes = prompt("¿En cuántas celdas desea dividir este espacio? (Ingrese un número del 2 al 5):", "2");
+    
+    if (partes === null) return; // Canceló
+    const n = parseInt(partes);
+    
+    if (isNaN(n) || n < 2 || n > 5) {
+        alert("Por favor, ingrese un número válido entre 2 y 5.");
+        return;
+    }
+
+    $.post("{{ route('almacen.layout.subdividir_slot') }}", {
+        _token: '{{ csrf_token() }}',
+        ubicacion_id: ubicacionId,
+        cantidad_divisiones: n // Enviamos la cantidad
+    }, function(res) {
+        if (res.success) {
+            alert('Espacio subdividido en ' + n + ' partes.');
+            recargarMatrizActual();
+        }
+    }).fail(err => alert("Error: " + (err.responseJSON?.message || "No se pudo realizar la acción.")));
+}
+
+    function combinarSlotActivo() {
+        const contenedor = $('#controlesEstructuraCelda');
+        const ubicacionId = contenedor.attr('data-activo-id');
+        
+        if (!ubicacionId) return;
+
+        // Aquí llamarías a tu ruta de Laravel para combinar
+        $.post("{{ route('almacen.layout.combinar_slots') }}", {
+            _token: '{{ csrf_token() }}',
+            ubicacion_id: ubicacionId
+        }, function(res) {
+            if (res.success) {
+                alert('Celdas combinadas con éxito.');
+                recargarMatrizActual();
+            }
+        }).fail(err => alert("Error al combinar: " + err.responseJSON.message));
+    }
 </script>
 @endpush
 @endsection

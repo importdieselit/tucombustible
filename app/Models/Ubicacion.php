@@ -11,6 +11,7 @@ class Ubicacion extends Model
     protected $table = 'ubicaciones';
     protected $fillable = [
         'almacen_id',
+        'estructura_grid_id',
         'codigo_ubicacion',
         'pasillo',
         'estante',
@@ -18,7 +19,10 @@ class Ubicacion extends Model
         'posicion',
         'tipo',
         'capacidad_maxima_kg',
-        'volumen_maximo_litros'
+        'volumen_maximo_litros',
+        'colspan',
+        'subposicion',
+        'esta_bloqueada'
     ];
     protected $hasTimestamps = true;
 

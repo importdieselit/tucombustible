@@ -166,6 +166,85 @@ window.addEventListener('load', function() {
 
     // --- FUNCIONES DE RENDERIZADO VOLUMÉTRICO PROPORCIONAL ---
 
+    function crearBloqueEstructural(posX, posY, posZ, infoSub, index, numSubdivisiones) {
+    const anchoTotal = cellSize - espacioEstructura;
+    const prof = cellSize - espacioEstructura;
+    const altoTotal = alturaNivel - espacioEstructura;
+
+    // Calcular el ancho de esta subdivisión específica
+    const anchoSub = anchoTotal / numSubdivisiones;
+
+    // Coordenadas centrales exactas en el mapa 3D
+    const zCentro = posZ + cellSize/2;
+    // La X central desplaza la caja para alinearla lado a lado (A, B, C...)
+    const xCentro = posX + (espacioEstructura/2) + (index * anchoSub) + (anchoSub/2);
+
+    // 1. CASO: CELDA VACÍA
+    if (!infoSub || !infoSub.ocupado) {
+        const geometry = new THREE.BoxGeometry(anchoSub, altoTotal, prof);
+        const edges = new THREE.EdgesGeometry(geometry);
+        const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xb0bec5, linewidth: 2 }));
+        line.position.set(xCentro, posY + alturaNivel/2, zCentro);
+        scene.add(line);
+        return;
+    }
+
+    // 2. CASO: CELDA OCUPADA
+    const ratio = (infoSub.capacidad && infoSub.capacidad > 0) ? Math.min(infoSub.stock / infoSub.capacidad, 1) : 1;
+    const altoLleno = Math.max(altoTotal * ratio, 0.05); 
+    const altoVacio = altoTotal - altoLleno;
+
+    // Volumen Lleno (Stock)
+    const matLleno = new THREE.MeshStandardMaterial({ color: 0x0d6efd, roughness: 0.4 });
+    const meshLleno = new THREE.Mesh(new THREE.BoxGeometry(anchoSub, altoLleno, prof), matLleno);
+    meshLleno.position.set(xCentro, posY + altoLleno/2, zCentro);
+    meshLleno.castShadow = true;
+    scene.add(meshLleno);
+
+    // Volumen Vacío (Transparente)
+    if (altoVacio > 0) {
+        const matVacio = new THREE.MeshStandardMaterial({ color: 0x0d6efd, transparent: true, opacity: 0.15 });
+        const meshVacio = new THREE.Mesh(new THREE.BoxGeometry(anchoSub, altoVacio, prof), matVacio);
+        meshVacio.position.set(xCentro, posY + altoLleno + (altoVacio/2), zCentro);
+        scene.add(meshVacio);
+    }
+
+    // Jaula Wireframe negra
+    const edges = new THREE.EdgesGeometry(new THREE.BoxGeometry(anchoSub, altoTotal, prof));
+    const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x000000 }));
+    line.position.set(xCentro, posY + altoTotal/2, zCentro);
+    scene.add(line);
+
+    // --- ETIQUETAS DE IDENTIFICACIÓN ---
+    const offsetZ = prof / 2 + 0.01;
+    const offsetXEtq = anchoSub / 2 + 0.01;
+    const etiqAncho = anchoSub * 0.85;
+    const etiqAlto = altoTotal * 0.4;
+
+    // Etiqueta Frontal
+    const etiqZPos = crearEtiquetaPlana(infoSub.sku, infoSub.stock, infoSub.capacidad, infoSub.producto, '#0d6efd', etiqAncho, etiqAlto);
+    etiqZPos.position.set(xCentro, posY + altoTotal/2, zCentro + offsetZ);
+    scene.add(etiqZPos);
+
+    // Etiqueta Trasera
+    const etiqZNeg = crearEtiquetaPlana(infoSub.sku, infoSub.stock, infoSub.capacidad, infoSub.producto, '#0d6efd', etiqAncho, etiqAlto);
+    etiqZNeg.rotation.y = Math.PI; 
+    etiqZNeg.position.set(xCentro, posY + altoTotal/2, zCentro - offsetZ);
+    scene.add(etiqZNeg);
+
+    // Etiqueta Derecha
+    const etiqXPos = crearEtiquetaPlana(infoSub.sku, infoSub.stock, infoSub.capacidad, infoSub.producto, '#0d6efd', etiqAncho, etiqAlto);
+    etiqXPos.rotation.y = Math.PI / 2;
+    etiqXPos.position.set(xCentro + offsetXEtq, posY + altoTotal/2, zCentro);
+    scene.add(etiqXPos);
+
+    // Etiqueta Izquierda
+    const etiqXNeg = crearEtiquetaPlana(infoSub.sku, infoSub.stock, infoSub.capacidad, infoSub.producto, '#0d6efd', etiqAncho, etiqAlto);
+    etiqXNeg.rotation.y = -Math.PI / 2;
+    etiqXNeg.position.set(xCentro - offsetXEtq, posY + altoTotal/2, zCentro);
+    scene.add(etiqXNeg);
+}
+
     function crearEstructuraVacia(x, y, z) {
         const ancho = cellSize - espacioEstructura;
         const alto = alturaNivel - espacioEstructura;
@@ -348,34 +427,44 @@ window.addEventListener('load', function() {
 
     // --- PROCESAMIENTO E ITERACIÓN DEL LAYOUT MATRIZ ---
     dataAlmacen.forEach(item => {
-        const posX = (item.x * cellSize) - offsetX - (cellSize);
-        const posZ = (item.z * cellSize) - offsetZ - (cellSize);
+    const posX = (item.x * cellSize) - offsetX - (cellSize);
+    const posZ = (item.z * cellSize) - offsetZ - (cellSize);
 
-        if (item.tipo === 'ESTANTE') {
-            for (let n = 1; n <= item.niveles; n++) {
-                const infoNivel = item.inventario.find(i => i.nivel === n);
-                const posY = (n - 1) * alturaNivel;
+    if (item.tipo === 'ESTANTE') {
+        for (let n = 1; n <= item.niveles; n++) {
+            const posY = (n - 1) * alturaNivel;
 
-                if (infoNivel && infoNivel.ocupado) {
-                    crearCajaSolida(posX, posY, posZ, infoNivel.sku, infoNivel.stock, infoNivel.producto, infoNivel.capacidad);
-                } else {
-                    crearEstructuraVacia(posX, posY, posZ);
-                }
-            }
-        } 
-        else if (item.tipo === 'GRANEL_LUBRICANTE') {
-            const ubiOcupada = item.inventario.find(i => i.ocupado);
-            if (ubiOcupada) {
-                crearTanqueGranel(posX, posZ, true, ubiOcupada.sku, ubiOcupada.stock, ubiOcupada.producto, ubiOcupada.capacidad);
+            // Extraemos TODAS las subdivisiones que pertenecen a este nivel
+            let subsEnNivel = item.inventario.filter(i => i.nivel === n);
+            const numSubdivisiones = subsEnNivel.length > 0 ? subsEnNivel.length : 1;
+
+            if (subsEnNivel.length > 0) {
+                // Ordenamos alfabéticamente por código (Ej: -A, -B, -C) para pintar en orden de izquierda a derecha
+                subsEnNivel.sort((a, b) => a.codigo_completo.localeCompare(b.codigo_completo));
+                
+                // Dibujamos cada subdivisión recalculando su X interna
+                subsEnNivel.forEach((subInfo, index) => {
+                    crearBloqueEstructural(posX, posY, posZ, subInfo, index, numSubdivisiones);
+                });
             } else {
-                crearTanqueGranel(posX, posZ, false, '', 0, '', 0);
+                // Nivel completamente vacío (Sin subdivisiones guardadas en BD)
+                crearBloqueEstructural(posX, posY, posZ, null, 0, 1);
             }
-        } 
-        else if (item.tipo === 'PISO_PALLET') {
-            const infoPallet = item.inventario.find(i => i.nivel === 1);
-            crearPalletPiso(posX, posZ, infoPallet);
         }
-    });
+    } 
+    else if (item.tipo === 'GRANEL_LUBRICANTE') {
+        const ubiOcupada = item.inventario.find(i => i.ocupado);
+        if (ubiOcupada) {
+            crearTanqueGranel(posX, posZ, true, ubiOcupada.sku, ubiOcupada.stock, ubiOcupada.producto, ubiOcupada.capacidad);
+        } else {
+            crearTanqueGranel(posX, posZ, false, '', 0, '', 0);
+        }
+    } 
+    else if (item.tipo === 'PISO_PALLET') {
+        const infoPallet = item.inventario.find(i => i.nivel === 1);
+        crearPalletPiso(posX, posZ, infoPallet);
+    }
+});
 
     // --- 4. CÁMARAS Y CONTROLES ---
     const orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
