@@ -3,6 +3,10 @@
 namespace App\Models;// si usas Laravel 7+
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Vehiculo;
+use App\Models\Tanque;
+use App\Models\MovimientoCombustible;
 
 class RepostajeVehiculo extends Model
 {
@@ -116,4 +120,11 @@ class RepostajeVehiculo extends Model
     {
         return $this->belongsTo(User::class, 'id_admin', 'id');
     }
+
+    public function movimientoCombustible()
+    {
+        return $this->hasOne(MovimientoCombustible::class, 'ref', 'id');
+    }
+    
+
 }

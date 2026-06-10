@@ -44,6 +44,28 @@ class InventarioController extends BaseController
         return view('inventario.form', compact('item', 'almacenes'));
     }
 
+    public function applyBusinessFilters(Request $request)
+    {
+        $query = Inventario::query();
+
+        if ($request->filled('id_almacen')) {
+            $query->where('id_almacen', $request->id_almacen);
+        }
+
+        if ($request->filled('codigo')) {
+            $query->where('codigo', 'like', '%' . $request->codigo . '%');
+        }
+
+        if ($request->filled('descripcion')) {
+           
+        $query->where('descripcion', 'like', '%' . $request->descripcion . '%');
+        }
+
+        // Agrega más filtros según sea necesario
+
+        return $query;
+    }
+
     /**
      * Almacena un nuevo item en la base de datos.
      * @param \Illuminate\Http\Request $request

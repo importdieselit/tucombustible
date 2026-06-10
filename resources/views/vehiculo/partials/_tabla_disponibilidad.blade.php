@@ -78,7 +78,8 @@
                     <div class="card-body">
 
                         <div class="row g-3 mb-4">
-                            <h3 class="w-100 text-center"><strong>  UNIDADES OPERATIVAS</strong></h3>
+                            
+                            <h3 class="w-100 text-center "><strong>  UNIDADES OPERATIVAS</strong></h3>
                             <div class="col-12 col-md-6 col-lg-3">
                                 <div class="card h-100 shadow-sm  border-chutos border-0 border-top border-4">
                                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
@@ -161,7 +162,7 @@
                                     </div>
                                 </div>
                             </div>
-
+                        
                             <h3 class="w-100 text-center"><strong>  UNIDADES CON FALLA</strong></h3>
                             <div class="col-12 col-md-6 col-lg-3">
                                 <div class="card h-100 shadow-sm border-0 border-top border-4 border-chutos">
@@ -353,7 +354,7 @@
                     </div>     
                 </div>
             </div>
-            <div class="col-12">
+            <div class="col-12 d-none">
                 <h3 class="w-100 text-center"><strong>  PLANIFICACION DEL DIA </strong></h3>
                 <div class="card shadow-sm border-0 h-100" style="border-radius: 15px;">
                     <div class="card-body">

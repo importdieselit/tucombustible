@@ -22,7 +22,18 @@ class Kernel extends ConsoleKernel
         $schedule->command('send:reporte-diario-operaciones')->dailyAt('08:00')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));
         $schedule->command('gps:actualizar')->everyTwoMinutes()->withoutOverlapping()->appendOutputTo(storage_path('logs/reportes_automaticos.log'));
         $schedule->command('viajes:check-alertas')->everyThirtyMinutes()->withoutOverlapping()->appendOutputTo(storage_path('logs/reportes_automaticos.log'));
+<<<<<<< HEAD
         $schedule->command('cupos:reset')->monthlyOn(1, '00:00');
+=======
+        $schedule->call(function () {
+            app(\App\Services\ReporteEficienciaService::class)->refrescarAgregados();
+        })->hourly(); // Se actualiza cada hora automáticamente
+        $schedule->command('queue:work --stop-when-empty')->everyMinute()->withoutOverlapping();
+
+        $schedule->command('summary:daily-report')->dailyAt('00:00');
+        $schedule->command('cupos:reset')->monthlyOn(1, '00:00');
+        $schedule->command('reports:watch')->everyFiveMinutes()->between('16:40', '17:00')->timezone('America/Caracas');
+>>>>>>> main
     }
 
  

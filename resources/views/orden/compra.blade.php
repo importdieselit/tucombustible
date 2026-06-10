@@ -107,8 +107,8 @@
     </div>
                 <div class="mt-4 flex gap-3">
 
-    {{-- ESTATUS: 1 = SOLICITADA --}}
-            @if ($purchaseOrder->estatus == 1)
+    {{-- ESTATUS: 2 = SOLICITADA --}}
+            @if ($purchaseOrder->estatus == 2)
                 {{-- Solo usuarios administradores pueden aprobar o rechazar --}}
                 @if($admin)
                     <button class="px-4 py-2 btn btn-info text-white rounded shadow"
@@ -124,8 +124,8 @@
             @endif
 
 
-            {{-- ESTATUS: 2 = APROBADA --}}
-            @if ($purchaseOrder->estatus == 2)
+            {{-- ESTATUS: 5 = APROBADA --}}
+            @if ($purchaseOrder->estatus == 5)
                 {{-- Mecánico marca como recibido --}}
                 @if($user->id_perfil == 5) 
                     <button class="px-4 py-2 bg-blue-600 text-white rounded shadow"
@@ -137,13 +137,13 @@
 
 
             {{-- ESTATUS: 3 = RECHAZADA --}}
-            @if ($purchaseOrder->estatus == 3)
+            @if ($purchaseOrder->estatus == 4)
                 <span class="text-red-600 font-semibold">Orden Rechazada</span>
             @endif
 
 
-            {{-- ESTATUS: 4 = RECIBIDO --}}
-            @if ($purchaseOrder->estatus == 4)
+            {{-- ESTATUS: 1 = RECIBIDO --}}
+            @if ($purchaseOrder->estatus == 1)
                 <span class="text-green-700 font-semibold">Orden Finalizada y Recibida</span>
             @endif
 

@@ -702,7 +702,13 @@ class OrdenController extends BaseController
         return response()->json(['success' => true]);
     }
 
-    
+    public function deleteTrabajoExterno($id)
+    {
+        $trabajo= TrabajoExterno::find($id);
+        $trabajo->delete();
+
+        return response()->json(['success' => true]);
+    }
     
 
     public function addInsumo(Request $request, $id)
@@ -1170,8 +1176,18 @@ class OrdenController extends BaseController
             $orden->hora_out = Carbon::now()->toTimeString();
             $orden->id_us_out = Auth::id(); // Usuario que cierra la orden
             $orden->save();
+            
+            $vehiculo = Vehiculo::find($orden->id_vehiculo);
+            if($vehiculo){
+                $vehiculo->estatus = 1; // Disponible
+                $vehiculo->save();
+            }
 
             if($orden->tipo == 'Mantenimiento' || $orden->tipo == 'Preventivo'){
+                $vehiculo->km_mantt = 0;
+                $vehiculo->hrs_mantt = 0;
+                 // Reiniciar contador de mantenimiento
+                $vehiculo->save();
                 $mantenimiento = MantenimientoProgramado::where('orden_id', $orden->id)->first();
                 if($mantenimiento){
                     $mantenimiento->estatus = 3; // Cerrada

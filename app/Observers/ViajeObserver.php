@@ -7,6 +7,8 @@ use App\Models\Vehiculo;
 use App\Models\Chofer;
 use App\Services\FcmNotificationService;
 use Illuminate\Support\Facades\DB;
+use App\Notifications\ViajeCreadoNotification;
+use Illuminate\Support\Facades\Notification;
 
 class ViajeObserver
 {
@@ -32,6 +34,24 @@ class ViajeObserver
             }
             
             $vehiculo->save();
+
+            $viaje->load(['chofer', 'ayudante_chofer','vehiculo', 'cisternaAcoplada']);
+
+            $destinatarios = collect();
+
+            if ($viaje->chofer_id) {
+                $destinatarios->push($viaje->chofer);
+            }
+            
+            if (!is_null($viaje->ayudante)) {
+                $destinatarios->push($viaje->ayudante_chofer);
+            }
+
+            // Si hay personal asignado, enviamos la notificación multicanal (Push + WhatsApp)
+            if ($destinatarios->isNotEmpty()) {
+                Notification::send($destinatarios, new ViajeCreadoNotification($viaje));
+            }
+            
         }
         
         
@@ -51,10 +71,10 @@ class ViajeObserver
             $viejoStatus = $viaje->getOriginal('status'); // El valor antes del update
 
             if ($viejoStatus === 'Programado' && $nuevoStatus === 'EN RUTA') {
-                $this->actualizarEstatusFlota($viaje, 2);
+              $this->actualizarEstatusFlota($viaje, 2);
             } elseif ($nuevoStatus === 'COMPLETADO') {
-                Vehiculo::where('id', $viaje->vehiculo_id)->update(['acoplado_id' => null]);
-                $this->actualizarEstatusFlota($viaje, 1);
+              $this->actualizarEstatusFlota($viaje, 1);
+              Vehiculo::where('id', $viaje->vehiculo_id)->update(['acoplado_id' => null]);
             }
         }
     }
@@ -66,7 +86,7 @@ class ViajeObserver
         $vehiculo = Vehiculo::find($viaje->vehiculo_id);
         if ($vehiculo && $vehiculo->estatus != $estatusDestino) {
             $vehiculo->estatus = $estatusDestino;
-            $vehiculo->save();
+            $vehiculo->saveQuietly();
         }
 
         // 2. Actualizar la Cisterna (Asumiendo que el ID de cisterna guarda otro Vehiculo)
@@ -74,7 +94,7 @@ class ViajeObserver
             $cisterna = Vehiculo::find($viaje->cisterna);
             if ($cisterna && $cisterna->estatus != $estatusDestino) {
                 $cisterna->estatus = $estatusDestino;
-                $cisterna->save();
+                $cisterna->saveQuietly();
             }
         }
     }

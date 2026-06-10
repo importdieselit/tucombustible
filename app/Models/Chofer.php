@@ -5,10 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Illuminate\Notifications\Notifiable;
+use NotificationChannels\WebPush\HasPushSubscriptions;
+
 
 class Chofer extends Model
 {
-    use HasFactory;
+    use HasFactory, Notifiable, HasPushSubscriptions;
 
 
     protected $table = 'choferes';
@@ -52,9 +55,14 @@ class Chofer extends Model
     /**
      * Define la relación con el modelo Persona.
      */
-    public function persona()
+    public function persona() 
     {
         return $this->belongsTo(Persona::class);
+    }
+
+    public function personaInfo() 
+    {
+        return $this->hasOne(Persona::class, 'id', 'persona_id');
     }
 
     /**
@@ -118,8 +126,10 @@ class Chofer extends Model
         {
             return $this->hasMany(Viaje::class, 'ayudante_id');
         }
-        
 
-        
-
+    // Método estándar para que Laravel sepa a qué número enviar WhatsApp
+    public function routeNotificationForWhatsApp() {
+        // Asumiendo que la relación persona tiene el teléfono con código de área (ej: 584120000000)
+        return $this->personaInfo->telefono; 
+    }
 }

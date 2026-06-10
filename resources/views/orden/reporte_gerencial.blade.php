@@ -1,8 +1,7 @@
 @extends('layouts.app')
 @push('styles')
 <style>
-
-    .badge {
+.badge {
   /* Alineación */
   display: inline-flex;
   align-items: center;
@@ -16,7 +15,6 @@
   font-family: sans-serif;
   font-size: 12px;
 }
-
 .icon {
   display: flex;
   align-items: center;
@@ -24,30 +22,29 @@
      esto asegura que no haya desfases */
 }
 .bg-chutos {
-        background-color: #ff6600 !important;
-    }
-    .bg-camiones {
-        background-color: #ffc107 !important;
-    }
-    .bg-cisternas {
-        background-color: #198754 !important;
-    }
-    .bg-camionetas {
-        background-color: #2c3e50 !important;
-    }
-
-    .border-chutos {
-        border-color: #ff6600 !important;
-    }
-    .border-camiones {
-        border-color: #ffc107 !important;
-        }
-    .border-cisternas {
-        border-color: #198754 !important;
-    }
-    .border-camionetas {
-        border-color: #2c3e50 !important
-    }
+    background-color: #ff6600 !important;
+}
+.bg-camiones {
+    background-color: #ffc107 !important;
+}
+.bg-cisternas {
+    background-color: #198754 !important;
+}
+.bg-camionetas {
+    background-color: #2c3e50 !important;
+}
+.border-chutos {
+    border-color: #ff6600 !important;
+}
+.border-camiones {
+    border-color: #ffc107 !important;
+}
+.border-cisternas {
+    border-color: #198754 !important;
+}
+.border-camionetas {
+    border-color: #2c3e50 !important
+}
 
 @media print {
     /* Configuración de la página */
@@ -212,7 +209,7 @@
             </div>
         </div>
 
-        <div class="card border-0 shadow-sm mb-4">
+        <div class="card border-0 shadow-sm mb-4 d-none">
             <div class="card-header bg-camionetas text-white py-2">
                 <h6 class="mb-0 small fw-bold">RESUMEN DEL PERÍODO</h6>
             </div>
@@ -236,16 +233,6 @@
                         <h4 class="fw-bold text-danger mt-1">${{ number_format($reporte['financiero']['total'], 2) }}</h4>
                     </div>
                 </div>
-            </div>
-        </div>
-        <div class="card border-0 shadow-sm mt-4">
-            <div class="card-header bg-white py-3">
-                <h6 class="fw-bold text-dark mb-0">
-                    <i class="fas fa-chart-line me-2 text-primary"></i> FLUJO DIARIO: ÓRDENES ABIERTAS VS. CERRADAS
-                </h6>
-            </div>
-            <div class="card-body">
-                <div id="container-timeline-mantenimiento" style="width:100%; height:350px;"></div>
             </div>
         </div>
         <div class="row g-3 mb-4">
@@ -357,54 +344,60 @@ document.addEventListener('DOMContentLoaded', function() {
     const timelineData = @json($reporte['timeline']);
 
     Highcharts.chart('container-timeline-mantenimiento', {
-        chart: {
-            type: 'areaspline', // Curvas suaves con relleno
-            backgroundColor: 'transparent'
-        },
-        title: { text: null },
-        xAxis: {
-            categories: timelineData.labels,
-            gridLineWidth: 1,
-            gridLineDashStyle: 'Dot'
-        },
-        yAxis: {
-            title: { text: 'Cantidad de Órdenes' },
-            min: 0,
-            allowDecimals: false
-        },
-        tooltip: {
-            shared: true,
-            crosshairs: true
-        },
-        plotOptions: {
-            areaspline: {
-                fillOpacity: 0.1,
-                marker: {
-                    radius: 4,
-                    symbol: 'circle'
-                },
-                lineWidth: 3
-            }
-        },
-        series: [{
-            name: 'Órdenes Abiertas',
-            data: timelineData.abiertas,
-            color: '#ff6600', // Tu color de Chutos/Naranja
-        }, {
-            name: 'Órdenes Cerradas',
-            data: timelineData.cerradas,
-            color: '#198754', // Verde Cisternas/Éxito
-        }],
-        credits: { enabled: false },
-        responsive: {
-            rules: [{
-                condition: { maxWidth: 500 },
-                chartOptions: {
-                    legend: { layout: 'horizontal', align: 'center', verticalAlign: 'bottom' }
+    chart: {
+        type: 'column', // Cambiado de areaspline a column
+        backgroundColor: 'transparent',
+        marginTop: 30
+    },
+    title: { text: null },
+    xAxis: {
+        categories: timelineData.labels,
+        crosshair: true, // Resalta la columna al pasar el mouse
+        gridLineWidth: 0 // Limpiamos el fondo para que resalten las barras
+    },
+    yAxis: {
+        title: { text: 'Cantidad de Órdenes' },
+        min: 0,
+        allowDecimals: false,
+        gridLineDashStyle: 'Dot'
+    },
+    tooltip: {
+        shared: true,
+        headerFormat: '<span style="font-size:12px; font-weight:bold">{point.key}</span><br/>',
+        borderWidth: 0,
+        shadow: true,
+        backgroundColor: '#ffffff'
+    },
+    plotOptions: {
+        column: {
+            pointPadding: 0.2, // Espacio entre barras del mismo día
+            borderWidth: 0,
+            borderRadius: 5,   // Bordes redondeados para un look moderno
+            dataLabels: {
+                enabled: true, // Muestra el número arriba de la barra para lectura rápida
+                style: {
+                    fontSize: '10px'
                 }
-            }]
+            }
         }
-    });
+    },
+    series: [{
+        name: 'Órdenes Abiertas',
+        data: timelineData.abiertas,
+        color: '#ff6600', // Naranja Estándar
+    }, {
+        name: 'Órdenes Cerradas',
+        data: timelineData.cerradas,
+        color: '#198754', // Verde Estándar
+    }],
+    credits: { enabled: false },
+    legend: {
+        itemStyle: {
+            fontWeight: 'bold',
+            color: '#333'
+        }
+    }
+});
     
     // 1. Obtenemos la data real que mostraste en el dd()
     const dataFromLaravel = @json($reporte['operativo']['por_tipo']);

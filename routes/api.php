@@ -28,6 +28,8 @@ use App\Http\Controllers\Apis\IncidenciaController;
 use App\Http\Controllers\ViajesController;
 use App\Http\Controllers\Apis\SearchController;
 use App\Http\Controllers\TelegramController;
+use App\Http\Controllers\Api\ApkUpdateController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -47,6 +49,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+
+Route::get('/apk/latest', [ApkUpdateController::class, 'getLatestVersion']);
 
 Route::post('/ia/webhook', [IntegracionIAController::class, 'handleWebhook']);
 Route::post('/telegram/webhook/logistica', [TelegramController::class, 'handleLogisticaWebhook']);

@@ -114,7 +114,11 @@
                                 <th class="ps-3">Cliente / RIF</th>
                                 <th>Dirección</th>
                                 <th class="text-center" style="width: 15%;">Litros</th>
+<<<<<<< HEAD
                                 @if($viaje->tipo_planificacion == 2) 
+=======
+                                @if($viaje->tipo_planificacion == 1) 
+>>>>>>> main
                                     <th style="width: 30%;">Buque / IMO / Bandera</th> 
                                 @endif
                             </tr>
@@ -123,6 +127,7 @@
                             @foreach($viaje->detalles as $detalle)
                             <tr class="align-middle">
                                 <td class="ps-3">
+<<<<<<< HEAD
                                     <strong>{{ $detalle->cliente->nombre ?? $viaje->nombre_cliente_externo }}</strong><br>
                                     <small class="text-muted">{{ $detalle->cliente->rif ?? 'S/R' }}</small>
                                 </td>
@@ -130,6 +135,15 @@
                                 <td class="text-center fw-black text-dark fs-6">{{ number_format($detalle->litros_despachados ?? $detalle->litros ?? 0, 0) }} L</td>
                                 
                                 @if($viaje->tipo_planificacion == 2)
+=======
+                                    <strong>{{ $detalle->cliente->nombre ?? $viaje->nombre_cliente_externo ?? $detalle->otro_cliente ?? 'N/A'}}</strong><br>
+                                    <small class="text-muted">{{ $detalle->cliente->rif ?? 'S/R' }}</small>
+                                </td>
+                                <td>{{ $detalle->direccion_despacho ?? $detalle->cliente->direccion_operativa ?? 'S/D' }}</td>
+                                <td class="text-center fw-black text-dark fs-6">{{ number_format($detalle->litros_despachados ?? $detalle->litros ?? 0, 0) }} L</td>
+                                
+                                @if($viaje->tipo_planificacion == 1)
+>>>>>>> main
                                     <td>
                                         <div class="x-small p-1" style="font-size: 11px; line-height: 1.3;">
                                             <strong>Buque:</strong> {{ $detalle->buques->nombre ?? $detalle->buque_nombre_manual ?? 'N/A' }}<br>

@@ -33,6 +33,10 @@ class Viaje extends Model
         'tipo_planificacion', 'sede_id', 'ayudante_id', 'tipo_remolque', 
         'punto_salida', 'punto_llegada', 'codigo_sap', 'nombre_cliente_externo',
         
+<<<<<<< HEAD
+=======
+
+>>>>>>> main
         // AGREGAR ESTOS CAMPOS DE TRANSPORTE EXTERNO:
         'es_transporte_externo', 'vehiculo_externo', 'chofer_externo', 
         'ayudante_externo', 'cisterna_externo'
@@ -51,11 +55,26 @@ class Viaje extends Model
         return $this->belongsTo(Chofer::class, 'chofer_id'); 
     }
 
+<<<<<<< HEAD
+    public function ayudante(): BelongsTo
+=======
+
     public function ayudante(): BelongsTo
     {
         return $this->belongsTo(Chofer::class, 'ayudante_id'); 
     }
+    
+    public function ayudante_chofer(): BelongsTo
+>>>>>>> main
+    {
+        return $this->belongsTo(Chofer::class, 'ayudante_id'); 
+    }
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> main
     public function proveedor(): BelongsTo
     {
         return $this->belongsTo(Proveedor::class, 'proveedor_id');
@@ -117,4 +136,19 @@ class Viaje extends Model
     {
         return $this->belongsTo(Sedes::class, 'sede_id');
     }
+<<<<<<< HEAD
+=======
+
+    public function inspecciones(): HasOne
+    {
+        return $this->hasOne(Inspeccion::class, 'viaje_id');
+    }
+   
+
+    // Relación para el nuevo ayudante_id (Integridad referencial)
+    public function ayudante_id_rel(): BelongsTo
+    {
+        return $this->belongsTo(Chofer::class, 'ayudante_id');
+    }
+>>>>>>> main
 }

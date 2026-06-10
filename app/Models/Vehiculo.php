@@ -122,7 +122,9 @@ class Vehiculo extends Model
         'acoplado_id',
         'chofer_id',
         'latitud',
-        'longitud'
+        'longitud',
+        'fecha_salida_real',
+        'fecha_llegada',
     ];
     /**
      * The attributes that should be cast to native types.
@@ -164,9 +166,11 @@ class Vehiculo extends Model
         'facturacion_completa' => 'boolean', // Si aplicara, basado en otro contexto si no fuera booleano nativo
         'acoplado_id' => 'integer', // bigint unsigned
         'chofer_id' => 'integer', // bigint unsigned
+        'fecha_salida_real' => 'datetime',
+        'fecha_llegada' => 'datetime',
     ];
 
-    public $ignorarEnBitacora = ['latitud', 'longitud'];
+    public $ignorarEnBitacora = ['latitud', 'longitud','updated_at'];
 
     // Relaciones (si es necesario y tienes los modelos correspondientes)
 
@@ -191,11 +195,11 @@ class Vehiculo extends Model
         return $this->belongsTo(Marca::class, 'marca', 'id'); // Ajusta 'App\Marca::class' al nombre de tu modelo de Marca
     }
 
-        public function ordenes()
-        {
-            // Ajusta 'id_vehiculo' si el nombre de la llave foránea en la tabla 'ordenes' es diferente
-            return $this->hasMany(Orden::class, 'id_vehiculo'); 
-        }
+    public function ordenes()
+    {
+        // Ajusta 'id_vehiculo' si el nombre de la llave foránea en la tabla 'ordenes' es diferente
+        return $this->hasMany(Orden::class, 'id_vehiculo'); 
+    }
 
     public function getDiasFueraServicioAttribute()
     {
@@ -326,7 +330,13 @@ class Vehiculo extends Model
     public function tipoVehiculo()
     {
         return $this->belongsTo(TipoVehiculo::class, 'tipo', 'id'); // Ajusta 'App\TipoVehiculo::class' al nombre de tu modelo de TipoVehiculo
-    } 
+    }
+
+    public function planMayorItems()
+{
+    return $this->belongsToMany(MantenimientoItem::class, 'plan_mayor_controles', 'vehiculo_id', 'mantenimiento_item_id')
+                ->withTimestamps();
+}
 
     public static function misVehiculos()
     {
@@ -354,8 +364,8 @@ class Vehiculo extends Model
     /**
      * Evalúa el estatus de un documento basado en su campo de fecha o texto.
      */
-   public function getDocumentStatus(string $docName, ?string $dateField = null, ?string $textField = null): array
-{
+    public function getDocumentStatus(string $docName, ?string $dateField = null, ?string $textField = null): array
+    {
     $rawValue = $dateField ? ($this->{$dateField} ?? '') : ($this->{$textField} ?? '');
     $statusValue = trim(mb_strtoupper($rawValue));
 

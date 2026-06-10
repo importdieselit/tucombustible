@@ -27,6 +27,7 @@ class ChecklistController extends Controller
     protected $fcmService;
     protected $telegramService;
 
+
     public function __construct(
         FcmNotificationService $fcmService, 
         TelegramNotificationService $telegramService
@@ -112,8 +113,11 @@ class ChecklistController extends Controller
                     $vehiculo = $this->getVehiculoCompleto($vehiculoId);
                     
                     $viajes = Viaje::where('vehiculo_id', $vehiculoId)
-                                ->whereDate('fecha_salida', '>=', now())
-                                ->get();
+                        ->where(function ($query) {
+                            $query->whereDate('fecha_salida', '>=', now())
+                                ->orWhere('status', 'Programado');
+                        })
+                        ->get();
 
                     // --- BLOQUE 1: Inyectar Rutas/Viajes en "Información General" ---
                     if ($viajes->count() > 0) {
@@ -133,7 +137,10 @@ class ChecklistController extends Controller
                         ];
                         // Lo insertamos al final de la primera sección
                         $dataResponse['sections'][0]['items'][] = $campoViaje;
-                      //  Log::info("Checklist ID {$id}: Se inyectó campo de selección de ruta con " . count($opcionesViajes) . " opciones para Vehículo ID {$vehiculoId}.");
+                       
+                            $dataResponse['sections'][0]['items'][1]['value'] = $viajes[0]->chofer->persona->nombre ?? '';
+                            $dataResponse['sections'][0]['items'][2]['value'] = $viajes[0]->ayudante_chofer->persona->nombre ?? '';
+                       //  Log::info("Checklist ID {$id}: Se inyectó campo de selección de ruta con " . count($opcionesViajes) . " opciones para Vehículo ID {$vehiculoId}.");
                     }
                     
                     // --- BLOQUE 2: Auto-completar "Datos del Vehículo" ---
@@ -221,6 +228,38 @@ class ChecklistController extends Controller
                             ->whereNull('respuesta_in')
                             ->orderByDesc('created_at')
                             ->first();
+
+            if (is_null($old_inspeccion)) {
+                // No ha salido → primera salida
+                $tipoCheck = 'OUT'; // salida
+            } else {
+
+                $tiempoTranscurrido = $old_inspeccion->created_at->diffInMinutes(now());
+                if ($tiempoTranscurrido < 60) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "No se puede registrar la llegada todavía. Debe esperar al menos 1 hora desde la salida (Han pasado {$tiempoTranscurrido} min)."
+                    ], 422);
+                }
+
+                $latSede = 10.488249123497356;
+                $lngSede = -66.8234169941792;
+                $radioSede = 0.180; // 180 metros en km (aprox)
+
+                if (isset($vehiculo->latitud) && isset($vehiculo->longitud)) {
+                    $distancia = $this->calcularDistancia($vehiculo->latitud, $vehiculo->longitud, $latSede, $lngSede);
+                    
+                    if ($distancia > $radioSede) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => "Validación GPS fallida: El vehículo se encuentra a " . round($distancia, 2) . " km. Debe estar en la sede para cerrar el checklist."
+                        ], 422);
+                    }
+                }
+                // Tiene OUT pendiente → ahora está entrando
+                $tipoCheck = 'IN'; // entrada
+            }
+
             $isCriticalFailure = false;
             
             // Nombres de los ítems críticos a verificar
@@ -278,13 +317,7 @@ class ChecklistController extends Controller
             $shouldUpdateExisting = $old_inspeccion 
                 && (empty($old_inspeccion->respuesta_in) || empty($old_inspeccion->respuesta_json));
             
-           if (is_null($old_inspeccion)) {
-                // No ha salido → primera salida
-                $tipoCheck = 'OUT'; // salida
-            } else {
-                // Tiene OUT pendiente → ahora está entrando
-                $tipoCheck = 'IN'; // entrada
-            }
+           
             if($tipoCheck == 'OUT'){
                 $inspeccion = Inspeccion::create([
                     'vehiculo_id' => $request->vehiculo_id,
@@ -726,5 +759,15 @@ class ChecklistController extends Controller
                 'message' => 'Error al obtener vehículo: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+     private function calcularDistancia(mixed $lat1, mixed $lon1, mixed $lat2, mixed $lon2)
+    {
+        $earthRadius = 6371; // Radio de la tierra en km
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+        $a = sin($dLat/2) * sin($dLat/2) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon/2) * sin($dLon/2);
+        $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+        return $earthRadius * $c;
     }
 }

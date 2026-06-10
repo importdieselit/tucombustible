@@ -15,13 +15,16 @@ use App\Models\Orden;
 use App\Models\User;
 use App\Services\FcmNotificationService;
 use App\Services\TelegramNotificationService;  
-
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 class InspeccionController extends Controller
 {
     // ID del checklist de vehículos (hardcodeado por tu requerimiento)
     const CHECKLIST_VEHICULOS_ID = 1;
     protected $fcmService;
     protected $telegramService;
+
 
     public function __construct(
         FcmNotificationService $fcmService, 
@@ -65,14 +68,14 @@ class InspeccionController extends Controller
           //  $tipo='salida';
         }
 
-            
-
-
         // Obtener datos del vehículo (para pre-rellenar el formulario)
         $vehiculo = Vehiculo::with(['tipoVehiculo', 'isMarca', 'isModelo'])->findOrFail($vehiculo_id);
         $viajes = Viaje::where('vehiculo_id', $vehiculo_id)
-                                ->whereDate('fecha_salida', '>=', now())
-                                ->get();
+            ->where(function ($query) {
+                $query->whereDate('fecha_salida', '>=', now())
+                    ->orWhere('status', 'Programado');
+            })
+            ->get();
 
                     // --- BLOQUE 1: Inyectar Rutas/Viajes en "Información General" ---
                     if ($viajes->count() > 0 && is_null($viajePrevioId)) {
@@ -93,6 +96,9 @@ class InspeccionController extends Controller
                         ];
                         // Lo insertamos al final de la primera sección
                         $dataResponse['sections'][0]['items'][] = $campoViaje;
+                            $dataResponse['sections'][0]['items'][1]['value'] = $viajes[0]->chofer->persona->nombre ?? '';
+                            $dataResponse['sections'][0]['items'][2]['value'] = $viajes[0]->ayudante()->first()->persona->nombre ?? '';
+                        
                     } elseif (!is_null($viajePrevioId)) {
                         // Si ya hay un viaje (Entrada), lo dejamos como texto estático o radio deshabilitado
                         foreach($dataResponse['sections'][0]['items'] as &$item) {
@@ -100,6 +106,7 @@ class InspeccionController extends Controller
                                 $item['readonly'] = true; // El JS debe manejar este atributo
                             }
                         }
+                        
                     }
 
                     foreach ($dataResponse['sections'][1]['items'] as &$item) {
@@ -121,23 +128,10 @@ class InspeccionController extends Controller
                                 $key = $mapaAtributos[$campo] ?? $campo;
                                 $item['value'] = $vehiculo->$key ?? "";
                             }
-                        
-                            // Caso para campos compuestos (Seguros, Verificación)
-                            // if (is_array($item['data_source']) && $item['data_source']['model'] == 'Vehiculo') {
-                            //     $statusField = $item['data_source']['status_field'];
-                            //     $dateField = $item['data_source']['date_field'];
-                                
-                            //     $item['value'] = [
-                            //         "status" => $vehiculo->$statusField ?? false,
-                            //         "vigencia" => $vehiculo->$dateField ?? ""
-                            //     ];
-                            // }
                         }
                     }
                     $checklist->checklist=$dataResponse;
-                
-       
-
+    
         return view('checklist.salida', [
             'checklist' => $checklist,
             'vehiculo' => $vehiculo,
@@ -146,7 +140,7 @@ class InspeccionController extends Controller
         ]);
     }
 
-public function store(Request $request)
+    public function store(Request $request)
     {
         $data = $request->validate([
             'vehiculo_id' => 'required|exists:vehiculos,id',
@@ -160,26 +154,28 @@ public function store(Request $request)
         $estatusGeneral = 'OK';
         $warningFound = false;
         $fail=0;
+        $user = auth()->user();
+        $nombre = $user->persona->nombre ?? 'Usuario'.$user->id;
 
         $isCriticalFailure = false;
             
-            // Nombres de los ítems críticos a verificar
-            $criticalItems = [
-                'Vehiculo Operativo?',
-                'Apto para Carga de Combustible?'
-            ];
+        $criticalItems = [
+            'Vehiculo Operativo?',
+            'Apto para Carga de Combustible?'
+        ];
 
         $vehiculo = Vehiculo::find($data['vehiculo_id']);
         $old_inspeccion = Inspeccion::where('vehiculo_id', $data['vehiculo_id'])
-            ->where('checklist_id',1)
+            ->whereIn('checklist_id', [1,3])
             ->whereNull('respuesta_in')
             ->first();
+
+        
 
         $chofer = $respuestaJson['sections'][2]['items'][0]['value'] ?? null;
         $observaciones=$respuestas['sections'][13]['items'][0]['value'] ?? null;
         // 1. Determinar el Estatus General
         foreach ($respuestaJson['sections'] as $section) {
-           
             // Función auxiliar para procesar los items, ya sea directamente o dentro de subsecciones
             $processItems = function ($items) use (&$estatusGeneral, &$warningFound, &$fail,&$vehiculo,&$chofer,&$isCriticalFailure,&$criticalItems) {
                 foreach ($items as $item) {
@@ -275,9 +271,34 @@ public function store(Request $request)
             $tipoCheck='OUT';
             $vehiculo->estatus=2;
         }else{
+            
+            $tiempoTranscurrido = $old_inspeccion->created_at->diffInMinutes(now());
+            if ($tiempoTranscurrido < 60) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "No se puede registrar la llegada todavía. Debe esperar al menos 1 hora desde la salida (Han pasado {$tiempoTranscurrido} min)."
+                ], 422);
+            }
+
+            $latSede = 10.488249123497356;
+            $lngSede = -66.8234169941792;
+            $radioSede = 0.180; // 180   metros en km (aprox)
+
+            if (isset($vehiculo->latitud) && isset($vehiculo->longitud)) {
+                $distancia = $this->calcularDistancia($vehiculo->latitud, $vehiculo->longitud, $latSede, $lngSede);
+                
+                if ($distancia > $radioSede) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Validación GPS fallida: El vehículo se encuentra a " . round($distancia, 2) . " km. Debe estar en la sede para cerrar el checklist."
+                    ], 422);
+                }
+            }
+
             $old_inspeccion->respuesta_in=json_encode($respuestaJson);
             $old_inspeccion->estatus_general=$estatusGeneral;
             $old_inspeccion->save();
+            $inspeccion=$old_inspeccion;
             $createdAt = $old_inspeccion->created_at; 
             $updatedAt = now();
             $tipoCheck='IN';            
@@ -290,8 +311,7 @@ public function store(Request $request)
             $viaje=Viaje::where('vehiculo_id',$vehiculo->id)->where('status', 'EN RUTA')->first();
             if($viaje){
                 $viaje->status='COMPLETADO';
-                $viaje->save();
-                
+                $viaje->save();         
             }
         }
 
@@ -320,14 +340,14 @@ public function store(Request $request)
                 $observacionAlerta = "Ingreso de Unidad {$vehiculo->flota} {$vehiculo->placa} a Patio. Inspección completada.";
                 $notifTitle = "Unidad {$vehiculo->flota} Ingresando a Patio";
                 $notifBody = "Unidad {$vehiculo->flota} ingresando a Patio con {$chofer}.";
-                $telegramMessage = "📥 *INGRESO* - Unidad: **{$vehiculo->placa}** ({$vehiculo->flota}) ingresa a patio. Nuevo Estatus: **Operativo**. Chofer: {$chofer}. Revisar: {$alertaAction} \n OBSERVACIONES: {$observaciones}";
+                $telegramMessage = "📥 *CHECKIN* REALIZADO POR: {$nombre} - Unidad: **{$vehiculo->placa}** ({$vehiculo->flota}) ingresa a patio. Nuevo Estatus: **Operativo**. Chofer: {$chofer}. Revisar: {$alertaAction} \n OBSERVACIONES: {$observaciones}";
                 
             } else {
                 // 🟡 UNIDAD SALIENDO: No está en ruta (probablemente 1 - Operativo) y pasa a En Ruta (2)
                 $observacionAlerta = "Salida de vehículo {$vehiculo->placa}. Inspección completada.";
                 $notifTitle = "Salida de Unidad {$vehiculo->flota} en Inspeccion";
                 $notifBody = "Unidad {$vehiculo->flota} Saliendo a Ruta con {$chofer}.";
-                $telegramMessage = "📤 *SALIDA* - Unidad: **{$vehiculo->placa}** ({$vehiculo->flota}) saliendo a ruta . Nuevo Estatus: **En Ruta**  Chofer: {$chofer}. Revisar: {$alertaAction} \n OBSERVACIONES: {$observaciones}";
+                $telegramMessage = "📤 *CHECKOUT* REALIZADO POR: {$nombre} * - Unidad: **{$vehiculo->placa}** ({$vehiculo->flota}) saliendo a ruta . Nuevo Estatus: **En Ruta**  Chofer: {$chofer}. Revisar: {$alertaAction} \n OBSERVACIONES: {$observaciones}";
             }
 
             $alertaData = [
@@ -347,7 +367,8 @@ public function store(Request $request)
                 $alertaData 
             );
 
-            $this->telegramService->sendMessage($telegramMessage); 
+            $this->telegramService->sendMessage($telegramMessage);
+
 
 
         return response()->json([
@@ -373,7 +394,7 @@ public function store(Request $request)
 
         $vehiculo = Vehiculo::find($data['vehiculo_id']);
         $old_inspeccion = Inspeccion::where('vehiculo_id', $data['vehiculo_id'])
-            ->where('checklist_id',2)
+            ->whereIn('checklist_id',2)
             ->whereNull('respuesta_in')
             ->first();
 
@@ -475,7 +496,7 @@ public function store(Request $request)
     }
 
 
-    public function show($inspeccion_id)
+    public function show(int $inspeccion_id)
     {
         // Carga la inspección y el vehículo relacionado
         $inspeccion = Inspeccion::with('vehiculo')->findOrFail($inspeccion_id);
@@ -490,7 +511,7 @@ public function store(Request $request)
         return view('checklist.show', compact('inspeccion', 'imagenes','respuesta', 'titulo'));
     }
 
-    public function exportPdf($inspeccion_id)
+    public function exportPdf(int $inspeccion_id)
     {
         $inspeccion = Inspeccion::with('vehiculo')->findOrFail($inspeccion_id);
         
@@ -539,6 +560,127 @@ public function store(Request $request)
             return [$v->id => "{$v->flota} - {$v->placa}"];
         });
         return view('checklist.index', compact('resumenAlertas','vehiculosDisponibles', 'inspeccionesRecientes','user'));
+    }
+
+    private function calcularDistancia(mixed $lat1, mixed $lon1, mixed $lat2, mixed $lon2)
+    {
+        $earthRadius = 6371; // Radio de la tierra en km
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+        $a = sin($dLat/2) * sin($dLat/2) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon/2) * sin($dLon/2);
+        $c = 2 * atan2(sqrt($a), sqrt(1-$a));
+        return $earthRadius * $c;
+    }
+
+
+    public function reporte(Request $request)
+    {
+        // Rango de fechas por defecto (Mes actual)
+        $fechaInicio = $request->get('fecha_inicio', Carbon::now()->startOfMonth()->toDateString());
+        $fechaFin = $request->get('fecha_fin', Carbon::now()->endOfMonth()->toDateString());
+
+        // Consulta optimizada respetando tu esquema de Personas y llaves foráneas chofere/ayudante
+       $viajesAuditados = Viaje::leftJoin('inspecciones', 'viajes.id', '=', 'inspecciones.viaje_id')
+            // Joins para obtener el nombre del Chofer
+            ->leftJoin('choferes as c_principal', 'viajes.chofer_id', '=', 'c_principal.id')
+            ->leftJoin('personas as p_chofer', 'c_principal.persona_id', '=', 'p_chofer.id')
+            
+            // Joins para obtener el nombre del Ayudante
+            ->leftJoin('choferes as c_ayudante', 'viajes.ayudante_id', '=', 'c_ayudante.id')
+            ->leftJoin('personas as p_ayudante', 'c_ayudante.persona_id', '=', 'p_ayudante.id')
+            
+            ->whereBetween('viajes.fecha_salida_real', [$fechaInicio . ' 00:00:00', $fechaFin . ' 23:59:59'])
+            ->select(
+                'viajes.id as viaje_id',
+                'viajes.chofer_id',
+                'p_chofer.nombre as chofer_nombre',
+                'viajes.ayudante_id',
+                'p_ayudante.nombre as ayudante_nombre',
+                'viajes.fecha_salida_real',
+                'viajes.fecha_llegada',
+                'inspecciones.created_at as checklist_salida',
+                'inspecciones.updated_at as checklist_llegada',
+                'inspecciones.respuesta_json',
+                'inspecciones.respuesta_in',
+                
+                // REGLAS DE NEGOCIO EN BASE DE DATOS:
+                // 1. Incompleto: No existe inspección o falta alguna de las dos respuestas (salida/entrada)
+                DB::raw('CASE WHEN inspecciones.id IS NULL OR inspecciones.respuesta_json IS NULL OR inspecciones.respuesta_in IS NULL THEN 1 ELSE 0 END as es_incompleto'),
+                
+                // 2. Salida Tardía: El registro se creó igual o después de la salida real del camión
+                DB::raw('CASE WHEN inspecciones.created_at >= viajes.fecha_salida_real THEN 1 ELSE 0 END as salida_tardia'),
+                
+                // 3. Llegada Tardía: El registro se cerró (update) más de 1 hora posterior a la llegada del viaje
+                DB::raw('CASE WHEN inspecciones.updated_at > DATE_ADD(viajes.fecha_llegada, INTERVAL 1 HOUR) THEN 1 ELSE 0 END as llegada_tardia')
+            )
+            ->get();
+
+        $reportePersonal = [];
+
+        foreach ($viajesAuditados as $v) {
+            // Procesar métricas si el viaje tiene un Chofer asignado
+            if ($v->chofer_id) {
+                $this->acumularMetricas($reportePersonal, $v->chofer_id, $v->chofer_nombre, 'Chofer', $v);
+            }
+            // Procesar métricas si el viaje tiene un Ayudante asignado
+            if ($v->ayudante_id) {
+                $this->acumularMetricas($reportePersonal, $v->ayudante_id, $v->ayudante_nombre, 'Ayudante', $v);
+            }
+        }
+
+        // Cálculo de Eficiencia estricto y puro (Valores completos sin redondeos)
+        foreach ($reportePersonal as $key => $personal) {
+            if ($personal['total_viajes'] > 0) {
+                $penalizados = $personal['salidas_tardias'] + $personal['llegadas_tardias'] + $personal['incompletos'];
+                $validos = ($personal['total_viajes']*2) - $penalizados;
+                
+                // Preservamos el valor flotante analítico exacto
+                $reportePersonal[$key]['porcentaje_cumplimiento'] = ($validos / ($personal['total_viajes']*2)) * 100;
+            } else {
+                $reportePersonal[$key]['porcentaje_cumplimiento'] = 0.0000;
+            }
+        }
+
+        // Resumen ejecutivo para los indicadores KPI superiores
+        $kpisGlobales = [
+            'total_viajes'     => $viajesAuditados->count(),
+            'salidas_tardias'  => $viajesAuditados->sum('salida_tardia'),
+            'llegadas_tardias' => $viajesAuditados->sum('llegada_tardia'),
+            'incompletos'      => $viajesAuditados->sum('es_incompleto'),
+        ];
+
+        return view('checklist.performance_report', compact('reportePersonal', 'kpisGlobales', 'fechaInicio', 'fechaFin'));
+    }
+
+    private function acumularMetricas(&$arr, $id, $nombre, $rol, $viaje)
+    {
+        $compositeKey = $id . '_' . $rol;
+
+        if (!isset($arr[$compositeKey])) {
+            $arr[$compositeKey] = [
+                'id'                      => $id,
+                'nombre'                  => !empty(trim($nombre)) ? $nombre : 'Personal ID: ' . $id,
+                'rol'                     => $rol,
+                'total_viajes'            => 0,
+                'salidas_tardias'         => 0,
+                'llegadas_tardias'        => 0,
+                'incompletos'             => 0,
+                'porcentaje_cumplimiento' => 0.0000
+            ];
+        }
+
+        $arr[$compositeKey]['total_viajes']++;
+        
+        if ($viaje->es_incompleto == 1) {
+            $arr[$compositeKey]['incompletos']++;
+        } else {
+            if ($viaje->salida_tardia == 1) {
+                $arr[$compositeKey]['salidas_tardias']++;
+            }
+            if ($viaje->llegada_tardia == 1) {
+                $arr[$compositeKey]['llegadas_tardias']++;
+            }
+        }
     }
 
 }

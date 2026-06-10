@@ -734,12 +734,14 @@ class PedidoController extends Controller
 
             // Enviar notificación FCM al cliente
             try {
-                FcmNotificationService::sendPedidoStatusNotification(
-                    $pedido,
-                    $oldStatus,
-                    'aprobado',
-                    $request->observaciones_admin
-                );
+                if($pedido){
+                    FcmNotificationService::sendPedidoStatusNotification(
+                        $pedido,
+                        $oldStatus,
+                        'aprobado',
+                        $request->observaciones_admin
+                    );
+                }
             } catch (\Exception $e) {
                 Log::error("Error enviando notificación FCM al cliente: " . $e->getMessage());
                 // No fallar la operación principal por error en notificación
@@ -748,10 +750,12 @@ class PedidoController extends Controller
             // Enviar notificación FCM al conductor si fue asignado
             if ($request->has('chofer_id') && $request->chofer_id !== null) {
                 try {
-                    FcmNotificationService::sendPedidoAsignadoConductorNotification(
-                        $pedido->fresh(['cliente']),
-                        $request->chofer_id
-                    );
+                    if($pedido){
+                        FcmNotificationService::sendPedidoAsignadoConductorNotification(
+                            $pedido->fresh(['cliente']),
+                            $request->chofer_id
+                        );
+                    }
                 } catch (\Exception $e) {
                     Log::error("Error enviando notificación FCM al conductor: " . $e->getMessage());
                     // No fallar la operación principal por error en notificación

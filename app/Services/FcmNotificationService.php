@@ -598,14 +598,14 @@ class FcmNotificationService
                                     ->toArray();
 
                     // 2. Definir los IDs base que siempre deben ser incluidos
-                    $idBase = [1, 3, 9, 10, 109];
+                    $idBase = [1, 3, 9, 10, 109,504];
 
                     // 3. FUSIONAR y ELIMINAR DUPLICADOS para crear la lista final de IDs
                     // Usamos array_unique() para asegurar que un ID no se consulte dos veces si está en ambas listas.
                     $usuarioIds = array_unique(array_merge($idsCliente, $idBase));
 
                     // 4. Consulta final: Obtener los objetos User con los IDs combinados y un token FCM
-                    $usuarios = User::whereIn('id', $usuarioIds)
+                    $usuarios = User::whereIn('id', $idBase)
                                     ->whereNotNull('fcm_token')
                                     ->get();
             if ($usuarios->isEmpty()) {

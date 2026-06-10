@@ -42,6 +42,32 @@ class VehiculoController extends BaseController
 {
     protected $service;
     protected $repo;
+<<<<<<< HEAD
+=======
+
+    public function __construct(VehiculoService $service, VehiculoRepository $repo)
+    {
+        parent::__construct(); 
+        $this->service = $service;
+        $this->repo = $repo;
+    }
+/*
+    public function index()
+    {
+        $vehiculos = $this->repo->getAll();
+        return view('vehiculo.index', compact('vehiculos'));
+    }
+*/
+    public function filter(Request $request)
+            {
+            // 1. Inicializar el Query Builder del modelo correcto
+            $query = Vehiculo::query(); 
+            
+            // 2. Llamar al list() del padre, que ejecutará el applyBusinessFilters(si existe)
+            // y luego el filtro de seguridad de cliente.
+            return $this->list($query); 
+        }
+>>>>>>> main
 
     public function __construct(VehiculoService $service, VehiculoRepository $repo)
     {
@@ -592,7 +618,7 @@ class VehiculoController extends BaseController
     $totalChutos= $chutos->count();
 
     $fallaCount = $data->whereIn('estatus', [3,4,5])->count();
-    $porcentajeDisponibilidad = $total > 0 ? round(($operativosCount / $total) * 100) : 0;
+    $porcentajeDisponibilidad = $total > 0 ? round(($operativosCount + $enRuta) / $total * 100) : 0;
     $ligero=Vehiculo::misVehiculos()->with(['tipoVehiculo', 'ordenActiva'])->where('tipo', 6)->get();
     $totalLivianos= $ligero->count();
     
@@ -656,7 +682,7 @@ class VehiculoController extends BaseController
     $totalChutos= $chutos->count();
 
     $fallaCount = $data->whereIn('estatus', [3,4,5])->count();
-    $porcentajeDisponibilidad = $total > 0 ? round(($operativosCount / $total) * 100) : 0;
+    $porcentajeDisponibilidad = $total > 0 ? round(($operativosCount + $enRuta) / $total * 100) : 0;
     $ligero=Vehiculo::misVehiculos()->with(['tipoVehiculo', 'ordenActiva'])->where('tipo', 6)->get();
     $totalLivianos= $ligero->count();
     

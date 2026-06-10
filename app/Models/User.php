@@ -61,6 +61,19 @@ class User extends Authenticatable
         return $this->belongsTo(Persona::class, 'id_persona');
     }
 
+    public function getPersonaAttribute()
+    {
+        return $this->persona()->first();
+    }
+    public function getPerfilAttribute()
+    {
+        return $this->perfil()->first();
+    }
+    public function personalData()
+    {
+        return $this->getPersonaAttribute()->personal()->first();
+    }
+
     // ELIMINADO: La relación conductor() ya no va aquí, Conductor se relaciona con Persona.
     // public function conductor() { return $this->hasOne(Conductor::class); }
 

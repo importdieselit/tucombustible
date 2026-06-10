@@ -93,8 +93,8 @@
                 <span class="badge bg-light text-dark border">{{ $mov->vehiculo->placa ?? 'Sin Placa' }}</span>
             </td>
             <td class="@if($mov->tipo_movimiento=='salida') text-danger @else text-success @endif fw-bold">@if($mov->tipo_movimiento=='salida') - @else + @endif  {{ number_format($mov->cantidad_litros, 2) }} L</td>
-            <td>{{ number_format($mov->cant_inicial, 2) }}</td>
-            <td class="text-primary">{{ number_format($mov->cant_final, 2) }}</td>
+            <td>{{ number_format($mov->repostajeVehiculo->qtya ?? 0, 2) }}</td>
+            <td class="text-primary">{{ number_format($mov->repostajeVehiculo->rest ?? 0, 2) }}</td>
             <td class="editable-obs" data-id="{{ $mov->id }}" data-field="observaciones" title="Doble clic para editar observación">
                 <span class="obs-text text-muted small">{{ $mov->observaciones ?? 'Sin observaciones' }}</span>
             </td>

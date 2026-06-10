@@ -36,6 +36,9 @@
                 <a href="{{ route('ordenes.reporte_gerencial') }}" class="btn btn-dark" style="background-color: #ebeaeb; color: #000; border: 1px solid #000 !important;">
                     <i class="fas fa-table me-2"></i> Reporte General
                 </a>
+                <a href="{{ route('plan_mayor.index') }}" class="btn btn-sm btn-orange" style="background-color: #f2A435; color: white;">
+                    <i class="fas fa-money-check-alt me-1 me-md-2"></i> Plan Mayor
+                </a>
                 <a href="{{ route('ordenes.list') }}" class="btn btn-dark">
                     <i class="fas fa-table me-2"></i> Listado General
                 </a>

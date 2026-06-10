@@ -151,8 +151,13 @@
             <label class="small fw-bold text-uppercase text-muted mb-1">Tipo</label>
             <select name="tipo" class="form-select form-select-sm fw-bold">
                 <option value="">TODAS</option>
+<<<<<<< HEAD
                 <option value="1" {{ request('tipo') == '1' ? 'selected' : '' }}>Despacho Diesel</option>
                 <option value="2" {{ request('tipo') == '2' ? 'selected' : '' }}>Despacho MGO</option>
+=======
+                <option value="2" {{ request('tipo') == '2' ? 'selected' : '' }}>Despacho Diesel</option>
+                <option value="1" {{ request('tipo') == '1' ? 'selected' : '' }}>Despacho MGO</option>
+>>>>>>> main
                 <option value="3" {{ request('tipo') == '3' ? 'selected' : '' }}>Fletes</option>
                 {{-- Abrimos las compras en dos opciones independientes --}}
                 <option value="4_diesel" {{ request('tipo') == '4_diesel' ? 'selected' : '' }}>Compras Diesel</option>
@@ -240,6 +245,7 @@
 
                                         // 2. Identificamos el producto o combustible específico
                                         $productoEspecifico = match($viaje->tipo_planificacion) {
+<<<<<<< HEAD
                                             1       => 'DIESEL',
                                             2       => 'MGO',
                                             3       => $viaje->producto_flete ?? 'Sin Especificar',
@@ -247,6 +253,15 @@
                                             4       => match((int)$viaje->tipo) {
                                                         1 => 'DIESEL',
                                                         2 => 'MGO'
+=======
+                                            2       => 'DIESEL',
+                                            1       => 'MGO',
+                                            3       => $viaje->producto_flete ?? 'Sin Especificar',
+                                            // Evaluamos directamente el campo entero 'tipo' de la tabla viajes
+                                            4       => match((int)$viaje->tipo) {
+                                                        2 => 'DIESEL',
+                                                        1 => 'MGO'
+>>>>>>> main
                                                     },
                                             default => 'Sin especificar'
                                         };
@@ -365,7 +380,11 @@
         </div>
     </div>
 </div>
+<<<<<<< HEAD
 
+=======
+@push('scripts')
+>>>>>>> main
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     // Función para Cargar Detalles
@@ -378,8 +397,17 @@
         container.innerHTML = '<div class="p-5 text-center"><div class="spinner-border text-orange"></div></div>';
         modal.show();
 
+<<<<<<< HEAD
         // Usamos el helper url() de Laravel para evitar problemas de rutas relativas
         fetch(`{{ url('logistica') }}/${id}`)
+=======
+        let urlBase = "{{ route('logistica.show', ':id') }}";
+
+        let urlFinal = urlBase.replace(':id', id);
+
+        // Usamos el helper url() de Laravel para evitar problemas de rutas relativas
+         fetch(urlFinal)
+>>>>>>> main
             .then(response => {
                 if(!response.ok) throw new Error('Error de servidor al cargar los detalles');
                 return response.text();
@@ -393,7 +421,11 @@
             });
     }
 
+<<<<<<< HEAD
     // Función para Cancelar
+=======
+    // Función para Cancelar (en test)
+>>>>>>> main
     function cancelarPlanificacion(id) {
         Swal.fire({
             title: '¿ESTÁS SEGURO?',
@@ -406,7 +438,14 @@
             cancelButtonText: 'NO'
         }).then((result) => {
             if (result.isConfirmed) {
+<<<<<<< HEAD
                 fetch(`/logistica/${id}/cancelar`, {
+=======
+                let urlBase = "{{ route('logistica.cancelar', ':id') }}";
+                let urlFinal = urlBase.replace(':id', id);
+                // Usamos el helper url() de Laravel para evitar problemas de rutas relativas
+                fetch(urlFinal, {
+>>>>>>> main
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -426,4 +465,8 @@
         });
     }
 </script>
+<<<<<<< HEAD
+=======
+@endpush
+>>>>>>> main
 @endsection
