@@ -22,7 +22,7 @@ use App\Http\Controllers\{
     ReporteController, AforoController, SearchController, DataDeletionController,
     ViajesController, TelegramController, PlanificacionMantenimientoController,
     ReportController, ClienteActivosController,NotificationController, PlanMayorController,LogisticaController,
-    GerentialReportController
+    GerentialReportController,PagosController
 };
 use App\Http\Controllers\SalaControlController;
 
@@ -336,7 +336,8 @@ Route::middleware(['auth'])->group(function () {
                 'inspecciones'                => InspeccionController::class,
                 'pedidos'                     => PedidoController::class,
                 'reportes'                    => ReporteController::class,
-                'combustible'                 => MovimientoCombustibleController::class
+                'combustible'                 => MovimientoCombustibleController::class,
+                'pagos'                       => PagosController::class
             ]; 
 
             foreach ($resourceControllers as $prefix => $controller) {
