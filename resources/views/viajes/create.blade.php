@@ -197,7 +197,7 @@
             {{-- Cliente/Otro Cliente --}}
             <td>
                 <div class="input-group">
-                    <select name=" select2 despachos[{INDEX}][cliente_id]" id="cliente_id_{INDEX}" class="form-select form-select-sm client-select select-or-other-client" data-other-field="otro_cliente_{INDEX}">
+                    <select name="despachos[{INDEX}][cliente_id]" id="cliente_id_{INDEX}" class="form-select form-select-sm client-select select-or-other-client select2-dinamico" data-other-field="otro_cliente_{INDEX}">
                         <option value="">Seleccione Cliente</option>
                         @foreach($clientes as $cliente)
                             <option value="{{ $cliente->id }}">{{ $cliente->alias ?? $cliente->nombre }}</option>
@@ -352,7 +352,13 @@
             const newRow = despachosTableBody.lastElementChild;
             // Aplicar la lógica de exclusividad a la nueva fila
             applyExclusivityLogic(newRow);
-
+            newRow.find('.select2-dinamico').select2({
+                theme: 'bootstrap-5', // Si estás usando el paquete select2-bootstrap-5-theme
+                width: '100%',
+                placeholder: 'Seleccione Cliente',
+                allowClear: true,
+                // dropdownParent: $('#tu-modal-id') // Descomenta esta línea SOLO si la tabla está dentro de un modal
+            });
             rowIndex++; // Aumentar el índice para la próxima fila
         }
         
