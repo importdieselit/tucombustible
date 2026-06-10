@@ -79,7 +79,7 @@ class GerentialReportController extends Controller
             'availableDates', 'selectedDate', 'ventasLitros', 'ventasUsd',
             'opexRecords', 'bancosRecords', 'cajasRecords', 'totalOpex',
             'totalBancos', 'totalCajas', 'totalLiquidez', 'pctBancos', 'pctCajas',
-            'alertas' // <-- Nueva variable
+            'alertas' 
         ));
     }
 
