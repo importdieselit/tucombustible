@@ -126,7 +126,7 @@
                                     <strong>{{ $detalle->cliente->nombre ?? $viaje->nombre_cliente_externo }}</strong><br>
                                     <small class="text-muted">{{ $detalle->cliente->rif ?? 'S/R' }}</small>
                                 </td>
-                                <td>{{ $detalle->direccion_despacho ?? $detalle->cliente->direccion_operativa }}</td>
+                                <td>{{ $detalle->direccion_despacho ?? $detalle->cliente->direccion_operativa ?? 'S/D' }}</td>
                                 <td class="text-center fw-black text-dark fs-6">{{ number_format($detalle->litros_despachados ?? $detalle->litros ?? 0, 0) }} L</td>
                                 
                                 @if($viaje->tipo_planificacion == 2)
