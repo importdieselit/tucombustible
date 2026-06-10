@@ -123,7 +123,7 @@
                             @foreach($viaje->detalles as $detalle)
                             <tr class="align-middle">
                                 <td class="ps-3">
-                                    <strong>{{ $detalle->cliente->nombre ?? $viaje->nombre_cliente_externo }}</strong><br>
+                                    <strong>{{ $detalle->cliente->nombre ?? $viaje->nombre_cliente_externo ?? $detalle->otro_cliente }}</strong><br>
                                     <small class="text-muted">{{ $detalle->cliente->rif ?? 'S/R' }}</small>
                                 </td>
                                 <td>{{ $detalle->direccion_despacho ?? $detalle->cliente->direccion_operativa ?? 'S/D' }}</td>
