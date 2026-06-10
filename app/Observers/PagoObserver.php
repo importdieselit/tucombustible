@@ -33,7 +33,7 @@ class PagoObserver
             }
 
             // 3. Estructuramos un mensaje más profesional (aprovechando negritas de WhatsApp con *)
-            $notificacion = "¡Hola! Queremos informarte que tu pago por *{$pago->litros} LTS* (Ref: {$pago->referencia}) ha sido validado exitosamente.\n\nGracias por confiar en nosotros.";
+            $notificacion = "¡Buen Dia! Le informamos que su pago a Impordiesel por *{$pago->litros} LTS* (Ref: {$pago->referencia}) ha sido registrado y validado exitosamente.\n\nGracias por confiar en nosotros.";
 
             // 4. Ejecutamos el envío
             $this->whatsappService->enviarMensaje($notificacion, $telefono);
