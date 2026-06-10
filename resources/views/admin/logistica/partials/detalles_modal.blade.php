@@ -114,7 +114,7 @@
                                 <th class="ps-3">Cliente / RIF</th>
                                 <th>Dirección</th>
                                 <th class="text-center" style="width: 15%;">Litros</th>
-                                @if($viaje->tipo_planificacion == 2) 
+                                @if($viaje->tipo_planificacion == 1) 
                                     <th style="width: 30%;">Buque / IMO / Bandera</th> 
                                 @endif
                             </tr>
