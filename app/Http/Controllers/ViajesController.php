@@ -67,7 +67,7 @@ class ViajesController extends Controller
         $vehiculos = Vehiculo::where('es_flota',true)->get(['id', 'placa', 'flota']);
         $cisternas = Vehiculo::where('es_flota',true)->where('tipo',2)->get(['id', 'placa', 'flota']);
         $destino = TabuladorViatico::orderBy('destino', 'asc')->pluck('destino')->unique();
-        $clientes = Cliente::where('status',1)->orderBy('nombre', 'asc')->get(['id','nombre','alias']);
+        $clientes = Cliente::where('status',2)->orderBy('nombre', 'asc')->get(['id','nombre','alias']);
         
         return view('viajes.create', compact('choferes', 'vehiculos', 'destino', 'clientes', 'cisternas'));
     }
