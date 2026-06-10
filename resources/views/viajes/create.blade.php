@@ -197,13 +197,13 @@
             {{-- Cliente/Otro Cliente --}}
             <td>
                 <div class="input-group">
-                    <select name="despachos[{INDEX}][cliente_id]" id="cliente_id_{INDEX}" class="form-select form-select-sm client-select select-or-other-client" data-other-field="otro_cliente_{INDEX}">
+                    <select name=" select2 despachos[{INDEX}][cliente_id]" id="cliente_id_{INDEX}" class="form-select form-select-sm client-select select-or-other-client" data-other-field="otro_cliente_{INDEX}">
                         <option value="">Seleccione Cliente</option>
                         @foreach($clientes as $cliente)
                             <option value="{{ $cliente->id }}">{{ $cliente->alias ?? $cliente->nombre }}</option>
                         @endforeach
                     </select>
-                    <input type="text" name="despachos[{INDEX}][otro_cliente]" id="otro_cliente_{INDEX}" class="form-control form-control-sm other-client-input select-or-other-input" data-select-field="cliente_id_{INDEX}" placeholder="Otro Cliente Manual">
+                    <input type="text" name="despachos[{INDEX}][otro_cliente]" id="otro_cliente_{INDEX}" class="form-control form-control-sm other-client-input select-or-other-input d-none" data-select-field="cliente_id_{INDEX}" placeholder="Otro Cliente Manual">
                 </div>
             </td>
             {{-- Litros Despachados --}}
