@@ -129,7 +129,7 @@
                                     <li><span class="badge bg-warning me-1">&nbsp;</span> Cajas: <strong>{{ number_format($pctCajas, 1) }}%</strong></li>
                                 </ul>
                             </div>
-                            <div style="width: 100px; height: 100px;">
+                            <div style="width: 200px; height: 200px;">
                                 <svg viewBox="0 0 32 32" style="transform: rotate(-90deg); border-radius: 50%;">
                                     <circle r="16" cx="16" cy="16" fill="#ffc107"></circle>
                                     <circle r="16" cx="16" cy="16" fill="transparent" stroke="#198754" stroke-width="32" stroke-dasharray="{{ $pctBancos }} 100"></circle>
@@ -253,11 +253,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 scale: 3, // Aumenta la escala para mejor calidad de imagen
                 logging: false, // Desactiva logs de html2canvas
                 useCORS: true, // Necesario si hay imágenes o recursos externos
-                windowWidth: 2000, // Mantenemos el estándar de ancho del Master Card
-                windowHeight: 1500, // Mantenemos el estándar de alto del Master Card
+                windowWidth: 1700, // Mantenemos el estándar de ancho del Master Card
+                windowHeight: 2000, // Mantenemos el estándar de alto del Master Card
                 constraints: {
-                    width: 2000,
-                    height: 1500
+                    width: 1700,
+                    height: 2000
                 }
 
             });

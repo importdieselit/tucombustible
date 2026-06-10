@@ -226,6 +226,8 @@
 @endsection
 
 @push('scripts')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const despachosTableBody = document.getElementById('despachos-table-body');
@@ -349,9 +351,8 @@
             template = template.replace(/{INDEX}/g, rowIndex);
             // Insertar la fila y obtener la referencia
             despachosTableBody.insertAdjacentHTML('beforeend', template);
-            const newRow = despachosTableBody.lastElementChild;
-            // Aplicar la lógica de exclusividad a la nueva fila
-            applyExclusivityLogic(newRow);
+            let newRow = despachosTableBody.lastElementChild;
+
             newRow.find('.select2-dinamico').select2({
                 theme: 'bootstrap-5', // Si estás usando el paquete select2-bootstrap-5-theme
                 width: '100%',
@@ -359,6 +360,10 @@
                 allowClear: true,
                 // dropdownParent: $('#tu-modal-id') // Descomenta esta línea SOLO si la tabla está dentro de un modal
             });
+
+            // Aplicar la lógica de exclusividad a la nueva fila
+            applyExclusivityLogic(newRow);
+            
             rowIndex++; // Aumentar el índice para la próxima fila
         }
         
