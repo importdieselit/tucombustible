@@ -17,8 +17,7 @@ const urlsToCache = [
     appBase + 'logistica/planificacion',
     appBase + 'logistica/crear/diesel',
     appBase + 'logistica/crear/mgo',
-    appBase + 'logistica/crear/flete',
-    appBase + 'logistica/crear/compra',
+    appBase + 'logistica/crear/mgo',
 
     
     appBase + 'ordenes/create',
