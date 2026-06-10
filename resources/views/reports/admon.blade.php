@@ -123,8 +123,8 @@
 
                         <div class="chart-container d-flex align-items-center justify-content-around mb-4">
                             <div class="w-50">
-                                <h6 class="small text-uppercase fw-bold text-muted mb-2">Segmentación Total</h6>
-                                <ul class="list-unstyled small mb-0">
+                                <h6 class=" text-uppercase fw-bold text-muted mb-2">Segmentación Total</h6>
+                                <ul class="list-unstyled  mb-0">
                                     <li class="mb-1"><span class="badge bg-success me-1">&nbsp;</span> Bancos: <strong>{{ number_format($pctBancos, 1) }}%</strong></li>
                                     <li><span class="badge bg-warning me-1">&nbsp;</span> Cajas: <strong>{{ number_format($pctCajas, 1) }}%</strong></li>
                                 </ul>
