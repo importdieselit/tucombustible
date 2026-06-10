@@ -175,6 +175,26 @@
         </div>
     @endif
     </div>
+    {{-- Panel de Análisis Automático --}}
+        @if($alertas->isNotEmpty())
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow-sm border-0" style="border-left: 4px solid #f59e0b;">
+                        <div class="card-body bg-light rounded">
+                            <h6 class="text-bold-custom mb-3 d-flex align-items-center" style="color: #b45309;">
+                                <i class="fa fa-lightbulb-o me-2 fs-5"></i> Insights y Alertas de la Operación
+                            </h6>
+                            <ul class="mb-0 text-secondary small" style="line-height: 1.8;">
+                                @foreach($alertas as $alerta)
+                                    <li><strong>Observación:</strong> {{ $alerta }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endif
+    </div>
     <div id="outputContainer" class="mt-8 pt-4 border-t border-gray-300 width-full">
         </div>
 </div>

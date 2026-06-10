@@ -44,10 +44,42 @@ class GerentialReportController extends Controller
         $pctBancos = $totalLiquidez > 0 ? ($totalBancos / $totalLiquidez) * 100 : 0;
         $pctCajas = $totalLiquidez > 0 ? ($totalCajas / $totalLiquidez) * 100 : 0;
 
+        $alertas = collect();
+
+        // Regla 1: Rentabilidad (Gastos vs Ventas)
+        if ($ventasUsd > 0 && $totalOpex > $ventasUsd) {
+            $alertas->push("Atención de Rentabilidad: Los Gastos Operacionales ($" . number_format($totalOpex, 2) . ") superaron los ingresos por Ventas en esta fecha.");
+        }
+
+        // Regla 2: Concentración de OPEX (Un gasto acapara más del 40% del total)
+        if ($totalOpex > 0) {
+            foreach ($opexRecords as $gasto) {
+                if (($gasto->monto / $totalOpex) > 0.40) {
+                    $alertas->push("Concentración de Gasto: '{$gasto->cuenta}' representa un " . number_format(($gasto->monto / $totalOpex) * 100, 1) . "% de los gastos totales. Verificar si requiere desglose.");
+                }
+            }
+        }
+
+        // Regla 3: Anomalías en Cajas (Valores negativos)
+        foreach ($cajasRecords as $caja) {
+            if ($caja->monto < 0) {
+                $alertas->push("Anomalía Contable: La '{$caja->cuenta}' presenta un saldo negativo ($" . number_format($caja->monto, 2) . "). Las cajas físicas no deberían estar en negativo; posible error de transcripción.");
+            }
+        }
+
+        // Regla 4: Sobregiros Bancarios
+        foreach ($bancosRecords as $banco) {
+            if ($banco->monto < 0) {
+                $alertas->push("Alerta de Liquidez: '{$banco->cuenta}' se encuentra en sobregiro ($" . number_format($banco->monto, 2) . ").");
+            }
+        }
+
+        // Retornar las alertas compactadas a la vista
         return view('reports.admon', compact(
             'availableDates', 'selectedDate', 'ventasLitros', 'ventasUsd',
             'opexRecords', 'bancosRecords', 'cajasRecords', 'totalOpex',
-            'totalBancos', 'totalCajas', 'totalLiquidez', 'pctBancos', 'pctCajas'
+            'totalBancos', 'totalCajas', 'totalLiquidez', 'pctBancos', 'pctCajas',
+            'alertas' // <-- Nueva variable
         ));
     }
 
