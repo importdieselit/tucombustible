@@ -22,8 +22,7 @@ use App\Http\Controllers\{
     ReporteController, AforoController, SearchController, DataDeletionController,
     ViajesController, TelegramController, PlanificacionMantenimientoController,
     ReportController, ClienteActivosController,NotificationController, PlanMayorController,LogisticaController,
-    AlmacenLayoutController,ConteoController,
-    GerentialReportController,PagoController
+    AlmacenLayoutController,ConteoController, GerentialReportController,PagosController
 };
 use App\Http\Controllers\SalaControlController;
 
