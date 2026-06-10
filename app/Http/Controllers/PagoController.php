@@ -10,7 +10,7 @@ use App\Models\Pedido;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Override;
 
-class PagosController extends BaseController
+class PagoController extends BaseController
 {
     public function getAditionalData()
     {
@@ -84,15 +84,17 @@ class PagosController extends BaseController
             'fecha_solicitud' => 'required|date',
         ]);
 
-        $pago = Pago::create($validatedData);
-        $pago->save();
-
-         $cliente = Cliente::find($validatedData['id_cliente']);
+        $cliente = Cliente::find($validatedData['id_cliente']);
          if(is_null($cliente->telefono)){
             $cliente->telefono = $validatedData['telefono_contacto'];
             $cliente->contacto = $validatedData['persona_contacto'];
             $cliente->save();
          }
+
+        $pago = Pago::create($validatedData);
+        $pago->save();
+
+         
 
         $pedido = Pedido::find($validatedData['id_pedido']);
         if ($pedido) {
@@ -101,7 +103,7 @@ class PagosController extends BaseController
         }else{
            
             $pedido = Pedido::create([
-                'id_cliente' => $validatedData['id_cliente'],
+                'cliente_id' => $validatedData['id_cliente'],
                 'fecha_solicitud' => now(),
                 'user_id' => $validatedData['id_usuario'],
                 'cantidad_solicitada' => $validatedData['litros'],
