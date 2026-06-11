@@ -353,7 +353,7 @@
             despachosTableBody.insertAdjacentHTML('beforeend', template);
             let newRow = despachosTableBody.lastElementChild;
 
-            newRow.find('.select2-dinamico').select2({
+            $(newRow).find('.select2-dinamico').select2({                
                 theme: 'bootstrap-5', // Si estás usando el paquete select2-bootstrap-5-theme
                 width: '100%',
                 placeholder: 'Seleccione Cliente',
