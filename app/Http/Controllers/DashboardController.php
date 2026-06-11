@@ -66,7 +66,7 @@ class DashboardController extends Controller
                 'cliente_rechazado'   => view('cliente.rechazado', $data),
                 'cliente_inactivo'    => view('cliente.inactivo', $data),
                 'cliente_padre',
-                'cliente_sucursal'    => view('cliente.index', $data),
+                'cliente_sucursal'    => view('portal.cliente.index', $data),
                 default               => abort(403, 'Perfil de usuario no reconocido o expediente no vinculado.'),
             };
     }
