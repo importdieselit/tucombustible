@@ -92,7 +92,7 @@
                         <th class="px-6 py-4">Cliente</th>
                         <th class="px-6 py-4 text-center">Volumen</th>
                         <th class="px-6 py-4 text-center">Pedido Asociado</th>
-                        <th class="px-6 py-4 text-center">Acción</th>
+                        <th class="px-6 py-4 text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
@@ -130,9 +130,17 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 text-center">
-                            <button onclick="viewPago({{ $pago->id }})" class="text-gray-500 hover:text-orange-impordiesel mx-1 transition">
-                                <i class="fas fa-eye"></i>
-                            </button>
+                            <div class="flex justify-center items-center gap-2">
+                                <button onclick="viewPago({{ $pago->id }})" class="text-gray-500 hover:text-gray-800 transition" title="Visualizar">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button onclick="editPago({{ $pago->id }})" class="text-blue-600 hover:text-blue-800 transition" title="Editar Registro">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deletePago({{ $pago->id }})" class="text-red-600 hover:text-red-800 transition" title="Eliminar Registro">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                     @empty
@@ -160,6 +168,8 @@
         
         <form id="formPago" onsubmit="submitPago(event)" class="p-6">
             @csrf
+            {{-- Campos Ocultos de Control Operativo --}}
+            <input type="hidden" name="pago_id" id="pago_id" value="">
             <input type="hidden" name="id_usuario" value="{{ auth()->id() ?? 1 }}">
             <input type="hidden" name="id_pedido" id="id_pedido" value="">
             
@@ -229,16 +239,35 @@
 
 @push('scripts')
 <script>
+    // Conmutador del estado visual del formulario del modal
+    function toggleFormInputs(disabled = false) {
+        const form = document.getElementById('formPago');
+        const elements = form.querySelectorAll('input, select, textarea');
+        elements.forEach(el => {
+            if(el.id !== 'pago_id' && el.name !== '_token' && el.name !== 'id_usuario') {
+                el.disabled = disabled;
+            }
+        });
+    }
+
     function openModalPago() {
         document.getElementById('formPago').reset();
+        document.getElementById('pago_id').value = '';
+        document.getElementById('id_pedido').value = '';
         document.getElementById('modalTitle').innerText = 'Registrar Nuevo Pago';
-        document.getElementById('btnSubmitPago').style.display = 'block';
-        document.getElementById('modalPago').classList.remove('hidden');
         
+        const btnSubmit = document.getElementById('btnSubmitPago');
+        btnSubmit.style.display = 'block';
+        btnSubmit.innerHTML = 'Guardar Pago';
+        
+        toggleFormInputs(false);
+
         // Seteo de fechas por defecto al día de hoy
         const hoy = new Date().toISOString().split('T')[0];
         document.getElementById('fecha_solicitud').value = hoy;
         document.getElementById('fecha_pago').value = hoy;
+        
+        document.getElementById('modalPago').classList.remove('hidden');
     }
 
     function closeModalPago() {
@@ -252,8 +281,7 @@
         const inputContacto = document.getElementById('persona_contacto');
         const inputTelefono = document.getElementById('telefono_contacto');
 
-        if(opcionSeleccionada.value !== "") {
-            // Lee los datos almacenados en los atributos de la etiqueta option
+        if(opcionSeleccionada && opcionSeleccionada.value !== "") {
             const contactoDB = opcionSeleccionada.getAttribute('data-contacto');
             const telefonoDB = opcionSeleccionada.getAttribute('data-telefono');
 
@@ -265,18 +293,68 @@
         }
     }
 
+    // CARGAR DATOS PARA EDICIÓN
+    async function editPago(id) {
+        openModalPago();
+        document.getElementById('modalTitle').innerText = 'Editar Registro de Pago';
+        document.getElementById('pago_id').value = id;
+
+        // Construcción de URL limpia basada en las convenciones de Laravel Resource
+        const urlShow = `{{ url('pagos') }}/${id}`;
+
+        try {
+            const response = await fetch(urlShow, {
+                headers: { 'Accept': 'application/json' }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Mapear valores directo a los inputs correspondientes
+                document.getElementById('id_cliente').value = data.id_cliente;
+                document.getElementById('persona_contacto').value = data.persona_contacto || '';
+                document.getElementById('telefono_contacto').value = data.telefono_contacto || '';
+                document.getElementById('referencia').value = data.referencia;
+                document.getElementById('litros').value = data.litros;
+                document.getElementById('id_pedido').value = data.id_pedido || '';
+                
+                // Formatear fechas YYYY-MM-DD para compatibilidad nativa con input type="date"
+                if(data.fecha_solicitud) document.getElementById('fecha_solicitud').value = data.fecha_solicitud.split('T')[0];
+                if(data.fecha_pago) document.getElementById('fecha_pago').value = data.fecha_pago.split('T')[0];
+
+            } else {
+                alert('No se pudo extraer la información del pago seleccionado.');
+                closeModalPago();
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error de conectividad al consultar el registro.');
+            closeModalPago();
+        }
+    }
+
+    // ENVIAR FORMULARIO (CREAR O ACTUALIZAR)
     async function submitPago(e) {
         e.preventDefault();
         const form = document.getElementById('formPago');
         const formData = new FormData(form);
         const btnSubmit = document.getElementById('btnSubmitPago');
         
+        const idpago = document.getElementById('pago_id').value;
+        
+        // Estrategia Reutilizable: Si existe ID mutamos el endpoint a Update usando PUT
+        let fetchUrl = "{{ route('pagos.store') }}";
+        if(idpago) {
+            fetchUrl = `{{ url('pagos') }}/${idpago}`;
+            formData.append('_method', 'PUT'); // Simulación obligatoria de método en Laravel mediante FormData
+        }
+        
         btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Procesando...';
         btnSubmit.disabled = true;
 
         try {
-            const response = await fetch("{{ route('pagos.store') }}", {
-                method: 'POST',
+            const response = await fetch(fetchUrl, {
+                method: 'POST', // Siempre viaja por POST debido al manejo de archivos/FormData
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
                     'Accept': 'application/json'
@@ -285,12 +363,12 @@
             });
 
             if (response.ok) {
-                alert('Pago registrado con éxito y pedido generado (si aplicaba).');
-                location.reload(); // Recarga para actualizar la tabla
+                alert(idpago ? 'Registro de pago actualizado con éxito.' : 'Pago registrado con éxito y pedido generado (si aplicaba).');
+                location.reload();
             } else {
                 const errorData = await response.json();
                 console.error(errorData);
-                alert('Error al validar/guardar los datos. Verifique los campos obligatorios.');
+                alert('Error al validar/guardar los datos. Verifique los campos obligatorios o referencias duplicadas.');
             }
         } catch (error) {
             console.error('Error de red:', error);
@@ -301,10 +379,41 @@
         }
     }
 
-    function viewPago(id) {
-        // Aquí podrías crear un Fetch hacia un endpoint de show o getDetailsForView 
-        // para rellenar el formulario en modo "Solo lectura". 
-        alert("Integración de visualización pendiente para el ID: " + id);
+    // ELIMINAR REGISTRO DE FORMA ASÍNCRONA
+    async function deletePago(id) {
+        if (!confirm('¿Está completamente seguro de eliminar este registro de pago? Esta acción puede desafectar el volumen comprometido de los pedidos asociados.')) {
+            return;
+        }
+
+        const urlDestroy = `{{ url('pagos') }}/${id}`;
+
+        try {
+            const response = await fetch(urlDestroy, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                alert('Registro eliminado correctamente de la base de datos.');
+                location.reload();
+            } else {
+                alert('No se pudo procesar la eliminación. Es posible que el pago esté vinculado a un despacho ejecutado.');
+            }
+        } catch (error) {
+            console.error('Error de comunicación:', error);
+            alert('Fallo de red al solicitar la baja del registro.');
+        }
+    }
+
+    // VISUALIZACIÓN EN SOLO LECTURA
+    async function viewPago(id) {
+        await editPago(id); // Reutiliza el mapeo de la data
+        document.getElementById('modalTitle').innerText = 'Consulta Detallada de Pago';
+        document.getElementById('btnSubmitPago').style.display = 'none'; // Esconde el botón de acción
+        toggleFormInputs(true); // Bloquea todos los inputs para auditoría visual limpia
     }
 </script>
 @endpush

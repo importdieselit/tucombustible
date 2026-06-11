@@ -99,7 +99,7 @@ class LoginController extends Controller
                 => redirect()->route('vehiculos.index'),
 
             3
-                => redirect()->route('cliente.index'),
+                => redirect()->route('portal.clientes.index'),
 
             4
                 => redirect()->route('inspecciones.index'),
