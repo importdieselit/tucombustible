@@ -319,8 +319,12 @@
                 document.getElementById('id_pedido').value = data.id_pedido || '';
                 
                 // Formatear fechas YYYY-MM-DD para compatibilidad nativa con input type="date"
-                if(data.fecha_solicitud) document.getElementById('fecha_solicitud').value = data.fecha_solicitud.split('T')[0];
-                if(data.fecha_pago) document.getElementById('fecha_pago').value = data.fecha_pago.split('T')[0];
+                if (data.fecha_solicitud) {
+                    document.getElementById('fecha_solicitud').value = data.fecha_solicitud.substring(0, 10);
+                }
+                if (data.fecha_pago) {
+                    document.getElementById('fecha_pago').value = data.fecha_pago.substring(0, 10);
+                }
 
             } else {
                 alert('No se pudo extraer la información del pago seleccionado.');
