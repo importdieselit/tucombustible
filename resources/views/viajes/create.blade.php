@@ -355,9 +355,10 @@
 
             $(newRow).find('.select2-dinamico').select2({                
                 theme: 'bootstrap-5', // Si estás usando el paquete select2-bootstrap-5-theme
-                width: '100%',
+                width: '80%',
                 placeholder: 'Seleccione Cliente',
                 allowClear: true,
+                style: 'border:solid 1px #ccc; padding: 0px'
                 // dropdownParent: $('#tu-modal-id') // Descomenta esta línea SOLO si la tabla está dentro de un modal
             });
 
