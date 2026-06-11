@@ -166,9 +166,9 @@ class WatchAdmonReports extends Command
                 $numerosDestino = [
                     '584241666291', // Jefe
                     '584241177910', // Gerente
-                    '584242982588', // admin
-                    '584143779488', //comercial
-                    '584141780355'  // Leudo
+                    '584242982588' // admin
+                   // '584143779488', //comercial
+                    //'584141780355'  // Leudo
                 ];
 
                 foreach ($numerosDestino as $numero) {

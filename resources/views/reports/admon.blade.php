@@ -5,7 +5,7 @@
     .kpi-card { background: #ffffff; border-left: 4px solid #0f2d59; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
     .table-header-custom { background-color: #0f2d59 !important; color: white; }
     .text-bold-custom { font-weight: 700; color: #0f2d59; }
-    .text-bold-title { font-weight: 800; color: #0f2d59; font-size: 1.5rem; }
+    .text-bold-title { font-weight: 800; color: #0f2d59; font-size: 1.7rem; }
     .chart-container { background: white; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; }
     /* Ajuste de fondo para que combine con el contenedor principal del layout */
     .bg-dashboard { background-color: #f1f5f9; } 
@@ -48,7 +48,7 @@
                 <small class="text-muted">Control de Operaciones y Flujos Financieros</small>
             </div>
             <div class="col-7 justify-content-between align-items-center mb-4">
-              <h1 class="text-bold-title text-navy">Dashboard Administracion</h1>
+              <h1 class="text-bold-title text-navy">RESUMEN FINANCIERO DIARIO {{{{ \Carbon\Carbon::parse($date)->format('d/m/Y') }}}}</h1>
             </div>
     @if($opexRecords->isEmpty() && $bancosRecords->isEmpty())
         <div class="alert alert-warning text-center">No hay datos registrados para la fecha seleccionada.</div>
