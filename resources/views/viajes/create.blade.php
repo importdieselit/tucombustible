@@ -197,13 +197,13 @@
             {{-- Cliente/Otro Cliente --}}
             <td>
                 <div class="input-group">
-                    <select name="despachos[{INDEX}][cliente_id]" id="cliente_id_{INDEX}" class="form-select form-select-sm client-select select-or-other-client select2-dinamico" data-other-field="otro_cliente_{INDEX}">
+                    <select name="despachos[{INDEX}][cliente_id]" id="cliente_id_{INDEX}" class="form-select form-select-sm client-select select-or-other-client" data-other-field="otro_cliente_{INDEX}">
                         <option value="">Seleccione Cliente</option>
                         @foreach($clientes as $cliente)
                             <option value="{{ $cliente->id }}">{{ $cliente->alias ?? $cliente->nombre }}</option>
                         @endforeach
                     </select>
-                    <input type="text" name="despachos[{INDEX}][otro_cliente]" id="otro_cliente_{INDEX}" class="form-control form-control-sm other-client-input select-or-other-input d-none" data-select-field="cliente_id_{INDEX}" placeholder="Otro Cliente Manual">
+                    <input type="text" name="despachos[{INDEX}][otro_cliente]" id="otro_cliente_{INDEX}" class="form-control form-control-sm other-client-input select-or-other-input" data-select-field="cliente_id_{INDEX}" placeholder="Otro Cliente Manual">
                 </div>
             </td>
             {{-- Litros Despachados --}}
@@ -226,8 +226,6 @@
 @endsection
 
 @push('scripts')
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const despachosTableBody = document.getElementById('despachos-table-body');
@@ -351,20 +349,10 @@
             template = template.replace(/{INDEX}/g, rowIndex);
             // Insertar la fila y obtener la referencia
             despachosTableBody.insertAdjacentHTML('beforeend', template);
-            let newRow = despachosTableBody.lastElementChild;
-
-            $(newRow).find('.select2-dinamico').select2({                
-                theme: 'bootstrap-5', // Si estás usando el paquete select2-bootstrap-5-theme
-                width: '80%',
-                placeholder: 'Seleccione Cliente',
-                allowClear: true,
-                style: 'border:solid 1px #ccc; padding: 0px; margin:10px'
-                // dropdownParent: $('#tu-modal-id') // Descomenta esta línea SOLO si la tabla está dentro de un modal
-            });
-
+            const newRow = despachosTableBody.lastElementChild;
             // Aplicar la lógica de exclusividad a la nueva fila
             applyExclusivityLogic(newRow);
-            
+
             rowIndex++; // Aumentar el índice para la próxima fila
         }
         
