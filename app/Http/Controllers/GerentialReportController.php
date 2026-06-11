@@ -41,12 +41,14 @@ class GerentialReportController extends Controller
         // Buscamos directamente por cuenta para evitar cruces con cotizaciones
         $ventasLitros = $records->where('cuenta', 'LITROS VENDIDOS')->first()->monto ?? 0;
         $ventasUsd = $records->where('cuenta', 'VENTAS REALIZADAS')->first()->monto ?? 0;
+        $litrosComprados = $records->filter(fn($q) => trim($q->cuenta) === 'LITROS COMPRADOS')->first()->monto ?? 0;
         
         // OPEX y Liquidez
         $opexRecords = $records->filter(fn($item) => trim($item->tipo) === 'GASTOS OPERACIONALES');
         $bancosRecords = $records->filter(fn($item) => trim($item->tipo) === 'DISPONIBILIDAD DE BANCOS (MONEDA EXTRANJERA)'); 
         $cajasRecords = $records->filter(fn($item) => trim($item->tipo) === 'DISPONIBILIDAD DE CAJAS (MONEDA EXTRANJERA)'); 
 
+        $balanceLitros = $litrosComprados - $ventasLitros;
 
         // 2. Extracción por Patrones (Agregación Inteligente)
         $ventasUsd = $records->where('cuenta', 'VENTAS REALIZADAS')->sum('monto');
@@ -141,7 +143,7 @@ class GerentialReportController extends Controller
             'totalBancos', 'totalCajas', 'totalLiquidez', 'pctBancos', 'pctCajas',
             'cxcRecords', 'cxpRecords', 'totalCxC', 'totalCxP', 'pctCxC_Ventas', 'pctCxP_Ventas',
             'margenBruto', 'comprasUsd', 'inventario', 'totalCxC', 'totalCxP',
-            'alertas'
+            'alertas', 'balanceLitros', 'litrosComprados'
         ));
     }
 
