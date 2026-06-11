@@ -80,6 +80,9 @@ class GerentialReportController extends Controller
         $totalCxC = $cxcRecords->sum('monto');
         $totalCxP = $cxpRecords->sum('monto');
 
+        $comprasUsd = $totalCxP; // Asumimos que la cuenta por pagar es la adquisición del combustible
+        $margenBruto = $ventasUsd > 0 ? (($ventasUsd - $comprasUsd) / $ventasUsd) * 100 : 0;
+
         // 6. Liquidez: Agrupación por Tipo
         $totalBancos = $records->where('tipo', 'DISPONIBILIDAD DE BANCOS (MONEDA EXTRANJERA)')->sum('monto');
         $totalCajas = $records->where('tipo', 'DISPONIBILIDAD DE CAJAS (MONEDA EXTRANJERA)')->sum('monto');
@@ -137,6 +140,7 @@ class GerentialReportController extends Controller
             'opexRecords', 'bancosRecords', 'cajasRecords', 'totalOpex',
             'totalBancos', 'totalCajas', 'totalLiquidez', 'pctBancos', 'pctCajas',
             'cxcRecords', 'cxpRecords', 'totalCxC', 'totalCxP', 'pctCxC_Ventas', 'pctCxP_Ventas',
+            'margenBruto', 'comprasUsd', 'inventario', 'totalCxC', 'totalCxP',
             'alertas'
         ));
     }
