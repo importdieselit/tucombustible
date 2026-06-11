@@ -223,7 +223,7 @@
             </div>
             <div class="col-md-4">
                 <div class="kpi-card p-3" style="border-left-color: #8b5cf6;">
-                    <span class="text-muted text-uppercase d-block small fw-bold">Balance Litros</span> 
+                    <span class="text-muted text-uppercase d-block small fw-bold">Rotacion de Inventario</span> 
                     <span class="fs-4 fw-bold text-dark">{{ number_format($balanceLitros, 0, ',', '.') }} L</span>
                 </div>
             </div>
