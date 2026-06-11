@@ -8,6 +8,11 @@
     .text-bold-title { font-weight: 800; color: #0f2d59; font-size: 1.7rem; }
     .chart-container { background: white; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; }
     .bg-dashboard { background-color: #f1f5f9; } 
+    .kpi-card-financial { 
+        background: #f8fafc; 
+        border: 1px solid #e2e8f0; 
+        border-radius: 6px; 
+    }
 </style>
 @endpush
 
@@ -203,7 +208,26 @@
                 </div>
             </div>
         </div>
-
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="kpi-card p-3" style="border-left-color: #6366f1;">
+                    <span class="text-muted text-uppercase d-block small fw-bold">Margen Bruto</span> 
+                    <span class="fs-4 fw-bold" style="color: #6366f1;">{{ number_format($margenBruto, 1, ',', '.') }}%</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="kpi-card p-3" style="border-left-color: #f43f5e;">
+                    <span class="text-muted text-uppercase d-block small fw-bold">Compras (CXP Combustible)</span> 
+                    <span class="fs-4 fw-bold text-danger">$ {{ number_format($comprasUsd, 2, ',', '.') }}</span>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="kpi-card p-3" style="border-left-color: #8b5cf6;">
+                    <span class="text-muted text-uppercase d-block small fw-bold">Balance Litros</span> 
+                    <span class="fs-4 fw-bold text-dark">{{ number_format($balanceLitros, 0, ',', '.') }} L</span>
+                </div>
+            </div>
+        </div>
         {{-- Panel de Análisis Automático --}}
         @if($alertas->isNotEmpty())
             <div class="row mt-2">

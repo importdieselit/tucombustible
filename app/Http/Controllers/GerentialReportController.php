@@ -28,6 +28,15 @@ class GerentialReportController extends Controller
         // Obtener registros de esa fecha
         $records = ReportRecord::where('report_date', $selectedDate)->get();
 
+        // 1. Limpieza de datos (Normalización)
+        // Usamos trim() y utf8_decode por seguridad con caracteres especiales
+        $records->transform(function ($item) {
+            $item->tipo = trim($item->tipo);
+            $item->cuenta = trim($item->cuenta);
+            return $item;
+        });
+
+
         // Clasificación de variables principales basados en el archivo CSV
         // Buscamos directamente por cuenta para evitar cruces con cotizaciones
         $ventasLitros = $records->where('cuenta', 'LITROS VENDIDOS')->first()->monto ?? 0;
@@ -38,18 +47,49 @@ class GerentialReportController extends Controller
         $bancosRecords = $records->filter(fn($item) => trim($item->tipo) === 'DISPONIBILIDAD DE BANCOS (MONEDA EXTRANJERA)'); 
         $cajasRecords = $records->filter(fn($item) => trim($item->tipo) === 'DISPONIBILIDAD DE CAJAS (MONEDA EXTRANJERA)'); 
 
+
+        // 2. Extracción por Patrones (Agregación Inteligente)
+        $ventasUsd = $records->where('cuenta', 'VENTAS REALIZADAS')->sum('monto');
+        
+        // El OPEX es TODO lo que diga 'GASTOS OPERACIONALES' 
+        // EXCEPTO las cuentas que claramente son CxC o CxP (contaminación del sistema)
+        $rawOpex = $records->where('tipo', 'GASTOS OPERACIONALES');
+        
+        $opexRecords = $rawOpex->reject(function ($item) {
+            $pattern = '/(CUENTAS POR COBRAR|CXP NACIONALES|PAGARE)/i';
+            return preg_match($pattern, $item->cuenta);
+        });
+
+        // 3. CxC: Capturamos tanto las CxC individuales como la cuenta agrupada
+        $cxcRecords = $records->filter(function ($item) {
+            return $item->tipo === 'CUENTAS POR COBRAR' || 
+                   str_contains($item->cuenta, 'CUENTAS POR COBRAR');
+        });
+
+        // 4. CxP: Capturamos las deudas (Proveedor + Nacionales)
+        $cxpRecords = $records->filter(function ($item) {
+            return $item->tipo === 'CUENTAS POR PAGAR' || 
+                   str_contains($item->cuenta, 'CXP NACIONALES');
+        });
+
+        // 5. Inventario: Captura dinámica
+        $inventario = $records->where('tipo', 'INVENTARIO')->sum('monto');
+
+        // Sumatorias base
+        $totalOpex = $opexRecords->sum('monto');
+        $totalCxC = $cxcRecords->sum('monto');
+        $totalCxP = $cxpRecords->sum('monto');
+
+        // 6. Liquidez: Agrupación por Tipo
+        $totalBancos = $records->where('tipo', 'DISPONIBILIDAD DE BANCOS (MONEDA EXTRANJERA)')->sum('monto');
+        $totalCajas = $records->where('tipo', 'DISPONIBILIDAD DE CAJAS (MONEDA EXTRANJERA)')->sum('monto');
+
         // Control de Cartera (CxC y CxP)
         $cxcRecords = $records->filter(fn($item) => trim($item->tipo) === 'CUENTAS POR COBRAR');
         $cxpRecords = $records->filter(fn($item) => trim($item->tipo) === 'CUENTAS POR PAGAR');
 
         // Sumatorias de apoyo
-        $totalOpex = $opexRecords->sum('monto');
-        $totalBancos = $bancosRecords->sum('monto');
-        $totalCajas = $cajasRecords->sum('monto');
         $totalLiquidez = $totalBancos + $totalCajas;
-        
-        $totalCxC = $cxcRecords->sum('monto');
-        $totalCxP = $cxpRecords->sum('monto');
 
         // Porcentajes para gráficas vectoriales
         $pctBancos = $totalLiquidez > 0 ? ($totalBancos / $totalLiquidez) * 100 : 0;
@@ -58,6 +98,7 @@ class GerentialReportController extends Controller
         // Cálculo de % de control vs Ventas (Evitando división por cero)
         $pctCxC_Ventas = $ventasUsd > 0 ? ($totalCxC / $ventasUsd) * 100 : 0;
         $pctCxP_Ventas = $ventasUsd > 0 ? ($totalCxP / $ventasUsd) * 100 : 0;
+        
 
         $alertas = collect();
 
