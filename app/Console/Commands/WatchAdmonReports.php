@@ -86,7 +86,7 @@ class WatchAdmonReports extends Command
             $isHeader = true;
 
             while (($row = fgetcsv($fileStream, 1000, ";")) !== FALSE) {
-                if ($isHeader) { $isHeader = false; continue; }
+               // if ($isHeader) { $isHeader = false; continue; }
                 if (empty($row[0]) || str_contains($row[0], '---')) continue;
 
                 ReportRecord::create([
