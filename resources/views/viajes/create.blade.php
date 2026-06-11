@@ -358,7 +358,7 @@
                 width: '80%',
                 placeholder: 'Seleccione Cliente',
                 allowClear: true,
-                style: 'border:solid 1px #ccc; padding: 0px'
+                style: 'border:solid 1px #ccc; padding: 0px; margin:10px'
                 // dropdownParent: $('#tu-modal-id') // Descomenta esta línea SOLO si la tabla está dentro de un modal
             });
 
