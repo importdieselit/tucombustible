@@ -176,20 +176,20 @@
                     <div class="row g-2">
                         <div class="col-6 mb-2">
                             <label class="small fw-bold text-muted text-uppercase">Placa Vehículo</label>
-                            <input type="text" name="vehiculo_externo" x-model="externo_vehiculo" class="form-control form-control-sm border-orange uppercase" placeholder="ABC-123" :required="esPropio == '0'">
+                            <input type="text" name="vehiculo_externo" x-model="vehiculo_externo" class="form-control form-control-sm border-orange uppercase" placeholder="ABC-123" :required="esPropio == '0'">
                         </div>
                         <div class="col-6 mb-2">
                             <label class="small fw-bold text-muted text-uppercase">Placa Cisterna</label>
-                            <input type="text" name="cisterna_externo" x-model="externo_cisterna" class="form-control form-control-sm border-orange uppercase" placeholder="Opcional">
+                            <input type="text" name="cisterna_externo" x-model="cisterna_externo" class="form-control form-control-sm border-orange uppercase" placeholder="Opcional">
                         </div>
                         <div class="col-12">
                             <div class="input-group input-group-sm mb-1">
                                 <span class="input-group-text">Chofer</span>
-                                <input type="text" name="chofer_externo" x-model="externo_chofer" class="form-control uppercase" placeholder="Nombre completo" :required="esPropio == '0'">
+                                <input type="text" name="chofer_externo" x-model="chofer_externo" class="form-control uppercase" placeholder="Nombre completo" :required="esPropio == '0'">
                             </div>
                             <div class="input-group input-group-sm mb-1">
                                 <span class="input-group-text">Ayudante</span>
-                                <input type="text" name="ayudante_externo" x-model="externo_ayudante" class="form-control uppercase" placeholder="Nombre completo">
+                                <input type="text" name="ayudante_externo" x-model="ayudante_externo" class="form-control uppercase" placeholder="Nombre completo">
                             </div>
                         </div>
                     </div>
