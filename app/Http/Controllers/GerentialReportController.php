@@ -12,12 +12,13 @@ class GerentialReportController extends Controller
 {
     public function admon(Request $request)
     {
-
         $tokenValido = config('services.reporte.internal_token');
+        
         // Si no está logueado Y el token no coincide, entonces al login
         if (!auth()->check() && $request->get('token') !== $tokenValido) {
-        // abort(403, 'Acceso no autorizado');
+            // abort(403, 'Acceso no autorizado');
         }
+        
         // Obtener fechas disponibles para el filtro selector
         $availableDates = ProcessedFile::orderBy('report_date', 'desc')->pluck('report_date');
         
@@ -27,75 +28,86 @@ class GerentialReportController extends Controller
         // Obtener registros de esa fecha
         $records = ReportRecord::where('report_date', $selectedDate)->get();
 
-        // Clasificación de variables operacionales limpias
-        $ventasLitros = $records->where('tipo', 'VENTAS');
-        $ventasUsd = $records->where('tipo', 'VENTAS (USD)')->first()->monto ?? 0;
-        $opexRecords = $records->where('tipo', 'GASTOS OPERACIONALES');
-        $bancosRecords = $records->where('tipo', 'DISPONIBILIDAD DE BANCOS (MONEDA EXTRANJERA)'); 
-        $cajasRecords = $records->where('tipo', 'DISPONIBILIDAD DE CAJAS (MONEDA EXTRANJERA)'); 
+        // Clasificación de variables principales basados en el archivo CSV
+        // Buscamos directamente por cuenta para evitar cruces con cotizaciones
+        $ventasLitros = $records->where('cuenta', 'LITROS VENDIDOS')->first()->monto ?? 0;
+        $ventasUsd = $records->where('cuenta', 'VENTAS REALIZADAS')->first()->monto ?? 0;
+        
+        // OPEX y Liquidez
+        $opexRecords = $records->filter(fn($item) => trim($item->tipo) === 'GASTOS OPERACIONALES');
+        $bancosRecords = $records->filter(fn($item) => trim($item->tipo) === 'DISPONIBILIDAD DE BANCOS (MONEDA EXTRANJERA)'); 
+        $cajasRecords = $records->filter(fn($item) => trim($item->tipo) === 'DISPONIBILIDAD DE CAJAS (MONEDA EXTRANJERA)'); 
 
-        // Totales de apoyo
+        // Control de Cartera (CxC y CxP)
+        $cxcRecords = $records->filter(fn($item) => trim($item->tipo) === 'CUENTAS POR COBRAR');
+        $cxpRecords = $records->filter(fn($item) => trim($item->tipo) === 'CUENTAS POR PAGAR');
+
+        // Sumatorias de apoyo
         $totalOpex = $opexRecords->sum('monto');
         $totalBancos = $bancosRecords->sum('monto');
         $totalCajas = $cajasRecords->sum('monto');
         $totalLiquidez = $totalBancos + $totalCajas;
+        
+        $totalCxC = $cxcRecords->sum('monto');
+        $totalCxP = $cxpRecords->sum('monto');
 
         // Porcentajes para gráficas vectoriales
         $pctBancos = $totalLiquidez > 0 ? ($totalBancos / $totalLiquidez) * 100 : 0;
         $pctCajas = $totalLiquidez > 0 ? ($totalCajas / $totalLiquidez) * 100 : 0;
 
+        // Cálculo de % de control vs Ventas (Evitando división por cero)
+        $pctCxC_Ventas = $ventasUsd > 0 ? ($totalCxC / $ventasUsd) * 100 : 0;
+        $pctCxP_Ventas = $ventasUsd > 0 ? ($totalCxP / $ventasUsd) * 100 : 0;
+
         $alertas = collect();
 
-        // Regla 1: Rentabilidad (Gastos vs Ventas)
+        // Reglas de Negocio Automatizadas
         if ($ventasUsd > 0 && $totalOpex > $ventasUsd) {
             $alertas->push("Atención de Rentabilidad: Los Gastos Operacionales ($" . number_format($totalOpex, 2) . ") superaron los ingresos por Ventas en esta fecha.");
         }
 
-        // Regla 2: Concentración de OPEX (Un gasto acapara más del 40% del total)
         if ($totalOpex > 0) {
             foreach ($opexRecords as $gasto) {
                 if (($gasto->monto / $totalOpex) > 0.40) {
-                    $alertas->push("Concentración de Gasto: '{$gasto->cuenta}' representa un " . number_format(($gasto->monto / $totalOpex) * 100, 1) . "% de los gastos totales. Verificar si requiere desglose.");
+                    $alertas->push("Concentración de Gasto: '{$gasto->cuenta}' representa un " . number_format(($gasto->monto / $totalOpex) * 100, 1) . "% de los gastos totales.");
                 }
             }
         }
 
-        // Regla 3: Anomalías en Cajas (Valores negativos)
         foreach ($cajasRecords as $caja) {
             if ($caja->monto < 0) {
-                $alertas->push("Anomalía Contable: La '{$caja->cuenta}' presenta un saldo negativo ($" . number_format($caja->monto, 2) . "). Las cajas físicas no deberían estar en negativo; posible error de transcripción.");
+                $alertas->push("Anomalía Contable: '{$caja->cuenta}' presenta un saldo negativo ($" . number_format($caja->monto, 2) . ").");
             }
         }
 
-        // Regla 4: Sobregiros Bancarios
         foreach ($bancosRecords as $banco) {
             if ($banco->monto < 0) {
                 $alertas->push("Alerta de Liquidez: '{$banco->cuenta}' se encuentra en sobregiro ($" . number_format($banco->monto, 2) . ").");
             }
         }
 
-        // Retornar las alertas compactadas a la vista
+        // Nueva Alerta: Control de Deuda
+        if ($pctCxC_Ventas > 50) {
+            $alertas->push("Riesgo de Flujo: Las Cuentas por Cobrar representan más del 50% de las ventas realizadas.");
+        }
+
         return view('reports.admon', compact(
             'availableDates', 'selectedDate', 'ventasLitros', 'ventasUsd',
             'opexRecords', 'bancosRecords', 'cajasRecords', 'totalOpex',
             'totalBancos', 'totalCajas', 'totalLiquidez', 'pctBancos', 'pctCajas',
-            'alertas' 
+            'cxcRecords', 'cxpRecords', 'totalCxC', 'totalCxP', 'pctCxC_Ventas', 'pctCxP_Ventas',
+            'alertas'
         ));
     }
 
     public function sendWhatsapp(Request $request, WhatsappApiService $whatsappService)
     {
         if ($request->hasFile('image')) {
-            // Guardar archivo temporalmente
             $path = $request->file('image')->store('temp', 'public');
             $fullPath = storage_path('app/public/' . $path);
             
-            // Usamos tu servicio
-            // NOTA: Si tu API requiere URL pública, usa: asset('storage/'.$path)
-            // Si tu servicio acepta la ruta absoluta, envíalo así:
             $response = $whatsappService->enviarImagen($request->caption, $fullPath);
             
-            // Limpiar archivo después de enviar
             Storage::disk('public')->delete($path);
 
             if ($response && $response->successful()) {

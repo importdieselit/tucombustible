@@ -7,7 +7,6 @@
     .text-bold-custom { font-weight: 700; color: #0f2d59; }
     .text-bold-title { font-weight: 800; color: #0f2d59; font-size: 1.7rem; }
     .chart-container { background: white; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; }
-    /* Ajuste de fondo para que combine con el contenedor principal del layout */
     .bg-dashboard { background-color: #f1f5f9; } 
 </style>
 @endpush
@@ -16,7 +15,6 @@
 <div class="container-fluid py-4 max-width-1200 bg-dashboard">
     
     <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
-        
          <button id="captureButton" class="btn btn-primary shadow-sm">
             <i class="fa fa-camera me-2"></i> Capturar a portapapeles
         </button>
@@ -26,11 +24,8 @@
         <button id="sendWhatsappButton" class="btn btn-info shadow-sm">
             <i class="fa fa-paper-plane me-2"></i> Enviar a WhatsApp
         </button>
-    </div>
-    <div id="statusMessage" class="text-center p-3 rounded-lg bg-yellow-100 text-yellow-800 hidden mb-4">
-            Procesando...
-    </div>
-        <form action="{{ route('reporte.admon') }}" method="GET" class="d-flex align-items-center gap-2">
+        
+        <form action="{{ route('reporte.admon') }}" method="GET" class="d-flex align-items-center gap-2 m-0">
             <label for="date" class="fw-bold text-secondary mb-0 text-nowrap">Fecha de Reporte:</label>
             <select name="date" id="date" class="form-select" onchange="this.form.submit()">
                 @foreach($availableDates as $date)
@@ -41,15 +36,22 @@
             </select>
         </form>
     </div>
+
+    <div id="statusMessage" class="text-center p-3 rounded bg-warning text-dark d-none mb-4 fw-bold">
+        Procesando...
+    </div>
+
     <div id="reporteFinanzas" class="bg-white p-4 rounded shadow-sm printableArea">
-        <div class="row col-12 g-12 justify-content-between align-items-center  bg-white p-3 rounded shadow-sm">
-            <div class="col-3">
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
+            <div>
                 <h2 class="text-bold-custom mb-0">IMPORDIESEL, C.A.</h2>
                 <small class="text-muted">Control de Operaciones y Flujos Financieros</small>
             </div>
-            <div class="col-7 justify-content-between align-items-center mb-4">
-              <h1 class="text-bold-title text-navy">RESUMEN FINANCIERO DIARIO {{{{ \Carbon\Carbon::parse($date)->format('d/m/Y') }}}}</h1>
+            <div>
+              <h1 class="text-bold-title m-0">RESUMEN GERENCIAL DIARIO: {{ \Carbon\Carbon::parse($selectedDate)->format('d/m/Y') }}</h1>
             </div>
+        </div>
+
     @if($opexRecords->isEmpty() && $bancosRecords->isEmpty())
         <div class="alert alert-warning text-center">No hay datos registrados para la fecha seleccionada.</div>
     @else
@@ -57,7 +59,7 @@
             <div class="col-md-3">
                 <div class="kpi-card p-3">
                     <span class="text-muted text-uppercase d-block small fw-bold">Litros Vendidos</span> 
-                    <span class="fs-4 fw-bold text-dark">{{ number_format($ventasLitros->where('cuenta', 'LITROS VENDIDOS')->first()->monto ?? 0, 2, ',', '.') }} L</span> 
+                    <span class="fs-4 fw-bold text-dark">{{ number_format($ventasLitros, 2, ',', '.') }} L</span> 
                 </div>
             </div>
             <div class="col-md-3">
@@ -67,35 +69,77 @@
                 </div>
             </div>
             <div class="col-md-3">
+                <div class="kpi-card p-3" style="border-left-color: #2563eb;">
+                    <span class="text-muted text-uppercase d-block small fw-bold">Cuentas por Cobrar (CxC)</span> 
+                    <span class="fs-4 fw-bold text-primary">$ {{ number_format($totalCxC, 2, ',', '.') }}</span>
+                </div>
+            </div>
+            <div class="col-md-3">
                 <div class="kpi-card p-3" style="border-left-color: #16a34a;">
                     <span class="text-muted text-uppercase d-block small fw-bold">Total Gastos (OPEX)</span> 
                     <span class="fs-4 fw-bold text-success">$ {{ number_format($totalOpex, 2, ',', '.') }}</span>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="kpi-card p-3" style="border-left-color: #dc2626;">
-                    <span class="text-muted text-uppercase d-block small fw-bold">Liquidez Consolidada</span>
-                    <span class="fs-4 fw-bold text-danger">$ {{ number_format($totalLiquidez, 2, ',', '.') }}</span>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <h5 class="text-bold-custom border-bottom pb-2 mb-3">Control de Cartera: Proporción vs Ventas Realizadas</h5>
+                        <div class="row align-items-center">
+                            
+                            <div class="col-md-6 mb-3 mb-md-0 border-end">
+                                <div class="d-flex justify-content-between small text-secondary mb-1">
+                                    <span>Impacto de Cuentas por Cobrar (CxC)</span> 
+                                    <strong>{{ number_format($pctCxC_Ventas, 1) }}%</strong> 
+                                </div>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar bg-primary progress-bar-striped" role="progressbar" style="width: {{ min($pctCxC_Ventas, 100) }}%"></div>
+                                </div>
+                                <small class="text-muted mt-2 d-block">
+                                    CxC Pendiente: <strong>$ {{ number_format($totalCxC, 2, ',', '.') }}</strong> sobre los $ {{ number_format($ventasUsd, 2, ',', '.') }} facturados.
+                                </small>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="d-flex justify-content-between small text-secondary mb-1">
+                                    <span>Impacto de Cuentas por Pagar (CxP)</span> 
+                                    <strong>{{ number_format($pctCxP_Ventas, 1) }}%</strong> 
+                                </div>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar bg-danger progress-bar-striped" role="progressbar" style="width: {{ min($pctCxP_Ventas, 100) }}%"></div>
+                                </div>
+                                <small class="text-muted mt-2 d-block">
+                                    CxP Pendiente: <strong>$ {{ number_format($totalCxP, 2, ',', '.') }}</strong>.
+                                </small>
+                            </div>
+
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div class="row g-4">
             <div class="col-lg-6">
-                <div class="card shadow-sm border-0 mb-4">
+                <div class="card shadow-sm border-0 mb-4 h-100">
                     <div class="card-body">
                         <h5 class="text-bold-custom border-bottom pb-2 mb-3">Distribución de Gastos Operacionales</h5>
                         
                         <div class="chart-container mb-4">
                             @foreach($opexRecords->sortByDesc('monto')->take(5) as $gasto) 
-                                @php $maxMonto = $opexRecords->max('monto') ?: 1; $porcentajeBarra = ($gasto->monto / $maxMonto) * 100; @endphp 
+                                @php 
+                                    $maxMonto = $opexRecords->max('monto') ?: 1; 
+                                    $porcentajeBarra = ($gasto->monto / $maxMonto) * 100; 
+                                @endphp 
                                 <div class="mb-2">
                                     <div class="d-flex justify-content-between small text-secondary">
                                         <span>{{ $gasto->cuenta }}</span> 
                                         <strong>$ {{ number_format($gasto->monto, 2, ',', '.') }}</strong> 
                                     </div>
                                     <div class="progress" style="height: 10px;">
-                                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ $porcentajeBarra }}%"></div>
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ $porcentajeBarra }}%"></div>
                                     </div>
                                 </div>
                             @endforeach
@@ -109,7 +153,7 @@
                                 @foreach($opexRecords as $gasto) 
                                     <tr><td>{{ $gasto->cuenta }}</td><td class="text-end fw-bold">$ {{ number_format($gasto->monto, 2, ',', '.') }}</td></tr> 
                                 @endforeach
-                                <tr class="table-light text-bold-custom"><td>TOTAL OPEX:</td><td class="text-end">$ {{ number_format($totalOpex, 2, ',', '.') }}</td></tr>
+                                <tr class="table-light text-bold-custom border-top border-dark"><td>TOTAL OPEX:</td><td class="text-end">$ {{ number_format($totalOpex, 2, ',', '.') }}</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -117,19 +161,19 @@
             </div>
 
             <div class="col-lg-6">
-                <div class="card shadow-sm border-0 mb-4">
+                <div class="card shadow-sm border-0 mb-4 h-100">
                     <div class="card-body">
-                        <h5 class="text-bold-custom border-bottom pb-2 mb-3">Disponibilidad de Liquidez</h5>
+                        <h5 class="text-bold-custom border-bottom pb-2 mb-3">Disponibilidad de Liquidez Consolidada: <span class="text-danger">$ {{ number_format($totalLiquidez, 2, ',', '.') }}</span></h5>
 
                         <div class="chart-container d-flex align-items-center justify-content-around mb-4">
                             <div class="w-50">
-                                <h6 class=" text-uppercase fw-bold text-muted mb-2">Segmentación Total</h6>
-                                <ul class="list-unstyled  mb-0">
+                                <h6 class="text-uppercase fw-bold text-muted mb-2">Segmentación</h6>
+                                <ul class="list-unstyled mb-0">
                                     <li class="mb-1"><span class="badge bg-success me-1">&nbsp;</span> Bancos: <strong>{{ number_format($pctBancos, 1) }}%</strong></li>
                                     <li><span class="badge bg-warning me-1">&nbsp;</span> Cajas: <strong>{{ number_format($pctCajas, 1) }}%</strong></li>
                                 </ul>
                             </div>
-                            <div style="width: 200px; height: 200px;">
+                            <div style="width: 150px; height: 150px;">
                                 <svg viewBox="0 0 32 32" style="transform: rotate(-90deg); border-radius: 50%;">
                                     <circle r="16" cx="16" cy="16" fill="#ffc107"></circle>
                                     <circle r="16" cx="16" cy="16" fill="transparent" stroke="#198754" stroke-width="32" stroke-dasharray="{{ $pctBancos }} 100"></circle>
@@ -151,40 +195,25 @@
                                         </tr>
                                     @endif
                                 @endforeach
-                                <tr class="table-light text-bold-custom"><td>TOTAL EN BANCOS:</td><td class="text-end">$ {{ number_format($totalBancos, 2, ',', '.') }}</td></tr>
+                                <tr class="table-light text-bold-custom border-top border-dark"><td>TOTAL EN BANCOS:</td><td class="text-end">$ {{ number_format($totalBancos, 2, ',', '.') }}</td></tr>
                             </tbody>
                         </table>
 
-                        <h6 class="text-bold-custom mb-2">Disponibilidad en Cajas</h6>
-                        <table class="table table-sm table-hover">
-                            <thead class="table-dark">
-                                <tr><th>Caja</th><th class="text-end">Monto (USD)</th></tr>
-                            </thead>
-                            <tbody>
-                                @foreach($cajasRecords as $caja) 
-                                    @if($caja->monto != 0) 
-                                        <tr><td>{{ $caja->cuenta }}</td><td class="text-end">$ {{ number_format($caja->monto, 2, ',', '.') }}</td></tr> 
-                                    @endif
-                                @endforeach
-                                <tr class="table-light text-bold-custom"><td>TOTAL EN CAJAS:</td><td class="text-end">$ {{ number_format($totalCajas, 2, ',', '.') }}</td></tr>
-                            </tbody>
-                        </table>
                     </div>
                 </div>
             </div>
         </div>
-    @endif
-    </div>
-    {{-- Panel de Análisis Automático --}}
+
+        {{-- Panel de Análisis Automático --}}
         @if($alertas->isNotEmpty())
-            <div class="row mb-4">
+            <div class="row mt-2">
                 <div class="col-12">
                     <div class="card shadow-sm border-0" style="border-left: 4px solid #f59e0b;">
                         <div class="card-body bg-light rounded">
                             <h6 class="text-bold-custom mb-3 d-flex align-items-center" style="color: #b45309;">
                                 <i class="fas fa-lightbulb me-2 fs-5"></i> Insights y Alertas de la Operación
                             </h6>
-                            <ul class="mb-0 text-black" style="line-height: 1.8;">
+                            <ul class="mb-0 text-dark" style="line-height: 1.8;">
                                 @foreach($alertas as $alerta)
                                     <li><strong>Observación:</strong> {{ $alerta }}</li>
                                 @endforeach
@@ -194,194 +223,130 @@
                 </div>
             </div>
         @endif
+    @endif
     </div>
-    <div id="outputContainer" class="mt-8 pt-4 border-t border-gray-300 width-full">
-        </div>
+    <div id="outputContainer" class="mt-4 pt-4 border-top"></div>
 </div>
-@push('scripts')
 
+@push('scripts')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
 <script>
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
 document.addEventListener('DOMContentLoaded', function() {
     
-   
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     
-    const printableArea = $("div.printableArea")[0]; 
-    const elementToCaptureSelector = '.printableArea';
+    // JS Nativo para seleccionar de forma limpia
+    const printableArea = document.querySelector('.printableArea');
     const captureButton = document.getElementById('captureButton');
     const statusMessage = document.getElementById('statusMessage');
     const outputContainer = document.getElementById('outputContainer');
     const exportButton = document.getElementById('exportButton');
+    const sendWhatsappButton = document.getElementById('sendWhatsappButton');
 
-    if (!printableArea || !captureButton || !statusMessage) {
-        console.error("Faltan elementos DOM críticos (printableArea, captureButton, statusMessage, o outputContainer).");
-        return; // Salir si no se puede inicializar correctamente
+    if (!printableArea) {
+        console.error("Falta la clase .printableArea en el DOM.");
+        return;
     }
 
-    statusMessage.textContent = 'Procesando...';
-
-   const sendWhatsappButton = document.getElementById('sendWhatsappButton');
+    // Funciones Helper para Status
+    const setStatus = (msg, bgClass, textClass) => {
+        statusMessage.textContent = msg;
+        statusMessage.className = `text-center p-3 rounded fw-bold mb-4 d-block ${bgClass} ${textClass}`;
+    };
 
     async function sendReportToWhatsapp() {
-        statusMessage.textContent = 'Enviando imagen a WhatsApp...';
-        statusMessage.classList.remove('hidden', 'bg-red-100', 'bg-green-100');
-        statusMessage.classList.add('bg-yellow-100', 'text-yellow-800');
+        setStatus('Generando imagen para enviar a WhatsApp...', 'bg-warning', 'text-dark');
         sendWhatsappButton.disabled = true;
 
         try {
-            // Capturar
             const canvas = await html2canvas(printableArea, { scale: 2, useCORS: true });
             const imageBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
             
-            // Crear FormData
             const formData = new FormData();
             formData.append('image', imageBlob, 'reporte_whatsapp.png');
             formData.append('caption', '📊 *Reporte Gerencial KPI* - ' + new Date().toLocaleDateString());
             
-            // Enviar a tu ruta de Laravel
             const response = await fetch('{{ route('whatsapp.send') }}', {
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': csrfToken },
                 body: formData
             });
 
-            if (!response.ok) throw new Error('Error al enviar el reporte.');
+            if (!response.ok) throw new Error('Error de conexión con la API.');
 
-            statusMessage.textContent = '¡Reporte enviado exitosamente a WhatsApp!';
-            statusMessage.classList.replace('bg-yellow-100', 'bg-green-100');
+            setStatus('¡Reporte enviado exitosamente a WhatsApp!', 'bg-success', 'text-white');
         } catch (error) {
-            statusMessage.textContent = 'Error: ' + error.message;
-            statusMessage.classList.replace('bg-yellow-100', 'bg-red-100');
+            setStatus('Error: ' + error.message, 'bg-danger', 'text-white');
         } finally {
             sendWhatsappButton.disabled = false;
+            setTimeout(() => statusMessage.classList.add('d-none'), 5000);
         }
     }
     
     async function captureAndCopyToClipboard() {
-        // 1. Mostrar estado de carga y deshabilitar botón
-        statusMessage.textContent = 'Generando imagen...';
-        statusMessage.classList.remove('hidden', 'bg-red-100', 'text-red-800', 'bg-green-100', 'text-green-800');
-        statusMessage.classList.add('bg-yellow-100', 'text-yellow-800');
+        setStatus('Generando imagen en portapapeles...', 'bg-warning', 'text-dark');
         captureButton.disabled = true;
-        outputContainer.innerHTML = ''; // Limpiar previsualización anterior
 
         try {
-            // 2. Generar el Canvas a partir del elemento DOM (ya corregido a 'printableArea[0]')
             const canvas = await html2canvas(printableArea, {
-                scale: 3, // Aumenta la escala para mejor calidad de imagen
-                logging: false, // Desactiva logs de html2canvas
-                useCORS: true, // Necesario si hay imágenes o recursos externos
-                windowWidth: 1700, // Mantenemos el estándar de ancho del Master Card
-                windowHeight: 2000, // Mantenemos el estándar de alto del Master Card
-                constraints: {
-                    width: 1700,
-                    height: 2000
-                }
-
+                scale: 3, 
+                logging: false, 
+                useCORS: true, 
+                windowWidth: 1500
             });
 
-            // Opcional: Mostrar el canvas generado en el DOM
-           // outputContainer.appendChild(canvas);
-
-            // 3. Convertir el Canvas a un Blob (formato de datos binarios)
             const imageBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
             
-            if (!imageBlob) {
-                throw new Error('No se pudo generar el Blob de la imagen.');
-            }
+            if (!imageBlob) throw new Error('Blob no generado.');
 
-            // 4. Copiar la imagen (Blob) al portapapeles usando el Clipboard API
             const item = new ClipboardItem({ "image/png": imageBlob });
             await navigator.clipboard.write([item]);
 
-            // 5. Éxito
-            statusMessage.textContent = '¡Éxito! La imagen ha sido copiada al portapapeles. Ahora puedes pegarla (Ctrl+V).';
-            statusMessage.classList.replace('bg-yellow-100', 'bg-green-100');
-            statusMessage.classList.replace('text-yellow-800', 'text-green-800');
-
+            setStatus('¡Imagen copiada al portapapeles (Ctrl+V)!', 'bg-success', 'text-white');
         } catch (error) {
-            // 6. Manejo de Errores
-            let errorMessage = 'Error desconocido al copiar.';
-
-            if (error.name === 'NotAllowedError' || (error.message && error.message.includes('permission'))) {
-                errorMessage = 'Permiso denegado: El navegador requiere que la página esté en un contexto seguro (HTTPS) o que el usuario interactúe primero para usar el Clipboard API.';
-            } else {
-                console.error('Error durante la captura o copia:', error);
-                errorMessage = `Error al generar/copiar la imagen: ${error.message}`;
-            }
-            
-            statusMessage.textContent = errorMessage;
-            statusMessage.classList.replace('bg-yellow-100', 'bg-red-100');
-            statusMessage.classList.replace('text-yellow-800', 'text-red-800');
-
+            setStatus('Error de permisos o renderizado: ' + error.message, 'bg-danger', 'text-white');
         } finally {
-            // 7. Reestablecer el botón
             captureButton.disabled = false;
+            setTimeout(() => statusMessage.classList.add('d-none'), 5000);
         }
     }
 
     async function exportarEImprimir() {
-
-        // 1. Estado visual
-        statusMessage.textContent = 'Procesando reporte gerencial...';
-        statusMessage.classList.remove('hidden', 'bg-red-100', 'bg-green-100');
-        statusMessage.classList.add('bg-yellow-100', 'text-yellow-800');
+        setStatus('Procesando descarga en alta definición...', 'bg-warning', 'text-dark');
         exportButton.disabled = true;
 
-        printableArea.classList.add('is-capturing');
-
         try {
-            // 2. Captura del área con escala 2 para alta definición
             const canvas = await html2canvas(printableArea, {
                 scale: 3,
                 useCORS: true,
                 logging: false,
                 backgroundColor: '#ffffff',
-                windowWidth: 1500 // Mantenemos el estándar de ancho del Master Card
+                windowWidth: 1500
             });
 
-            // 3. Convertir a URL de datos (Data URL)
             const image = canvas.toDataURL("image/png");
-
-            // 4. Crear link de descarga dinámico
             const link = document.createElement('a');
             
-            // Formateamos el nombre del archivo: reporte_disponibilidad_25_03_2026.png
             const fecha = new Date().toLocaleDateString().replace(/\//g, '_');
-            link.download = `reporte_disponibilidad_${fecha}.png`;
-            
+            link.download = `Reporte_Gerencial_${fecha}.png`;
             link.href = image;
             
-            // 5. Disparar la descarga
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
 
-            // 6. Éxito
-            statusMessage.textContent = '¡Reporte descargado con éxito!';
-            statusMessage.classList.replace('bg-yellow-100', 'bg-green-100');
-            statusMessage.classList.replace('text-yellow-800', 'text-green-800');
-
+            setStatus('¡Reporte descargado con éxito!', 'bg-success', 'text-white');
         } catch (error) {
-            console.error('Error al descargar:', error);
-            statusMessage.textContent = 'Error al generar la descarga: ' + error.message;
-            statusMessage.classList.replace('bg-yellow-100', 'bg-red-100');
+            setStatus('Error al generar la descarga: ' + error.message, 'bg-danger', 'text-white');
         } finally {
-            // 7. Limpieza
-            printableArea.classList.remove('is-capturing');
-            downloadButton.disabled = false;
-            setTimeout(() => statusMessage.classList.add('hidden'), 5000);
+            exportButton.disabled = false;
+            setTimeout(() => statusMessage.classList.add('d-none'), 5000);
         }
     }
 
-    // 8. Asignar el evento al botón
-    captureButton.addEventListener('click', captureAndCopyToClipboard);
-    exportButton.addEventListener('click', exportarEImprimir);
-
-
-    sendWhatsappButton.addEventListener('click', sendReportToWhatsapp);
+    captureButton?.addEventListener('click', captureAndCopyToClipboard);
+    exportButton?.addEventListener('click', exportarEImprimir);
+    sendWhatsappButton?.addEventListener('click', sendReportToWhatsapp);
 });
 </script>
 @endpush

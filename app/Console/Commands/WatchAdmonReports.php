@@ -42,7 +42,7 @@ class WatchAdmonReports extends Command
         $expectedFileName = "Resumen_Diario_DID_{$todayDate}.csv";
         $directory = 'Reportes_Admon';
         $filePath = "{$directory}/{$expectedFileName}";
-
+        $this->info($filePath);
         // 1. Verificamos si el archivo de HOY ya fue procesado con éxito
         if (ProcessedFile::where('report_date', $todayDate)->exists()) {
             $this->info("El reporte de hoy ({$todayDateText}) ya fue procesado exitosamente. No se requiere acción.");
@@ -60,11 +60,11 @@ class WatchAdmonReports extends Command
         // 3. El archivo no existe. Revisamos si llegamos a la hora límite (17:00)
         $currentTime = Carbon::now('America/Caracas')->format('H:i');
         
-       // if ($currentTime >= '17:00') {
+        if ($currentTime >= '17:00') {
             $this->error("Hora límite alcanzada ({$currentTime}). El archivo {$expectedFileName} no existe.");
             $this->sendWhatsAppAlert($todayDate);
             return 1;
-        //}
+        }
 
         // Si no existe pero aún no son las 17:00, simplemente esperamos al próximo ciclo
         $this->info("El archivo aún no se ha generado. Hora actual: {$currentTime}. Siguiente intento en 5 min.");
