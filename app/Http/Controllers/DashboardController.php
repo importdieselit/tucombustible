@@ -21,7 +21,6 @@ class DashboardController extends Controller
         $user = Auth::user();
         $perfilId = (int) $user->id_perfil;
 
-
         // El controlador actúa como un policía de tránsito distribuyendo según el perfil_id
         return match ($perfilId) {
             // 1. LÓGICA DEL CHOFER (Perfil 4)
@@ -31,7 +30,7 @@ class DashboardController extends Controller
         // Redirigimos antes de tocar cualquier Servicio
 
             // 2. LÓGICA DEL CLIENTE (Perfil 3)
-            3 => redirect()->route('cliente.index'),
+            3 => $this->cliente($user),
 
             // 3. DASHBOARD PRINCIPAL / ADMINISTRATIVOS (Se excluyó el 4 de esta lista)
             default => in_array($perfilId, [1, 2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18])
@@ -39,6 +38,7 @@ class DashboardController extends Controller
                 : abort(403, 'Perfil de usuario no reconocido o sin privilegios de acceso.'),
 
         };
+
     }
 
     /**
@@ -56,4 +56,19 @@ class DashboardController extends Controller
         // Cargamos la vista profesional que está en resources/views/dashboard/admin_principal.blade.php
         return view('dashboard.admin_principal', compact('stats'));
     }
+
+    public function cliente($user)
+    {
+        $data = $this->dashboardService->getDashboardData($user);
+
+            return match ($data['perfil']) {
+                'cliente_en_registro' => view('cliente.en_proceso', $data),
+                'cliente_rechazado'   => view('cliente.rechazado', $data),
+                'cliente_inactivo'    => view('cliente.inactivo', $data),
+                'cliente_padre',
+                'cliente_sucursal'    => view('cliente.index', $data),
+                default               => abort(403, 'Perfil de usuario no reconocido o expediente no vinculado.'),
+            };
+    }
+
 }
