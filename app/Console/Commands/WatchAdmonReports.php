@@ -66,7 +66,7 @@ class WatchAdmonReports extends Command
             return 1;
         }
 
-        // Si no existe pero aún no son las 17:00, simplemente esperamos al próximo ciclo
+        // Si no existe pero aún no son las 19:30, simplemente esperamos al próximo ciclo
         $this->info("El archivo aún no se ha generado. Hora actual: {$currentTime}. Siguiente intento en 5 min.");
         return 0;
     }
