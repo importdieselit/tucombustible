@@ -1,237 +1,220 @@
-@extends('layouts.app')
-
-@section('title', 'Detalles del Ítem')
-
-@push('styles')
-    <!-- CSS de Highcharts -->
-    <link rel="stylesheet" href="https://code.highcharts.com/css/highcharts.css">
-@endpush
-
+@extends('layouts.app') 
 @section('content')
-<div class="row page-titles mb-4">
-    <div class="col-12 d-flex justify-content-between align-items-center">
-        <h3 class="text-themecolor mb-0">Detalles de {{ $item->name }}</h3>
+<div class="container-fluid py-4">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <a href="{{ route('inventario.edit', $item->id) }}" class="btn btn-warning d-flex align-items-center me-2">
-                <i class="bi bi-pencil me-1"></i> Editar Ítem
-            </a>
-            <a href="{{ route('inventario.list') }}" class="btn btn-info d-flex align-items-center">
-                <i class="bi bi-list me-1"></i> Ver Listado
-            </a>
+            <h3 class="mb-0 text-dark fw-bold">{{ $item->codigo }} - {{ $item->descripcion }}</h3>
+            <span class="text-muted"><i class="bi bi-tag"></i> {{ $item->categoria }}</span>
+        </div>
+        <div>
+            <button class="btn btn-outline-secondary btn-sm"><i class="bi bi-printer"></i> Imprimir Ficha</button>
+            <button class="btn btn-primary btn-sm"><i class="bi bi-pencil"></i> Editar Ítem</button>
         </div>
     </div>
-</div>
 
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-6">
-                <h5 class="card-title">Información del Ítem</h5>
-                <p><strong>ID de Ítem:</strong> {{ $item->codigo ?? 'N/A' }}</p>
-                <p><strong>Nombre:</strong> {{ $item->descripcion ?? 'N/A' }}</p>
-                <p><strong>Categoría:</strong> {{ $item->grupo ?? 'N/A' }}</p>
-                <p><strong>Almacén:</strong> {{ $item->almacen->nombre ?? 'N/A' }}</p>
-            </div>
-            <div class="col-md-6">
-                <h5 class="card-title">Existencia y Estado</h5>
-                <p>
-                    <strong>Existencia Actual:</strong> {{ number_format($item->existencia ?? 0, 0, ',', '.') }}
-                    @if ($item->existencia < $item->existencia_minima)
-                        <span class="badge bg-danger ms-2">Bajo Stock</span>
-                    @else
-                        <span class="badge bg-success ms-2">Stock Óptimo</span>
-                    @endif
-                </p>
-                <p><strong>Existencia Mínima:</strong> {{ number_format($item->existencia_minima ?? 0, 0, ',', '.') }}</p>
-                <p><strong>Fecha de Registro:</strong> {{ !is_null($item->created_at)?$item->created_at->format('d/m/Y'): 'N/A' }}</p>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body d-flex flex-column justify-content-center">
+                    <div class="row text-center g-3">
+                        <div class="col-12">
+                            <h6 class="text-muted text-uppercase mb-1">Stock Actual</h6>
+                            <h2 class="fw-bold text-primary mb-0">{{ $item->stock_actual }} <span class="fs-6 text-muted">{{ $item->unidad }}</span></h2>
+                        </div>
+                        <hr class="my-2">
+                        <div class="col-6">
+                            <h6 class="text-muted mb-1" style="font-size: 0.8rem;">Tasa de Rotación</h6>
+                            <h4 class="mb-0">{{ $item->tasa_rotacion }}</h4>
+                        </div>
+                        <div class="col-6 border-start">
+                            <h6 class="text-muted mb-1" style="font-size: 0.8rem;">Duración Promedio</h6>
+                            <h4 class="mb-0">{{ $item->promedio_duracion }} <span class="fs-6 text-muted">días</span></h4>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        
-        <hr>
 
-        <h5 class="card-title">Opciones de Inventario</h5>
-        <div class="d-flex justify-content-start flex-wrap gap-2 mb-4">
-            <a href="{{ route('inventario.entry', $item->id) }}" class="btn btn-success d-flex align-items-center">
-                <i class="bi bi-plus-circle me-1"></i> Registrar Entrada
-            </a>
-            <a href="{{ route('inventario.adjustment', $item->id) }}" class="btn btn-warning text-dark d-flex align-items-center">
-                <i class="bi bi-sliders me-1"></i> Registrar Ajuste
-            </a>
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body pb-0">
+                    <h6 class="text-muted mb-3"><i class="bi bi-graph-up"></i> Historial de Existencias (Últimos 15 días)</h6>
+                    <div style="height: 200px;">
+                        <canvas id="stockChart"></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
 
-{{-- Sección de Gráficos --}}
-<div class="row mb-4">
-    <div class="col-md-6">
-        <div class="card shadow-sm">
-            <div class="card-header bg-white">
-                <h5 class="card-title m-0">Histórico de Stock (Últimos 30 días)</h5>
-            </div>
-            <div class="card-body">
-                <div id="stock-history-chart"></div>
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-0 pt-4 pb-0">
+            <h6 class="text-muted mb-0"><i class="bi bi-geo-alt"></i> Ubicación Física: <strong class="text-dark">{{ $item->ubicacion_texto }}</strong></h6>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4 text-center">
+                    <p class="text-muted small mb-2">Croquis de Almacén</p>
+                    <img src="{{ $item->img_croquis_almacen }}" class="img-fluid rounded border" alt="Almacen">
+                </div>
+                <div class="col-md-4 text-center">
+                    <p class="text-muted small mb-2">Ubicación en Estante</p>
+                    <img src="{{ $item->img_croquis_estante }}" class="img-fluid rounded border" alt="Estante">
+                </div>
+                <div class="col-md-4 text-center">
+                    <p class="text-muted small mb-2">Render 3D Referencial</p>
+                    <img src="{{ $item->img_render_3d }}" class="img-fluid rounded border" alt="3D">
+                </div>
             </div>
         </div>
     </div>
-    <div class="col-md-6">
-        <div class="card shadow-sm">
-            <div class="card-header bg-white">
-                <h5 class="card-title m-0">Variación de Costo (Últimas Compras)</h5>
-            </div>
-            <div class="card-body">
-                <div id="cost-variation-chart"></div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom pt-3 pb-0">
+            <ul class="nav nav-tabs border-0" id="itemTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active fw-bold text-dark border-0" id="historial-tab" data-bs-toggle="tab" data-bs-target="#historial" type="button" role="tab">Historial (Últ. 30)</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link text-muted border-0" id="sustitutos-tab" data-bs-toggle="tab" data-bs-target="#sustitutos" type="button" role="tab">Equivalentes</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link text-muted border-0" id="vehiculos-tab" data-bs-toggle="tab" data-bs-target="#vehiculos" type="button" role="tab">Vehículos Asoc.</button>
+                </li>
+            </ul>
+        </div>
+        <div class="card-body">
+            <div class="tab-content" id="itemTabsContent">
+                
+                <div class="tab-pane fade show active" id="historial" role="tabpanel">
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-hover table-sm align-middle">
+                            <thead class="table-light position-sticky top-0">
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Tipo</th>
+                                    <th>Cant.</th>
+                                    <th>Documento</th>
+                                    <th>Usuario</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($movimientos as $mov)
+                                <tr>
+                                    <td class="text-muted">{{ $mov->fecha }}</td>
+                                    <td>
+                                        <span class="badge {{ $mov->tipo == 'Entrada' ? 'bg-success' : 'bg-danger' }}">
+                                            {{ $mov->tipo }}
+                                        </span>
+                                    </td>
+                                    <td class="fw-bold {{ $mov->cantidad > 0 ? 'text-success' : 'text-danger' }}">{{ $mov->cantidad }}</td>
+                                    <td>{{ $mov->documento }}</td>
+                                    <td>{{ $mov->usuario }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="sustitutos" role="tabpanel">
+                    <table class="table table-hover table-sm align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Código</th>
+                                <th>Descripción</th>
+                                <th>Stock Actual</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($equivalentes as $eq)
+                            <tr>
+                                <td class="fw-bold">{{ $eq->codigo }}</td>
+                                <td>{{ $eq->descripcion }}</td>
+                                <td>{{ $eq->stock }} Und</td>
+                                <td><a href="#" class="btn btn-sm btn-light"><i class="bi bi-eye"></i></a></td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="tab-pane fade" id="vehiculos" role="tabpanel">
+                    <table class="table table-hover table-sm align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Placa</th>
+                                <th>Modelo</th>
+                                <th>Departamento</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($vehiculos as $veh)
+                            <tr>
+                                <td class="fw-bold">{{ $veh->placa }}</td>
+                                <td>{{ $veh->modelo }}</td>
+                                <td>{{ $veh->departamento }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
             </div>
         </div>
     </div>
+
 </div>
-{{-- Tabla de Movimientos del Ítem --}}
-<div class="card shadow-sm mb-4">
-    <div class="card-header bg-white">
-        <h5 class="card-title m-0">Historial de Movimientos</h5>
-    </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-striped table-hover">
-                <thead>
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Tipo</th>
-                        <th>Cantidad</th>
-                        <th>Referencia</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{-- Aquí iría un bucle para mostrar los movimientos, por ejemplo: --}}
-                    {{-- @foreach($item->movimientos as $movimiento)
-                    <tr>
-                        <td>{{ $movimiento->created_at->format('d/m/Y') }}</td>
-                        <td>
-                            @if ($movimiento->tipo == 'entrada')
-                                <span class="badge bg-success">Entrada</span>
-                            @elseif ($movimiento->tipo == 'salida')
-                                <span class="badge bg-danger">Salida</span>
-                            @else
-                                <span class="badge bg-secondary">Ajuste</span>
-                            @endif
-                        </td>
-                        <td>{{ $movimiento->cantidad }}</td>
-                        <td>{{ $movimiento->referencia ?? 'N/A' }}</td>
-                    </tr>
-                    @endforeach --}}
-                    <tr>
-                        <td>25/08/2025</td>
-                        <td><span class="badge bg-success">Entrada</span></td>
-                        <td>+10</td>
-                        <td>Orden de Compra #1234</td>
-                    </tr>
-                    <tr>
-                        <td>20/08/2025</td>
-                        <td><span class="badge bg-danger">Salida</span></td>
-                        <td>-2</td>
-                        <td>Orden de Trabajo #5678</td>
-                    </tr>
-                    <tr>
-                        <td>15/08/2025</td>
-                        <td><span class="badge bg-secondary">Ajuste</span></td>
-                        <td>-1 (Daño)</td>
-                        <td>Ajuste de inventario</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-@endsection
 
 @push('scripts')
-    <!-- Script de Highcharts -->
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Ejemplo de datos, tu controlador de Laravel debe pasar esto
-            // Formato esperado para el histórico de stock:
-            // const stockHistoryData = {
-            //     dates: ['2025-07-26', '2025-08-01', '2025-08-10', '2025-08-20', '2025-08-26'],
-            //     stock: [100, 110, 95, 105, 98]
-            // };
-            const stockHistoryData = @json($stock_history ?? ['dates' => [], 'stock' => []]);
-            
-            // Gráfico Histórico de Stock
-            Highcharts.chart('stock-history-chart', {
-                chart: {
-                    type: 'line',
-                    zoomType: 'x'
-                },
-                title: {
-                    text: 'Stock Diario'
-                },
-                xAxis: {
-                    categories: stockHistoryData.dates,
-                    title: {
-                        text: 'Fecha'
-                    }
-                },
-                yAxis: {
-                    title: {
-                        text: 'Cantidad en Stock'
-                    }
-                },
-                credits: {
-                    enabled: false
-                },
-                series: [{
-                    name: 'Stock',
-                    data: stockHistoryData.stock
-                }]
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Control visual de las pestañas (para mantener el estilo limpio)
+    const triggerTabList = document.querySelectorAll('#itemTabs button')
+    triggerTabList.forEach(tab => {
+        tab.addEventListener('click', () => {
+            triggerTabList.forEach(t => {
+                t.classList.remove('active', 'fw-bold', 'text-dark');
+                t.classList.add('text-muted');
             });
-            
-            // Formato esperado para la variación de costo:
-            // const costVariationData = [{
-            //     name: 'Compra 1',
-            //     y: 15.50
-            // }, {
-            //     name: 'Compra 2',
-            //     y: 16.00
-            // }, {
-            //     name: 'Compra 3',
-            //     y: 15.75
-            // }];
-            const costVariationData = @json($cost_history ?? []);
+            tab.classList.remove('text-muted');
+            tab.classList.add('active', 'fw-bold', 'text-dark');
+        })
+    });
 
-            // Gráfico de Variación de Costo
-            Highcharts.chart('cost-variation-chart', {
-                chart: {
-                    type: 'line',
-                    zoomType: 'x'
-                },
-                title: {
-                    text: 'Variación de Costo'
-                },
-                xAxis: {
-                    categories: costVariationData.map(d => d.date),
-                    title: {
-                        text: 'Fecha de Compra'
-                    }
-                },
-                yAxis: {
-                    title: {
-                        text: 'Costo ($)'
-                    }
-                },
-                tooltip: {
-                    formatter: function() {
-                        return '<b>' + this.x + '</b><br/>' + 'Costo: $' + this.y.toFixed(2);
-                    }
-                },
-                credits: {
-                    enabled: false
-                },
-                series: [{
-                    name: 'Costo',
-                    data: costVariationData.map(d => d.cost)
-                }]
-            });
-        });
-    </script>
+    // Inicialización de la Gráfica
+    const ctx = document.getElementById('stockChart').getContext('2d');
+    const stockChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {!! json_encode($graficaFechas) !!},
+            datasets: [{
+                label: 'Nivel de Stock',
+                data: {!! json_encode($graficaStock) !!},
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                borderWidth: 2,
+                pointRadius: 3,
+                fill: true,
+                tension: 0.3 // Hace que la línea sea curva
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true, grid: { borderDash: [2, 4] } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+});
+</script>
 @endpush
+@endsection
