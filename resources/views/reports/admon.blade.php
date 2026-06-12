@@ -203,7 +203,20 @@
                                 <tr class="table-light text-bold-custom border-top border-dark"><td>TOTAL EN BANCOS:</td><td class="text-end">$ {{ number_format($totalBancos, 2, ',', '.') }}</td></tr>
                             </tbody>
                         </table>
-
+                        <h6 class="text-bold-custom mb-2">Disponibilidad en Cajas</h6>
+                        <table class="table table-sm table-hover">
+                            <thead class="table-dark">
+                                <tr><th>Caja</th><th class="text-end">Monto (USD)</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach($cajasRecords as $caja) 
+                                    @if($caja->monto != 0) 
+                                        <tr><td>{{ $caja->cuenta }}</td><td class="text-end">$ {{ number_format($caja->monto, 2, ',', '.') }}</td></tr> 
+                                    @endif
+                                @endforeach
+                                <tr class="table-light text-bold-custom"><td>TOTAL EN CAJAS:</td><td class="text-end">$ {{ number_format($totalCajas, 2, ',', '.') }}</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
