@@ -60,7 +60,7 @@ class WatchAdmonReports extends Command
         // 3. El archivo no existe. Revisamos si llegamos a la hora límite (17:00)
         $currentTime = Carbon::now('America/Caracas')->format('H:i');
         
-        if ($currentTime >= '17:00') {
+        if ($currentTime >= '19:31') {
             $this->error("Hora límite alcanzada ({$currentTime}). El archivo {$expectedFileName} no existe.");
             $this->sendWhatsAppAlert($todayDate);
             return 1;
