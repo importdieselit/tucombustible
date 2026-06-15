@@ -170,6 +170,47 @@
                 </div>
             </div>
 
+            {{-- 🏢 CONTACTOS DEL CLIENTE ASOCIADO AL FLETE (NUEVO BLOQUE COHESIVO) --}}
+            @if($viaje->cliente_id && $viaje->cliente)
+                <div class="col-12 mt-3">
+                    <h6 class="fw-black text-orange small text-uppercase mb-2">
+                        <i class="fas fa-user-tie me-1"></i> Cliente Asociado y Contactos
+                    </h6>
+                    <div class="p-3 rounded border shadow-sm" style="background-color: #f8fafc; border-left: 4px solid #fd7e14 !important;">
+                        <div class="row g-2">
+                            {{-- Razón Social --}}
+                            <div class="col-md-4 border-end border-2">
+                                <small class="text-muted fw-bold text-uppercase d-block mb-1" style="font-size: 10px; letter-spacing: 0.5px;">Cliente / Empresa</small>
+                                <strong class="text-dark d-block text-uppercase" style="font-size: 13px;">{{ $viaje->cliente->nombre }}</strong>
+                                <small class="text-muted fw-bold">RIF: {{ $viaje->cliente->rif }}</small>
+                            </div>
+                            
+                            {{-- Contacto Principal --}}
+                            <div class="col-md-4 border-end border-2 ps-md-3">
+                                <small class="fw-bold text-uppercase d-block mb-1" style="font-size: 10px; letter-spacing: 0.5px; color: #16a34a;">Contacto Principal</small>
+                                <span class="text-dark fw-bold d-block small">
+                                    <i class="fas fa-user text-success me-1"></i> {{ $viaje->cliente->contacto ?? 'S/N' }}
+                                </span>
+                                <span class="text-muted small">
+                                    <i class="fas fa-phone text-muted me-1"></i> {{ $viaje->cliente->telefono ?? 'S/T' }}
+                                </span>
+                            </div>
+
+                            {{-- Contacto Alternativo --}}
+                            <div class="col-md-4 ps-md-3">
+                                <small class="fw-bold text-uppercase d-block mb-1" style="font-size: 10px; letter-spacing: 0.5px; color: #4f46e5;">Contacto Alternativo</small>
+                                <span class="text-dark fw-bold d-block small">
+                                    <i class="far fa-user text-indigo me-1"></i> {{ $viaje->cliente->contacto_alt ?? 'S/N' }}
+                                </span>
+                                <span class="text-muted small">
+                                    <i class="fas fa-phone text-muted me-1"></i> {{ $viaje->cliente->telefono_alt ?? 'S/T' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
         {{-- COMPRAS --}}
         @elseif($viaje->tipo_planificacion == 4)
             @php 

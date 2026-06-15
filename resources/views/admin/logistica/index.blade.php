@@ -4,6 +4,23 @@
 @section('content')
 <div class="container-fluid py-4 px-4">
 
+    {{-- ALERTAS DE SESIÓN (SUCCESS Y WARNING) --}}
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0" role="alert" style="border-left: 4px solid #198754 !important;">
+            <i class="fas fa-check-circle me-2 text-success"></i>
+            <span class="fw-bold text-dark small">{{ session('success') }}</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if (session('warning'))
+        <div class="alert alert-warning alert-dismissible fade show shadow-sm border-0" role="alert" style="border-left: 4px solid #ffc107 !important;">
+            <i class="fas fa-exclamation-triangle me-2 text-warning"></i>
+            <span class="fw-bold text-dark small">{{ session('warning') }}</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     {{-- ENCABEZADO --}}
     <div class="mb-4">
         <h2 class="h4 fw-black text-dark text-uppercase mb-1">

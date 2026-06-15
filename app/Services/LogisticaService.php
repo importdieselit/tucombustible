@@ -148,7 +148,17 @@ class LogisticaService
 
     private function validarCapacidadYRequisitos(array $data, float $totalLitros, array $items)
     {
-        // 1. Validación de destinos (intacta)
+        if (!empty($data['fecha_programada'])) {
+            // Parseamos la fecha y extraemos solo la hora en formato 24h (HH:mm)
+            $horaSalida = Carbon::parse($data['fecha_programada'])->format('H:i');
+            
+            if ($horaSalida < '05:00' || $horaSalida > '15:00') {
+                // Al usar session()->flash, el mensaje se enviará a la vista pero la ejecución CONTINÚA
+                session()->flash('warning', "Se recomienda que la hora de salida de las planificaciones esté comprendida entre las 5:00 A.M. y las 3:00 P.M.");
+            }
+        }
+
+        // Validación de destinos (intacta)
         if (in_array($data['tipo_planificacion'], [1, 2]) && empty($items)) {
             throw new Exception("No hay destinos o clientes agregados a la carga.");
         }
