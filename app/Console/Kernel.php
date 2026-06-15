@@ -36,7 +36,7 @@ class Kernel extends ConsoleKernel
         ->when(function () {
             $now = \Carbon\Carbon::now('America/Caracas');
             // El comando SOLO se activará en estas dos ventanas de tiempo seguras
-            return $now->between('08:00', '08:45') || $now->between('17:00', '19:45');
+            return $now->between('08:00', '08:45') || $now->between('17:00', '17:45');
         });
     }
 

@@ -47,7 +47,7 @@ class WatchAdmonReports extends Command
             [
                 'file_name'   => "Resumen_Diario_DID_{$todayDateFile}.csv",
                 'report_date' => $todayDateText,
-                'alert_time'  => '19:30',
+                'alert_time'  => '17:30',
                 'turno'       => 'Vespertino'
             ]
         ];
