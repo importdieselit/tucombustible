@@ -85,7 +85,7 @@ class Inventario extends Model
      */
     public function stocks()
     {
-        return $this->hasMany(InventarioStock::class, 'item_id'); // InventarioStock creado en la respuesta anterior
+        return $this->hasMany(InventarioStock::class, 'inventario_id'); // InventarioStock creado en la respuesta anterior
     }
 
     public function ubicacion()

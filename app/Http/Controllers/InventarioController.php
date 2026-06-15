@@ -12,9 +12,17 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use App\Models\InventarioSuministro;
+use App\Models\InventarioDespacho;
+use App\Models\InventarioCompra;    
+use App\Models\InventarioAsociado;
+use App\Models\Ubicacion;
+use App\Models\InventarioStock;
+use App\Models\AlmacenEstructuraGrid;
 use App\Models\Ventas;
 use App\Models\VentasDetalle;
-
+use App\Models\Orden;
+use Illuminate\Support\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 
 class InventarioController extends BaseController
 {
@@ -44,27 +52,24 @@ class InventarioController extends BaseController
         return view('inventario.form', compact('item', 'almacenes'));
     }
 
-    protected function applyBusinessFilters(Builder $query): Builder
+   public function applyBusinessFilters(Builder $query)
     {
-        $filterKey = request()->get('filter'); // Usamos el helper global 'request()'
-        
-        if ($filterKey) {
-            switch ($filterKey) {
-                case 'id_almacen':
-                    $query->where('id_almacen', request()->id_almacen);
-                    break;
-                case 'codigo':
-                    $query->where('codigo', 'like', '%' . request()->codigo . '%');
-                    break;
-                case 'descripcion':
-                    $query->where('descripcion', 'like', '%' . request()->descripcion . '%');
-                    break;
-                default:
-                    break;
-            }
+        $query->with(['almacen','ubicacion','modelosAsociados','equivalentes']);
+        // 1. Usamos el helper global request() en lugar de inyectar la clase en los argumentos
+        if (request()->filled('id_almacen')) {
+            $query->where('id_almacen', request('id_almacen'));
         }
-        // Agrega más filtros según sea necesario
 
+        if (request()->filled('codigo')) {
+            $query->where('codigo', 'like', '%' . request('codigo') . '%');
+        }
+
+        if (request()->filled('descripcion')) {
+            $query->where('descripcion', 'like', '%' . request('descripcion') . '%');
+        }
+
+        // 2. RETORNAMOS el mismo query modificado para que el BaseController 
+        // pueda seguir aplicándole los filtros de seguridad de 'id_cliente'
         return $query;
     }
 
@@ -104,13 +109,87 @@ class InventarioController extends BaseController
      */
     public function show($id)
     {
-        $item = Inventario::with(['almacen', 'usuario'])->find($id);
-        if (!$item) {
-            abort(404, 'Item de inventario no encontrado.');
-        }
-        return view('inventario.show', compact('item'));
-    }
+        // 1. Cargar el ítem con sus relaciones de stock y ubicación
+        $item = Inventario::with([
+            'almacen', 
+            'modelosAsociados', 
+            'equivalentes',
+            'stocks.ubicacion.estructuraGrid' // Importante para el mapa
+        ])->findOrFail($id);
+        
+        // --- CÁLCULOS DE ROTACIÓN Y GRÁFICA (Como lo teníamos antes) ---
+        $salidasUltimoMes = InventarioDespacho::where('inventario_id', $id)
+            ->where('estatus', '!=', 'Anulado')
+            ->where('created_at', '>=', Carbon::now()->subDays(30))
+            ->sum('cantidad_despachada');
+            
+        $promedioDiarioDespacho = $salidasUltimoMes / 30;
+        $item->tasa_rotacion = $item->existencia > 0 ? number_format($salidasUltimoMes / $item->existencia, 1) : '0.0';
+        $item->promedio_duracion = $promedioDiarioDespacho > 0 ? round($item->existencia / $promedioDiarioDespacho) : '∞';
 
+        $despachos = InventarioDespacho::with(['usuarioDespacha', 'ordenTrabajo'])
+            ->where('inventario_id', $id)->where('estatus', '!=', 'Anulado')
+            ->orderBy('created_at', 'desc')->limit(30)->get();
+
+        $movimientos = $despachos->map(function($mov) {
+            return (object)[
+                'fecha' => $mov->created_at->format('d/m/Y H:i'),
+                'tipo' => 'Salida',
+                'cantidad' => -abs($mov->cantidad_despachada),
+                'documento' => 'OT-' . str_pad($mov->orden_trabajo_id, 5, '0', STR_PAD_LEFT),
+                'usuario' => $mov->usuarioDespacha->name ?? 'Operador'
+            ];
+        });
+
+        // Gráfica de últimos 15 días
+        $stockSimulado = $item->existencia;
+        $stockDiario = [];
+        for ($i = 0; $i <= 14; $i++) {
+            $fechaCarbon = Carbon::now('America/Caracas')->subDays($i);
+            $salidasDelDia = InventarioDespacho::where('inventario_id', $id)->where('estatus', '!=', 'Anulado')
+                ->whereDate('created_at', $fechaCarbon->format('Y-m-d'))->sum('cantidad_despachada');
+            $stockDiario[$fechaCarbon->format('d-M')] = $stockSimulado;
+            $stockSimulado += $salidasDelDia; 
+        }
+        $graficaFechas = array_reverse(array_keys($stockDiario));
+        $graficaStock = array_reverse(array_values($stockDiario));
+
+        $equivalentes = $item->equivalentes; 
+        $vehiculos = $item->modelosAsociados->map(function($asociado) {
+            return (object)[
+                'placa' => $asociado->vehiculo->placa ?? $asociado->referencia ?? 'N/A',
+                'modelo' => $asociado->vehiculo->modelo ?? 'N/A',
+                'departamento' => $asociado->vehiculo->departamento ?? 'General'
+            ];
+        });
+
+        // --- NUEVO: LÓGICA DE MAPEO Y UBICACIÓN ---
+        $almacen = $item->almacen;
+        $estructuras = collect();
+        $ubicacionPrincipal = null;
+        $ubicacion_texto = 'No asignada';
+
+        if ($almacen) {
+            // Obtenemos todo el plano del almacén
+            $estructuras = AlmacenEstructuraGrid::where('almacen_id', $almacen->id)
+                ->get()
+                ->keyBy(function($est) {
+                    return $est->coord_y . '-' . $est->coord_x;
+                });
+                
+            // Obtenemos la ubicación donde hay stock de este ítem
+            $stockPrincipal = $item->stocks->first(); 
+            if ($stockPrincipal && $stockPrincipal->ubicacion) {
+                $ubicacionPrincipal = $stockPrincipal->ubicacion;
+                $ubicacion_texto = "{$ubicacionPrincipal->codigo_ubicacion} | Pasillo {$ubicacionPrincipal->pasillo}, Estante {$ubicacionPrincipal->estante}, Nivel {$ubicacionPrincipal->nivel}, Casilla {$ubicacionPrincipal->posicion}";
+            }
+        }
+        
+        return view('inventario.show', compact(
+            'item', 'movimientos', 'graficaFechas', 'graficaStock', 'equivalentes', 'vehiculos',
+            'almacen', 'estructuras', 'ubicacionPrincipal', 'ubicacion_texto'
+        ));
+    }
     /**
      * Muestra el formulario para editar un item existente.
      * @param int $id
@@ -178,8 +257,6 @@ class InventarioController extends BaseController
         return redirect()->route('inventario.list')
             ->with('success', 'Item de inventario eliminado exitosamente.');
     }
-
-    
     
     public function entry()
     {
