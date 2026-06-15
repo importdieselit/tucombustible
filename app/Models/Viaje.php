@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Models\Chofer;
 use App\Models\ViaticoViaje;
 use App\Models\Vehiculo;
@@ -33,10 +34,6 @@ class Viaje extends Model
         'tipo_planificacion', 'sede_id', 'ayudante_id', 'tipo_remolque', 
         'punto_salida', 'punto_llegada', 'codigo_sap', 'nombre_cliente_externo',
         
-<<<<<<< HEAD
-=======
-
->>>>>>> main
         // AGREGAR ESTOS CAMPOS DE TRANSPORTE EXTERNO:
         'es_transporte_externo', 'vehiculo_externo', 'chofer_externo', 
         'ayudante_externo', 'cisterna_externo'
@@ -55,9 +52,6 @@ class Viaje extends Model
         return $this->belongsTo(Chofer::class, 'chofer_id'); 
     }
 
-<<<<<<< HEAD
-    public function ayudante(): BelongsTo
-=======
 
     public function ayudante(): BelongsTo
     {
@@ -65,16 +59,12 @@ class Viaje extends Model
     }
     
     public function ayudante_chofer(): BelongsTo
->>>>>>> main
     {
         return $this->belongsTo(Chofer::class, 'ayudante_id'); 
     }
 
-<<<<<<< HEAD
-=======
 
 
->>>>>>> main
     public function proveedor(): BelongsTo
     {
         return $this->belongsTo(Proveedor::class, 'proveedor_id');
@@ -136,8 +126,6 @@ class Viaje extends Model
     {
         return $this->belongsTo(Sedes::class, 'sede_id');
     }
-<<<<<<< HEAD
-=======
 
     public function inspecciones(): HasOne
     {
@@ -150,5 +138,4 @@ class Viaje extends Model
     {
         return $this->belongsTo(Chofer::class, 'ayudante_id');
     }
->>>>>>> main
 }

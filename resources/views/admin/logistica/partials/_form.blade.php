@@ -62,6 +62,32 @@
                             @if(!isset($viaje)) minDate: "today" @endif
                         });
                     });
+
+                    document.addEventListener('DOMContentLoaded', function () {
+                    // Busca el formulario (asegúrate de que tu etiqueta <form> tenga id="formPlanificacion" o cámbialo por el tuyo)
+                    const form = document.getElementById('formPlanificacion'); 
+
+                    if (form) {
+                        form.addEventListener('submit', function (event) {
+                            // Contamos cuántos checkboxes de destino están marcados
+                            const destinosSeleccionados = document.querySelectorAll('input[name="destino_ciudad[]"]:checked');
+
+                            if (destinosSeleccionados.length === 0) {
+                                // 1. Detiene por completo el envío del formulario al servidor
+                                event.preventDefault(); 
+
+                                // 2. Muestra la alerta estética que ya usas en ImporDiesel
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'DATO REQUERIDO',
+                                    text: 'Debe seleccionar al menos un destino en el tabulador de viáticos antes de guardar.',
+                                    confirmButtonColor: '#212529', // El color oscuro corporativo que usas
+                                    confirmButtonText: 'ENTENDIDO'
+                                });
+                            }
+                        });
+                    }
+                });
                 </script>
 
                 {{-- DESTINO PARA TABULADOR (MULTIPLE - ESTILO CHECKBOX PREMIUM) --}}
@@ -176,20 +202,20 @@
                     <div class="row g-2">
                         <div class="col-6 mb-2">
                             <label class="small fw-bold text-muted text-uppercase">Placa Vehículo</label>
-                            <input type="text" name="vehiculo_externo" x-model="externo_vehiculo" class="form-control form-control-sm border-orange uppercase" placeholder="ABC-123" :required="esPropio == '0'">
+                            <input type="text" name="vehiculo_externo" x-model="vehiculo_externo" class="form-control form-control-sm border-orange uppercase" placeholder="ABC-123" :required="esPropio == '0'">
                         </div>
                         <div class="col-6 mb-2">
                             <label class="small fw-bold text-muted text-uppercase">Placa Cisterna</label>
-                            <input type="text" name="cisterna_externo" x-model="externo_cisterna" class="form-control form-control-sm border-orange uppercase" placeholder="Opcional">
+                            <input type="text" name="cisterna_externo" x-model="cisterna_externo" class="form-control form-control-sm border-orange uppercase" placeholder="Opcional">
                         </div>
                         <div class="col-12">
                             <div class="input-group input-group-sm mb-1">
                                 <span class="input-group-text">Chofer</span>
-                                <input type="text" name="chofer_externo" x-model="externo_chofer" class="form-control uppercase" placeholder="Nombre completo" :required="esPropio == '0'">
+                                <input type="text" name="chofer_externo" x-model="chofer_externo" class="form-control uppercase" placeholder="Nombre completo" :required="esPropio == '0'">
                             </div>
                             <div class="input-group input-group-sm mb-1">
                                 <span class="input-group-text">Ayudante</span>
-                                <input type="text" name="ayudante_externo" x-model="externo_ayudante" class="form-control uppercase" placeholder="Nombre completo">
+                                <input type="text" name="ayudante_externo" x-model="ayudante_externo" class="form-control uppercase" placeholder="Nombre completo">
                             </div>
                         </div>
                     </div>

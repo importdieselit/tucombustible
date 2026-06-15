@@ -120,13 +120,10 @@
             <div class="container-fluid">
                 <div class="row">
                     @php($user = Auth::user())
-<<<<<<< HEAD
-=======
 
                     @if($user->id_perfil !=4)
                         @php($sidebar = 'admin_sidebar')
                     @endif
->>>>>>> main
                     @if($user->id_perfil!=3)
                         @include('layouts.sidebar')
                     @endif

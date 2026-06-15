@@ -19,11 +19,6 @@ class CheckUserRole
         }
 
         $user = Auth::user();
-<<<<<<< HEAD
-        
-=======
-
->>>>>>> main
         if ($user->id_perfil == 1) {
             return $next($request);
         }

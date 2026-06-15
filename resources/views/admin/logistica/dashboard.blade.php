@@ -148,21 +148,12 @@
                                                 };
 
                                                 $productoEspecifico = match($viaje->tipo_planificacion) {
-<<<<<<< HEAD
-                                                    1       => 'DIESEL',
-                                                    2       => 'MGO',
-                                                    3       => $viaje->producto_flete ?? 'Sin Especificar',
-                                                    4       => match((int)$viaje->tipo) {
-                                                                1 => 'DIESEL',
-                                                                2 => 'MGO',
-=======
                                                     2       => 'DIESEL',
                                                     1       => 'MGO',
                                                     3       => $viaje->producto_flete ?? 'Sin Especificar',
                                                     4       => match((int)$viaje->tipo) {
                                                                 2 => 'DIESEL',
                                                                 1 => 'MGO',
->>>>>>> main
                                                                 default => 'Sin Especificar'
                                                             },
                                                     default => 'Sin especificar'
@@ -334,17 +325,12 @@
                 <p class="mt-2 fw-bold text-uppercase small">Cargando información...</p>
             </div>`;
         modal.show();
-<<<<<<< HEAD
-
-        fetch(`/logistica/${id}`)
-=======
         let urlBase = "{{ route('logistica.show', ':id') }}";
 
         let urlFinal = urlBase.replace(':id', id);
 
         // Usamos el helper url() de Laravel para evitar problemas de rutas relativas
         fetch(urlFinal)
->>>>>>> main
             .then(response => {
                 if (!response.ok) throw new Error('Error al cargar datos');
                 return response.text();
@@ -361,13 +347,9 @@
             });
     }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> main
     function cancelarPlanificacion(id) {
         Swal.fire({
-            title: '¿ESTÁS SEGURO?',
+            title: '¿Estás seguro?',
             text: "Esta acción cancelará la planificación y no se podrá revertir.",
             icon: 'warning',
             showCancelButton: true,
@@ -377,14 +359,10 @@
             cancelButtonText: 'NO'
         }).then((result) => {
             if (result.isConfirmed) {
-<<<<<<< HEAD
-                fetch(`/logistica/${id}/cancelar`, {
-=======
                 let urlBase = "{{ route('logistica.cancelar', ':id') }}";
                 let urlFinal = urlBase.replace(':id', id);
-                // Usamos el helper url() de Laravel para evitar problemas de rutas relativas
+                
                 fetch(urlFinal, {
->>>>>>> main
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -399,6 +377,9 @@
                     } else {
                         Swal.fire('ERROR', data.error, 'error');
                     }
+                })
+                .catch(err => {
+                    Swal.fire('ERROR', 'No se pudo procesar la solicitud.', 'error');
                 });
             }
         });

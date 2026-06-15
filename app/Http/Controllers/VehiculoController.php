@@ -42,8 +42,6 @@ class VehiculoController extends BaseController
 {
     protected $service;
     protected $repo;
-<<<<<<< HEAD
-=======
 
     public function __construct(VehiculoService $service, VehiculoRepository $repo)
     {
@@ -67,25 +65,6 @@ class VehiculoController extends BaseController
             // y luego el filtro de seguridad de cliente.
             return $this->list($query); 
         }
->>>>>>> main
-
-    public function __construct(VehiculoService $service, VehiculoRepository $repo)
-    {
-        parent::__construct(); 
-        $this->service = $service;
-        $this->repo = $repo;
-    }
-
-    public function index()
-    {
-        $vehiculos = $this->repo->getAll();
-        return view('vehiculo.index', compact('vehiculos'));
-    }
-
-    public function filter(Request $request)
-    {
-        return $this->list(\App\Models\Vehiculo::query()); 
-    }
 
     protected function getAdditionalData()
     {

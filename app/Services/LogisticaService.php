@@ -82,7 +82,7 @@ class LogisticaService
             if (in_array($viaje->tipo_planificacion, [1, 2])) {
                 foreach ($viaje->detalles as $detalle) {
                     // Devolver saldo al cliente si fue despacho directo
-                    if ($viaje->tipo_planificacion == 1 && is_null($detalle->pedido_id) && $detalle->cliente_id) {
+                    if ($viaje->tipo_planificacion == 2 && is_null($detalle->pedido_id) && $detalle->cliente_id) {
                         Cliente::where('id', $detalle->cliente_id)->increment('disponible', $detalle->litros);
                         
                         // Revertir cupo mensual
@@ -250,7 +250,7 @@ class LogisticaService
                         ? $item['pedido_id'] : null;
             
             // Gestión de Saldo y Cupo (Solo si NO hay pedido y es Tipo 1)
-            if ($viaje->tipo_planificacion == 1 && !empty($item['cliente_id']) && is_null($pedidoId)) { 
+            if ($viaje->tipo_planificacion == 2 && !empty($item['cliente_id']) && is_null($pedidoId)) { 
                 $cliente = Cliente::lockForUpdate()->findOrFail($item['cliente_id']);
                 if ($item['litros'] > $cliente->disponible) {
                     throw new Exception("Saldo insuficiente para {$cliente->nombre}.");
@@ -270,7 +270,7 @@ class LogisticaService
             $bandera = $item['buque_bandera'] ?? null;
 
             // Si es una planificación MGO y se intentó escribir/seleccionar un buque
-            if ($viaje->tipo_planificacion == 2 && !empty($item['buque_nombre'])) {
+            if ($viaje->tipo_planificacion == 1 && !empty($item['buque_nombre'])) {
                 $nombreFormateado = trim(strtoupper($item['buque_nombre']));
 
                 // Validamos si ya existe un buque registrado con ese nombre exacto en mayúsculas
@@ -337,7 +337,7 @@ class LogisticaService
 
     private function afectarInventarioGlobal($tipoId, $cantidad, $viajeId)
     {
-        $nombreProducto = ($tipoId == 1) ? 'DIESEL' : (($tipoId == 2) ? 'MGO' : null);
+        $nombreProducto = ($tipoId == 2) ? 'DIESEL' : (($tipoId == 1) ? 'MGO' : null);
         if ($nombreProducto) {
             $deposito = DB::table('depositos')->where('producto', $nombreProducto)->first();
             if ($deposito) {
@@ -358,7 +358,7 @@ class LogisticaService
 
     private function revertirInventarioGlobal($tipoId, $cantidad, $viajeId) 
     {
-        $nombreProducto = ($tipoId == 1) ? 'DIESEL' : (($tipoId == 2) ? 'MGO' : null);
+        $nombreProducto = ($tipoId == 2) ? 'DIESEL' : (($tipoId == 1) ? 'MGO' : null);
         if ($nombreProducto) {
             DB::table('depositos')->where('producto', $nombreProducto)->increment('nivel_actual_litros', $cantidad);
             DB::table('movimientos_combustible')->where('viaje_id', $viajeId)->delete();

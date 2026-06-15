@@ -22,15 +22,10 @@ class CheckAlertasViajes extends Command
         
         $this->info("Iniciando verificación de alertas operativas: " . now()->toDateTimeString());
         
-<<<<<<< HEAD
-        // IDs de usuarios a notificar
-        $usuariosNotificar = [504]; 
-=======
 
         // IDs de usuarios a notificar de forma individual vía Push (FCM)
         $usuariosNotificar = [1, 504, 495]; 
 
->>>>>>> main
         $reporte = ['salidas' => 0, 'notificadas_salida' => 0, 'retornos' => 0, 'notificadas_retorno' => 0];
 
         // --- CASO 1: SALIDAS RETRASADAS ---
@@ -59,10 +54,6 @@ class CheckAlertasViajes extends Command
             ->exists();
 
             if (!$hasChecklist) {
-<<<<<<< HEAD
-                $this->warn(" > Enviando alerta: Viaje #{$viaje->id} [{$viaje->vehiculo->placa}]");
-                $this->enviarAlerta("ALERTA SALIDA: El viaje #{$viaje->id}. Unidad {$viaje->vehiculo->flota} [{$viaje->vehiculo->placa}] a {$viaje->destino_ciudad} no tiene checklist tras 30 min.", $usuariosNotificar, $viaje);
-=======
 
                 $this->warn(" > Enviando alerta: Viaje #{$viaje->id}");
                 $tiempoRetraso = now()->diffInMinutes($viaje->fecha_salida);
@@ -78,7 +69,6 @@ class CheckAlertasViajes extends Command
                 // Envío de alertas Push
                 $this->enviarAlerta($mensajeSalida, $usuariosNotificar, $viaje);
 
->>>>>>> main
                 $reporte['notificadas_salida']++;
 
                 // Notificación única al grupo de operaciones de WhatsApp (Fuera de bucles redundantes)
@@ -125,13 +115,13 @@ class CheckAlertasViajes extends Command
                 "• *Conductor:* {$viaje->chofer->persona->nombre}\n\n" .
                 "*Acción Requerida:* Exigir la ejecución inmediata del checklist de entrada para cerrar el ciclo de auditoría.";
 
-
-            if (!$hasCheckIn) {
-                $this->warn(" > Enviando alerta: Vehículo {$viaje->vehiculo->placa} inconsistente.");
-                $this->enviarAlerta("ALERTA RETORNO: El vehículo {$viaje->vehiculo->flota} [{$viaje->vehiculo->placa}] está libre pero el viaje #{$viaje->id} a {$viaje->destino_ciudad} sigue 'EN RUTA'.", $usuariosNotificar, $viaje);
-                $reporte['notificadas_retorno']++;
-            }
-
+            // 👇 Se elimina el IF porque la consulta de arriba ya garantiza que no tienen check-in
+            $this->warn(" > Enviando alerta: Vehículo {$viaje->vehiculo->placa} inconsistente.");
+            
+            // Enviamos el $mensajeRetorno pulido que armaste arriba 🚀
+            $this->enviarAlerta($mensajeRetorno, $usuariosNotificar, $viaje);
+            
+            $reporte['notificadas_retorno']++;
         }
 
         $this->renderResumen($reporte);

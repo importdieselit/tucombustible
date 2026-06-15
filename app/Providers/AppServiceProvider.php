@@ -8,12 +8,9 @@ use App\View\Composers\AlertsComposer;
 use App\Models\BitacoraSistema;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
-<<<<<<< HEAD
-=======
 use Illuminate\Support\Facades\Notification;
 use App\Channels\WhatsAppChannel;
 use App\Services\GoogleSheetsService;
->>>>>>> main
 
 class AppServiceProvider extends ServiceProvider
 {
