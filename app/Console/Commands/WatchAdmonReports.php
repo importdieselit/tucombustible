@@ -59,6 +59,8 @@ class WatchAdmonReports extends Command
             $reportDate = $fileConfig['report_date'];
             $turno = $fileConfig['turno'];
             $filePath = "{$directory}/{$expectedFileName}";
+            $this->info($filePath);
+            $this->info('verificando archivo [{$expectedFileName}] para {$reportDate}');
 
             // CONTROL DE ERRORES 1: Evitar reprocesar por Turno y Fecha (Blindaje de duplicados)
             if (ProcessedFile::where('report_date', $reportDate)->where('turno', $turno)->exists()) {
