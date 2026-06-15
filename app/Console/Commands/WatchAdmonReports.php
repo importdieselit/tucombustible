@@ -53,7 +53,7 @@ class WatchAdmonReports extends Command
                 'turno'       => 'Vespertino'
             ]
         ];
-
+        $this->info('iniciando revision');
         foreach ($filesToWatch as $fileConfig) {
             $expectedFileName = $fileConfig['file_name'];
             $reportDate = $fileConfig['report_date'];
@@ -62,6 +62,7 @@ class WatchAdmonReports extends Command
 
             // CONTROL DE ERRORES 1: Evitar reprocesar por Turno y Fecha (Blindaje de duplicados)
             if (ProcessedFile::where('report_date', $reportDate)->where('turno', $turno)->exists()) {
+                $this->info('ya procesado {$turno} para {$reportDate}. Continuando...  ');
                 continue; 
             }
 
@@ -73,6 +74,7 @@ class WatchAdmonReports extends Command
                 try {
                     $this->processFile($filePath, $expectedFileName, $reportDate, $turno);
                     $this->sendWhatsappReport($reportDate, $turno);
+                    $this->info('archivo procesado correctamente enviado whatsapp');
                 } catch (\Exception $e) {
                     $this->error("Error crítico procesando {$expectedFileName}: " . $e->getMessage());
                     Log::critical("Fallo en procesamiento de reporte [{$turno}] de fecha {$reportDate}: " . $e->getMessage());
@@ -87,8 +89,9 @@ class WatchAdmonReports extends Command
                 $this->error("Hora límite alcanzada para el reporte {$turno}. Enviando alerta...");
                 $this->sendWhatsAppAlert($expectedFileName, $turno);
             }
-        }
 
+        }
+        $this->info('terminando revision');
         return 0;
     }
 
