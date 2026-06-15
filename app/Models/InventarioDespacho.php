@@ -10,7 +10,7 @@ class InventarioDespacho extends Model
     use HasFactory;
     protected $table = 'inventario_despachos';
     protected $fillable = [
-        'orden_trabajo_id',
+        'id_orden',
         'inventario_id',
         'ubicacion_origen_id',
         'cantidad_solicitada',
@@ -24,7 +24,7 @@ class InventarioDespacho extends Model
     protected $hasTimestamps = true;
     public function ordenTrabajo()
     {
-        return $this->belongsTo(Orden::class, 'orden_trabajo_id');
+        return $this->belongsTo(Orden::class, 'orden_id');
     }
     public function inventario()
     {
