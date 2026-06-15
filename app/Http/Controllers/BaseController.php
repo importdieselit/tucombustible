@@ -247,7 +247,7 @@ abstract class BaseController extends Controller
     {
         try {
             $item = $this->model->findOrFail($id);
-            $item->merge($request->all());
+            $item->fill($request->all());
             $item->save();
             Session::flash('success', class_basename($this->model) . ' actualizado exitosamente.');
         } catch (ModelNotFoundException $e) {
