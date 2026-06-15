@@ -56,7 +56,7 @@ class VehiculoController extends BaseController
         return view('vehiculo.index', compact('vehiculos'));
     }
 */
-    public function filter(Request $request)
+     public function filter(Request $request)
             {
             // 1. Inicializar el Query Builder del modelo correcto
             $query = Vehiculo::query(); 

@@ -22,6 +22,7 @@ use App\Http\Controllers\{
     ReporteController, AforoController, SearchController, DataDeletionController,
     ViajesController, TelegramController, PlanificacionMantenimientoController,
     ReportController, ClienteActivosController,NotificationController, PlanMayorController,LogisticaController,
+    AlmacenLayoutController,ConteoController,
     GerentialReportController,PagoController
 };
 use App\Http\Controllers\SalaControlController;
@@ -146,12 +147,17 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/inventario/solicitudes/{id}/dispatch', [InventarioController::class, 'dispatch'])->name('inventario.requests.dispatch');
     Route::post('/inventario/import/excel', [InventarioController::class, 'import'])->name('inventario.import');
     Route::get('/inventario/export/excel', [InventarioController::class, 'export'])->name('inventario.export');
+    Route::get('inventario/compras/crear', [InventarioController::class, 'create'])->name('compras.create');
+    Route::post('inventario/compras/guardar', [InventarioController::class, 'store'])->name('compras.store');
     Route::get('/ventas/create', [InventarioController::class, 'ventaCreate'])->name('ventas.create');
     Route::post('/ventas/store', [InventarioController::class, 'ventaStore'])->name('ventas.store');
     Route::post('/clientes/store-ajax', [PortalClienteController::class, 'storeAjax'])->name('clientes.storeAjax');  
     Route::get('/ventas/list', [InventarioController::class, 'ventaList'])->name('ventas.list'); 
     Route::get('/ventas/show/{id}', [InventarioController::class, 'ventaShow'])->name('ventas.show'); 
-
+    Route::get('inventario/conteo/', [ConteoController::class, 'create'])->name('inventario.conteo');
+    Route::post('inventario/conteo/guardar', [ConteoController::class, 'store'])->name('inventario.conteo.store');
+    Route::get('inventario/conteo/estadisticas', [ConteoController::class, 'estadisticas'])->name('conteo.estadisticas');
+    
     // Importaciones
     Route::get('choferes/importar', [ChoferController::class, 'showImportForm'])->name('choferes.show-import-form');
     Route::post('choferes/importar', [ChoferController::class, 'importar'])->name('choferes.importar');
@@ -187,6 +193,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/ordenes/{id}/addTrabajosMasivo', [OrdenController::class, 'addTrabajosMasivo'])->name('ordenes.addTrabajosMasivo');
         Route::post('/ordenes/trabajo/{id}/finalizar', [OrdenController::class, 'finalizarTrabajo'])->name('ordenes.trabajo.finalizar');
         Route::post('/ordenes/{id}/insumos/add', [OrdenController::class, 'addInsumo'])->name('ordenes.addInsumo');
+        Route::put('/ordenes/{id}/insumos/edit', [OrdenController::class, 'editInsumo'])->name('ordenes.editInsumo');
         Route::get('/vehiculos/{id}/orden-abierta', [OrdenController::class, 'verificarOrdenAbierta'])->name('vehiculos.checkOrden');
         Route::post('ordenes/{id}/add-manual-supply', [OrdenController::class, 'addManualSupply'])->name('ordenes.addManualSupply');
         Route::delete('/ordenes/purchase/{id}/delete', [OrdenController::class, 'deleteManualSupply'])->name('ordenes.deleteManualSupply');
@@ -311,6 +318,21 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/admin/principal', [DashboardController::class, 'adminPrincipal'])->name('dashboard.admin');
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+        Route::get('/logistica/almacen/{id}/disenar', [AlmacenLayoutController::class, 'disenar'])->name('almacen.layout.disenar');
+        Route::post('/logistica/almacen/layout/guardar', [AlmacenLayoutController::class, 'guardarEstructura'])->name('almacen.layout.guardar');
+        Route::post('/logistica/almacen/layout/guardar-drag', [AlmacenLayoutController::class, 'guardarEstructuraDrag'])->name('almacen.layout.guardar_drag');
+        Route::post('/logistica/almacen/layout/inspeccionar', [AlmacenLayoutController::class, 'inspeccionarEstante'])->name('almacen.layout.inspeccionar');
+        Route::post('/logistica/almacen/layout/redimensionar', [AlmacenLayoutController::class, 'redimensionarGrid'])->name('almacen.layout.redimensionar');
+        Route::get('/logistica/almacen/{id}/3d', [AlmacenLayoutController::class, 'vista3D'])->name('almacen.layout.3d');
+        // Rutas para gestión de tráfico Drag & Drop en Planta
+        Route::post('/almacen/layout/buscar-items', [AlmacenLayoutController::class, 'buscarItemsAAsignar'])->name('almacen.layout.buscar_items');
+        Route::post('/almacen/layout/asignar-item', [AlmacenLayoutController::class, 'asignarItemUbicacion'])->name('almacen.layout.asignar_item');
+        Route::post('/almacen/layout/reubicar-item', [AlmacenLayoutController::class, 'reubicarItemUbicacion'])->name('almacen.layout.reubicar_item');
+        Route::post('/almacen/layout/vaciar-slot', [AlmacenLayoutController::class, 'vaciarItemUbicacion'])->name('almacen.layout.vaciar_slot');
+        Route::post('/almacen/layout/actualizar-posicion-3d', [AlmacenLayoutController::class, 'actualizarPosicion3D'])->name('almacen.layout.actualizar_posicion_3d');
+        Route::post('/almacen/layout/subdividir-slot', [AlmacenLayoutController::class, 'subdividirSlot'])->name('almacen.layout.subdividir_slot');
+        Route::post('/almacen/layout/combinar-slots', [AlmacenLayoutController::class, 'combinarSlots'])->name('almacen.layout.combinar_slots');
 
         /**
          * MÓDULOS DE ADMINISTRACIÓN (Perfiles 1 y 2: Admin y Super)

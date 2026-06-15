@@ -58,9 +58,10 @@
                             <th class="ps-3" width="5%">#</th>
                             <th>Código</th>
                             <th width="50%">Descripción del Producto</th>
+                            <th >Ubicacion</th>
                             <th>Grupo / Categoría</th>
                             <th>Almacén</th> {{-- Columna para el filtro --}}
-                            <th class="text-center">Stock</th>
+                            <th class="text-center">Existencia total</th>
                             <th class="text-center">Mínimo</th>
                             <th class="text-center">Estado</th>
                         </tr>
@@ -74,10 +75,11 @@
                                 <div class="fw-bold">{{ $item->descripcion ?? 'N/A' }}</div>
                                 <div class="x-small text-muted text-uppercase">Reg: {{ !is_null($item->fecha_in) ? \Carbon\Carbon::parse(strtotime($item->fecha_in))->format('d/m/Y') : 'N/A' }}</div>
                             </td>
+                            <td><small class="fw-bold text-muted">{{ $item->ubicacion->codigo_ubicacion ?? 'Sin Asignar' }}</small></td>
                             <td><span class="badge bg-light text-dark border">{{ $item->grupo ?? 'N/A' }}</span></td>
                             <td><small class="fw-bold text-muted">{{ $item->almacen->nombre ?? 'Principal - Boleita' }}</small></td>
                             <td class="text-center fw-bold fs-6">
-                                {{ number_format($item->existencia ?? 0, 0, ',', '.') }}
+                                {{ number_format($item->existencia + $item->getExistenciaTotalAttribute() ?? 0, 0, ',', '.') }}
                             </td>
                             <td class="text-center text-muted">
                                 {{ number_format($item->existencia_minima ?? 0, 0, ',', '.') }}
