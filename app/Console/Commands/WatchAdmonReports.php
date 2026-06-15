@@ -41,7 +41,7 @@ class WatchAdmonReports extends Command
         // Estructura de configuración limpia y estandarizada
         $filesToWatch = [
             [
-                'file_name'   => "Resumen_Diario_Matutino_DID_{$yesterdayDateFile}.csv",
+                'file_name'   => "Resumen_Diario_matutino_DID_{$yesterdayDateFile}.csv",
                 'report_date' => $yesterdayDateText,
                 'alert_time'  => '08:30',
                 'turno'       => 'Matutino'
@@ -60,17 +60,17 @@ class WatchAdmonReports extends Command
             $turno = $fileConfig['turno'];
             $filePath = "{$directory}/{$expectedFileName}";
             $this->info($filePath);
-            $this->info('verificando archivo [{$expectedFileName}] para {$reportDate}');
+            $this->info('verificando archivo ['.$expectedFileName.'] para '.$reportDate.' - '.$turno.'...');
 
             // CONTROL DE ERRORES 1: Evitar reprocesar por Turno y Fecha (Blindaje de duplicados)
             if (ProcessedFile::where('report_date', $reportDate)->where('turno', $turno)->exists()) {
-                $this->info('ya procesado {$turno} para {$reportDate}. Continuando...  ');
+                $this->info('ya procesado '.$turno.' para '.$reportDate.'. Continuando...  ');
                 continue; 
             }
 
             // Si el archivo físico existe en el Storage
             if (Storage::exists($filePath)) {
-                $this->info("Archivo [{$turno}] encontrado: {$expectedFileName}. Procesando...");
+                $this->info("Archivo ['.$turno.'] encontrado: {$expectedFileName}. Procesando...");
                 
                 // CONTROL DE ERRORES 2: Capturar excepciones de lectura del archivo
                 try {
@@ -84,6 +84,8 @@ class WatchAdmonReports extends Command
                 }
                 
                 continue;
+            }else{
+               $this->info('Archivo no encontrado: {$expectedFileName}. Continuando... ');
             }
 
             // Alerta por WhatsApp si llegó la hora de corte y no está el archivo
