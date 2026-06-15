@@ -5,6 +5,7 @@ namespace App\Console;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
+
 class Kernel extends ConsoleKernel
 {
     /**
@@ -29,7 +30,14 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('summary:daily-report')->dailyAt('00:00');
         $schedule->command('cupos:reset')->monthlyOn(1, '00:00');
-        $schedule->command('reports:watch')->everyFiveMinutes()->between('19:10', '19:30')->timezone('America/Caracas');
+        $schedule->command('reports:watch')
+        ->everyMinute()
+        ->timezone('America/Caracas')
+        ->when(function () {
+            $now = \Carbon\Carbon::now('America/Caracas');
+            // El comando SOLO se activará en estas dos ventanas de tiempo seguras
+            return $now->between('08:00', '08:45') || $now->between('17:00', '19:45');
+        });
     }
 
  

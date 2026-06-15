@@ -19,17 +19,24 @@ class GerentialReportController extends Controller
             // abort(403, 'Acceso no autorizado');
         }
         
-        // Obtener fechas disponibles para el filtro selector
-        $availableDates = ProcessedFile::orderBy('report_date', 'desc')->pluck('report_date');
-        
-        // Seleccionar fecha por defecto (la última procesada o la actual)
-        $selectedDate = $request->get('date', $availableDates->first() ?? now()->toDateString());
+        // 1. Obtener archivos disponibles para armar los filtros
+        $availableFiles = ProcessedFile::orderBy('report_date', 'desc')
+            ->orderBy('turno', 'desc')
+            ->get();
 
-        // Obtener registros de esa fecha
-        $records = ReportRecord::where('report_date', $selectedDate)->get();
+        // Determinar archivo por defecto si no se pasa por URL
+        $defaultFile = $availableFiles->first();
 
-        // 1. Limpieza de datos (Normalización)
-        // Usamos trim() y utf8_decode por seguridad con caracteres especiales
+        // 2. CONTROL DE ERRORES: Búsqueda exacta combinando Fecha y Turno
+        $selectedDate = $request->get('date', $defaultFile ? $defaultFile->report_date : now()->toDateString());
+        $selectedTurno = $request->get('turno', $defaultFile ? $defaultFile->turno : 'Vespertino');
+
+        // 3. Filtrado Absoluto: Ya no hay mezclas de montos de diferentes turnos
+        $records = ReportRecord::where('report_date', $selectedDate)
+            ->where('turno', $selectedTurno)
+            ->get();
+
+        // Normalización de datos
         $records->transform(function ($item) {
             $item->tipo = trim($item->tipo);
             $item->cuenta = trim($item->cuenta);
@@ -137,13 +144,13 @@ class GerentialReportController extends Controller
             $alertas->push("Riesgo de Flujo: Las Cuentas por Cobrar representan más del 50% de las ventas realizadas.");
         }
 
+
         return view('reports.admon', compact(
-            'availableDates', 'selectedDate', 'ventasLitros', 'ventasUsd',
+            'availableFiles', 'selectedDate', 'selectedTurno', 'ventasLitros', 'ventasUsd',
             'opexRecords', 'bancosRecords', 'cajasRecords', 'totalOpex',
             'totalBancos', 'totalCajas', 'totalLiquidez', 'pctBancos', 'pctCajas',
             'cxcRecords', 'cxpRecords', 'totalCxC', 'totalCxP', 'pctCxC_Ventas', 'pctCxP_Ventas',
-            'margenBruto', 'comprasUsd', 'inventario', 'totalCxC', 'totalCxP',
-            'alertas', 'balanceLitros', 'litrosComprados'
+            'margenBruto', 'comprasUsd', 'inventario', 'alertas', 'balanceLitros', 'litrosComprados'
         ));
     }
 
