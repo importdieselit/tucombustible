@@ -13,6 +13,15 @@
         border: 1px solid #e2e8f0; 
         border-radius: 6px; 
     }
+    /* Estilo para el indicador visual de turno */
+    .badge-turno {
+        font-size: 0.9rem;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+    .badge-matutino { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+    .badge-vespertino { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
 </style>
 @endpush
 
@@ -20,25 +29,39 @@
 <div class="container-fluid py-4 max-width-1200 bg-dashboard">
     
     <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
-         <button id="captureButton" class="btn btn-primary shadow-sm">
-            <i class="fa fa-camera me-2"></i> Capturar a portapapeles
-        </button>
-        <button id="exportButton" class="btn btn-success shadow-sm">
-            <i class="fa fa-download me-2"></i> Exportar Reporte
-        </button>
-        <button id="sendWhatsappButton" class="btn btn-info shadow-sm">
-            <i class="fa fa-paper-plane me-2"></i> Enviar a WhatsApp
-        </button>
+        <div class="d-flex gap-2">
+            <button id="captureButton" class="btn btn-primary shadow-sm">
+                <i class="fa fa-camera me-2"></i> Capturar a portapapeles
+            </button>
+            <button id="exportButton" class="btn btn-success shadow-sm">
+                <i class="fa fa-download me-2"></i> Exportar Reporte
+            </button>
+            <button id="sendWhatsappButton" class="btn btn-info shadow-sm">
+                <i class="fa fa-paper-plane me-2"></i> Enviar a WhatsApp
+            </button>
+        </div>
         
-        <form action="{{ route('reporte.admon') }}" method="GET" class="d-flex align-items-center gap-2 m-0">
-            <label for="date" class="fw-bold text-secondary mb-0 text-nowrap">Fecha de Reporte:</label>
-            <select name="date" id="date" class="form-select" onchange="this.form.submit()">
-                @foreach($availableDates as $date)
-                    <option value="{{ $date }}" {{ $date == $selectedDate ? 'selected' : '' }}>
-                        {{ \Carbon\Carbon::parse($date)->format('d/m/Y') }}
-                    </option>
-                @endforeach
-            </select>
+        {{-- Filtros de Búsqueda Integrando Fecha y Turno simultáneos --}}
+        <form action="{{ route('reporte.admon') }}" method="GET" class="d-flex align-items-center gap-3 m-0">
+            <div class="d-flex align-items-center gap-2">
+                <label for="date" class="fw-bold text-secondary mb-0 text-nowrap">Fecha:</label>
+                <select name="date" id="date" class="form-select" onchange="this.form.submit()">
+                    {{-- Cambiamos $availableDates por $availableFiles agrupados por fecha para evitar duplicados en el select --}}
+                    @foreach($availableFiles->unique('report_date') as $file)
+                        <option value="{{ $file->report_date }}" {{ $file->report_date == $selectedDate ? 'selected' : '' }}>
+                            {{ \Carbon\Carbon::parse($file->report_date)->format('d/m/Y') }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <label for="turno" class="fw-bold text-secondary mb-0 text-nowrap">Turno:</label>
+                <select name="turno" id="turno" class="form-select" onchange="this.form.submit()">
+                    <option value="Matutino" {{ $selectedTurno == 'Matutino' ? 'selected' : '' }}>🌅 Matutino</option>
+                    <option value="Vespertino" {{ $selectedTurno == 'Vespertino' ? 'selected' : '' }}>🌆 Vespertino</option>
+                </select>
+            </div>
         </form>
     </div>
 
@@ -52,13 +75,17 @@
                 <h2 class="text-bold-custom mb-0">IMPORDIESEL, C.A.</h2>
                 <small class="text-muted">Control de Operaciones y Flujos Financieros</small>
             </div>
-            <div>
-              <h1 class="text-bold-title m-0">RESUMEN GERENCIAL DIARIO: {{ \Carbon\Carbon::parse($selectedDate)->format('d/m/Y') }}</h1>
+            <div class="text-end">
+                <h1 class="text-bold-title mb-1">RESUMEN GERENCIAL DIARIO: {{ \Carbon\Carbon::parse($selectedDate)->format('d/m/Y') }}</h1>
+                {{-- Badge dinámico para identificar visualmente el turno en la captura de pantalla --}}
+                <span class="badge-turno {{ $selectedTurno == 'Matutino' ? 'badge-matutino' : 'badge-vespertino' }}">
+                    {{ $selectedTurno == 'Matutino' ? '🌅 CORTE MATUTINO (CIERRE DÍA ANTERIOR)' : '🌆 CORTE VESPERTINO (CIERRE OPERATIVO)' }}
+                </span>
             </div>
         </div>
 
     @if($opexRecords->isEmpty() && $bancosRecords->isEmpty())
-        <div class="alert alert-warning text-center">No hay datos registrados para la fecha seleccionada.</div>
+        <div class="alert alert-warning text-center">No hay datos registrados para el turno y fecha seleccionados.</div>
     @else
         <div class="row g-3 mb-4">
             <div class="col-md-3">
@@ -241,7 +268,7 @@
                 </div>
             </div>
         </div>
-        {{-- Panel de Análisis Automático --}}
+
         @if($alertas->isNotEmpty())
             <div class="row mt-2">
                 <div class="col-12">
@@ -272,11 +299,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     
-    // JS Nativo para seleccionar de forma limpia
     const printableArea = document.querySelector('.printableArea');
     const captureButton = document.getElementById('captureButton');
     const statusMessage = document.getElementById('statusMessage');
-    const outputContainer = document.getElementById('outputContainer');
     const exportButton = document.getElementById('exportButton');
     const sendWhatsappButton = document.getElementById('sendWhatsappButton');
 
@@ -285,7 +310,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
-    // Funciones Helper para Status
     const setStatus = (msg, bgClass, textClass) => {
         statusMessage.textContent = msg;
         statusMessage.className = `text-center p-3 rounded fw-bold mb-4 d-block ${bgClass} ${textClass}`;
@@ -301,7 +325,8 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const formData = new FormData();
             formData.append('image', imageBlob, 'reporte_whatsapp.png');
-            formData.append('caption', '📊 *Reporte Gerencial KPI* - ' + new Date().toLocaleDateString());
+            // Añadimos el turno explícito en el pie del mensaje de WhatsApp para mayor claridad del grupo directivo
+            formData.append('caption', '📊 *Reporte Gerencial KPI ({{ $selectedTurno }})* - ' + '{{ \Carbon\Carbon::parse($selectedDate)->format('d/m/Y') }}');
             
             const response = await fetch('{{ route('whatsapp.send') }}', {
                 method: 'POST',
@@ -333,7 +358,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             const imageBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-            
             if (!imageBlob) throw new Error('Blob no generado.');
 
             const item = new ClipboardItem({ "image/png": imageBlob });
@@ -364,8 +388,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const image = canvas.toDataURL("image/png");
             const link = document.createElement('a');
             
-            const fecha = new Date().toLocaleDateString().replace(/\//g, '_');
-            link.download = `Reporte_Gerencial_${fecha}.png`;
+            const fecha = '{{ $selectedDate }}';
+            const turno = '{{ $selectedTurno }}';
+            link.download = `Reporte_Gerencial_${fecha}_${turno}.png`;
             link.href = image;
             
             document.body.appendChild(link);
