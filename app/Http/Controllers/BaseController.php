@@ -206,7 +206,7 @@ abstract class BaseController extends Controller
                 'item' => $item,
                 'modelName' => class_basename($this->model)
             ], $additionalDetails);
-
+            
             return view($this->getModelNameLowerCase() . '.show', $viewData);
         } catch (ModelNotFoundException $e) {
             Session::flash('error', 'El registro no fue encontrado.');

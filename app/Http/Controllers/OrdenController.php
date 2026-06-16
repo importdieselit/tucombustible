@@ -1029,10 +1029,9 @@ class OrdenController extends BaseController
         }
 
         Session::flash('success', 'Orden creada exitosamente.');
-        
         return ($result['compra']) 
-            ? redirect()->route('ordenes.compra', ['id_order' => $orden->id, 'id' => $result['compra']->id])
-            : redirect()->route('ordenes.show', ['id' => $orden->id]);
+            ? redirect()->route('ordenes.compra', ['id_order' => $result['orden']['id'], 'id' => $result['compra']['id']])
+            : redirect()->route('ordenes.show', ['ordene' => $result['orden']['id']]);
     }
 
     public function addFotos(Request $request, $id)
