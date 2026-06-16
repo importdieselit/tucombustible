@@ -13,6 +13,7 @@ class GerentialReportController extends Controller
     public function admon(Request $request)
     {
         $tokenValido = config('services.reporte.internal_token');
+        $precioCompra= 0.54;
         
         // Si no está logueado Y el token no coincide, entonces al login
         if (!auth()->check() && $request->get('token') !== $tokenValido) {
@@ -80,7 +81,9 @@ class GerentialReportController extends Controller
             return $item->tipo === 'CUENTAS POR PAGAR' || 
                    str_contains($item->cuenta, 'CXP NACIONALES');
         });
-
+        $cxpCMGO= $records->where('cuenta' ,'CXP (USD)')->where('descuenta', 'MARINE GAS OIL ( TM )')->first()->monto ?? 0;
+        $cxpCDiesel = $records->where('cuenta' ,'CXP (USD)')->where('descuenta', 'DIESEL')->first()->monto ?? 0;
+        $cxpComb = $cxpCMGO + $cxpCDiesel;
         // 5. Inventario: Captura dinámica
         $inventario = $records->where('tipo', 'INVENTARIO')->sum('monto');
 
@@ -89,7 +92,7 @@ class GerentialReportController extends Controller
         $totalCxC = $cxcRecords->sum('monto');
         $totalCxP = $cxpRecords->sum('monto');
 
-        $comprasUsd = $totalCxP; // Asumimos que la cuenta por pagar es la adquisición del combustible
+        $comprasUsd = $precioCompra * $litrosComprados; 
         $margenBruto = $ventasUsd > 0 ? (($ventasUsd - $comprasUsd) / $ventasUsd) * 100 : 0;
 
         // 6. Liquidez: Agrupación por Tipo
@@ -150,7 +153,7 @@ class GerentialReportController extends Controller
             'opexRecords', 'bancosRecords', 'cajasRecords', 'totalOpex',
             'totalBancos', 'totalCajas', 'totalLiquidez', 'pctBancos', 'pctCajas',
             'cxcRecords', 'cxpRecords', 'totalCxC', 'totalCxP', 'pctCxC_Ventas', 'pctCxP_Ventas',
-            'margenBruto', 'comprasUsd', 'inventario', 'alertas', 'balanceLitros', 'litrosComprados'
+            'margenBruto', 'comprasUsd', 'inventario', 'alertas', 'balanceLitros', 'litrosComprados','cxpComb'
         ));
     }
 
