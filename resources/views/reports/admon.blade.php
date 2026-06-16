@@ -249,25 +249,25 @@
             </div>
         </div>
         <div class="row g-3 mb-4">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="kpi-card p-3" style="border-left-color: #6366f1;">
                     <span class="text-muted text-uppercase d-block small fw-bold">Margen Bruto</span> 
                     <span class="fs-4 fw-bold" style="color: #6366f1;">{{ number_format($margenBruto, 1, ',', '.') }}%</span>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                  <div class="kpi-card p-3" style="border-left-color: #b45309;">
                     <span class="text-muted text-uppercase d-block small fw-bold">Compras</span> 
                     <span class="fs-4 fw-bold text-danger">$ {{ number_format($comprasUsd, 2, ',', '.') }}</span>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="kpi-card p-3" style="border-left-color: #f43f5e;">
                     <span class="text-muted text-uppercase d-block small fw-bold">CXP Combustible</span> 
                     <span class="fs-4 fw-bold text-danger">$ {{ number_format($cxpComb, 2, ',', '.') }}</span>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="kpi-card p-3" style="border-left-color: #16a34a;">
                     <span class="text-muted text-uppercase d-block small fw-bold">Rotacion de Inventario</span> 
                     <span class="fs-4 fw-bold text-dark">{{ number_format($balanceLitros, 0, ',', '.') }} L</span>
