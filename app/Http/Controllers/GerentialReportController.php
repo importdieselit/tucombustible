@@ -85,8 +85,7 @@ class GerentialReportController extends Controller
         $cxpCDiesel = $records->where('cuenta' ,'CXP (USD)')->where('descuenta', 'DIESEL')->first()->monto ?? 0;
         $cxpComb = $cxpCMGO + $cxpCDiesel;
 
-        echo $cxpCMGO .' + '.$cxpCDiesel;
-        dd($cxpComb);
+        
         // 5. Inventario: Captura dinámica
         $inventario = $records->where('tipo', 'INVENTARIO')->sum('monto');
 
