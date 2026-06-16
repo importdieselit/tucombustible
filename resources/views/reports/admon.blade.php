@@ -258,7 +258,7 @@
             <div class="col-md-4">
                 <div class="kpi-card p-3" style="border-left-color: #f43f5e;">
                     <span class="text-muted text-uppercase d-block small fw-bold">Compras (CXP Combustible)</span> 
-                    <span class="fs-4 fw-bold text-danger">$ {{ number_format($comprasUsd, 2, ',', '.') }}</span>
+                    <span class="fs-4 fw-bold text-danger">$ {{ number_format($cxpComb, 2, ',', '.') }}</span>
                 </div>
             </div>
             <div class="col-md-4">
