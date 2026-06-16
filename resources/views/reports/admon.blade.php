@@ -258,7 +258,7 @@
             <div class="col-md-3">
                  <div class="kpi-card p-3" style="border-left-color: #b45309;">
                     <span class="text-muted text-uppercase d-block small fw-bold">Compras</span> 
-                    <span class="fs-4 fw-bold text-danger">$ {{ number_format($comprasUsd, 2, ',', '.') }}</span>
+                    <span class="fs-4 fw-bold text-color: #b45309">$ {{ number_format($comprasUsd, 2, ',', '.') }}</span>
                 </div>
             </div>
             <div class="col-md-3">
