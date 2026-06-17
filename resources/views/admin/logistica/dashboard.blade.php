@@ -347,10 +347,9 @@
             });
     }
 
-
     function cancelarPlanificacion(id) {
         Swal.fire({
-            title: '¿ESTÁS SEGURO?',
+            title: '¿Estás seguro?',
             text: "Esta acción cancelará la planificación y no se podrá revertir.",
             icon: 'warning',
             showCancelButton: true,
@@ -362,7 +361,7 @@
             if (result.isConfirmed) {
                 let urlBase = "{{ route('logistica.cancelar', ':id') }}";
                 let urlFinal = urlBase.replace(':id', id);
-                // Usamos el helper url() de Laravel para evitar problemas de rutas relativas
+                
                 fetch(urlFinal, {
                     method: 'POST',
                     headers: {
@@ -378,6 +377,9 @@
                     } else {
                         Swal.fire('ERROR', data.error, 'error');
                     }
+                })
+                .catch(err => {
+                    Swal.fire('ERROR', 'No se pudo procesar la solicitud.', 'error');
                 });
             }
         });

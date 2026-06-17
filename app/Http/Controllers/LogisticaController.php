@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Validation\Rule;
 use App\Services\LogisticaService;
 use App\Models\Vehiculo;
 use App\Models\Chofer; 
@@ -128,7 +129,7 @@ class LogisticaController extends Controller
         }
 
         // Pedidos: Solo para Diesel
-        if ($tipoPlanificacionId == 1) {
+        if ($tipoPlanificacionId == 2) {
             $pedidosPendientes = Pedido::where('estado', 'pendiente')
                 ->with('cliente')
                 ->get(); 
@@ -184,7 +185,13 @@ class LogisticaController extends Controller
             // CASO 1: Si es transporte PROPIO (es_transporte_propio es 1)
             'vehiculo_id'          => 'required_if:es_transporte_propio,1|nullable|exists:vehiculos,id',
             'chofer_id'            => 'required_if:es_transporte_propio,1|nullable|exists:choferes,id',
-            'cisterna'             => 'required_if:es_transporte_propio,1|nullable|exists:vehiculos,id',
+            'cisterna' => Rule::requiredIf(function () use ($request) {
+                if ($request->input('es_transporte_propio') == 1 && $request->input('vehiculo_id')) {
+                    $vehiculo = Vehiculo::find($request->input('vehiculo_id'));
+                    return $vehiculo && $vehiculo->tipo == 3; // Modifica 'tipo' si tu columna se llama distinto
+                }
+                return false;
+            }),
             'ayudante_id'          => 'nullable|exists:choferes,id',
 
             // CASO 2: Si es transporte EXTERNO (es_transporte_propio es 0)

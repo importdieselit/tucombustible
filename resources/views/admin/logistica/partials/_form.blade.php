@@ -62,6 +62,32 @@
                             @if(!isset($viaje)) minDate: "today" @endif
                         });
                     });
+
+                    document.addEventListener('DOMContentLoaded', function () {
+                    // Busca el formulario (asegúrate de que tu etiqueta <form> tenga id="formPlanificacion" o cámbialo por el tuyo)
+                    const form = document.getElementById('formPlanificacion'); 
+
+                    if (form) {
+                        form.addEventListener('submit', function (event) {
+                            // Contamos cuántos checkboxes de destino están marcados
+                            const destinosSeleccionados = document.querySelectorAll('input[name="destino_ciudad[]"]:checked');
+
+                            if (destinosSeleccionados.length === 0) {
+                                // 1. Detiene por completo el envío del formulario al servidor
+                                event.preventDefault(); 
+
+                                // 2. Muestra la alerta estética que ya usas en ImporDiesel
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'DATO REQUERIDO',
+                                    text: 'Debe seleccionar al menos un destino en el tabulador de viáticos antes de guardar.',
+                                    confirmButtonColor: '#212529', // El color oscuro corporativo que usas
+                                    confirmButtonText: 'ENTENDIDO'
+                                });
+                            }
+                        });
+                    }
+                });
                 </script>
 
                 {{-- DESTINO PARA TABULADOR (MULTIPLE - ESTILO CHECKBOX PREMIUM) --}}
