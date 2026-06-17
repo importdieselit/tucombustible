@@ -88,9 +88,9 @@ class Inventario extends Model
         return $this->hasMany(InventarioStock::class, 'inventario_id'); // InventarioStock creado en la respuesta anterior
     }
 
-    public function ubicacion()
+    public function ubicaciones()
     {
-        return $this->hasOneThrough(Ubicacion::class, InventarioStock::class, 'inventario_id', 'id', 'id', 'ubicacion_id');
+        return $this->hasManyThrough(Ubicacion::class, InventarioStock::class, 'inventario_id', 'id', 'id', 'ubicacion_id');
     }
 
     /**

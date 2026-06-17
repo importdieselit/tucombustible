@@ -16,42 +16,70 @@
     .text-bold-title { font-weight: 800; color: var(--color-corporate-blue); font-size: 1.7rem; }
     .chart-container { background: white; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; }
 
-    /* --- ESTILOS DE LOS PLANOS 2D (CROQUIS) --- */
-    .mini-croquis-container {
-        background-color: #f8f9fa;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        height: 250px;
-        padding: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-    }
+   /* Contenedor del mapa */
+.mini-croquis-container {
+    border: 1px solid #e2e8f0;
+    display: inline-block;
+    width: 100%;
+    max-width: 320px; /* Tamaño ideal de lectura rápida */
+}
+
+/* El grid de la planta */
+.grid-planta {
+    display: grid;
+    gap: 3px; /* Espaciado fino entre celdas */
+    background-color: #f8fafc;
+}
+
+/* Celda base del croquis */
+.celda-planta {
+    aspect-ratio: 1 / 1;
+    border-radius: 2px;
+    transition: all 0.2s ease;
+}
+
+/* Celdas que no tienen construida ninguna estructura (Pasillos) */
+.celda-vacia {
+    background-color: #f1f5f9; 
+    border: 1px dashed #e2e8f0;
+}
+
+/* Color UNIFORME para todas las estructuras existentes del almacén */
+.has-est {
+    background-color: #94a3b8; /* Gris azulado neutro y profesional */
+    border: 1px solid #64748b;
+}
+
+/* Color RESALTADO para indicar dónde se encuentra exactamente el ítem */
+.active-location {
+    background-color: #dc3545 !important; /* Rojo Bootstrap de alta prioridad */
+    border: 1px solid #b21f2d !important;
+    box-shadow: 0 0 8px rgba(220, 53, 69, 0.6);
+    z-index: 2;
+}
+
+/* Efecto opcional de pulsación sutil para llamar la atención del operario */
+.animate-pulse {
+    animation: pulseEffect 2s infinite;
+}
+
+@keyframes pulseEffect {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.08); opacity: 0.85; }
+    100% { transform: scale(1); opacity: 1; }
+}
 
     /* 1. Vista de Planta (Almacén completo) */
-    .grid-planta {
-        display: grid;
-        gap: 4px;
-        width: 100%;
-        height: 100%;
-        background: white;
-        border: 1px solid #cbd5e1;
-        padding: 5px;
-    }
-    .celda-planta {
-        background-color: #f1f5f9;
-        border: 1px dashed #e2e8f0;
-        border-radius: 2px;
-    }
+   
+  
     .celda-planta.has-est {
         background-color: #94a3b8;
         border: 1px solid #64748b;
     }
-    .celda-planta.active-location {
-        background-color: var(--color-corporate-blue) !important;
-        border-color: var(--color-corporate-blue) !important;
-        box-shadow: 0 0 10px rgba(15, 45, 89, 0.5);
+    .celda-planta.active-location
+        background-color: #dc3545  !important;
+        border-color:  #b21f2d !important;
+        box-shadow: 0 0 10px #dc3545;
         animation: pulse 2s infinite;
     }
 
@@ -185,29 +213,42 @@
             </h6>
         </div>
         <div class="card-body bg-light">
-            @if(isset($almacen) && isset($ubicacionPrincipal))
+          @if(isset($almacen) && isset($ubicacionPrincipal))
                 <div class="row g-4">
                     
                     <div class="col-md-4 text-center">
                         <p class="text-muted text-uppercase fw-bold small mb-2 letter-spacing-1">Planta de Almacén</p>
-                        <div class="mini-croquis-container shadow-sm bg-white">
+                        <div class="mini-croquis-container shadow-sm bg-white p-2 rounded">
                             @php 
                                 $cols = $almacen->total_columnas_grid ?? 10;
                                 $filas = $almacen->total_filas_grid ?? 10;
                             @endphp
+                            
                             <div class="grid-planta" style="grid-template-columns: repeat({{ $cols }}, 1fr);">
                                 @for($y = 1; $y <= $filas; $y++)
                                     @for($x = 1; $x <= $cols; $x++)
                                         @php
-                                            $est = $estructuras["{$y}-{$x}"] ?? null;
-                                            $isActive = $est && $est->id == $ubicacionPrincipal->estructura_grid_id;
+                                            // Búsqueda limpia y exacta mediante la colección mapeada
+                                            $est = $estructuras->get("{$y}-{$x}");
+                                            
+                                            // Evaluamos si esta celda coincide con la estructura donde está guardado el ítem
+                                            $isActive = $est && ($est->id == $ubicacionPrincipal->estructura_grid_id);
                                         @endphp
-                                        <div class="celda-planta {{ $est ? 'has-est' : '' }} {{ $isActive ? 'active-location' : '' }}"></div>
+                                        
+                                        <div class="celda-planta 
+                                            {{ $est ? 'has-est' : 'celda-vacia' }} 
+                                            {{ $isActive ? 'active-location animate-pulse' : '' }}"
+                                            title="{{ $est ? 'Bloque: '.$est->codigo_bloque : 'Pasillo/Vacío' }}">
+                                        </div>
                                     @endfor
                                 @endfor
                             </div>
                         </div>
                     </div>
+
+                </div>
+           
+
 
                     <div class="col-md-4 text-center">
                         <p class="text-muted text-uppercase fw-bold small mb-2 letter-spacing-1">Elevación de Estructura</p>

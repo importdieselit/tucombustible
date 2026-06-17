@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
-use App\Models\InventarioDespacho;
 use App\Models\InventarioCompra;    
 use App\Models\InventarioAsociado;
 use App\Models\Ubicacion;
@@ -20,6 +19,7 @@ use App\Models\AlmacenEstructuraGrid;
 use App\Models\Ventas;
 use App\Models\VentasDetalle;
 use App\Models\Orden;
+use App\Models\InventarioDespacho;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -139,7 +139,7 @@ class InventarioController extends BaseController
                 'usuario' => $mov->usuarioDespacha->name ?? 'Operador'
             ];
         });
-
+            
         // Gráfica de últimos 15 días
         $stockSimulado = $item->existencia;
         $stockDiario = [];
@@ -163,25 +163,24 @@ class InventarioController extends BaseController
         });
 
         // --- NUEVO: LÓGICA DE MAPEO Y UBICACIÓN ---
-        $almacen = $item->almacen;
-        $estructuras = collect();
-        $ubicacionPrincipal = null;
         $ubicacion_texto = 'No asignada';
+        $ubicacionPrincipal = $item->ubicaciones()->first(); 
 
-        if ($almacen) {
-            // Obtenemos todo el plano del almacén
-            $estructuras = AlmacenEstructuraGrid::where('almacen_id', $almacen->id)
+        $almacen = null;
+        $estructuras = collect(); // Colección vacía por defecto
+        $ubicacion_texto = 'No Asignada';
+
+        if ($ubicacionPrincipal && $ubicacionPrincipal->estructuraGrid) {
+            // Obtener el almacén a través de la estructura mapeada
+            $almacen = $ubicacionPrincipal->estructuraGrid->almacen;
+            $ubicacion_texto = $ubicacionPrincipal->codigo; // Ej: "ESTANTE A - NIVEL 2 - SLOT 3"
+
+            // 3. Cargar TODAS las estructuras de ese almacén usando tu estándar keyBy
+            $estructuras = \App\Models\AlmacenEstructuraGrid::where('almacen_id', $almacen->id)
                 ->get()
                 ->keyBy(function($est) {
                     return $est->coord_y . '-' . $est->coord_x;
                 });
-                
-            // Obtenemos la ubicación donde hay stock de este ítem
-            $stockPrincipal = $item->stocks->first(); 
-            if ($stockPrincipal && $stockPrincipal->ubicacion) {
-                $ubicacionPrincipal = $stockPrincipal->ubicacion;
-                $ubicacion_texto = "{$ubicacionPrincipal->codigo_ubicacion} | Pasillo {$ubicacionPrincipal->pasillo}, Estante {$ubicacionPrincipal->estante}, Nivel {$ubicacionPrincipal->nivel}, Casilla {$ubicacionPrincipal->posicion}";
-            }
         }
         
         return view('inventario.show', compact(
