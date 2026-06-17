@@ -32,6 +32,9 @@
                                 <a href="{{ route('almacenes.edit', $almacen->id) }}" class="bg-yellow-500 hover:bg-yellow-600 text-white py-1 px-3 rounded-md transition-colors duration-200">
                                     Editar
                                 </a>
+                                <a href="{{ route('almacen.layout.disenar', $almacen->id) }}" class="bg-green-500 hover:bg-green-600 text-white py-1 px-3 rounded-md transition-colors duration-200">
+                                    Diseñar
+                                </a>
                                 <form action="{{ route('almacenes.destroy', $almacen->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres eliminar este almacén?');">
                                     @csrf
                                     @method('DELETE')

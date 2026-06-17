@@ -15,10 +15,10 @@ use App\Models\TipoFalla;
 use App\Models\EstatusData; 
 use Carbon\Carbon; 
 use Illuminate\Support\Facades\Auth;
-use App\Models\InventarioSuministro; 
 use App\Traits\GenerateAlerts;
 use Illuminate\Support\Facades\Redirect;
 use App\Models\Inventario; 
+use App\Models\InventarioDespacho;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use App\Models\SuministroCompra;
@@ -276,7 +276,7 @@ class OrdenController extends BaseController
 
     protected function getDetailsForView($item){
 
-        $insumos= InventarioSuministro::where('id_orden', $item->id)->get();
+        $insumos= InventarioDespacho::where('id_orden', $item->id)->get();
         $trabajos= Trabajos::where('id_orden', $item->id)->get();
         $trabajosExternos = TrabajoExterno::where('id_orden', $item->id)->with(['proveedor'])->get();
         $fotos= OrdenFoto::where('orden_id',$item->id)->get();
@@ -524,8 +524,8 @@ class OrdenController extends BaseController
             $fotos= OrdenFoto::where('orden_id',$id)->get();
             $personal = Personal::with('persona')->where('cargo', 'Mecánico')->get(); // Cargar relación con Persona para obtener nombres completos
             $inventario = Inventario::where('id_almacen',2)->orderBy('descripcion')->get();
-            $suministros= InventarioSuministro::where('id_orden', $id)->with('inventario')->get();
-            $proveedores = Proveedor::whereIn('id_tipo_proveedor', [2])->orderBy('nombre')->get();
+            $suministros= InventarioDespacho::where('id_orden', $id)->with('inventario')->get();
+            $proveedores = Proveedor::whereIn('id_tipo_proveedor', [2,4])->orderBy('nombre')->get();
         
             $categorias_tempario = TemparioCategoria::orderBy('categoria')->get();
             
@@ -713,23 +713,43 @@ class OrdenController extends BaseController
 
     public function addInsumo(Request $request, $id)
     {
-        // Lógica para agregar insumo a la orden
-        // Esto podría incluir validación, creación de registros en tablas pivot, etc.
-
-        // Ejemplo básico:
-        $orden = Orden::findOrFail($id);
-        $orden->suministros()->create([
-            'id_inventario' => $request->id_inventario,
-            'cantidad' => $request->cantidad,
-            'precio_unitario' => Inventario::find($request->id_inventario)->costo_div ?? 0,
-            'id_orden' => $orden->id,
-            'id_auto' => $orden->id_vehiculo,
-            'id_usuario' => Auth::id(),
-            'id_emisor' => Auth::id(),
-            'estatus' => 2, // 2 = Solicitado/En Uso
+        $request->validate([
+            'id_inventario' => 'required|exists:inventario,id',
+            'cantidad'      => 'required|integer|min:1',
         ]);
 
-        return back()->with('success', 'Insumo agregado correctamente.');
+        $orden = Orden::findOrFail($id);
+
+        // Creamos el registro usando tu modelo InventarioDespacho
+        InventarioDespacho::create([
+            'id_orden'            => $orden->id,
+            'inventario_id'       => $request->id_inventario,
+            'cantidad_solicitada' => $request->cantidad,
+            'estatus'             => 2, // 2 = Solicitado / En Uso
+            'usuario_solicita_id' => Auth::id(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Insumo asignado correctamente a la orden.'
+        ]);
+    }
+
+    public function editInsumo(Request $request, $id)
+    {
+        $request->validate([
+            'cantidad'      => 'required|integer|min:1',
+        ]);
+
+        $insumo = InventarioDespacho::findOrFail($id);
+        $insumo->cantidad_solicitada = $request->cantidad;
+        $insumo->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Insumo actualizado correctamente.'
+        ]);
+                    
     }
 
     public function addManualSupply(Request $request, $id)
@@ -794,7 +814,7 @@ class OrdenController extends BaseController
     public function destroy($id)
     {
         $orden = Orden::findOrFail($id);
-        $supply = InventarioSuministro::where('id_orden', $id)->delete();
+        $supply = InventarioDespacho::where('id_orden', $id)->delete();
         $compras = SuministroCompra::where('orden_id', $id)->get();
         foreach($compras as $compra){
             $compra->detalles()->delete();
@@ -853,12 +873,10 @@ class OrdenController extends BaseController
                 $inv = Inventario::find($usoItem['id']);
                 $orden->suministros()->create([
                     'id_inventario' => $usoItem['id'],
-                    'cantidad' => $usoItem['cantidad'],
+                    'cantidad_solicitada' => $usoItem['cantidad'],
                     'precio_unitario' => $inv->costo_div ?? 0,
                     'id_orden' => $orden->id,
-                    'id_auto' => $orden->id_vehiculo,
-                    'id_usuario' => $userId,
-                    'id_emisor' => $userId,
+                    'usuario_solicitante_id' => $userId,
                     'estatus' => 2,
                 ]);
                 // RECOMENDACIÓN: $inv->decrement('stock', $usoItem['cantidad']);
@@ -1011,10 +1029,9 @@ class OrdenController extends BaseController
         }
 
         Session::flash('success', 'Orden creada exitosamente.');
-        
         return ($result['compra']) 
-            ? redirect()->route('ordenes.compra', ['id_order' => $orden->id, 'id' => $result['compra']->id])
-            : redirect()->route('ordenes.list');
+            ? redirect()->route('ordenes.compra', ['id_order' => $result['orden']['id'], 'id' => $result['compra']['id']])
+            : redirect()->route('ordenes.show', ['ordene' => $result['orden']['id']]);
     }
 
     public function addFotos(Request $request, $id)
@@ -1088,17 +1105,15 @@ class OrdenController extends BaseController
             $userId = Auth::id();
             $orden = Orden::findOrFail($request->id_orden);
     
-            $supply = InventarioSuministro::create([
+            $supply = InventarioDespacho::create([
                 'id_orden' => $orden->id,
                 'id_inventario' => $request->id_inventario,
-                'cantidad' => $request->cantidad,
+                'cantidad_solicitada' => $request->cantidad,
                 'precio_unitario' => Inventario::find($request->id_inventario)->costo_div ?? 0, // Obtener el costo del inventario
-                'id_usuario' => $userId, // Usuario que registra el suministro
-                'id_auto' => $orden->id_vehiculo,
-                'id_emisor' => $userId,
+                'usuario_solicita_id' => $userId, // Usuario que registra el suministro
                 'estatus' => 2, // 2 = 'Solicitado'
             ]);
-            $result= InventarioSuministro::with('inventario')->where('id_inventario_suministro', $supply->id_inventario_suministro)->first();
+            $result= InventarioDespacho::with('inventario')->find($supply->id);
     
             Session::flash('success', 'Suministro agregado exitosamente.');
 
@@ -1126,9 +1141,9 @@ class OrdenController extends BaseController
         ]);
 
         try {
-            $supply = InventarioSuministro::findOrFail($id);
+            $supply = InventarioDespacho::findOrFail($id);
             $supply->update([
-                'cantidad' => $request->cantidad,
+                'cantidad_solicitada' => $request->cantidad,
                 // Puedes actualizar otros campos aquí
             ]);
 
@@ -1150,7 +1165,7 @@ class OrdenController extends BaseController
      */
     public function deleteSupply($id)
     {
-            $supply = InventarioSuministro::findOrFail($id);
+            $supply = InventarioDespacho::findOrFail($id);
             $supply->delete();
 
             Session::flash('success', 'Suministro eliminado exitosamente.');

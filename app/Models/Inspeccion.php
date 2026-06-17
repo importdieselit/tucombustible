@@ -52,7 +52,7 @@ class Inspeccion extends Model
     
     public function viaje()
     {
-        return $this->belongsTo(Viaje::class, 'viaje_id');
+        return $this->hasOne(Viaje::class, 'viaje_id');
     }
 
      public function getResponsableInspeccionAttribute()

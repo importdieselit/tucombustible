@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Log;
 use App\Models\Chofer;
 use App\Models\ViaticoViaje;
 use App\Models\Vehiculo;
@@ -28,7 +29,7 @@ class Viaje extends Model
         'fecha_salida', 'status', 'vehiculo_id', 'litros', 'has_viatico', 
         'cliente_id', 'otro_cliente', 'usuario_id', 'otro_vehiculo', 
         'otro_chofer', 'otro_ayudante', 'tipo', 'cisterna', 'tipo_combustible_id', 'proveedor_id',
-        'observacion', 'producto_flete',
+        'observacion', 'producto_flete','fecha_llegada','fecha_salida_real',
 
         // Campos de Logística
         'tipo_planificacion', 'sede_id', 'ayudante_id', 'tipo_remolque', 
@@ -41,6 +42,8 @@ class Viaje extends Model
 
     protected $casts = [
         'fecha_salida' => 'datetime',
+        'fecha_llegada' => 'datetime',
+        'fecha_salida_real' => 'datetime'
     ];
 
     /**
