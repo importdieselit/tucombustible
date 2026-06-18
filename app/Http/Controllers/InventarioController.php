@@ -163,29 +163,43 @@ class InventarioController extends BaseController
         });
 
         // --- NUEVO: LÓGICA DE MAPEO Y UBICACIÓN ---
-        $ubicacion_texto = 'No asignada';
         $ubicacionPrincipal = $item->ubicaciones()->first(); 
-
         $almacen = null;
-        $estructuras = collect(); // Colección vacía por defecto
+        $gridActivo = null; 
+        $estructuras = collect();
+        $cacheUbicacionesEstante = collect();
         $ubicacion_texto = 'No Asignada';
 
-        if ($ubicacionPrincipal && $ubicacionPrincipal->estructuraGrid) {
-            // Obtener el almacén a través de la estructura mapeada
-            $almacen = $ubicacionPrincipal->estructuraGrid->almacen;
-            $ubicacion_texto = $ubicacionPrincipal->codigo; // Ej: "ESTANTE A - NIVEL 2 - SLOT 3"
+        if ($ubicacionPrincipal) {
+            // ¿Qué representa $gridActivo? El casillero o bloque del mapa general (AlmacenEstructuraGrid)
+            // Accedemos a él mediante la relación belongsTo definida en tu modelo Ubicacion
+            $gridActivo = $ubicacionPrincipal->estructuraGrid; 
 
-            // 3. Cargar TODAS las estructuras de ese almacén usando tu estándar keyBy
-            $estructuras = \App\Models\AlmacenEstructuraGrid::where('almacen_id', $almacen->id)
-                ->get()
-                ->keyBy(function($est) {
-                    return $est->coord_y . '-' . $est->coord_x;
-                });
+            if ($gridActivo) {
+                $almacen = $gridActivo->almacen;
+                $ubicacion_texto = $ubicacionPrincipal->codigo_ubicacion; // Ej: "ESTANTE A - Nivel 3 - Posición 2"
+
+                // CROQUIS 1: Mapeo de toda la planta del almacén (Estándar keyBy)
+                $estructuras = \App\Models\AlmacenEstructuraGrid::where('almacen_id', $almacen->id)
+                    ->get()
+                    ->keyBy(function($est) {
+                        return $est->coord_y . '-' . $est->coord_x;
+                    });
+
+                // CROQUIS 2: Mapeo de la elevación (Todos los slots de ESTE estante en específico)
+                $cacheUbicacionesEstante = \App\Models\Ubicacion::where('estructura_grid_id', $gridActivo->id)
+                    ->with(['inventarioItems']) // Precarga relación para evitar query N+1 al iterar
+                    ->get()
+                    ->groupBy(function($ubicacion) {
+                        return $ubicacion->nivel . '-' . $ubicacion->posicion;
+                    });
+            }
         }
         
         return view('inventario.show', compact(
             'item', 'movimientos', 'graficaFechas', 'graficaStock', 'equivalentes', 'vehiculos',
-            'almacen', 'estructuras', 'ubicacionPrincipal', 'ubicacion_texto'
+            'almacen', 'estructuras', 'ubicacionPrincipal', 'ubicacion_texto','gridActivo', 
+            'cacheUbicacionesEstante'
         ));
     }
     /**
@@ -360,7 +374,7 @@ class InventarioController extends BaseController
     public function requests()
     {
         // Se obtienen todas las solicitudes de insumos con las relaciones necesarias
-        $solicitudes = InventarioSuministro::with('inventario', 'orden')
+        $solicitudes = InventarioDespacho::with('inventario', 'orden')
             ->orderBy('created_at', 'desc')
             ->get();
         return view('inventario.requests', compact('solicitudes'));
@@ -374,7 +388,7 @@ class InventarioController extends BaseController
     public function approve($id)
     {
         try {
-            $solicitud = InventarioSuministro::findOrFail($id);
+            $solicitud = InventarioDespacho::findOrFail($id);
             if ($solicitud->estatus != 2) {
                 Session::flash('error', 'Esta solicitud ya ha sido procesada.');
                 return redirect()->back();
@@ -397,7 +411,7 @@ class InventarioController extends BaseController
     public function reject($id)
     {
         try {
-            $solicitud = InventarioSuministro::findOrFail($id);
+            $solicitud = InventarioDespacho::findOrFail($id);
             if ($solicitud->estatus == 1 || $solicitud->estatus == 5) {
                 Session::flash('error', 'Esta solicitud ya ha sido despachada o rechazada.');
                 return redirect()->back();
@@ -422,7 +436,7 @@ class InventarioController extends BaseController
         $userId = Auth::id();
         DB::beginTransaction();
         try {
-            $solicitud = InventarioSuministro::findOrFail($id);
+            $solicitud = InventarioDespacho::findOrFail($id);
 
             // Verificar que la solicitud esté aprobada
             if ($solicitud->estatus != 3) {

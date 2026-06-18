@@ -5,6 +5,7 @@
     /* --- VARIABLES Y COLORES CORPORATIVOS --- */
     :root {
         --color-corporate-blue: #0f2d59;
+        --color-corporate-red: #ef4444;
         --color-industrial-orange: #f59e0b;
         --color-industrial-orange-dark: #b45309;
     }
@@ -16,70 +17,42 @@
     .text-bold-title { font-weight: 800; color: var(--color-corporate-blue); font-size: 1.7rem; }
     .chart-container { background: white; padding: 15px; border-radius: 6px; border: 1px solid #e2e8f0; }
 
-   /* Contenedor del mapa */
-.mini-croquis-container {
-    border: 1px solid #e2e8f0;
-    display: inline-block;
-    width: 100%;
-    max-width: 320px; /* Tamaño ideal de lectura rápida */
-}
-
-/* El grid de la planta */
-.grid-planta {
-    display: grid;
-    gap: 3px; /* Espaciado fino entre celdas */
-    background-color: #f8fafc;
-}
-
-/* Celda base del croquis */
-.celda-planta {
-    aspect-ratio: 1 / 1;
-    border-radius: 2px;
-    transition: all 0.2s ease;
-}
-
-/* Celdas que no tienen construida ninguna estructura (Pasillos) */
-.celda-vacia {
-    background-color: #f1f5f9; 
-    border: 1px dashed #e2e8f0;
-}
-
-/* Color UNIFORME para todas las estructuras existentes del almacén */
-.has-est {
-    background-color: #94a3b8; /* Gris azulado neutro y profesional */
-    border: 1px solid #64748b;
-}
-
-/* Color RESALTADO para indicar dónde se encuentra exactamente el ítem */
-.active-location {
-    background-color: #dc3545 !important; /* Rojo Bootstrap de alta prioridad */
-    border: 1px solid #b21f2d !important;
-    box-shadow: 0 0 8px rgba(220, 53, 69, 0.6);
-    z-index: 2;
-}
-
-/* Efecto opcional de pulsación sutil para llamar la atención del operario */
-.animate-pulse {
-    animation: pulseEffect 2s infinite;
-}
-
-@keyframes pulseEffect {
-    0% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.08); opacity: 0.85; }
-    100% { transform: scale(1); opacity: 1; }
-}
+    /* --- ESTILOS DE LOS PLANOS 2D (CROQUIS) --- */
+    .mini-croquis-container {
+        background-color: #f8f9fa;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        height: 250px;
+        padding: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
 
     /* 1. Vista de Planta (Almacén completo) */
-   
-  
+    .grid-planta {
+        display: grid;
+        gap: 4px;
+        width: 100%;
+        height: 100%;
+        background: white;
+        border: 1px solid #cbd5e1;
+        padding: 5px;
+    }
+    .celda-planta {
+        background-color: #f1f5f9;
+        border: 1px dashed #e2e8f0;
+        border-radius: 2px;
+    }
     .celda-planta.has-est {
         background-color: #94a3b8;
         border: 1px solid #64748b;
-    }
-    .celda-planta.active-location
-        background-color: #dc3545  !important;
-        border-color:  #b21f2d !important;
-        box-shadow: 0 0 10px #dc3545;
+    }   
+    .celda-planta.active-location {
+        background-color: var(--color-corporate-red) !important;
+        border-color: var(--color-corporate-red) !important;
+        box-shadow: 0 0 10px rgba(239,68,68,0.5);
         animation: pulse 2s infinite;
     }
 
@@ -114,6 +87,38 @@
         50% { transform: scale(1.08); }
         100% { transform: scale(1); }
     }
+
+    #tablaMatrizEstante th, #tablaMatrizEstante td {
+    vertical-align: middle !important;
+}
+
+/* Estados estándar */
+.slot-libre {
+    border-color: #10b981 !important; /* Verde Esmeralda */
+}
+.slot-ocupado {
+    border-color: #ef4444 !important; /* Rojo Cuidado */
+}
+
+/* ESTADO DE ALTA PRIORIDAD: Resalta la ubicación del ítem consultado */
+.slot-item-actual {
+    border-color: #ffc107 !important; /* Amarillo/Dorado Neón de Bootstrap */
+    background-color: #2d2613 !important; /* Fondo ámbar oscuro para contraste */
+    box-shadow: 0 0 12px rgba(255, 193, 7, 0.7);
+    transform: scale(1.02);
+    z-index: 5;
+}
+
+/* Animación sutil de respiración sobre el borde del producto actual */
+.pulse-item-border {
+    animation: borderGlow 2.5s infinite;
+}
+
+@keyframes borderGlow {
+    0% { border-color: #ffc107; box-shadow: 0 0 4px rgba(255, 193, 7, 0.4); }
+    50% { border-color: #fd7e14; box-shadow: 0 0 14px rgba(253, 126, 20, 0.8); }
+    100% { border-color: #ffc107; box-shadow: 0 0 4px rgba(255, 193, 7, 0.4); }
+}
 </style>
 @endpush
 
@@ -213,61 +218,140 @@
             </h6>
         </div>
         <div class="card-body bg-light">
-          @if(isset($almacen) && isset($ubicacionPrincipal))
-                <div class="row g-4">
-                    
+            <div class="row w-100 col-12">
+            @if(isset($almacen) && isset($ubicacionPrincipal))
+                
                     <div class="col-md-4 text-center">
                         <p class="text-muted text-uppercase fw-bold small mb-2 letter-spacing-1">Planta de Almacén</p>
-                        <div class="mini-croquis-container shadow-sm bg-white p-2 rounded">
+                        <div class="mini-croquis-container shadow-sm bg-white">
                             @php 
                                 $cols = $almacen->total_columnas_grid ?? 10;
                                 $filas = $almacen->total_filas_grid ?? 10;
                             @endphp
-                            
                             <div class="grid-planta" style="grid-template-columns: repeat({{ $cols }}, 1fr);">
                                 @for($y = 1; $y <= $filas; $y++)
                                     @for($x = 1; $x <= $cols; $x++)
                                         @php
-                                            // Búsqueda limpia y exacta mediante la colección mapeada
-                                            $est = $estructuras->get("{$y}-{$x}");
-                                            
-                                            // Evaluamos si esta celda coincide con la estructura donde está guardado el ítem
-                                            $isActive = $est && ($est->id == $ubicacionPrincipal->estructura_grid_id);
+                                            $est = $estructuras["{$y}-{$x}"] ?? null;
+                                            $isActive = $est && $est->id == $ubicacionPrincipal->estructura_grid_id;
                                         @endphp
-                                        
-                                        <div class="celda-planta 
-                                            {{ $est ? 'has-est' : 'celda-vacia' }} 
-                                            {{ $isActive ? 'active-location animate-pulse' : '' }}"
-                                            title="{{ $est ? 'Bloque: '.$est->codigo_bloque : 'Pasillo/Vacío' }}">
-                                        </div>
+                                        <div class="celda-planta {{ $est ? 'has-est' : '' }} {{ $isActive ? 'active-location' : '' }}"></div>
                                     @endfor
                                 @endfor
                             </div>
                         </div>
                     </div>
-
-                </div>
-           
-
-
+                    
                     <div class="col-md-4 text-center">
-                        <p class="text-muted text-uppercase fw-bold small mb-2 letter-spacing-1">Elevación de Estructura</p>
-                        <div class="mini-croquis-container shadow-sm bg-white">
-                            @php $gridActivo = $ubicacionPrincipal->estructuraGrid ?? null; @endphp
-                            @if($gridActivo)
-                                <div class="grid-alzado" style="grid-template-rows: repeat({{ $gridActivo->cantidad_niveles }}, 1fr);">
-                                    @for($nivel = $gridActivo->cantidad_niveles; $nivel >= 1; $nivel--)
-                                        <div class="nivel-alzado" style="grid-template-columns: repeat({{ $gridActivo->cantidad_secciones }}, 1fr);">
-                                            @for($pos = 1; $pos <= $gridActivo->cantidad_secciones; $pos++)
-                                                @php $isBinActive = ($ubicacionPrincipal->nivel == $nivel && $ubicacionPrincipal->posicion == $pos); @endphp
-                                                <div class="casilla-alzado {{ $isBinActive ? 'active-location' : '' }}"></div>
+                        <div class="table-responsive bg-dark p-3 rounded shadow-inner mb-4">
+                            <table class="table table-bordered text-center align-middle mb-0 text-white border-secondary" id="tablaMatrizEstante">
+                                <thead>
+                                    <tr>
+                                        <th class="bg-secondary text-light small border-secondary" style="width:120px;">Nivel \ Posición</th>
+                                        @for($p = 1; $p <= $gridActivo->cantidad_secciones; $p++)
+                                            <th class="bg-secondary text-light small border-secondary">Posición {{ $p }}</th>
+                                        @endfor
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for($n = $gridActivo->cantidad_niveles; $n >= 1; $n--)
+                                        <tr>
+                                            <td class="bg-dark text-light fw-bold small align-middle border-secondary">Nivel {{ $n }}</td>
+                                            
+                                            @php 
+                                                $saltarColumnas = 0; 
+                                            @endphp
+
+                                            @for($p = 1; $p <= $gridActivo->cantidad_secciones; $p++)
+                                                {{-- Ignorar celdas absorbidas por un colspan anterior --}}
+                                                @if($saltarColumnas > 0)
+                                                    @php $saltarColumnas--; @endphp
+                                                    @continue
+                                                @endif
+
+                                                @php
+                                                    $key = "{$n}-{$p}";
+                                                    // Obtenemos los slots que pertenecen a esta coordenada
+                                                    $slotsCelda = $cacheUbicacionesEstante->get($key);
+                                                @endphp
+
+                                                @if($slotsCelda && $slotsCelda->count() > 0)
+                                                    @php
+                                                        // Evaluamos el colspan configurado en la primera ubicación del bloque
+                                                        $colspan = $slotsCelda->first()->colspan ?? 1;
+                                                        if ($colspan > 1) {
+                                                            $saltarColumnas = $colspan - 1;
+                                                        }
+                                                    @endphp
+
+                                                    <td colspan="{{ $colspan }}" class="p-1 align-middle border-secondary bg-dark-subtle" style="min-width: 100px;">
+                                                        {{-- Contenedor flexible para múltiples subdivisiones (subposiciones) --}}
+                                                        <div class="d-flex w-100 h-100 gap-1 justify-content-center">
+                                                            @foreach($slotsCelda as $slot)
+                                                                @php
+                                                                    $ocupado = $slot->ocupado ?? false;
+                                                                    
+                                                                    // Condición CRÍTICA: ¿Es este slot el lugar específico del ítem actual?
+                                                                    $isCurrentItemLocation = ($slot->id == $ubicacionPrincipal->id);
+                                                                    
+                                                                    // Selección de Clases de Estado y Bordes
+                                                                    if ($isCurrentItemLocation) {
+                                                                        $claseEstado = 'slot-item-actual pulse-item-border';
+                                                                    } else {
+                                                                        $claseEstado = $ocupado ? 'slot-ocupado border-danger' : 'slot-libre border-success';
+                                                                    }
+
+                                                                    // Cálculo métrico de ocupación
+                                                                    $porcentaje = 0;
+                                                                    $colorBarra = 'bg-success';
+                                                                    if ($ocupado && $slot->inventario) {
+                                                                        $capacidad = $slot->capacidad_maxima ?? $slot->total_articulos ?? 1;
+                                                                        $actual = $slot->total_articulos ?? 0;
+                                                                        $porcentaje = $capacidad > 0 ? ($actual / $capacidad) * 100 : 0;
+                                                                        $colorBarra = $porcentaje > 90 ? 'bg-danger' : ($porcentaje > 70 ? 'bg-warning' : 'bg-success');
+                                                                    }
+                                                                @endphp
+
+                                                                <div class="slot-rack flex-fill p-2 rounded text-center {{ $claseEstado }}" 
+                                                                    style="background: #1e293b; border: 1px solid; min-width: 85px; transition: 0.2s;">
+                                                                    
+                                                                    @if($slot->subposicion)
+                                                                        <span class="badge bg-secondary mb-1" style="font-size: 7px; padding: 2px 4px;">SUB: {{ $slot->subposicion }}</span>
+                                                                    @endif
+                                                                    
+                                                                    <div class="fw-bold" style="font-size: 10px; color: #cbd5e1;">N{{ $n }}-P{{ $p }}</div>
+                                                                    
+                                                                    @if($ocupado && $slot->inventario)
+                                                                        <div class="small text-truncate text-white-50 mt-1" style="font-size:9px;" title="{{ $slot->inventario->producto }}">
+                                                                            {{ $slot->inventario->sku }}
+                                                                        </div>
+                                                                        <div class="fw-bold text-light" style="font-size:10px;">
+                                                                            {{ $slot->total_articulos }} / {{ $slot->capacidad_maxima ?? '∞' }}
+                                                                        </div>
+                                                                        
+                                                                        <div class="progress mt-1" style="height: 4px; background-color: #334155;">
+                                                                            <div class="progress-bar {{ $colorBarra }}" role="progressbar" style="width: {{ min($porcentaje, 100) }}%"></div>
+                                                                        </div>
+                                                                        <div class="d-flex justify-content-between mt-1" style="font-size: 7px; opacity: 0.8;">
+                                                                            <span style="color: #94a3b8;">Llenado</span>
+                                                                            <span class="fw-bold text-white">{{ round($porcentaje) }}%</span>
+                                                                        </div>
+                                                                    @else
+                                                                        <div class="mt-1"><small style="font-size:9px;" class="text-muted">Libre</small></div>
+                                                                    @endif
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                    </td>
+                                                @else
+                                                    {{-- Celda vacía o sin configurar en la matriz --}}
+                                                    <td class="bg-dark text-muted text-center align-middle border-secondary" style="opacity:0.2; border-style: dashed !important;">-</td>
+                                                @endif
                                             @endfor
-                                        </div>
+                                        </tr>
                                     @endfor
-                                </div>
-                            @else
-                                <span class="text-muted align-self-center">Sin estructura base registrada</span>
-                            @endif
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
@@ -279,8 +363,7 @@
                             </div>
                         </div>
                     </div>
-
-                </div>
+            
             @else
                 <div class="text-center py-5">
                     <i class="bi bi-box-seam text-muted fs-1 mb-3"></i>
