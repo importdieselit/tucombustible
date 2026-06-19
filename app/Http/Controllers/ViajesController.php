@@ -1530,14 +1530,17 @@ public function updateGuiaData(Request $request, $viajeId)
 
         // Carga optimizada de relaciones para evitar queries N+1 en el Blade
         $viaje = Viaje::with([
-            'vehiculo',
-            'cisternaAcoplada',
-            'chofer.persona',
-            'sede',
+            'vehiculo', 
+            'chofer.persona', 
+            'ayudante.persona', 
+            'sede', 
             'detalles.cliente',
             'detalles.buques',
+            'chofer.persona',
+            'ayudante.persona',
+            'compraCombustible',
             'compraCombustible.planta'
-        ])->findOrFail($id);
+            ])->findOrFail($id);
 
         return view('viajes.imprimir', compact('viaje'));
     }
