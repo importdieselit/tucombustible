@@ -504,6 +504,9 @@
             </div>
         </div>
     </div>
+     <a href="{{ route('ordenes.imprimir', $orden->id) }}" target="_blank" class="btn btn-sm btn-dark ms-2">
+                    <i class="fas fa-print"></i> Imprimir Hoja Única
+                </a>
 </div>
 
 {{-- MODALES --}}
@@ -567,9 +570,7 @@
                 <button type="button" class="btn btn-success btn-sm fw-bold px-4" id="btn-guardar-todo">
                     <i class="fas fa-save me-1"></i> GUARDAR TRABAJO
                 </button>
-                <a href="{{ route('ordenes.imprimir', $orden->id) }}" target="_blank" class="btn btn-sm btn-dark ms-2">
-                    <i class="fas fa-print"></i> Imprimir Hoja Única
-                </a>
+               
             </div>
         </div>
     </div>
