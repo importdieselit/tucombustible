@@ -449,6 +449,38 @@
             }
         });
     }
+
+     function enviarCapturaWa(idViaje) {
+        let btn = $('#btnWs_' + idViaje);
+        let originalHtml = btn.html();
+        
+        // Estado de carga
+        btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Enviando...').prop('disabled', true);
+
+        $.ajax({
+            url: `/viajes/${idViaje}/enviar-whatsapp`, // Ajusta la ruta a tu estandar
+            type: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                if(response.success) {
+                    // Puedes cambiar esto por SweetAlert2 si lo usas en el sistema
+                    alert('Captura enviada exitosamente a WhatsApp.');
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            },
+            error: function(xhr) {
+                console.error(xhr.responseText);
+                alert('Ocurrió un error de comunicación con el servidor.');
+            },
+            complete: function() {
+                // Restaurar botón
+                btn.html(originalHtml).prop('disabled', false);
+            }
+        });
+    }
 </script>
 @endpush
 @endsection
