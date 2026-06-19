@@ -34,16 +34,25 @@ class ChequeoDepositoController extends Controller
             ->leftJoin('users', 'chequeos_depositos.id_usuario', '=', 'users.id')
             ->select('chequeos_depositos.*', 'sedes.nombre as sede_nombre', 'users.name as usuario_nombre');
 
-        // Filtro histórico por sede si el usuario lo selecciona
+        // Filtro por sede
         if ($request->filled('id_sede')) {
             $query->where('chequeos_depositos.id_sede', $request->id_sede);
         }
 
+        // 🆕 FILTROS POR RANGO DE FECHAS
+        if ($request->filled('fecha_inicio')) {
+            $query->where('chequeos_depositos.fecha', '>=', $request->fecha_inicio);
+        }
+
+        if ($request->filled('fecha_fin')) {
+            $query->where('chequeos_depositos.fecha', '<=', $request->fecha_fin);
+        }
+
+        // Paginado estricto de 15 en 15
         $chequeos = $query->orderBy('chequeos_depositos.fecha', 'desc')
             ->orderBy('chequeos_depositos.created_at', 'desc')
             ->paginate(15);
 
-        // Se obtienen las sedes para poder pintar el filtro en la vista index
         $sedes = Sedes::orderBy('nombre', 'asc')->get();
 
         return view('combustibles.chequeos_depositos.index', compact('chequeos', 'sedes'));
@@ -91,6 +100,30 @@ class ChequeoDepositoController extends Controller
             return redirect()->back()
                 ->withInput()
                 ->withErrors(['error' => $e->getMessage()]);
+        }
+    }
+
+    public function show($id)
+    {
+        try {
+            $detalles = DB::table('chequeos_depositos_detalles')
+                ->join('depositos', 'chequeos_depositos_detalles.id_deposito', '=', 'depositos.id')
+                ->join('tipos_combustible', 'chequeos_depositos_detalles.id_tipos_combustible', '=', 'tipos_combustible.id')
+                ->where('chequeos_depositos_detalles.id_chequeo', $id)
+                ->select(
+                    'chequeos_depositos_detalles.*',
+                    'depositos.serial as tanque_serial',
+                    'depositos.forma as tanque_forma',
+                    'depositos.capacidad_maxima as capacidad_max',
+                    'tipos_combustible.nombre as combustible_nombre'
+                )
+                ->get();
+
+            // Retornamos la sub-vista parcial inyectando los detalles corregidos
+            return view('combustibles.chequeos_depositos.partials.detalle_tanques_tabla', compact('detalles'));
+
+        } catch (Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 }

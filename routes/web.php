@@ -330,6 +330,7 @@ Route::middleware(['auth'])->group(function () {
                     Route::get('/', [ChequeoDepositoController::class, 'index'])->name('index');
                     Route::get('/crear', [ChequeoDepositoController::class, 'create'])->name('create');
                     Route::post('/guardar', [ChequeoDepositoController::class, 'store'])->name('store');
+                    Route::get('/{id}', [ChequeoDepositoController::class, 'show'])->name('show');
                 });
         });
 

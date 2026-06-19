@@ -21,9 +21,8 @@
     <div class="mb-4 d-flex justify-content-between align-items-end">
         <div>
             <h2 class="h4 fw-black text-dark text-uppercase mb-1">
-                <i class="fas fa-database text-orange me-2"></i> Infraestructura de Tanques
+                <i class="fas fa-database text-orange me-2"></i> Infraestructura de Tanques de Impordiesel
             </h2>
-            <p class="text-muted small mb-0">Gestión, cubicidad y control físico de almacenamiento de combustibles de ImporDiesel.</p>
         </div>
         <div>
             <a href="{{ route('combustibles.depositos.create') }}" class="btn btn-sm btn-dark fw-bold text-uppercase shadow-sm py-2 px-3" style="font-size: 12px;">
@@ -59,7 +58,7 @@
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
             <h6 class="mb-0 fw-black text-uppercase small text-dark">
-                <i class="fas fa-cubes text-orange me-2"></i> Diseñador de Patio de Tanques (3D Interactivo)
+                <i class="fas fa-cubes text-orange me-2"></i> Plano Tridimensional de Depositos de Combustible (3D Interactivo)
             </h6>
             @if(request('id_sede'))
                 <span class="badge bg-light text-dark border px-3 py-2 text-uppercase fw-bold" style="font-size: 11px;">
@@ -110,7 +109,7 @@
     <div class="card shadow-sm border-0" style="border-left: 4px solid #ff6600;">
         <div class="card-header bg-white border-bottom py-3">
             <h6 class="mb-0 fw-black text-uppercase small text-dark">
-                <i class="fas fa-gas-pump text-orange me-2"></i> Historial de Tanques Registrados
+                <i class="fas fa-gas-pump text-orange me-2"></i> Tanques Registrados
             </h6>
         </div>
         <div class="card-body p-0">
@@ -118,9 +117,9 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="bg-light sticky-top" style="z-index: 10;">
                         <tr class="text-uppercase text-muted" style="font-size: 13px;">
-                            <th class="ps-4">Nombre / Serial</th>
+                            <th class="ps-4">Nombre</th>
                             <th>Sede</th>
-                            <th>Tipo de Combustible</th>
+                            <th>Combustible Actual</th>
                             <th class="text-center">Capacidad Máxima</th>
                             <th class="text-center">Forma Geométrica</th>
                             <th class="text-center">Acciones</th>

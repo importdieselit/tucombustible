@@ -17,24 +17,26 @@
 <div class="container-fluid py-4 px-4">
 
     {{-- ENCABEZADO --}}
-    <div class="mb-4 d-flex justify-content-between align-items-end">
+    <div class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
         <div>
             <h2 class="h4 fw-black text-dark text-uppercase mb-1">
-                <i class="fas fa-eye-dropper text-orange me-2"></i> Auditoría de Varillaje de Tanques
+                <i class="fas fa-eye-dropper text-orange me-2"></i> Chequeo de Tanques (Varillaje)
             </h2>
-            <p class="text-muted small mb-0">Control físico, cubicación instantánea y validación de existencias en tiempo real.</p>
         </div>
-        <div class="text-end">
-            <span class="badge bg-dark text-white p-2 text-uppercase fw-bold" style="font-size: 12px;">
+        <div class="d-flex flex-wrap align-items-center justify-content-md-end gap-2">
+            <span class="badge bg-light text-dark border p-2 text-uppercase fw-bold mb-0 d-inline-flex align-items-center" style="font-size: 12px; height: 32px;">
                 <i class="fas fa-user-shield text-orange me-1"></i> Auditor: {{ auth()->user()->name }}
             </span>
+            <a href="{{ route('combustibles.chequeos_depositos.index') }}" class="btn btn-sm btn-dark fw-bold text-uppercase shadow-sm px-3 d-inline-flex align-items-center" style="font-size: 12px; height: 32px;">
+                <i class="fas fa-history me-1"></i> Histórico de Chequeos
+            </a>
         </div>
     </div>
 
     {{-- FILTROS POR SEDE (CONTROLADOR DE FLUJO GET) --}}
     <form action="{{ url()->current() }}" method="GET" class="row g-2 align-items-end mb-4">
         <div class="col-md-3">
-            <label class="small fw-bold text-uppercase text-muted mb-1" style="font-size: 12px;">Ubicación a Evaluar</label>
+            <label class="small fw-bold text-uppercase text-muted mb-1" style="font-size: 12px;">Sede a Chequear</label>
             <select name="id_sede" class="form-select form-select-sm fw-bold" style="font-size: 13px;" onchange="this.form.submit()">
                 <option value="">SELECCIONE UNA SEDE PARA AUDITAR</option>
                 @foreach($sedes as $sede)
@@ -61,8 +63,8 @@
         <div class="alert bg-white shadow-sm d-flex align-items-center mb-4 py-3" style="border-left: 4px solid #ff6600; border-radius: 4px;">
             <i class="fas fa-clock text-orange fa-lg me-3"></i>
             <div>
-                <strong class="text-dark d-block" style="font-size: 14px;">Sello de Auditoría Blindado</strong>
-                <span class="text-muted small">Este registro se guardará automáticamente con la fecha y hora exacta del servidor. No se permiten modificaciones extemporáneas.</span>
+                <strong class="text-dark d-block" style="font-size: 14px;">Información Blindada de Chequeo</strong>
+                <span class="text-muted small">Este registro se guardará automáticamente con la fecha y hora exacta. Además del usuario que realiza el chequeo</span>
             </div>
         </div>
 
@@ -70,7 +72,7 @@
         <div class="card shadow-sm border-0 mb-4">
             <div class="card-header bg-white border-bottom py-3">
                 <h6 class="mb-0 fw-black text-uppercase small text-dark">
-                    <i class="fas fa-cube text-orange me-2"></i> Monitoreo Volumétrico (Gemelo Digital 3D)
+                    <i class="fas fa-cube text-orange me-2"></i> Plano Tridimensional de Depositos de Combustible (3D Interactivo)
                 </h6>
             </div>
             <div class="card-body p-0 bg-dark position-relative">
@@ -90,7 +92,6 @@
                 </div>
             </div>
         </div>
-
 
         @if ($errors->any())
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -133,7 +134,7 @@
             <div class="card shadow-sm border-0 mb-4" style="border-left: 4px solid #ff6600;">
                 <div class="card-header bg-white border-bottom py-3">
                     <h6 class="mb-0 fw-black text-uppercase small text-dark">
-                        <i class="fas fa-list-check text-orange me-2"></i> Captura Forzosa de Medidas en Patio
+                        <i class="fas fa-list-check text-orange me-2"></i> Ingrese acá las mediciones realizadas con su respectivo tipo de combustible para cada tanque
                     </h6>
                 </div>
                 <div class="card-body p-0">
@@ -141,12 +142,12 @@
                         <table class="table table-hover align-middle mb-0">
                             <thead class="bg-light">
                                 <tr class="text-uppercase text-muted" style="font-size: 12px; letter-spacing: 0.5px;">
-                                    <th class="ps-4">Tanque / Serial</th>
-                                    <th>Geometría</th>
+                                    <th class="ps-4">Nombre</th>
+                                    <th>Forma Geométrica</th>
                                     <th>Capacidad Máxima</th>
-                                    <th style="width: 280px;">Combustible Presente</th>
-                                    <th style="width: 200px;">Medición Vara (CM)</th>
-                                    <th class="text-end pe-4" style="width: 180px;">Litros Cubitados</th>
+                                    <th style="width: 280px;">Combustible Actual</th>
+                                    <th style="width: 200px;">Centimetros Medidos</th>
+                                    <th class="text-end pe-4" style="width: 180px;">Litros Calculados</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -158,7 +159,6 @@
                                     <tr data-tanque-id="{{ $deposito->id }}" class="fila-tanque">
                                         <td class="ps-4">
                                             <span class="fw-black text-dark d-block" style="font-size: 15px;">{{ $deposito->serial }}</span>
-                                            <small class="text-muted text-uppercase font-monospace" style="font-size: 11px;">ID: #{{ $deposito->id }}</small>
                                             <input type="hidden" name="detalles[{{ $loop->index }}][id_deposito]" value="{{ $deposito->id }}">
                                         </td>
                                         <td>
@@ -172,13 +172,12 @@
                                             </span>
                                         </td>
                                         <td>
-                                            {{-- SELECT DINÁMICO DE COMBUSTIBLE CON ATRIBUTOS DATA PARA THREE.JS --}}
                                             <select name="detalles[{{ $loop->index }}][id_tipos_combustible]" class="form-select form-select-sm select-combustible" data-tanque-id="{{ $deposito->id }}">
                                                 @foreach($tiposCombustible as $tipo)
                                                     @php
-                                                        // Evaluamos la persistencia: 1. Datos enviados fallidos (old) -> 2. Campo singular -> 3. Campo plural (por si acaso)
                                                         $selectedId = old("detalles.{$loop->index}.id_tipos_combustible")  
                                                             ?? $deposito->ultima_medicion->id_tipos_combustible 
+                                                            ?? $deposito->ultima_medicion->id_tipo_combustible 
                                                             ?? '';
                                                     @endphp
                                                     <option value="{{ $tipo->id }}" 
@@ -232,9 +231,9 @@
                     <div class="card shadow-sm border-0 h-100">
                         <div class="card-body">
                             <label class="small fw-black text-uppercase text-muted mb-2 d-block" style="font-size: 12px;">
-                                <i class="fas fa-comment-alt me-1 text-orange"></i> Observaciones de Patio e Incidencias
+                                <i class="fas fa-comment-alt me-1 text-orange"></i> Observaciones e Incidencias
                             </label>
-                            <textarea name="observaciones" rows="3" class="form-control" placeholder="Escriba aquí novedades (Ej. Variaciones climáticas, estado físico de la vara, condiciones de seguridad del patio)..." style="font-size: 13px; border-radius: 6px;"></textarea>
+                            <textarea name="observaciones" rows="3" class="form-control" placeholder="Escriba aquí novedades (Ej. Estado físico de la vara, condiciones de seguridad del patio)..." style="font-size: 13px; border-radius: 6px Pert;"></textarea>
                         </div>
                     </div>
                 </div>
@@ -258,7 +257,7 @@
         <div class="card-body py-5 text-center bg-light border border-dashed rounded shadow-sm">
             <div class="py-5">
                 <i class="fas fa-clipboard-check text-muted fa-3x mb-3 opacity-50"></i>
-                <h5 class="fw-bold text-secondary text-uppercase mb-1" style="font-size: 14px;">Formulario de Varillaje no Iniciado</h5>
+                <h5 class="fw-bold text-secondary text-uppercase mb-1" style="font-size: 14px;">Formulario de Chequeo no Iniciado</h5>
                 <p class="text-muted small mb-0">Seleccione una Sede operativa específica en el panel superior para desplegar los tanques y registrar las lecturas.</p>
             </div>
          </div>
@@ -287,7 +286,7 @@
             camera.position.set(0, 10, 15);
             const renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(container.clientWidth, container.clientHeight);
-            renderer.localClippingEnabled = true; // Fundamental para el nivel de líquido
+            renderer.localClippingEnabled = true; 
             container.appendChild(renderer.domElement);
 
             const controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -316,7 +315,7 @@
                 const diametro = (tanque.diametro || 200) / 100;
                 const radio = diametro / 2;
 
-                // 1. GEOMETRÍAS CON SOPORTE TOTAL (INCLUYENDO ÓVALOS)
+                // 1. GEOMETRÍAS CON SOPORTE TOTAL
                 if (tanque.forma === 'R' || tanque.forma === 'C') {
                     geometry = new THREE.BoxGeometry(ancho, alto, largo);
                     fluidGeometry = new THREE.BoxGeometry(ancho * 0.99, alto * 0.99, largo * 0.99);
@@ -333,12 +332,12 @@
 
                 // 2. DETECTAR COMBUSTIBLE ACTIVO DESDE EL DOM
                 const selectElement = document.querySelector(`.select-combustible[data-tanque-id="${tanque.id}"]`);
-                let colorFluido = 0xffa500; // Diesel por defecto (Naranja)
+                let colorFluido = 0xffa500; 
                 if (selectElement) {
                     const opt = selectElement.options[selectElement.selectedIndex];
                     const nombreComb = opt ? (opt.getAttribute('data-nombre') || '') : '';
                     if (nombreComb && !nombreComb.includes('DIESEL')) {
-                        colorFluido = 0x00a8ff; // MGO (Azul)
+                        colorFluido = 0x00a8ff; 
                     }
                 }
 
@@ -355,6 +354,9 @@
 
                 let yFija = alto / 2;
                 let altoVisual = alto;
+                
+                // EXTRAER ORIENTACIÓN ORIGINAL DESDE LA BASE DE DATOS
+                let rotacionInicial = tanque.rotacion ? parseFloat(tanque.rotacion) : 0;
 
                 if (tanque.forma === 'CH') {
                     tankMesh.rotation.z = Math.PI / 2;
@@ -370,7 +372,6 @@
                 }
 
                 // 4. CREAR LÍQUIDO (HIJO)
-                // Inicializamos al 0% (se actualizará en el loop de sincronización final si hay datos)
                 const clipPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), yFija - (altoVisual / 2));
                 clippingPlanes[tanque.id] = clipPlane;
 
@@ -382,21 +383,24 @@
                     side: THREE.DoubleSide
                 });
                 const fluidMesh = new THREE.Mesh(fluidGeometry, materialLiquido);
-                fluidMesh.raycast = function() {}; // Desactiva colisiones directas al líquido
+                fluidMesh.raycast = function() {}; 
 
-                // APLICAR JERARQUÍA NATIVA
+                // JERARQUÍA NATIVA APLICADA
                 tankMesh.add(fluidMesh);
 
                 const inicialX = tanque.orden_x !== null ? parseFloat(tanque.orden_x) : filaEjeX;
                 const inicialZ = tanque.orden_z !== null ? parseFloat(tanque.orden_z) : 0;
 
+                // POSICIONAR Y ROTAR EN EL PATIO SEGÚN COORDENADAS HISTÓRICAS
                 tankMesh.position.set(inicialX, yFija, inicialZ);
+                tankMesh.rotation.y = THREE.MathUtils.degToRad(rotacionInicial);
                 
                 tankMesh.userData = {
                     id: tanque.id,
                     serial: tanque.serial,
                     capacidad: parseFloat(tanque.capacidad_maxima).toLocaleString('es-VE'),
-                    altoMax: altoVisual
+                    altoMax: altoVisual,
+                    rotacion: rotacionInicial // Mantenemos registro en metadatos
                 };
 
                 scene.add(tankMesh);
@@ -441,7 +445,7 @@
                 });
             });
 
-            // LISTENER CORRECTO PARA EL SELECT DE COMBUSTIBLE
+            // LISTENER PARA EL SELECT DE COMBUSTIBLE
             document.querySelectorAll('.select-combustible').forEach(select => {
                 select.addEventListener('change', function() {
                     const id = this.getAttribute('data-tanque-id');
@@ -455,7 +459,7 @@
                 });
             });
 
-            // RAYCASTER PARA EL TOOLTIP (CLIC DIRECTO EN EL TANQUE)
+            // RAYCASTER PARA EL TOOLTIP
             const raycaster = new THREE.Raycaster();
             const mouse = new THREE.Vector2();
 
@@ -474,8 +478,6 @@
                     const data = tanqueSeleccionado.userData;
 
                     const inputCms = document.querySelector(`.input-centimetros[data-tanque-id="${data.id}"]`).value || '0';
-                    
-                    // Leer directamente desde el Select Dinámico
                     const selectComb = document.querySelector(`.select-combustible[data-tanque-id="${data.id}"]`);
                     const optionActiva = selectComb ? selectComb.options[selectComb.selectedIndex] : null;
                     const tipoActivo = optionActiva ? (optionActiva.getAttribute('data-nombre') || 'DIESEL') : 'DIESEL';
@@ -524,7 +526,6 @@
                 });
             }, 300);
 
-            // ANIMATION LOOP
             function animate() {
                 requestAnimationFrame(animate);
                 controls.update();
@@ -532,7 +533,6 @@
             }
             animate();
 
-            // RESPONSIVE RESIZE
             window.addEventListener('resize', function () {
                 camera.aspect = container.clientWidth / container.clientHeight;
                 camera.updateProjectionMatrix();
