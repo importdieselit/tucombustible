@@ -94,7 +94,7 @@
             </div>
         </div>
         
-        {{-- Tarjeta: Ayudante --}}
+        {{-- Tarjeta: Alludante --}}
         <div class="col-md-3">
             <div class="p-3 rounded shadow-sm h-100" style="background-color: #f5f3ff; border-left: 4px solid #6366f1;">
                 <label class="small fw-bold d-block text-uppercase mb-1" style="font-size: 11px; letter-spacing: 0.5px; color: #4f46e5;">Ayudante de Ruta</label>
