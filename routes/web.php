@@ -43,7 +43,9 @@ Auth::routes(['reset' => false]);
 Route::get('/', function () { return redirect()->route('login'); });
 Route::get('/viajes/reporte-interno', [ViajesController::class, 'reporteDiario'])
     ->name('reporte.operaciones.interno');
-Route::post('/viajes/{id}/enviar-whatsapp', [ViajesController::class, 'enviarWhatsappAjax']);
+
+
+Route::post('/viajes/{id}/imprimir', [ViajesController::class, 'imprimir'])->name('viajes.imprimir');
 Route::get('/reporte/flota-interno', [VehiculoController::class, 'reporteDisponibilidad'])->name('reporte.flota.interno');
 Route::get('/reporte/mantenimiento-interno', [OrdenController::class, 'reporteGerencial'])->name('reporte.mantenimiento.interno');
 Route::get('/vehiculos/disponibilidad/refresh', [VehiculoController::class, 'refreshDisponibilidad'])->name('vehiculos.disponibilidad.refresh');
@@ -289,6 +291,7 @@ Route::middleware(['auth'])->group(function () {
         Route::put('viaticos/tabulador/update', [ViajesController::class, 'tabuladorUpdate'])->name('viaticos.tabulador.update');
         Route::put('viaticos/parametros/update', [ViajesController::class, 'parametrosUpdate'])->name('viaticos.parametros.update');
         Route::get('eventos', [ViajesController::class, 'getCombinedEventos'])->name('eventos');
+        Route::post('/viajes/{id}/enviar-whatsapp', [ViajesController::class, 'enviarWhatsappAjax']);
         Route::get('/viajes/reporte/{fecha?}', [ViajesController::class, 'reporteDiario'])->name('viajes.reporteDiario');
         Route::get('/viajes/reporte/print/{fecha?}', [ViajesController::class, 'reporteDiarioPrint'])->name('viajes.reporteDiario.print');
 
