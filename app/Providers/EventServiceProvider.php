@@ -20,6 +20,9 @@ use App\Models\Inspeccion;
 use App\Observers\InspeccionObserver;
 use App\Models\Orden;
 use App\Observers\OrdenObserver;
+use App\Models\Pago;
+use App\Observers\PagoObserver;
+
 
 
 
@@ -53,6 +56,7 @@ class EventServiceProvider extends ServiceProvider
         Viaje::observe(ViajeObserver::class);
         Inspeccion::observe(InspeccionObserver::class);
         Orden::observe(OrdenObserver::class);
+        Pago::observe(PagoObserver::class);
 
     }
 }

@@ -67,8 +67,41 @@ class Inventario extends Model
         return $this->belongsTo(Marca::class, 'marca', 'id');
     }
 
-    // public function modeloObj()
-    // {
-    //     return $this->belongsTo(Modelo::class, 'modelo', 'id');
-    // }
+    public function equivalentes()
+    {
+        return $this->belongsToMany(Inventario::class, 'inventario_equivalentes', 'inventario_id', 'equivalente_id');
+    }
+
+    /**
+     * RELACIÓN: Modelos de Vehículos Asociados
+     */
+    public function modelosAsociados()
+    {
+        return $this->hasMany(InventarioAsociado::class, 'inventario_id');
+    }
+
+    /**
+     * RELACIÓN: Stock Físico (Las ubicaciones donde está guardado)
+     */
+    public function stocks()
+    {
+        return $this->hasMany(InventarioStock::class, 'inventario_id'); // InventarioStock creado en la respuesta anterior
+    }
+
+    public function ubicacion()
+    {
+        return $this->hasOneThrough(Ubicacion::class, InventarioStock::class, 'inventario_id', 'id', 'id', 'ubicacion_id');
+    }
+
+    /**
+     * ATRIBUTO VIRTUAL: Existencia Total Consolidada
+     * Esto reemplaza la antigua columna "existencia". Suma el stock de todas sus ubicaciones en caliente.
+     */
+    public function getExistenciaTotalAttribute()
+    {
+        return $this->stocks()->sum('cantidad_actual');
+    }
+    
+
+
 }

@@ -221,4 +221,8 @@ class Cliente extends Model
     {
         return $this->hasMany(DespachoViaje::class, 'cliente_id');
     }
+    public function pagos()
+    {
+        return $this->hasMany(Pago::class, 'id_cliente');
+    }
 }

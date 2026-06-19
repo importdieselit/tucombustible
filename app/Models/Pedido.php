@@ -75,4 +75,10 @@ class Pedido extends Model
     { 
         return $this->belongsTo(TipoCombustible::class, 'tipo_combustible_id'); 
     }
+
+    public function pago()
+    {
+        return $this->hasOne(Pago::class, 'id_pedido');
+    }
+
 }
