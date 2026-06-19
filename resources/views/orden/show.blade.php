@@ -504,7 +504,7 @@
             </div>
         </div>
     </div>
-     <a href="{{ route('orden.imprimir', $orden->id) }}" target="_blank" class="btn btn-sm btn-dark ms-2">
+     <a href="{{ route('ordenes.imprimir', $orden->id) }}" target="_blank" class="btn btn-sm btn-dark ms-2">
                     <i class="fas fa-print"></i> Imprimir Hoja Única
                 </a>
 </div>

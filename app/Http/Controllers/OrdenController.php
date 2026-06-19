@@ -1570,7 +1570,7 @@ class OrdenController extends BaseController
         $estatusData = $this->getEstatusData($orden->estatus);
 
         // 6. Retornamos la vista optimizada que creamos en el paso anterior
-        return view('ordenes.imprimir', compact(
+        return view('orden.imprimir', compact(
             'orden', 
             'trabajos', 
             'suministros', 
