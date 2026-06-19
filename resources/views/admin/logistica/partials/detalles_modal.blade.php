@@ -8,6 +8,30 @@
 
 <div id="areaCapturaViaje" class="modal-body p-4" style="background-color: #ffffff;">
     
+    {{-- 📊 LÓGICA DE MOVIMIENTO Y PRODUCTO --}}
+    @php
+        // 1. Identificamos el tipo de movimiento general
+        $movimiento = match($viaje->tipo_planificacion) {
+            1, 2    => ['text' => 'DESPACHO', 'color' => 'bg-success'],
+            3       => ['text' => 'FLETE', 'color' => 'bg-secondary'],
+            4       => ['text' => 'COMPRA', 'color' => 'bg-info'],
+            default => ['text' => 'OTRO', 'color' => 'bg-light text-dark']
+        };
+
+        // 2. Identificamos el producto o combustible específico
+        $productoEspecifico = match($viaje->tipo_planificacion) {
+            2       => 'DIESEL',
+            1       => 'MGO',
+            3       => $viaje->producto_flete ?? 'Sin Especificar',
+            4       => match((int)$viaje->tipo) {
+                        2 => 'DIESEL',
+                        1 => 'MGO',
+                        default => 'Sin Especificar'
+                       },
+            default => 'Sin especificar'
+        };
+    @endphp
+
     {{-- 🏢 MEMBRETE CORPORATIVO OPTIMIZADO PARA CAPTURAS --}}
     <div class="row align-items-center border-bottom pb-3 mb-4">
         <div class="col-6">
@@ -19,7 +43,15 @@
                 <span class="badge bg-dark text-white fw-bold px-2 py-1 text-uppercase" style="font-size: 13px; display: inline-block;">
                     ID: V-{{ str_pad($viaje->id, 5, '0', STR_PAD_LEFT) }}
                 </span>
+                <span class="badge {{ $movimiento['color'] }} text-white fw-bold px-2 py-1 text-uppercase ms-1" style="font-size: 13px; display: inline-block; vertical-align: middle;">
+                    {{ $movimiento['text'] }}
+                </span>
             </div>
+
+            <span class="d-block text-dark fw-black text-uppercase mt-1" style="font-size: 14px; letter-spacing: 0.5px;">
+                <i class="fas fa-gas-pump text-orange me-1"></i> {{ $productoEspecifico }}
+            </span>
+
             <span class="d-block text-dark fw-black small mt-1" style="font-size: 13px;">
                 <i class="far fa-calendar-alt text-muted me-1"></i> {{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y') }} 
                 <i class="far fa-clock text-orange ms-2 me-1"></i> {{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('h:i A') }}
