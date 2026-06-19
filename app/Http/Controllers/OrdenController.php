@@ -1512,4 +1512,107 @@ class OrdenController extends BaseController
 
         return view('orden.reporte_gerencial', compact('reporte'));
     }
+
+    public function imprimir($id)
+    {
+        $orden = $this->model->where('id', $id)->with(['vehiculoBelong'])->first();
+            if (!$orden) {
+                 Session::flash('error', 'La orden de trabajo no fue encontrada.');
+                return Redirect::route('ordenes.list');
+            }
+            $trabajos = Trabajos::where('id_orden', $id)->with(['categoria', 'servicio'])->get();
+            $trabajosExternos = TrabajoExterno::where('id_orden', $id)->with(['proveedor'])->get();
+
+            // 1. Extraemos los IDs asegurando que no haya nulos y limpiando el array
+            $todosLosIds = $trabajos->pluck('id_mecanico')
+                ->flatten()
+                ->filter()
+                ->unique();
+
+            // 2. Pedimos el Personal e INCLUIMOS la relación 'persona' aquí (Eager Loading)
+            $personalRelacionado = Personal::with('persona')
+                ->whereIn('id_personal', $todosLosIds)
+                ->get()
+                ->keyBy('id_personal'); // Esto nos permite buscar por ID rápidamente
+
+            // 3. Asignamos los datos a cada trabajo usando los datos ya cargados en memoria
+            $trabajos->each(function ($trabajo) use ($personalRelacionado) {
+                // Normalizamos los IDs (por si vienen como string "1,2" o array [1,2])
+                $ids = is_array($trabajo->id_mecanico) 
+                    ? $trabajo->id_mecanico 
+                    : explode(',', (string)$trabajo->id_mecanico);
+                if($trabajo->fecha_fin){
+                    $fechaInicio = Carbon::parse($trabajo->created_at);
+                    $fechaFin = Carbon::parse($trabajo->fecha_fin);
+                    $minutos = $fechaInicio->diffInMinutes($fechaFin);
+                    $horas = floor($minutos / 60);
+                    $minRestantes = $minutos % 60;
+                    $tiempoTexto = ($horas > 0) ? "{$horas}h {$minRestantes}m" : "{$minRestantes}min";
+                    $trabajo->tiempo_ejecucion = $tiempoTexto;
+                // Filtramos la colección que ya tenemos en memoria (sin ir a la base de datos otra vez)
+                }else{
+                    $trabajo->tiempo_ejecucion = null;
+                }
+                $trabajo->mecanicos_lista = $personalRelacionado->whereIn('id_personal', $ids)->values();
+            });
+            $requerimientos = SuministroCompra::where('orden_id', $id)->with('detalles')->get();
+            $estatusData = EstatusData::find($orden->estatus);
+            $fotos= OrdenFoto::where('orden_id',$id)->get();
+            $personal = Personal::with('persona')->where('cargo', 'Mecánico')->get(); // Cargar relación con Persona para obtener nombres completos
+            $inventario = Inventario::where('id_almacen',2)->orderBy('descripcion')->get();
+            $suministros= InventarioDespacho::where('id_orden', $id)->with('inventario')->get();
+            $proveedores = Proveedor::whereIn('id_tipo_proveedor', [2,4])->orderBy('nombre')->get();
+        
+            $categorias_tempario = TemparioCategoria::orderBy('categoria')->get();
+
+        // 5. Estructuramos el objeto de estatus que espera tu vista
+        // Mapeamos los códigos o textos a los iconos y colores corporativos
+        $estatusData = $this->getEstatusData($orden->estatus);
+
+        // 6. Retornamos la vista optimizada que creamos en el paso anterior
+        return view('ordenes.imprimir', compact(
+            'orden', 
+            'trabajos', 
+            'suministros', 
+            'requerimientos', 
+            'estatusData'
+        ));
+    }
+
+    /**
+     * Helper estandarizado para resolver los badges y estilos del estatus
+     */
+    private function getEstatusData($estatus)
+    {
+        // Creamos un objeto rápido para mantener la compatibilidad con tu vista: $estatusData->css
+        $data = new \stdClass();
+
+        switch ($estatus) {
+            case 'ABIERTA':
+            case 2:
+                $data->orden = 'ABIERTA';
+                $data->css = 'warning text-dark';
+                $data->icon_orden = 'fa-folder-open';
+                break;
+            case 'CERRADA':
+            case 4:
+                $data->orden = 'CERRADA';
+                $data->css = 'success';
+                $data->icon_orden = 'fa-check-double';
+                break;
+            case 'ANULADA':
+            case 1:
+                $data->orden = 'ANULADA';
+                $data->css = 'danger';
+                $data->icon_orden = 'fa-times-circle';
+                break;
+            default:
+                $data->orden = 'EN PROCESO';
+                $data->css = 'secondary';
+                $data->icon_orden = 'fa-tools';
+                break;
+        }
+
+        return $data;
+    }
 }

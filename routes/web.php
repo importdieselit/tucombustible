@@ -196,6 +196,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/ordenes/{id}/addTrabajosMasivo', [OrdenController::class, 'addTrabajosMasivo'])->name('ordenes.addTrabajosMasivo');
         Route::post('/ordenes/trabajo/{id}/finalizar', [OrdenController::class, 'finalizarTrabajo'])->name('ordenes.trabajo.finalizar');
         Route::post('/ordenes/{id}/insumos/add', [OrdenController::class, 'addInsumo'])->name('ordenes.addInsumo');
+        Route::get('/ordenes/{id}/imprimir', [OrdenController::class, 'imprimir'])->name('ordenes.imprimir');
         Route::put('/ordenes/{id}/insumos/edit', [OrdenController::class, 'editInsumo'])->name('ordenes.editInsumo');
         Route::get('/vehiculos/{id}/orden-abierta', [OrdenController::class, 'verificarOrdenAbierta'])->name('vehiculos.checkOrden');
         Route::post('ordenes/{id}/add-manual-supply', [OrdenController::class, 'addManualSupply'])->name('ordenes.addManualSupply');
