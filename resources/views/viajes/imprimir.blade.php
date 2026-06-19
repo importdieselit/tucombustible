@@ -1,12 +1,40 @@
-<div class="modal-header bg-dark text-white py-3">
-    <h6 class="modal-title fw-black text-uppercase">
-        <i class="fas fa-search me-2 text-orange"></i> 
-        Planificación V-{{ str_pad($viaje->id, 5, '0', STR_PAD_LEFT) }}
-    </h6>
-    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-</div>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planificación V-{{ str_pad($viaje->id, 5, '0', STR_PAD_LEFT) }}</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f1f5f9;
+            margin: 0;
+            padding: 0;
+        }
+        /* Garantizar el renderizado exacto de clases de peso pesado */
+        .fw-black { 
+            font-weight: 900 !important; 
+        }
+        .text-orange { 
+            color: #fd7e14 !important; 
+        }
+        /* Forzar que el fondo no sufra recortes extraños en la captura */
+        #areaCapturaViaje {
+            max-width: 1100px;
+            margin: 0 auto;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body>
 
-<div id="areaCapturaViaje" class="modal-body p-4" style="background-color: #ffffff;">
+<div id="areaCapturaViaje" class="p-4" style="background-color: #ffffff;">
     
     {{-- 📊 LÓGICA DE MOVIMIENTO Y PRODUCTO --}}
     @php
@@ -60,7 +88,7 @@
     </div>
 
     <div class="row g-3">
-        {{-- 🎯 BLOQUE 1: DATOS COMUNES (REDISÉÑO DE ALTO CONTRASTE) --}}
+        {{-- 🎯 BLOQUE 1: DATOS COMUNES --}}
         
         {{-- Tarjeta: Vehículo / Cisterna --}}
         <div class="col-md-3">
@@ -94,7 +122,7 @@
             </div>
         </div>
         
-        {{-- Tarjeta: Alludante --}}
+        {{-- Tarjeta: Ayudante --}}
         <div class="col-md-3">
             <div class="p-3 rounded shadow-sm h-100" style="background-color: #f5f3ff; border-left: 4px solid #6366f1;">
                 <label class="small fw-bold d-block text-uppercase mb-1" style="font-size: 11px; letter-spacing: 0.5px; color: #4f46e5;">Ayudante de Ruta</label>
@@ -110,7 +138,6 @@
             <div class="p-3 rounded shadow-sm h-100" style="background-color: #fff7ed; border-left: 4px solid #ea580c;">
                 <label class="small fw-bold d-block text-uppercase mb-1" style="font-size: 11px; letter-spacing: 0.5px; color: #c2410c;">Destinos</label>
                 @if(!empty($viaje->destino_ciudad))
-                    {{-- Cambiamos d-flex gap por un bloque tradicional --}}
                     <div class="d-block mt-2">
                         @foreach(explode(', ', $viaje->destino_ciudad) as $ciudad)
                             <span class="badge text-white fw-bold text-uppercase px-2 py-1 shadow-sm d-inline-block me-1 mb-1" style="background-color: #fd7e14; font-size: 10px; letter-spacing: 0.5px; vertical-align: middle;">
@@ -128,7 +155,7 @@
             <hr class="text-muted opacity-25">
         </div>
 
-        {{-- ⚙️ BLOQUE 2: LÓGICA POR TIPO (CONSERVADO COMPLETO) --}}
+        {{-- ⚙️ BLOQUE 2: LOGICA POR TIPO --}}
         
         {{-- DIESEL Y MGO --}}
         @if(in_array($viaje->tipo_planificacion, [1, 2]))
@@ -161,10 +188,8 @@
                                     <small class="text-muted">{{ $detalle->cliente->rif ?? 'S/R' }}</small>
                                 </td>
                                 <td>{{ $detalle->direccion_despacho ?? $detalle->cliente->direccion_operativa ?? 'S/D' }}</td>
-                                <td>{{ $detalle->cliente->contacto ?? 'N/A' }}
-                                    {{ $detalle->cliente->telefono ?? 'N/A' }}</td>
-                                <td>{{ $detalle->cliente->contacto_alt ?? 'N/A' }}
-                                    {{ $detalle->cliente->telefono_alt ?? 'N/A' }}</td>
+                                <td>{{ $detalle->cliente->contacto ?? 'N/A' }} {{ $detalle->cliente->telefono ?? 'N/A' }}</td>
+                                <td>{{ $detalle->cliente->contacto_alt ?? 'N/A' }} {{ $detalle->cliente->telefono_alt ?? 'N/A' }}</td>
                                 <td class="text-center fw-black text-dark fs-6">{{ number_format($detalle->litros_despachados ?? $detalle->litros ?? 0, 0) }} L</td>
                                 
                                 @if($viaje->tipo_planificacion == 1)
@@ -202,7 +227,6 @@
                 </div>
             </div>
 
-            {{-- 🏢 CONTACTOS DEL CLIENTE ASOCIADO AL FLETE (NUEVO BLOQUE COHESIVO) --}}
             @if($viaje->cliente_id && $viaje->cliente)
                 <div class="col-12 mt-3">
                     <h6 class="fw-black text-orange small text-uppercase mb-2">
@@ -210,14 +234,12 @@
                     </h6>
                     <div class="p-3 rounded border shadow-sm" style="background-color: #f8fafc; border-left: 4px solid #fd7e14 !important;">
                         <div class="row g-2">
-                            {{-- Razón Social --}}
                             <div class="col-md-4 border-end border-2">
                                 <small class="text-muted fw-bold text-uppercase d-block mb-1" style="font-size: 10px; letter-spacing: 0.5px;">Cliente / Empresa</small>
                                 <strong class="text-dark d-block text-uppercase" style="font-size: 13px;">{{ $viaje->cliente->nombre }}</strong>
                                 <small class="text-muted fw-bold">RIF: {{ $viaje->cliente->rif }}</small>
                             </div>
                             
-                            {{-- Contacto Principal --}}
                             <div class="col-md-4 border-end border-2 ps-md-3">
                                 <small class="fw-bold text-uppercase d-block mb-1" style="font-size: 10px; letter-spacing: 0.5px; color: #16a34a;">Contacto Principal</small>
                                 <span class="text-dark fw-bold d-block small">
@@ -228,7 +250,6 @@
                                 </span>
                             </div>
 
-                            {{-- Contacto Alternativo --}}
                             <div class="col-md-4 ps-md-3">
                                 <small class="fw-bold text-uppercase d-block mb-1" style="font-size: 10px; letter-spacing: 0.5px; color: #4f46e5;">Contacto Alternativo</small>
                                 <span class="text-dark fw-bold d-block small">
@@ -269,21 +290,18 @@
             </div>
         @endif
 
-        {{-- 💬 OBSERVACIONES (CONSERVADO COMPLETO) --}}
+        {{-- 💬 OBSERVACIONES --}}
         <div class="col-12 mt-2">
             <div class="p-3 rounded border" style="background-color: #f8fafc;">
                 <label class="small text-muted fw-bold text-uppercase d-block mb-1" style="font-size: 15px; letter-spacing: 0.5px;">Observaciones del Viaje</label>
-                <p class="mb-0 small text-secondary italic" style="font-style: italic;">
+                <p class="mb-0 small text-secondary" style="font-style: italic;">
                     @php
-                        // 1. Intentar obtener de la tabla 'despachos_viajes' (Para Diesel/MGO)
                         $obs = $viaje->detalles->pluck('observacion')->filter()->first();
 
-                        // 2. Si es una Compra (Tipo 4), intentar obtener de la tabla 'compras_combustible'
                         if (!$obs && $viaje->tipo_planificacion == 4) {
                             $obs = $viaje->compraCombustible->first()->observaciones ?? null;
                         }
 
-                        // 3. Fallback Final: La tabla 'viajes'
                         if (!$obs) {
                             $obs = $viaje->observacion;
                         }
@@ -296,56 +314,5 @@
     </div>
 </div>
 
-<div class="modal-footer bg-light py-2">
-    <div class="d-flex w-100 justify-content-between align-items-center">
-        @php
-            $statusColor = 'success';
-            if(in_array($viaje->status, ['CANCELADO', 'PENDIENTE_ASIGNACION'])) {
-                $statusColor = $viaje->status == 'CANCELADO' ? 'danger' : 'warning text-dark';
-            }
-        @endphp
-        <span class="badge bg-{{ $statusColor }} fw-bold text-uppercase px-3 py-2 shadow-sm" style="font-size: 11px; letter-spacing: 0.5px;">
-            <i class="fas fa-info-circle me-1"></i> {{ $viaje->status }}
-        </span>
-        <button type="button" class="btn btn-success fw-bold text-uppercase btn-sm px-3 me-2" id="btnWs_{{ $viaje->id }}" onclick="enviarCapturaWa({{ $viaje->id }})" style="font-size: 11px;">
-                <i class="fab fa-whatsapp me-1"></i> Enviar a WA
-        </button>
-        <button type="button" class="btn btn-dark fw-bold text-uppercase btn-sm px-3" data-bs-dismiss="modal" style="font-size: 11px;">Cerrar</button>
-    </div>
-</div>
-@push('script')
-<script>
-    function enviarCapturaWa(idViaje) {
-        let btn = $('#btnWs_' + idViaje);
-        let originalHtml = btn.html();
-        
-        // Estado de carga
-        btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Enviando...').prop('disabled', true);
-
-        $.ajax({
-            url: `/viajes/${idViaje}/enviar-whatsapp`, // Ajusta la ruta a tu estandar
-            type: 'POST',
-            data: {
-                _token: '{{ csrf_token() }}'
-            },
-            success: function(response) {
-                if(response.success) {
-                    // Puedes cambiar esto por SweetAlert2 si lo usas en el sistema
-                    alert('Captura enviada exitosamente a WhatsApp.');
-                } else {
-                    alert('Error: ' + response.message);
-                }
-            },
-            error: function(xhr) {
-                console.error(xhr.responseText);
-                alert('Ocurrió un error de comunicación con el servidor.');
-            },
-            complete: function() {
-                // Restaurar botón
-                btn.html(originalHtml).prop('disabled', false);
-            }
-        });
-    }
-</script>
-    
-@endpush
+</body>
+</html>

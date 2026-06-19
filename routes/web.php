@@ -43,6 +43,7 @@ Auth::routes(['reset' => false]);
 Route::get('/', function () { return redirect()->route('login'); });
 Route::get('/viajes/reporte-interno', [ViajesController::class, 'reporteDiario'])
     ->name('reporte.operaciones.interno');
+Route::post('/viajes/{id}/enviar-whatsapp', [ViajesController::class, 'enviarWhatsappAjax']);
 Route::get('/reporte/flota-interno', [VehiculoController::class, 'reporteDisponibilidad'])->name('reporte.flota.interno');
 Route::get('/reporte/mantenimiento-interno', [OrdenController::class, 'reporteGerencial'])->name('reporte.mantenimiento.interno');
 Route::get('/vehiculos/disponibilidad/refresh', [VehiculoController::class, 'refreshDisponibilidad'])->name('vehiculos.disponibilidad.refresh');
