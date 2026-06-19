@@ -34,7 +34,7 @@ class DepositoController extends Controller
     public function index(Request $request)
     {
         $sedes = Sedes::orderBy('nombre')->get();
-        $depositos = Deposito::with(['sedes', 'tipoCombustible'])
+        $depositos = Deposito::with(['sedes', 'tipoCombustible','ultimaMedicion.tipoCombustible'])
                 ->when($request->id_sede, function ($query, $id_sede) {
                 return $query->where('id_sede', $id_sede);
             })
@@ -107,7 +107,7 @@ class DepositoController extends Controller
         Session::flash('success', '¡Tanque registrado exitosamente!');
         
         // Redirección apuntando al nuevo namespace de rutas que estás armando
-        return redirect()->route('combustibles.dashboard');
+        return redirect()->route('combustibles.depositos.index');
     }
 
     public function update(Request $request, $id)
@@ -153,7 +153,7 @@ class DepositoController extends Controller
         $this->depositoService->actualizarDeposito($id, $validator->validated());
 
         Session::flash('success', '¡Tanque actualizado correctamente!');
-        return redirect()->route('combustibles.dashboard');
+        return redirect()->route('combustibles.depositos.index');
     }
 
     public function destroy($id)
@@ -179,13 +179,15 @@ class DepositoController extends Controller
             'tanques.*.id' => 'required|exists:depositos,id',
             'tanques.*.x' => 'required|numeric',
             'tanques.*.z' => 'required|numeric',
+            'tanques.*.rotacion' => 'required|numeric|min:0|max:360',
         ]);
 
         // Actualizar uno a uno velozmente
         foreach ($request->tanques as $datosTanque) {
             Deposito::where('id', $datosTanque['id'])->update([
                 'orden_x' => $datosTanque['x'],
-                'orden_z' => $datosTanque['z']
+                'orden_z' => $datosTanque['z'],
+                'rotacion' => $datosTanque['rotacion']
             ]);
         }
 

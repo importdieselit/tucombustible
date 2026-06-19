@@ -21,7 +21,7 @@ return new class extends Migration
                   ->onDelete('restrict');
             
             $table->date('fecha');
-            $table->enum('turno', ['Mañana', 'Tarde/Noche']);
+            $table->enum('turno', ['Matutino', 'Nocturno']);
             
             $table->timestamps();
 

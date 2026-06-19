@@ -31,7 +31,8 @@ class Deposito extends Model
         'ancho',
         'alto',
         'capacidad_maxima',
-        'forma'
+        'forma',
+        'rotacion',
     ];
     protected $casts = [
         'capacidad_litros' => 'float',
@@ -113,5 +114,11 @@ class Deposito extends Model
     public function historialChequeos()
     {
         return $this->hasMany(ChequeoDepositoDetalle::class, 'id_deposito');
+    }
+
+    public function ultimaMedicion()
+    {
+        return $this->hasOne(ChequeoDepositoDetalle::class, 'id_deposito')
+                    ->latestOfMany(); 
     }
 }

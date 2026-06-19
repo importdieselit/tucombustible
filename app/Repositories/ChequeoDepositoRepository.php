@@ -34,6 +34,7 @@ class ChequeoDepositoRepository
                 'id_usuario' => $datosCabecera['id_usuario'],
                 'fecha'      => $datosCabecera['fecha'],
                 'turno'      => $datosCabecera['turno'],
+                'observaciones' => $datosCabecera['observaciones'] ?? null,
             ]);
 
             // 2. Iterar y guardar cada línea de detalle (tanques)
@@ -43,11 +44,12 @@ class ChequeoDepositoRepository
                     'id_deposito'         => $detalle['id_deposito'],
                     'centimetros_medidos' => $detalle['centimetros_medidos'],
                     'litros_calculados'   => $detalle['litros_calculados'],
+                    'id_tipos_combustible' => $detalle['id_tipos_combustible'],
                 ]);
             }
 
             // Devolvemos el objeto completo con sus relaciones cargadas si se necesita en el flujo
-            return $chequeo->load('detalles.deposito');
+            return $chequeo->load('detalles.deposito', 'detalles.tipoCombustible');
         });
     }
 
@@ -57,7 +59,7 @@ class ChequeoDepositoRepository
     public function obtenerHistorialPorSede(int $idSede, int $perPage = 15)
     {
         return ChequeoDeposito::where('id_sede', $idSede)
-            ->with(['usuario', 'detalles.deposito'])
+            ->with(['usuario', 'detalles.deposito', 'detalles.tipoCombustible'])
             ->orderBy('fecha', 'desc')
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
@@ -68,6 +70,6 @@ class ChequeoDepositoRepository
      */
     public function buscarPorId(int $id): ?ChequeoDeposito
     {
-        return ChequeoDeposito::with(['sede', 'usuario', 'detalles.deposito'])->find($id);
+        return ChequeoDeposito::with(['sede', 'usuario', 'detalles.deposito', 'detalles.tipoCombustible'])->find($id);
     }
 }

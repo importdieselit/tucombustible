@@ -62,7 +62,7 @@
             <i class="fas fa-clock text-orange fa-lg me-3"></i>
             <div>
                 <strong class="text-dark d-block" style="font-size: 14px;">Sello de Auditoría Blindado</strong>
-                <span class="text-muted small">Este registro se guardará automáticamente con la fecha y hora exacta del servidor en ImporDiesel: <span class="fw-bold text-dark">{{ date('d/m/Y') }} a las {{ date('h:i A') }}</span>. No se permiten modificaciones extemporáneas.</span>
+                <span class="text-muted small">Este registro se guardará automáticamente con la fecha y hora exacta del servidor. No se permiten modificaciones extemporáneas.</span>
             </div>
         </div>
 
@@ -91,10 +91,43 @@
             </div>
         </div>
 
+
+        @if ($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <div class="fw-bold mb-1"><i class="fas fa-exclamation-triangle me-2"></i> Por favor corrige los siguientes errores:</div>
+                <ul class="mb-0 small">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
         {{-- FORMULARIO PRINCIPAL DE ENVÍO POST --}}
         <form action="{{ route('combustibles.chequeos_depositos.store') }}" method="POST">
             @csrf
             <input type="hidden" name="id_sede" value="{{ request('id_sede') }}">
+
+            {{-- 1. SELECCIÓN DE TURNO --}}
+            <div class="card shadow-sm border-0 mb-3 bg-light">
+                <div class="card-body py-2 px-3">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <label class="small fw-black text-uppercase text-muted mb-0">
+                                <i class="fas fa-sun text-orange me-1"></i> Turno Operativo
+                            </label>
+                        </div>
+                        <div class="col-md-4">
+                            <select name="turno" class="form-select form-select-sm fw-bold" required>
+                                <option value="">Seleccione...</option>
+                                <option value="Matutino" {{ old('turno') == 'Matutino' ? 'selected' : '' }}>Matutino</option>
+                                <option value="Nocturno" {{ old('turno') == 'Nocturno' ? 'selected' : '' }}>Nocturno</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             {{-- TABLA DE REGISTRO OBLIGATORIO --}}
             <div class="card shadow-sm border-0 mb-4" style="border-left: 4px solid #ff6600;">
@@ -118,10 +151,15 @@
                             </thead>
                             <tbody>
                                 @forelse($depositos as $deposito)
+                                    @php
+                                        $altoMaximoTanque = ($deposito->forma == 'R' || $deposito->forma == 'OV' || $deposito->forma == 'C') ? $deposito->alto : $deposito->diametro;
+                                    @endphp
+
                                     <tr data-tanque-id="{{ $deposito->id }}" class="fila-tanque">
                                         <td class="ps-4">
                                             <span class="fw-black text-dark d-block" style="font-size: 15px;">{{ $deposito->serial }}</span>
                                             <small class="text-muted text-uppercase font-monospace" style="font-size: 11px;">ID: #{{ $deposito->id }}</small>
+                                            <input type="hidden" name="detalles[{{ $loop->index }}][id_deposito]" value="{{ $deposito->id }}">
                                         </td>
                                         <td>
                                             <span class="badge bg-light text-secondary border text-uppercase fw-bold" style="font-size: 11px;">
@@ -134,51 +172,51 @@
                                             </span>
                                         </td>
                                         <td>
-                                            {{-- SELECCIÓN EXPLÍCITA DEL PRODUCTO MOMENTÁNEO --}}
-                                            <div class="btn-group btn-group-sm w-100" role="group">
-                                                <input type="radio" class="btn-check radio-combustible" 
-                                                    name="tanques[{{ $deposito->id }}][tipo_combustible]" 
-                                                    id="combustible_diesel_{{ $deposito->id }}" 
-                                                    value="DIESEL" 
-                                                    data-tanque-id="{{ $deposito->id }}"
-                                                    checked>
-                                                <label class="btn btn-outline-warning fw-black text-uppercase" for="combustible_diesel_{{ $deposito->id }}" style="font-size: 11px;">Diesel</label>
-
-                                                <input type="radio" class="btn-check radio-combustible" 
-                                                    name="tanques[{{ $deposito->id }}][tipo_combustible]" 
-                                                    id="combustible_mgo_{{ $deposito->id }}" 
-                                                    value="MGO" 
-                                                    data-tanque-id="{{ $deposito->id }}">
-                                                <label class="btn btn-outline-info fw-black text-uppercase" for="combustible_mgo_{{ $deposito->id }}" style="font-size: 11px;">MGO</label>
-                                            </div>
+                                            {{-- SELECT DINÁMICO DE COMBUSTIBLE CON ATRIBUTOS DATA PARA THREE.JS --}}
+                                            <select name="detalles[{{ $loop->index }}][id_tipos_combustible]" class="form-select form-select-sm select-combustible" data-tanque-id="{{ $deposito->id }}">
+                                                @foreach($tiposCombustible as $tipo)
+                                                    @php
+                                                        // Evaluamos la persistencia: 1. Datos enviados fallidos (old) -> 2. Campo singular -> 3. Campo plural (por si acaso)
+                                                        $selectedId = old("detalles.{$loop->index}.id_tipos_combustible")  
+                                                            ?? $deposito->ultima_medicion->id_tipos_combustible 
+                                                            ?? '';
+                                                    @endphp
+                                                    <option value="{{ $tipo->id }}" 
+                                                        data-nombre="{{ strtoupper($tipo->nombre) }}"
+                                                        {{ $selectedId == $tipo->id ? 'selected' : '' }}>
+                                                        {{ $tipo->nombre }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
                                         </td>
                                         <td>
-                                            {{-- INPUT DE CENTÍMETROS FISICOS --}}
                                             <div class="input-group input-group-sm">
                                                 <input type="number" 
-                                                       name="tanques[{{ $deposito->id }}][centimetros]" 
+                                                       name="detalles[{{ $loop->index }}][centimetros_medidos]" 
                                                        class="form-select form-select-sm fw-black text-center input-centimetros" 
                                                        step="0.01" 
                                                        min="0" 
-                                                       max="{{ $deposito->alto_total ?? $deposito->diametro ?? 500 }}"
+                                                       max="{{ $altoMaximoTanque ?? 500 }}"
+                                                       value="{{ $deposito->ultima_medicion->centimetros_medidos ?? '' }}"
                                                        placeholder="0.00"
                                                        data-tanque-id="{{ $deposito->id }}"
-                                                       data-alto-max="{{ $deposito->alto_total ?? $deposito->diametro ?? 250 }}"
+                                                       data-alto-max="{{ $altoMaximoTanque ?? 250 }}"
                                                        required 
                                                        style="font-size: 14px; border-radius: 4px 0 0 4px;">
                                                 <span class="input-group-text bg-light fw-bold text-muted" style="font-size: 11px;">CM</span>
                                             </div>
                                         </td>
                                         <td class="text-end pe-4">
-                                            {{-- PREVIEW DINÁMICO MEDIANTE JAVASCRIPT --}}
-                                            <span class="fw-black text-orange visor-litros" id="visor_litros_{{ $deposito->id }}" style="font-size: 16px;">0,00</span>
+                                            <span class="fw-black text-orange visor-litros" id="visor_litros_{{ $deposito->id }}" style="font-size: 16px;">
+                                                {{ isset($deposito->ultima_medicion->litros_calculados) ? number_format($deposito->ultima_medicion->litros_calculados, 2, ',', '.') : '0,00' }}
+                                            </span>
                                             <span class="text-muted small fw-bold">Lts</span>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="text-center py-4 text-muted">
-                                            <i class="fas fa-exclamation-triangle text-warning me-1"></i> No se encontraron tanques configurados para esta sede.
+                                        <td colspan="6" class="text-center py-4 text-muted small fw-bold">
+                                            <i class="fas fa-info-circle me-1 text-warning"></i> Seleccione una Sede Operativa para listar los tanques asociados.
                                         </td>
                                     </tr>
                                 @endforelse
@@ -196,7 +234,7 @@
                             <label class="small fw-black text-uppercase text-muted mb-2 d-block" style="font-size: 12px;">
                                 <i class="fas fa-comment-alt me-1 text-orange"></i> Observaciones de Patio e Incidencias
                             </label>
-                            <textarea name="observaciones" rows="3" class="form-control" placeholder="Escriba aquí novedades (Ej. Variaciones climáticas, estado físico de la vara, condiciones de seguridad del patio)..." required style="font-size: 13px; border-radius: 6px;"></textarea>
+                            <textarea name="observaciones" rows="3" class="form-control" placeholder="Escriba aquí novedades (Ej. Variaciones climáticas, estado físico de la vara, condiciones de seguridad del patio)..." style="font-size: 13px; border-radius: 6px;"></textarea>
                         </div>
                     </div>
                 </div>
@@ -221,137 +259,148 @@
             <div class="py-5">
                 <i class="fas fa-clipboard-check text-muted fa-3x mb-3 opacity-50"></i>
                 <h5 class="fw-bold text-secondary text-uppercase mb-1" style="font-size: 14px;">Formulario de Varillaje no Iniciado</h5>
-                <p class="text-muted small mb-0">Seleccione una **Sede operativa específica** en el panel superior para desplegar los tanques y registrar las lecturas.</p>
+                <p class="text-muted small mb-0">Seleccione una Sede operativa específica en el panel superior para desplegar los tanques y registrar las lecturas.</p>
             </div>
-        </div>
+         </div>
     @endif
 </div>
 
-{{-- CARGA SCRIPT DE RENDERIZADO 3D COMPLETO --}}
+{{-- CARGA SCRIPT DE RENDERIZADO 3D (ARQUITECTURA PADRE-HIJO OPTIMIZADA) --}}
 @if(request('id_sede'))
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const tanquesRaw = @json($depositos);
+            const tanquesRaw = @json($depositos instanceof \Illuminate\Pagination\LengthAwarePaginator ? $depositos->items() : $depositos);
             const tanquesData = tanquesRaw.sort((a, b) => a.serial.localeCompare(b.serial));
 
             const container = document.getElementById('canvas-3d');
             const tooltip = document.getElementById('3d-tooltip');
-
-            // MAPA DE REFERENCIAS PARA ACTUALIZAR DESDE EL DOM HTML
             const fluidMeshes = {};
             const clippingPlanes = {};
 
-            // ESCENA
             const scene = new THREE.Scene();
             scene.background = new THREE.Color(0x111116);
 
             const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
             camera.position.set(0, 10, 15);
-
             const renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(container.clientWidth, container.clientHeight);
-            
-            // ACTIVAR PLANOS DE CORTE LOCALES PARA EL EFECTO LÍQUIDO SUBE/BAJA
-            renderer.localClippingEnabled = true;
+            renderer.localClippingEnabled = true; // Fundamental para el nivel de líquido
             container.appendChild(renderer.domElement);
 
-            // CONTROL CÁMARA
             const controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
             controls.maxPolarAngle = Math.PI / 2 - 0.05;
             controls.minDistance = 3;
             controls.maxDistance = 30;
-
-            // ILUMINACIÓN
-            scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+            
+            scene.add(new THREE.AmbientLight(0xffffff, 0.5));
             const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
             dirLight.position.set(10, 25, 15);
             scene.add(dirLight);
-
-            // REJILLA PISO
             const gridHelper = new THREE.GridHelper(50, 50, 0xff6600, 0x222226);
             scene.add(gridHelper);
 
+            const objetoTanquesMeshes = [];
             let filaEjeX = -(tanquesData.length * 3.5) / 2;
 
             tanquesData.forEach(tanque => {
                 let geometry, fluidGeometry;
-                const largo = (tanque.largo || 300) / 100;
+                
+                const largo = (tanque.longitud || tanque.largo || 300) / 100;
                 const ancho = (tanque.ancho || 200) / 100;
-                const alto = (tanque.alto_total || 250) / 100;
+                const alto = (tanque.alto || tanque.alto_total || 250) / 100;
                 const diametro = (tanque.diametro || 200) / 100;
                 const radio = diametro / 2;
 
-                // Definición geométrica base externa e interna
+                // 1. GEOMETRÍAS CON SOPORTE TOTAL (INCLUYENDO ÓVALOS)
                 if (tanque.forma === 'R' || tanque.forma === 'C') {
                     geometry = new THREE.BoxGeometry(ancho, alto, largo);
-                    fluidGeometry = new THREE.BoxGeometry(ancho * 0.99, alto, largo * 0.99);
-                } else if (tanque.forma === 'CV' || tanque.forma === 'CH') {
-                    geometry = new THREE.CylinderGeometry(radio, radio, tanque.forma === 'CH' ? largo : alto, 32);
-                    fluidGeometry = new THREE.CylinderGeometry(radio * 0.99, radio * 0.99, tanque.forma === 'CH' ? largo : alto, 32);
+                    fluidGeometry = new THREE.BoxGeometry(ancho * 0.99, alto * 0.99, largo * 0.99);
+                } else if (tanque.forma === 'CV' || tanque.forma === 'OV') {
+                    geometry = new THREE.CylinderGeometry(radio, radio, alto, 32);
+                    fluidGeometry = new THREE.CylinderGeometry(radio * 0.98, radio * 0.98, alto * 0.98, 32);
+                } else if (tanque.forma === 'CH' || tanque.forma === 'OH') {
+                    geometry = new THREE.CylinderGeometry(radio, radio, largo, 32);
+                    fluidGeometry = new THREE.CylinderGeometry(radio * 0.98, radio * 0.98, largo * 0.98, 32);
                 } else {
                     geometry = new THREE.SphereGeometry(radio, 32, 32);
-                    fluidGeometry = new THREE.SphereGeometry(radio * 0.99, 32, 32);
+                    fluidGeometry = new THREE.SphereGeometry(radio * 0.98, 32, 32);
                 }
 
-                let yFija = alto / 2;
-                if (tanque.forma === 'CH') yFija = radio;
+                // 2. DETECTAR COMBUSTIBLE ACTIVO DESDE EL DOM
+                const selectElement = document.querySelector(`.select-combustible[data-tanque-id="${tanque.id}"]`);
+                let colorFluido = 0xffa500; // Diesel por defecto (Naranja)
+                if (selectElement) {
+                    const opt = selectElement.options[selectElement.selectedIndex];
+                    const nombreComb = opt ? (opt.getAttribute('data-nombre') || '') : '';
+                    if (nombreComb && !nombreComb.includes('DIESEL')) {
+                        colorFluido = 0x00a8ff; // MGO (Azul)
+                    }
+                }
 
-                // 1. CONSTRUCCIÓN DE LA CARCASA EXTERNA TRANSLÚCIDA (EL CONTENEDOR)
+                // 3. CREAR CONTENEDOR (PADRE)
                 const materialContenedor = new THREE.MeshStandardMaterial({
                     color: 0xffffff,
-                    roughness: 0.1,
-                    metalness: 0.5,
+                    roughness: 0.2,
+                    metalness: 0.4,
                     transparent: true,
-                    opacity: 0.40,
+                    opacity: 0.35,
                     side: THREE.DoubleSide
                 });
                 const tankMesh = new THREE.Mesh(geometry, materialContenedor);
 
-                // 2. PLANO DE CORTE EXCLUSIVO PARA ESTE LÍQUIDO
-                // Corta todo lo que esté por encima de una altura Y dada en el espacio global
-                const clipPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), yFija - (alto / 2));
+                let yFija = alto / 2;
+                let altoVisual = alto;
+
+                if (tanque.forma === 'CH') {
+                    tankMesh.rotation.z = Math.PI / 2;
+                    yFija = radio;
+                    altoVisual = diametro;
+                } else if (tanque.forma === 'OV') {
+                    tankMesh.scale.set(ancho / diametro, 1, 1);
+                } else if (tanque.forma === 'OH') {
+                    tankMesh.rotation.z = Math.PI / 2;
+                    tankMesh.scale.set(1, 1, ancho / diametro);
+                    yFija = radio;
+                    altoVisual = diametro;
+                }
+
+                // 4. CREAR LÍQUIDO (HIJO)
+                // Inicializamos al 0% (se actualizará en el loop de sincronización final si hay datos)
+                const clipPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), yFija - (altoVisual / 2));
                 clippingPlanes[tanque.id] = clipPlane;
 
-                // 3. CONSTRUCCIÓN DEL LÍQUIDO INTERNO (EL CONTENIDO)
                 const materialLiquido = new THREE.MeshStandardMaterial({
-                    color: 0xffa500, // Por defecto Diesel (Amarillo Naranja)
+                    color: colorFluido, 
                     roughness: 0.1,
                     metalness: 0.1,
                     clippingPlanes: [clipPlane],
                     side: THREE.DoubleSide
                 });
                 const fluidMesh = new THREE.Mesh(fluidGeometry, materialLiquido);
+                fluidMesh.raycast = function() {}; // Desactiva colisiones directas al líquido
 
-                // Rotación de cilindros horizontales
-                if (tanque.forma === 'CH') {
-                    tankMesh.rotation.z = Math.PI / 2;
-                    fluidMesh.rotation.z = Math.PI / 2;
-                }
+                // APLICAR JERARQUÍA NATIVA
+                tankMesh.add(fluidMesh);
 
-                // Posicionamiento de origen
                 const inicialX = tanque.orden_x !== null ? parseFloat(tanque.orden_x) : filaEjeX;
                 const inicialZ = tanque.orden_z !== null ? parseFloat(tanque.orden_z) : 0;
 
                 tankMesh.position.set(inicialX, yFija, inicialZ);
-                fluidMesh.position.set(inicialX, yFija, inicialZ);
-
-                // Meta-datos técnicos adjuntos
+                
                 tankMesh.userData = {
                     id: tanque.id,
                     serial: tanque.serial,
                     capacidad: parseFloat(tanque.capacidad_maxima).toLocaleString('es-VE'),
-                    altoMax: alto
+                    altoMax: altoVisual
                 };
 
                 scene.add(tankMesh);
-                scene.add(fluidMesh);
-
-                // Guardar referencia para actualizaciones reactivas
+                objetoTanquesMeshes.push(tankMesh);
                 fluidMeshes[tanque.id] = fluidMesh;
 
                 if (tanque.orden_x === null) {
@@ -359,11 +408,7 @@
                 }
             });
 
-            // INTERACTIVIDAD: ACTUALIZACIÓN EN VIVO DESDE LA TABLA HTML
-            // --------------------------------------------------------------------------
-            
-            // Función central que calcula los litros aproximados en base a porcentaje lineal
-            // Nota: En producción, puedes conectar aquí tu AforoCalculoService por AJAX si requieres precisión matemática absoluta por centímetros
+            // FUNCIÓN DE ACTUALIZACIÓN DE FLUIDO
             function actualizarVolumenFisico(tanqueId, cms, altoMaxCms) {
                 const tanqueData = tanquesData.find(t => t.id == tanqueId);
                 if (!tanqueData) return;
@@ -372,25 +417,21 @@
                 if (porcentaje > 1) porcentaje = 1;
                 if (porcentaje < 0 || isNaN(porcentaje)) porcentaje = 0;
 
-                // Simulación lineal básica para el visor visual inmediato
                 const litrosTotales = parseFloat(tanqueData.capacidad_maxima);
                 const litrosCalculados = litrosTotales * porcentaje;
 
                 document.getElementById(`visor_litros_${tanqueId}`).innerText = litrosCalculados.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-                // ACTUALIZAR RENDER 3D MEDIANTE EL PLANO DE CORTE (CLIPPING PLANE)
-                const meshRef = fluidMeshes[tanqueId];
-                if (meshRef) {
-                    const altoRealMesh = meshRef.geometry.parameters.height || (meshRef.geometry.parameters.radius * 2) || 2.5;
-                    const yBase = meshRef.position.y;
-                    
-                    // El plano de corte se ubica en el eje Y relativo al porcentaje del líquido
+                
+                const meshPadre = objetoTanquesMeshes.find(m => m.userData.id == tanqueId);
+                if (meshPadre) {
+                    const altoRealMesh = meshPadre.userData.altoMax;
+                    const yBase = meshPadre.position.y;
                     const alturaCorteY = (yBase - (altoRealMesh / 2)) + (altoRealMesh * porcentaje);
                     clippingPlanes[tanqueId].constant = alturaCorteY;
                 }
             }
 
-            // Escuchar cambios en los inputs numéricos (Centímetros)
+            // LISTENERS DE INPUTS
             document.querySelectorAll('.input-centimetros').forEach(input => {
                 input.addEventListener('input', function() {
                     const id = this.getAttribute('data-tanque-id');
@@ -400,21 +441,21 @@
                 });
             });
 
-            // Escuchar cambios en los selectores de tipo de combustible (Radio Buttons)
-            document.querySelectorAll('.radio-combustible').forEach(radio => {
-                radio.addEventListener('change', function() {
+            // LISTENER CORRECTO PARA EL SELECT DE COMBUSTIBLE
+            document.querySelectorAll('.select-combustible').forEach(select => {
+                select.addEventListener('change', function() {
                     const id = this.getAttribute('data-tanque-id');
-                    const tipo = this.value;
-                    const meshRef = fluidMeshes[id];
+                    const optionSeleccionada = this.options[this.selectedIndex];
+                    const nombreCombustible = optionSeleccionada ? (optionSeleccionada.getAttribute('data-nombre') || '') : '';
                     
-                    if (meshRef) {
-                        // Cambiar el color de la malla de líquido dinámicamente
-                        meshRef.material.color.setHex(tipo === 'DIESEL' ? 0xffa500 : 0x00a8ff);
+                    const fluidMeshRef = fluidMeshes[id];
+                    if (fluidMeshRef) {
+                        fluidMeshRef.material.color.setHex(nombreCombustible.includes('DIESEL') ? 0xffa500 : 0x00a8ff);
                     }
                 });
             });
 
-            // RAYCASTER PARA FICHA TÉCNICA FLOTANTE (CON CLIC)
+            // RAYCASTER PARA EL TOOLTIP (CLIC DIRECTO EN EL TANQUE)
             const raycaster = new THREE.Raycaster();
             const mouse = new THREE.Vector2();
 
@@ -426,17 +467,19 @@
                 mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
                 raycaster.setFromCamera(mouse, camera);
-                // Filtrar solo objetos con userData (las carcasas exteriores)
-                const meshesHijas = scene.children.filter(c => c.userData && c.userData.id);
-                const intersects = raycaster.intersectObjects(meshesHijas);
+                const intersects = raycaster.intersectObjects(objetoTanquesMeshes);
 
                 if (intersects.length > 0) {
-                    const object = intersects[0].object;
-                    const data = object.userData;
+                    const tanqueSeleccionado = intersects[0].object;
+                    const data = tanqueSeleccionado.userData;
 
-                    // Buscar datos vigentes en los inputs HTML de la tabla
                     const inputCms = document.querySelector(`.input-centimetros[data-tanque-id="${data.id}"]`).value || '0';
-                    const tipoActivo = document.querySelector(`.radio-combustible[data-tanque-id="${data.id}"]:checked`).value;
+                    
+                    // Leer directamente desde el Select Dinámico
+                    const selectComb = document.querySelector(`.select-combustible[data-tanque-id="${data.id}"]`);
+                    const optionActiva = selectComb ? selectComb.options[selectComb.selectedIndex] : null;
+                    const tipoActivo = optionActiva ? (optionActiva.getAttribute('data-nombre') || 'DIESEL') : 'DIESEL';
+                    
                     const litrosVisor = document.getElementById(`visor_litros_${data.id}`).innerText;
 
                     tooltip.innerHTML = `
@@ -446,7 +489,7 @@
                         </h6>
                         <div class="mb-1" style="font-size: 12px;">
                             <strong class="text-secondary">Líquido Declarado:</strong> 
-                            <span class="badge px-2 py-0.5 fw-bold text-uppercase ${tipoActivo === 'DIESEL' ? 'bg-warning text-dark' : 'bg-info text-white'}" style="font-size: 10px;">${tipoActivo}</span>
+                            <span class="badge px-2 py-0.5 fw-bold text-uppercase ${tipoActivo.includes('DIESEL') ? 'bg-warning text-dark' : 'bg-info text-white'}" style="font-size: 10px;">${tipoActivo}</span>
                         </div>
                         <div class="mb-1" style="font-size: 12px;">
                             <strong class="text-secondary">Medida de Vara:</strong> 
@@ -468,7 +511,20 @@
                 }
             });
 
-            // ANIMACIÓN CONTINUA
+            // SINCRONIZACIÓN INICIAL DE NIVELES (Si hay un varillaje previo en BD)
+            setTimeout(() => {
+                document.querySelectorAll('.input-centimetros').forEach(input => {
+                    const id = input.getAttribute('data-tanque-id');
+                    const cms = parseFloat(input.value);
+                    const altoMax = parseFloat(input.getAttribute('data-alto-max'));
+                    
+                    if (!isNaN(cms) && cms > 0) {
+                        actualizarVolumenFisico(id, cms, altoMax);
+                    }
+                });
+            }, 300);
+
+            // ANIMATION LOOP
             function animate() {
                 requestAnimationFrame(animate);
                 controls.update();
@@ -476,7 +532,7 @@
             }
             animate();
 
-            // REDIMENSIONAMIENTO DINÁMICO
+            // RESPONSIVE RESIZE
             window.addEventListener('resize', function () {
                 camera.aspect = container.clientWidth / container.clientHeight;
                 camera.updateProjectionMatrix();
@@ -489,9 +545,5 @@
 <style>
     .text-orange { color: #ff6600 !important; }
     .fw-black { font-weight: 900; }
-    .btn-outline-warning { border-color: #ffa500; color: #ffa500; }
-    .btn-outline-warning:checked + label, .btn-outline-warning:hover { background-color: #ffa500 !important; color: #000 !important; }
-    .btn-outline-info { border-color: #00a8ff; color: #00a8ff; }
-    .btn-outline-info:checked + label, .btn-outline-info:hover { background-color: #00a8ff !important; color: #fff !important; }
 </style>
 @endsection

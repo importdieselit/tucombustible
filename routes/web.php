@@ -327,6 +327,7 @@ Route::middleware(['auth'])->group(function () {
 
                 // 🆕 Auditoría y Registro de Varillaje (Chequeo de Tanques en Patio)
                 Route::prefix('chequeos_depositos')->name('chequeos_depositos.')->group(function () {
+                    Route::get('/', [ChequeoDepositoController::class, 'index'])->name('index');
                     Route::get('/crear', [ChequeoDepositoController::class, 'create'])->name('create');
                     Route::post('/guardar', [ChequeoDepositoController::class, 'store'])->name('store');
                 });

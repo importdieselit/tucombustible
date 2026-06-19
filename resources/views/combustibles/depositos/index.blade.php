@@ -73,9 +73,9 @@
                 <div id="canvas-3d" style="width: 100%; height: 500px; cursor: default;"></div>
                 
                 {{-- Tooltip flotante --}}
-                <div id="3d-tooltip" class="position-absolute p-3 bg-white rounded shadow-lg border" style="display: none; z-index: 100; pointer-events: none; min-width: 200px; border-left: 4px solid #ff6600 !important;"></div>
+                <div id="3d-tooltip" class="position-absolute p-3 bg-white rounded shadow-lg border" style="display: none; z-index: 100; min-width: 200px; border-left: 4px solid #ff6600 !important;"></div>
                 
-                {{-- BOTÓN FLOTANTE PARA GUARDAR MAPA (Aparece solo cuando hay cambios) --}}
+                {{-- BOTÓN FLOTANTE PARA GUARDAR MAPA --}}
                 <div class="position-absolute top-0 end-0 m-3" id="wrapper-boton-guardar" style="display: none;">
                     <button type="button" id="btn-guardar-patio" class="btn btn-success fw-bold text-uppercase shadow-lg py-2 px-3" style="font-size: 12px; border-radius: 30px;">
                         <i class="fas fa-save me-1"></i> Guardar Distribución
@@ -84,7 +84,7 @@
 
                 {{-- Leyenda estática --}}
                 <div class="position-absolute bottom-0 start-0 m-3 text-white p-2 rounded d-flex align-items-center gap-3 shadow-sm" 
-                    style="z-index: 10; bg-color: rgba(0,0,0,0.4); backdrop-filter: blur(2px);">
+                    style="z-index: 10; background-color: rgba(0,0,0,0.4); backdrop-filter: blur(2px);">
                     <div class="d-flex align-items-center gap-2">
                         <span class="d-inline-block rounded-circle" style="width: 12px; height: 12px; background-color: #ffa500;"></span>
                         <span class="fw-bold text-light" style="font-size: 11px; letter-spacing: 0.5px;">DIESEL</span>
@@ -131,17 +131,20 @@
                             <tr>
                                 <td class="ps-4 fw-black text-dark" style="font-size: 15px;">{{ $deposito->serial }}</td>
                                 <td class="text-muted fw-bold" style="font-size: 14px;"><i class="fas fa-map-marker-alt text-secondary me-1"></i> {{ $deposito->sedes->nombre ?? 'N/A' }}</td>
-                                <td><span class="badge bg-dark text-white text-uppercase" style="font-size: 12px;">{{ $deposito->tipoCombustible->nombre ?? 'Sin Asignar' }}</span></td>
+                                <td>
+                                    <span class="badge bg-dark text-white text-uppercase" style="font-size: 12px;">
+                                        {{-- Primero intenta buscar en la última medición, si es null, busca en la configuración base --}}
+                                        {{ $deposito->ultimaMedicion->tipoCombustible->nombre ?? ($deposito->tipoCombustible->nombre ?? 'Sin Asignar') }}
+                                    </span>
+                                </td>
                                 <td class="text-center fw-black text-orange" style="font-size: 16px;">{{ number_format($deposito->capacidad_maxima, 2, ',', '.') }} <span class="text-muted fw-bold" style="font-size: 12px;">Lts</span></td>
                                 <td class="text-center"><span class="badge bg-light text-secondary border text-uppercase fw-bold" style="font-size: 12px;">{{ $formasGeometricas[$deposito->forma] ?? $deposito->forma }}</span></td>
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center gap-2">
-                                        {{-- Botón de Editar --}}
                                         <a href="{{ route('combustibles.depositos.edit', $deposito->id) }}" class="btn btn-sm btn-light border shadow-sm" title="Editar Geometría">
                                             <i class="fas fa-edit text-warning"></i>
                                         </a>
                                         
-                                        {{-- Botón de Eliminar Restaurado --}}
                                         <form action="{{ route('combustibles.depositos.destroy', $deposito->id) }}" 
                                             method="POST" 
                                             class="m-0" 
@@ -166,14 +169,14 @@
 </div>
 
 @if(request('id_sede'))
-    {{-- DEPENDENCIAS DE THREE.JS (INCLUYENDO DRAG CONTROLS) --}}
+    {{-- DEPENDENCIAS DE THREE.JS --}}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/DragControls.js"></script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const tanquesRaw = @json($depositos->items());
+            const tanquesRaw = @json($depositos instanceof \Illuminate\Pagination\LengthAwarePaginator ? $depositos->items() : $depositos);
             const tanquesData = tanquesRaw.sort((a, b) => a.serial.localeCompare(b.serial));
 
             const container = document.getElementById('canvas-3d');
@@ -190,6 +193,7 @@
 
             const renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.localClippingEnabled = true; // Habilita el recorte de fluido
             container.appendChild(renderer.domElement);
 
             // CONTROL DE ÓRBITA (CÁMARA)
@@ -197,126 +201,181 @@
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
             controls.maxPolarAngle = Math.PI / 2 - 0.05;
-
-            // CONFIGURACIÓN DE ZOOM LÍMITE (Ajustes de cercanía)
             controls.minDistance = 3;
             controls.maxDistance = 30;
 
-            // ILUMINACIÓN
+            // ILUMINACIÓN Y PISO
             scene.add(new THREE.AmbientLight(0xffffff, 0.5));
             const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
             dirLight.position.set(10, 25, 15);
             scene.add(dirLight);
-
-            // PISO
+            
             const gridHelper = new THREE.GridHelper(50, 50, 0xff6600, 0x222226);
             scene.add(gridHelper);
 
             const objetoTanquesMeshes = [];
-            
-            // FILA POR DEFECTO SI NO TIENEN COORDENADAS GUARDADAS
             let filaEjeX = -(tanquesData.length * 3.5) / 2;
 
             tanquesData.forEach(tanque => {
-                let geometry;
-                const largo = (tanque.largo || 300) / 100;
-                const ancho = (tanque.ancho || 200) / 100;
-                const alto = (tanque.alto_total || 250) / 100;
-                const diametro = (tanque.diametro || 200) / 100;
-                const radio = diametro / 2;
+            let geometry, fluidGeometry;
+            
+            const largo = (tanque.longitud || tanque.largo || 300) / 100;
+            const ancho = (tanque.ancho || 200) / 100;
+            const alto = (tanque.alto || tanque.alto_total || 250) / 100;
+            const diametro = (tanque.diametro || 200) / 100;
+            const radio = diametro / 2;
 
-                if (tanque.forma === 'R' || tanque.forma === 'C') {
-                    geometry = new THREE.BoxGeometry(ancho, alto, largo);
-                } else if (tanque.forma === 'CV' || tanque.forma === 'CH') {
-                    geometry = new THREE.CylinderGeometry(radio, radio, tanque.forma === 'CH' ? largo : alto, 32);
-                } else {
-                    geometry = new THREE.SphereGeometry(radio, 32, 32);
-                }
+            // 1. CONSTRUCCIÓN DE GEOMETRÍAS SOPORTANDO TODAS LAS FORMAS
+            if (tanque.forma === 'R' || tanque.forma === 'C') {
+                geometry = new THREE.BoxGeometry(ancho, alto, largo);
+                fluidGeometry = new THREE.BoxGeometry(ancho * 0.99, alto * 0.99, largo * 0.99);
+            } else if (tanque.forma === 'CV' || tanque.forma === 'OV') {
+                geometry = new THREE.CylinderGeometry(radio, radio, alto, 32);
+                fluidGeometry = new THREE.CylinderGeometry(radio * 0.98, radio * 0.98, alto * 0.98, 32);
+            } else if (tanque.forma === 'CH' || tanque.forma === 'OH') {
+                geometry = new THREE.CylinderGeometry(radio, radio, largo, 32);
+                fluidGeometry = new THREE.CylinderGeometry(radio * 0.98, radio * 0.98, largo * 0.98, 32);
+            } else {
+                geometry = new THREE.SphereGeometry(radio, 32, 32);
+                fluidGeometry = new THREE.SphereGeometry(radio * 0.98, 32, 32);
+            }
 
-                let colorTanque = 0x00a8ff;
-                const relacion = tanque.tipo_combustible || tanque.tipoCombustible;
-                if (relacion && relacion.nombre.toUpperCase().includes('DIESEL')) {
-                    colorTanque = 0xffa500; // Diesel -> Amarillo Naranja Industrial
-                }
+            // =========================================================================
+            // RESOLUCIÓN DE COMBUSTIBLE EN TIEMPO REAL (IGUAL QUE LA TABLA HTML)
+            // =========================================================================
+            // Accedemos de forma segura tanto a snake_case como camelCase por si acaso
+            const ultimaMedicion = tanque.ultima_medicion || tanque.ultimaMedicion;
+            let tipoCombustibleReal = null;
 
-                const material = new THREE.MeshStandardMaterial({
-                    color: colorTanque,
-                    roughness: 0.3,
-                    metalness: 0.6
-                });
+            if (ultimaMedicion) {
+                tipoCombustibleReal = ultimaMedicion.tipo_combustible || ultimaMedicion.tipoCombustible;
+            }
 
-                const mesh = new THREE.Mesh(geometry, material);
+            // Si no hay última medición, hacemos el fallback al combustible base de la configuración
+            if (!tipoCombustibleReal) {
+                tipoCombustibleReal = tanque.tipo_combustible || tanque.tipoCombustible;
+            }
 
-                // Determinar la altura fija original para bloquear el eje Y
-                let yFija = alto / 2;
-                if (tanque.forma === 'CH') {
-                    mesh.rotation.z = Math.PI / 2;
-                    yFija = radio;
-                }
+            // Extraemos el nombre definitivo
+            const nombreCombustible = (tipoCombustibleReal && tipoCombustibleReal.nombre) 
+                ? tipoCombustibleReal.nombre 
+                : 'Sin Asignar';
 
-                // USAR COORDENADAS GUARDADAS O RECURRIR A LA FILA AUTOMÁTICA
-                const inicialX = tanque.orden_x !== null ? parseFloat(tanque.orden_x) : filaEjeX;
-                const inicialZ = tanque.orden_z !== null ? parseFloat(tanque.orden_z) : 0;
+            // Asignación dinámica del color del fluido basado en el nombre real
+            let colorFluido = 0x00a8ff; // Por defecto: Azul MGO
+            if (nombreCombustible.toUpperCase().includes('DIESEL')) {
+                colorFluido = 0xffa500; // Naranja: Diesel
+            }
+            // =========================================================================
 
-                mesh.position.set(inicialX, yFija, inicialZ);
-
-                // Formatear el texto de medidas según la forma geométrica para la auditoría
-                let medidasTexto = '';
-                if (tanque.forma === 'R' || tanque.forma === 'C') {
-                    medidasTexto = `${tanque.ancho || 0} x ${tanque.alto || 0} x ${tanque.longitud || 0} cm`;
-                } else if (tanque.forma === 'CV') {
-                    medidasTexto = `Diametro: ${tanque.diametro || 0} cm | Alto: ${tanque.alto || 0} cm`;
-                } else if (tanque.forma === 'CH') {
-                    medidasTexto = `Diametro: ${tanque.diametro || 0} cm | Largo: ${tanque.longitud || 0} cm`;
-                } else {
-                    medidasTexto = `${tanque.diametro || 0} cm`;
-                }
-
-                // Meta-datos adjuntos completos para el panel interactivo
-                mesh.userData = {
-                    id: tanque.id,
-                    serial: tanque.serial,
-                    capacidad: parseFloat(tanque.capacidad_maxima).toLocaleString('es-VE'),
-                    combustible: relacion ? relacion.nombre : 'N/A',
-                    medidas: medidasTexto, // Dimensiones agregadas para el visor técnico
-                    yFija: yFija 
-                };
-
-                scene.add(mesh);
-                objetoTanquesMeshes.push(mesh);
-
-                // Si no había posición guardada, rodamos el siguiente de la fila hacia la derecha
-                if (tanque.orden_x === null) {
-                    filaEjeX += Math.max(ancho, diametro, largo) + 2.0;
-                }
+            // 2. CREACIÓN DE LA MALLA PADRE (El Metal del Tanque)
+            const materialContenedor = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                roughness: 0.2,
+                metalness: 0.4,
+                transparent: true,
+                opacity: 0.35,
+                side: THREE.DoubleSide
             });
+            const tankMesh = new THREE.Mesh(geometry, materialContenedor);
+
+            // Elevación base
+            let yFija = alto / 2;
+            let altoVisual = alto;
+            let rotacionInicial = tanque.rotacion ? parseFloat(tanque.rotacion) : 0;
+
+            // ROTACIONES Y ESCALAS PARA TANQUES ACOSTADOS U OVALADOS
+            if (tanque.forma === 'CH') {
+                tankMesh.rotation.z = Math.PI / 2;
+                yFija = radio;
+                altoVisual = diametro;
+            } else if (tanque.forma === 'OV') {
+                tankMesh.scale.set(ancho / diametro, 1, 1);
+            } else if (tanque.forma === 'OH') {
+                tankMesh.rotation.z = Math.PI / 2;
+                tankMesh.scale.set(1, 1, ancho / diametro);
+                yFija = radio;
+                altoVisual = diametro;
+            }
+
+            // 3. CREACIÓN DE LA MALLA HIJA (El Líquido)
+            const nivelSimulado = 0.70; 
+            const alturaCorteY = (yFija - (altoVisual / 2)) + (altoVisual * nivelSimulado);
+            const clipPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), alturaCorteY);
+
+            const materialLiquido = new THREE.MeshStandardMaterial({
+                color: colorFluido, // <--- Aquí ya aplica el color corregido
+                roughness: 0.1,
+                metalness: 0.1,
+                clippingPlanes: [clipPlane],
+                side: THREE.DoubleSide
+            });
+            const fluidMesh = new THREE.Mesh(fluidGeometry, materialLiquido);
+
+            fluidMesh.raycast = function() {}; 
+            tankMesh.add(fluidMesh);
+
+            // 4. POSICIONAR EL TANQUE MAESTRO EN EL PATIO
+            const inicialX = tanque.orden_x !== null ? parseFloat(tanque.orden_x) : filaEjeX;
+            const inicialZ = tanque.orden_z !== null ? parseFloat(tanque.orden_z) : 0;
+            tankMesh.position.set(inicialX, yFija, inicialZ);
+            tankMesh.rotation.y = THREE.MathUtils.degToRad(rotacionInicial);
+
+            let medidasTexto = '';
+            if (tanque.forma === 'R' || tanque.forma === 'C') {
+                medidasTexto = `${tanque.ancho || 0} x ${tanque.alto || 0} x ${tanque.longitud || 0} cm`;
+            } else if (tanque.forma === 'CV' || tanque.forma === 'OV') {
+                medidasTexto = `Diámetro: ${tanque.diametro || 0} cm | Alto: ${tanque.alto || 0} cm`;
+            } else if (tanque.forma === 'CH' || tanque.forma === 'OH') {
+                medidasTexto = `Diámetro: ${tanque.diametro || 0} cm | Largo: ${tanque.longitud || 0} cm`;
+            } else {
+                medidasTexto = `${tanque.diametro || 0} cm`;
+            }
+
+            // Guardar datos en el tanque principal
+            tankMesh.userData = {
+                id: tanque.id,
+                serial: tanque.serial,
+                capacidad: parseFloat(tanque.capacidad_maxima).toLocaleString('es-VE'),
+                combustible: nombreCombustible,
+                medidas: medidasTexto,
+                yFija: yFija,
+                rotacion: rotacionInicial 
+            };
+
+            scene.add(tankMesh);
+            objetoTanquesMeshes.push(tankMesh);
+
+            if (tanque.orden_x === null) {
+                filaEjeX += Math.max(ancho, diametro, largo) + 2.0;
+            }
+        });
 
             // -------------------------------------------------------------
-            // CONFIGURACIÓN DE ARRASTRE (DRAG CONTROLS)
+            // ARRASTRE LIMPIO Y NATIVO
             // -------------------------------------------------------------
             const dragControls = new THREE.DragControls(objetoTanquesMeshes, camera, renderer.domElement);
 
-            dragControls.addEventListener('dragstart', function (event) {
-                controls.enabled = false; // Desactivar rotación de cámara mientras arrastras
+            dragControls.addEventListener('dragstart', function () {
+                controls.enabled = false;
                 tooltip.style.display = 'none';
             });
 
             dragControls.addEventListener('drag', function (event) {
-                // BLOQUEO ABSOLUTO DEL EJE Y (Para que se muevan solo por el piso XZ)
+                // Bloqueamos nativamente el movimiento hacia arriba/abajo (Eje Y)
                 event.object.position.y = event.object.userData.yFija;
-                
-                // Mostrar botón de guardar al haber cambios estructurales
                 wrapperBoton.style.display = 'block';
             });
 
-            dragControls.addEventListener('dragend', function (event) {
-                controls.enabled = true; // Reactivar control de cámara al soltar
+            dragControls.addEventListener('dragend', function () {
+                controls.enabled = true;
             });
 
-            // RAYCASTER PARA EL TOOLTIP (SOLO FUNCIONA SI NO SE ESTÁ ARRASTRANDO)
+            // -------------------------------------------------------------
+            // RAYCASTERS LIMPIOS (DOBLE CLIC Y CLIC)
+            // -------------------------------------------------------------
             const raycaster = new THREE.Raycaster();
             const mouse = new THREE.Vector2();
-            let activoMesh = null;
 
             window.addEventListener('dblclick', function(event) {
                 const rect = renderer.domElement.getBoundingClientRect();
@@ -324,33 +383,26 @@
                 mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
                 raycaster.setFromCamera(mouse, camera);
-                const intersects = raycaster.intersectObjects(objetoTanquesMeshes);
+                // Ya no necesitamos recursividad porque DragControls solo evalúa el parent
+                const intersects = raycaster.intersectObjects(objetoTanquesMeshes); 
 
                 if (intersects.length > 0) {
-                    const tanqueSeleccionado = intersects[0].object;
-                    
-                    // Mover el punto de pivote de la cámara al centro del tanque
+                    const tanqueSeleccionado = intersects[0].object; 
                     controls.target.copy(tanqueSeleccionado.position);
-                    
-                    // Reposicionar la cámara suavemente a una distancia cercana e inclinada
                     camera.position.set(
                         tanqueSeleccionado.position.x, 
-                        tanqueSeleccionado.position.y + 3, // 3 metros arriba del tanque
-                        tanqueSeleccionado.position.z + 5  // 5 metros atrás del tanque
+                        tanqueSeleccionado.position.y + 3, 
+                        tanqueSeleccionado.position.z + 5  
                     );
-                    
                     controls.update();
                 } else {
-                    // Si hace doble click al piso vacío, reestablece la cámara al centro general
                     controls.target.set(0, 0, 0);
                     camera.position.set(0, 10, 15);
                     controls.update();
                 }
             });
             
-            // RAYCASTER PARA MOSTRAR ESPECIFICACIONES AL HACER CLIC
             window.addEventListener('click', function(event) {
-                // Evitar que se active si haces clic en botones o fuera del canvas interactivo
                 if (event.target.tagName !== 'CANVAS') return;
 
                 const rect = renderer.domElement.getBoundingClientRect();
@@ -364,11 +416,9 @@
                     const tanqueSeleccionado = intersects[0].object;
                     const data = tanqueSeleccionado.userData;
 
-                    // Determinar color de etiqueta por tipo de combustible
                     const esDiesel = data.combustible.toUpperCase().includes('DIESEL');
                     const badgeColor = esDiesel ? 'background-color: #ffa500; color: #000;' : 'background-color: #00a8ff; color: #fff;';
 
-                    // Inyectar las especificaciones técnicas en el div flotante
                     tooltip.innerHTML = `
                         <div class="text-uppercase fw-bold text-muted mb-1" style="font-size: 10px; letter-spacing: 0.5px;">Ficha de Infraestructura</div>
                         <h6 class="fw-black text-dark text-uppercase mb-2" style="font-size: 14px;">
@@ -382,13 +432,15 @@
                             <strong class="text-secondary">Capacidad Máx:</strong> 
                             <span class="fw-black text-dark">${data.capacidad} Lts</span>
                         </div>
-                        <div style="font-size: 12px;">
+                        <div class="mb-2" style="font-size: 12px;">
                             <strong class="text-secondary">Medidas:</strong> 
                             <span class="text-muted font-monospace fw-bold">${data.medidas}</span>
                         </div>
+                        <button type="button" class="btn btn-xs btn-outline-dark w-100 fw-bold btn-girar-tanque-3d" data-id="${data.id}" style="font-size: 11px; padding: 2px 5px;">
+                            <i class="fas fa-sync-alt me-1 text-orange"></i> GIRAR 90°
+                        </button>
                     `;
 
-                    // Calcular la posición exacta del cursor relativa al contenedor con posición relativa
                     const contenedorRect = container.getBoundingClientRect();
                     const xPos = event.clientX - contenedorRect.left + 15;
                     const yPos = event.clientY - contenedorRect.top + 15;
@@ -397,23 +449,22 @@
                     tooltip.style.top = `${yPos}px`;
                     tooltip.style.display = 'block';
                 } else {
-                    // Ocultar el tooltip si el operador hace clic en el piso vacío del patio
                     tooltip.style.display = 'none';
                 }
             });
 
-            // Ocultar el tooltip si se empieza a rotar la cámara con OrbitControls para evitar desfases visuales
             controls.addEventListener('start', function() {
                 tooltip.style.display = 'none';
             });
 
-            // ENVIAR NUEVAS COORDENADAS POR AJAX (FETCH)
+            // ENVIAR NUEVAS COORDENADAS POR AJAX
             btnGuardar.addEventListener('click', function () {
                 const posiciones = objetoTanquesMeshes.map(mesh => {
                     return {
                         id: mesh.userData.id,
                         x: mesh.position.x,
-                        z: mesh.position.z
+                        z: mesh.position.z,
+                        rotacion: mesh.userData.rotacion
                     };
                 });
 
@@ -424,7 +475,6 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRired': '{{ csrf_token() }}', // Para seguridad de Laravel
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
                     body: JSON.stringify({ tanques: posiciones })
@@ -443,6 +493,29 @@
                     btnGuardar.disabled = false;
                     btnGuardar.innerHTML = `<i class="fas fa-save me-1"></i> Guardar Distribución`;
                 });
+            });
+
+            // ESCUCHAR EL GIRO DESDE EL TOOLTIP (Delegación de eventos)
+            tooltip.addEventListener('click', function (event) {
+                const botonGirar = event.target.closest('.btn-girar-tanque-3d');
+                if (!botonGirar) return;
+
+                const tanqueId = parseInt(botonGirar.getAttribute('data-id'));
+                // Buscamos el objeto 3D correspondiente en el array global de mallas
+                const meshTanque = objetoTanquesMeshes.find(mesh => mesh.userData.id === tanqueId);
+
+                if (meshTanque) {
+                    // 1. Sumar 90 grados y mantenerlo en el rango de 0-360
+                    meshTanque.userData.rotacion = (meshTanque.userData.rotacion + 90) % 360;
+
+                    // 2. Aplicar la rotación física en el entorno 3D (Eje Y)
+                    meshTanque.rotation.y = THREE.MathUtils.degToRad(meshTanque.userData.rotacion);
+
+                    // 3. Mostrar el botón flotante superior de "Guardar Distribución"
+                    wrapperBoton.style.display = 'block';
+                    
+                    console.log(`Rotando tanque ID ${tanqueId} a ${meshTanque.userData.rotacion}°`);
+                }
             });
 
             function animate() {

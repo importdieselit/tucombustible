@@ -15,4 +15,18 @@ class DepositoRepository
     {
         return Deposito::create($data);
     }
+
+    public function update($id, array $data): Deposito
+    {
+        $deposito = $this->find($id);
+        $deposito->update($data);
+        
+        return $deposito;
+    }
+
+    public function delete($id): bool
+    {
+        $deposito = $this->find($id);
+        return $deposito->delete();
+    }
 }

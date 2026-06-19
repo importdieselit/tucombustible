@@ -16,6 +16,7 @@ class ChequeoDeposito extends Model
         'id_usuario',
         'fecha',
         'turno',
+        'observaciones',
     ];
 
     /**
