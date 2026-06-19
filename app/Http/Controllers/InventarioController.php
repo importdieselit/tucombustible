@@ -53,7 +53,7 @@ class InventarioController extends BaseController
 
    public function applyBusinessFilters(Builder $query)
     {
-        $query->with(['almacen','ubicacion','modelosAsociados','equivalentes']);
+        $query->with(['almacen','ubicaciones','modelosAsociados','equivalentes']);
         // 1. Usamos el helper global request() en lugar de inyectar la clase en los argumentos
         if (request()->filled('id_almacen')) {
             $query->where('id_almacen', request('id_almacen'));
@@ -163,32 +163,35 @@ class InventarioController extends BaseController
         });
 
         // --- NUEVO: LÓGICA DE MAPEO Y UBICACIÓN ---
-        $ubicacionPrincipal = $item->ubicaciones()->first(); 
+        $ubicaciones = $item->ubicaciones; // Cargamos la colección completa de ubicaciones
+        $ubicacionesIds = $ubicaciones->pluck('id')->toArray(); // Array plano de IDs: [12, 15, 23]
+
+        $ubicacionPrincipal = $ubicaciones->first(); 
         $almacen = null;
         $gridActivo = null; 
         $estructuras = collect();
         $cacheUbicacionesEstante = collect();
         $ubicacion_texto = 'No Asignada';
-
+        
         if ($ubicacionPrincipal) {
-            // ¿Qué representa $gridActivo? El casillero o bloque del mapa general (AlmacenEstructuraGrid)
-            // Accedemos a él mediante la relación belongsTo definida en tu modelo Ubicacion
             $gridActivo = $ubicacionPrincipal->estructuraGrid; 
 
             if ($gridActivo) {
                 $almacen = $gridActivo->almacen;
-                $ubicacion_texto = $ubicacionPrincipal->codigo_ubicacion; // Ej: "ESTANTE A - Nivel 3 - Posición 2"
+                
+                // Aprovechamos el accessor dinámico por comas que creamos en el paso anterior
+                $ubicacion_texto = $item->ubicaciones_texto; 
 
-                // CROQUIS 1: Mapeo de toda la planta del almacén (Estándar keyBy)
+                // CROQUIS 1: Mapeo de toda la planta del almacén
                 $estructuras = \App\Models\AlmacenEstructuraGrid::where('almacen_id', $almacen->id)
                     ->get()
                     ->keyBy(function($est) {
                         return $est->coord_y . '-' . $est->coord_x;
                     });
 
-                // CROQUIS 2: Mapeo de la elevación (Todos los slots de ESTE estante en específico)
+                // CROQUIS 2: Mapeo de la elevación (Todos los slots de ESTE estante)
                 $cacheUbicacionesEstante = \App\Models\Ubicacion::where('estructura_grid_id', $gridActivo->id)
-                    ->with(['inventarioItems']) // Precarga relación para evitar query N+1 al iterar
+                    ->with(['inventarioItems','inventarioStock']) 
                     ->get()
                     ->groupBy(function($ubicacion) {
                         return $ubicacion->nivel . '-' . $ubicacion->posicion;
@@ -199,7 +202,7 @@ class InventarioController extends BaseController
         return view('inventario.show', compact(
             'item', 'movimientos', 'graficaFechas', 'graficaStock', 'equivalentes', 'vehiculos',
             'almacen', 'estructuras', 'ubicacionPrincipal', 'ubicacion_texto','gridActivo', 
-            'cacheUbicacionesEstante'
+            'cacheUbicacionesEstante','ubicacionesIds'
         ));
     }
     /**

@@ -58,7 +58,7 @@
                             <th class="ps-3" width="5%">#</th>
                             <th>Código</th>
                             <th width="50%">Descripción del Producto</th>
-                            <th >Ubicacion</th>
+                            <th style="width: 1%; white-space: nowrap;">Ubicacion</th>
                             <th>Grupo / Categoría</th>
                             <th>Almacén</th> {{-- Columna para el filtro --}}
                             <th class="text-center">Existencia total</th>
@@ -75,7 +75,11 @@
                                 <div class="fw-bold">{{ $item->descripcion ?? 'N/A' }}</div>
                                 <div class="x-small text-muted text-uppercase">Reg: {{ !is_null($item->fecha_in) ? \Carbon\Carbon::parse(strtotime($item->fecha_in))->format('d/m/Y') : 'N/A' }}</div>
                             </td>
-                            <td><small class="fw-bold text-muted">{{ $item->ubicacion->codigo_ubicacion ?? 'Sin Asignar' }}</small></td>
+                            <td>
+                                <div class="text-dark leading-normal fw-bold small text-nowrap" style="width: 1%;">
+                                    {!! $item->ubicaciones_html !!}
+                                </div>
+                            </td>
                             <td><span class="badge bg-light text-dark border">{{ $item->grupo ?? 'N/A' }}</span></td>
                             <td><small class="fw-bold text-muted">{{ $item->almacen->nombre ?? 'Principal - Boleita' }}</small></td>
                             <td class="text-center fw-bold fs-6">

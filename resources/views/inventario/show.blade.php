@@ -213,8 +213,8 @@
     <div class="card border-0 shadow-sm mb-4 mt-4">
         <div class="card-header bg-white border-bottom pt-4 pb-3">
             <h6 class="text-bold-custom mb-0 fs-5">
-                <i class="bi bi-geo-alt-fill text-danger me-2"></i> Ubicación Física Registrada: 
-                <span class="text-dark">{{ $ubicacion_texto ?? 'No Asignada' }}</span>
+                <i class="bi bi-geo-alt-fill text-danger me-2"></i> Ubicaciones Físicas Registradas: 
+                <span class="text-dark">[{{ $ubicacion_texto ?? 'No Asignada' }}]</span>
             </h6>
         </div>
         <div class="card-body bg-light">
@@ -287,60 +287,66 @@
                                                     <td colspan="{{ $colspan }}" class="p-1 align-middle border-secondary bg-dark-subtle" style="min-width: 100px;">
                                                         {{-- Contenedor flexible para múltiples subdivisiones (subposiciones) --}}
                                                         <div class="d-flex w-100 h-100 gap-1 justify-content-center">
-                                                            @foreach($slotsCelda as $slot)
-                                                                @php
-                                                                    $ocupado = $slot->ocupado ?? false;
-                                                                    
-                                                                    // Condición CRÍTICA: ¿Es este slot el lugar específico del ítem actual?
-                                                                    $isCurrentItemLocation = ($slot->id == $ubicacionPrincipal->id);
-                                                                    
-                                                                    // Selección de Clases de Estado y Bordes
-                                                                    if ($isCurrentItemLocation) {
-                                                                        $claseEstado = 'slot-item-actual pulse-item-border';
-                                                                    } else {
-                                                                        $claseEstado = $ocupado ? 'slot-ocupado border-danger' : 'slot-libre border-success';
-                                                                    }
+                                                           @foreach($slotsCelda as $slot)
+                                                            @php
+                                                                $itm = $slot->inventarioStock ?? false;
 
-                                                                    // Cálculo métrico de ocupación
-                                                                    $porcentaje = 0;
-                                                                    $colorBarra = 'bg-success';
-                                                                    if ($ocupado && $slot->inventario) {
-                                                                        $capacidad = $slot->capacidad_maxima ?? $slot->total_articulos ?? 1;
-                                                                        $actual = $slot->total_articulos ?? 0;
-                                                                        $porcentaje = $capacidad > 0 ? ($actual / $capacidad) * 100 : 0;
-                                                                        $colorBarra = $porcentaje > 90 ? 'bg-danger' : ($porcentaje > 70 ? 'bg-warning' : 'bg-success');
-                                                                    }
-                                                                @endphp
+                                                                if($itm && isset($itm->cantidad_actual) && $itm->cantidad_actual>0 ){
+                                                                    $ocupado = true;
+                                                                }else{
+                                                                    $ocupado = false;
+                                                                }
+                                    
+                                                                // SE MODIFICÓ: Comprueba si el ID del slot actual está presente en las ubicaciones del ítem
+                                                                $isCurrentItemLocation = in_array($slot->id, $ubicacionesIds);
+                                                                
+                                                                // Selección de Clases de Estado y Bordes
+                                                                if ($isCurrentItemLocation) {
+                                                                    // Se aplicará el resaltado a cada celda donde se encuentre el producto
+                                                                    $claseEstado = 'slot-item-actual pulse-item-border';
+                                                                } else {
+                                                                       
+                                                                    $claseEstado = $ocupado ? 'slot-ocupado border-danger' : 'slot-libre border-success';
+                                                                }
 
-                                                                <div class="slot-rack flex-fill p-2 rounded text-center {{ $claseEstado }}" 
-                                                                    style="background: #1e293b; border: 1px solid; min-width: 85px; transition: 0.2s;">
+                                                                // Cálculo métrico de ocupación
+                                                                $porcentaje = 0;
+                                                                $colorBarra = 'bg-success';
+                                                                if ($ocupado) {
+                                                                    $capacidad = $itm->capacidad_asignada ?? $itm->cantidad_actual ?? 1;
+                                                                    $actual = $itm->cantidad_actual ?? 0;
+                                                                    $porcentaje = $capacidad > 0 ? ($actual / $capacidad) * 100 : 0;
+                                                                    $colorBarra = $porcentaje > 90 ? 'bg-danger' : ($porcentaje > 70 ? 'bg-warning' : 'bg-success');
+                                                                }
+                                                            @endphp
+
+                                                            <div class="slot-rack flex-fill p-2 rounded text-center {{ $claseEstado }}" 
+                                                                style="background: #1e293b; border: 1px solid; min-width: 85px; transition: 0.2s;">
+                                                                
+                                                                @if($slot->subposicion)
+                                                                    <span class="badge bg-secondary mb-1" style="font-size: 7px; padding: 2px 4px;">SUB: {{ $slot->subposicion }}</span>
+                                                                @endif
+                                                                
+                                                                <div class="fw-bold" style="font-size: 10px; color: #cbd5e1;">N{{ $n }}-P{{ $p }}</div>
+                                                                
+                                                                @if($ocupado)
                                                                     
-                                                                    @if($slot->subposicion)
-                                                                        <span class="badge bg-secondary mb-1" style="font-size: 7px; padding: 2px 4px;">SUB: {{ $slot->subposicion }}</span>
-                                                                    @endif
+                                                                    <div class="fw-bold text-light" style="font-size:10px;">
+                                                                        {{ $actual ?? '' }} / {{ $capacidad ?? '∞' }}
+                                                                    </div>
                                                                     
-                                                                    <div class="fw-bold" style="font-size: 10px; color: #cbd5e1;">N{{ $n }}-P{{ $p }}</div>
-                                                                    
-                                                                    @if($ocupado && $slot->inventario)
-                                                                        <div class="small text-truncate text-white-50 mt-1" style="font-size:9px;" title="{{ $slot->inventario->producto }}">
-                                                                            {{ $slot->inventario->sku }}
-                                                                        </div>
-                                                                        <div class="fw-bold text-light" style="font-size:10px;">
-                                                                            {{ $slot->total_articulos }} / {{ $slot->capacidad_maxima ?? '∞' }}
-                                                                        </div>
-                                                                        
-                                                                        <div class="progress mt-1" style="height: 4px; background-color: #334155;">
-                                                                            <div class="progress-bar {{ $colorBarra }}" role="progressbar" style="width: {{ min($porcentaje, 100) }}%"></div>
-                                                                        </div>
-                                                                        <div class="d-flex justify-content-between mt-1" style="font-size: 7px; opacity: 0.8;">
-                                                                            <span style="color: #94a3b8;">Llenado</span>
-                                                                            <span class="fw-bold text-white">{{ round($porcentaje) }}%</span>
-                                                                        </div>
-                                                                    @else
-                                                                        <div class="mt-1"><small style="font-size:9px;" class="text-muted">Libre</small></div>
-                                                                    @endif
-                                                                </div>
-                                                            @endforeach
+                                                                    <div class="progress mt-1" style="height: 4px; background-color: #334155;">
+                                                                        <div class="progress-bar {{ $colorBarra }}" role="progressbar" style="width: {{ min($porcentaje, 100) }}%"></div>
+                                                                    </div>
+                                                                    <div class="d-flex justify-content-between mt-1" style="font-size: 7px; opacity: 0.8;">
+                                                                        <span style="color: #ffffff;">Llenado</span>
+                                                                        <span class="fw-bold text-white">{{ round($porcentaje) }}%</span>
+                                                                    </div>
+                                                                @else
+                                                                    <div class="mt-1"><small style="font-size:9px;" class="text-white">Libre</small></div>
+                                                                @endif
+                                                            </div>
+                                                        @endforeach
                                                         </div>
                                                     </td>
                                                 @else
@@ -559,12 +565,12 @@ document.addEventListener("DOMContentLoaded", function() {
             // Iluminación
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
             scene.add(ambientLight);
-            const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
-            dirLight.position.set(10, 20, 10);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.7);
+            dirLight.position.set(15, 30, 15);
             scene.add(dirLight);
 
             // Cámara y Renderizador
-            const camera = new THREE.PerspectiveCamera(45, targetContainer.clientWidth / targetContainer.clientHeight, 0.1, 1000);
+            const camera = new THREE.PerspectiveCamera(55, targetContainer.clientWidth / targetContainer.clientHeight, 0.1, 1000);
             const renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(targetContainer.clientWidth, targetContainer.clientHeight);
             targetContainer.appendChild(renderer.domElement);
@@ -572,57 +578,186 @@ document.addEventListener("DOMContentLoaded", function() {
             // Controles de Órbita
             const controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
             controls.enablePan = false;
             controls.maxPolarAngle = Math.PI / 2 - 0.05; 
 
-            // Construcción del Suelo Industrial
-            const planeGeo = new THREE.PlaneGeometry(60, 60);
+            // Construcción del Suelo y Grilla
+            const planeGeo = new THREE.PlaneGeometry(80, 80);
             const planeMat = new THREE.MeshPhongMaterial({ color: 0x222222, side: THREE.DoubleSide });
             const plane = new THREE.Mesh(planeGeo, planeMat);
-            plane.rotation.x = Math.PI / 2;
+            plane.rotation.x = -Math.PI / 2;
             scene.add(plane);
 
-            // Datos Inyectados de Estructuras
+            const gridHelper = new THREE.GridHelper(80, 40, 0x444444, 0x2d2d2d);
+            gridHelper.position.y = 0.01;
+            scene.add(gridHelper);
+
+            // ==========================================
+            // DATA INYECTADA DESDE LARAVEL
+            // ==========================================
             const estructuras = @json($estructuras->values());
             const cols = {{ $almacen->total_columnas_grid ?? 10 }};
             const filas = {{ $almacen->total_filas_grid ?? 10 }};
-            const idTarget = {{ $ubicacionPrincipal->estructura_grid_id }};
+            
+            const idTarget = {{ $gridActivo->id ?? 0 }};
+            const ubicacionesItemIds = @json($ubicacionesIds ?? []); // Todas las IDs donde está el producto
+            const cacheEstante = @json($cacheUbicacionesEstante);    // El caché exacto con las subdivisiones
+
             let targetPos = new THREE.Vector3(0, 0, 0);
+            let targetCount = 0; // Para centrar la cámara en el promedio de las posiciones
 
-            // Renderizado Dinámico de Bloques Estructurales
-            estructuras.forEach(est => {
-                const x = (est.coord_x - cols/2) * 2;
-                const z = (est.coord_y - filas/2) * 2;
-                const height = (est.cantidad_niveles * 0.8) || 2;
-                const isTarget = (est.id === idTarget);
+            // Constantes Métricas (Escala 3D)
+            const cellSize = 2;           
+            const alturaNivel = 0.8;      
+            const anchoTotalRack = 1.6;   
+            const profTotalRack = 1.0;    
+
+            // Funciones Auxiliares de Renderizado
+            function agregarPuntero(px, py, pz) {
+                const indicatorMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+                const indicatorGeo = new THREE.ConeGeometry(0.12, 0.35, 16);
+                const indicator = new THREE.Mesh(indicatorGeo, indicatorMat);
+                indicator.position.set(px, py, pz);
+                indicator.rotation.x = Math.PI; 
+                scene.add(indicator);
                 
-                const material = new THREE.MeshPhongMaterial({
-                    color: isTarget ? 0xf59e0b : 0x64748b,
-                    transparent: !isTarget,
-                    opacity: isTarget ? 1.0 : 0.5
-                });
+                // Acumulamos las posiciones para sacar el centro promedio de la cámara
+                targetPos.x += px;
+                targetPos.y += py;
+                targetPos.z += pz;
+                targetCount++;
+            }
 
-                const geometry = new THREE.BoxGeometry(1.6, height, 1);
+            function dibujarCaja(xCentro, yCentro, zCentro, ancho, alto, prof, isExactTarget, nivelesTotales) {
+                const matColor = isExactTarget ? 0xf59e0b : 0x3b82f6; 
+                const matOpacity = isExactTarget ? 0.9 : 0.25;
+                const matTransparent = !isExactTarget;
+
+                const geometry = new THREE.BoxGeometry(ancho * 0.92, alto * 0.85, prof);
+                const material = new THREE.MeshPhongMaterial({ color: matColor, transparent: matTransparent, opacity: matOpacity });
                 const mesh = new THREE.Mesh(geometry, material);
-                mesh.position.set(x, height / 2, z);
+                mesh.position.set(xCentro, yCentro, zCentro);
                 scene.add(mesh);
 
-                if(isTarget) {
-                    targetPos.copy(mesh.position);
-                    
-                    // Indicador cónico flotante sobre el estante objetivo
-                    const indicatorMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-                    const indicatorGeo = new THREE.ConeGeometry(0.25, 0.5, 4);
-                    const indicator = new THREE.Mesh(indicatorGeo, indicatorMat);
-                    indicator.position.set(x, height + 0.8, z);
-                    indicator.rotation.x = Math.PI; 
-                    scene.add(indicator);
+                const edges = new THREE.EdgesGeometry(geometry);
+                const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ 
+                    color: isExactTarget ? 0xffffff : 0x64748b,
+                    transparent: !isExactTarget,
+                    opacity: isExactTarget ? 1.0 : 0.4
+                }));
+                line.position.copy(mesh.position);
+                scene.add(line);
+
+                if (isExactTarget) {
+                    agregarPuntero(xCentro, (nivelesTotales * alturaNivel) + 0.4, zCentro);
+                }
+            }
+
+            // Renderizado de las estructuras del almacén
+            estructuras.forEach(est => {
+                const x = (est.coord_x - cols / 2) * cellSize;
+                const z = (est.coord_y - filas / 2) * cellSize;
+                const niveles = parseInt(est.cantidad_niveles) || 1;
+                const secciones = parseInt(est.cantidad_secciones) || 1;
+                const isTargetStructure = (est.id === idTarget);
+
+                if (est.tipo_estructura === 'ESTANTE') {
+                    if (isTargetStructure) {
+                        // RECORREMOS LA VERDAD ABSOLUTA DESDE CACHE (IDÉNTICO A LA MATRIZ 2D)
+                        const anchoSeccion = anchoTotalRack / secciones;
+                        const xStartSeccion = x - (anchoTotalRack / 2);
+
+                        for (let n = 1; n <= niveles; n++) {
+                            const yCentro = (n - 1) * alturaNivel + (alturaNivel / 2);
+                            
+                            for (let p = 1; p <= secciones; p++) {
+                                const key = n + '-' + p;
+                                const slots = cacheEstante[key]; // Extraemos los sub-slots de esta celda
+                                const xCentroSeccion = xStartSeccion + ((p - 1) * anchoSeccion) + (anchoSeccion / 2);
+
+                                if (slots && slots.length > 0) {
+                                    // LA CELDA ESTÁ SUBDIVIDIDA O TIENE REGISTRO
+                                    const numSub = slots.length;
+                                    const anchoSub = anchoSeccion / numSub;
+                                    const xStartSub = xCentroSeccion - (anchoSeccion / 2);
+
+                                    slots.forEach((slot, idx) => {
+                                        // in_array seguro comparando IDs
+                                        const isExactTarget = ubicacionesItemIds.some(id => id == slot.id);
+                                        const xCentroSub = xStartSub + (idx * anchoSub) + (anchoSub / 2);
+                                        
+                                        dibujarCaja(xCentroSub, yCentro, z, anchoSub, alturaNivel, profTotalRack, isExactTarget, niveles);
+                                    });
+                                } else {
+                                    // Celda sin configurar
+                                    dibujarCaja(xCentroSeccion, yCentro, z, anchoSeccion, alturaNivel, profTotalRack, false, niveles);
+                                }
+                            }
+                        }
+                    } else {
+                        // Estructura X que no es en la que estamos buscando. La dibujamos como un bloque sólido fantasma
+                        const geometry = new THREE.BoxGeometry(anchoTotalRack, niveles * alturaNivel, profTotalRack);
+                        const material = new THREE.MeshPhongMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.1 });
+                        const mesh = new THREE.Mesh(geometry, material);
+                        mesh.position.set(x, (niveles * alturaNivel) / 2, z);
+                        scene.add(mesh);
+                        
+                        const edges = new THREE.EdgesGeometry(geometry);
+                        const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x64748b, opacity: 0.3, transparent: true }));
+                        line.position.copy(mesh.position);
+                        scene.add(line);
+                    }
+                } 
+                else if (est.tipo_estructura === 'GRANEL_LUBRICANTE') {
+                    const matColor = isTargetStructure ? 0xf59e0b : 0xeab308;
+                    const cylinder = new THREE.Mesh(
+                        new THREE.CylinderGeometry(0.6, 0.6, alturaNivel * 1.5, 16),
+                        new THREE.MeshPhongMaterial({ color: matColor, transparent: !isTargetStructure, opacity: isTargetStructure ? 1.0 : 0.4 })
+                    );
+                    cylinder.position.set(x, (alturaNivel * 1.5) / 2, z);
+                    scene.add(cylinder);
+
+                    if (isTargetStructure) agregarPuntero(x, (alturaNivel * 1.5) + 0.4, z);
+                }
+                else if (est.tipo_estructura === 'PISO_PALLET') {
+                    const matColor = isTargetStructure ? 0xf59e0b : 0x06b6d4;
+                    const pallet = new THREE.Mesh(
+                        new THREE.BoxGeometry(anchoTotalRack, 0.15, profTotalRack),
+                        new THREE.MeshPhongMaterial({ color: matColor, transparent: !isTargetStructure, opacity: isTargetStructure ? 1.0 : 0.4 })
+                    );
+                    pallet.position.set(x, 0.08, z);
+                    scene.add(pallet);
+
+                    if (isTargetStructure) agregarPuntero(x, 0.6, z);
                 }
             });
 
-            // Posicionamiento focalizado de la cámara
-            camera.position.set(targetPos.x + 5, targetPos.y + 5, targetPos.z + 5);
-            controls.target.copy(targetPos);
+            // Enfoque Automático Promediado
+            if (targetCount > 0) {
+                targetPos.x /= targetCount;
+                targetPos.y /= targetCount;
+                targetPos.z /= targetCount;
+                
+                // Parámetros ajustables para el "Zoom Out" inicial
+                const alturaCamara = 18;     // Qué tan alto vuela el "dron"
+                const distanciaRetiroX = 15; // Retiro lateral
+                const distanciaRetiroZ = 20; // Retiro frontal
+                
+                // Posicionamos la cámara lejos y alta, pero en diagonal al objetivo
+                camera.position.set(
+                    targetPos.x + distanciaRetiroX, 
+                    targetPos.y + alturaCamara, 
+                    targetPos.z + distanciaRetiroZ
+                );
+                
+                // Forzamos a que la lente mire exactamente al centro del producto resaltado
+                controls.target.set(targetPos.x, targetPos.y, targetPos.z);
+            } else {
+                // Vista general isométrica de todo el almacén por defecto
+                camera.position.set(cols * 1.5, 20, filas * 1.5); 
+                controls.target.set(0, 0, 0);
+            }
             controls.update();
 
             function animate() {
@@ -632,7 +767,7 @@ document.addEventListener("DOMContentLoaded", function() {
             }
             animate();
 
-            // Evento Responsivo del Viewport 3D
+            // Evento Responsivo
             window.addEventListener('resize', () => {
                 if(!targetContainer) return;
                 camera.aspect = targetContainer.clientWidth / targetContainer.clientHeight;
@@ -640,8 +775,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 renderer.setSize(targetContainer.clientWidth, targetContainer.clientHeight);
             });
         }
-    @endif
-    
+    @endif  
 });
 </script>
 @endpush
