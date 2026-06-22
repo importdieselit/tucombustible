@@ -48,9 +48,9 @@
             <a href="{{ route('ordenes.list') }}" class="btn btn-sm btn-outline-secondary">
                 <i class="fas fa-arrow-left"></i> Volver
             </a>
-            <button onclick="window.print();" class="btn btn-sm btn-dark ms-2">
+            <a href="{{ route('ordenes.imprimir', $orden->id) }}" target="_blank" class="btn btn-sm btn-dark ms-2">
                 <i class="fas fa-print"></i> Imprimir
-            </button>
+            </a>
         </div>
         <div class="d-flex gap-2">
             @if($orden->estatus == 'ABIERTA' || $orden->estatus == 2 || $orden->estatus == 3)
@@ -505,7 +505,7 @@
         </div>
     </div>
      <a href="{{ route('ordenes.imprimir', $orden->id) }}" target="_blank" class="btn btn-sm btn-dark ms-2">
-                    <i class="fas fa-print"></i> Imprimir Hoja Única
+                    <i class="fas fa-print"></i> Imprimir
                 </a>
 </div>
 
