@@ -245,6 +245,7 @@ class ViajesController extends Controller
                 'vehiculo_id' => $request->vehiculo_id ?? 0,
                 'cisterna' =>   $request->cisterna ?? null,
                 'ayudante' => $request->ayudante ?? 0,
+                'ayudante_id' => $request->ayudante ?? 0,
                 'otro_chofer' => $request->otro_chofer ?? null,
                 'otro_vehiculo' => $request->otro_vehiculo ?? null,
                 'otro_ayudante' => $request->otro_ayudante?? null,
