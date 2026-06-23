@@ -1130,6 +1130,7 @@ public function updateGuiaData(Request $request, $viajeId)
                 'vehiculo_id' => $request->vehiculo_id ?? 0,
                 'cisterna' => $request->cisterna ?? 0,
                 'ayudante' => $request->ayudante ?? 0,
+                'ayudante_id' => $request->ayudante ?? 0,
                 'otro_chofer' => $request->otro_chofer_id ?? null,
                 'otro_vehiculo' => $request->otro_vehiculo_id ?? null,
                 'otro_ayudante' => $request->otro_ayudante_id ?? null,

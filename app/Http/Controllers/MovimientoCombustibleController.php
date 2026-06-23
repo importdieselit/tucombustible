@@ -1412,6 +1412,7 @@ public function storeDespachoIndustrial(Request $request)
                 'cisterna' => $request->cisterna_id,
                 'chofer_id' => $request->chofer_id,
                 'ayudante' => $request->ayudante ?? null, // Ayudante es opcional
+                'ayudante_id' => $request->ayudante ?? null, // Ayudante es opcional
                 'destino_ciudad' => $destino->destino ?? 'N/A', 
                 'fecha_salida' => $fecha,
                 'litros' =>$request->litros,
@@ -1521,6 +1522,7 @@ public function storeDespachoIndustrial(Request $request)
                 'vehiculo_id' => $request->vehiculo_id,
                 'chofer_id' => $request->chofer_id,
                 'ayudante' => $request->ayudante ?? null, // Ayudante es opcional
+                'ayudante_id' => $request->ayudante ?? null, // Ayudante es opcional
                 'destino_ciudad' => 'FLETE -> '. $request->planta_destino_id.' -> '.$request->destino_ciudad ?? 'FLETE N/A', 
                 'fecha_salida' => $request->fecha_salida,
                 'status' => 'Programado',

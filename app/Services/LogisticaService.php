@@ -232,6 +232,7 @@ class LogisticaService
             'cisterna'             => $cisternaValor,
             'chofer_id'            => $esPropio ? $data['chofer_id'] : null,
             'ayudante_id'          => $esPropio ? ($data['ayudante_id'] ?? null) : null,
+            'ayudante'          => $esPropio ? ($data['ayudante_id'] ?? null) : null,
             
             // Flags de Transporte Externo
             'es_transporte_externo'=> !$esPropio,
