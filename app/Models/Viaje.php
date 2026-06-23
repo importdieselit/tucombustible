@@ -32,7 +32,7 @@ class Viaje extends Model
         'observacion', 'producto_flete','fecha_llegada','fecha_salida_real',
 
         // Campos de Logística
-        'tipo_planificacion', 'sede_id', 'ayudante_id', 'tipo_remolque', 
+        'tipo_planificacion', 'sede_id', 'ayudante_id', 'tipo_remolque', 'ayudante',
         'punto_salida', 'punto_llegada', 'codigo_sap', 'nombre_cliente_externo',
         
         // AGREGAR ESTOS CAMPOS DE TRANSPORTE EXTERNO:
