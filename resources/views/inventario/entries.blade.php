@@ -1,4 +1,29 @@
-<div class="card shadow-sm border-0">
+@extends('layouts.app')
+
+@section('title', 'Control de Inventario y Almacenes')
+
+@push('styles')
+<style>
+    /* Estándares Corporativos */
+    .bg-navy { background-color: #002855 !important; }
+    .bg-orange { background-color: #ff6600 !important; }
+    .text-navy { color: #002855 !important; }
+    .text-orange { color: #ff6600 !important; }
+    .border-orange { border-color: #ff6600 !important; }
+    
+    .card-kpi { border: none; border-radius: 8px; transition: transform 0.2s; }
+    .card-kpi:hover { transform: translateY(-5px); }
+    .stats-number { font-size: 2rem; font-weight: 800; line-height: 1; }
+    .stats-label { font-size: 0.7rem; text-uppercase; font-weight: 700; color: #6c757d; letter-spacing: 0.5px; }
+    
+    .table-alerts thead { font-size: 0.7rem; background: #f8f9fa; }
+    .badge-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+</style>
+@endpush
+
+@section('content')
+<div class="container-fluid py-4">
+    <div class="card shadow-sm border-0">
     <div class="card-header bg-primary text-white">
         <h5 class="mb-0"><i class="fas fa-file-import me-2"></i> Registrar Entrada de Almacén</h5>
     </div>
@@ -37,7 +62,7 @@
         </form>
     </div>
 </div>
-
+@push('scripts')
 <script>
 $('#form-entrada').on('submit', function(e) {
     e.preventDefault();
@@ -55,3 +80,5 @@ $('#form-entrada').on('submit', function(e) {
     });
 });
 </script>
+@endpush
+@endsection
