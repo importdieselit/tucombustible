@@ -20,6 +20,7 @@ use App\Models\SuministroCompra;
 use App\Models\SuministroCompraDetalle;
 use App\Models\Ventas;
 use App\Models\VentasDetalle;
+use App\Models\Proveedor;
 use App\Models\Orden;
 use App\Models\InventarioDespacho;
 use App\Models\MovimientoInventario;
@@ -123,8 +124,9 @@ class InventarioController extends BaseController
     {
         $item = new Inventario();
         $almacenes = Almacen::all();
+        $proveedores = Proveedor::where('id_tipo_proveedor', 4)->get(); // Solo proveedores de tipo 4 (ejemplo)
         // Nota: Los datos de Marca, Modelo, Condicion, etc. deben ser cargados aquí
-        return view('inventario.form', compact('item', 'almacenes'));
+        return view('inventario.form', compact('item', 'almacenes', 'proveedores'));
     }
 
    public function applyBusinessFilters(Builder $query)
