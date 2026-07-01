@@ -131,14 +131,14 @@ class InventarioController extends BaseController
         // Catálogos para el Paso 2 (Datos de Compra)
         $almacenes = Almacen::all(); // Opcional: ->where('estatus', 1)
         // Sustituye DB::table por tu Modelo Proveedor si lo tienes
-        $proveedores = DB::table('proveedores')->where('id_tipo_proveedor', 4)->get(); 
+        $proveedores = Proveedor::where('id_tipo_proveedor', 4)->get(); 
 
         // Catálogos para el Paso 3 (Ficha Técnica / Nuevo Ítem)
         $marcas = Marca::all();
         
         // Asumiendo tablas por defecto si no pasaste los modelos de planes:
-        $planes = DB::table('planes_mantenimiento')->get(); 
-        $servicios = DB::table('servicios')->get();
+        $planes = PlanMantenimiento::all();
+        $servicios = Servicio::all();
 
         return view('inventario.form', compact('almacenes', 'proveedores', 'marcas', 'planes', 'servicios'));
     }
