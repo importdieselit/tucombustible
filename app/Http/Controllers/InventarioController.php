@@ -103,6 +103,7 @@ class InventarioController extends BaseController
                     'color'      => $this->generarColorCorporativo($index)
                 ];
             });
+            
 
         return view('inventario.index', [
             'valorTotal' => $valorTotal,
@@ -360,11 +361,42 @@ class InventarioController extends BaseController
             ->with('success', 'Item de inventario eliminado exitosamente.');
     }
 
+    public function getDetallesArticulo($id)
+    {
+        $articulo = Inventario::findOrFail($id);
+
+        // 1. Stock global en el maestro que no se ha amarrado a ningún slot físico aún
+        $stockGeneral = $articulo->existencia ?? 0;
+
+        // 2. Slots donde ya existe este artículo (Relación pivote o de inventario físico)
+        // Cambia los nombres de relaciones según tus modelos estructurados
+        $slotsPoseidos = DB::table('articulo_slot as as')
+            ->join('slots_almacen as s', 'as.slot_id', '=', 's.id')
+            ->where('as.articulo_id', $id)
+            ->select('as.slot_id', 's.codigo_posicion', 'as.cantidad')
+            ->get();
+
+        // Suma de lo que está repartido en los racks
+        $stockEnSlots = $slotsPoseidos->sum('cantidad'); 
+
+        // 3. Catálogo completo de ubicaciones para pintar los selectores de destino
+        $todosLosSlots = DB::table('slots_almacen')->select('id', 'codigo_posicion')->get();
+
+        return response()->json([
+            'success' => true,
+            'articulo' => $articulo,
+            'stock_general' => $stockGeneral,
+            'stock_total' => $stockGeneral + $stockEnSlots,
+            'slots_poseidos' => $slotsPoseidos,
+            'todos_los_slots' => $todosLosSlots
+        ]);
+    }
+
     public function createEntry($id){
        
         $item= Inventario::find($id);
         $locations = InventarioStock::where('inventario_id',$id)->get();
-        dd($item);
+        dd($item);  
         return view('inventario.entries', compact(['id', 'item','locations']));
     }
     
