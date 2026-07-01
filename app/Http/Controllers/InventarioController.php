@@ -15,6 +15,7 @@ use App\Models\InventarioCompra;
 use App\Models\InventarioAsociado;
 use App\Models\Ubicacion;
 use App\Models\InventarioStock;
+use App\Models\InventarioDetalleCompra;
 use App\Models\AlmacenEstructuraGrid;
 use App\Models\SuministroCompra;
 use App\Models\SuministroCompraDetalle;
@@ -122,11 +123,19 @@ class InventarioController extends BaseController
      */
     public function create()
     {
-        $item = new Inventario();
-        $almacenes = Almacen::all();
-        $proveedores = Proveedor::where('id_tipo_proveedor', 4)->get(); // Solo proveedores de tipo 4 (ejemplo)
-        // Nota: Los datos de Marca, Modelo, Condicion, etc. deben ser cargados aquí
-        return view('inventario.form', compact('item', 'almacenes', 'proveedores'));
+        // Catálogos para el Paso 2 (Datos de Compra)
+        $almacenes = Almacen::all(); // Opcional: ->where('estatus', 1)
+        // Sustituye DB::table por tu Modelo Proveedor si lo tienes
+        $proveedores = DB::table('proveedores')->where('id_tipo_proveedor', 4)->get(); 
+
+        // Catálogos para el Paso 3 (Ficha Técnica / Nuevo Ítem)
+        $marcas = Marca::all();
+        
+        // Asumiendo tablas por defecto si no pasaste los modelos de planes:
+        $planes = DB::table('planes_mantenimiento')->get(); 
+        $servicios = DB::table('servicios')->get();
+
+        return view('inventario.form', compact('almacenes', 'proveedores', 'marcas', 'planes', 'servicios'));
     }
 
    public function applyBusinessFilters(Builder $query)
@@ -157,26 +166,145 @@ class InventarioController extends BaseController
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            //'id_usuario' => 'required|exists:users,id',
-            'id_almacen' => 'required|exists:almacenes,id',
-            'codigo' => 'required|string|max:50|unique:inventario',
-            'descripcion' => 'required|string|max:200'
-            ]);
-            
+        $idUsuario = Auth::id() ?? 1; // Fallback por seguridad
+
+        // 1. REGLAS BASE (Aplicables a todos los ingresos)
+        $rules = [
+            'numero_factura' => 'required|string|max:100',
+            'proveedor_id'   => 'required|integer',
+            'cantidad'       => 'required|numeric|min:0.01',
+            'costo_unitario' => 'required|numeric|min:0',
+            'id_almacen'     => 'required|exists:almacenes,id',
+        ];
+
+        // 2. REGLAS CONDICIONALES (El Wizard determinó si es Nuevo o Existente)
+        if (empty($request->item_id)) {
+            // Reglas para Ítem Nuevo
+            $rules['codigo']      = 'required|string|max:50|unique:inventario,codigo';
+            // Validamos los arreglos de las tablas pivote
+            $rules['asociaciones_vehiculos.*.marca']  = 'sometimes|required|integer';
+            $rules['asociaciones_vehiculos.*.modelo'] = 'sometimes|required|integer';
+            $rules['planes_mantenimiento.*.id_plan']  = 'sometimes|required|integer';
+            $rules['equivalentes.*']                  = 'sometimes|integer|exists:inventario,id';
+        } else {
+            // Reglas para Ítem Existente
+            $rules['item_id'] = 'required|exists:inventario,id';
+        }
+
+        $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
-            return redirect()->route('inventario.create')
+            return redirect()->back()
                 ->withErrors($validator)
                 ->withInput();
         }
 
-        // Se asigna el usuario autenticado (asumiendo que hay un sistema de autenticación)
-        $request->merge(['id_usuario' => Auth::id()]);
-        Inventario::create($request->all());
+        // 3. PROCESAMIENTO TRANSACCIONAL (Todo o Nada)
+        try {
+            DB::beginTransaction();
 
-        return redirect()->route('inventario.list')
-            ->with('success', 'Item de inventario creado exitosamente.');
+            $itemId = $request->item_id;
+            $costoTotalCompra = $request->cantidad * $request->costo_unitario;
+
+            // ==========================================
+            // FASE A: CREACIÓN DEL ÍTEM (Si es Nuevo)
+            // ==========================================
+            if (empty($itemId)) {
+                // 1. Crear el Registro Maestro (Modelo: Inventario)
+                $nuevoItem = Inventario::create([
+                    'codigo'      => $request->codigo,
+                    'descripcion' => $request->descripcion ?? 'Sin descripción',
+                    'id_almacen'  => $request->id_almacen,
+                    'id_usuario'  => $idUsuario,
+                    'existencia'  => 0, // Inicia en 0, se sumará en la Fase B
+                    'costo'       => $request->costo_unitario,
+                    'estatus'     => 1, // Activo por defecto
+                ]);
+
+                $itemId = $nuevoItem->id;
+
+                // 2. Asociar Vehículos Compatibles (Modelo: InventarioAsociado)
+                if ($request->has('asociaciones_vehiculos')) {
+                    foreach ($request->asociaciones_vehiculos as $vehiculo) {
+                        InventarioAsociado::create([
+                            'id_inventario' => $itemId,
+                            'marca'         => $vehiculo['marca'],
+                            'modelo'        => $vehiculo['modelo'],
+                            'id_usuario'    => $idUsuario,
+                        ]);
+                    }
+                }
+
+                // 3. Asociar Planes de Mantenimiento (Usamos DB Builder asumiendo estructura estándar)
+                if ($request->has('planes_mantenimiento')) {
+                    foreach ($request->planes_mantenimiento as $plan) {
+                        DB::table('inventario_planes')->insert([
+                            'inventario_id' => $itemId,
+                            'plan_id'       => $plan['id_plan'],
+                            'servicio_id'   => $plan['id_servicio'],
+                            'cantidad'      => $plan['cantidad'] ?? 1,
+                        ]);
+                    }
+                }
+
+                // 4. Asociar Equivalentes (Usando la relación Many-to-Many de tu Modelo Inventario)
+                if ($request->has('equivalentes')) {
+                    $nuevoItem->equivalentes()->sync($request->equivalentes);
+                }
+            }
+
+            // ==========================================
+            // FASE B: REGISTRO DE LA COMPRA / INGRESO
+            // ==========================================
+
+            // 1. Crear la Cabecera de la Compra (Modelo: InventarioCompra)
+            $compra = InventarioCompra::create([
+                'id_usuario'         => $idUsuario,
+                'id_proveedor'       => $request->proveedor_id,
+                'destino'            => $request->id_almacen, // Según tu modelo, destino parece ser el almacén
+                'factura_referencia' => $request->numero_factura,
+                'fecha_factura'      => now()->format('Y-m-d'),
+                'fecha_in'           => now(),
+                'compra_total'       => $costoTotalCompra,
+                'estatus'            => 1, 
+                'anulada'            => false,
+            ]);
+
+            // 2. Crear el Detalle de la Compra (Modelo: InventarioDetalleCompra)
+            InventarioDetalleCompra::create([
+                'id_inventario_compra' => $compra->id_inventario_compra, // PK de tu modelo InventarioCompra
+                'id_inventario'        => $itemId,
+                'id_usuario'           => $idUsuario,
+                'cantidad'             => $request->cantidad,
+                'precio'               => $request->costo_unitario,
+                'total'                => $costoTotalCompra,
+            ]);
+
+            // 3. Actualizar el Stock Maestro (Modelo: Inventario)
+            $itemMaestro = Inventario::find($itemId);
+            $itemMaestro->existencia += $request->cantidad;
+            $itemMaestro->costo = $request->costo_unitario; // Actualiza el costo al último ingresado
+            $itemMaestro->save();
+
+            // Opcional: Si manejas InventarioStock (Ubicaciones precisas), lo inicializarías aquí.
+            // InventarioStock::updateOrCreate(
+            //    ['inventario_id' => $itemId, 'ubicacion_id' => $request->ubicacion_exacta],
+            //    ['cantidad_actual' => DB::raw("cantidad_actual + {$request->cantidad}")]
+            // );
+
+            DB::commit();
+
+            return redirect()->route('inventario.index')
+                ->with('success', 'Mercancía ingresada y registrada exitosamente bajo la factura ' . $request->numero_factura);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Fallo crítico en store de Inventario: ' . $e->getMessage() . ' - Line: ' . $e->getLine());
+            
+            return redirect()->back()
+                ->with('error', 'Ocurrió un error en la base de datos al guardar la información. Contacte a soporte.')
+                ->withInput();
+        }
     }
 
     /**
