@@ -143,6 +143,30 @@ class InventarioController extends BaseController
         return view('inventario.form', compact('almacenes', 'proveedores', 'marcas', 'planes', 'servicios'));
     }
 
+    public function buscar(Request $request)
+    {
+        // Tolerancia de parámetros: acepta tanto 'q' (JS) como 'termino'
+        $term = $request->input('q') ?? $request->input('termino');
+
+        // Si el término está vacío o es muy corto, retornamos una respuesta vacía inmediata
+        if (empty($term) || strlen($term) < 3) {
+            return response()->json([]);
+        }
+
+        // Consulta estandarizada y segura
+        $items = Inventario::where('estatus', 1) // Mantenemos consistencia con ítems activos
+            ->where(function($query) use ($term) {
+                $query->where('codigo', 'LIKE', "%{$term}%")
+                    ->orWhere('descripcion', 'LIKE', "%{$term}%");
+            })
+            ->select(['id', 'codigo', 'descripcion', 'costo', 'id_almacen']) // Traemos solo lo necesario para optimizar memoria
+            ->take(15) // Límite de rendimiento para evitar saturar el DOM en búsquedas muy genéricas
+            ->get();
+
+        // Retornamos la colección directa para cumplir con el contrato del frontend (data.forEach)
+        return response()->json($items);
+    }
+
    public function applyBusinessFilters(Builder $query)
     {
         $query->with(['almacen','ubicaciones','modelosAsociados','equivalentes']);

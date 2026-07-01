@@ -200,32 +200,54 @@
         const resultsDiv = document.getElementById('search-results');
 
         // Buscador en tiempo real
-        smartSearch.addEventListener('input', function() {
-            if (this.value.length < 3) { resultsDiv.innerHTML = ''; return; }
-            
-            fetch(`/api/inventario/buscar?q=${this.value}`)
-                .then(res => res.json())
-                .then(data => {
-                    resultsDiv.innerHTML = '';
+       smartSearch.addEventListener('input', function() {
+        // Si el término es menor a 3 caracteres, limpiamos y cancelamos la petición
+        if (this.value.length < 3) {
+            resultsDiv.innerHTML = ''; 
+            return; 
+        }
+        
+        // Capturamos el valor actual para usarlo dentro del flujo asíncrono
+        const queryValue = this.value;
+
+        fetch(`/api/inventario/buscar?q=${encodeURIComponent(queryValue)}`)
+            .then(res => {
+                if (!res.ok) throw new Error('Error en la comunicación con el servidor');
+                return res.json();
+            })
+            .then(data => {
+                // Limpieza inicial obligatoria antes de renderizar nuevos resultados
+                resultsDiv.innerHTML = '';
+
+                // 'data' ahora es un arreglo plano directo desde Eloquent
+                if (data.length > 0) {
                     data.forEach(item => {
                         let btn = document.createElement('button');
                         btn.className = 'list-group-item list-group-item-action';
                         btn.innerHTML = `<strong>${item.codigo}</strong> - ${item.descripcion}`;
                         btn.onclick = (e) => {
                             e.preventDefault();
-                            selectItem(item);
+                            selectItem(item); // Ejecuta tu lógica de selección de ítem existente
                         };
                         resultsDiv.appendChild(btn);
                     });
-                    
-                    // Opción para crear nuevo si no aparece
-                    let addNew = document.createElement('button');
-                    addNew.className = 'list-group-item list-group-item-action list-group-item-warning';
-                    addNew.innerHTML = `<i class="bi bi-plus-circle"></i> No existe: Crear "${this.value}"`;
-                    addNew.onclick = (e) => { e.preventDefault(); setupNewItem(this.value); };
-                    resultsDiv.appendChild(addNew);
-                });
-        });
+                }
+
+                // Opción estandarizada para crear un nuevo ítem si no se encuentra el código esperado
+                let addNew = document.createElement('button');
+                addNew.className = 'list-group-item list-group-item-action list-group-item-warning';
+                addNew.innerHTML = `<i class="bi bi-plus-circle"></i> No existe: Crear "${queryValue}"`;
+                addNew.onclick = (e) => {
+                    e.preventDefault(); 
+                    setupNewItem(queryValue); // Levanta el paso 3 del Wizard para nuevo registro
+                };
+                resultsDiv.appendChild(addNew);
+            })
+            .catch(err => {
+                console.error('Error en SmartSearch:', err);
+                resultsDiv.innerHTML = '<div class="list-group-item text-danger">Error al cargar resultados</div>';
+            });
+    });
 
         function selectItem(item) {
             document.getElementById('item_id').value = item.id;
