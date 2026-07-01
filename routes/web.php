@@ -136,7 +136,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/reportes/gerencial', [ReportController::class, 'reporteGerencial'])->name('reportes.gerencial');
 
     // Inventario y Almacén
-    Route::get('inventario/entry', [InventarioController::class, 'entry'])->name('inventario.entry');
+    Route::post('store/entry', [InventarioController::class, 'entry'])->name('store.entry');
+    Route::get('inventario/entry/{id?}', [InventarioController::class, 'createEntry'])->name('inventario.entry');
     Route::get('inventario/adjustment', [InventarioController::class, 'adjustment'])->name('inventario.adjustment');
     Route::get('/inventario/solicitudes', [InventarioController::class, 'requests'])->name('inventario.requests');
     Route::post('/inventario/solicitudes/{id}/approve', [InventarioController::class, 'approve'])->name('inventario.requests.approve');

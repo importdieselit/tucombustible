@@ -359,6 +359,14 @@ class InventarioController extends BaseController
         return redirect()->route('inventario.list')
             ->with('success', 'Item de inventario eliminado exitosamente.');
     }
+
+    public function createEntry($id){
+       
+        $item= Inventario::find($id);
+        $locations = InventarioStock::where('inventario_id',$id)->get();
+        dd($item);
+        return view('inventario.entries', compact(['id', 'item','locations']));
+    }
     
     public function entry(Request $request)
     {
