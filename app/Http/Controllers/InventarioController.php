@@ -11,15 +11,18 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
-use App\Models\InventarioDespacho;
 use App\Models\InventarioCompra;    
 use App\Models\InventarioAsociado;
 use App\Models\Ubicacion;
 use App\Models\InventarioStock;
 use App\Models\AlmacenEstructuraGrid;
+use App\Models\SuministroCompra;
+use App\Models\SuministroCompraDetalle;
 use App\Models\Ventas;
 use App\Models\VentasDetalle;
 use App\Models\Orden;
+use App\Models\InventarioDespacho;
+use App\Models\MovimientoInventario;
 use Illuminate\Support\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -34,8 +37,86 @@ class InventarioController extends BaseController
         $totalItems = Inventario::count();
         $totalCantidad = Inventario::sum('existencia');
         $valorTotal = Inventario::sum(DB::raw('existencia * costo'));
+         // 1. Métricas Principales (KPIs)
+        
+        $itemsBajoStock = Inventario::whereColumn('existencia', '<=', 'existencia_minima')
+            ->where('estatus', 1)->where('venta',0)
+            ->count();
 
-        return view('inventario.index', compact('totalItems', 'totalCantidad', 'valorTotal'));
+        // Asumimos que los despachos son movimientos de tipo 'SALIDA' con estatus 'PENDIENTE'
+        $despachosPendientes = InventarioDespacho::where('estatus', 2)
+            ->count();
+
+        $comprasPendientes = SuministroCompra::where('estatus', 2)
+            ->count();
+        
+        $despachosPendientes+=$comprasPendientes;
+
+
+        $movimientosRecientes = InventarioDespacho::where('created_at', '>=', Carbon::now()->subDay())
+            ->count();
+
+        // 2. Alertas de Reposición (Stock Crítico)
+        $stockCritico = Inventario::whereColumn('existencia', '<=', 'existencia_minima')
+            ->select('descripcion', 'existencia as cantidad', 'existencia_minima')
+            ->orderBy(DB::raw('existencia / existencia_minima'), 'asc') // Los más urgentes primero
+            ->limit(5)
+            ->get();
+
+        // 3. Data para Gráfica de Entradas vs Salidas (Últimos 6 meses)
+        $meses = [];
+        $entradasData = [];
+        $salidasData = [];
+
+        for ($i = 5; $i >= 0; $i--) {
+            $mes = Carbon::now()->subMonths($i);
+            $meses[] = strtoupper($mes->translatedFormat('M'));
+            
+            $entradasData[] = SuministroCompraDetalle::whereMonth('created_at', $mes->month)
+                ->whereYear('created_at', $mes->year)
+                ->sum('cantidad_aprobada');
+
+            $salidasData[] = InventarioDespacho::whereMonth('created_at', $mes->month)
+                ->whereYear('created_at', $mes->year)
+                ->sum('cantidad_despachada');
+            $salidasCompras=SuministroCompraDetalle::where('estatus', 1)->whereMonth('created_at', $mes->month)
+                ->whereYear('created_at', $mes->year)
+                ->sum('cantidad_aprobada');
+            $salidasData[] += $salidasCompras;
+        }
+
+        // 4. Inversión por Categoría (Doughnut Chart)
+        // 4.1. Calculamos el valor global primero para los porcentajes
+        $valorTotal = Inventario::selectRaw('SUM(existencia * costo) as total')->value('total') ?? 0;
+
+        // 4.2. Agrupamos por el campo 'grupo' y sumamos la inversión de cada uno
+        $categoriasData = Inventario::select('grupo')
+            ->selectRaw('SUM(existencia * costo) as subtotal')
+           // ->where('venta',0)
+            ->groupBy('grupo')
+            ->get()
+            ->map(function ($item, $index) use ($valorTotal) {
+                return [
+                    'nombre'     => strtoupper($item->grupo ?? 'SIN GRUPO'),
+                    'valor'      => $item->subtotal,
+                    'porcentaje' => $valorTotal > 0 ? ($item->subtotal / $valorTotal) * 100 : 0,
+                    'color'      => $this->generarColorCorporativo($index)
+                ];
+            });
+
+        return view('inventario.index', [
+            'valorTotal' => $valorTotal,
+            'itemsBajoStock' => $itemsBajoStock,
+            'despachosPendientes' => $despachosPendientes,
+            'movimientosRecientes' => $movimientosRecientes,
+            'stockCritico' => $stockCritico,
+            'mesesMovimientos' => $meses,
+            'entradasData' => $entradasData,
+            'salidasData' => $salidasData,
+            'categorias' => $categoriasData,
+            'categoriasNombres' => $categoriasData->pluck('nombre'),
+            'categoriasValores' => $categoriasData->pluck('valor')
+        ]);
     }
 
 
@@ -53,7 +134,7 @@ class InventarioController extends BaseController
 
    public function applyBusinessFilters(Builder $query)
     {
-        $query->with(['almacen','ubicacion','modelosAsociados','equivalentes']);
+        $query->with(['almacen','ubicaciones','modelosAsociados','equivalentes']);
         // 1. Usamos el helper global request() en lugar de inyectar la clase en los argumentos
         if (request()->filled('id_almacen')) {
             $query->where('id_almacen', request('id_almacen'));
@@ -139,7 +220,7 @@ class InventarioController extends BaseController
                 'usuario' => $mov->usuarioDespacha->name ?? 'Operador'
             ];
         });
-
+            
         // Gráfica de últimos 15 días
         $stockSimulado = $item->existencia;
         $stockDiario = [];
@@ -163,30 +244,46 @@ class InventarioController extends BaseController
         });
 
         // --- NUEVO: LÓGICA DE MAPEO Y UBICACIÓN ---
-        $almacen = $item->almacen;
-        $estructuras = collect();
-        $ubicacionPrincipal = null;
-        $ubicacion_texto = 'No asignada';
+        $ubicaciones = $item->ubicaciones; // Cargamos la colección completa de ubicaciones
+        $ubicacionesIds = $ubicaciones->pluck('id')->toArray(); // Array plano de IDs: [12, 15, 23]
 
-        if ($almacen) {
-            // Obtenemos todo el plano del almacén
-            $estructuras = AlmacenEstructuraGrid::where('almacen_id', $almacen->id)
-                ->get()
-                ->keyBy(function($est) {
-                    return $est->coord_y . '-' . $est->coord_x;
-                });
+        $ubicacionPrincipal = $ubicaciones->first(); 
+        $almacen = null;
+        $gridActivo = null; 
+        $estructuras = collect();
+        $cacheUbicacionesEstante = collect();
+        $ubicacion_texto = 'No Asignada';
+        
+        if ($ubicacionPrincipal) {
+            $gridActivo = $ubicacionPrincipal->estructuraGrid; 
+
+            if ($gridActivo) {
+                $almacen = $gridActivo->almacen;
                 
-            // Obtenemos la ubicación donde hay stock de este ítem
-            $stockPrincipal = $item->stocks->first(); 
-            if ($stockPrincipal && $stockPrincipal->ubicacion) {
-                $ubicacionPrincipal = $stockPrincipal->ubicacion;
-                $ubicacion_texto = "{$ubicacionPrincipal->codigo_ubicacion} | Pasillo {$ubicacionPrincipal->pasillo}, Estante {$ubicacionPrincipal->estante}, Nivel {$ubicacionPrincipal->nivel}, Casilla {$ubicacionPrincipal->posicion}";
+                // Aprovechamos el accessor dinámico por comas que creamos en el paso anterior
+                $ubicacion_texto = $item->ubicaciones_texto; 
+
+                // CROQUIS 1: Mapeo de toda la planta del almacén
+                $estructuras = \App\Models\AlmacenEstructuraGrid::where('almacen_id', $almacen->id)
+                    ->get()
+                    ->keyBy(function($est) {
+                        return $est->coord_y . '-' . $est->coord_x;
+                    });
+
+                // CROQUIS 2: Mapeo de la elevación (Todos los slots de ESTE estante)
+                $cacheUbicacionesEstante = \App\Models\Ubicacion::where('estructura_grid_id', $gridActivo->id)
+                    ->with(['inventarioItems','inventarioStock']) 
+                    ->get()
+                    ->groupBy(function($ubicacion) {
+                        return $ubicacion->nivel . '-' . $ubicacion->posicion;
+                    });
             }
         }
         
         return view('inventario.show', compact(
             'item', 'movimientos', 'graficaFechas', 'graficaStock', 'equivalentes', 'vehiculos',
-            'almacen', 'estructuras', 'ubicacionPrincipal', 'ubicacion_texto'
+            'almacen', 'estructuras', 'ubicacionPrincipal', 'ubicacion_texto','gridActivo', 
+            'cacheUbicacionesEstante','ubicacionesIds'
         ));
     }
     /**
@@ -203,6 +300,12 @@ class InventarioController extends BaseController
         $almacenes = Almacen::all();
         // Nota: Los datos de Marca, Modelo, Condicion, etc. deben ser cargados aquí
         return view('inventario.form', compact('item', 'almacenes'));
+    }
+
+     private function generarColorCorporativo($id)
+    {
+        $colores = ['#002855', '#ff6600', '#6c757d', '#adb5bd', '#004085'];
+        return $colores[$id % count($colores)];
     }
 
     /**
@@ -256,9 +359,57 @@ class InventarioController extends BaseController
         return redirect()->route('inventario.list')
             ->with('success', 'Item de inventario eliminado exitosamente.');
     }
+
+    public function createEntry($id){
+       
+        $item= Inventario::find($id);
+        $locations = InventarioStock::where('inventario_id',$id)->get();
+        dd($item);
+        return view('inventario.entries', compact(['id', 'item','locations']));
+    }
     
-    public function entry()
+    public function entry(Request $request)
     {
+        $request->validate([
+            'item_id' => 'required|exists:inventario,id',
+            'slot_id'     => 'required|exists:inventario_stock,id',
+            'cantidad'    => 'required|numeric|gt:0',
+            'compra_id'   => 'nullable|exists:compras,id',
+        ]);
+
+        DB::transaction(function () use ($request) {
+            // 1. Obtener o crear el registro de stock actual en ese slot
+            $stockActual = InventarioStock::firstOrCreate(
+                ['inventario_id' => $request->item_id, 'ubicacion_id' => $request->slot_id],
+                ['cantidad_actual' => 0]
+            );
+
+            if($stockActual->candidad_asignada ==0 || is_null($stockActual->cantidad_asignada) ){
+                $stockActual->cantidad_asignada = $request->cantidad;
+            }
+            $stockAnterior = $stockActual->cantidad_actual;
+            $stockNuevo = $stockAnterior + $request->cantidad;
+
+            // 2. Actualizar stock en el slot
+            $stockActual->cantidad_actual = $stockNuevo;
+            $stockActual->save();
+
+            // 3. Registrar en el Kardex (Movimientos)
+            MovimientoInventario::create([
+                'articulo_id'    => $request->articulo_id,
+                'slot_id'        => $request->slot_id,
+                'tipo'           => 'ENTRADA',
+                'cantidad'       => $request->cantidad,
+                'stock_anterior' => $stockAnterior,
+                'stock_nuevo'    => $stockNuevo,
+                'compra_id'      => $request->compra_id,
+                'motivo'         => 'Entrada por orden de compra #' . $request->compra_id,
+                'user_id'        => Auth::id() ?? 1 // Fallback para pruebas
+            ]);
+
+        return response()->json(['success' => true, 'message' => 'Entrada registrada exitosamente.']);
+    
+        });
     }
 
     public function adjustment()
@@ -361,7 +512,7 @@ class InventarioController extends BaseController
     public function requests()
     {
         // Se obtienen todas las solicitudes de insumos con las relaciones necesarias
-        $solicitudes = InventarioSuministro::with('inventario', 'orden')
+        $solicitudes = InventarioDespacho::with('inventario', 'orden')
             ->orderBy('created_at', 'desc')
             ->get();
         return view('inventario.requests', compact('solicitudes'));
@@ -375,7 +526,7 @@ class InventarioController extends BaseController
     public function approve($id)
     {
         try {
-            $solicitud = InventarioSuministro::findOrFail($id);
+            $solicitud = InventarioDespacho::findOrFail($id);
             if ($solicitud->estatus != 2) {
                 Session::flash('error', 'Esta solicitud ya ha sido procesada.');
                 return redirect()->back();
@@ -398,7 +549,7 @@ class InventarioController extends BaseController
     public function reject($id)
     {
         try {
-            $solicitud = InventarioSuministro::findOrFail($id);
+            $solicitud = InventarioDespacho::findOrFail($id);
             if ($solicitud->estatus == 1 || $solicitud->estatus == 5) {
                 Session::flash('error', 'Esta solicitud ya ha sido despachada o rechazada.');
                 return redirect()->back();
@@ -423,7 +574,7 @@ class InventarioController extends BaseController
         $userId = Auth::id();
         DB::beginTransaction();
         try {
-            $solicitud = InventarioSuministro::findOrFail($id);
+            $solicitud = InventarioDespacho::findOrFail($id);
 
             // Verificar que la solicitud esté aprobada
             if ($solicitud->estatus != 3) {

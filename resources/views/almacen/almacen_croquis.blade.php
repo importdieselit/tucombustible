@@ -978,7 +978,11 @@
         } catch(err) { console.error(err); }
     });
 
-    // Función auxiliar para refrescar el visual del modal en caliente
+    
+
+});
+
+// Función auxiliar para refrescar el visual del modal en caliente
     function recargarMatrizActual() {
         // Obtenemos las coordenadas X y Y del título o variable temporal
         const titulo = $('#insTituloEstante').text(); // Ej: EST-A
@@ -986,8 +990,6 @@
         $(`.celda-mapa[data-codigo="${titulo}"]`).first().trigger('click');
         $('#inpBuscarItemModal').trigger('keyup'); // Refresca stocks del buscador
     }
-
-});
 
 // Función estándar para leer la celda seleccionada y mostrarla en el inspector
 function cargarDetalleSlot(ubicacionId, matrizKey, subposicion) {

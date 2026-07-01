@@ -3,6 +3,7 @@
 namespace App\Models; // O App\Models
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Inventario extends Model
 {
@@ -88,9 +89,31 @@ class Inventario extends Model
         return $this->hasMany(InventarioStock::class, 'inventario_id'); // InventarioStock creado en la respuesta anterior
     }
 
-    public function ubicacion()
+    public function ubicaciones()
     {
-        return $this->hasOneThrough(Ubicacion::class, InventarioStock::class, 'inventario_id', 'id', 'id', 'ubicacion_id');
+        return $this->hasManyThrough(Ubicacion::class, InventarioStock::class, 'inventario_id', 'id', 'id', 'ubicacion_id');
+    }
+
+    public function getUbicacionesTextoAttribute()
+    {
+        if ($this->ubicaciones->isEmpty()) {
+            return 'No Asignada';
+        }
+
+        return $this->ubicaciones->pluck('codigo_ubicacion')->implode('], [');
+    }
+
+    /**
+     * Accessor Universal para HTML (separado por saltos de línea)
+     * Se invoca en Blade como: {!! $item->ubicaciones_html !!}
+     */
+    public function getUbicacionesHtmlAttribute()
+    {
+        if ($this->ubicaciones->isEmpty()) {
+            return '<span class="text-muted">No Asignada</span>';
+        }
+
+        return $this->ubicaciones->pluck('codigo_ubicacion')->implode('<br>');
     }
 
     /**

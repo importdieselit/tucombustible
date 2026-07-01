@@ -295,6 +295,7 @@ public function guardarEstructuraDrag(Request $request)
     if (!$estructura || $estructura->tipo_estructura === 'PASILLO') {
         return response()->json(['success' => false, 'error' => 'Posición vacía o pasillo.']);
     }
+   
 
     $codigoBloque = $estructura->codigo_bloque;
 
@@ -319,7 +320,7 @@ public function guardarEstructuraDrag(Request $request)
             ];
         }
 
-        $stock = $ubi->inventarioStock->first(); 
+        $stock = $ubi->inventarioStock; 
         $totalItems = $stock ? $stock->cantidad_actual : 0;
         
         $detallesInventario = null;

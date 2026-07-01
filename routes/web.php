@@ -142,7 +142,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/whatsapp/send', [GerentialReportController::class, 'sendWhatsapp'])->name('whatsapp.send');
     
     // Inventario y Almacén
-    Route::get('inventario/entry', [InventarioController::class, 'entry'])->name('inventario.entry');
+    Route::post('store/entry', [InventarioController::class, 'entry'])->name('store.entry');
+    Route::get('inventario/entry/{id?}', [InventarioController::class, 'createEntry'])->name('inventario.entry');
     Route::get('inventario/adjustment', [InventarioController::class, 'adjustment'])->name('inventario.adjustment');
     Route::get('/inventario/solicitudes', [InventarioController::class, 'requests'])->name('inventario.requests');
     Route::post('/inventario/solicitudes/{id}/approve', [InventarioController::class, 'approve'])->name('inventario.requests.approve');
