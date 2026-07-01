@@ -103,7 +103,7 @@ class InventarioController extends BaseController
                     'color'      => $this->generarColorCorporativo($index)
                 ];
             });
-            
+
 
         return view('inventario.index', [
             'valorTotal' => $valorTotal,
@@ -396,7 +396,7 @@ class InventarioController extends BaseController
        
         $item= Inventario::find($id);
         $locations = InventarioStock::where('inventario_id',$id)->get();
-        dd($item);  
+        
         return view('inventario.entries', compact(['id', 'item','locations']));
     }
     
