@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Repositories\DepositoRepository;
 use App\Repositories\ChequeoDepositoRepository;
 use App\Services\AforoCalculoService;
+use App\Services\WhatsAppApiService;
 use App\Models\Deposito;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -14,13 +15,15 @@ class DepositoService
     protected $depositoRepo;
     protected $chequeoRepo;
     protected $aforoService;
+    protected $whatsappService;
 
     public function __construct(DepositoRepository $depositoRepo, ChequeoDepositoRepository $chequeoRepo, 
-    AforoCalculoService $aforoService
+    AforoCalculoService $aforoService, WhatsAppApiService $whatsappService
     ) {
         $this->depositoRepo = $depositoRepo;
         $this->chequeoRepo = $chequeoRepo;
         $this->aforoService = $aforoService;
+        $this->whatsappService = $whatsappService;
     }
 
     public function registrarDeposito(array $data): Deposito
@@ -70,7 +73,6 @@ class DepositoService
                             ->get();
 
         foreach ($depositos as $deposito) {
-            // Buscamos el último renglón de detalle registrado para este tanque
             $deposito->ultima_medicion = DB::table('chequeos_depositos_detalles')
                 ->where('id_deposito', $deposito->id)
                 ->orderBy('id', 'desc')
@@ -88,6 +90,7 @@ class DepositoService
         }
 
         $detallesProcesados = [];
+        $tanquesCriticos = []; //Tanques en menos del 20%
 
         // 2. Procesamiento secuencial del arreglo normalizado enviado por la vista
         foreach ($data['detalles'] as $detalle) {
@@ -98,6 +101,19 @@ class DepositoService
                 $deposito, 
                 (float) $detalle['centimetros_medidos']
             );
+
+            if ($litrosCalculados < $deposito->nivel_alerta_litros) {
+                $porcentajeActual = $deposito->capacidad_maxima > 0 
+                    ? round(($litrosCalculados / $deposito->capacidad_maxima) * 100, 1) 
+                    : 0;
+
+                $tanquesCriticos[] = [
+                    'serial' => $deposito->serial,
+                    'litros' => round($litrosCalculados, 2),
+                    'limite' => round($deposito->nivel_alerta_litros, 2),
+                    'porcentaje' => $porcentajeActual
+                ];
+            }
 
             $detallesProcesados[] = [
                 'id_deposito'         => $detalle['id_deposito'],
@@ -117,6 +133,41 @@ class DepositoService
         ];
 
         // 4. Persistencia mediante el Repositorio usando su transacción atómica original
-        return $this->chequeoRepo->guardarChequeoCompleto($datosCabecera, $detallesProcesados);
+        $chequeoGuardado = $this->chequeoRepo->guardarChequeoCompleto($datosCabecera, $detallesProcesados);
+
+        // 🆕 SI TODO SE GUARDÓ BIEN Y HAY ALERTAS, ENVIAMOS EL WHATSAPP
+        if ($chequeoGuardado && !empty($tanquesCriticos)) {
+            $nombreSede = DB::table('sedes')->where('id', $data['id_sede'])->value('nombre') ?? "Sede #{$data['id_sede']}";
+            $this->notificarTanquesCriticos($tanquesCriticos, $data['turno'], $nombreSede);
+        }
+
+        return $chequeoGuardado;
+    }
+
+    protected function notificarTanquesCriticos(array $tanques, string $turno, string $nombreSede)
+    {
+        $idDestino = config('services.whatsapp.dev_group_id', 'WHATSAPP_DEV_GROUP_ID');
+
+        $mensaje = "⚠️ *ALERTA DE NIVELES CRÍTICOS* ⚠️\n";
+        $mensaje .= "Se ha registrado el varillaje del turno: *{$turno}* en la sede *{$nombreSede}*.\n\n";
+        $mensaje .= "Los siguientes tanques están por debajo del *20%* de su capacidad:\n\n";
+
+        foreach ($tanques as $tanque) {
+            $litrosFormateados     = number_format($tanque['litros'], 2, ',', '.');
+        $limiteFormateado      = number_format($tanque['limite'], 2, ',', '.');
+
+            $mensaje .= "🛢️ *Tanque:* {$tanque['serial']}\n";
+            $mensaje .= "🔹 *Nivel actual:* {$litrosFormateados} Lts\n";
+            $mensaje .= "📉 *Límite de alerta (menos de 20%):* {$limiteFormateado} Lts\n";
+            $mensaje .= "----------------------------------\n";
+        }
+        
+        $mensaje .= "\nSe recomienda coordinar la logística de reabastecimiento.";
+
+        try {
+            $this->whatsappService->enviarMensaje($idDestino, $mensaje);
+        } catch (Exception $e) {
+            logger()->error("No se pudo enviar la alerta de WhatsApp: " . $e->getMessage());
+        }
     }
 }

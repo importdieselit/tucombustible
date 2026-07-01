@@ -16,22 +16,19 @@ class WhatsAppApiService
     }
 
     public function enviarMensaje($idDestino, $mensaje) {
-        return Http::withHeaders([
-            'apikey' => $this->key
-        ])->post("{$this->url}/message/sendText", [
-            'number' => $idDestino, // Aquí va el ID del grupo o comunidad
-            'text' => $mensaje,
-            'linkPreview' => true
+        return Http::post("{$this->url}/messages/chat", [
+            'token' => $this->key,
+            'to'    => $idDestino,
+            'body'  => $mensaje,
         ]);
     }
 
     public function enviarImagen($idDestino, $caption, $rutaImagen) {
-        // Útil para enviar el gráfico del reporte de disponibilidad
-        return Http::withHeaders(['apikey' => $this->key])
-            ->post("{$this->url}/message/sendMedia", [
-                'number' => $idDestino,
-                'media' => $rutaImagen,
-                'caption' => $caption
-            ]);
+        return Http::post("{$this->url}/messages/image", [
+            'token'   => $this->key,
+            'to'      => $idDestino,
+            'image'   => $rutaImagen,
+            'caption' => $caption
+        ]);
     }
 }

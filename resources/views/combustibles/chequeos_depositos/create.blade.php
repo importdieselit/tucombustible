@@ -147,7 +147,6 @@
                                     <th>Capacidad Máxima</th>
                                     <th style="width: 280px;">Combustible Actual</th>
                                     <th style="width: 200px;">Centimetros Medidos</th>
-                                    <th class="text-end pe-4" style="width: 180px;">Litros Calculados</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -170,6 +169,7 @@
                                             <span class="fw-bold text-secondary" style="font-size: 14px;">
                                                 {{ number_format($deposito->capacidad_maxima, 2, ',', '.') }} Lts
                                             </span>
+                                            <span id="visor_litros_{{ $deposito->id }}" style="display: none;"></span>
                                         </td>
                                         <td>
                                             <select name="detalles[{{ $loop->index }}][id_tipos_combustible]" class="form-select form-select-sm select-combustible" data-tanque-id="{{ $deposito->id }}">
@@ -204,12 +204,6 @@
                                                        style="font-size: 14px; border-radius: 4px 0 0 4px;">
                                                 <span class="input-group-text bg-light fw-bold text-muted" style="font-size: 11px;">CM</span>
                                             </div>
-                                        </td>
-                                        <td class="text-end pe-4">
-                                            <span class="fw-black text-orange visor-litros" id="visor_litros_{{ $deposito->id }}" style="font-size: 16px;">
-                                                {{ isset($deposito->ultima_medicion->litros_calculados) ? number_format($deposito->ultima_medicion->litros_calculados, 2, ',', '.') : '0,00' }}
-                                            </span>
-                                            <span class="text-muted small fw-bold">Lts</span>
                                         </td>
                                     </tr>
                                 @empty
