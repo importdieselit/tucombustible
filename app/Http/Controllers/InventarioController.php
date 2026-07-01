@@ -154,8 +154,7 @@ class InventarioController extends BaseController
         }
 
         // Consulta estandarizada y segura
-        $items = Inventario::where('estatus', 1) // Mantenemos consistencia con ítems activos
-            ->where(function($query) use ($term) {
+        $items = Inventario::where(function($query) use ($term) {
                 $query->where('codigo', 'LIKE', "%{$term}%")
                     ->orWhere('descripcion', 'LIKE', "%{$term}%");
             })
