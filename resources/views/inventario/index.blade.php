@@ -156,7 +156,10 @@
                             <ul class="list-unstyled small">
                                 @foreach($categorias as $cat)
                                 <li class="mb-2 d-flex justify-content-between border-bottom pb-1">
-                                    <span><span class="badge-dot" style="background-color: {{ $cat->color }}"></span> {{ $cat->grupo }}</span>
+                                    <span>
+                                        <span class="badge-dot" style="background-color: {{ $cat->color }}"></span> 
+                                        {{ $cat->nombre }}
+                                    </span>
                                     <span class="fw-bold">{{ number_format($cat->porcentaje, 1) }}%</span>
                                 </li>
                                 @endforeach
