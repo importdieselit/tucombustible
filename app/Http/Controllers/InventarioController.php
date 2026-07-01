@@ -32,38 +32,30 @@ class InventarioController extends BaseController
      * Muestra el dashboard principal del inventario.
      * @return \Illuminate\View\View
      */
-    public function index()
+   public function index()
     {
         $totalItems = Inventario::count();
         $totalCantidad = Inventario::sum('existencia');
         $valorTotal = Inventario::sum(DB::raw('existencia * costo'));
-         // 1. Métricas Principales (KPIs)
         
         $itemsBajoStock = Inventario::whereColumn('existencia', '<=', 'existencia_minima')
-            ->where('estatus', 1)->where('venta',0)
+            ->where('estatus', 1)->where('venta', 0)
             ->count();
 
-        // Asumimos que los despachos son movimientos de tipo 'SALIDA' con estatus 'PENDIENTE'
-        $despachosPendientes = InventarioDespacho::where('estatus', 2)
-            ->count();
-
-        $comprasPendientes = SuministroCompra::where('estatus', 2)
-            ->count();
-        
-        $despachosPendientes+=$comprasPendientes;
-
+        $despachosPendientes = InventarioDespacho::where('estatus', 2)->count();
+        $comprasPendientes = SuministroCompra::where('estatus', 2)->count();
+        $despachosPendientes += $comprasPendientes;
 
         $movimientosRecientes = InventarioDespacho::where('created_at', '>=', Carbon::now()->subDay())
             ->count();
 
-        // 2. Alertas de Reposición (Stock Crítico)
         $stockCritico = Inventario::whereColumn('existencia', '<=', 'existencia_minima')
             ->select('descripcion', 'existencia as cantidad', 'existencia_minima')
-            ->orderBy(DB::raw('existencia / existencia_minima'), 'asc') // Los más urgentes primero
+            ->orderBy(DB::raw('existencia / existencia_minima'), 'asc')
             ->limit(5)
             ->get();
 
-        // 3. Data para Gráfica de Entradas vs Salidas (Últimos 6 meses)
+        // 3. Gráfica de Entradas vs Salidas (Corrección de Bug de Índices)
         $meses = [];
         $entradasData = [];
         $salidasData = [];
@@ -76,27 +68,30 @@ class InventarioController extends BaseController
                 ->whereYear('created_at', $mes->year)
                 ->sum('cantidad_aprobada');
 
-            $salidasData[] = InventarioDespacho::whereMonth('created_at', $mes->month)
+            // Capturamos ambos flujos en variables limpias
+            $despachado = InventarioDespacho::whereMonth('created_at', $mes->month)
                 ->whereYear('created_at', $mes->year)
                 ->sum('cantidad_despachada');
-            $salidasCompras=SuministroCompraDetalle::where('estatus', 1)->whereMonth('created_at', $mes->month)
+
+            $salidasCompras = SuministroCompraDetalle::where('estatus', 1)
+                ->whereMonth('created_at', $mes->month)
                 ->whereYear('created_at', $mes->year)
                 ->sum('cantidad_aprobada');
-            $salidasData[] += $salidasCompras;
+                
+            // Sumamos antes de insertar para mantener un único índice por mes
+            $salidasData[] = $despachado + $salidasCompras; 
         }
 
-        // 4. Inversión por Categoría (Doughnut Chart)
-        // 4.1. Calculamos el valor global primero para los porcentajes
+        // 4. Inversión por Categoría
         $valorTotal = Inventario::selectRaw('SUM(existencia * costo) as total')->value('total') ?? 0;
 
-        // 4.2. Agrupamos por el campo 'grupo' y sumamos la inversión de cada uno
         $categoriasData = Inventario::select('grupo')
             ->selectRaw('SUM(existencia * costo) as subtotal')
-           // ->where('venta',0)
             ->groupBy('grupo')
             ->get()
             ->map(function ($item, $index) use ($valorTotal) {
-                return [
+                // Convertimos a objeto de inmediato para la vista
+                return (object) [
                     'nombre'     => strtoupper($item->grupo ?? 'SIN GRUPO'),
                     'valor'      => $item->subtotal,
                     'porcentaje' => $valorTotal > 0 ? ($item->subtotal / $valorTotal) * 100 : 0,
@@ -104,19 +99,18 @@ class InventarioController extends BaseController
                 ];
             });
 
-
         return view('inventario.index', [
-            'valorTotal' => $valorTotal,
-            'itemsBajoStock' => $itemsBajoStock,
-            'despachosPendientes' => $despachosPendientes,
+            'valorTotal'           => $valorTotal,
+            'itemsBajoStock'       => $itemsBajoStock,
+            'despachosPendientes'  => $despachosPendientes,
             'movimientosRecientes' => $movimientosRecientes,
-            'stockCritico' => $stockCritico,
-            'mesesMovimientos' => $meses,
-            'entradasData' => $entradasData,
-            'salidasData' => $salidasData,
-            'categorias' => $categoriasData,
-            'categoriasNombres' => $categoriasData->pluck('nombre'),
-            'categoriasValores' => $categoriasData->pluck('valor')
+            'stockCritico'         => $stockCritico,
+            'mesesMovimientos'     => $meses,
+            'entradasData'         => $entradasData,
+            'salidasData'          => $salidasData,
+            'categorias'           => $categoriasData,
+            'categoriasNombres'    => $categoriasData->pluck('nombre'),
+            'categoriasValores'    => $categoriasData->pluck('valor')
         ]);
     }
 
