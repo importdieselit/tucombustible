@@ -164,6 +164,24 @@ window.addEventListener('load', function() {
         return new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
     }
 
+    // Función auxiliar para estandarizar las etiquetas flotantes
+    function agregarEtiquetaFlotante(info, x, z, alturaY) {
+        const canvas = document.createElement('canvas');
+        canvas.width = 512; canvas.height = 256;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = 'rgba(20,20,20,0.85)'; ctx.fillRect(0,0,512,256);
+        ctx.fillStyle = '#0dcaf0'; ctx.fillRect(0,0,512,12);
+        ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center';
+        ctx.font = 'Bold 42px Arial'; ctx.fillText(info.sku, 256, 75);
+        ctx.font = 'Bold 36px Arial'; ctx.fillStyle = '#0dcaf0'; ctx.fillText(`Stock: ${info.stock} / ${info.capacidad}`, 256, 135);
+        ctx.font = '26px Arial'; ctx.fillStyle = '#cccccc'; ctx.fillText(info.producto.substring(0,35), 256, 195);
+
+        const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas) }));
+        sprite.scale.set(cellSize * 1.5, cellSize * 0.75, 1);
+        sprite.position.set(x + cellSize/2, alturaY, z + cellSize/2);
+        scene.add(sprite);
+    }
+
     // --- FUNCIONES DE RENDERIZADO VOLUMÉTRICO PROPORCIONAL ---
 
     function crearBloqueEstructural(posX, posY, posZ, infoSub, index, numSubdivisiones) {
@@ -372,58 +390,109 @@ window.addEventListener('load', function() {
         scene.add(line);
     }
 
-    function crearPalletPiso(x, z, infoPallet) {
-        const planoMat = new THREE.MeshStandardMaterial({ color: 0x0dcaf0, side: THREE.DoubleSide, roughness: 0.8 });
-        const pisoCelda = new THREE.Mesh(new THREE.PlaneGeometry(cellSize, cellSize), planoMat);
-        pisoCelda.rotation.x = -Math.PI / 2;
-        pisoCelda.position.set(x + cellSize/2, 0.01, z + cellSize/2);
+    function crearPalletPiso(x, z, infoPallet, CxF = 4, CxC = 4, nivelesMax = 5) {
+        // Base de madera (Paleta real)
+        const planoMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 1.0 });
+        const pisoCelda = new THREE.Mesh(new THREE.BoxGeometry(cellSize - 0.2, 0.1, cellSize - 0.2), planoMat);
+        pisoCelda.position.set(x + cellSize/2, 0.05, z + cellSize/2);
+        pisoCelda.receiveShadow = true;
         scene.add(pisoCelda);
 
         if (infoPallet && infoPallet.ocupado) {
-            const anchoBox = cellSize - 0.4;
-            const altoTotal = 1.6; 
-            const prof = cellSize - 0.4;
+            // Configuraciones de la estiba
+            const cajasPorFila = CxF;
+            const cajasPorColumna = CxC;
+            const nivelesMaximos = nivelesMax;
+            const totalCajasMaximas = cajasPorFila * cajasPorColumna * nivelesMaximos; // 80 cajas
 
+            // Cálculo de cuántas cajas dibujar basado en el % de stock
             const ratio = (infoPallet.capacidad && infoPallet.capacidad > 0) ? Math.min(infoPallet.stock / infoPallet.capacidad, 1) : 1;
-            const altoLleno = Math.max(altoTotal * ratio, 0.05);
-            const altoVacio = altoTotal - altoLleno;
+            const cajasADibujar = Math.floor(ratio * totalCajasMaximas);
 
-            // Sólido
-            const meshLleno = new THREE.Mesh(new THREE.BoxGeometry(anchoBox, altoLleno, prof), new THREE.MeshStandardMaterial({ color: 0x17a2b8, roughness: 0.5 }));
-            meshLleno.position.set(x + cellSize/2, altoLleno/2, z + cellSize/2);
-            meshLleno.castShadow = true;
-            scene.add(meshLleno);
+            // Dimensiones de cada cajita
+            const anchoCaja = (cellSize - 0.4) / cajasPorFila;
+            const profCaja = (cellSize - 0.4) / cajasPorColumna;
+            const altoCaja = 1.4 / nivelesMaximos;
 
-            // Transparente
-            if (altoVacio > 0) {
-                const meshVacio = new THREE.Mesh(new THREE.BoxGeometry(anchoBox, altoVacio, prof), new THREE.MeshStandardMaterial({ color: 0x17a2b8, transparent: true, opacity: 0.15 }));
-                meshVacio.position.set(x + cellSize/2, altoLleno + (altoVacio/2), z + cellSize/2);
-                scene.add(meshVacio);
+            const boxGeom = new THREE.BoxGeometry(anchoCaja - 0.02, altoCaja - 0.02, profCaja - 0.02); // -0.02 para crear separación visual
+            const boxMat = new THREE.MeshStandardMaterial({ color: 0xc2a878, roughness: 0.9 }); // Color cartón corrugado
+
+            let cajasDibujadas = 0;
+            const startX = x + 0.2 + (anchoCaja / 2);
+            const startZ = z + 0.2 + (profCaja / 2);
+
+            // Bucle anidado para construir la paleta capa por capa
+            dibujadoLoop:
+            for (let nivel = 0; nivel < nivelesMaximos; nivel++) {
+                const posY = 0.1 + (nivel * altoCaja) + (altoCaja / 2);
+                for (let fila = 0; fila < cajasPorFila; fila++) {
+                    for (let col = 0; col < cajasPorColumna; col++) {
+                        if (cajasDibujadas >= cajasADibujar) break dibujadoLoop;
+                        
+                        const mallaCaja = new THREE.Mesh(boxGeom, boxMat);
+                        mallaCaja.position.set(startX + (fila * anchoCaja), posY, startZ + (col * profCaja));
+                        mallaCaja.castShadow = true;
+                        scene.add(mallaCaja);
+                        cajasDibujadas++;
+                    }
+                }
             }
 
-            // Bordes
-            const edges = new THREE.EdgesGeometry(new THREE.BoxGeometry(anchoBox, altoTotal, prof));
-            const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x000000 }));
-            line.position.set(x + cellSize/2, altoTotal/2, z + cellSize/2);
-            scene.add(line);
-
-            // Cartel Flotante
-            const canvas = document.createElement('canvas');
-            canvas.width = 512; canvas.height = 256;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = 'rgba(20,20,20,0.85)'; ctx.fillRect(0,0,512,256);
-            ctx.fillStyle = '#17a2b8'; ctx.fillRect(0,0,512,12);
-            ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center';
-            ctx.font = 'Bold 42px Arial'; ctx.fillText(infoPallet.sku, 256, 75);
-            ctx.font = 'Bold 36px Arial'; ctx.fillStyle = '#17a2b8'; ctx.fillText(`Stock: ${infoPallet.stock} / ${infoPallet.capacidad}`, 256, 135);
-            ctx.font = '26px Arial'; ctx.fillStyle = '#cccccc'; ctx.fillText(infoPallet.producto.substring(0,35), 256, 195);
-
-            const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas) }));
-            sprite.scale.set(cellSize * 1.5, cellSize * 0.75, 1);
-            sprite.position.set(x + cellSize/2, altoTotal + 0.8, z + cellSize/2);
-            scene.add(sprite);
+            // Etiqueta flotante reutilizable
+            agregarEtiquetaFlotante(infoPallet, x, z, 1.8);
         }
+
+       
     }
+
+     function crearTamboresPiramide(x, z, infoTambores) {
+            // Configuraciones de la base
+            const tamboresEnBase = 10;
+            const totalTamboresMax = (tamboresEnBase * (tamboresEnBase + 1)) / 2; // Fórmula matemática (10+9+8...+1) = 55 tambores
+            
+            // El diámetro de cada tambor debe ajustarse al tamaño de la celda
+            const diametro = (cellSize - 0.2) / tamboresEnBase;
+            const radio = diametro / 2;
+            const largo = cellSize - 0.4;
+
+            if (infoTambores && infoTambores.ocupado) {
+                const ratio = (infoTambores.capacidad && infoTambores.capacidad > 0) ? Math.min(infoTambores.stock / infoTambores.capacidad, 1) : 1;
+                const tamboresADibujar = Math.floor(ratio * totalTamboresMax);
+
+                const matTambor = new THREE.MeshStandardMaterial({ color: 0x1f618d, roughness: 0.5, metalness: 0.3 }); // Azul acero
+                const cylGeom = new THREE.CylinderGeometry(radio, radio, largo, 16);
+                cylGeom.rotateX(Math.PI / 2); // Acostar el tambor horizontalmente
+
+                let tamboresDibujados = 0;
+                let tamboresEsteNivel = tamboresEnBase;
+                let nivelActual = 0;
+
+                // Bucle para apilar (Desplazamiento geométrico en las juntas)
+                construccionPiramide:
+                while (tamboresEsteNivel > 0 && tamboresDibujados < tamboresADibujar) {
+                    // Cálculo de la altura: Raíz cuadrada de (2r)^2 - r^2 = r * 1.732 (Apilamiento hexagonal)
+                    const posY = radio + (nivelActual * (radio * 1.732)); 
+                    
+                    // Desplazamiento en X: Cada nivel se corre hacia adentro el valor de 1 radio
+                    const startX = x + 0.1 + (nivelActual * radio) + radio;
+
+                    for (let i = 0; i < tamboresEsteNivel; i++) {
+                        if (tamboresDibujados >= tamboresADibujar) break construccionPiramide;
+                        
+                        const mallaTambor = new THREE.Mesh(cylGeom, matTambor);
+                        mallaTambor.position.set(startX + (i * diametro), posY, z + cellSize/2);
+                        mallaTambor.castShadow = true;
+                        scene.add(mallaTambor);
+                        
+                        tamboresDibujados++;
+                    }
+                    nivelActual++;
+                    tamboresEsteNivel--;
+                }
+
+                agregarEtiquetaFlotante(infoTambores, x, z, radio + (10 * radio * 1.732) + 0.5);
+            }
+        }
 
     // --- PROCESAMIENTO E ITERACIÓN DEL LAYOUT MATRIZ ---
     dataAlmacen.forEach(item => {
@@ -463,6 +532,9 @@ window.addEventListener('load', function() {
     else if (item.tipo === 'PISO_PALLET') {
         const infoPallet = item.inventario.find(i => i.nivel === 1);
         crearPalletPiso(posX, posZ, infoPallet);
+    } else if (item.tipo === 'TAMBORES_PIRAMIDE') {
+        const infoTambores = item.inventario.find(i => i.nivel === 1);
+        crearTamboresPiramide(posX, posZ, infoTambores);
     }
 });
 

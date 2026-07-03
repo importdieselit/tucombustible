@@ -30,7 +30,7 @@ public function guardarEstructuraDrag(Request $request)
         'almacen_id'       => 'required|exists:almacenes,id',
         'start_x'          => 'required|integer',
         'start_y'          => 'required|integer',
-        'tipo_estructura'  => 'required|in:ESTANTE,GRANEL_LUBRICANTE,PISO_PALLET,PASILLO',
+        'tipo_estructura'  => 'required|in:ESTANTE,GRANEL_LUBRICANTE,PISO_PALLET,PASILLO,TAMBORES_PIRAMIDE',
         'codigo_bloque'    => 'required|string|max:20',
         'cantidad_niveles' => 'required|integer|min:1',
         'largo_secciones'  => 'required|integer|min:1',
@@ -237,6 +237,20 @@ public function guardarEstructuraDrag(Request $request)
                                 'tipo'               => 'PISO_PALLET',
                                 'esta_bloqueada'     => false
                             ]);
+                        } else if ($request->tipo_estructura === 'TAMBORES_PIRAMIDE') {
+                            $codigoUbicacion = "ALM" . $request->almacen_id . "-" . strtoupper($request->codigo_bloque) . "-TAMBORES";
+
+                            Ubicacion::create([
+                                'almacen_id'         => $request->almacen_id,
+                                'estructura_grid_id' => $estructura->id,
+                                'codigo_ubicacion'   => $codigoUbicacion,
+                                'pasillo'            => sprintf("P%02d", $request->coord_x),
+                                'estante'            => strtoupper($request->codigo_bloque),
+                                'nivel'              => '1',
+                                'posicion'           => '1',
+                                'tipo'               => 'PISO_PALLET', // Lógicamente se comporta igual que un pallet de piso
+                                'esta_bloqueada'     => false
+                            ]);
                         }
                     }
                 }
@@ -362,7 +376,7 @@ public function guardarEstructuraDrag(Request $request)
             'almacen_id'       => 'required|exists:almacenes,id',
             'coord_x'          => 'required|integer',
             'coord_y'          => 'required|integer',
-            'tipo_estructura'  => 'required|in:ESTANTE,GRANEL_LUBRICANTE,PISO_PALLET,PASILLO',
+            'tipo_estructura'  => 'required|in:ESTANTE,GRANEL_LUBRICANTE,PISO_PALLET,PASILLO,TAMBORES_PIRAMIDE',
             'codigo_bloque'    => 'required|string|max:20',
             'cantidad_niveles' => 'required_if:tipo_estructura,ESTANTE|integer|min:1',
             'cantidad_secciones'=> 'required_if:tipo_estructura,ESTANTE|integer|min:1',
@@ -449,6 +463,20 @@ public function guardarEstructuraDrag(Request $request)
                         'tipo'               => 'PISO_PALLET', // Asegúrate de tener este tipo en tu Enum
                         'esta_bloqueada'     => false
                     ]);
+                } else if ($request->tipo_estructura === 'TAMBORES_PIRAMIDE') {
+                    $codigoUbicacion = "ALM" . $request->almacen_id . "-" . strtoupper($request->codigo_bloque) . "-TAMBORES";
+
+                    Ubicacion::create([
+                        'almacen_id'         => $request->almacen_id,
+                        'estructura_grid_id' => $estructura->id,
+                        'codigo_ubicacion'   => $codigoUbicacion,
+                        'pasillo'            => sprintf("P%02d", $request->coord_x),
+                        'estante'            => strtoupper($request->codigo_bloque),
+                        'nivel'              => '1',
+                        'posicion'           => '1',
+                        'tipo'               => 'PISO_PALLET', // Lógicamente se comporta igual que un pallet de piso
+                        'esta_bloqueada'     => false
+                    ]);
                 }
 
                 return $estructura;
@@ -471,6 +499,7 @@ public function guardarEstructuraDrag(Request $request)
             'ESTANTE'           => 'bg-primary text-white',
             'GRANEL_LUBRICANTE' => 'bg-warning text-dark',
             'PISO_PALLET'       => 'bg-info text-white', // Nuevo estilo 2D
+            'TAMBORES_PIRAMIDE' => 'bg-secondary text-white',
             default             => 'bg-white text-muted'
         };
     }

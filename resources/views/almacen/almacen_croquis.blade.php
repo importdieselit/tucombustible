@@ -102,6 +102,20 @@
     background: linear-gradient(90deg, #3b82f6, #60a5fa); /* Gradiente azul profesional */
 }
 
+.bg-tambores {
+    background-image: linear-gradient(rgba(108, 117, 125, 0.75), rgba(108, 117, 125, 0.75)), url('empty-recycle-blue-steel-chemical-tanks-oil-fuel-barrels-stacked-row-factory-storage-background-texture-190526464_2.webp');
+    background-size: cover;
+    background-position: center;
+    border: 2px solid #6c757d !important;
+}
+
+.bg-pallets {
+    background-image: linear-gradient(rgba(13, 202, 240, 0.75), rgba(13, 202, 240, 0.75)), url('pallets-boxes-cardboard-parcels-ready-260nw-2303925603_2.webp');
+    background-size: cover;
+    background-position: center;
+    border: 2px solid #0dcaf0 !important;
+}
+
 /* Variaciones de color según nivel */
 .bg-danger-gradient { background: linear-gradient(90deg, #ef4444, #f87171); }
 .bg-warning-gradient { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
@@ -152,6 +166,7 @@
                             <option value="ESTANTE">Estante / Rack Estructural</option>
                             <option value="GRANEL_LUBRICANTE">Zona Lubricantes (Granel)</option>
                             <option value="PISO_PALLET">Área de Suelo / Pallet (1x1)</option>
+                            <option value="TAMBORES_PIRAMIDE">Área de Tambores / Pirámides</option>
                             <option value="PASILLO">⚠️ Borrador / Pasillo Vacío</option>
                         </select>
                     </div>
@@ -227,6 +242,7 @@
                                             'ESTANTE' => 'bg-primary text-white border-solid',
                                             'GRANEL_LUBRICANTE' => 'bg-warning text-dark border-solid',
                                             'PISO_PALLET' => 'bg-info text-white border-solid',
+                                            'TAMBORES_PIRAMIDE' => 'bg-tambores text-white',
                                             default => ''
                                         };
                                     }
@@ -396,13 +412,18 @@
             $('#propiedadesEstante').addClass('d-none');
             $('#lblTokenText').text('BORRAR ESPACIO');
             $('#dragToken').removeClass('text-primary text-info').addClass('text-danger');
-        } else if (val === 'PISO_PALLET') {
-            // Bloqueamos a 1x1
+        } else if (val === 'PISO_PALLET' || val === 'TAMBORES_PIRAMIDE') {
+            // Bloqueamos a 1x1 ambos tipos de suelo
             $('#propiedadesEstante').addClass('d-none');
             $('#cfgNiveles').val(1);
             $('#cfgLargo').val(1);
             actualizarTokenTexto();
-            $('#dragToken').removeClass('text-danger text-primary').addClass('text-info');
+            
+            if(val === 'PISO_PALLET') {
+                $('#dragToken').removeClass('text-danger text-primary text-secondary').addClass('text-info');
+            } else {
+                $('#dragToken').removeClass('text-danger text-primary text-info').addClass('text-secondary');
+            }
         } else {
             $('#propiedadesEstante').removeClass('d-none');
             actualizarTokenTexto();
@@ -587,7 +608,7 @@
                     if (response.celdas_borradas && response.celdas_borradas.length > 0) {
                         response.celdas_borradas.forEach(celda => {
                             const selectorBorrar = `#cell-${celda.y}-${celda.x}`;
-                            $(selectorBorrar).removeClass('bg-primary bg-warning bg-info text-white text-dark');
+                            $(selectorBorrar).removeClass('bg-primary bg-warning bg-info text-white text-dark bg-pallets bg-tambores');
                             $(selectorBorrar).find('.txt-codigo').text('');
                             $(selectorBorrar).removeAttr('data-codigo data-tipo data-niveles').attr('draggable', 'false');
                         });
@@ -595,7 +616,7 @@
 
                     // 2. Limpieza por código de bloque: buscamos todas las celdas que tenían este código antes del movimiento
                     $(`.celda-mapa[data-codigo="${response.codigo}"]`).each(function() {
-                        $(this).removeClass('bg-primary bg-warning bg-info text-white text-dark');
+                        $(this).removeClass('bg-primary bg-warning bg-info text-white text-dark bg-pallets bg-tambores');
                         $(this).find('.txt-codigo').text('');
                         $(this).removeAttr('data-codigo data-tipo data-niveles').attr('draggable', 'false');
                     });
@@ -606,7 +627,7 @@
                         const selector = `#cell-${celda.y}-${celda.x}`;
                         
                         // Limpieza preventiva sobre la celda destino antes de pintar
-                        $(selector).removeClass('bg-primary bg-warning bg-info text-white text-dark');
+                        $(selector).removeClass('bg-primary bg-warning bg-info text-white text-dark bg-pallets bg-tambores');
                         
                         if (response.tipo === 'ESTANTE') {
                             $(selector).addClass('bg-primary text-white');
@@ -626,7 +647,13 @@
                             // Los pallets en base de datos e interfaz gráfica se configuran con nivel 1
                             $(selector).attr('data-codigo', response.codigo).attr('data-tipo', response.tipo).attr('data-niveles', 1);
                             if (modoReubicacion) $(selector).attr('draggable', 'true');
-                        } 
+                        }
+                        else if (response.tipo === 'TAMBORES_PIRAMIDE') {
+                            $(selector).addClass('bg-tambores text-white'); // Usa la nueva clase CSS
+                            $(selector).find('.txt-codigo').text(response.codigo);
+                            $(selector).attr('data-codigo', response.codigo).attr('data-tipo', response.tipo).attr('data-niveles', 1);
+                            if (modoReubicacion) $(selector).attr('draggable', 'true');
+                        }
                         else {
                             // En caso de pasar a PASILLO o limpieza
                             $(selector).find('.txt-codigo').text('');
