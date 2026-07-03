@@ -4,10 +4,12 @@ namespace App\Services;
 
 use App\Repositories\DepositoRepository;
 use App\Repositories\ChequeoDepositoRepository;
+use App\Repositories\HistorialLlenadoRepository;
 use App\Services\AforoCalculoService;
 use App\Services\WhatsAppApiService;
 use App\Models\Deposito;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 use Exception;
 
 class DepositoService
@@ -16,20 +18,23 @@ class DepositoService
     protected $chequeoRepo;
     protected $aforoService;
     protected $whatsappService;
+    protected $historialRepo;
 
     public function __construct(DepositoRepository $depositoRepo, ChequeoDepositoRepository $chequeoRepo, 
-    AforoCalculoService $aforoService, WhatsAppApiService $whatsappService
+    AforoCalculoService $aforoService, WhatsAppApiService $whatsappService, HistorialLlenadoRepository $historialRepo
     ) {
         $this->depositoRepo = $depositoRepo;
         $this->chequeoRepo = $chequeoRepo;
         $this->aforoService = $aforoService;
         $this->whatsappService = $whatsappService;
+        $this->historialRepo = $historialRepo;
     }
 
     public function registrarDeposito(array $data): Deposito
     {
         $data['capacidad_litros'] = $data['capacidad_maxima'];
         $data['nivel_alerta_litros'] = (float) $data['capacidad_maxima'] * 0.20;
+        $data['llena_cupo_prepagado'] = isset($data['llena_cupo_prepagado']) ? 1 : 0;
         
         // Mapeo preventivo por si usas el string legacy 'producto' en tus reportes
         if (isset($data['producto_nombre_legacy'])) {
@@ -48,6 +53,7 @@ class DepositoService
     {
         // Regla de Negocio: Si cambia la capacidad, se recalcula el 20% de alerta estricto
         $data['nivel_alerta_litros'] = (float) $data['capacidad_maxima'] * 0.20;
+        $data['llena_cupo_prepagado'] = isset($data['llena_cupo_prepagado']) ? 1 : 0;
 
         if (isset($data['producto_nombre_legacy'])) {
             $data['producto'] = $data['producto_nombre_legacy'];
@@ -169,5 +175,64 @@ class DepositoService
         } catch (Exception $e) {
             logger()->error("No se pudo enviar la alerta de WhatsApp: " . $e->getMessage());
         }
+    }
+
+    public function registrarLlenado(int $clienteId, int $idDeposito, float $litros): int
+    {
+        return DB::transaction(function () use ($clienteId, $idDeposito, $litros) {
+            
+            // 1. Obtener y validar el tanque
+            $deposito = Deposito::findOrFail($idDeposito);
+
+            if (!$deposito->llena_cupo_prepagado) {
+                throw new Exception("Operación denegada: Este tanque no está autorizado para Llenado Prepagado.");
+            }
+
+            // 🚨 CORRECCIÓN: ID 2 es Diésel en la tabla tipos_combustible
+            $esDiesel = ($deposito->tipo_combustible_id == 2);
+
+            // 2. Aplicar reglas según el combustible
+            if ($esDiesel) {
+                $cliente = DB::table('clientes')->where('id', $clienteId)->first();
+
+                if (!$cliente) {
+                    throw new Exception("El cliente seleccionado no existe.");
+                }
+
+                if ($cliente->disponible < $litros) {
+                    throw new Exception("Saldo insuficiente: El cliente solo cuenta con {$cliente->disponible} litros disponibles en su Cupo Gasco.");
+                }
+
+                // Descontar del disponible general del cliente
+                DB::table('clientes')->where('id', $clienteId)->decrement('disponible', $litros);
+
+                // Acumular en el reporte mensual de Gasco
+                $ahora = Carbon::now('America/Caracas');
+                DB::table('gasco_cupos_mensuales')
+                    ->where('cliente_id', $clienteId)
+                    ->where('mes', $ahora->month)
+                    ->where('anio', $ahora->year)
+                    ->increment('litros_consumidos', $litros);
+            }
+
+            // 3. Descontar stock físico del tanque
+            if ($deposito->nivel_actual_litros >= $litros) {
+                $deposito->decrement('nivel_actual_litros', $litros);
+            } else {
+                // Salvaguarda operativa por si hay descuadre con el varillaje real
+                $deposito->update(['nivel_actual_litros' => 0]);
+            }
+
+            // 4. Guardar registro inmutable usando el repositorio
+            $llenado = $this->historialRepo->registrar([
+                'cliente_id'          => $clienteId,
+                'id_sede'             => $deposito->id_sede,
+                'id_deposito'         => $deposito->id,
+                'tipo_combustible_id' => $deposito->tipo_combustible_id,
+                'litros'              => $litros,
+            ]);
+
+            return $llenado->id;
+        });
     }
 }

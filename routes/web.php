@@ -21,7 +21,7 @@ use App\Http\Controllers\{
     ReporteController, AforoController, SearchController, DataDeletionController,
     ViajesController, TelegramController, PlanificacionMantenimientoController,
     ReportController, ClienteActivosController,NotificationController,LogisticaController,
-    ChequeoDepositoController, CombustibleController
+    ChequeoDepositoController, CombustibleController, LlenadoCupoPrepagadoController
 };
 
 /* --- Rutas Públicas y Auth --- */
@@ -332,6 +332,13 @@ Route::middleware(['auth'])->group(function () {
                     Route::get('/crear', [ChequeoDepositoController::class, 'create'])->name('create');
                     Route::post('/guardar', [ChequeoDepositoController::class, 'store'])->name('store');
                     Route::get('/{id}', [ChequeoDepositoController::class, 'show'])->name('show');
+                });
+
+                // 🆕 Llenados con Cupos Prepagados
+                Route::prefix('llenados_prepagados')->name('llenados_prepagados.')->group(function () {
+                    Route::get('/', [LlenadoCupoPrepagadoController::class, 'index'])->name('index');
+                    Route::get('/crear', [LlenadoCupoPrepagadoController::class, 'create'])->name('create');
+                    Route::post('/guardar', [LlenadoCupoPrepagadoController::class, 'store'])->name('store');
                 });
         });
 

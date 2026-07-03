@@ -33,11 +33,13 @@ class Deposito extends Model
         'capacidad_maxima',
         'forma',
         'rotacion',
+        'llena_cupo_prepagado',
     ];
     protected $casts = [
         'capacidad_litros' => 'float',
         'nivel_actual_litros' => 'float',
         'nivel_alerta_litros' => 'float',
+        'llena_cupo_prepagado' => 'boolean',
     ];
 
     // Constantes para mapear las formas del ENUM de tu DDL

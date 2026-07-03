@@ -86,6 +86,20 @@
                                 <input type="text" class="form-control bg-light fw-bold text-secondary border-orange" 
                                     :value="formatoNumero(capacidadMaxima * 0.20)" readonly>
                             </div>
+
+                            <div class="col-12 mt-3 border-top pt-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input checkbox-orange" type="checkbox" 
+                                           name="llena_cupo_prepagado" value="1" id="llena_cupo_prepagado"
+                                           {{ old('llena_cupo_prepagado') ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-bold text-muted small text-uppercase ms-2" for="llena_cupo_prepagado">
+                                        <i class="fas fa-gas-pump text-orange me-1"></i> Habilitar Tanque para Modalidad de Cupo Prepagado
+                                    </label>
+                                </div>
+                                <div class="form-text text-muted small mt-1 ps-4">
+                                    Si se activa, este tanque estará disponible para suministro en los despachos a clientes con cupos prepagados.
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -189,6 +203,14 @@
     .form-control:focus, .form-select:focus {
         border-color: #ff6600 !important;
         box-shadow: 0 0 0 0.25 rgh(255, 102, 0, 0.25) !important;
+    }
+    .form-check-input.checkbox-orange:checked {
+        background-color: #ff6600 !important;
+        border-color: #ff6600 !important;
+    }
+    .form-check-input.checkbox-orange:focus {
+        border-color: #ff6600 !important;
+        box-shadow: 0 0 0 0.25rem rgba(255, 102, 0, 0.25) !important;
     }
 </style>
 @endsection

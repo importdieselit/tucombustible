@@ -46,6 +46,13 @@ class ChequeoDepositoRepository
                     'litros_calculados'   => $detalle['litros_calculados'],
                     'id_tipos_combustible' => $detalle['id_tipos_combustible'],
                 ]);
+
+                DB::table('depositos')->where('id', $detalle['id_deposito'])->update([
+                    'nivel_actual_litros' => $detalle['litros_calculados'],
+                    'tipo_combustible_id' => $detalle['id_tipos_combustible'],
+                    'nivel_cm'            => $detalle['centimetros_medidos'],
+                    'updated_at'          => now() // Al usar DB::table manual, forzamos el timestamp
+                ]);
             }
 
             // Devolvemos el objeto completo con sus relaciones cargadas si se necesita en el flujo

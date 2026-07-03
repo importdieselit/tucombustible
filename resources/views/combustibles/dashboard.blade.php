@@ -60,6 +60,26 @@
             </div>
         </div>
 
+        {{-- OPCIÓN 3: LLENADOS CON CUPOS PREPGADOS --}}
+        <div class="col-md-5">
+            <div class="card h-100 shadow-sm border-0 card-modulo transition-all" style="border-top: 4px solid #ff6600 !important;">
+                <div class="card-body p-4 d-flex flex-column align-items-center text-center">
+                    <div class="bg-light rounded-circle p-3 mb-3 d-flex align-items-center justify-content-center shadow-inner" style="width: 70px; height: 70px;">
+                        <i class="fas fa-eye-dropper text-orange fa-2x"></i>
+                    </div>
+                    <h5 class="fw-black text-uppercase text-dark mb-2" style="font-size: 16px; letter-spacing: 0.5px;">
+                        Llenados con Cupos Prepagados
+                    </h5>
+                    <p class="text-muted small mb-4 flex-grow-1">
+                        Llenados de vehiculos de clientes con cupos prepagados.
+                    </p>
+                    <a href="{{ route('combustibles.llenados_prepagados.index') }}" class="btn btn-warning w-100 fw-black text-uppercase py-2 shadow-sm text-dark" style="background-color: #ff6600; border-color: #ff6600; font-size: 12px; letter-spacing: 0.5px;">
+                        <i class="fas fa-clipboard-check me-1"></i> Abrir Llenado
+                    </a>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 

@@ -92,7 +92,8 @@ class DepositoController extends Controller
             'ancho'    => 'required_if:forma,R,OH,OV|nullable|numeric|min:0',
             'alto'     => 'required_if:forma,R,CV,OV|nullable|numeric|min:0',
             
-            'producto_nombre_legacy' => 'nullable|string|max:255'
+            'producto_nombre_legacy' => 'nullable|string|max:255',
+            'llena_cupo_prepagado'   => 'nullable|boolean'
         ], $messages);
 
         if ($validator->fails()) {
@@ -142,7 +143,8 @@ class DepositoController extends Controller
             'ancho'    => 'required_if:forma,R,OH,OV|nullable|numeric|min:0',
             'alto'     => 'required_if:forma,R,CV,OV|nullable|numeric|min:0',
             
-            'producto_nombre_legacy' => 'nullable|string|max:255'
+            'producto_nombre_legacy' => 'nullable|string|max:255',
+            'llena_cupo_prepagado'   => 'nullable|boolean'
         ], $messages);
 
         if ($validator->fails()) {
