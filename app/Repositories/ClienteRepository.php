@@ -241,9 +241,17 @@ class ClienteRepository
 
     public function registrarPlaca($clienteId, string $placa): PlacaVehiculo
     {
+        $placaLimpia = strtoupper(str_replace(' ', '', $placa));
+
         return PlacaVehiculo::updateOrCreate(
-            ['cliente_id' => $clienteId, 'placa' => strtoupper(str_replace(' ', '', $placa))],
-            ['activo' => 1, 'updated_at' => now()]
+            // El primer array es el criterio de búsqueda único global
+            ['placa' => $placaLimpia], 
+            // El segundo array contiene lo que se va a insertar o actualizar si se encuentra
+            [
+                'cliente_id' => $clienteId, 
+                'activo' => 1, 
+                'updated_at' => now()
+            ]
         );
     }
 
@@ -267,8 +275,15 @@ class ClienteRepository
     public function registrarChofer($clienteId, string $nombreCompleto, string $cedula): ChoferCliente
     {
         return ChoferCliente::updateOrCreate(
-            ['cliente_id' => $clienteId, 'cedula' => $cedula],
-            ['nombre_completo' => strtoupper($nombreCompleto), 'activo' => 1, 'updated_at' => now()]
+            // Criterio de búsqueda único global
+            ['cedula' => $cedula], 
+            // Datos a actualizar o insertar
+            [
+                'cliente_id' => $clienteId,
+                'nombre_completo' => strtoupper($nombreCompleto), 
+                'activo' => 1, 
+                'updated_at' => now()
+            ]
         );
     }
 

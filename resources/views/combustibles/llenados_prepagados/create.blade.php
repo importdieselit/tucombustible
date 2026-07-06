@@ -63,7 +63,7 @@
                             {{-- SELECCIÓN DE CLIENTE --}}
                             <div class="col-12">
                                 <label class="small fw-bold text-uppercase text-muted mb-1" style="font-size: 12px;">Cliente Corporativo</label>
-                                <select name="cliente_id" class="form-select fw-bold text-dark" style="font-size: 14px;" required>
+                                <select name="cliente_id" id="select-cliente" class="form-select fw-bold text-dark" style="font-size: 14px;" required>
                                     <option value="">-- SELECCIONE EL CLIENTE --</option>
                                     @foreach($clientes as $cliente)
                                         <option value="{{ $cliente->id }}" {{ old('cliente_id') == $cliente->id ? 'selected' : '' }}>
@@ -71,6 +71,61 @@
                                         </option>
                                     @endforeach
                                 </select>
+                            </div>
+
+                            {{-- SELECCIÓN DE CHOFER AUTORIZADO (Dependiente del Cliente) --}}
+                            <div class="col-md-6">
+                                <label class="small fw-bold text-uppercase text-muted mb-1" style="font-size: 12px;">Chofer Autorizado</label>
+                                <select name="chofer_cliente_id" id="select-chofer" class="form-select fw-bold text-dark" style="font-size: 14px;" required disabled>
+                                    <option value="">-- SELECCIONE CHOFER --</option>
+                                    <option value="nuevo" {{ old('chofer_cliente_id') == 'nuevo' ? 'selected' : '' }} class="text-orange fw-bold">
+                                        [+] REGISTRAR NUEVO CHOFER
+                                    </option>
+                                    @foreach($choferes as $chofer)
+                                        <option value="{{ $chofer->id }}" data-cliente="{{ $chofer->cliente_id }}" {{ old('chofer_cliente_id') == $chofer->id ? 'selected' : '' }} style="display: none;">
+                                            {{ $chofer->nombre_completo }} (CI: {{ $chofer->cedula }})
+                                        </option>
+                                    @endforeach
+                                </select>
+
+                                {{-- CAMPOS CONDICIONALES PARA NUEVO CHOFER --}}
+                                <div id="div-nuevo-chofer" class="mt-2 p-3 bg-light border rounded row g-2" style="display: none;">
+                                    <div class="col-12">
+                                        <span class="badge bg-orange text-white text-uppercase mb-2" style="font-size: 10px;">Nuevo Registro</span>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="small fw-bold text-muted mb-1">Nombre Completo</label>
+                                        <input type="text" name="nuevo_chofer_nombre" id="input-chofer-nombre" class="form-control form-control-sm text-uppercase" value="{{ old('nuevo_chofer_nombre') }}" placeholder="Ej. Juan Pérez">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="small fw-bold text-muted mb-1">Cédula de Identidad</label>
+                                        <input type="text" name="nuevo_chofer_cedula" id="input-chofer-cedula" class="form-control form-control-sm" value="{{ old('nuevo_chofer_cedula') }}" placeholder="Ej. 12345678" maxlength="8" inputmode="numeric">                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- SELECCIÓN DE PLACA DEL VEHÍCULO (Dependiente del Cliente) --}}
+                            <div class="col-md-6">
+                                <label class="small fw-bold text-uppercase text-muted mb-1" style="font-size: 12px;">Vehículo / Placa</label>
+                                <select name="placa_vehiculo_id" id="select-placa" class="form-select fw-bold text-dark" style="font-size: 14px;" required disabled>
+                                    <option value="">-- SELECCIONE PLACA --</option>
+                                    <option value="nuevo" {{ old('placa_vehiculo_id') == 'nuevo' ? 'selected' : '' }} class="text-orange fw-bold">
+                                        [+] REGISTRAR NUEVA PLACA
+                                    </option>
+                                    @foreach($placas as $placa)
+                                        <option value="{{ $placa->id }}" data-cliente="{{ $placa->cliente_id }}" {{ old('placa_vehiculo_id') == $placa->id ? 'selected' : '' }} style="display: none;">
+                                            {{ $placa->placa }}
+                                        </option>
+                                    @endforeach
+                                </select>
+
+                                {{-- CAMPOS CONDICIONALES PARA NUEVA PLACA --}}
+                                <div id="div-nueva-placa" class="mt-2 p-3 bg-light border rounded" style="display: none;">
+                                    <span class="badge bg-orange text-white text-uppercase mb-2" style="font-size: 10px;">Nuevo Registro</span>
+                                    <div>
+                                        <label class="small fw-bold text-muted mb-1">Número de Placa</label>
+                                        <input type="text" name="nueva_placa_numero" id="input-placa-numero" class="form-control form-control-sm text-uppercase" value="{{ old('nueva_placa_numero') }}" placeholder="Ej. AB123CD">
+                                    </div>
+                                </div>
                             </div>
 
                             {{-- SELECCIÓN DE SEDE EMISORA --}}
@@ -86,7 +141,7 @@
                                 </select>
                             </div>
 
-                            {{-- SELECCIÓN DE TANQUE AUTORIZADO --}}
+                            {{-- SELECCIÓN DE TANQUE AUTORIZADO (Dependiente de la Sede) --}}
                             <div class="col-md-6">
                                 <label class="small fw-bold text-uppercase text-muted mb-1" style="font-size: 12px;">Tanque Emisor</label>
                                 <select name="id_deposito" id="select-tanque" class="form-select fw-bold text-dark" style="font-size: 14px;" required disabled>
@@ -149,10 +204,23 @@ document.addEventListener('DOMContentLoaded', function () {
     const selectTanque = document.getElementById('select-tanque');
     const optionsTanque = Array.from(selectTanque.options);
 
+    const selectCliente = document.getElementById('select-cliente');
+    const selectChofer = document.getElementById('select-chofer');
+    const selectPlaca = document.getElementById('select-placa');
+    
+    const optionsChofer = Array.from(selectChofer.options);
+    const optionsPlaca = Array.from(selectPlaca.options);
+
+    const divNuevoChofer = document.getElementById('div-nuevo-chofer');
+    const inputChoferNombre = document.getElementById('input-chofer-nombre');
+    const inputChoferCedula = document.getElementById('input-chofer-cedula');
+
+    const divNuevaPlaca = document.getElementById('div-nueva-placa');
+    const inputPlacaNumero = document.getElementById('input-placa-numero');
+
     function filtrarTanques() {
         const sedeId = selectSede.value;
 
-        // Si no hay sede seleccionada, deshabilitamos el selector de tanques y lo reseteamos
         if (!sedeId) {
             selectTanque.value = "";
             selectTanque.disabled = true;
@@ -162,41 +230,125 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Habilitamos el selector de tanques
         selectTanque.disabled = false;
         let coincidenciaEncontrada = false;
 
         optionsTanque.forEach(opt => {
             if (opt.value === "") {
-                opt.style.display = 'block'; // La opción por defecto siempre visible
+                opt.style.display = 'block';
             } else if (opt.getAttribute('data-sede') === sedeId) {
-                opt.style.display = 'block'; // Muestra tanques de esta sede
+                opt.style.display = 'block';
                 if (opt.value === selectTanque.value) {
                     coincidenciaEncontrada = true;
                 }
             } else {
-                opt.style.display = 'none'; // Oculta tanques ajenos
+                opt.style.display = 'none';
             }
         });
 
-        // Si el tanque previamente seleccionado (por el old()) no pertenece a la nueva sede elegida, reseteamos el select
         if (!coincidenciaEncontrada && selectTanque.value !== "") {
             selectTanque.value = "";
         }
     }
 
-    // Escuchar el cambio de sede
-    selectSede.addEventListener('change', filtrarTanques);
+    function filtrarDatosCliente() {
+        const clienteId = selectCliente.value;
 
-    // Disparar al cargar la página por si hay datos de validación fallida (old())
-    if (selectSede.value) {
-        filtrarTanques();
+        if (!clienteId) {
+            selectChofer.value = "";
+            selectPlaca.value = "";
+            selectChofer.disabled = true;
+            selectPlaca.disabled = true;
+            
+            optionsChofer.forEach(opt => { if (opt.value !== "") opt.style.display = 'none'; });
+            optionsPlaca.forEach(opt => { if (opt.value !== "") opt.style.display = 'none'; });
+            
+            toggleNuevoChofer();
+            toggleNuevaPlaca();
+            return;
+        }
+
+        selectChofer.disabled = false;
+        selectPlaca.disabled = false;
+
+        let choferCoincide = false;
+        let placaCoincide = false;
+
+        optionsChofer.forEach(opt => {
+            if (opt.value === "" || opt.value === "nuevo") {
+                opt.style.display = 'block';
+                if (opt.value === selectChofer.value) choferCoincide = true;
+            } else if (opt.getAttribute('data-cliente') === clienteId) {
+                opt.style.display = 'block';
+                if (opt.value === selectChofer.value) choferCoincide = true;
+            } else {
+                opt.style.display = 'none';
+            }
+        });
+
+        optionsPlaca.forEach(opt => {
+            if (opt.value === "" || opt.value === "nuevo") {
+                opt.style.display = 'block';
+                if (opt.value === selectPlaca.value) placaCoincide = true;
+            } else if (opt.getAttribute('data-cliente') === clienteId) {
+                opt.style.display = 'block';
+                if (opt.value === selectPlaca.value) placaCoincide = true;
+            } else {
+                opt.style.display = 'none';
+            }
+        });
+
+        if (!choferCoincide && selectChofer.value !== "") selectChofer.value = "";
+        if (!placaCoincide && selectPlaca.value !== "") selectPlaca.value = "";
+
+        toggleNuevoChofer();
+        toggleNuevaPlaca();
     }
+
+    function toggleNuevoChofer() {
+        if (selectChofer.value === 'nuevo') {
+            divNuevoChofer.style.display = 'flex';
+            inputChoferNombre.required = true;
+            inputChoferCedula.required = true;
+        } else {
+            divNuevoChofer.style.display = 'none';
+            inputChoferNombre.required = false;
+            inputChoferNombre.value = '';
+            inputChoferCedula.required = false;
+            inputChoferCedula.value = '';
+        }
+    }
+
+    // Muestra u oculta la sección para tipear la placa
+    function toggleNuevaPlaca() {
+        if (selectPlaca.value === 'nuevo') {
+            divNuevaPlaca.style.display = 'block';
+            inputPlacaNumero.required = true;
+        } else {
+            divNuevaPlaca.style.display = 'none';
+            inputPlacaNumero.required = false;
+            inputPlacaNumero.value = '';
+        }
+    }
+
+    selectSede.addEventListener('change', filtrarTanques);
+    selectCliente.addEventListener('change', filtrarDatosCliente);
+    selectChofer.addEventListener('change', toggleNuevoChofer);
+    selectPlaca.addEventListener('change', toggleNuevaPlaca);
+
+    if (selectSede.value) filtrarTanques();
+    if (selectCliente.value) filtrarDatosCliente();
+
+    // Limitar el input de cédula estrictamente a números en tiempo real
+    inputChoferCedula.addEventListener('input', function () {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
 });
 </script>
 
 <style>
     .text-orange { color: #ff6600 !important; }
+    .bg-orange { background-color: #ff6600 !important; }
     .fw-black { font-weight: 900; }
 </style>
 @endsection

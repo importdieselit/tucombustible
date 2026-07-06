@@ -13,11 +13,23 @@ class HistorialLlenadoCupoPrepagado extends Model
         'cliente_id',
         'id_sede',
         'id_deposito',
+        'chofer_cliente_id',
+        'placa_vehiculo_id',
         'tipo_combustible_id',
         'litros',
     ];
 
     // Relaciones para cuando muestres el historial en las tablas de Livewire
+
+    public function chofer(): BelongsTo
+    {
+        return $this->belongsTo(ChoferCliente::class, 'chofer_cliente_id');
+    }
+
+    public function placa(): BelongsTo
+    {
+        return $this->belongsTo(PlacaVehiculo::class, 'placa_vehiculo_id');
+    }
     
     public function cliente(): BelongsTo
     {
@@ -26,7 +38,6 @@ class HistorialLlenadoCupoPrepagado extends Model
 
     public function sede(): BelongsTo
     {
-        // Usamos 'Sedes' que es como se llama tu modelo
         return $this->belongsTo(Sedes::class, 'id_sede');
     }
 

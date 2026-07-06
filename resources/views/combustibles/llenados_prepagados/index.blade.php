@@ -19,28 +19,58 @@
         </div>
     </div>
 
-    {{-- FILTROS POR SEDE --}}
-    <form action="{{ url()->current() }}" method="GET" class="row g-2 align-items-end mb-4">
-        <div class="col-md-3">
-            <label class="small fw-bold text-uppercase text-muted mb-1" style="font-size: 12px;">Filtrar por Sede</label>
-            <select name="id_sede" class="form-select form-select-sm fw-bold" style="font-size: 13px;" onchange="this.form.submit()">
-                <option value="">TODAS LAS SEDES OPERATIVAS</option>
-                @foreach($sedes as $sede)
-                    <option value="{{ $sede->id }}" {{ request('id_sede') == $sede->id ? 'selected' : '' }}>
-                        {{ $sede->nombre }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-        
-        @if(request('id_sede'))
-            <div class="col-md-1">
-                <a href="{{ url()->current() }}" class="btn btn-outline-secondary btn-sm w-100 fw-bold text-uppercase" style="font-size: 12px; padding: 5px 0;">
-                    Limpiar
-                </a>
+    {{-- BLOQUE DE FILTROS AVANZADOS --}}
+    <div class="card shadow-sm border-0 mb-4 p-3 bg-white">
+        <form action="{{ url()->current() }}" method="GET" class="row g-2 align-items-end">
+            
+            {{-- BÚSQUEDA POR CLIENTE --}}
+            <div class="col-md-3">
+                <label class="small fw-bold text-uppercase text-muted mb-1" style="font-size: 11px;">Cliente (Nombre o RIF)</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light text-muted"><i class="fas fa-search"></i></span>
+                    <input type="text" name="search_cliente" class="form-control fw-bold text-dark" style="font-size: 13px;" placeholder="Buscar por RIF o Nombre..." value="{{ request('search_cliente') }}">
+                </div>
             </div>
-        @endif
-    </form>
+
+            {{-- FILTRO POR SEDE --}}
+            <div class="col-md-3">
+                <label class="small fw-bold text-uppercase text-muted mb-1" style="font-size: 11px;">Filtrar por Sede</label>
+                <select name="id_sede" class="form-select form-select-sm fw-bold text-dark" style="font-size: 13px;">
+                    <option value="">TODAS LAS SEDES OPERATIVAS</option>
+                    @foreach($sedes as $sede)
+                        <option value="{{ $sede->id }}" {{ request('id_sede') == $sede->id ? 'selected' : '' }}>
+                            {{ $sede->nombre }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- RANGO DE FECHAS: DESDE --}}
+            <div class="col-md-2">
+                <label class="small fw-bold text-uppercase text-muted mb-1" style="font-size: 11px;">Fecha Desde</label>
+                <input type="date" name="fecha_desde" class="form-control form-control-sm fw-bold text-dark" style="font-size: 13px;" value="{{ request('fecha_desde') }}">
+            </div>
+
+            {{-- RANGO DE FECHAS: HASTA --}}
+            <div class="col-md-2">
+                <label class="small fw-bold text-uppercase text-muted mb-1" style="font-size: 11px;">Fecha Hasta</label>
+                <input type="date" name="fecha_hasta" class="form-control form-control-sm fw-bold text-dark" style="font-size: 13px;" value="{{ request('fecha_hasta') }}">
+            </div>
+            
+            {{-- ACCIONES DEL FILTRO --}}
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-sm btn-dark w-100 fw-bold text-uppercase d-inline-flex align-items-center justify-content-center" style="font-size: 11px; height: 31px;">
+                    <i class="fas fa-filter me-1"></i> Filtrar
+                </button>
+                
+                @if(request()->filled('id_sede') || request()->filled('search_cliente') || request()->filled('fecha_desde') || request()->filled('fecha_hasta'))
+                    <a href="{{ url()->current() }}" class="btn btn-outline-secondary btn-sm w-100 fw-bold text-uppercase d-inline-flex align-items-center justify-content-center" style="font-size: 11px; height: 31px;">
+                        Limpiar
+                    </a>
+                @endif
+            </div>
+        </form>
+    </div>
 
     {{-- ALERTAS DEL SISTEMA --}}
     @if(Session::has('success'))
@@ -59,13 +89,16 @@
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                {{-- 🆕 Agregamos min-width para garantizar que la barra de scroll aparezca sin aplastar el texto --}}
+                <table class="table table-hover align-middle mb-0" style="min-width: 1200px;">
                     <thead class="bg-light">
                         <tr class="text-uppercase text-muted" style="font-size: 12px; letter-spacing: 0.5px;">
                             <th class="ps-4">Fecha y Hora</th>
-                            <th>Cliente Corporativo</th>
+                            <th>Cliente</th>
+                            <th>Chofer</th>
+                            <th>Vehículo</th>
                             <th>Sede</th>
-                            <th>Tanque / Depósito</th>
+                            <th>Depósito</th>
                             <th>Combustible</th>
                             <th class="pe-4 text-end">Litros Despachados</th>
                         </tr>
@@ -80,6 +113,21 @@
                                     <span class="fw-black text-dark d-block" style="font-size: 14px;">{{ $llenado->cliente->nombre }}</span>
                                     <small class="text-muted font-monospace">{{ $llenado->cliente->rif }}</small>
                                 </td>
+                                
+                                {{-- 🆕 Renderizado del Chofer --}}
+                                <td>
+                                    <span class="text-dark fw-bold" style="font-size: 13px;">
+                                        <i class="fas fa-user text-muted me-1"></i> {{ $llenado->chofer->nombre_completo ?? 'N/A' }}
+                                    </span>
+                                </td>
+
+                                {{-- 🆕 Renderizado de la Placa --}}
+                                <td>
+                                    <span class="badge bg-dark text-white font-monospace text-uppercase p-2" style="font-size: 11px; letter-spacing: 0.5px;">
+                                        <i class="fas fa-truck me-1 text-warning"></i> {{ $llenado->placa->placa ?? 'S/P' }}
+                                    </span>
+                                </td>
+
                                 <td>
                                     <span class="badge bg-light text-secondary border text-uppercase fw-bold" style="font-size: 11px;">
                                         {{ $llenado->sede->nombre }}
@@ -103,7 +151,8 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-5 text-muted small fw-bold">
+                                {{-- 🆕 Actualizado colspan a 8 por las dos nuevas columnas --}}
+                                <td colspan="8" class="text-center py-5 text-muted small fw-bold">
                                     <i class="fas fa-info-circle me-1 text-warning"></i> No se han registrado movimientos de llenado prepagado para los filtros seleccionados.
                                 </td>
                             </tr>

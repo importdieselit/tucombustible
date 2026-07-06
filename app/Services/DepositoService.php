@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Repositories\DepositoRepository;
 use App\Repositories\ChequeoDepositoRepository;
 use App\Repositories\HistorialLlenadoRepository;
+use App\Repositories\GascoCupoRepository;
 use App\Services\AforoCalculoService;
 use App\Services\WhatsAppApiService;
 use App\Models\Deposito;
@@ -19,15 +20,18 @@ class DepositoService
     protected $aforoService;
     protected $whatsappService;
     protected $historialRepo;
+    protected $gascoCupoRepo;
 
     public function __construct(DepositoRepository $depositoRepo, ChequeoDepositoRepository $chequeoRepo, 
-    AforoCalculoService $aforoService, WhatsAppApiService $whatsappService, HistorialLlenadoRepository $historialRepo
+    AforoCalculoService $aforoService, WhatsAppApiService $whatsappService, HistorialLlenadoRepository $historialRepo, 
+    GascoCupoRepository $gascoCupoRepo
     ) {
         $this->depositoRepo = $depositoRepo;
         $this->chequeoRepo = $chequeoRepo;
         $this->aforoService = $aforoService;
         $this->whatsappService = $whatsappService;
         $this->historialRepo = $historialRepo;
+        $this->gascoCupoRepo = $gascoCupoRepo;
     }
 
     public function registrarDeposito(array $data): Deposito
@@ -177,9 +181,9 @@ class DepositoService
         }
     }
 
-    public function registrarLlenado(int $clienteId, int $idDeposito, float $litros): int
+    public function registrarLlenado(int $clienteId, int $idDeposito, float $litros, int $choferClienteId, int $placaVehiculoId): int
     {
-        return DB::transaction(function () use ($clienteId, $idDeposito, $litros) {
+        return DB::transaction(function () use ($clienteId, $idDeposito, $litros, $choferClienteId, $placaVehiculoId) {
             
             // 1. Obtener y validar el tanque
             $deposito = Deposito::findOrFail($idDeposito);
@@ -188,12 +192,23 @@ class DepositoService
                 throw new Exception("Operación denegada: Este tanque no está autorizado para Llenado Prepagado.");
             }
 
-            // 🚨 CORRECCIÓN: ID 2 es Diésel en la tabla tipos_combustible
+            // Solo el Diésel (ID 2) consume y valida cupo
             $esDiesel = ($deposito->tipo_combustible_id == 2);
 
-            // 2. Aplicar reglas según el combustible
             if ($esDiesel) {
-                $cliente = DB::table('clientes')->where('id', $clienteId)->first();
+                // 🆕 ADAPTACIÓN: Forzamos la inicialización segura del mes usando tu repositorio.
+                // Si estamos en Julio de 2026 y no existe, él clonará 'litros_autorizados' correctamente.
+                $cupoMensual = $this->gascoCupoRepo->getOrCreateMonthlyQuota($clienteId);
+
+                if (!$cupoMensual) {
+                    throw new Exception("El cliente seleccionado no tiene ningún Cupo GASCO base configurado en el sistema.");
+                }
+
+                // lockForUpdate previene colisiones si hay consumos simultáneos del mismo cupo
+                $cliente = DB::table('clientes')
+                    ->where('id', $clienteId)
+                    ->lockForUpdate()
+                    ->first();
 
                 if (!$cliente) {
                     throw new Exception("El cliente seleccionado no existe.");
@@ -203,31 +218,23 @@ class DepositoService
                     throw new Exception("Saldo insuficiente: El cliente solo cuenta con {$cliente->disponible} litros disponibles en su Cupo Gasco.");
                 }
 
-                // Descontar del disponible general del cliente
-                DB::table('clientes')->where('id', $clienteId)->decrement('disponible', $litros);
-
-                // Acumular en el reporte mensual de Gasco
-                $ahora = Carbon::now('America/Caracas');
-                DB::table('gasco_cupos_mensuales')
-                    ->where('cliente_id', $clienteId)
-                    ->where('mes', $ahora->month)
-                    ->where('anio', $ahora->year)
-                    ->increment('litros_consumidos', $litros);
+                $this->gascoCupoRepo->updateConsumed($cupoMensual->id, $litros);
             }
 
-            // 3. Descontar stock físico del tanque
+            // Descuento físico del inventario del tanque
             if ($deposito->nivel_actual_litros >= $litros) {
                 $deposito->decrement('nivel_actual_litros', $litros);
             } else {
-                // Salvaguarda operativa por si hay descuadre con el varillaje real
                 $deposito->update(['nivel_actual_litros' => 0]);
             }
 
-            // 4. Guardar registro inmutable usando el repositorio
+            // Registro histórico en la tabla de llenados con tu repositorio correspondiente
             $llenado = $this->historialRepo->registrar([
                 'cliente_id'          => $clienteId,
                 'id_sede'             => $deposito->id_sede,
                 'id_deposito'         => $deposito->id,
+                'chofer_cliente_id'   => $choferClienteId,
+                'placa_vehiculo_id'   => $placaVehiculoId,
                 'tipo_combustible_id' => $deposito->tipo_combustible_id,
                 'litros'              => $litros,
             ]);
