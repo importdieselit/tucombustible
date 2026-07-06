@@ -24,12 +24,12 @@ use Illuminate\Support\Facades\Cache;
 class ChecklistController extends Controller
 {
 
-    protected $fcmService;
-    protected $telegramService;
+    protected FcmNotificationService $fcmService;
+    protected TelegramNotificationService $telegramService;
 
 
     public function __construct(
-        FcmNotificationService $fcmService, 
+        FcmNotificationService $fcmService,
         TelegramNotificationService $telegramService
     ) {
         $this->fcmService = $fcmService;
@@ -66,7 +66,7 @@ class ChecklistController extends Controller
     /**
      * Obtener un checklist específico con su estructura completa
      */
-    public function show($id)
+    public function show(int $id)
     {
         try {
 
@@ -372,6 +372,7 @@ class ChecklistController extends Controller
 
             $alertaAction = "/inspecciones/{$inspeccion->id}";
             $condicion=null;
+            $nuevoEstatusViaje=1;
             // 2. Determinar el NUEVO estado del vehículo y el mensaje base
             if ($isCriticalFailure) {
                 // 🔴 CONDICIÓN CRÍTICA: Prioridad alta, pasa a No Operativo (3)
@@ -414,7 +415,7 @@ class ChecklistController extends Controller
 
             if(!is_null($condicion)){
                 $viaje = Viaje::where('vehiculo_id', $vehiculo->id)
-                        ->where('status', $condicion)
+                        ->like('status', $condicion)
                         ->first();
                 if ($viaje && $viaje->status != $nuevoEstatusViaje) {
                     $viaje->status = $nuevoEstatusViaje;
@@ -612,7 +613,7 @@ class ChecklistController extends Controller
     /**
      * Obtener detalles de una inspección específica
      */
-    public function showInspeccion($id)
+    public function showInspeccion( int $id)
     {
         try {
             $inspeccion = Inspeccion::with([

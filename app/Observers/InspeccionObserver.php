@@ -32,14 +32,25 @@ class InspeccionObserver
         $endpoint = "{$baseUrl}/messages/chat?token={$tokenWA}";
         $data = json_decode($inspeccion->respuesta_json, true);
         $observacion=false;
+        $check=0;
         // Recorremos las secciones e items buscando la etiqueta específica
-        foreach ($data['sections'] as $section) {
+       foreach ($data['sections'] as $section) {
             foreach ($section['items'] as $item) {
-                if (isset($item['label']) && $item['label'] === 'Observaciones Generales') {
-                    // Retornamos el valor limpio de espacios
-                   $observacion = isset($item['value']) ? trim($item['value']) : false;
-                     break 2; // Salimos de ambos bucles una vez encontrada la etiqueta
+                $label = $item['label'] ?? '';
+
+                if ($label === 'Observaciones Generales') {
+                    $observacion = isset($item['value']) ? trim($item['value']) : false;
+                    $check++;
                 }
+
+                if ($label === 'Seleccione Ruta a Cubrir' && !empty($item['value'])) {
+                    if (preg_match('/ID-(\d+)/', $item['value'], $matches)) {
+                        $inspeccion->viaje_id = $matches[1];
+                    }
+                    $check++;
+                }
+
+                if ($check === 2) break 2;
             }
         }
         
@@ -50,17 +61,24 @@ class InspeccionObserver
                 $vehiculo->save();
             }
             
-            // Buscar viaje programado
-            $viajesProgramados = Viaje::where('vehiculo_id', $vehiculo->id)
-                                      ->where('status', 'Programado')->orderBy('fecha_salida', 'asc')
-                                      ->get();
-            if ($viajesProgramados->isNotEmpty()) {
-                if (!$inspeccion->viaje_id) {
-                    $inspeccion->viaje_id = $viajesProgramados->first()->id;
-                    $inspeccion->save();
-                }
+            $viaje = $inspeccion->viaje_id ? Viaje::find($inspeccion->viaje_id) : null;
 
-                $mensaje =" CHECKOUT: {$nombre} ha registrado el checklist de salida para la unidad {$vehiculo->flota} - {$vehiculo->placa}. Salida #{$viajesProgramados->first()->id} a {$viajesProgramados->first()->destino_ciudad}.";
+            // Prioridad B (Failsafe): Si no vino ID en el form, o era un ID viejo/borrado, rescatamos el primero en fila
+            if (!$viaje) {
+                $viaje = Viaje::where('vehiculo_id', $vehiculo->id)
+                            ->where('status', 'Programado')
+                            ->orderBy('fecha_salida', 'asc')
+                            ->first(); // Eficiencia SQL: LIMIT 1
+
+                // Si el failsafe tuvo éxito, aseguramos la trazabilidad guardando el ID en la inspección
+                if ($viaje) {
+                    $inspeccion->viaje_id = $viaje->id;
+                    $inspeccion->save(); 
+                }
+            }
+            if ($viaje) {
+                // BUG CORREGIDO: Ahora el mensaje usa los datos reales del objeto $viaje resuelto
+                $mensaje = " CHECKOUT: {$nombre} ha registrado el checklist de salida para la unidad {$vehiculo->flota} - {$vehiculo->placa}. Salida #{$viaje->id} a {$viaje->destino_ciudad}.";
                 if ($observacion) {
                     $mensaje .= " Observación: {$observacion}";
                 }
@@ -74,9 +92,10 @@ class InspeccionObserver
                                 'referenceId' => '',
                             ]);
                 
-                $viaje = $viajesProgramados->first();
-                $viaje->status = 'EN RUTA';
-                $viaje->save(); // ¡Esto disparará el ViajeObserver automáticamente!
+                if ($viaje && $viaje->status != 'EN RUTA') {
+                        $viaje->status = 'EN RUTA';
+                        $viaje->save(); // ¡Esto disparará el ViajeObserver automáticamente!
+                }
             }
         }
     }
@@ -113,10 +132,12 @@ class InspeccionObserver
                 }
 
                 // Buscar viaje en ruta
-                $viajesEnRuta =Viaje::where('vehiculo_id', $vehiculo->id)
-                                     ->where('status', 'EN RUTA')
-                                     ->update(['status' => 'COMPLETADO']);
-                                    // ->get();
+            $viaje = Viaje::find($inspeccion->viaje_id) ?? 
+                     Viaje::where('vehiculo_id', $vehiculo->id)->where('status', 'EN RUTA')->first();
+
+            if ($viaje) {
+                $viaje->update(['status' => 'COMPLETADO']); // Dispara tu Observer perfectamente
+            }
                 $data = json_decode($inspeccion->respuesta_in, true);
                 $observacion=false;
                 // Recorremos las secciones e items buscando la etiqueta específica

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 
 class AlmacenLayoutController extends Controller
 {
-    public function disenar($id)
+    public function disenar( int $id)
     {
         $almacen = Almacen::findOrFail($id);
         $estructuras = AlmacenEstructuraGrid::where('almacen_id', $id)
@@ -466,7 +466,7 @@ public function guardarEstructuraDrag(Request $request)
         }
     }
 
-    private function getClaseColor($tipo) {
+    private function getClaseColor(string $tipo) {
         return match($tipo) {
             'ESTANTE'           => 'bg-primary text-white',
             'GRANEL_LUBRICANTE' => 'bg-warning text-dark',
@@ -514,7 +514,7 @@ public function guardarEstructuraDrag(Request $request)
         ]);
     }
 
-   public function vista3D($id)
+   public function vista3D(int $id)
 {
     $almacen = Almacen::findOrFail($id);
     

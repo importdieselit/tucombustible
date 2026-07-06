@@ -22,8 +22,8 @@ class InspeccionController extends Controller
 {
     // ID del checklist de vehículos (hardcodeado por tu requerimiento)
     const CHECKLIST_VEHICULOS_ID = 1;
-    protected $fcmService;
-    protected $telegramService;
+    protected FcmNotificationService $fcmService;
+    protected TelegramNotificationService $telegramService;
 
 
     public function __construct(
@@ -34,7 +34,7 @@ class InspeccionController extends Controller
         $this->telegramService = $telegramService;
     }
 
-    public function create($vehiculo_id, $tipo='salida'){
+    public function create(int $vehiculo_id, string $tipo='salida'){
         // Obtener el blueprint del checklist
         $checklist = Checklist::find(self::CHECKLIST_VEHICULOS_ID);
         if (!$checklist) {
@@ -259,14 +259,9 @@ class InspeccionController extends Controller
                 'usuario_id' => Auth::id(),
                 'estatus_general' => $estatusGeneral,
                 'respuesta_json' => json_encode($respuestaJson), 
+                'viaje_id' => $viajeIdSeleccionado
             ]);
-            if ($viajeIdSeleccionado) {
-                        $viaje = Viaje::find($viajeIdSeleccionado);
-                        if ($viaje) {
-                            $viaje->status = 'EN RUTA';
-                            $viaje->save();
-                        }
-                    }
+            
 
             $tipoCheck='OUT';
             $vehiculo->estatus=2;
@@ -652,7 +647,14 @@ class InspeccionController extends Controller
         return view('checklist.performance_report', compact('reportePersonal', 'kpisGlobales', 'fechaInicio', 'fechaFin'));
     }
 
-    private function acumularMetricas(&$arr, $id, $nombre, $rol, $viaje)
+    /**
+     * @param array<int|string, array> $arr
+     * @param int $id
+     * @param string $nombre
+     * @param string $rol
+     * @param object $viaje  Expected to be a Viaje model or similar with properties used below
+     */
+    private function acumularMetricas(array &$arr, int $id, string $nombre, string $rol, object $viaje)
     {
         $compositeKey = $id . '_' . $rol;
 
