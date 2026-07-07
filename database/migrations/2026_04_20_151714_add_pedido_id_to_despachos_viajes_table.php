@@ -26,6 +26,9 @@ class AddPedidoIdToDespachosViajesTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('despachos_viajes');
+        Schema::table('despachos_viajes', function(Blueprint $table) {
+            $table->dropForeign(['pedido_id']); 
+            $table->dropColumn('pedido_id');
+        });
     }
 }
