@@ -294,6 +294,7 @@
                                     <tr><th>Cliente / Cuenta</th><th class="text-end">Monto (USD)</th></tr>
                                 </thead>
                                 <tbody>
+                                    {{  dd($cxpDesglose) }}
                                     @foreach($cxcDesglose as $cxc)
                                         @if($cxc->monto != 0)
                                         <tr>
