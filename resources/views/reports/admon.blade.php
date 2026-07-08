@@ -22,6 +22,8 @@
     }
     .badge-matutino { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
     .badge-vespertino { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+    .table-responsive-custom { max-height: 280px; overflow-y: auto; }
+    .table-responsive-custom thead th { position: sticky; top: 0; z-index: 1; }
 </style>
 @endpush
 
@@ -248,29 +250,122 @@
                 </div>
             </div>
         </div>
+        
+        <div class="row g-4 mb-4">
+            
+            <!-- Desglose de Ventas -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <h5 class="text-bold-custom border-bottom pb-2 mb-3">Composición de Ventas</h5>
+                        <div class="table-responsive-custom">
+                            <table class="table table-sm table-hover align-middle">
+                                <thead class="table-header-custom">
+                                    <tr><th>Concepto</th><th class="text-end">Monto</th></tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($ventasDesglose as $venta)
+                                        <tr>
+                                            <td class="small">{{ $venta->cuenta }}</td>
+                                            <td class="text-end small {{ $venta->monto < 0 ? 'text-danger fw-bold' : '' }}">
+                                                @if(str_contains($venta->tipo, 'USD'))
+                                                    $ {{ number_format($venta->monto, 2, ',', '.') }}
+                                                @else
+                                                    {{ number_format($venta->monto, 2, ',', '.') }} L
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Desglose de Cuentas por Cobrar (CxC) -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <h5 class="text-bold-custom border-bottom pb-2 mb-3">Detalle Cuentas por Cobrar</h5>
+                        <div class="table-responsive-custom">
+                            <table class="table table-sm table-hover align-middle">
+                                <thead class="table-header-custom">
+                                    <tr><th>Cliente / Cuenta</th><th class="text-end">Monto (USD)</th></tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($cxcDesglose as $cxc)
+                                        @if($cxc->monto != 0)
+                                        <tr>
+                                            <td class="small">{{ $cxc->cuenta }}</td>
+                                            <td class="text-end small fw-bold">$ {{ number_format($cxc->monto, 2, ',', '.') }}</td>
+                                        </tr>
+                                        @endif
+                                    @endforeach
+                                    <tr class="table-light text-bold-custom border-top border-dark">
+                                        <td class="small">TOTAL CxC:</td>
+                                        <td class="text-end small">$ {{ number_format($totalCxC, 2, ',', '.') }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Desglose de Inventario -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <h5 class="text-bold-custom border-bottom pb-2 mb-3">Estado de Inventario</h5>
+                        <div class="table-responsive-custom">
+                            <table class="table table-sm table-hover align-middle">
+                                <thead class="table-header-custom">
+                                    <tr><th>Producto</th><th class="text-end">Cantidad</th></tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($inventarioDesglose->sortByDesc('monto') as $inv)
+                                        @if($inv->monto != 0)
+                                        <tr>
+                                            <td class="small">{{ $inv->cuenta }}</td>
+                                            <td class="text-end small {{ $inv->monto < 0 ? 'text-danger' : 'fw-bold' }}">
+                                                {{ number_format($inv->monto, 2, ',', '.') }}
+                                            </td>
+                                        </tr>
+                                        @endif
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- INDICADORES FINALES ACTUALIZADOS CON INVENTARIO -->
         <div class="row g-3 mb-4">
             <div class="col-md-3">
                 <div class="kpi-card p-3" style="border-left-color: #6366f1;">
-                    <span class="text-muted text-uppercase d-block small fw-bold">Margen Bruto</span> 
+                    <span class="text-muted text-uppercase d-block small fw-bold">Margen Bruto Estimado</span> 
                     <span class="fs-4 fw-bold" style="color: #6366f1;">{{ number_format($margenBruto, 1, ',', '.') }}%</span>
                 </div>
             </div>
             <div class="col-md-3">
-                 <div class="kpi-card p-3" style="border-left-color: #b45309;">
-                    <span class="text-muted text-uppercase d-block small fw-bold">Compras</span> 
-                    <span class="fs-4 fw-bold text-color: #b45309">$ {{ number_format($comprasUsd, 2, ',', '.') }}</span>
+                 <div class="kpi-card p-3" style="border-left-color: #0ea5e9;">
+                    <span class="text-muted text-uppercase d-block small fw-bold">Inventario MGO</span> 
+                    <span class="fs-4 fw-bold" style="color: #0ea5e9;">{{ number_format($invMGO, 0, ',', '.') }} L</span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="kpi-card p-3" style="border-left-color: #b45309;">
+                    <span class="text-muted text-uppercase d-block small fw-bold">Inventario Diésel</span> 
+                    <span class="fs-4 fw-bold" style="color: #b45309;">{{ number_format($invDiesel, 0, ',', '.') }} L</span>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="kpi-card p-3" style="border-left-color: #f43f5e;">
                     <span class="text-muted text-uppercase d-block small fw-bold">CXP Combustible</span> 
                     <span class="fs-4 fw-bold text-danger">$ {{ number_format($cxpComb, 2, ',', '.') }}</span>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="kpi-card p-3" style="border-left-color: #16a34a;">
-                    <span class="text-muted text-uppercase d-block small fw-bold">Rotacion de Inventario</span> 
-                    <span class="fs-4 fw-bold text-dark">{{ number_format($balanceLitros, 0, ',', '.') }} L</span>
                 </div>
             </div>
         </div>

@@ -10,10 +10,11 @@ use Illuminate\Support\Facades\Storage;
 
 class GerentialReportController extends Controller
 {
+    
     public function admon(Request $request)
     {
         $tokenValido = config('services.reporte.internal_token');
-        $precioCompra= 0.54;
+        $precioCompra = 0.54;
         
         // Si no está logueado Y el token no coincide, entonces al login
         if (!auth()->check() && $request->get('token') !== $tokenValido) {
@@ -32,7 +33,7 @@ class GerentialReportController extends Controller
         $selectedDate = $request->get('date', $defaultFile ? $defaultFile->report_date : now()->toDateString());
         $selectedTurno = $request->get('turno', $defaultFile ? $defaultFile->turno : 'Vespertino');
 
-        // 3. Filtrado Absoluto: Ya no hay mezclas de montos de diferentes turnos
+        // 3. Filtrado Absoluto
         $records = ReportRecord::where('report_date', $selectedDate)
             ->where('turno', $selectedTurno)
             ->get();
@@ -44,79 +45,63 @@ class GerentialReportController extends Controller
             return $item;
         });
 
+        // 4. Agrupaciones y Desgloses (NUEVO)
+        $ventasDesglose = $records->filter(fn($q) => in_array($q->tipo, ['VENTAS', 'VENTAS (USD)']));
+        $cxcDesglose = $records->filter(fn($item) => $item->tipo === 'CUENTAS POR COBRAR');
+        $inventarioDesglose = $records->filter(fn($item) => $item->tipo === 'INVENTARIO');
 
         // Clasificación de variables principales basados en el archivo CSV
-        // Buscamos directamente por cuenta para evitar cruces con cotizaciones
-        $ventasLitros = $records->where('cuenta', 'LITROS VENDIDOS')->first()->monto ?? 0;
+        // Ya no buscamos 'LITROS VENDIDOS' porque el CSV lo desglosa en facturas, notas y devoluciones
+        $ventasLitros = $records->where('tipo', 'VENTAS')->sum('monto');
         $ventasUsd = $records->where('cuenta', 'VENTAS REALIZADAS')->first()->monto ?? 0;
-        $litrosComprados = $records->filter(fn($q) => trim($q->cuenta) === 'LITROS COMPRADOS')->first()->monto ?? 0;
+        $litrosComprados = $records->filter(fn($q) => $q->cuenta === 'LITROS COMPRADOS')->first()->monto ?? 0;
         
         // OPEX y Liquidez
-        $opexRecords = $records->filter(fn($item) => trim($item->tipo) === 'GASTOS OPERACIONALES');
-        $bancosRecords = $records->filter(fn($item) => trim($item->tipo) === 'DISPONIBILIDAD DE BANCOS (MONEDA EXTRANJERA)'); 
-        $cajasRecords = $records->filter(fn($item) => trim($item->tipo) === 'DISPONIBILIDAD DE CAJAS (MONEDA EXTRANJERA)'); 
+        $bancosRecords = $records->filter(fn($item) => $item->tipo === 'DISPONIBILIDAD DE BANCOS (MONEDA EXTRANJERA)'); 
+        $cajasRecords = $records->filter(fn($item) => $item->tipo === 'DISPONIBILIDAD DE CAJAS (MONEDA EXTRANJERA)'); 
 
         $balanceLitros = $litrosComprados - $ventasLitros;
 
-        // 2. Extracción por Patrones (Agregación Inteligente)
-        $ventasUsd = $records->where('cuenta', 'VENTAS REALIZADAS')->sum('monto');
-        
         // El OPEX es TODO lo que diga 'GASTOS OPERACIONALES' 
         // EXCEPTO las cuentas que claramente son CxC o CxP (contaminación del sistema)
         $rawOpex = $records->where('tipo', 'GASTOS OPERACIONALES');
-        
         $opexRecords = $rawOpex->reject(function ($item) {
             $pattern = '/(CUENTAS POR COBRAR|CXP NACIONALES|PAGARE)/i';
             return preg_match($pattern, $item->cuenta);
         });
 
-        // 3. CxC: Capturamos tanto las CxC individuales como la cuenta agrupada
-        $cxcRecords = $records->filter(function ($item) {
-            return $item->tipo === 'CUENTAS POR COBRAR' || 
-                   str_contains($item->cuenta, 'CUENTAS POR COBRAR');
-        });
-
-        // 4. CxP: Capturamos las deudas (Proveedor + Nacionales)
+        // CxC y CxP Totales
+        $totalCxC = $cxcDesglose->sum('monto');
         $cxpRecords = $records->filter(function ($item) {
-            return $item->tipo === 'CUENTAS POR PAGAR' || 
-                   str_contains($item->cuenta, 'CXP NACIONALES');
+            return $item->tipo === 'CUENTAS POR PAGAR' || str_contains($item->cuenta, 'CXP NACIONALES');
         });
-        $cxpCMGO= $records->where('cuenta' ,'CXP (USD)')->where('descuenta', 'MARINE GAS OIL ( TM )')->first()->monto ?? 0;
-        $cxpCDiesel = $records->where('cuenta' ,'CXP (USD)')->where('descuenta', 'DIESEL')->first()->monto ?? 0;
+        
+        $cxpCMGO = $records->where('cuenta', 'CXP (USD)')->where('descuenta', 'MARINE GAS OIL ( TM )')->first()->monto ?? 0;
+        $cxpCDiesel = $records->where('cuenta', 'CXP (USD)')->where('descuenta', 'DIESEL')->first()->monto ?? 0;
         $cxpComb = $cxpCMGO + $cxpCDiesel;
-
-            
-        // 5. Inventario: Captura dinámica
-        $inventario = $records->where('tipo', 'INVENTARIO')->sum('monto');
 
         // Sumatorias base
         $totalOpex = $opexRecords->sum('monto');
-        $totalCxC = $cxcRecords->sum('monto');
         $totalCxP = $cxpRecords->sum('monto');
+        $inventarioTotal = $inventarioDesglose->sum('monto');
+
+        // KPIs de Inventario precisos (Para inyectar en la vista)
+        $invDiesel = $inventarioDesglose->filter(fn($q) => str_contains(strtoupper($q->cuenta), 'DIESEL'))->sum('monto');
+        $invMGO = $inventarioDesglose->filter(fn($q) => str_contains(strtoupper($q->cuenta), 'MARINE GAS OIL'))->sum('monto');
 
         $comprasUsd = $precioCompra * $litrosComprados; 
         $margenBruto = $ventasUsd > 0 ? (($ventasUsd - $comprasUsd) / $ventasUsd) * 100 : 0;
 
-        // 6. Liquidez: Agrupación por Tipo
-        $totalBancos = $records->where('tipo', 'DISPONIBILIDAD DE BANCOS (MONEDA EXTRANJERA)')->sum('monto');
-        $totalCajas = $records->where('tipo', 'DISPONIBILIDAD DE CAJAS (MONEDA EXTRANJERA)')->sum('monto');
-
-        // Control de Cartera (CxC y CxP)
-        $cxcRecords = $records->filter(fn($item) => trim($item->tipo) === 'CUENTAS POR COBRAR');
-        $cxpRecords = $records->filter(fn($item) => trim($item->tipo) === 'CUENTAS POR PAGAR');
-
-        // Sumatorias de apoyo
+        // Liquidez: Agrupación por Tipo
+        $totalBancos = $bancosRecords->sum('monto');
+        $totalCajas = $cajasRecords->sum('monto');
         $totalLiquidez = $totalBancos + $totalCajas;
 
-        // Porcentajes para gráficas vectoriales
         $pctBancos = $totalLiquidez > 0 ? ($totalBancos / $totalLiquidez) * 100 : 0;
         $pctCajas = $totalLiquidez > 0 ? ($totalCajas / $totalLiquidez) * 100 : 0;
-
-        // Cálculo de % de control vs Ventas (Evitando división por cero)
         $pctCxC_Ventas = $ventasUsd > 0 ? ($totalCxC / $ventasUsd) * 100 : 0;
         $pctCxP_Ventas = $ventasUsd > 0 ? ($totalCxP / $ventasUsd) * 100 : 0;
         
-
         $alertas = collect();
 
         // Reglas de Negocio Automatizadas
@@ -144,18 +129,17 @@ class GerentialReportController extends Controller
             }
         }
 
-        // Nueva Alerta: Control de Deuda
         if ($pctCxC_Ventas > 50) {
             $alertas->push("Riesgo de Flujo: Las Cuentas por Cobrar representan más del 50% de las ventas realizadas.");
         }
 
-
         return view('reports.admon', compact(
             'availableFiles', 'selectedDate', 'selectedTurno', 'ventasLitros', 'ventasUsd',
+            'ventasDesglose', 'cxcDesglose', 'inventarioDesglose', 'invDiesel', 'invMGO',
             'opexRecords', 'bancosRecords', 'cajasRecords', 'totalOpex',
             'totalBancos', 'totalCajas', 'totalLiquidez', 'pctBancos', 'pctCajas',
             'cxcRecords', 'cxpRecords', 'totalCxC', 'totalCxP', 'pctCxC_Ventas', 'pctCxP_Ventas',
-            'margenBruto', 'comprasUsd', 'inventario', 'alertas', 'balanceLitros', 'litrosComprados','cxpComb'
+            'margenBruto', 'comprasUsd', 'inventarioTotal', 'alertas', 'balanceLitros', 'litrosComprados','cxpComb'
         ));
     }
 
