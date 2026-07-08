@@ -22,7 +22,7 @@
     }
     .badge-matutino { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
     .badge-vespertino { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
-    .table-responsive-custom { max-height: 280px; overflow-y: auto; }
+    .table-responsive-custom { overflow-y: auto; }
     .table-responsive-custom thead th { position: sticky; top: 0; z-index: 1; }
 </style>
 @endpush

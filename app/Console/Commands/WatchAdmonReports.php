@@ -32,14 +32,15 @@ class WatchAdmonReports extends Command
         $currentTime = $now->format('H:i');
         
         $todayDateText = $now->format('Y-m-d');
-        $todayDateFile = $now->format('Y-d-m');
+        $todayDateMFile = $now->format('Y-d-m');
+        $todayDateFile = $now->format('d-m-M');
         
         $directory = 'Reportes_Admon';
 
         // Estructura de configuración limpia y estandarizada
         $filesToWatch = [
             [
-                'file_name'   => "Resumen_Diario_matutino_DID_{$todayDateFile}.csv",
+                'file_name'   => "Resumen_Diario_matutino_DID_{$todayDateMFile}.csv",
                 'report_date' => $todayDateText,
                 'alert_time'  => '08:30',
                 'turno'       => 'Matutino'
