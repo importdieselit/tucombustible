@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Storage;
 
 class GerentialReportController extends Controller
 {
-    
     public function admon(Request $request)
     {
         $tokenValido = config('services.reporte.internal_token');
@@ -48,6 +47,7 @@ class GerentialReportController extends Controller
         // 4. Agrupaciones y Desgloses (NUEVO)
         $ventasDesglose = $records->filter(fn($q) => in_array($q->tipo, ['VENTAS', 'VENTAS (USD)']));
         $cxcDesglose = $records->filter(fn($item) => $item->tipo === 'CUENTAS POR COBRAR');
+        $cxcRecords = $records->filter(fn($item) => $item->tipo === 'CUENTAS POR COBRAR');
         $inventarioDesglose = $records->filter(fn($item) => $item->tipo === 'INVENTARIO');
 
         // Clasificación de variables principales basados en el archivo CSV
