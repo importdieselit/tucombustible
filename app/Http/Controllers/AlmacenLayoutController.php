@@ -543,7 +543,7 @@ public function guardarEstructuraDrag(Request $request)
         ]);
     }
 
-   public function vista3D($id)
+   public function vista3D(int $id)
 {
     $almacen = Almacen::findOrFail($id);
     
@@ -560,18 +560,21 @@ public function guardarEstructuraDrag(Request $request)
         $inventarioEstado = [];
 
         foreach ($ubis as $ubi) {
-            $cantidadTotal = $ubi->inventarioStock->first()->cantidad_actual ?? null;
-            $capacidad = $ubi->inventarioStock->first()->capacidad_asignada ?? null;
-            $primerArticulo = $ubi->inventarioStock->first();
+            // Usamos el nullsafe operator (?->) porque es un hasOne, no una colección.
+            $cantidadTotal = $ubi->inventarioStock?->cantidad_actual ?? 0;
+            $capacidad     = $ubi->inventarioStock?->capacidad_asignada ?? 0;
+            $primerArticulo = $ubi->inventarioStock; // El objeto directo, sin first()
+            
             $estaOcupado = $cantidadTotal > 0;
 
             $inventarioEstado[] = [
-                'codigo_completo' => $ubi->codigo_ubicacion, // IMPORTANTE: Permite ordenar las subdivisiones
+                'codigo_completo' => $ubi->codigo_ubicacion, 
                 'nivel'    => intval($ubi->nivel),
                 'posicion' => intval($ubi->posicion),
                 'ocupado'  => $estaOcupado,
-                'sku'      => $estaOcupado ? $primerArticulo->item->codigo : '',
-                'producto' => $estaOcupado ? $primerArticulo->item->descripcion : '',
+                // Validamos que exista tanto el stock como el item asociado antes de leer
+                'sku'      => $estaOcupado ? $primerArticulo?->item?->codigo : '',
+                'producto' => $estaOcupado ? $primerArticulo?->item?->descripcion : '',
                 'stock'    => $estaOcupado ? $cantidadTotal : 0,
                 'capacidad' => $estaOcupado ? $capacidad : 0
             ];

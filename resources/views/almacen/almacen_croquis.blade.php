@@ -11,20 +11,62 @@
         border-radius: 8px;
         border: 1px solid #dee2e6;
     }
-    .celda-mapa {
-        aspect-ratio: 1 / 1;
-        min-width: 60px;
-        border: 1px dashed #cbd5e1;
-        border-radius: 4px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        font-size: 10px;
-        font-weight: bold;
-        transition: all 0.15s;
-        background-color: #ffffff;
-    }
+
+
+    /* 1. Contenedor Viewport (Genera el scroll) */
+.almacen-viewport {
+    width: 100%;
+    max-height: 70vh; /* Altura máxima antes de hacer scroll */
+    overflow: auto; /* Activa el scroll horizontal y vertical */
+    background-color: #e2e8f0; /* Fondo gris para el área fuera de la grilla */
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+}
+
+/* 2. Scrollbar Personalizado y Siempre Visible */
+.almacen-viewport::-webkit-scrollbar {
+    width: 14px;
+    height: 14px;
+}
+.almacen-viewport::-webkit-scrollbar-track {
+    background: #f8fafc;
+    border-left: 1px solid #e2e8f0;
+    border-top: 1px solid #e2e8f0;
+}
+.almacen-viewport::-webkit-scrollbar-thumb {
+    background-color: #94a3b8;
+    border-radius: 10px;
+    border: 3px solid #f8fafc; /* Simula padding interno */
+}
+.almacen-viewport::-webkit-scrollbar-thumb:hover {
+    background-color: #64748b;
+}
+
+/* 3. Ajustes de la Grilla para soportar la Variable CSS */
+.grid-almacen {
+    display: grid;
+    /* Usa la variable --zoom-size. Si falla, usa 60px por defecto */
+    grid-template-columns: repeat({{ $almacen->total_columnas_grid }}, var(--zoom-size, 60px));
+    gap: 6px;
+    background-color: #ffffff;
+    padding: 20px;
+    width: max-content; /* CRÍTICO: Obliga a la grilla a expandirse si sus hijos son muy grandes */
+}
+
+.celda-mapa {
+    aspect-ratio: 1 / 1;
+    width: var(--zoom-size, 60px); /* El ancho se rige por el Zoom */
+    min-width: unset; /* Borramos el min-width anterior */
+    border: 1px dashed #cbd5e1;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    transition: width 0.1s ease-out; /* Transición suave al hacer zoom */
+}
+
     /* Estados de arrastre */
     .celda-preview-valida {
         background-color: #e0f2fe !important;
@@ -228,40 +270,50 @@
                     </div>
                 </div>
                 <div class="card-body" >
-                    <div class="grid-almacen" id="gridContenedorPrincipal">
-                        @for ($y = 1; $y <= $almacen->total_filas_grid; $y++)
-                            @for ($x = 1; $x <= $almacen->total_columnas_grid; $x++)
-                                @php 
-                                    $key = "$y-$x";
-                                    $existe = $estructuras->has($key);
-                                    $bloque = $existe ? $estructuras->get($key) : null;
-                                    
-                                    $claseColor = '';
-                                    if($bloque) {
-                                        $claseColor = match($bloque->tipo_estructura) {
-                                            'ESTANTE' => 'bg-primary text-white border-solid',
-                                            'GRANEL_LUBRICANTE' => 'bg-warning text-dark border-solid',
-                                            'PISO_PALLET' => 'bg-info text-white border-solid',
-                                            'TAMBORES_PIRAMIDE' => 'bg-tambores text-white',
-                                            default => ''
-                                        };
-                                    }
-                                @endphp
+                    <div class="d-flex justify-content-end mb-2 gap-2">
+                        <span class="text-muted small align-self-center me-2"><i class="fas fa-mouse"></i> Ctrl + Rueda para Zoom</span>
+                        <button class="btn btn-sm btn-outline-secondary" id="btnZoomOut" title="Alejar"><i class="fas fa-search-minus"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary" id="btnZoomIn" title="Acercar"><i class="fas fa-search-plus"></i></button>
+                        <button class="btn btn-sm btn-outline-primary" id="btnZoomReset" title="Restaurar">100%</button>
+                    </div>
 
-                                <div class="celda-mapa {{ $claseColor }}" 
-                                    id="cell-{{ $y }}-{{ $x }}"
-                                    data-x="{{ $x }}" 
-                                    data-y="{{ $y }}"
-                                    @if($bloque)
-                                        data-codigo="{{ $bloque->codigo_bloque }}"
-                                        data-tipo="{{ $bloque->tipo_estructura }}"
-                                        data-niveles="{{ $bloque->cantidad_niveles }}"
-                                    @endif>
-                                    <span class="txt-codigo" style="font-size:11px;">{{ $bloque ? $bloque->codigo_bloque : '' }}</span>
-                                    <small class="text-muted" style="font-size: 8px; opacity:0.5;">[{{$y}},{{$x}}]</small>
-                                </div>
+                    <div class="almacen-viewport shadow-inner" id="viewportAlmacen">
+                        
+                        <div class="grid-almacen" id="gridContenedorPrincipal" style="--zoom-size: 60px;">
+                            @for ($y = 1; $y <= $almacen->total_filas_grid; $y++)
+                                @for ($x = 1; $x <= $almacen->total_columnas_grid; $x++)
+                                    @php 
+                                        $key = "$y-$x";
+                                        $existe = $estructuras->has($key);
+                                        $bloque = $existe ? $estructuras->get($key) : null;
+                                        
+                                        $claseColor = '';
+                                        if($bloque) {
+                                            $claseColor = match($bloque->tipo_estructura) {
+                                                'ESTANTE' => 'bg-primary text-white border-solid',
+                                                'GRANEL_LUBRICANTE' => 'bg-warning text-dark border-solid',
+                                                'PISO_PALLET' => 'bg-pallets text-white border-solid',
+                                                'TAMBORES_PIRAMIDE' => 'bg-tambores text-white',
+                                                default => ''
+                                            };
+                                        }
+                                    @endphp
+
+                                    <div class="celda-mapa {{ $claseColor }}" 
+                                        id="cell-{{ $y }}-{{ $x }}"
+                                        data-x="{{ $x }}" 
+                                        data-y="{{ $y }}"
+                                        @if($bloque)
+                                            data-codigo="{{ $bloque->codigo_bloque }}"
+                                            data-tipo="{{ $bloque->tipo_estructura }}"
+                                            data-niveles="{{ $bloque->cantidad_niveles }}"
+                                        @endif>
+                                        <span class="txt-codigo" style="font-size:11px;">{{ $bloque ? $bloque->codigo_bloque : '' }}</span>
+                                        <small class="text-muted" style="font-size: 8px; opacity:0.5;">[{{$y}},{{$x}}]</small>
+                                    </div>
+                                @endfor
                             @endfor
-                        @endfor
+                        </div>
                     </div>
                 </div>
             </div>
@@ -385,6 +437,43 @@
 
     let cacheUbicacionesEstante = {};
  window.addEventListener('load', function() {
+
+    const grid = document.getElementById('gridContenedorPrincipal');
+    const viewport = document.getElementById('viewportAlmacen');
+
+    let zoomActual = 60; // Tamaño inicial en px
+    const stepZoom = 5;  // Píxeles que aumenta/reduce por cada toque de rueda
+    const minZoom = 30;  // Límite para alejar
+    const maxZoom = 120; // Límite para acercar
+
+    // Función central para aplicar el zoom
+    function aplicarZoom(nuevoTamano) {
+        // Validar límites
+        if (nuevoTamano < minZoom) zoomActual = minZoom;
+        else if (nuevoTamano > maxZoom) zoomActual = maxZoom;
+        else zoomActual = nuevoTamano;
+
+        // Inyectar variable CSS
+        grid.style.setProperty('--zoom-size', `${zoomActual}px`);
+    }
+
+    // Evento: Rueda del Ratón (Requiere presionar Ctrl para no interferir con el scroll normal de la página)
+    viewport.addEventListener('wheel', function(e) {
+        if (e.ctrlKey) {
+            e.preventDefault(); // Evita el zoom nativo del navegador
+            
+            if (e.deltaY < 0) {
+                aplicarZoom(zoomActual + stepZoom); // Scroll arriba = Acercar
+            } else {
+                aplicarZoom(zoomActual - stepZoom); // Scroll abajo = Alejar
+            }
+        }
+    }, { passive: false });
+
+    // Eventos: Botones UI
+    $('#btnZoomIn').on('click', () => aplicarZoom(zoomActual + (stepZoom * 2)));
+    $('#btnZoomOut').on('click', () => aplicarZoom(zoomActual - (stepZoom * 2)));
+    $('#btnZoomReset').on('click', () => aplicarZoom(60));
     
     // --- ESTADOS GLOBALES ---
     let modoReubicacion = false;

@@ -74,14 +74,14 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/PointerLockControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
 
-<div class="position-absolute top-2 end-2 bg-dark bg-opacity-75 text-light p-2 rounded small border border-secondary text-center" style="z-index: 100; pointer-events: auto;">
+{{-- <div class="position-absolute top- end-5 bg-dark bg-opacity-75 text-light p-2 rounded small border border-secondary text-center" style="z-index: 100; pointer-events: auto;">
     <div class="font-weight-bold mb-1" style="font-size: 11px; color: #38bdf8;">MODO EDICIÓN 3D</div>
     <div class="btn-group btn-group-sm w-100 mb-1" role="group">
         <button type="button" class="btn btn-outline-info active" id="btnModoMover"><i class="fas fa-arrows-alt"></i> Mover</button>
         <button type="button" class="btn btn-outline-info" id="btnModoRotar"><i class="fas fa-sync-alt"></i> Girar</button>
     </div>
     <div class="text-muted" style="font-size: 9px;">Haz click en un objeto para seleccionarlo.<br>Presiona [Esc] para deseleccionar.</div>
-</div>
+</div> --}}
 
 <script>
 window.addEventListener('load', function() {
@@ -180,6 +180,83 @@ window.addEventListener('load', function() {
         sprite.scale.set(cellSize * 1.5, cellSize * 0.75, 1);
         sprite.position.set(x + cellSize/2, alturaY, z + cellSize/2);
         scene.add(sprite);
+    }
+
+    function agregarEtiquetasTamboresPiramide(item, infoTambores, posXBase, posZBase, ultimoAvance, dirX, dirZ, paredHorizontal) {
+        if (!infoTambores) return;
+
+        const sku = infoTambores.sku;
+        const stock = infoTambores.stock;
+        const cap = infoTambores.capacidad;
+        const producto = infoTambores.producto;
+        const colorHex = '#0dcaf0';
+
+        // Dimensiones estándar para la etiqueta en el espacio
+        const anchoEtiq = cellSize * 1.5;
+        const altoEtiq = cellSize * 0.75;
+
+        // Centros de la celda de anclaje base
+        const centroBaseX = posXBase + (cellSize / 2);
+        const centroBaseZ = posZBase + (cellSize / 2);
+
+        // ==========================================
+        // 1. ETIQUETA EN LA PARED (Vertical)
+        // ==========================================
+        const etiquetaPared = crearEtiquetaPlana(sku, stock, cap, producto, colorHex, anchoEtiq, altoEtiq);
+        
+        // Colocarla exactamente en el plano del borde exterior del almacén
+        let paredX = centroBaseX;
+        let paredZ = centroBaseZ;
+        
+        if (paredHorizontal) {
+            // Pared Norte o Sur: Desplazamos al extremo exterior de la celda en Z
+            paredZ = posZBase + (item.z === 1 ? 0.05 : cellSize - 0.05);
+            // Si es pared Norte mira hacia +Z, si es Sur rota 180 grados (Math.PI)
+            etiquetaPared.rotation.y = (item.z === 1) ? 0 : Math.PI;
+        } else {
+            // Pared Este u Oeste: Desplazamos al extremo exterior de la celda en X
+            paredX = posXBase + (item.x === 1 ? 0.05 : cellSize - 0.05);
+            // Rotación fija para mirar al centro del almacén
+            etiquetaPared.rotation.y = (item.x === 1) ? Math.PI / 2 : -Math.PI / 2;
+        }
+        
+        etiquetaPared.position.set(paredX, cellSize * 2 , paredZ); // Un poco elevada del piso
+        scene.add(etiquetaPared);
+
+        // ==========================================
+        // 2. ETIQUETA EN EL PISO (Horizontal frente al último tambor)
+        // ==========================================
+        const etiquetaPiso = crearEtiquetaPlana(sku, stock, cap, producto, colorHex, anchoEtiq, altoEtiq);
+        
+        // Rotación horizontal (acostada en el suelo)
+        etiquetaPiso.rotation.x = -Math.PI / 2;
+        
+        // Si está en pared horizontal, la etiqueta en el piso rota para leerse de frente
+        if (paredHorizontal) {
+            etiquetaPiso.rotation.z = (item.z === 1) ? 0 : Math.PI;
+        } else {
+            etiquetaPiso.rotation.z = (item.x === 1) ? -Math.PI / 2 : Math.PI / 2;
+        }
+
+        // Punto de inicio real (mismo cálculo del render de los tambores)
+        const diametro = cellSize / 2;
+        const radio = diametro / 2;
+        const inicioX = paredHorizontal ? centroBaseX : centroBaseX - (cellSize / 2 * dirX) + (radio * dirX);
+        const inicioZ = paredHorizontal ? centroBaseZ - (cellSize / 2 * dirZ) + (radio * dirZ) : centroBaseZ;
+
+        // Se posiciona un diámetro más allá del avance del último tambor
+        let pisoX = inicioX;
+        let pisoZ = inicioZ;
+        const margenFrente = ultimoAvance + (diametro * 1.1);
+
+        if (paredHorizontal) {
+            pisoZ += (dirZ * margenFrente);
+        } else {
+            pisoX += (dirX * margenFrente);
+        }
+
+        etiquetaPiso.position.set(pisoX, 0.02, pisoZ); // Casi a ras de piso (0.02) para evitar Z-fighting
+        scene.add(etiquetaPiso);
     }
 
     // --- FUNCIONES DE RENDERIZADO VOLUMÉTRICO PROPORCIONAL ---
@@ -445,98 +522,157 @@ window.addEventListener('load', function() {
        
     }
 
-     function crearTamboresPiramide(x, z, infoTambores) {
-            // Configuraciones de la base
-            const tamboresEnBase = 10;
-            const totalTamboresMax = (tamboresEnBase * (tamboresEnBase + 1)) / 2; // Fórmula matemática (10+9+8...+1) = 55 tambores
-            
-            // El diámetro de cada tambor debe ajustarse al tamaño de la celda
-            const diametro = (cellSize - 0.2) / tamboresEnBase;
-            const radio = diametro / 2;
-            const largo = cellSize - 0.4;
+    
 
-            if (infoTambores && infoTambores.ocupado) {
-                const ratio = (infoTambores.capacidad && infoTambores.capacidad > 0) ? Math.min(infoTambores.stock / infoTambores.capacidad, 1) : 1;
-                const tamboresADibujar = Math.floor(ratio * totalTamboresMax);
+    function crearTamboresPiramideDinamico(item, infoTambores, posXBase, posZBase) {
+        if (!infoTambores || !infoTambores.ocupado || infoTambores.stock <= 0) return;
 
-                const matTambor = new THREE.MeshStandardMaterial({ color: 0x1f618d, roughness: 0.5, metalness: 0.3 }); // Azul acero
-                const cylGeom = new THREE.CylinderGeometry(radio, radio, largo, 16);
-                cylGeom.rotateX(Math.PI / 2); // Acostar el tambor horizontalmente
+        const stockTotal = infoTambores.stock;
 
-                let tamboresDibujados = 0;
-                let tamboresEsteNivel = tamboresEnBase;
-                let nivelActual = 0;
+        // 1. Detección del Muro de Anclaje
+        let dirX = 0, dirZ = 0;
+        let paredHorizontal = false;
 
-                // Bucle para apilar (Desplazamiento geométrico en las juntas)
-                construccionPiramide:
-                while (tamboresEsteNivel > 0 && tamboresDibujados < tamboresADibujar) {
-                    // Cálculo de la altura: Raíz cuadrada de (2r)^2 - r^2 = r * 1.732 (Apilamiento hexagonal)
-                    const posY = radio + (nivelActual * (radio * 1.732)); 
-                    
-                    // Desplazamiento en X: Cada nivel se corre hacia adentro el valor de 1 radio
-                    const startX = x + 0.1 + (nivelActual * radio) + radio;
+        if (item.z === 1) {
+            dirZ = 1; paredHorizontal = true; // Pared Norte: Expande en +Z
+        } else if (item.z === configFilas) {
+            dirZ = -1; paredHorizontal = true; // Pared Sur: Expande en -Z
+        } else if (item.x === 1) {
+            dirX = 1; paredHorizontal = false; // Pared Oeste: Expande en +X
+        } else if (item.x === configColumnas) {
+            dirX = -1; paredHorizontal = false; // Pared Este: Expande en -X
+        } else {
+            console.warn(`Tambores en celda [${item.x}, ${item.z}] no están en borde. Omitiendo.`);
+            return;
+        }
 
-                    for (let i = 0; i < tamboresEsteNivel; i++) {
-                        if (tamboresDibujados >= tamboresADibujar) break construccionPiramide;
-                        
-                        const mallaTambor = new THREE.Mesh(cylGeom, matTambor);
-                        mallaTambor.position.set(startX + (i * diametro), posY, z + cellSize/2);
-                        mallaTambor.castShadow = true;
-                        scene.add(mallaTambor);
-                        
-                        tamboresDibujados++;
-                    }
-                    nivelActual++;
-                    tamboresEsteNivel--;
-                }
+        // 2. Física y Dimensiones
+        const diametro = cellSize / 2; // Exactamente 2 tambores de diámetro por cada celda
+        const radio = diametro / 2;
+        const largo = cellSize * 0.8; // 80% del ancho para no rozar con las celdas vecinas
+        const alturaNivel = radio * Math.sqrt(3); // Física real de anidamiento (1.732 * r)
 
-                agregarEtiquetaFlotante(infoTambores, x, z, radio + (10 * radio * 1.732) + 0.5);
+        const matTambor = new THREE.MeshStandardMaterial({ color: 0x1f618d, roughness: 0.5, metalness: 0.2 });
+        const cylGeom = new THREE.CylinderGeometry(radio, radio, largo, 32);
+
+        // El tambor se acuesta paralelo a la pared
+        if (paredHorizontal) {
+            cylGeom.rotateZ(Math.PI / 2); // Orientado en el eje X
+        } else {
+            cylGeom.rotateX(Math.PI / 2); // Orientado en el eje Z
+        }
+
+        const centroBaseX = posXBase + (cellSize / 2);
+        const centroBaseZ = posZBase + (cellSize / 2);
+
+        // Punto cero pegado a la pared para iniciar el apilamiento
+        const inicioX = paredHorizontal ? centroBaseX : centroBaseX - (cellSize / 2 * dirX) + (radio * dirX);
+        const inicioZ = paredHorizontal ? centroBaseZ - (cellSize / 2 * dirZ) + (radio * dirZ) : centroBaseZ;
+
+        // 3. Matriz de Secuencia Diaria (Lógica 1-2-3-4-5-6)
+        const posiciones = [];
+        for (let i = 0; i < stockTotal; i++) {
+            if (i === 0) {
+                posiciones.push({ c: 0, l: 0 }); // Tambor 1: Base inicial
+            } else if (i === 1) {
+                posiciones.push({ c: 1, l: 0 }); // Tambor 2: Base extendida
+            } else if (i === 2) {
+                posiciones.push({ c: 1, l: 1 }); // Tambor 3: Sube a 2da fila apoyado en 1 y 2
+            } else {
+                // Del tambor 4 en adelante, se construyen en "rebanadas diagonales" de 3
+                const indexAjustado = i - 3;
+                const rebanada = 2 + Math.floor(indexAjustado / 3);
+                const posEnRebanada = indexAjustado % 3; // 0=Base, 1=2da Fila, 2=3ra Fila
+                posiciones.push({ c: rebanada, l: posEnRebanada });
             }
         }
+
+        // 4. Renderizado Funcional
+        posiciones.forEach((pos) => {
+            // Cada nivel 'l' retrocede medio tambor hacia atrás para encajar en la hendidura
+            const avanceLogico = (pos.c * diametro) - (pos.l * radio);
+
+            let finalX = inicioX;
+            let finalZ = inicioZ;
+
+            if (paredHorizontal) {
+                finalZ += (dirZ * avanceLogico);
+            } else {
+                finalX += (dirX * avanceLogico);
+            }
+
+            const finalY = radio + (pos.l * alturaNivel);
+
+            const mallaTambor = new THREE.Mesh(cylGeom, matTambor);
+            mallaTambor.position.set(finalX, finalY, finalZ);
+            mallaTambor.castShadow = true;
+            scene.add(mallaTambor);
+        });
+
+        // 5. Etiqueta Flotante Centrada
+       if (posiciones.length > 0) {
+            const ultimoPos = posiciones[posiciones.length - 1];
+            const maxAvance = (ultimoPos.c * diametro); // Distancia del tambor más alejado
+
+            agregarEtiquetasTamboresPiramide(
+                item, 
+                infoTambores, 
+                posXBase, 
+                posZBase, 
+                maxAvance, 
+                dirX, 
+                dirZ, 
+                paredHorizontal
+            );
+        }
+    }
+
 
     // --- PROCESAMIENTO E ITERACIÓN DEL LAYOUT MATRIZ ---
     dataAlmacen.forEach(item => {
-    const posX = (item.x * cellSize) - offsetX - (cellSize);
-    const posZ = (item.z * cellSize) - offsetZ - (cellSize);
+        const posX = (item.x * cellSize) - offsetX - (cellSize);
+        const posZ = (item.z * cellSize) - offsetZ - (cellSize);
 
-    if (item.tipo === 'ESTANTE') {
-        for (let n = 1; n <= item.niveles; n++) {
-            const posY = (n - 1) * alturaNivel;
+        if (item.tipo === 'ESTANTE') {
+            for (let n = 1; n <= item.niveles; n++) {
+                const posY = (n - 1) * alturaNivel;
 
-            // Extraemos TODAS las subdivisiones que pertenecen a este nivel
-            let subsEnNivel = item.inventario.filter(i => i.nivel === n);
-            const numSubdivisiones = subsEnNivel.length > 0 ? subsEnNivel.length : 1;
+                // Extraemos TODAS las subdivisiones que pertenecen a este nivel
+                let subsEnNivel = item.inventario.filter(i => i.nivel === n);
+                const numSubdivisiones = subsEnNivel.length > 0 ? subsEnNivel.length : 1;
 
-            if (subsEnNivel.length > 0) {
-                // Ordenamos alfabéticamente por código (Ej: -A, -B, -C) para pintar en orden de izquierda a derecha
-                subsEnNivel.sort((a, b) => a.codigo_completo.localeCompare(b.codigo_completo));
-                
-                // Dibujamos cada subdivisión recalculando su X interna
-                subsEnNivel.forEach((subInfo, index) => {
-                    crearBloqueEstructural(posX, posY, posZ, subInfo, index, numSubdivisiones);
-                });
-            } else {
-                // Nivel completamente vacío (Sin subdivisiones guardadas en BD)
-                crearBloqueEstructural(posX, posY, posZ, null, 0, 1);
+                if (subsEnNivel.length > 0) {
+                    // Ordenamos alfabéticamente por código (Ej: -A, -B, -C) para pintar en orden de izquierda a derecha
+                    subsEnNivel.sort((a, b) => a.codigo_completo.localeCompare(b.codigo_completo));
+                    
+                    // Dibujamos cada subdivisión recalculando su X interna
+                    subsEnNivel.forEach((subInfo, index) => {
+                        crearBloqueEstructural(posX, posY, posZ, subInfo, index, numSubdivisiones);
+                    });
+                } else {
+                    // Nivel completamente vacío (Sin subdivisiones guardadas en BD)
+                    crearBloqueEstructural(posX, posY, posZ, null, 0, 1);
+                }
             }
+        } 
+        else if (item.tipo === 'GRANEL_LUBRICANTE') {
+            const ubiOcupada = item.inventario.find(i => i.ocupado);
+            if (ubiOcupada) {
+                crearTanqueGranel(posX, posZ, true, ubiOcupada.sku, ubiOcupada.stock, ubiOcupada.producto, ubiOcupada.capacidad);
+            } else {
+                crearTanqueGranel(posX, posZ, false, '', 0, '', 0);
+            }
+        } 
+        else if (item.tipo === 'PISO_PALLET') {
+            const infoPallet = item.inventario.find(i => i.nivel === 1);
+            crearPalletPiso(posX, posZ, infoPallet);
+        } else if (item.tipo === 'TAMBORES_PIRAMIDE') {
+            const infoTambores = item.inventario.find(i => i.nivel === 1);
+            console.log(`Procesando Tambores en celda [${item.x}, ${item.z}] con stock: ${infoTambores ? infoTambores.stock : 0}`);
+            // Enviamos el item completo, y las coordenadas absolutas calculadas
+            crearTamboresPiramideDinamico(item, infoTambores, posX, posZ);
         }
-    } 
-    else if (item.tipo === 'GRANEL_LUBRICANTE') {
-        const ubiOcupada = item.inventario.find(i => i.ocupado);
-        if (ubiOcupada) {
-            crearTanqueGranel(posX, posZ, true, ubiOcupada.sku, ubiOcupada.stock, ubiOcupada.producto, ubiOcupada.capacidad);
-        } else {
-            crearTanqueGranel(posX, posZ, false, '', 0, '', 0);
-        }
-    } 
-    else if (item.tipo === 'PISO_PALLET') {
-        const infoPallet = item.inventario.find(i => i.nivel === 1);
-        crearPalletPiso(posX, posZ, infoPallet);
-    } else if (item.tipo === 'TAMBORES_PIRAMIDE') {
-        const infoTambores = item.inventario.find(i => i.nivel === 1);
-        crearTamboresPiramide(posX, posZ, infoTambores);
-    }
-});
+    });
 
     // --- 4. CÁMARAS Y CONTROLES ---
     const orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
