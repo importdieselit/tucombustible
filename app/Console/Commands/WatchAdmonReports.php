@@ -33,7 +33,7 @@ class WatchAdmonReports extends Command
         
         $todayDateText = $now->format('Y-m-d');
         $todayDateMFile = $now->format('Y-d-m');
-        $todayDateFile = $now->format('d-m-M');
+        $todayDateFile = $now->format('d-m-Y');
         
         $directory = 'Reportes_Admon';
 
