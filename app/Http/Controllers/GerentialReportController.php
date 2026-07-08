@@ -47,6 +47,7 @@ class GerentialReportController extends Controller
         // 4. Agrupaciones y Desgloses (NUEVO)
         $ventasDesglose = $records->filter(fn($q) => in_array($q->tipo, ['VENTAS', 'VENTAS (USD)']));
         $cxcDesglose = $records->filter(fn($item) => $item->tipo === 'CUENTAS POR COBRAR');
+        dd($cxcDesglose);
         $cxcRecords = $records->filter(fn($item) => $item->tipo === 'CUENTAS POR COBRAR');
         $inventarioDesglose = $records->filter(fn($item) => $item->tipo === 'INVENTARIO');
 
@@ -132,6 +133,7 @@ class GerentialReportController extends Controller
         if ($pctCxC_Ventas > 50) {
             $alertas->push("Riesgo de Flujo: Las Cuentas por Cobrar representan más del 50% de las ventas realizadas.");
         }
+
 
         return view('reports.admon', compact(
             'availableFiles', 'selectedDate', 'selectedTurno', 'ventasLitros', 'ventasUsd',
