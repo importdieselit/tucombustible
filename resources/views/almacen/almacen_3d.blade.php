@@ -516,7 +516,7 @@ window.addEventListener('load', function() {
             }
 
             // Etiqueta flotante reutilizable
-            agregarEtiquetaFlotante(infoPallet, x, z, 1.8);
+            agregarEtiquetaFlotante(infoPallet, x, z, 2.8);
         }
 
        
@@ -665,7 +665,7 @@ window.addEventListener('load', function() {
         } 
         else if (item.tipo === 'PISO_PALLET') {
             const infoPallet = item.inventario.find(i => i.nivel === 1);
-            crearPalletPiso(posX, 2, infoPallet);
+            crearPalletPiso(posX, posZ, infoPallet);
         } else if (item.tipo === 'TAMBORES_PIRAMIDE') {
             const infoTambores = item.inventario.find(i => i.nivel === 1);
             console.log(`Procesando Tambores en celda [${item.x}, ${item.z}] con stock: ${infoTambores ? infoTambores.stock : 0}`);
