@@ -62,7 +62,8 @@ class SalaControlController extends Controller
         $operativosCount = $data->where('estatus', 1)->count();
         $fallaCount = $data->whereIn('estatus', [3, 4, 5])->count();
         $porcentajeDisponibilidad = $total > 0 ? round(($operativosCount + $enRuta) / $total * 100) : 0;
-        $tanque00=Deposito::where('id', 3)->first();
+        
+        
         $disponiblidadCombustible =  Deposito::where('id','!=', 3)->selectRaw('SUM(nivel_actual_litros) as total_combustible, sum(capacidad_litros) as capacidad_total')->first();
         
         // Segmentación de Flota
@@ -157,6 +158,7 @@ class SalaControlController extends Controller
 
         // 5. Estadísticas para las Cards (Usando los litros ya procesados)
         $totalDisponibles = Deposito::sum('nivel_actual_litros');
+        $tanque00=Deposito::where('serial', '00')->first()?->nivel_actual_litros ?? 0;
 
         $totalDespachados = $despachos->whereIn('status', ['EN RUTA', 'COMPLETADO'])
             ->sum('litros_totales');
@@ -175,7 +177,8 @@ class SalaControlController extends Controller
             'despachados' => $totalDespachados,
             'cargas'      => $totalCarga,
             'prog_desp'   => $totalProgDespacho,
-            'prog_carg'   => $totalProgCarga
+            'prog_carg'   => $totalProgCarga,
+            'tanque00'    => $tanque00
         ];
 
         // =========================================================
