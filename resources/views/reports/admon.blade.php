@@ -229,12 +229,7 @@
                                 <tr class="table-light text-bold-custom border-top border-dark"><td>TOTAL OPEX:</td><td class="text-end">$ {{ number_format($totalOpex, 2, ',', '.') }}</td></tr>
                             </tbody>
                         </table>
-                    </div>
-                </div>
-
-                     <!-- Desglose de Inventario -->
-                 <div class="card shadow-sm border-0 h-100">
-                    <div class="card-body">
+                         <!-- Desglose de Inventario -->
                         <h5 class="text-bold-custom border-bottom pb-2 mb-3">Estado de Inventario</h5>
                         <div class="table-responsive-custom">
                             <table class="table table-sm table-hover align-middle">
@@ -256,8 +251,7 @@
                             </table>
                         </div>
                     </div>
-                </div>
-
+                </div>  
                 
             </div>
 
@@ -313,14 +307,8 @@
                                 <tr class="table-light text-bold-custom"><td>TOTAL EN CAJAS:</td><td class="text-end">$ {{ number_format($totalCajas, 2, ',', '.') }}</td></tr>
                             </tbody>
                         </table>
-                    </div>
-                </div>
-            
-                <!-- Desglose de Ventas -->
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-body">
-                        <h5 class="text-bold-custom border-bottom pb-2 mb-3">Composición de Ventas</h5>
-                        <div class="table-responsive-custom">
+                         <!-- Desglose de Ventas -->
+                        <h6 class="text-bold-custom border-bottom pb-2 mb-3">Composición de Ventas</h6>
                             <table class="table table-sm table-hover align-middle">
                                 <thead class="table-header-custom">
                                     <tr><th>Concepto</th><th class="text-end">Monto</th></tr>
@@ -340,15 +328,9 @@
                                     @endforeach
                                 </tbody>
                             </table>
-                        </div>
-                    </div>
-                </div>
-                <!-- Desglose de Cuentas por Cobrar (CxC) -->
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-body">
+                            <!-- Desglose de Cuentas por Cobrar (CxC) -->
                         <h5 class="text-bold-custom border-bottom pb-2 mb-3">Detalle Cuentas por Cobrar</h5>
-                        <div class="table-responsive-custom">
-                            <table class="table table-sm table-hover align-middle">
+                        <table class="table table-sm table-hover align-middle">
                                 <thead class="table-header-custom">
                                     <tr><th>Cliente / Cuenta</th><th class="text-end">Monto (USD)</th></tr>
                                 </thead>
@@ -368,7 +350,7 @@
                                     </tr>
                                 </tbody>
                             </table>
-                        </div>
+
                     </div>
                 </div>
             </div>
