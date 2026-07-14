@@ -21,7 +21,7 @@
         font-weight: 600;
     }
     .badge-matutino { background-color: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
-    .badge-vespertino { background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+    .badge-vespertino { background-color: #fef3c7; color: #b45309; border: 1px solid #f0fd8a; }
     .table-responsive-custom { overflow-y: auto; }
     .table-responsive-custom thead th { position: sticky; top: 0; z-index: 1; }
 </style>
@@ -96,45 +96,63 @@
                     <span class="fs-4 fw-bold text-dark">{{ number_format($ventasLitros, 2, ',', '.') }} L</span> 
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <div class="kpi-card p-3" style="border-left-color: #b45309;">
                     <span class="text-muted text-uppercase d-block small fw-bold">Litros Devueltos</span> 
-                    <span class="fs-4 fw-bold" style="color: #b45309;">$ {{ number_format($ventasDesglose->get('LITROS DEVUELTOS')?->monto ?? 0 , 2, ',', '.') }}</span> 
+                    <span class="fs-4 fw-bold" style="color: #b45309;">{{ number_format($ventasDesglose->get('LITROS DEVUELTOS')?->monto ?? 0 , 2, ',', '.') }} L</span> 
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <div class="kpi-card p-3" style="border-left-color: #2563eb;">
                     <span class="text-muted text-uppercase d-block small fw-bold">Litros Facturados</span> 
-                    <span class="fs-4 fw-bold text-primary">$ {{ number_format($ventasDesglose->get('LITROS FACTURADOS')?->monto ?? 0, 2, ',', '.') }}</span>
+                    <span class="fs-4 fw-bold text-primary">{{ number_format($ventasDesglose->get('LITROS FACTURADOS')?->monto ?? 0, 2, ',', '.') }} L</span>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="kpi-card p-3" style="border-left-color: #16a34a;">
+                    <span class="text-muted text-uppercase d-block small fw-bold">Litros Notas de Entrega</span> 
+                    <span class="fs-4 fw-bold text-success">{{ number_format($ventasDesglose->get('LITROS NOTAS DE ENTREGA')?->monto ?? 0, 2, ',', '.') }} L</span>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="kpi-card p-3" style="border-left-color: #16a34a;">
-                    <span class="text-muted text-uppercase d-block small fw-bold">Litros Notas de Entrega</span> 
-                    <span class="fs-4 fw-bold text-success">$ {{ number_format($ventasDesglose->get('LITROS NOTAS DE ENTREGA')?->monto ?? 0, 2, ',', '.') }}</span>
+                <div class="kpi-card p-3" style="border-left-color: #dc3545;">
+                    <span class="text-muted text-uppercase d-block small fw-bold">Ventas (USD)</span> 
+                    <span class="fs-4 fw-bold text-danger">$ {{ number_format($ventasUsd, 2, ',', '.') }}</span>
                 </div>
             </div>
         </div>
         <div class="row g-3 mb-4">
             <div class="col-md-3">
-                <div class="kpi-card p-3" style="border-left-color: #2563eb;">
+                <div class="kpi-card p-3">
                     <span class="text-muted text-uppercase d-block small fw-bold">Cuentas por Cobrar (CxC)</span> 
-                    <span class="fs-4 fw-bold text-primary">$ {{ number_format($totalCxC, 2, ',', '.') }}</span>
+                    <span class="fs-4 fw-bold text-dark">$ {{ number_format($totalCxC, 2, ',', '.') }}</span>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <div class="kpi-card p-3" style="border-left-color: #b45309;">
                     <span class="text-muted text-uppercase d-block small fw-bold">Total Ventas (CxP)</span> 
                     <span class="fs-4 fw-bold" style="color: #b45309;">$ {{ number_format($totalCxP, 2, ',', '.') }}</span> 
                 </div>
             </div>
-            
-            <div class="col-md-3">
-                <div class="kpi-card p-3" style="border-left-color: #16a34a;">
-                    <span class="text-muted text-uppercase d-block small fw-bold">Total Gastos (OPEX)</span> 
-                    <span class="fs-4 fw-bold text-success">$ {{ number_format($totalOpex, 2, ',', '.') }}</span>
+            <div class="col-md-2">
+                <div class="kpi-card p-3" style="border-left-color: #2563eb;">
+                    <span class="text-muted text-uppercase d-block small fw-bold">Total Bancos</span> 
+                    <span class="fs-4 fw-bold text-primary">$ {{ number_format($totalBancos, 2, ',', '.') }}</span>
                 </div>
             </div>
+            <div class="col-md-2">
+                <div class="kpi-card p-3" style="border-left-color: #16a34a;">
+                    <span class="text-muted text-uppercase d-block small fw-bold">Disponible Caja</span> 
+                    <span class="fs-4 fw-bold text-success">$ {{ number_format($totalCajas, 2, ',', '.') }}</span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="kpi-card p-3" style="border-left-color: #dc3545;">
+                    <span class="text-muted text-uppercase d-block small fw-bold">Total Gastos (OPEX)</span> 
+                    <span class="fs-4 fw-bold text-danger">$ {{ number_format($totalOpex, 2, ',', '.') }}</span>
+                </div>
+            </div>
+            
         </div>
 
         <div class="row mb-4">
