@@ -1408,6 +1408,7 @@ public function updateGuiaData(Request $request, $viajeId)
 
         // 5. Estadísticas para las Cards (Usando los litros ya procesados)
         $totalDisponibles = Deposito::sum('nivel_actual_litros');
+        $tanque00=Deposito::where('serial', '00')->first()?->nivel_actual_litros ?? 0;
 
         $totalDespachados = $despachos->whereIn('status', ['EN RUTA', 'COMPLETADO'])
             ->sum('litros_totales');
@@ -1432,7 +1433,8 @@ public function updateGuiaData(Request $request, $viajeId)
                 'despachados' => $totalDespachados,
                 'cargas'      => $totalCarga,
                 'prog_desp'   => $totalProgDespacho,
-                'prog_carg'   => $totalProgCarga
+                'prog_carg'   => $totalProgCarga,
+                'tanque00'    => $tanque00
             ]
         ]);
     }

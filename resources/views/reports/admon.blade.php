@@ -74,11 +74,11 @@
     <div id="reporteFinanzas" class="bg-white p-4 rounded shadow-sm printableArea">
         <div class="d-flex justify-content-between align-items-center border-bottom pb-3 mb-4">
             <div>
-                <h2 class="text-bold-custom mb-0">IMPORDIESEL, C.A.</h2>
+                <h2 class="text-bold-custom mb-0"><img src="{{ asset('img/logo1.png') }}" alt="logo empresa" style="width: 250px"></h2>
                 <small class="text-muted">Control de Operaciones y Flujos Financieros</small>
             </div>
             <div class="text-end">
-                <h1 class="text-bold-title mb-1">RESUMEN GERENCIAL DIARIO: {{ \Carbon\Carbon::parse($selectedDate)->format('d/m/Y') }}</h1>
+                <h1 class="text-bold-title mb-1">REPORTE FINANCIERO DIARIO: {{ \Carbon\Carbon::parse($selectedDate)->format('d/m/Y') }}</h1>
                 {{-- Badge dinámico para identificar visualmente el turno en la captura de pantalla --}}
                 <span class="badge-turno {{ $selectedTurno == 'Matutino' ? 'badge-matutino' : 'badge-vespertino' }}">
                     {{ $selectedTurno == 'Matutino' ? '🌅 CORTE MATUTINO (CIERRE DÍA ANTERIOR)' : '🌆 CORTE VESPERTINO (CIERRE OPERATIVO)' }}
@@ -98,16 +98,37 @@
             </div>
             <div class="col-md-3">
                 <div class="kpi-card p-3" style="border-left-color: #b45309;">
-                    <span class="text-muted text-uppercase d-block small fw-bold">Ventas Realizadas</span> 
-                    <span class="fs-4 fw-bold" style="color: #b45309;">$ {{ number_format($ventasUsd, 2, ',', '.') }}</span> 
+                    <span class="text-muted text-uppercase d-block small fw-bold">Litros Devueltos</span> 
+                    <span class="fs-4 fw-bold" style="color: #b45309;">$ {{ number_format($ventasDesglose->get('LITROS DEVUELTOS')?->monto ?? 0 , 2, ',', '.') }}</span> 
                 </div>
             </div>
+            <div class="col-md-3">
+                <div class="kpi-card p-3" style="border-left-color: #2563eb;">
+                    <span class="text-muted text-uppercase d-block small fw-bold">Litros Facturados</span> 
+                    <span class="fs-4 fw-bold text-primary">$ {{ number_format($ventasDesglose->get('LITROS FACTURADOS')?->monto ?? 0, 2, ',', '.') }}</span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="kpi-card p-3" style="border-left-color: #16a34a;">
+                    <span class="text-muted text-uppercase d-block small fw-bold">Litros Notas de Entrega</span> 
+                    <span class="fs-4 fw-bold text-success">$ {{ number_format($ventasDesglose->get('LITROS NOTAS DE ENTREGA')?->monto ?? 0, 2, ',', '.') }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="row g-3 mb-4">
             <div class="col-md-3">
                 <div class="kpi-card p-3" style="border-left-color: #2563eb;">
                     <span class="text-muted text-uppercase d-block small fw-bold">Cuentas por Cobrar (CxC)</span> 
                     <span class="fs-4 fw-bold text-primary">$ {{ number_format($totalCxC, 2, ',', '.') }}</span>
                 </div>
             </div>
+            <div class="col-md-3">
+                <div class="kpi-card p-3" style="border-left-color: #b45309;">
+                    <span class="text-muted text-uppercase d-block small fw-bold">Total Ventas (CxP)</span> 
+                    <span class="fs-4 fw-bold" style="color: #b45309;">$ {{ number_format($totalCxP, 2, ',', '.') }}</span> 
+                </div>
+            </div>
+            
             <div class="col-md-3">
                 <div class="kpi-card p-3" style="border-left-color: #16a34a;">
                     <span class="text-muted text-uppercase d-block small fw-bold">Total Gastos (OPEX)</span> 

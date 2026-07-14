@@ -46,7 +46,8 @@ class GerentialReportController extends Controller
         //dd($records);
 
         // 4. Agrupaciones y Desgloses (NUEVO)
-        $ventasDesglose = $records->filter(fn($q) => in_array($q->tipo, ['VENTAS', 'VENTAS (USD)']));
+        $ventasDesglose = $records->filter(fn($q) => in_array($q->tipo, ['VENTAS', 'VENTAS (USD)']))
+        ->keyBy('cuenta');
         $cxcDesglose = $records->filter(fn($item) => $item->tipo === 'CUENTAS POR COBRAR');
         //dd($cxcDesglose);
         $cxcRecords = $records->filter(fn($item) => $item->tipo === 'CUENTAS POR COBRAR');
