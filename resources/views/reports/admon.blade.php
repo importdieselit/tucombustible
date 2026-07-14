@@ -315,9 +315,9 @@
                         </table>
                     </div>
                 </div>
-            </div>
-            <!-- Desglose de Ventas -->
-            <div class="card shadow-sm border-0 h-100">
+            
+                <!-- Desglose de Ventas -->
+                <div class="card shadow-sm border-0 h-100">
                     <div class="card-body">
                         <h5 class="text-bold-custom border-bottom pb-2 mb-3">Composición de Ventas</h5>
                         <div class="table-responsive-custom">
@@ -327,16 +327,16 @@
                                 </thead>
                                 <tbody>
                                     @foreach($ventasDesglose as $venta)
-                                        <tr>
-                                            <td class="small">{{ $venta->cuenta }}</td>
-                                            <td class="text-end small {{ $venta->monto < 0 ? 'text-danger fw-bold' : '' }}">
-                                                @if(str_contains($venta->tipo, 'USD'))
-                                                    $ {{ number_format($venta->monto, 2, ',', '.') }}
-                                                @else
-                                                    {{ number_format($venta->monto, 2, ',', '.') }} L
-                                                @endif
-                                            </td>
-                                        </tr>
+                                            <tr>
+                                                <td class="small">{{ $venta->cuenta }}</td>
+                                                <td class="text-end small {{ $venta->monto < 0 ? 'text-danger fw-bold' : '' }}">
+                                                    @if(str_contains($venta->tipo, 'USD'))
+                                                        $ {{ number_format($venta->monto, 2, ',', '.') }}
+                                                    @else
+                                                        {{ number_format($venta->monto, 2, ',', '.') }} L
+                                                    @endif
+                                                </td>
+                                            </tr>
                                     @endforeach
                                 </tbody>
                             </table>
@@ -371,6 +371,7 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
         </div>
         
