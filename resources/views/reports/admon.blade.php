@@ -231,6 +231,34 @@
                         </table>
                     </div>
                 </div>
+
+                     <!-- Desglose de Inventario -->
+                 <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <h5 class="text-bold-custom border-bottom pb-2 mb-3">Estado de Inventario</h5>
+                        <div class="table-responsive-custom">
+                            <table class="table table-sm table-hover align-middle">
+                                <thead class="table-header-custom">
+                                    <tr><th>Producto</th><th class="text-end">Cantidad</th></tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($inventarioDesglose->sortByDesc('monto') as $inv)
+                                        @if($inv->monto != 0)
+                                        <tr>
+                                            <td class="small">{{ $inv->cuenta }}</td>
+                                            <td class="text-end small {{ $inv->monto < 0 ? 'text-danger' : 'fw-bold' }}">
+                                                {{ number_format($inv->monto, 2, ',', '.') }}
+                                            </td>
+                                        </tr>
+                                        @endif
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                
             </div>
 
             <div class="col-lg-6">
@@ -288,13 +316,8 @@
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="row g-4 mb-4">
-            
             <!-- Desglose de Ventas -->
-            <div class="col-lg-4">
-                <div class="card shadow-sm border-0 h-100">
+            <div class="card shadow-sm border-0 h-100">
                     <div class="card-body">
                         <h5 class="text-bold-custom border-bottom pb-2 mb-3">Composición de Ventas</h5>
                         <div class="table-responsive-custom">
@@ -320,10 +343,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Desglose de Cuentas por Cobrar (CxC) -->
-            <div class="col-lg-4">
+                <!-- Desglose de Cuentas por Cobrar (CxC) -->
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-body">
                         <h5 class="text-bold-custom border-bottom pb-2 mb-3">Detalle Cuentas por Cobrar</h5>
@@ -351,37 +371,10 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Desglose de Inventario -->
-            <div class="col-lg-4">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-body">
-                        <h5 class="text-bold-custom border-bottom pb-2 mb-3">Estado de Inventario</h5>
-                        <div class="table-responsive-custom">
-                            <table class="table table-sm table-hover align-middle">
-                                <thead class="table-header-custom">
-                                    <tr><th>Producto</th><th class="text-end">Cantidad</th></tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($inventarioDesglose->sortByDesc('monto') as $inv)
-                                        @if($inv->monto != 0)
-                                        <tr>
-                                            <td class="small">{{ $inv->cuenta }}</td>
-                                            <td class="text-end small {{ $inv->monto < 0 ? 'text-danger' : 'fw-bold' }}">
-                                                {{ number_format($inv->monto, 2, ',', '.') }}
-                                            </td>
-                                        </tr>
-                                        @endif
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
-
+        
+    
         <!-- INDICADORES FINALES ACTUALIZADOS CON INVENTARIO -->
         <div class="row g-3 mb-4">
             <div class="col-md-3">
