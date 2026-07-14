@@ -38,6 +38,9 @@ class CheckAlertasViajes extends Command
                 $query->whereNull('respuesta_in');
             })
             ->get();
+            
+            // nota: buscar inspeccxones con mismo vehiqplo id rin viaje id respuesta in null y dentro deeun rango de fecha aceptaple
+            
 
         $this->info("Viajes en mora encontrados: " . $viajesRetrasados->count());
 
@@ -61,7 +64,7 @@ class CheckAlertasViajes extends Command
                 $reporte['notificadas_salida']++;
 
                 // Notificación al grupo de WhatsApp con Timeout de protección
-                Http::asForm()
+               /* Http::asForm()
                     ->timeout(10) // Evita que el comando se quede colgado eternamente si el gateway cae
                     ->withoutVerifying()
                     ->post($endpoint, [
@@ -69,7 +72,7 @@ class CheckAlertasViajes extends Command
                         'to'      => config('services.whatsapp.group_operaciones'),
                         'body'     => $mensajeSalida,
                         'priority' => 1,
-                    ]);
+                    ]); */
 
             } catch (Exception $e) {
                 $this->error("Falló el procesamiento del viaje de salida #{$viaje->id}: " . $e->getMessage());
@@ -115,7 +118,7 @@ class CheckAlertasViajes extends Command
                 $reporte['notificadas_retorno']++;
 
                 // Enviar también al grupo de WhatsApp operativo para mantener el estándar
-                Http::asForm()
+               /* Http::asForm()
                     ->timeout(10)
                     ->withoutVerifying()
                     ->post($endpoint, [
@@ -123,7 +126,7 @@ class CheckAlertasViajes extends Command
                         'to'      => config('services.whatsapp.group_operaciones'),
                         'body'     => $mensajeRetorno,
                         'priority' => 1,
-                    ]);
+                    ]); */
 
             } catch (Exception $e) {
                 $this->error("Falló el procesamiento del retorno del viaje #{$viaje->id}: " . $e->getMessage());
