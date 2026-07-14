@@ -181,7 +181,7 @@
         </div>
         <div class="row g-2 mb-4 mx-1">
             <div class="col-12">
-                <div class="border-0 shadow-sm  border-4 border-camionetas">
+                <div class="border-0 shadow-sm   border-4 border-camionetas">
                     <div class="card-header bg-light text-center p-2">
                         <small class="text-muted fw-bold d-block text-uppercase">Disponibles</small>
                     </div>
