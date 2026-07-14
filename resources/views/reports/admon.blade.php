@@ -230,7 +230,7 @@
                             </tbody>
                         </table>
                          <!-- Desglose de Inventario -->
-                        <h5 class="text-bold-custom border-bottom pb-2 mb-3">Estado de Inventario</h5>
+                        <h4 class="text-bold-custom border-bottom pb-2 mb-3 mt-4">Estado de Inventario</h4>
                         <div class="table-responsive-custom">
                             <table class="table table-sm table-hover align-middle">
                                 <thead class="table-header-custom">
