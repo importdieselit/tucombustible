@@ -8,8 +8,8 @@
                         <small class="text-muted fw-bold d-block text-uppercase">Disponibles</small>
                     </div>
                     <div class="card-body p-2 row text-center">
-                        <h5 class="mb-0 col-4 d-inline fw-bold text-dark">Para Venta: {{ number_format($stats['disponibles'] - $stats['tanque00'], 0, ',', '.') }} <span class="small">L</span></h5>
-                        <h5 class="mb-0 col-4 d-inline fw-bold text-dark">Tanque 00 (prepagado): {{ number_format($stats['tanque00'], 0, ',', '.') }} <span class="small">L</span></h5>
+                        <h5 class="mb-0 col-4 d-inline fw-bold text-primary">Para Venta: {{ number_format($stats['disponibles'] - $stats['tanque00'], 0, ',', '.') }} <span class="small">L</span></h5>
+                        <h5 class="mb-0 col-4 d-inline fw-bold text-danger">Tanque 00 (prepagado): {{ number_format($stats['tanque00'], 0, ',', '.') }} <span class="small">L</span></h5>
                         <h5 class="mb-0 col-4 d-inline fw-bold text-dark">Total: {{ number_format($stats['disponibles'], 0, ',', '.') }} <span class="small">L</span></h5>
                     </div>
                 </div>
