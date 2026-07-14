@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Repositories\ViajeRepository;
 use App\Repositories\PedidoRepository;
+use App\Services\LogisticaInventarioService; // Este servicio se encarga de registrar los movimientos de combustibles en un Ledger
 use App\Models\Vehiculo;
 use App\Models\GascoCupoMensual;
 use App\Models\Cliente;
@@ -17,16 +18,14 @@ class LogisticaService
 {
     protected $viajeRepo;
     protected $pedidoRepo;
-
-    public function __construct(ViajeRepository $viajeRepo, PedidoRepository $pedidoRepo)
+    protected $inventarioService;
+    public function __construct(ViajeRepository $viajeRepo, PedidoRepository $pedidoRepo, LogisticaInventarioService $inventarioService)
     {
         $this->viajeRepo = $viajeRepo;
         $this->pedidoRepo = $pedidoRepo;
+        $this->inventarioService = $inventarioService;
     }
 
-    /**
-     * Guarda una nueva planificación (Crea el viaje desde cero)
-     */
     public function procesarPlanificacion(array $data)
     {
         if (!empty($data['vehiculo_externo'])) $data['vehiculo_externo'] = strtoupper($data['vehiculo_externo']);
@@ -55,8 +54,8 @@ class LogisticaService
             }
 
             // 5. Inventario global (Solo Diesel y MGO)
-            if (in_array($tipoPlanificacion, [1, 2]) && !empty($data['tipo_combustible_id'])) {
-                $this->afectarInventarioGlobal($data['tipo_combustible_id'], $totalLitros, $viaje->id);
+            if (!empty($data['tipo_combustible_id'])) {
+                $this->inventarioService->registrarCompromisoPlanificacion($viaje);
             } 
 
             return $viaje;
@@ -98,7 +97,9 @@ class LogisticaService
                 }
 
                 // Devolver inventario global
-                $this->revertirInventarioGlobal($viaje->tipo, $viaje->litros, $viaje->id);
+                if (!empty($viaje->tipo)) {
+                    $this->inventarioService->revertirCompromisoPlanificacion($viaje);
+                }
             }
 
             // 2. NUEVOS CÁLCULOS Y VALIDACIONES
@@ -113,9 +114,10 @@ class LogisticaService
             // 4. APLICAR NUEVOS IMPACTOS
             $this->registrarDetallesConImpacto($viaje, $itemsNuevos);
 
-            // 5. Afectar inventario con la nueva cantidad
-            if (in_array($viaje->tipo_planificacion, [1, 2]) && !empty($data['tipo_combustible_id'])) {
-                $this->afectarInventarioGlobal($data['tipo_combustible_id'], $totalLitrosNuevos, $viaje->id);
+            // 5. IMPACTO EN EL LEDGER: Asentamos el nuevo compromiso ajustado
+           if (!empty($data['tipo_combustible_id'])) {
+                $viaje->refresh(); // Garantiza tener los litros actualizados en la instancia del modelo
+                $this->inventarioService->registrarCompromisoPlanificacion($viaje);
             }
 
             return $viaje;
@@ -319,35 +321,5 @@ class LogisticaService
             'estatus'           => 'EN_TRANSITO',
             'sap'               => $data['codigo_sap'] ?? null,
         ]);
-    }
-
-    private function afectarInventarioGlobal($tipoId, $cantidad, $viajeId)
-    {
-        $nombreProducto = ($tipoId == 1) ? 'DIESEL' : (($tipoId == 2) ? 'MGO' : null);
-        if ($nombreProducto) {
-            $deposito = DB::table('depositos')->where('producto', $nombreProducto)->first();
-            if ($deposito) {
-                DB::table('depositos')->where('id', $deposito->id)->decrement('nivel_actual_litros', $cantidad);
-                DB::table('movimientos_combustible')->insert([
-                    'tipo_combustible_id' => $tipoId,
-                    'tipo_movimiento'     => 'salida',
-                    'deposito_id'         => $deposito->id,
-                    'viaje_id'            => $viajeId,
-                    'cantidad_litros'     => $cantidad,
-                    'observaciones'       => "PLANIFICACIÓN VIAJE #$viajeId",
-                    'created_at'          => now(),
-                    'updated_at'          => now()
-                ]);
-            }
-        }
-    }
-
-    private function revertirInventarioGlobal($tipoId, $cantidad, $viajeId) 
-    {
-        $nombreProducto = ($tipoId == 1) ? 'DIESEL' : (($tipoId == 2) ? 'MGO' : null);
-        if ($nombreProducto) {
-            DB::table('depositos')->where('producto', $nombreProducto)->increment('nivel_actual_litros', $cantidad);
-            DB::table('movimientos_combustible')->where('viaje_id', $viajeId)->delete();
-        }
     }
 }

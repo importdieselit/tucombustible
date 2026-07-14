@@ -8,6 +8,7 @@ use App\Repositories\HistorialLlenadoRepository;
 use App\Repositories\GascoCupoRepository;
 use App\Services\AforoCalculoService;
 use App\Services\WhatsAppApiService;
+use App\Services\CombustibleService;
 use App\Models\Deposito;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -21,10 +22,11 @@ class DepositoService
     protected $whatsappService;
     protected $historialRepo;
     protected $gascoCupoRepo;
+    protected $combustibleService;
 
     public function __construct(DepositoRepository $depositoRepo, ChequeoDepositoRepository $chequeoRepo, 
     AforoCalculoService $aforoService, WhatsAppApiService $whatsappService, HistorialLlenadoRepository $historialRepo, 
-    GascoCupoRepository $gascoCupoRepo
+    GascoCupoRepository $gascoCupoRepo, CombustibleService $combustibleService
     ) {
         $this->depositoRepo = $depositoRepo;
         $this->chequeoRepo = $chequeoRepo;
@@ -32,6 +34,7 @@ class DepositoService
         $this->whatsappService = $whatsappService;
         $this->historialRepo = $historialRepo;
         $this->gascoCupoRepo = $gascoCupoRepo;
+        $this->combustibleService = $combustibleService;
     }
 
     public function registrarDeposito(array $data): Deposito
@@ -99,59 +102,66 @@ class DepositoService
             throw new Exception("Ya se encuentra registrado un varillaje para esta sede en la fecha y turno especificados.");
         }
 
-        $detallesProcesados = [];
-        $tanquesCriticos = []; //Tanques en menos del 20%
-
-        // 2. Procesamiento secuencial del arreglo normalizado enviado por la vista
-        foreach ($data['detalles'] as $detalle) {
-            $deposito = Deposito::findOrFail($detalle['id_deposito']);
+        // Envolvemos todo el proceso en una transacción global para blindar la operación
+        return DB::transaction(function () use ($data) {
             
-            // Invocación al motor analítico de cubicación (AforoCalculoService)
-            $litrosCalculados = $this->aforoService->calcularLitros(
-                $deposito, 
-                (float) $detalle['centimetros_medidos']
-            );
+            $detallesProcesados = [];
+            $tanquesCriticos = []; 
 
-            if ($litrosCalculados < $deposito->nivel_alerta_litros) {
-                $porcentajeActual = $deposito->capacidad_maxima > 0 
-                    ? round(($litrosCalculados / $deposito->capacidad_maxima) * 100, 1) 
-                    : 0;
+            // 2. Procesamiento secuencial de cubicación
+            foreach ($data['detalles'] as $detalle) {
+                $deposito = Deposito::findOrFail($detalle['id_deposito']);
+                
+                $litrosCalculados = $this->aforoService->calcularLitros(
+                    $deposito, 
+                    (float) $detalle['centimetros_medidos']
+                );
 
-                $tanquesCriticos[] = [
-                    'serial' => $deposito->serial,
-                    'litros' => round($litrosCalculados, 2),
-                    'limite' => round($deposito->nivel_alerta_litros, 2),
-                    'porcentaje' => $porcentajeActual
+                if ($litrosCalculados < $deposito->nivel_alerta_litros) {
+                    $porcentajeActual = $deposito->capacidad_maxima > 0 
+                        ? round(($litrosCalculados / $deposito->capacidad_maxima) * 100, 1) 
+                        : 0;
+
+                    $tanquesCriticos[] = [
+                        'serial' => $deposito->serial,
+                        'litros' => round($litrosCalculados, 2),
+                        'limite' => round($deposito->nivel_alerta_litros, 2),
+                        'porcentaje' => $porcentajeActual
+                    ];
+                }
+
+                $detallesProcesados[] = [
+                    'id_deposito'          => $detalle['id_deposito'],
+                    'centimetros_medidos'  => $detalle['centimetros_medidos'],
+                    'litros_calculados'    => $litrosCalculados,
+                    'id_tipos_combustible' => $detalle['id_tipos_combustible'],
                 ];
             }
 
-            $detallesProcesados[] = [
-                'id_deposito'         => $detalle['id_deposito'],
-                'centimetros_medidos' => $detalle['centimetros_medidos'],
-                'litros_calculados'   => $litrosCalculados,
-                'id_tipos_combustible' => $detalle['id_tipos_combustible'],
+            // Este método altera el array $detallesProcesados por REFERENCIA inyectando 'litros_teoricos' 
+            // y 'merma_calculada', además de registrar inmediatamente el ajuste en transacciones_combustible.
+            $this->combustibleService->calcularMermasParaChequeo($detallesProcesados, (int) $data['id_sede']);
+
+            // 3. Preparación de los datos de cabecera firmados
+            $datosCabecera = [
+                'id_sede'       => $data['id_sede'],
+                'turno'         => $data['turno'],
+                'fecha'         => $data['fecha'],
+                'observaciones' => $data['observaciones'] ?? null,
+                'id_usuario'    => $data['id_usuario'] ?? auth()->id() ?? 1,
             ];
-        }
 
-        // 3. Preparación de los datos de cabecera firmados
-        $datosCabecera = [
-            'id_sede'       => $data['id_sede'],
-            'turno'         => $data['turno'],
-            'fecha'         => $data['fecha'],
-            'observaciones' => $data['observaciones'] ?? null,
-            'id_usuario'    => $data['id_usuario'] ?? auth()->id() ?? 1,
-        ];
+            // 4. Persistencia definitiva (el repositorio ya sabe leer las nuevas llaves inyectadas)
+            $chequeoGuardado = $this->chequeoRepo->guardarChequeoCompleto($datosCabecera, $detallesProcesados);
 
-        // 4. Persistencia mediante el Repositorio usando su transacción atómica original
-        $chequeoGuardado = $this->chequeoRepo->guardarChequeoCompleto($datosCabecera, $detallesProcesados);
+            // 5. Notificación automatizada por niveles de fosa críticos
+            if ($chequeoGuardado && !empty($tanquesCriticos)) {
+                $nombreSede = DB::table('sedes')->where('id', $data['id_sede'])->value('nombre') ?? "Sede #{$data['id_sede']}";
+                $this->notificarTanquesCriticos($tanquesCriticos, $data['turno'], $nombreSede);
+            }
 
-        // 🆕 SI TODO SE GUARDÓ BIEN Y HAY ALERTAS, ENVIAMOS EL WHATSAPP
-        if ($chequeoGuardado && !empty($tanquesCriticos)) {
-            $nombreSede = DB::table('sedes')->where('id', $data['id_sede'])->value('nombre') ?? "Sede #{$data['id_sede']}";
-            $this->notificarTanquesCriticos($tanquesCriticos, $data['turno'], $nombreSede);
-        }
-
-        return $chequeoGuardado;
+            return $chequeoGuardado;
+        });
     }
 
     protected function notificarTanquesCriticos(array $tanques, string $turno, string $nombreSede)
@@ -237,6 +247,15 @@ class DepositoService
                 'placa_vehiculo_id'   => $placaVehiculoId,
                 'tipo_combustible_id' => $deposito->tipo_combustible_id,
                 'litros'              => $litros,
+            ]);
+
+            // Registramos el Despacho Prepagado en el Ledger, no en la tabla de llenado_cupo_prepagado
+            $this->combustibleService->registrarDespachoPrepagado([
+                'sede_id'             => $deposito->id_sede,
+                'tipo_combustible_id' => $deposito->tipo_combustible_id,
+                'cantidad_litros'     => -$litros, // Negativo porque resta del Ledger
+                'deposito_id'         => $deposito->id,
+                'referencia_id'       => $llenado->id, // El cordón umbilical de auditoría
             ]);
 
             return $llenado->id;

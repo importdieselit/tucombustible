@@ -17,6 +17,8 @@ class ChequeoDepositoDetalle extends Model
         'id_tipos_combustible',
         'centimetros_medidos',
         'litros_calculados',
+        'litros_teoricos',
+        'merma_calculada',
     ];
 
     // Casteamos los valores para que Eloquent los devuelva siempre como floats y no como strings
@@ -24,6 +26,8 @@ class ChequeoDepositoDetalle extends Model
         'id_tipos_combustible' => 'integer',
         'centimetros_medidos' => 'float',
         'litros_calculados' => 'float',
+        'litros_teoricos' => 'float',
+        'merma_calculada' => 'float',
     ];
 
     /**

@@ -22,6 +22,7 @@ class User extends Authenticatable
         'password',
         'id_perfil',
         'id_persona',
+        'id_sede',
         'cliente_id',
         'fcm_token',
         'id_master',

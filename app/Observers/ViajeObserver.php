@@ -6,16 +6,25 @@ use App\Models\Viaje;
 use App\Models\Vehiculo;
 use App\Models\Chofer;
 use App\Services\FcmNotificationService;
+use App\Services\LogisticaInventarioService;
 use Illuminate\Support\Facades\DB;
 
 class ViajeObserver
 {
+    protected $inventarioService;
+
     /**
      * Handle the Viaje "created" event.
      *
      * @param  \App\Models\Viaje  $viaje
      * @return void
      */
+
+    public function __construct(LogisticaInventarioService $inventarioService)
+    {
+        $this->inventarioService = $inventarioService;
+    }
+
     public function created(Viaje $viaje)
     {
         $vehiculo = Vehiculo::find($viaje->vehiculo_id);
@@ -45,16 +54,35 @@ class ViajeObserver
      */
     public function updated(Viaje $viaje)
     {
-        // isDirty() verifica si un campo específico cambió en esta actualización
+        // isDirty() verifica si el campo status cambió en esta actualización
         if ($viaje->isDirty('status')) {
             $nuevoStatus = $viaje->status;
-            $viejoStatus = $viaje->getOriginal('status'); // El valor antes del update
+            $viejoStatus = $viaje->getOriginal('status'); // Estado anterior
 
-            if ($viejoStatus === 'Programado' && $nuevoStatus === 'EN RUTA') {
+            // 1. TRANSICIÓN A "EN RUTA" (Salida de Planta)
+            // Agregé strtoupper() por seguridad, ya que en LogisticaService guardas 'PROGRAMADO' en mayúsculas
+            if (strtoupper($viejoStatus) === 'PROGRAMADO' && $nuevoStatus === 'EN RUTA') {
+                
                 $this->actualizarEstatusFlota($viaje, 2);
+
+                // ⚡ LEDGER AUTOMÁTICO: Libera compromiso comercial y descuenta Stock Físico de la Sede
+                $this->inventarioService->registrarSalidaFisicaDespacho($viaje);
+
+            // 2. TRANSICIÓN A "COMPLETADO" (Llegada / Descarga)
             } elseif ($nuevoStatus === 'COMPLETADO') {
+                
                 Vehiculo::where('id', $viaje->vehiculo_id)->update(['acoplado_id' => null]);
                 $this->actualizarEstatusFlota($viaje, 1);
+
+                // ⚡ LEDGER AUTOMÁTICO: Si es una Compra (Tipo 4), suma los litros físicos reales a la fosa
+                if ($viaje->tipo_planificacion == 4) {
+                    $this->inventarioService->registrarIngresoFisicoCompra($viaje);
+                    
+                    // Aprovechamos de actualizar el estatus en tu tabla auxiliar de compras
+                    DB::table('compras_combustible')
+                        ->where('viaje_id', $viaje->id)
+                        ->update(['estatus' => 'COMPLETADO']);
+                }
             }
         }
     }

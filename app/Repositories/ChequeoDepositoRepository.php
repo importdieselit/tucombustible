@@ -21,6 +21,16 @@ class ChequeoDepositoRepository
             ->exists();
     }
 
+    public function obtenerUltimoDetallePorDeposito(int $idDeposito): ?ChequeoDepositoDetalle
+    {
+        return ChequeoDepositoDetalle::where('id_deposito', $idDeposito)
+            ->join('chequeos_depositos', 'chequeos_depositos_detalles.id_chequeo', '=', 'chequeos_depositos.id')
+            ->select('chequeos_depositos_detalles.*')
+            ->orderBy('chequeos_depositos.fecha', 'desc')
+            ->orderBy('chequeos_depositos.created_at', 'desc')
+            ->first();
+    }
+
     /**
      * Guardar el chequeo completo (Cabecera + Detalles) usando una Transacción Atómica.
      */
@@ -45,6 +55,8 @@ class ChequeoDepositoRepository
                     'centimetros_medidos' => $detalle['centimetros_medidos'],
                     'litros_calculados'   => $detalle['litros_calculados'],
                     'id_tipos_combustible' => $detalle['id_tipos_combustible'],
+                    'litros_teoricos'      => $detalle['litros_teoricos'],
+                    'merma_calculada'      => $detalle['merma_calculada'],
                 ]);
 
                 DB::table('depositos')->where('id', $detalle['id_deposito'])->update([
