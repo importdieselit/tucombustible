@@ -21,7 +21,7 @@ use App\Http\Controllers\{
     ReporteController, AforoController, SearchController, DataDeletionController,
     ViajesController, TelegramController, PlanificacionMantenimientoController,
     ReportController, ClienteActivosController,NotificationController,LogisticaController,
-    ChequeoDepositoController, CombustibleController, LlenadoCupoPrepagadoController
+    ChequeoDepositoController, CombustibleController, LlenadoCupoPrepagadoController, TransaccionCombustibleController
 };
 
 /* --- Rutas Públicas y Auth --- */
@@ -340,6 +340,12 @@ Route::middleware(['auth'])->group(function () {
                     Route::get('/crear', [LlenadoCupoPrepagadoController::class, 'create'])->name('create');
                     Route::post('/guardar', [LlenadoCupoPrepagadoController::class, 'store'])->name('store');
                 });
+
+                // Registro Histórico de Transacciones de Combustible
+                Route::prefix('transacciones')->name('transacciones.')->group(function () {
+                    Route::get('/', [TransaccionCombustibleController::class, 'index'])->name('index');
+                    Route::get('/{id}', [TransaccionCombustibleController::class, 'show'])->name('show');
+                });
         });
 
         // --- MÓDULO DE LOGÍSTICA ---
@@ -357,7 +363,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/pedidos/{id}/rechazar', [PedidoAdminController::class, 'rechazar'])->name('rechazar');
         });
 
-        // --- MÓDULO CLIENTES COMBUSTIBLE ---
+        // --- MÓDULO COMBUSTIBLE ---
         Route::prefix('admin-clientes')->name('clientes.')->group(function () {
             Route::get('/',                    [AdminClienteController::class, 'index'])->name('index');
             Route::get('/crear',               [AdminClienteController::class, 'create'])->name('create');
@@ -392,7 +398,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/choferes/{choferId}/inactivar',  [AdminClienteController::class, 'inactivarChofer'])->name('choferes.inactivar');
         });
 
-        // --- MÓDULO CLIENTES LUBRICANTES ---
+        // --- MÓDULO LUBRICANTES ---
         Route::prefix('admin-clientes-lubricantes')->name('clientes.lubricantes.')->group(function () {
             Route::get('/',         [AdminClienteController::class, 'indexLubricantes'])->name('index');
             Route::post('/',        [AdminClienteController::class, 'storeLubricante'])->name('store');

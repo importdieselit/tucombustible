@@ -18,14 +18,16 @@ return new class extends Migration
             
             // Tipo de movimiento operativo del nuevo flujo
             $table->enum('tipo_movimiento', [
-                'compra', 
-                'despacho', 
-                'trasegado', 
-                'reverso', 
-                'consumo_operativo', 
-                'ajuste_merma',
-                'despacho_prepagado',
-                'ingreso_reverso'
+                'compra',
+                'despacho',
+                'trasegado_interno',
+                'trasegado_inter-sede',
+                'trasegado_externo',
+                'reverso',
+                'consumo_operativo',
+                'ajuste_positivo',
+                'ajuste_negativo',
+                'despacho_prepagado'
             ])->index();
 
             // Cantidad con signo y decimales (Positivo = Entra, Negativo = Sale)

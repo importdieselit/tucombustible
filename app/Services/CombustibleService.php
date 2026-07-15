@@ -64,7 +64,7 @@ class CombustibleService
             $idDeposito = $detalle['id_deposito'];
             
             // 1. Obtener los litros que el sistema calcula que deberían haber en base a transacciones
-            $saldoTeoricoSistema = $this->ledgerRepo->getSaldoTeoricoPorDeposito($idDeposito);
+            $saldoTeoricoSistema = $this->ledgerRepo->getSaldoTeoricoPorDeposito($idDeposito) ?? 0.0;
 
             // 2. Calcular Merma: Real de la Vara - Teórico del Sistema
             $litrosMedidosVara = (float) $detalle['litros_calculados'];
@@ -80,7 +80,7 @@ class CombustibleService
                     'sede_id' => $sedeId,
                     'tipo_combustible_id' => $detalle['id_tipos_combustible'],
                     'bolsa_tipo' => 'general', // Las mermas físicas afectan directamente el inventario base
-                    'tipo_movimiento' => 'ajuste_merma',
+                    'tipo_movimiento' => $merma > 0 ? 'ajuste_positivo' : 'ajuste_negativo',
                     'cantidad_litros' => $merma, // Negativo resta (pérdida), positivo suma (ganancia térmica)
                     'deposito_id' => $idDeposito,
                     'user_id' => auth()->id() ?? 1,
@@ -103,7 +103,8 @@ class CombustibleService
             'cantidad_litros'     => -abs($data['cantidad_litros']), // Forzamos negativo por seguridad contable
             'deposito_id'         => $data['deposito_id'],
             'user_id'             => auth()->id() ?? 1,
-            'referencia_id'       => $data['referencia_id'] ?? null // Enlace directo con historial_llenados
+            'referencia_id'       => $data['referencia_id'] ?? null, // Enlace directo con historial_llenados
+            'cliente_id'          => $data['cliente_id'] ?? null,
         ]);
     }
 

@@ -256,6 +256,7 @@ class DepositoService
                 'cantidad_litros'     => -$litros, // Negativo porque resta del Ledger
                 'deposito_id'         => $deposito->id,
                 'referencia_id'       => $llenado->id, // El cordón umbilical de auditoría
+                'cliente_id'          => $clienteId,
             ]);
 
             return $llenado->id;
