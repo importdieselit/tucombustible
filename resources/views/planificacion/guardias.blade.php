@@ -69,7 +69,10 @@
         
         <form action="{{ route('guardias.index') }}" method="GET" class="d-flex align-items-center gap-3 m-0">
             <div class="d-flex align-items-center gap-2">
-             </div>
+                <label for="date" class="fw-bold text-secondary mb-0 text-nowrap">Fecha:</label>
+                <!-- CORRECCIÓN 2: Usar $fechaBase -->
+                <span class="badge bg-dark text-white fw-bold fs-6">{{ $fechaBase->format('d/m/Y') }}</span>
+            </div>
             <div class="d-flex align-items-center gap-2">
                 <label for="rol" class="fw-bold text-secondary mb-0 text-nowrap">Rol Personal:</label>
                 <select name="rol" id="rol" class="form-select" onchange="this.form.submit()">
