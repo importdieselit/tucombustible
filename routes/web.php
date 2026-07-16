@@ -22,7 +22,7 @@ use App\Http\Controllers\{
     ReporteController, AforoController, SearchController, DataDeletionController,
     ViajesController, TelegramController, PlanificacionMantenimientoController,
     ReportController, ClienteActivosController,NotificationController, PlanMayorController,LogisticaController,
-    AlmacenLayoutController,ConteoController, GerentialReportController,PagosController
+    AlmacenLayoutController,ConteoController, GerentialReportController, PagoController, GuardiaController
 };
 use App\Http\Controllers\SalaControlController;
 
@@ -231,6 +231,11 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/rrhh/resultados-sheets', [EvaluacionesController::class, 'generarReporte'])
          ->name('reportes.sheets');
+
+        Route::get('/guardias', [GuardiaController::class, 'index'])->name('guardias.index');
+        Route::post('/guardias/store-ajax', [GuardiaController::class, 'storeAjax'])->name('guardias.storeAjax');
+        Route::delete('/guardias/delete-ajax/{id}', [GuardiaController::class, 'destroyAjax'])->name('guardias.destroyAjax');
+        Route::get('/guardias/reporte', [GuardiaController::class, 'report'])->name('guardias.reporte');
     
         // Combustible (Pedidos y Despachos)
         Route::prefix('combustible')->name('combustible.')->group(function () {
