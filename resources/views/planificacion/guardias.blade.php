@@ -69,9 +69,9 @@
         
         <form action="{{ route('guardias.index') }}" method="GET" class="d-flex align-items-center gap-3 m-0">
             <div class="d-flex align-items-center gap-2">
-                <label for="date" class="fw-bold text-secondary mb-0 text-nowrap">Ir a Fecha:</label>
+                <label for="date" class="fw-bold text-secondary mb-0 text-nowrap">Fecha:</label>
                 <!-- CORRECCIÓN 2: Usar $fechaBase -->
-                <input type="date" name="date" id="date" class="form-select" value="{{ $fechaBase->toDateString() }}" onchange="this.form.submit()">
+                <span class="badge bg-dark text-white fw-bold fs-6">{{ $fechaBase->format('d/m/Y') }}</span>
             </div>
             <div class="d-flex align-items-center gap-2">
                 <label for="rol" class="fw-bold text-secondary mb-0 text-nowrap">Rol Personal:</label>
