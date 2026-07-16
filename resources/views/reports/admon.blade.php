@@ -198,8 +198,7 @@
             <div class="col-lg-6">
                 <div class="card shadow-sm border-0 mb-4 h-100">
                     <div class="card-body">
-                        <h5 class="text-bold-custom border-bottom pb-2 mb-3">Distribución de Gastos Operacionales</h5>
-                        
+                        <h5 class="text-bold-custom border-bottom pb-2 mb-3">Distribución de Gastos Operacionales</h5>  
                         <div class="chart-container mb-4">
                             @foreach($opexRecords->sortByDesc('monto')->take(5) as $gasto) 
                                 @php 
