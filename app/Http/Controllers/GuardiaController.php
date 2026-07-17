@@ -7,6 +7,8 @@ use App\Models\Personal;
 use App\Models\Guardia;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use App\Services\WhatsappApiService;
+use Illuminate\Support\Facades\Storage;
 
 class GuardiaController extends Controller
 {
@@ -143,5 +145,23 @@ class GuardiaController extends Controller
             ->groupBy('fecha');
 
         return view('planificacion.guardias-print', compact('semanaDias', 'guardias', 'startOfWeek'));
+    }
+
+    public function sendWhatsapp(Request $request, WhatsappApiService $whatsappService)
+    {
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('temp', 'public');
+            $fullPath = storage_path('app/public/' . $path);
+            
+            $response = $whatsappService->enviarImagen($request->caption, $fullPath, config('services.whatsapp.group_operaciones'));
+            
+            Storage::disk('public')->delete($path);
+
+            if ($response && $response->successful()) {
+                return response()->json(['success' => true]);
+            }
+        }
+        
+        return response()->json(['success' => false], 500);
     }
 }

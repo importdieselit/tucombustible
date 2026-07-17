@@ -139,6 +139,7 @@ Route::middleware(['auth'])->group(function () {
     
     Route::get('/reportes/gerencial', [ReportController::class, 'reporteGerencial'])->name('reportes.gerencial');
     Route::post('/whatsapp/send', [GerentialReportController::class, 'sendWhatsapp'])->name('whatsapp.send');
+    Route::post('/guardias/send', [GuardiaController::class, 'sendWhatsapp'])->name('guardia.send');
     
     // Inventario y Almacén
     Route::post('store/entry', [InventarioController::class, 'entry'])->name('store.entry');
