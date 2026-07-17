@@ -23,6 +23,9 @@ class TrasegadoService
     /**
      * Registra un nuevo trasegado y gestiona su logística e inventario.
      */
+    /**
+     * Registra un nuevo trasegado y gestiona su logística e inventario.
+     */
     public function procesarTrasegado(array $data)
     {
         if (!empty($data['vehiculo_externo'])) $data['vehiculo_externo'] = strtoupper($data['vehiculo_externo']);
@@ -39,7 +42,48 @@ class TrasegadoService
                 throw new Exception("La cantidad de litros debe ser mayor a cero.");
             }
 
-            // 1. Verificar si requiere planificación logística de flota
+            // --- FASE: TRASEGADO INTERNO (Validaciones e Impacto Físico) ---
+            if ($tipoTrasegado === 'interno') {
+                // 1. Obtener la data en tiempo real de ambos tanques involucrados
+                $tanqueOrigen = DB::table('depositos')->where('id', $data['deposito_origen_id'])->first();
+                $tanqueDestino = DB::table('depositos')->where('id', $data['deposito_destino_id'])->first();
+
+                if (!$tanqueOrigen || !$tanqueDestino) {
+                    throw new Exception("Uno o ambos tanques de depósito no existen en el sistema.");
+                }
+
+                // 2. Regla de Oro: Misma sede
+                if ($tanqueOrigen->id_sede !== $tanqueDestino->id_sede) {
+                    throw new Exception("Trasegado inválido. Para operaciones internas, ambos tanques deben pertenecer a la misma sede.");
+                }
+
+                // 3. Regla de Oro: Mismo combustible
+                if ($tanqueOrigen->tipo_combustible_id !== $tanqueDestino->tipo_combustible_id) {
+                    throw new Exception("Operación rechazada. Los tanques seleccionados no poseen el mismo tipo de combustible.");
+                }
+
+                // 4. Validación de Stock disponible en Origen
+                if ($tanqueOrigen->nivel_actual_litros < $totalLitros) {
+                    throw new Exception("Stock insuficiente en el tanque de origen '{$tanqueOrigen->serial}'. Disponible: {$tanqueOrigen->nivel_actual_litros}L.");
+                }
+
+                // 5. Validación de capacidad disponible en Destino
+                $espacioDisponible = (float)$tanqueDestino->capacidad_litros - (float)$tanqueDestino->nivel_actual_litros;
+                if ($totalLitros > $espacioDisponible) {
+                    throw new Exception("Capacidad excedida en destino '{$tanqueDestino->serial}'. Espacio libre restante: {$espacioDisponible}L.");
+                }
+
+                // 6. Validación de bolsa prepagada (Opcional, de acuerdo al campo de tu tabla)
+                if ($data['bolsa_destino_tipo'] === 'prepagado' && (int)$tanqueDestino->llena_cupo_prepagado !== 1) {
+                    throw new Exception("El tanque de destino no está configurado ni habilitado para admitir cupos prepagados.");
+                }
+
+                // 7. Descontar e Incrementar los niveles físicos reales de los tanques
+                DB::table('depositos')->where('id', $tanqueOrigen->id)->decrement('nivel_actual_litros', $totalLitros);
+                DB::table('depositos')->where('id', $tanqueDestino->id)->increment('nivel_actual_litros', $totalLitros);
+            }
+
+            // 1. Verificar si requiere planificación logística de flota (Aplica a inter-sede y externo)
             $requiereViaje = ($tipoTrasegado === 'inter_sede') || ($tipoTrasegado === 'externo' && !empty($data['vehiculo_id']));
 
             if ($requiereViaje) {
@@ -69,7 +113,7 @@ class TrasegadoService
                 'user_id'              => $userId,
                 'status'               => 'completado',
                 'observaciones'        => $data['observaciones'] ?? null,
-                'viaje_id'             => $viajeId, // Recuerda agregar esta columna via migración si no la tienes
+                'viaje_id'             => $viajeId,
                 'created_at'           => now(),
                 'updated_at'           => now(),
             ]);
@@ -84,7 +128,7 @@ class TrasegadoService
                 'cantidad_litros'     => -abs($totalLitros), // (-) Resta
                 'user_id'             => $userId,
                 'viaje_id'            => $viajeId,
-                'observaciones'       => "Salida por Trasegado #{$trasegadoId} ({$tipoTrasegado})."
+                'observaciones'       => "Salida por Trasegado Interno #{$trasegadoId}."
             ]);
 
             // Destino: Suma combustible
@@ -96,7 +140,7 @@ class TrasegadoService
                 'cantidad_litros'     => abs($totalLitros), // (+) Suma
                 'user_id'             => $userId,
                 'viaje_id'            => $viajeId,
-                'observaciones'       => "Ingreso por Trasegado #{$trasegadoId} ({$tipoTrasegado})."
+                'observaciones'       => "Ingreso por Trasegado Interno #{$trasegadoId}."
             ]);
 
             return $trasegadoId;

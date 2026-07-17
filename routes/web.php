@@ -22,7 +22,7 @@ use App\Http\Controllers\{
     ViajesController, TelegramController, PlanificacionMantenimientoController,
     ReportController, ClienteActivosController,NotificationController,LogisticaController,
     ChequeoDepositoController, CombustibleController, LlenadoCupoPrepagadoController, 
-    TransaccionCombustibleController, ConsumoOperativoController
+    TransaccionCombustibleController, ConsumoOperativoController, TrasegadoController,
 };
 
 /* --- Rutas Públicas y Auth --- */
@@ -327,7 +327,7 @@ Route::middleware(['auth'])->group(function () {
                     Route::get('/{id}/aforo/exportar', [AforoController::class, 'exportAforoTable'])->name('aforo.export');
                 });
 
-                // 🆕 Auditoría y Registro de Varillaje (Chequeo de Tanques en Patio)
+                // Auditoría y Registro de Varillaje (Chequeo de Tanques en Patio)
                 Route::prefix('chequeos_depositos')->name('chequeos_depositos.')->group(function () {
                     Route::get('/', [ChequeoDepositoController::class, 'index'])->name('index');
                     Route::get('/crear', [ChequeoDepositoController::class, 'create'])->name('create');
@@ -335,18 +335,28 @@ Route::middleware(['auth'])->group(function () {
                     Route::get('/{id}', [ChequeoDepositoController::class, 'show'])->name('show');
                 });
 
-                // 🆕 Llenados con Cupos Prepagados
+                // Llenados con Cupos Prepagados
                 Route::prefix('llenados_prepagados')->name('llenados_prepagados.')->group(function () {
                     Route::get('/', [LlenadoCupoPrepagadoController::class, 'index'])->name('index');
                     Route::get('/crear', [LlenadoCupoPrepagadoController::class, 'create'])->name('create');
                     Route::post('/guardar', [LlenadoCupoPrepagadoController::class, 'store'])->name('store');
                 });
 
-                // 🆕 Consumos Operativos Internos (AGREGADO)
+                // Consumos Operativos Internos
                 Route::prefix('consumos_operativos')->name('consumos_operativos.')->group(function () {
                     Route::get('/', [ConsumoOperativoController::class, 'index'])->name('index');
                     Route::get('/crear', [ConsumoOperativoController::class, 'create'])->name('create');
                     Route::post('/guardar', [ConsumoOperativoController::class, 'store'])->name('store');
+                });
+
+                // Trasegados de Combustible (Interno, Inter-Sede y Externo)
+                Route::prefix('trasegados')->name('trasegados.')->group(function () {
+                    Route::get('/', [TrasegadoController::class, 'index'])->name('index');
+                    // Formularios independientes para evitar condicionales masivos en la vista
+                    Route::get('/crear/interno', [TrasegadoController::class, 'createInterno'])->name('create_interno');
+                    Route::get('/crear/inter-sede', [TrasegadoController::class, 'createInterSede'])->name('create_inter_sede');
+                    Route::get('/crear/externo', [TrasegadoController::class, 'createExterno'])->name('create_externo');
+                    Route::post('/guardar', [TrasegadoController::class, 'store'])->name('store');
                 });
 
                 // Registro Histórico de Transacciones de Combustible
