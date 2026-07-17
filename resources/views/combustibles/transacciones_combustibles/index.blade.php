@@ -31,19 +31,6 @@
                 </select>
             </div>
 
-            {{-- FILTRO POR TANQUE --}}
-            <div class="col-md-2">
-                <label class="small fw-bold text-uppercase text-muted mb-1" style="font-size: 11px;">Tanque / Depósito</label>
-                <select name="deposito_id" class="form-select form-select-sm fw-bold text-dark" style="font-size: 13px;">
-                    <option value="">TODOS LOS TANQUES</option>
-                    @foreach($depositos as $deposito)
-                        <option value="{{ $deposito->id }}" {{ request('deposito_id') == $deposito->id ? 'selected' : '' }}>
-                            {{ $deposito->serial }} ({{ $deposito->descripcion ?? 'S/D' }})
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
             {{-- FILTRO POR TIPO DE COMBUSTIBLE --}}
             <div class="col-md-2">
                 <label class="small fw-bold text-uppercase text-muted mb-1" style="font-size: 11px;">Combustible</label>

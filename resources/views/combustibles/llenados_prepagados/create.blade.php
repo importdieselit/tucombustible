@@ -188,7 +188,7 @@
                             <i class="fas fa-check-circle me-1"></i> Autorizar y Surtir
                         </button>
                         
-                        <a href="{{ route('combustibles.llenados_prepagados.index') }}" class="btn btn-sm btn-outline-light w-100 text-uppercase fw-bold opacity-70" style="font-size: 11px;">
+                        <a href="{{ route('combustibles.dashboard') }}" class="btn btn-sm btn-outline-light w-100 text-uppercase fw-bold opacity-70" style="font-size: 11px;">
                             Cancelar Operación
                         </a>
                     </div>

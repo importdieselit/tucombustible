@@ -293,9 +293,6 @@
                 </tbody>
             </table>
         </div>
-        <div class="p-4 bg-gray-50 border-t border-gray-200">
-            {{ $clientes->appends(request()->query())->links() }}
-        </div>
     </div>
 
     <div class="p-4 bg-gray-50 border-t border-gray-200">

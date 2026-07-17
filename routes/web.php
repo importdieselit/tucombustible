@@ -21,7 +21,8 @@ use App\Http\Controllers\{
     ReporteController, AforoController, SearchController, DataDeletionController,
     ViajesController, TelegramController, PlanificacionMantenimientoController,
     ReportController, ClienteActivosController,NotificationController,LogisticaController,
-    ChequeoDepositoController, CombustibleController, LlenadoCupoPrepagadoController, TransaccionCombustibleController
+    ChequeoDepositoController, CombustibleController, LlenadoCupoPrepagadoController, 
+    TransaccionCombustibleController, ConsumoOperativoController
 };
 
 /* --- Rutas Públicas y Auth --- */
@@ -339,6 +340,13 @@ Route::middleware(['auth'])->group(function () {
                     Route::get('/', [LlenadoCupoPrepagadoController::class, 'index'])->name('index');
                     Route::get('/crear', [LlenadoCupoPrepagadoController::class, 'create'])->name('create');
                     Route::post('/guardar', [LlenadoCupoPrepagadoController::class, 'store'])->name('store');
+                });
+
+                // 🆕 Consumos Operativos Internos (AGREGADO)
+                Route::prefix('consumos_operativos')->name('consumos_operativos.')->group(function () {
+                    Route::get('/', [ConsumoOperativoController::class, 'index'])->name('index');
+                    Route::get('/crear', [ConsumoOperativoController::class, 'create'])->name('create');
+                    Route::post('/guardar', [ConsumoOperativoController::class, 'store'])->name('store');
                 });
 
                 // Registro Histórico de Transacciones de Combustible

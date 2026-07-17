@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Deposito;
 use App\Repositories\TransaccionCombustibleRepository;
 use App\Repositories\SaldoPendienteClienteRepository;
 use App\Repositories\TrasegadoRepository;
@@ -108,10 +109,6 @@ class CombustibleService
         ]);
     }
 
-    /**
-     * CASO DE USO: Registrar el llenado para Consumo Operativo interno.
-     * Descuenta el inventario físico real del tanque de la sede.
-     */
     public function registrarConsumoOperativo(array $data): int
     {
         return DB::transaction(function () use ($data) {
@@ -122,12 +119,23 @@ class CombustibleService
                 throw new Exception("La cantidad de litros para el consumo operativo debe ser mayor a cero.");
             }
 
-            // 1. Guardar la causa en la tabla de consumos operativos
+            // 1. Bloqueamos el tanque para asegurar consistencia en la fosa física
+            $depositoId = $data['deposito_id'];
+            
+            // Usamos directamente el modelo Deposito (puedes importarlo arriba como App\Models\Deposito)
+            $deposito = Deposito::lockForUpdate()->findOrFail($depositoId);
+
+            // 2. Descontamos físicamente del tanque sin validar disponibilidad.
+            // Si el nivel actual es menor, Laravel decrementará y quedará en números rojos de forma natural.
+            $deposito->decrement('nivel_actual_litros', $cantidadLitros);
+
+            // 3. Guardar la causa en la tabla de consumos operativos
             $consumo = $this->consumoRepo->create([
-                'sede_id'             => $data['sede_id'],
-                'deposito_id'         => $data['deposito_id'],
+                'sede_id'             => $data['id_sede'] ?? $data['sede_id'], // Manejo flexible de la llave
+                'deposito_id'         => $depositoId,
                 'tipo_combustible_id' => $data['tipo_combustible_id'],
                 'cantidad_litros'     => $cantidadLitros,
+                'vehiculo_id'         => $data['vehiculo_id'] ?? null,
                 'equipo_maquinaria'   => strtoupper($data['equipo_maquinaria'] ?? 'GENÉRICO'),
                 'user_id'             => $userId,
                 'observaciones'       => $data['observaciones'] ?? null,
@@ -135,14 +143,14 @@ class CombustibleService
 
             $consumoId = is_object($consumo) ? $consumo->id : $consumo;
 
-            // 2. Asentar la salida física en el Ledger (Restar de la fosa)
+            // 4. Asentar la salida física en el Ledger (Restar de la fosa en el libro contable)
             $this->ledgerRepo->registrar([
-                'sede_id'             => $data['sede_id'],
+                'sede_id'             => $data['id_sede'] ?? $data['sede_id'],
                 'tipo_combustible_id' => $data['tipo_combustible_id'],
                 'bolsa_tipo'          => 'general',
                 'tipo_movimiento'     => 'consumo_operativo',
                 'cantidad_litros'     => -abs($cantidadLitros), // (-) Resta
-                'deposito_id'         => $data['deposito_id'],
+                'deposito_id'         => $depositoId,
                 'user_id'             => $userId,
                 'observaciones'       => "Salida por Consumo Operativo #{$consumoId}."
             ]);
