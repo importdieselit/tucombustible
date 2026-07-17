@@ -872,7 +872,7 @@ class OrdenController extends BaseController
             foreach ($usoInventario as $usoItem) {
                 $inv = Inventario::find($usoItem['id']);
                 $orden->suministros()->create([
-                    'id_inventario' => $usoItem['id'],
+                    'inventario_id' => $usoItem['id'],
                     'cantidad_solicitada' => $usoItem['cantidad'],
                     'precio_unitario' => $inv->costo_div ?? 0,
                     'id_orden' => $orden->id,
