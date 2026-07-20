@@ -144,7 +144,7 @@ class GuardiaController extends Controller
             ->get()
             ->groupBy('fecha');
 
-        return view('planificacion.guardias-print', compact('semanaDias', 'guardias', 'startOfWeek'));
+        return view('planificacion.guardias-print', compact('semanaDias', 'guardias', 'startOfWeek', 'endOfWeek'));
     }
 
     public function sendWhatsapp(Request $request, WhatsappApiService $whatsappService)

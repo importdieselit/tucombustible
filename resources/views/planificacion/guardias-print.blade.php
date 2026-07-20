@@ -179,7 +179,7 @@
                 const formData = new FormData();
                 formData.append('image', imageBlob, 'reporte_whatsapp.png');
                 // Añadimos el turno explícito en el pie del mensaje de WhatsApp para mayor claridad del grupo directivo
-                formData.append('caption', '📊 *Reporte Guardias - ' + '{{ \Carbon\Carbon::parse($selectedDate)->format('d/m/Y') }}');
+                formData.append('caption', '📊 *Reporte Guardias - ' + '{{ \Carbon\Carbon::parse($startOfWeek)->format('d/m/Y') }} - ' + '{{ \Carbon\Carbon::parse($endOfWeek)->format('d/m/Y') }}');
                 
                 const response = await fetch('{{ route('guardia.send') }}', {
                     method: 'POST',
