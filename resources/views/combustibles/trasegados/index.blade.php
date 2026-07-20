@@ -89,7 +89,7 @@
         <div class="card-header bg-white border-bottom py-3">
             <h6 class="mb-0 fw-black text-uppercase small text-dark">
                 <i class="fas fa-list text-orange me-2"></i> Auditoría de Movimientos de Combustible
-            </h6>
+            </h2>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -97,10 +97,10 @@
                     <thead class="bg-light">
                         <tr class="text-uppercase text-muted" style="font-size: 12px; letter-spacing: 0.5px;">
                             <th class="ps-4">Fecha y Hora</th>
-                            <th>Registrado Por</th> {{-- NUEVA COLUMNA --}}
+                            <th>Registrado Por</th>
                             <th>Sede Origen</th>
                             <th>Tanque Emisor</th>
-                            <th>Destino / Aliado</th> {{-- COLUMNA ADAPTABLE --}}
+                            <th>Destino / Aliado</th>
                             <th>Tanque Receptor</th>
                             <th>Combustible</th>
                             <th class="pe-4 text-end">Litros Trasegados</th>
@@ -109,9 +109,9 @@
                     <tbody>
                         @forelse($trasegados as $trasegado)
                             <tr>
-                                {{-- Fecha y Hora --}}
+                                {{-- Fecha y Hora (Corregido con Carbon::parse para evitar el error de string) --}}
                                 <td class="ps-4 font-monospace small fw-bold text-dark">
-                                    {{ $trasegado->created_at->format('d/m/Y h:i A') }}
+                                    {{ $trasegado->created_at ? \Carbon\Carbon::parse($trasegado->created_at)->format('d/m/Y h:i A') : 'N/A' }}
                                 </td>
 
                                 {{-- Usuario que registró --}}
@@ -138,11 +138,11 @@
 
                                 {{-- Destino o Aliado Comercial --}}
                                 <td>
-                                    @if($trasegado->aliado) {{-- Si el registro tiene un aliado asignado, es Externo --}}
+                                    @if($trasegado->aliado)
                                         <span class="badge text-uppercase fw-black px-2 py-1" style="font-size: 11px; background-color: #e3f2fd; color: #0d47a1; border: 1px solid #bbdefb;">
                                             <i class="fas fa-handshake me-1"></i> {{ $trasegado->aliado->nombre ?? $trasegado->aliado->razon_social ?? 'Aliado' }}
                                         </span>
-                                    @else {{-- Si no, asumimos que es un movimiento interno entre sedes --}}
+                                    @else
                                         <span class="badge bg-light text-secondary border text-uppercase fw-bold" style="font-size: 11px;">
                                             {{ $trasegado->sedeDestino->nombre ?? 'N/A' }}
                                         </span>

@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\TrasegadoService;
-use Illuminate\Support\Facades\DB;
+use App\Models\Trasegado;
+use App\Models\Sedes;   
+use App\Models\Deposito;   
 use Exception;
 
 class TrasegadoController extends Controller
@@ -17,16 +19,45 @@ class TrasegadoController extends Controller
     }
 
     /**
-     * Muestra el historial general de Trasegados.
+     * Muestra el historial general de Trasegados con filtros activos.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Traemos el histórico (puedes paginarlo luego)
-        $trasegados = DB::table('trasegados')
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+        // Iniciamos la consulta con Eager Loading para todas las relaciones de la vista
+        $query = Trasegado::with([
+            'user', 
+            'sedeOrigen', 
+            'depositoOrigen', 
+            'sedeDestino', 
+            'depositoDestino', 
+            'aliado', 
+            'tipoCombustible'
+        ]);
 
-        return view('combustibles.trasegados.index', compact('trasegados'));
+        // Procesamos los filtros avanzados que vienen de la vista
+        if ($request->filled('id_sede_origen')) {
+            $query->where('sede_origen_id', $request->id_sede_origen);
+        }
+
+        if ($request->filled('id_sede_destino')) {
+            $query->where('sede_destino_id', $request->id_sede_destino);
+        }
+
+        if ($request->filled('fecha_desde')) {
+            $query->whereDate('created_at', '>=', $request->fecha_desde);
+        }
+
+        if ($request->filled('fecha_hasta')) {
+            $query->whereDate('created_at', '<=', $request->fecha_hasta);
+        }
+
+        // Paginamos el resultado ordenado cronológicamente
+        $trasegados = $query->orderBy('created_at', 'desc')->paginate(20);
+
+        // Traemos las sedes para que el SELECT del filtro se llene correctamente
+        $sedes = Sedes::orderBy('nombre')->get();
+
+        return view('combustibles.trasegados.index', compact('trasegados', 'sedes'));
     }
 
     /**
@@ -34,10 +65,14 @@ class TrasegadoController extends Controller
      */
     public function createInterno()
     {
-        // Solo necesitamos las sedes y sus tanques
-        $sedes = DB::table('sedes')->where('estatus', 1)->get();
+        $sedes = Sedes::where('estatus', 1)->get();
         
-        return view('combustibles.trasegados.create_interno', compact('sedes'));
+        // CORREGIDO: Iniciamos el join directamente desde el modelo Eloquent
+        $tanques = Deposito::leftJoin('tipos_combustible', 'depositos.tipo_combustible_id', '=', 'tipos_combustible.id')
+            ->select('depositos.*', 'tipos_combustible.nombre as combustible_nombre')
+            ->get();
+        
+        return view('combustibles.trasegados.create_interno', compact('sedes', 'tanques'));
     }
 
     /**
@@ -45,15 +80,7 @@ class TrasegadoController extends Controller
      */
     public function createInterSede()
     {
-        $sedes = DB::table('sedes')->where('activo', 1)->get();
-        
-        // Datos específicos para la planificación del viaje
-        $choferes  = DB::table('choferes')->where('activo', 1)->get();
-        $ayudantes = DB::table('ayudantes')->where('activo', 1)->get();
-        $vehiculos = DB::table('vehiculos')->where('activo', 1)->get(); 
-        // Nota: En la vista evaluarás por JS si el vehículo seleccionado es tipo 'chuto' para mostrar el select de cisternas.
 
-        return view('combustibles.trasegados.create_intersede', compact('sedes', 'choferes', 'ayudantes', 'vehiculos'));
     }
 
     /**
@@ -61,15 +88,7 @@ class TrasegadoController extends Controller
      */
     public function createExterno()
     {
-        $sedes   = DB::table('sedes')->where('activo', 1)->get();
-        $aliados = DB::table('aliados_comerciales')->where('activo', 1)->get();
         
-        // Si el externo puede opcionalmente requerir viaje, nos traemos la flota también
-        $choferes  = DB::table('choferes')->where('activo', 1)->get();
-        $ayudantes = DB::table('ayudantes')->where('activo', 1)->get();
-        $vehiculos = DB::table('vehiculos')->where('activo', 1)->get();
-
-        return view('combustibles.trasegados.create_externo', compact('sedes', 'aliados', 'choferes', 'ayudantes', 'vehiculos'));
     }
 
     /**
@@ -77,12 +96,11 @@ class TrasegadoController extends Controller
      */
     public function store(Request $request)
     {
-        // Aquí puedes meter un FormRequest personalizado o validar según el tipo_trasegado
         $this->validarCamposSegunTipo($request);
 
         try {
             $data = $request->all();
-            $data['user_id'] = auth()->id() ?? 1; // Aseguramos el usuario de la sesión
+            $data['user_id'] = auth()->id() ?? 1;
 
             $trasegadoId = $this->trasegadoService->procesarTrasegado($data);
 
@@ -97,21 +115,37 @@ class TrasegadoController extends Controller
         }
     }
 
-    /**
-     * Validación dinámica en backend antes de tocar el Service.
-     */
+    public function destroy($id)
+    {
+        try {
+            $this->trasegadoService->anularTrasegado($id, auth()->id());
+
+            return redirect()
+                ->route('combustibles.trasegados.index')
+                ->with('success', "El trasegado #{$id} fue anulado y el inventario fue restablecido.");
+
+        } catch (Exception $e) {
+            return back()->with('error', 'No se pudo anular la operación: ' . $e->getMessage());
+        }
+    }
+
     protected function validarCamposSegunTipo(Request $request)
     {
         $rules = [
-            'tipo_trasegado'  => 'required|in:interno,inter_sede,external',
-            'cantidad_litros' => 'required|numeric|min:0.01',
+            'tipo_trasegado'      => 'required|in:interno,inter_sede,externo', 
+            'cantidad_litros'     => 'required|numeric|min:0.01',
+            'tipo_combustible_id' => 'required',
+            'bolsa_origen_tipo'   => 'required',
+            'bolsa_destino_tipo'  => 'required',
         ];
 
-        // Sumar reglas específicas según el flujo
         if ($request->tipo_trasegado === 'interno') {
             $rules['sede_origen_id']      = 'required';
             $rules['deposito_origen_id']  = 'required';
             $rules['deposito_destino_id'] = 'required|different:deposito_origen_id';
+
+            // Sincronizamos la sede destino para cumplir con el esquema del Service
+            $request->merge(['sede_destino_id' => $request->sede_origen_id]);
         }
 
         if ($request->tipo_trasegado === 'inter_sede') {

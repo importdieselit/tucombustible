@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Repositories\ViajeRepository;
-use App\Repositories\TransaccionCombustibleRepository; // Tu repositorio real del Ledger
+use App\Repositories\TransaccionCombustibleRepository;
 use App\Models\Vehiculo;
 use App\Models\Viaje;
 use Illuminate\Support\Facades\DB;
@@ -17,15 +17,9 @@ class TrasegadoService
     public function __construct(ViajeRepository $viajeRepo, TransaccionCombustibleRepository $transaccionRepo)
     {
         $this->viajeRepo = $viajeRepo;
-        $this->transaccionRepo = $transaccionRepo; // Inyectado directo para no tocar el otro servicio
+        $this->transaccionRepo = $transaccionRepo;
     }
 
-    /**
-     * Registra un nuevo trasegado y gestiona su logística e inventario.
-     */
-    /**
-     * Registra un nuevo trasegado y gestiona su logística e inventario.
-     */
     public function procesarTrasegado(array $data)
     {
         if (!empty($data['vehiculo_externo'])) $data['vehiculo_externo'] = strtoupper($data['vehiculo_externo']);
@@ -34,7 +28,7 @@ class TrasegadoService
         if (!empty($data['ayudante_externo'])) $data['ayudante_externo'] = strtoupper($data['ayudante_externo']);
 
         return DB::transaction(function () use ($data) {
-            $tipoTrasegado = $data['tipo_trasegado']; 
+            $tipoTrasegado = $data['tipo_trasegado']; // 'interno', 'inter_sede', 'externo'
             $totalLitros   = (float) ($data['cantidad_litros'] ?? 0);
             $userId        = $data['user_id'] ?? (auth()->id() ?? 1);
 
@@ -44,226 +38,148 @@ class TrasegadoService
 
             // --- FASE: TRASEGADO INTERNO (Validaciones e Impacto Físico) ---
             if ($tipoTrasegado === 'interno') {
-                // 1. Obtener la data en tiempo real de ambos tanques involucrados
                 $tanqueOrigen = DB::table('depositos')->where('id', $data['deposito_origen_id'])->first();
                 $tanqueDestino = DB::table('depositos')->where('id', $data['deposito_destino_id'])->first();
 
                 if (!$tanqueOrigen || !$tanqueDestino) {
-                    throw new Exception("Uno o ambos tanques de depósito no existen en el sistema.");
+                    throw new Exception("Uno o ambos tanques de depósito no existen.");
                 }
 
-                // 2. Regla de Oro: Misma sede
                 if ($tanqueOrigen->id_sede !== $tanqueDestino->id_sede) {
                     throw new Exception("Trasegado inválido. Para operaciones internas, ambos tanques deben pertenecer a la misma sede.");
                 }
 
-                // 3. Regla de Oro: Mismo combustible
                 if ($tanqueOrigen->tipo_combustible_id !== $tanqueDestino->tipo_combustible_id) {
-                    throw new Exception("Operación rechazada. Los tanques seleccionados no poseen el mismo tipo de combustible.");
+                    throw new Exception("Operación rechazada. Los tanques no poseen el mismo tipo de combustible.");
                 }
 
-                // 4. Validación de Stock disponible en Origen
                 if ($tanqueOrigen->nivel_actual_litros < $totalLitros) {
-                    throw new Exception("Stock insuficiente en el tanque de origen '{$tanqueOrigen->serial}'. Disponible: {$tanqueOrigen->nivel_actual_litros}L.");
+                    throw new Exception("Stock insuficiente en origen '{$tanqueOrigen->serial}'. Disponible: {$tanqueOrigen->nivel_actual_litros}L.");
                 }
 
-                // 5. Validación de capacidad disponible en Destino
                 $espacioDisponible = (float)$tanqueDestino->capacidad_litros - (float)$tanqueDestino->nivel_actual_litros;
                 if ($totalLitros > $espacioDisponible) {
                     throw new Exception("Capacidad excedida en destino '{$tanqueDestino->serial}'. Espacio libre restante: {$espacioDisponible}L.");
                 }
 
-                // 6. Validación de bolsa prepagada (Opcional, de acuerdo al campo de tu tabla)
-                if ($data['bolsa_destino_tipo'] === 'prepagado' && (int)$tanqueDestino->llena_cupo_prepagado !== 1) {
-                    throw new Exception("El tanque de destino no está configurado ni habilitado para admitir cupos prepagados.");
-                }
-
-                // 7. Descontar e Incrementar los niveles físicos reales de los tanques
+                // Descontar e Incrementar los niveles físicos reales de los tanques
                 DB::table('depositos')->where('id', $tanqueOrigen->id)->decrement('nivel_actual_litros', $totalLitros);
                 DB::table('depositos')->where('id', $tanqueDestino->id)->increment('nivel_actual_litros', $totalLitros);
             }
 
-            // 1. Verificar si requiere planificación logística de flota (Aplica a inter-sede y externo)
-            $requiereViaje = ($tipoTrasegado === 'inter_sede') || ($tipoTrasegado === 'externo' && !empty($data['vehiculo_id']));
-
-            if ($requiereViaje) {
-                $this->validarCapacidadYRequisitosTrasegado($data, $totalLitros);
-            }
-
-            // 2. Crear el Viaje de Planificación si aplica
-            $viajeId = null;
-            if ($requiereViaje) {
-                $datosViaje = $this->mapearDatosCabeceraViaje($data, $totalLitros);
-                $viaje = $this->viajeRepo->createViaje($datosViaje);
-                $viajeId = $viaje->id;
-            }
-
-            // 3. Registrar en tu tabla 'trasegados'
+            // --- INSERTAR CABECERA EN TRASEGADOS ---
             $trasegadoId = DB::table('trasegados')->insertGetId([
-                'tipo_trasegado'       => $tipoTrasegado,
-                'sede_origen_id'       => $data['sede_origen_id'],
-                'deposito_origen_id'   => $data['deposito_origen_id'],
-                'bolsa_origen_tipo'    => $data['bolsa_origen_tipo'], // 'general' o 'prepagado'
-                'sede_destino_id'      => $data['sede_destino_id'],
-                'deposito_destino_id'  => $data['deposito_destino_id'],
-                'bolsa_destino_tipo'   => $data['bolsa_destino_tipo'], // 'general' o 'prepagado'
-                'aliado_comercial_id'  => $data['aliado_comercial_id'] ?? null,
-                'tipo_combustible_id'  => $data['tipo_combustible_id'],
-                'cantidad_litros'      => $totalLitros,
-                'user_id'              => $userId,
-                'status'               => 'completado',
-                'observaciones'        => $data['observaciones'] ?? null,
-                'viaje_id'             => $viajeId,
-                'created_at'           => now(),
-                'updated_at'           => now(),
+                'tipo_trasegado'      => $tipoTrasegado,
+                'sede_origen_id'      => $data['sede_origen_id'],
+                'deposito_origen_id'  => $data['deposito_origen_id'],
+                'bolsa_origen_tipo'   => $data['bolsa_origen_tipo'], 
+                'sede_destino_id'     => $data['sede_destino_id'],
+                'deposito_destino_id' => $data['deposito_destino_id'],
+                'bolsa_destino_tipo'  => $data['bolsa_destino_tipo'], 
+                'aliado_comercial_id' => $data['aliado_comercial_id'] ?? null,
+                'tipo_combustible_id' => $data['tipo_combustible_id'],
+                'cantidad_litros'     => $totalLitros,
+                'user_id'             => $userId,
+                'status'              => 'completado',
+                'observaciones'       => $data['observaciones'] ?? null,
+                'created_at'          => now(),
+                'updated_at'          => now(),
             ]);
 
-            // 4. IMPACTO EN EL LEDGER (Doble Asiento: Sale de Origen, Entra en Destino)
-            // Origen: Resta combustible
+            // --- IMPACTO EN EL LEDGER (Doble Asiento con ENUM Mapeado) ---
+            // Mapeo exacto al ENUM de tu BD: 'trasegado_interno', 'trasegado_inter-sede', 'trasegado_externo'
+            $tipoMovimientoLedger = 'trasegado_' . str_replace('_', '-', $tipoTrasegado);
+
+            // Origen: Resta combustible (Para interno/intersede, deposito_id obligatorio)
             $this->transaccionRepo->registrar([
                 'sede_id'             => $data['sede_origen_id'],
+                'deposito_id'         => $data['deposito_origen_id'], 
                 'tipo_combustible_id' => $data['tipo_combustible_id'],
                 'bolsa_tipo'          => $data['bolsa_origen_tipo'],
-                'tipo_movimiento'     => 'trasegado_salida',
-                'cantidad_litros'     => -abs($totalLitros), // (-) Resta
+                'tipo_movimiento'     => $tipoMovimientoLedger,
+                'cantidad_litros'     => -abs($totalLitros), 
                 'user_id'             => $userId,
-                'viaje_id'            => $viajeId,
-                'observaciones'       => "Salida por Trasegado Interno #{$trasegadoId}."
+                'observaciones'       => "Salida por Trasegado #{$trasegadoId}."
             ]);
 
-            // Destino: Suma combustible
+            // Destino: Suma combustible (Para interno/intersede, deposito_id obligatorio)
             $this->transaccionRepo->registrar([
                 'sede_id'             => $data['sede_destino_id'],
+                'deposito_id'         => $data['deposito_destino_id'], 
                 'tipo_combustible_id' => $data['tipo_combustible_id'],
                 'bolsa_tipo'          => $data['bolsa_destino_tipo'],
-                'tipo_movimiento'     => 'trasegado_entrada',
-                'cantidad_litros'     => abs($totalLitros), // (+) Suma
+                'tipo_movimiento'     => $tipoMovimientoLedger,
+                'cantidad_litros'     => abs($totalLitros), 
                 'user_id'             => $userId,
-                'viaje_id'            => $viajeId,
-                'observaciones'       => "Ingreso por Trasegado Interno #{$trasegadoId}."
+                'observaciones'       => "Ingreso por Trasegado #{$trasegadoId}."
             ]);
 
             return $trasegadoId;
         });
     }
 
-    /**
-     * Actualiza un trasegado, revirtiendo los asientos del Ledger y la logística previa.
-     */
-    public function actualizarTrasegado($id, array $data)
+    public function anularTrasegado($id, $userId = null)
     {
-        if (!empty($data['vehiculo_externo'])) $data['vehiculo_externo'] = strtoupper($data['vehiculo_externo']);
-        if (!empty($data['cisterna_externo'])) $data['cisterna_externo'] = strtoupper($data['cisterna_externo']);
-        if (!empty($data['chofer_externo']))   $data['chofer_externo']   = strtoupper($data['chofer_externo']);
-        if (!empty($data['ayudante_externo'])) $data['ayudante_externo'] = strtoupper($data['ayudante_externo']);
-
-        return DB::transaction(function () use ($id, $data) {
+        return DB::transaction(function () use ($id, $userId) {
             $trasegado = DB::table('trasegados')->where('id', $id)->first();
+            
             if (!$trasegado) {
                 throw new Exception("El registro de trasegado no existe.");
             }
 
-            $userId = $data['user_id'] ?? (auth()->id() ?? 1);
+            if ($trasegado->status === 'anulado') {
+                throw new Exception("Este trasegado ya se encuentra anulado.");
+            }
 
-            // 1. REVERSIÓN EN EL LEDGER (Asientos inversos para neutralizar)
-            // Revertir Salida de Origen (Sumamos lo que se restó)
+            $operadorId = $userId ?? (auth()->id() ?? 1);
+
+            // 1. REVERSIÓN FÍSICA (Solo si fue interno)
+            if ($trasegado->tipo_trasegado === 'interno') {
+                // Devolvemos al origen
+                DB::table('depositos')->where('id', $trasegado->deposito_origen_id)->increment('nivel_actual_litros', $trasegado->cantidad_litros);
+                // Quitamos del destino
+                DB::table('depositos')->where('id', $trasegado->deposito_destino_id)->decrement('nivel_actual_litros', $trasegado->cantidad_litros);
+            }
+
+            // 2. CONTRASENTADO EN EL LEDGER (Usando el ENUM 'reverso' que tiene tu BD)
+            // Reverso de la salida (Sumamos lo que se restó en origen)
             $this->transaccionRepo->registrar([
-                'text'                => "REVERSIÓN",
                 'sede_id'             => $trasegado->sede_origen_id,
+                'deposito_id'         => $trasegado->deposito_origen_id,
                 'tipo_combustible_id' => $trasegado->tipo_combustible_id,
                 'bolsa_tipo'          => $trasegado->bolsa_origen_tipo,
-                'tipo_movimiento'     => 'reversion_trasegado_salida',
-                'cantidad_litros'     => abs($trasegado->cantidad_litros), // (+) Contrarresta el negativo
-                'user_id'             => $userId,
+                'tipo_movimiento'     => 'reverso',
+                'cantidad_litros'     => abs($trasegado->cantidad_litros), 
+                'user_id'             => $operadorId,
                 'viaje_id'            => $trasegado->viaje_id,
-                'observaciones'       => "Reversión por modificación del Trasegado #{$id}."
+                'observaciones'       => "Reverso de Salida por Anulación de Trasegado #{$id}."
             ]);
 
-            // Revertir Ingreso de Destino (Restamos lo que se sumó)
+            // Reverso del ingreso (Restamos lo que se sumó en destino)
             $this->transaccionRepo->registrar([
                 'sede_id'             => $trasegado->sede_destino_id,
+                'deposito_id'         => $trasegado->deposito_destino_id,
                 'tipo_combustible_id' => $trasegado->tipo_combustible_id,
                 'bolsa_tipo'          => $trasegado->bolsa_destino_tipo,
-                'tipo_movimiento'     => 'reversion_trasegado_entrada',
-                'cantidad_litros'     => -abs($trasegado->cantidad_litros), // (-) Contrarresta el positivo
-                'user_id'             => $userId,
+                'tipo_movimiento'     => 'reverso',
+                'cantidad_litros'     => -abs($trasegado->cantidad_litros), 
+                'user_id'             => $operadorId,
                 'viaje_id'            => $trasegado->viaje_id,
-                'observaciones'       => "Reversión por modificación del Trasegado #{$id}."
+                'observaciones'       => "Reverso de Ingreso por Anulación de Trasegado #{$id}."
             ]);
 
-            // 2. PROCESAR NUEVOS DATOS
-            $tipoTrasegado = $data['tipo_trasegado'];
-            $totalLitrosNuevos = (float) ($data['cantidad_litros'] ?? 0);
-            
-            $requiereViaje = ($tipoTrasegado === 'inter_sede') || ($tipoTrasegado === 'externo' && !empty($data['vehiculo_id']));
-
-            if ($requiereViaje) {
-                $this->validarCapacidadYRequisitosTrasegado($data, $totalLitrosNuevos);
+            // 3. Si tenía un viaje logístico asociado y estaba programado, se cancela o se evalúa
+            if ($trasegado->viaje_id) {
+                DB::table('viajes')->where('id', $trasegado->viaje_id)->update(['status' => 'ANULADO', 'updated_at' => now()]);
             }
 
-            // 3. GESTIÓN DE PLANIFICACIÓN LOGÍSTICA (Manteniendo ID del Viaje)
-            $viajeId = $trasegado->viaje_id;
-
-            if ($requiereViaje) {
-                $datosViaje = $this->mapearDatosCabeceraViaje($data, $totalLitrosNuevos);
-                
-                if ($viajeId) {
-                    // Si ya existía el viaje, lo actualizamos en vez de borrarlo
-                    Viaje::where('id', $viajeId)->update($datosViaje);
-                } else {
-                    // Si antes no requería viaje pero ahora sí, lo creamos de cero
-                    $viaje = $this->viajeRepo->createViaje($datosViaje);
-                    $viajeId = $viaje->id;
-                }
-            } else {
-                // Si el nuevo tipo ya no requiere transporte pero antes sí tenía uno asociado, se remueve
-                if ($viajeId) {
-                    Viaje::where('id', $viajeId)->delete();
-                    $viajeId = null;
-                }
-            }
-
-            // 4. Actualizar registro principal de trasegados
+            // 4. CAMBIO DE ESTADO DE LA CABECERA
             DB::table('trasegados')->where('id', $id)->update([
-                'tipo_trasegado'       => $tipoTrasegado,
-                'sede_origen_id'       => $data['sede_origen_id'],
-                'deposito_origen_id'   => $data['deposito_origen_id'],
-                'bolsa_origen_tipo'    => $data['bolsa_origen_tipo'],
-                'sede_destino_id'      => $data['sede_destino_id'],
-                'deposito_destino_id'  => $data['deposito_destino_id'],
-                'bolsa_destino_tipo'   => $data['bolsa_destino_tipo'],
-                'aliado_comercial_id'  => $data['aliado_comercial_id'] ?? null,
-                'tipo_combustible_id'  => $data['tipo_combustible_id'],
-                'cantidad_litros'      => $totalLitrosNuevos,
-                'viaje_id'             => $viajeId,
-                'observaciones'        => $data['observaciones'] ?? null,
-                'updated_at'           => now(),
+                'status'     => 'anulado',
+                'updated_at' => now()
             ]);
 
-            // 5. Registrar los nuevos movimientos finales en el Ledger
-            $this->transaccionRepo->registrar([
-                'sede_id'             => $data['sede_origen_id'],
-                'tipo_combustible_id' => $data['tipo_combustible_id'],
-                'bolsa_tipo'          => $data['bolsa_origen_tipo'],
-                'tipo_movimiento'     => 'trasegado_salida',
-                'cantidad_litros'     => -abs($totalLitrosNuevos),
-                'user_id'             => $userId,
-                'viaje_id'            => $viajeId,
-                'observaciones'       => "Nueva salida por modificación del Trasegado #{$id}."
-            ]);
-
-            $this->transaccionRepo->registrar([
-                'sede_id'             => $data['sede_destino_id'],
-                'tipo_combustible_id' => $data['tipo_combustible_id'],
-                'bolsa_tipo'          => $data['bolsa_destino_tipo'],
-                'tipo_movimiento'     => 'trasegado_entrada',
-                'cantidad_litros'     => abs($totalLitrosNuevos),
-                'user_id'             => $userId,
-                'viaje_id'            => $viajeId,
-                'observaciones'       => "Nuevo ingreso por modificación del Trasegado #{$id}."
-            ]);
-
-            return $id;
+            return true;
         });
     }
 
