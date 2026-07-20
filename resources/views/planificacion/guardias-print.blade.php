@@ -1,38 +1,66 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Token CSRF indispensable para peticiones AJAX en Laravel -->
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    
-    <title>Reporte de Guardias - IMPORDIESEL</title>
-    
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+@extends('layouts.app-nosidebar')
+
+@push('styles')
     <style>
+      <style>
         body { font-size: 13px; background-color: #f8fafc; color: #333; }
         .text-corporate { color: #0f2d59; }
         .bg-corporate { background-color: #0f2d59 !important; color: white; }
-        .table-custom { border: 2px solid #0f2d59; }
-        .table-custom th { background-color: #0f2d59; color: white; border: 1px solid #dee2e6; text-align: center; }
-        .table-custom td { border: 1px solid #dee2e6; vertical-align: top; height: 120px; background-color: #fff; }
-        .rol-badge { font-size: 10px; font-weight: bold; text-transform: uppercase; padding: 2px 4px; border-radius: 4px; display: inline-block; }
-        .badge-cho { background-color: #dbeafe; color: #1e40af; }
-        .badge-ayu { background-color: #fef3c7; color: #92400e; }
-        .badge-mec { background-color: #f3e8ff; color: #6b21a8; }
+        .text-bold-custom { font-weight: 700; color: #0f2d59; }
         
-        .printableArea { background-color: #ffffff !important; padding: 20px; border-radius: 8px; }
+        /* Badges de Roles */
+        .rol-badge { font-size: 10px; font-weight: bold; text-transform: uppercase; padding: 2px 5px; border-radius: 4px; display: inline-block; letter-spacing: 0.5px; }
+        .badge-cho { background-color: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+        .badge-ayu { background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+        .badge-mec { background-color: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff; }
+
+        /* Contenedor de impresión */
+        .printableArea { background-color: #ffffff !important; padding: 25px; border-radius: 8px; }
+
+        /* Estilos CSS Grid para el Calendario */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 10px;
+        }
+        .calendar-header-day {
+            text-align: center; font-weight: 700; color: #0f2d59; padding: 12px 0;
+            background: #f1f5f9; border-radius: 6px; text-transform: uppercase; font-size: 0.85rem;
+            border: 1px solid #e2e8f0;
+        }
+        .calendar-cell {
+            background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px;
+            min-height: 150px; display: flex; flex-direction: column; 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+        .calendar-cell.today { border: 2px solid #f59e0b; background: #fffbeb; }
+        
+        .cell-date-header {
+            padding: 8px 12px; border-bottom: 1px solid #f1f5f9; background: #fafafa;
+            font-weight: 600; color: #475569; display: flex; justify-content: space-between; align-items: center;
+            border-top-left-radius: 6px; border-top-right-radius: 6px;
+        }
+        .drop-container { flex-grow: 1; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+
+        /* Items asignados en el calendario */
+        .assigned-item {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            padding: 8px; border-radius: 6px;
+            display: flex; flex-direction: column; gap: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
 
         @media print {
             .no-print { display: none !important; }
             body { padding: 0; background-color: #fff; }
-            .printableArea { padding: 0; border-radius: 0; }
+            .printableArea { padding: 0; border-radius: 0; border: none !important; box-shadow: none !important; }
+            .calendar-cell { page-break-inside: avoid; }
         }
     </style>
-</head>
-<body class="p-4">
+@endpush
+
+@section('content')
 
     <!-- Barra de Acciones Superior -->
     <div class="d-flex justify-content-between align-items-center mb-4 no-print border-bottom pb-3">
@@ -58,7 +86,7 @@
         <!-- Encabezado del Reporte -->
         <div class="row align-items-center border-bottom pb-3 mb-4">
             <div class="col-8">
-                <h2 class="text-corporate fw-bold mb-1">IMPORDIESEL, C.A.</h2>
+                 <h2 class="text-bold-custom mb-0"><img src="{{ asset('img/logo1.png') }}" alt="logo empresa" style="width: 250px"></h2>
                 <h5 class="text-muted mb-0">Cronograma de Operación de Guardias</h5>
             </div>
             <div class="col-4 text-end">
@@ -70,43 +98,52 @@
         </div>
 
         <!-- Tabla Semanal de Guardias -->
-        <table class="table table-bordered table-custom">
-            <thead>
-                <tr>
-                    @foreach($semanaDias as $dia)
-                        <th style="width: 14.28%;">
-                            {{ $dia->isoFormat('dddd') }}<br>
-                            <span class="fs-5">{{ $dia->format('d/m') }}</span>
-                        </th>
-                    @endforeach
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    @foreach($semanaDias as $dia)
-                        @php 
-                            $fechaString = $dia->toDateString();
-                            $guardiasDelDia = $guardias->get($fechaString) ?? collect();
-                        @endphp
-                        <td>
+        <div class="calendar-container">
+            <!-- Cabeceras de días -->
+            <div class="calendar-grid mb-2">
+                @foreach($semanaDias as $dia)
+                    <div class="calendar-header-day">
+                        {{ $dia->isoFormat('dddd') }}
+                    </div>
+                @endforeach
+            </div>
+
+            <!-- Celdas de días -->
+            <div class="calendar-grid">
+                @foreach($semanaDias as $dia)
+                    @php 
+                        $fechaString = $dia->toDateString();
+                        $guardiasDelDia = $guardias->get($fechaString) ?? collect();
+                        $claseDia = $dia->isToday() ? 'today' : '';
+                    @endphp
+
+                    <div class="calendar-cell {{ $claseDia }}">
+                        <!-- Fecha de la celda -->
+                        <div class="cell-date-header">
+                            <span class="fs-6 {{ $dia->dayOfWeek == 0 ? 'text-danger' : 'text-corporate' }}">{{ $dia->format('d') }}</span>
+                            <span class="small text-muted text-uppercase">{{ $dia->translatedFormat('M') }}</span>
+                        </div>
+                        
+                        <!-- Contenido / Personal Asignado -->
+                        <div class="drop-container">
                             @forelse($guardiasDelDia as $g)
-                                <div class="mb-2 p-2 rounded border" style="background-color: #f8fafc;">
-                                    @php 
-                                        $badgeClass = strtolower(substr($g->rol_guardia, 0, 3)); 
-                                    @endphp
-                                    <span class="rol-badge badge-{{ $badgeClass }}">{{ $g->rol_guardia }}</span>
-                                    <div class="fw-bold mt-1" style="font-size: 11px;">
+                                @php 
+                                    $badgeClass = strtolower(substr($g->rol_guardia, 0, 3)); 
+                                @endphp
+                                <div class="assigned-item">
+                                    <span class="rol-badge badge-{{ $badgeClass }} align-self-start">{{ $g->rol_guardia }}</span>
+                                    <div class="fw-bold text-dark mt-1" style="font-size: 0.8rem; line-height: 1.2;">
                                         {{ $g->personal->persona->nombre ?? 'Sin nombre' }}
                                     </div>
                                 </div>
                             @empty
-                                <div class="text-center text-muted small mt-4">Sin guardias</div>
+                                <div class="text-center text-muted small mt-4 fw-medium" style="opacity: 0.6;">Sin guardias</div>
                             @endforelse
-                        </td>
-                    @endforeach
-                </tr>
-            </tbody>
-        </table>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
 
         <!-- Firmas / Control Interno -->
         <div class="row mt-5 pt-4 text-center">
@@ -120,7 +157,7 @@
             </div>
         </div>
     </div>
-
+@push('scripts')
     <!-- Librería html2canvas -->
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
@@ -229,7 +266,6 @@
         captureButton.addEventListener('click', captureAndCopyToClipboard);
         sendWhatsappButton.addEventListener('click', sendReportToWhatsapp);
     });
-    </script>
-
-</body>
-</html>
+</script>
+@endpush
+@endsection
