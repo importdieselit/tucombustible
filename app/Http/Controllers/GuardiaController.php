@@ -152,8 +152,8 @@ class GuardiaController extends Controller
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('temp', 'public');
             $fullPath = storage_path('app/public/' . $path);
-            
-            $response = $whatsappService->enviarImagen($request->caption, $fullPath, config('services.whatsapp.group_operaciones'));
+            $destiny=config('services.whatsapp.group_test');           
+            $response = $whatsappService->enviarImagen($request->caption, $fullPath, $destiny);
             
             Storage::disk('public')->delete($path);
 

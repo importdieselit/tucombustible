@@ -107,10 +107,17 @@
         const captureButton = document.getElementById('captureButton');
         const statusMessage = document.getElementById('statusMessage');
         const sendWhatsappButton = document.getElementById('sendWhatsappButton');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
         if (!printableArea || !captureButton || !statusMessage) {
             console.error("Faltan elementos críticos en el DOM para la ejecución de capturas.");
             return;
+        }
+
+        function setStatus(message, bgClass, textClass) {
+            if (!statusMessage) return;
+            statusMessage.className = `alert no-print mb-4 d-block ${bgClass} ${textClass}`;
+            statusMessage.textContent = message;
         }
 
         // Helper para el manejo visual de estados
@@ -122,6 +129,7 @@
         function hideStatus() {
             statusMessage.className = 'd-none';
         }
+
 
         /**
          * 1. Capturar área y copiar al portapapeles (Para pegar directo en WhatsApp con Ctrl+V)
@@ -160,7 +168,7 @@
             }
         }
 
-         async function sendReportToWhatsapp() {
+        async function sendReportToWhatsapp() {
             setStatus('Generando imagen para enviar a WhatsApp...', 'bg-warning', 'text-dark');
             sendWhatsappButton.disabled = true;
 
@@ -169,7 +177,7 @@
                 const imageBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
                 
                 const formData = new FormData();
-                formData.append('image', imageBlob, 'reporte_guardias.png');
+                formData.append('image', imageBlob, 'reporte_whatsapp.png');
                 // Añadimos el turno explícito en el pie del mensaje de WhatsApp para mayor claridad del grupo directivo
                 formData.append('caption', '📊 *Reporte Guardias - ' + '{{ \Carbon\Carbon::parse($selectedDate)->format('d/m/Y') }}');
                 
@@ -189,6 +197,8 @@
                 setTimeout(() => statusMessage.classList.add('d-none'), 5000);
             }
         }
+
+        
 
         // Asignación de Escuchas de Eventos
         captureButton.addEventListener('click', captureAndCopyToClipboard);
