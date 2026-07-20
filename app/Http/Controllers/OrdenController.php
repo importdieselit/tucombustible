@@ -868,7 +868,6 @@ class OrdenController extends BaseController
                 str_contains($item['id'], 'MANUAL') ? $solicitudCompra[] = $item : $usoInventario[] = $item;
             }
 
-            // USO (Descuento de Inventario)
             foreach ($usoInventario as $usoItem) {
                 $inv = Inventario::find($usoItem['id']);
                 $orden->suministros()->create([
@@ -879,10 +878,8 @@ class OrdenController extends BaseController
                     'usuario_solicitante_id' => $userId,
                     'estatus' => 2,
                 ]);
-                // RECOMENDACIÓN: $inv->decrement('stock', $usoItem['cantidad']);
             }
 
-            // COMPRA (Generar Solicitud)
             $compra = null;
         
             if (count($solicitudCompra) > 0) {

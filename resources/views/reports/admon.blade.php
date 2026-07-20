@@ -405,7 +405,7 @@
         @endif
     @endif
     </div>
-    <div id="outputContainer" class="mt-4 pt-4 border-top"></div>
+        
 </div>
 
 @push('scripts')
