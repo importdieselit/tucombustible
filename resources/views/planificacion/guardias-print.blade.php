@@ -2,39 +2,59 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Token CSRF indispensable para peticiones AJAX en Laravel -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    
     <title>Reporte de Guardias - IMPORDIESEL</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        body { font-size: 13px; background-color: #fff; color: #333; }
+        body { font-size: 13px; background-color: #f8fafc; color: #333; }
         .text-corporate { color: #0f2d59; }
         .bg-corporate { background-color: #0f2d59 !important; color: white; }
         .table-custom { border: 2px solid #0f2d59; }
         .table-custom th { background-color: #0f2d59; color: white; border: 1px solid #dee2e6; text-align: center; }
-        .table-custom td { border: 1px solid #dee2e6; vertical-align: top; height: 120px; }
+        .table-custom td { border: 1px solid #dee2e6; vertical-align: top; height: 120px; background-color: #fff; }
         .rol-badge { font-size: 10px; font-weight: bold; text-transform: uppercase; padding: 2px 4px; border-radius: 4px; display: inline-block; }
         .badge-cho { background-color: #dbeafe; color: #1e40af; }
         .badge-ayu { background-color: #fef3c7; color: #92400e; }
         .badge-mec { background-color: #f3e8ff; color: #6b21a8; }
+        
+        .printableArea { background-color: #ffffff !important; padding: 20px; border-radius: 8px; }
+
         @media print {
             .no-print { display: none !important; }
-            body { padding: 0; }
+            body { padding: 0; background-color: #fff; }
+            .printableArea { padding: 0; border-radius: 0; }
         }
     </style>
 </head>
 <body class="p-4">
 
+    <!-- Barra de Acciones Superior -->
     <div class="d-flex justify-content-between align-items-center mb-4 no-print border-bottom pb-3">
-        <span class="text-muted">Vista previa del Reporte de Guardias Semanales</span>
-        <button onclick="window.print()" class="btn btn-primary bg-corporate"><i class="fa fa-print"></i> Confirmar Impresión / Guardar PDF</button>
-        <button id="captureButton" class="btn btn-dark shadow-sm">
-            <i class="fa-regular fa-copy me-2"></i> Capturar Imagen
-        </button>
-        <button id="sendWhatsappButton" class="btn btn-info shadow-sm">
-            <i class="fa fa-paper-plane me-2"></i> Enviar a WhatsApp
-        </button>
+        <span class="text-muted fw-bold">Vista previa del Reporte de Guardias Semanales</span>
+        <div class="d-flex gap-2">
+            <button id="captureButton" class="btn btn-dark shadow-sm">
+                <i class="fa-regular fa-copy me-2"></i> Capturar Imagen
+            </button>
+            <button id="sendWhatsappButton" class="btn btn-info text-white shadow-sm">
+                <i class="fa-brands fa-whatsapp me-2"></i> Enviar a WhatsApp
+            </button>
+            <button onclick="window.print()" class="btn btn-primary bg-corporate shadow-sm">
+                <i class="fa fa-print me-2"></i> Imprimir / Guardar PDF
+            </button>
+        </div>
     </div>
+
+    <!-- Mensaje dinámico de estado -->
     <div id="statusMessage" class="alert no-print mb-4 d-none" role="alert"></div>
-    <div class="printableArea">
+
+    <!-- Área imprimible y capturable -->
+    <div class="printableArea border shadow-sm">
         <!-- Encabezado del Reporte -->
         <div class="row align-items-center border-bottom pb-3 mb-4">
             <div class="col-8">
@@ -43,7 +63,9 @@
             </div>
             <div class="col-4 text-end">
                 <h6 class="fw-bold mb-1">Semana Programada</h6>
-                <span class="badge bg-corporate fs-6">{{ $startOfWeek->format('d/m/Y') }} al {{ $startOfWeek->copy()->addDays(6)->format('d/m/Y') }}</span>
+                <span class="badge bg-corporate fs-6">
+                    {{ $startOfWeek->format('d/m/Y') }} al {{ $startOfWeek->copy()->addDays(6)->format('d/m/Y') }}
+                </span>
             </div>
         </div>
 
@@ -73,7 +95,9 @@
                                         $badgeClass = strtolower(substr($g->rol_guardia, 0, 3)); 
                                     @endphp
                                     <span class="rol-badge badge-{{ $badgeClass }}">{{ $g->rol_guardia }}</span>
-                                    <div class="fw-bold mt-1" style="font-size: 11px;">{{ $g->personal->persona->nombre }}</div>
+                                    <div class="fw-bold mt-1" style="font-size: 11px;">
+                                        {{ $g->personal->persona->nombre ?? 'Sin nombre' }}
+                                    </div>
                                 </div>
                             @empty
                                 <div class="text-center text-muted small mt-4">Sin guardias</div>
@@ -96,33 +120,25 @@
             </div>
         </div>
     </div>
-    <div id="outputContainer" class="mt-4 pt-4 border-top"></div>
-    <!-- Librería encargada de la renderización del HTML a Canvas -->
+
+    <!-- Librería html2canvas -->
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Selectores Nativos (Anti-errores, elimina dependencia obligatoria de jQuery)
         const printableArea = document.querySelector(".printableArea"); 
         const captureButton = document.getElementById('captureButton');
-        const statusMessage = document.getElementById('statusMessage');
         const sendWhatsappButton = document.getElementById('sendWhatsappButton');
+        const statusMessage = document.getElementById('statusMessage');
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-        if (!printableArea || !captureButton || !statusMessage) {
-            console.error("Faltan elementos críticos en el DOM para la ejecución de capturas.");
+        if (!printableArea || !captureButton || !statusMessage || !sendWhatsappButton) {
+            console.error("Faltan elementos necesarios en el DOM.");
             return;
         }
 
         function setStatus(message, bgClass, textClass) {
-            if (!statusMessage) return;
             statusMessage.className = `alert no-print mb-4 d-block ${bgClass} ${textClass}`;
-            statusMessage.textContent = message;
-        }
-
-        // Helper para el manejo visual de estados
-        function showStatus(message, type = 'info') {
-            statusMessage.className = `alert no-print mb-4 d-block alert-${type}`;
             statusMessage.textContent = message;
         }
 
@@ -130,79 +146,88 @@
             statusMessage.className = 'd-none';
         }
 
-
         /**
-         * 1. Capturar área y copiar al portapapeles (Para pegar directo en WhatsApp con Ctrl+V)
+         * 1. Capturar al Portapapeles
          */
         async function captureAndCopyToClipboard() {
-            showStatus('Generando imagen de alta resolución...', 'warning');
+            setStatus('Generando imagen de alta resolución...', 'alert-warning', 'text-dark');
             captureButton.disabled = true;
 
             try {
                 const canvas = await html2canvas(printableArea, {
-                    scale: 2, // Mantiene nitidez en pantallas de alta densidad
+                    scale: 2,
                     logging: false,
                     useCORS: true,
-                    backgroundColor: '#ffffff' // Garantiza que no existan transparencias
+                    backgroundColor: '#ffffff'
                 });
 
                 const imageBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-                
-                if (!imageBlob) throw new Error('Error al procesar los datos binarios de la imagen.');
+                if (!imageBlob) throw new Error('Error al procesar los datos de la imagen.');
 
                 const item = new ClipboardItem({ "image/png": imageBlob });
                 await navigator.clipboard.write([item]);
 
-                showStatus('¡Éxito! El cronograma se copió al portapapeles. Ya puedes pegarlo en WhatsApp (Ctrl + V).', 'success');
-                setTimeout(hideStatus, 6000);
+                setStatus('¡Éxito! El reporte se copió al portapapeles. Ya puedes pegarlo (Ctrl + V).', 'alert-success', 'text-white');
+                setTimeout(hideStatus, 5000);
 
             } catch (error) {
                 console.error(error);
-                if (error.name === 'NotAllowedError') {
-                    showStatus('Error de permisos: El navegador bloqueó el acceso al portapapeles. Asegúrate de estar usando HTTPS.', 'danger');
-                } else {
-                    showStatus(`Fallo al generar imagen: ${error.message}`, 'danger');
-                }
+                setStatus(`Fallo al generar imagen: ${error.message}`, 'alert-danger', 'text-white');
             } finally {
                 captureButton.disabled = false;
             }
         }
 
+        /**
+         * 2. Enviar a WhatsApp mediante la API
+         */
         async function sendReportToWhatsapp() {
-            setStatus('Generando imagen para enviar a WhatsApp...', 'bg-warning', 'text-dark');
+            setStatus('Generando imagen y enviando a WhatsApp...', 'alert-warning', 'text-dark');
             sendWhatsappButton.disabled = true;
 
             try {
-                const canvas = await html2canvas(printableArea, { scale: 2, useCORS: true });
+                const canvas = await html2canvas(printableArea, { 
+                    scale: 2, 
+                    useCORS: true,
+                    backgroundColor: '#ffffff' 
+                });
+                
                 const imageBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
                 
                 const formData = new FormData();
-                formData.append('image', imageBlob, 'reporte_whatsapp.png');
-                // Añadimos el turno explícito en el pie del mensaje de WhatsApp para mayor claridad del grupo directivo
-                formData.append('caption', '📊 *Reporte Guardias - ' + '{{ \Carbon\Carbon::parse($startOfWeek)->format('d/m/Y') }} - ' + '{{ \Carbon\Carbon::parse($endOfWeek)->format('d/m/Y') }}');
-                
-                const response = await fetch('{{ route('guardia.send') }}', {
+                formData.append('_token', csrfToken); // Garantiza que no falle CSRF
+                formData.append('image', imageBlob, 'reporte_guardias.png');
+                formData.append('caption', '📊 *Cronograma de Guardias Semanales* ({{ $startOfWeek->format("d/m/Y") }} - {{ $startOfWeek->copy()->addDays(6)->format("d/m/Y") }})');
+
+                const response = await fetch('{{ route("guardia.send") }}', {
                     method: 'POST',
-                    headers: { 'X-CSRF-TOKEN': csrfToken },
+                    headers: { 
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    },
                     body: formData
                 });
 
-                if (!response.ok) throw new Error('Error de conexión con la API.');
+                const data = await response.json();
 
-                setStatus('¡Reporte enviado exitosamente a WhatsApp!', 'bg-success', 'text-white');
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || data.message || 'Error al procesar el envío en el servidor.');
+                }
+
+                setStatus('¡Reporte enviado exitosamente a WhatsApp!', 'alert-success', 'text-white');
+                setTimeout(hideStatus, 5000);
+
             } catch (error) {
-                setStatus('Error: ' + error.message, 'bg-danger', 'text-white');
+                console.error(error);
+                setStatus('Error: ' + error.message, 'alert-danger', 'text-white');
             } finally {
                 sendWhatsappButton.disabled = false;
-                setTimeout(() => statusMessage.classList.add('d-none'), 5000);
             }
         }
 
-        
-
-        // Asignación de Escuchas de Eventos
+        // Asignar Eventos
         captureButton.addEventListener('click', captureAndCopyToClipboard);
-        sendWhatsappButton?.addEventListener('click', sendReportToWhatsapp);
+        sendWhatsappButton.addEventListener('click', sendReportToWhatsapp);
     });
     </script>
 
