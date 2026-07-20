@@ -57,7 +57,7 @@ class WhatsappApiService
                     'token'   => $this->key,
                     'to'      => $target,
                     'image'   => $rutaImagen, 
-                    'caption' => $caption . " - " . date('d/m/Y'),
+                    'caption' => $caption,
                     'priority' => 1
                 ]);
         } catch (\Exception $e) {
