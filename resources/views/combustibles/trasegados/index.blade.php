@@ -13,9 +13,28 @@
             <p class="text-muted small mb-0">Registro y trazabilidad cronológica de movimientos de combustible entre tanques</p>
         </div>
         <div class="d-flex flex-wrap align-items-center justify-content-md-end gap-2">
-            <a href="{{ route('combustibles.trasegados.create_interno') }}" class="btn btn-sm btn-warning fw-black text-uppercase shadow-sm px-3 d-inline-flex align-items-center" style="font-size: 12px; height: 32px; color: #000; background-color: #ff6600; border-color: #ff6600;">
-                <i class="fas fa-plus-circle me-1"></i> Registrar Trasegado
-            </a>
+            <div class="dropdown">
+                <button class="btn btn-sm btn-warning dropdown-toggle fw-black text-uppercase shadow-sm px-3 d-inline-flex align-items-center" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 12px; height: 32px; color: #000; background-color: #ff6600; border-color: #ff6600;">
+                    <i class="fas fa-plus-circle me-1"></i> Registrar Trasegado
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="dropdownMenuButton1" style="font-size: 13px;">
+                    <li>
+                        <a class="dropdown-item py-2 fw-bold text-dark" href="{{ route('combustibles.trasegados.create_interno') }}">
+                            <i class="fas fa-exchange-alt text-orange me-2"></i> Trasegado Interno (Misma Sede)
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item py-2 fw-bold text-dark" href="{{ route('combustibles.trasegados.create_inter_sedes') }}">
+                            <i class="fas fa-truck-moving text-orange me-2"></i> Trasegado Inter-Sedes
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item py-2 fw-bold text-dark" href="{{ route('combustibles.trasegados.create_externo') }}">
+                            <i class="fas fa-external-link-alt text-muted me-2"></i> Trasegado Externo (Prestamos con Aliados)
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 
@@ -100,7 +119,7 @@
                             <th>Registrado Por</th>
                             <th>Sede Origen</th>
                             <th>Tanque Emisor</th>
-                            <th>Destino / Aliado</th>
+                            <th>Sede Destino / Aliado</th>
                             <th>Tanque Receptor</th>
                             <th>Combustible</th>
                             <th class="pe-4 text-end">Litros Trasegados</th>
@@ -111,7 +130,7 @@
                             <tr>
                                 {{-- Fecha y Hora (Corregido con Carbon::parse para evitar el error de string) --}}
                                 <td class="ps-4 font-monospace small fw-bold text-dark">
-                                    {{ $trasegado->created_at ? \Carbon\Carbon::parse($trasegado->created_at)->format('d/m/Y h:i A') : 'N/A' }}
+                                    {{ $trasegado->created_at ? \Carbon\Carbon::parse($trasegado->created_at)->format('d/m/Y h:i A') : 'EXTERNO' }}
                                 </td>
 
                                 {{-- Usuario que registró --}}
@@ -125,14 +144,14 @@
                                 {{-- Sede Origen --}}
                                 <td>
                                     <span class="badge bg-light text-secondary border text-uppercase fw-bold" style="font-size: 11px;">
-                                        {{ $trasegado->sedeOrigen->nombre ?? 'N/A' }}
+                                        {{ $trasegado->sedeOrigen->nombre ?? 'EXTERNO' }}
                                     </span>
                                 </td>
 
                                 {{-- Tanque Emisor --}}
                                 <td>
                                     <span class="fw-bold text-dark" style="font-size: 13px;">
-                                        <i class="fas fa-database text-muted me-1"></i> {{ $trasegado->depositoOrigen->serial ?? 'N/A' }}
+                                        <i class="fas fa-database text-muted me-1"></i> {{ $trasegado->depositoOrigen->serial ?? 'Externo' }}
                                     </span>
                                 </td>
 
@@ -144,7 +163,7 @@
                                         </span>
                                     @else
                                         <span class="badge bg-light text-secondary border text-uppercase fw-bold" style="font-size: 11px;">
-                                            {{ $trasegado->sedeDestino->nombre ?? 'N/A' }}
+                                            {{ $trasegado->sedeDestino->nombre ?? 'EXTERNO' }}
                                         </span>
                                     @endif
                                 </td>
@@ -156,7 +175,7 @@
                                             <i class="fas fa-database text-muted me-1"></i> {{ $trasegado->depositoDestino->serial }}
                                         </span>
                                     @else
-                                        <span class="text-muted small">N/A (Externo)</span>
+                                        <span class="text-muted small">Externo</span>
                                     @endif
                                 </td>
 

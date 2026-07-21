@@ -35,12 +35,14 @@ class Cliente extends Model
         'prepagado',
         'registro_paso',
         'status',
+        'es_aliado_comercial',
         'fecha_aprobacion',
         'telegram_id',
     ];
 
     protected $casts = [
         'fecha_aprobacion' => 'datetime',
+        'es_aliado_comercial' => 'boolean',
     ];
 
     // -------------------------------------------------------

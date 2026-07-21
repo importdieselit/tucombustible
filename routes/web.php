@@ -354,7 +354,7 @@ Route::middleware(['auth'])->group(function () {
                     Route::get('/', [TrasegadoController::class, 'index'])->name('index');
                     // Formularios independientes para evitar condicionales masivos en la vista
                     Route::get('/crear/interno', [TrasegadoController::class, 'createInterno'])->name('create_interno');
-                    Route::get('/crear/inter-sede', [TrasegadoController::class, 'createInterSede'])->name('create_inter_sede');
+                    Route::get('/crear/inter-sede', [TrasegadoController::class, 'createInterSede'])->name('create_inter_sedes');
                     Route::get('/crear/externo', [TrasegadoController::class, 'createExterno'])->name('create_externo');
                     Route::post('/guardar', [TrasegadoController::class, 'store'])->name('store');
                 });

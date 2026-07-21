@@ -7,6 +7,7 @@ use App\Services\TrasegadoService;
 use App\Models\Trasegado;
 use App\Models\Sedes;   
 use App\Models\Deposito;   
+use App\Models\Cliente;
 use Exception;
 
 class TrasegadoController extends Controller
@@ -23,7 +24,6 @@ class TrasegadoController extends Controller
      */
     public function index(Request $request)
     {
-        // Iniciamos la consulta con Eager Loading para todas las relaciones de la vista
         $query = Trasegado::with([
             'user', 
             'sedeOrigen', 
@@ -34,7 +34,6 @@ class TrasegadoController extends Controller
             'tipoCombustible'
         ]);
 
-        // Procesamos los filtros avanzados que vienen de la vista
         if ($request->filled('id_sede_origen')) {
             $query->where('sede_origen_id', $request->id_sede_origen);
         }
@@ -51,10 +50,7 @@ class TrasegadoController extends Controller
             $query->whereDate('created_at', '<=', $request->fecha_hasta);
         }
 
-        // Paginamos el resultado ordenado cronológicamente
         $trasegados = $query->orderBy('created_at', 'desc')->paginate(20);
-
-        // Traemos las sedes para que el SELECT del filtro se llene correctamente
         $sedes = Sedes::orderBy('nombre')->get();
 
         return view('combustibles.trasegados.index', compact('trasegados', 'sedes'));
@@ -67,7 +63,6 @@ class TrasegadoController extends Controller
     {
         $sedes = Sedes::where('estatus', 1)->get();
         
-        // CORREGIDO: Iniciamos el join directamente desde el modelo Eloquent
         $tanques = Deposito::leftJoin('tipos_combustible', 'depositos.tipo_combustible_id', '=', 'tipos_combustible.id')
             ->select('depositos.*', 'tipos_combustible.nombre as combustible_nombre')
             ->get();
@@ -80,15 +75,34 @@ class TrasegadoController extends Controller
      */
     public function createInterSede()
     {
+        $sedes = Sedes::where('estatus', 1)->orderBy('nombre')->get();
+    
+        $tanques = Deposito::leftJoin('tipos_combustible', 'depositos.tipo_combustible_id', '=', 'tipos_combustible.id')
+            ->select(
+                'depositos.*', 
+                'tipos_combustible.nombre as combustible_nombre'
+            )
+            ->get();
 
+        return view('combustibles.trasegados.create_inter_sedes', compact('sedes', 'tanques'));
     }
 
     /**
-     * Formulario para Trasegado Externo.
+     * Formulario para Trasegado Externo (Préstamos con Aliados Comerciales / Entidades Externas).
      */
     public function createExterno()
     {
-        
+        $sedes = Sedes::where('estatus', 1)->orderBy('nombre')->get();
+
+        $tanques = Deposito::leftJoin('tipos_combustible', 'depositos.tipo_combustible_id', '=', 'tipos_combustible.id')
+            ->select('depositos.*', 'tipos_combustible.nombre as combustible_nombre')
+            ->get();
+
+        $aliados = Cliente::where('es_aliado_comercial', true)
+            ->orderBy('nombre')
+            ->get();
+
+        return view('combustibles.trasegados.create_externo', compact('sedes', 'tanques', 'aliados'));
     }
 
     /**
@@ -129,34 +143,80 @@ class TrasegadoController extends Controller
         }
     }
 
+    /**
+     * Valida dinámicamente según la naturaleza de la operación.
+     */
     protected function validarCamposSegunTipo(Request $request)
     {
+        // 1. Reglas base obligatorias para todos los tipos
         $rules = [
-            'tipo_trasegado'      => 'required|in:interno,inter_sede,externo', 
-            'cantidad_litros'     => 'required|numeric|min:0.01',
-            'tipo_combustible_id' => 'required',
-            'bolsa_origen_tipo'   => 'required',
-            'bolsa_destino_tipo'  => 'required',
+            'tipo_trasegado'      => 'required|in:interno,inter_sede,externo',
+            'cantidad_litros'     => 'required|numeric|gt:0',
+            'tipo_combustible_id' => 'required|exists:tipos_combustible,id',
+            'observaciones'       => 'nullable|string',
         ];
 
+        // 2. Trasegado Interno
         if ($request->tipo_trasegado === 'interno') {
-            $rules['sede_origen_id']      = 'required';
-            $rules['deposito_origen_id']  = 'required';
-            $rules['deposito_destino_id'] = 'required|different:deposito_origen_id';
+            $rules['sede_origen_id']      = 'required|exists:sedes,id';
+            $rules['deposito_origen_id']  = 'required|exists:depositos,id';
+            $rules['deposito_destino_id'] = 'required|exists:depositos,id|different:deposito_origen_id';
+            $rules['bolsa_origen_tipo']   = 'required|in:general,prepagado';
+            $rules['bolsa_destino_tipo']  = 'required|in:general,prepagado';
 
-            // Sincronizamos la sede destino para cumplir con el esquema del Service
             $request->merge(['sede_destino_id' => $request->sede_origen_id]);
         }
 
+        // 3. Trasegado Inter-Sede
         if ($request->tipo_trasegado === 'inter_sede') {
-            $rules['sede_origen_id']      = 'required';
-            $rules['sede_destino_id']     = 'required|different:sede_origen_id';
-            $rules['deposito_origen_id']  = 'required';
-            $rules['deposito_destino_id'] = 'required';
-            $rules['vehiculo_id']         = 'required';
-            $rules['chofer_id']           = 'required';
+            $rules['sede_origen_id']      = 'required|exists:sedes,id';
+            $rules['sede_destino_id']     = 'required|exists:sedes,id|different:sede_origen_id';
+            $rules['deposito_origen_id']  = 'required|exists:depositos,id';
+            $rules['deposito_destino_id'] = 'required|exists:depositos,id';
+            $rules['bolsa_origen_tipo']   = 'required|in:general,prepagado';
+            $rules['bolsa_destino_tipo']  = 'required|in:general,prepagado';
         }
 
+        // 4. Trasegado Externo (Préstamos / Entradas / Salidas Externas)
+        if ($request->tipo_trasegado === 'externo') {
+            // Si seleccionó "OTRO" o vino vacío, convertimos a null el cliente_id
+            if ($request->cliente_id === 'OTRO' || empty($request->cliente_id)) {
+                $request->merge(['cliente_id' => null]);
+            }
+
+            // Normalizamos el sentido de la operación
+            $operacion = $request->input('direccion_movimiento') ?? $request->input('operacion_externa');
+            $request->merge(['operacion_externa' => $operacion]);
+
+            $rules['operacion_externa'] = 'required|in:salida,entrada';
+            $rules['cliente_id']        = 'nullable|exists:clientes,id';
+            // entidad_externa es obligatoria SOLO SI NO se seleccionó un cliente_id del select
+            $rules['entidad_externa']   = 'required_without:cliente_id|nullable|string|max:255';
+
+            if ($operacion === 'salida') {
+                $rules['sede_origen_id']     = 'required|exists:sedes,id';
+                $rules['deposito_origen_id'] = 'required|exists:depositos,id';
+                $rules['bolsa_origen_tipo']  = 'required|in:general,prepagado';
+
+                $request->merge([
+                    'sede_destino_id'     => null,
+                    'deposito_destino_id' => null,
+                    'bolsa_destino_tipo'  => null,
+                ]);
+            } else {
+                $rules['sede_destino_id']     = 'required|exists:sedes,id';
+                $rules['deposito_destino_id'] = 'required|exists:depositos,id';
+                $rules['bolsa_destino_tipo']  = 'required|in:general,prepagado';
+
+                $request->merge([
+                    'sede_origen_id'     => null,
+                    'deposito_origen_id' => null,
+                    'bolsa_origen_tipo'  => null,
+                ]);
+            }
+        }
+
+        // 5. Ejecutamos la validación
         $request->validate($rules);
     }
 }

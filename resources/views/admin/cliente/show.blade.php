@@ -122,6 +122,17 @@
                             <label class="text-orange text-uppercase fw-bold d-block small mb-1">Dirección Operativa (Despacho)</label>
                             <span class="fw-bold text-dark uppercase">{{ $cliente->direccion_operativa ?? 'N/A' }}</span>
                         </div>
+                        <div class="mb-2">
+                            @if($cliente->es_aliado_comercial)
+                                <span class="badge bg-primary text-white px-3 py-2 rounded-pill fw-bold">
+                                    <i class="fas fa-handshake me-1"></i> Aliado Comercial (Aplica para prestamos de combustibles)
+                                </span>
+                            @else
+                                <span class="badge bg-secondary text-white px-3 py-2 rounded-pill fw-bold">
+                                    <i class="fas fa-building me-1"></i> No es Aliado Comercial (No aplica para prestamos de combustibles)
+                                </span>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>

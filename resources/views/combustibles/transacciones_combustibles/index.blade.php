@@ -8,7 +8,7 @@
     <div class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
         <div>
             <h2 class="h4 fw-black text-dark text-uppercase mb-1">
-                <i class="fas fa-book text-orange me-2"></i> Ledger de Combustibles
+                <i class="fas fa-book text-orange me-2"></i> Historial de Transacciones de Combustibles
             </h2>
             <p class="text-muted small mb-0">Libro mayor de auditoría y movimientos históricos de inventario</p>
         </div>
@@ -22,12 +22,36 @@
             <div class="col-md-2">
                 <label class="small fw-bold text-uppercase text-muted mb-1" style="font-size: 11px;">Movimiento</label>
                 <select name="tipo_movimiento" class="form-select form-select-sm fw-bold text-dark" style="font-size: 13px;">
-                    <option value="">TODOS</option>
+                    <option value="">TODOS LOS MOVIMIENTOS</option>
+                    
+                    {{-- Entradas y Salidas --}}
                     <option value="compra" {{ request('tipo_movimiento') == 'compra' ? 'selected' : '' }}>COMPRAS (ENTRADAS)</option>
                     <option value="despacho" {{ request('tipo_movimiento') == 'despacho' ? 'selected' : '' }}>DESPACHOS (SALIDAS)</option>
                     <option value="despacho_prepagado" {{ request('tipo_movimiento') == 'despacho_prepagado' ? 'selected' : '' }}>PREPAGADOS (SALIDAS)</option>
+                    <option value="consumo_operativo" {{ request('tipo_movimiento') == 'consumo_operativo' ? 'selected' : '' }}>CONSUMOS OPERATIVOS</option>
+                    
+                    {{-- Trasegados --}}
+                    <option value="trasegado_interno" {{ request('tipo_movimiento') == 'trasegado_interno' ? 'selected' : '' }}>TRASEGADO INTERNO</option>
+                    <option value="trasegado_inter-sede" {{ request('tipo_movimiento') == 'trasegado_inter-sede' ? 'selected' : '' }}>TRASEGADO INTER-SEDE</option>
+                    <option value="trasegado_externo" {{ request('tipo_movimiento') == 'trasegado_externo' ? 'selected' : '' }}>TRASEGADO EXTERNO</option>
+                    
+                    {{-- Ajustes y Reversos --}}
                     <option value="ajuste_positivo" {{ request('tipo_movimiento') == 'ajuste_positivo' ? 'selected' : '' }}>AJUSTES (+)</option>
                     <option value="ajuste_negativo" {{ request('tipo_movimiento') == 'ajuste_negativo' ? 'selected' : '' }}>AJUSTES (-)</option>
+                    <option value="reverso" {{ request('tipo_movimiento') == 'reverso' ? 'selected' : '' }}>REVERSOS</option>
+                </select>
+            </div>
+
+            {{-- FILTRO POR SEDE --}}
+            <div class="col-md-2">
+                <label class="small fw-bold text-uppercase text-muted mb-1" style="font-size: 11px;">Sede</label>
+                <select name="sede_id" class="form-select form-select-sm fw-bold text-dark" style="font-size: 13px;">
+                    <option value="">TODAS</option>
+                    @foreach($sedes as $sede)
+                        <option value="{{ $sede->id }}" {{ request('sede_id') == $sede->id ? 'selected' : '' }}>
+                            {{ strtoupper($sede->nombre) }}
+                        </option>
+                    @endforeach
                 </select>
             </div>
 
@@ -62,7 +86,7 @@
                     <i class="fas fa-filter me-1"></i> Filtrar
                 </button>
                 
-                @if(request()->filled('tipo_movimiento') || request()->filled('deposito_id') || request()->filled('tipo_combustible_id') || request()->filled('fecha_desde') || request()->filled('fecha_hasta'))
+                @if(request()->filled('tipo_movimiento') || request()->filled('sede_id') || request()->filled('deposito_id') || request()->filled('tipo_combustible_id') || request()->filled('fecha_desde') || request()->filled('fecha_hasta'))
                     <a href="{{ url()->current() }}" class="btn btn-outline-secondary btn-sm w-100 fw-bold text-uppercase d-inline-flex align-items-center justify-content-center" style="font-size: 11px; height: 31px;">
                         Limpiar
                     </a>
@@ -88,7 +112,7 @@
                             <th>Depósito / Tanque</th>
                             <th>Tipo Movimiento</th>
                             <th>Combustible</th>
-                            <th>Asociado (Cliente / Prov)</th>
+                            <th>Cliente / Aliado</th>
                             <th>Operador (Usuario)</th>
                             <th class="text-end">Litros</th>
                             <th class="pe-4 text-end" style="width: 80px;">Detalle</th>
@@ -168,11 +192,15 @@
                                     @endif
                                 </td>
 
-                                {{-- Tercero Asociado (Cliente o Proveedor) --}}
+                                {{-- Tercero Asociado (Cliente o Aliado Comercial) --}}
                                 <td>
                                     @if($transaccion->cliente)
-                                        <span class="fw-black text-dark d-block" style="font-size: 13px;">{{ $transaccion->cliente->nombre }}</span>
-                                        <small class="text-muted font-monospace" style="font-size: 11px;">{{ $transaccion->cliente->rif }}</small>
+                                        <span class="fw-black text-dark d-block" style="font-size: 13px;">
+                                            {{ $transaccion->cliente->nombre }}
+                                        </span>
+                                        <small class="text-muted font-monospace" style="font-size: 11px;">
+                                            {{ $transaccion->cliente->rif ?? 'S/N' }}
+                                        </small>
                                     @else
                                         <span class="text-muted italic small" style="font-size: 12px;">Uso Interno / Ajuste</span>
                                     @endif

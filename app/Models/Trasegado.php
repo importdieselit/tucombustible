@@ -10,9 +10,19 @@ class Trasegado extends Model
     protected $table = 'trasegados';
     
     protected $fillable = [
-        'tipo_trasegado', 'sede_origen_id', 'deposito_origen_id', 'bolsa_origen_tipo',
-        'sede_destino_id', 'deposito_destino_id', 'bolsa_destino_tipo',
-        'aliado_comercial_id', 'tipo_combustible_id', 'cantidad_litros', 'user_id', 'status', 'observaciones'
+        'tipo_trasegado', 
+        'sede_origen_id', 
+        'deposito_origen_id', 
+        'bolsa_origen_tipo',
+        'sede_destino_id', 
+        'deposito_destino_id', 
+        'bolsa_destino_tipo',
+        'cliente_id', 
+        'tipo_combustible_id', 
+        'cantidad_litros', 
+        'user_id', 
+        'status', 
+        'observaciones'
     ];
 
     protected $casts = [
@@ -50,8 +60,9 @@ class Trasegado extends Model
         return $this->belongsTo(Deposito::class, 'deposito_destino_id'); 
     }
 
-    public function aliado(): BelongsTo { 
-        return $this->belongsTo(AliadoComercial::class, 'aliado_comercial_id'); 
+    public function aliado() {
+        return $this->belongsTo(Cliente::class, 'cliente_id')
+                    ->where('es_aliado_comercial', true);
     }
     
     public function tipoCombustible(): BelongsTo { 
