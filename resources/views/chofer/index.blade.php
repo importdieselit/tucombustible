@@ -69,9 +69,14 @@
     </div>
 
     <div class="row">
-        <div class="col-12">
+        <div class="col-6">
             <a href="{{ route('choferes.list') }}" class="btn btn-primary btn-lg w-100">
                 Ver Listado de Choferes
+            </a>
+        </div>
+        <div class="col-6">
+            <a href="{{ route('choferes.documentacion') }}" class="btn btn-primary btn-lg w-100">
+                Ver Documentación de Choferes
             </a>
         </div>
     </div>
