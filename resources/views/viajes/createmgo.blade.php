@@ -197,6 +197,67 @@
 $(document).ready(function() {
     let despachoIdx = 0;
 
+     // 1. Extraemos la lógica repetitiva en una función genérica
+    function checkAlertasVehiculo(selectElement, typeName) {
+        const vehiculoId = selectElement.value;
+        
+        // Si vuelve a la opción vacía, no hacemos nada
+        if (!vehiculoId) return;
+
+        // Consultamos al servidor mediante AJAX
+        fetch(`/vehiculos/${vehiculoId}/alertas-documentos`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.tiene_alertas) {
+                    // Construir la lista de alertas (usando .map() para que sea más limpio)
+                    const listaHtml = `
+                        <div style="text-align: left; background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                            <ul class="mb-0 text-danger">
+                                ${data.alertas.map(alerta => `<li class="mb-2">${alerta.tooltip}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+
+                    // Lanzar SweetAlert
+                    Swal.fire({
+                        title: `¡${typeName} con Alertas!`,
+                        icon: 'warning',
+                        html: `Este ${typeName.toLowerCase()} tiene problemas en su documentación:<br><br>${listaHtml}<br><b>¿Deseas seleccionarlo de todas formas?</b>`,
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Sí, continuar',
+                        cancelButtonText: 'Cancelar asignación'
+                    }).then((result) => {
+                        if (!result.isConfirmed) {
+                            // Si el usuario cancela, reseteamos el select que disparó el evento
+                            selectElement.value = '';
+                        }
+                    });
+                }
+            })
+            .catch(error => {
+                console.error(`Error consultando documentos del ${typeName.toLowerCase()}:`, error);
+            });
+    }
+
+    // 2. Obtenemos los elementos
+    const vehiculoSelect = document.getElementById('vehiculo_id');
+    const cisternaSelect = document.getElementById('cisterna_id');
+
+    // 3. Asignamos los event listeners llamando a la función
+    if (vehiculoSelect) {
+        vehiculoSelect.addEventListener('change', function() {
+            checkAlertasVehiculo(this, 'Vehículo');
+        });
+    }
+
+    if (cisternaSelect) {
+        cisternaSelect.addEventListener('change', function() {
+            checkAlertasVehiculo(this, 'Cisterna'); 
+        });
+    }
+
     // 1. Filtrar Muelles por Destino (ID = Ubicacion)
     $('#destino_ciudad').on('change', function() {
         const id = $(this).val(); // ID del destino (TabuladorViatico)

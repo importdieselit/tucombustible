@@ -3,6 +3,59 @@
 @section('title', 'Listado de Vehículos')
 
 @push('styles')
+    <style>
+        .mini-doc {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 44px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            margin: 2px;
+            color: white;
+            font-weight: 800;
+            font-size: 0.65rem;
+            letter-spacing: 0.5px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
+            cursor: help;
+            transition: transform 0.2s ease-in-out;
+        }
+        .mini-doc:hover {
+            transform: translateY(-3px) scale(1.05);
+            z-index: 10;
+        }
+        /* Efecto de esquina doblada */
+        .mini-doc::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            border-width: 0 10px 10px 0;
+            border-style: solid;
+            /* El borde superior derecho coincide con el fondo para simular el corte */
+            border-color: #f8fafc #f8fafc rgba(0,0,0,0.2) rgba(0,0,0,0.2); 
+            border-radius: 0 4px 0 0;
+        }
+        /* Líneas decorativas simulando texto abajo */
+        .mini-doc::after {
+            content: "";
+            position: absolute;
+            bottom: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 2px;
+            background: rgba(255,255,255,0.7);
+            box-shadow: 0 -4px 0 rgba(255,255,255,0.7);
+        }
+
+        /* Ajustes de colores según Bootstrap pero garantizando contraste */
+        .mini-doc.bg-danger { background: #ef4444; border: 1px solid #b91c1c; }
+        .mini-doc.bg-warning { background: #f59e0b; border: 1px solid #b45309; color: #fff; text-shadow: 1px 1px 1px rgba(0,0,0,0.6); } 
+        .mini-doc.bg-secondary { background: #64748b; border: 1px solid #475569; }  
+    </style>
     <!-- CSS de DataTables -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.0.7/css/dataTables.dataTables.css" />
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.dataTables.css" />
@@ -234,37 +287,25 @@
                         </td>
                         <td class="d-none d-md-table-cell text-center clickable-td">
                             @php
+                                // Obtenemos la colección plana de documentos que requieren atención
                                 $alertas = $vehiculo->getDocumentosAlertas();
                             @endphp
 
-                            @if($alertas['vencidos']->count() > 0)
-                                <span class="badge rounded-pill bg-danger" 
-                                    style="cursor: help;"
-                                    data-bs-toggle="tooltip" 
-                                    data-bs-html="true" 
-                                    title="<b>VENCIDOS:</b><br>{{ $alertas['vencidos']->implode('<br>') }}">
-                                    {{ $alertas['vencidos']->count() }}
-                                </span>
-                            @endif
-
-                            @if($alertas['por_vencer']->count() > 0)
-                                <span class="badge rounded-pill bg-warning text-dark" 
-                                    style="cursor: help;"
-                                    data-bs-toggle="tooltip" 
-                                    data-bs-html="true" 
-                                    title="<b>POR VENCER:</b><br>{{ $alertas['por_vencer']->implode('<br>') }}">
-                                    {{ $alertas['por_vencer']->count() }}
-                                </span>
-                            @endif
-                            @if($alertas['sin_registrar']->count() > 0)
-                                <span class="badge rounded-pill bg-secondary" 
-                                    style="cursor: help;"
-                                    data-bs-toggle="tooltip" 
-                                    data-bs-html="true" 
-                                    title="<b>SIN REGISTRAR:</b><br>{{ $alertas['sin_registrar']->implode('<br>') }}">
-                                    {{ $alertas['sin_registrar']->count() }}
-                                </span>
-                            @endif
+                            <div class="d-flex flex-wrap justify-content-center gap-1">
+                                @forelse($alertas as $alerta)
+                                    <div class="mini-doc {{ $alerta->class }}" 
+                                        data-bs-toggle="tooltip" 
+                                        data-bs-html="true" 
+                                        title="{!! $alerta->tooltip !!}">
+                                        <!-- Abreviatura que va dentro del ícono -->
+                                        <span style="position: relative; top: -2px;">{{ $alerta->abreviatura }}</span>
+                                    </div>
+                                @empty
+                                    <span class="badge bg-success bg-opacity-25 text-success border border-success">
+                                        <i class="fa fa-check-circle me-1"></i> Al día
+                                    </span>
+                                @endforelse
+                            </div>
                         </td>
                     </tr>
                     @endforeach

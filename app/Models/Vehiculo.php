@@ -434,59 +434,153 @@ class Vehiculo extends Model
  * Agrupa los documentos por su estado de alerta (vencidos o por vencer)
  * Reutiliza getDocumentStatus para mantener un solo punto de verdad.
  */
-    public function getDocumentosAlertas()
+  
+        public function getDocumentosAlertas()
         {
+            // 1. Arreglo ordenado por PRIORIDAD
+            // Estructura: 'Nombre' => [['campo1', 'campo2'], 'ABREVIATURA', 'TIPO_VALIDACION']
+            // Tipos de validación disponibles: 'codigo', 'fecha', 'archivo'
             $documentos = [
-                'Póliza' => ['poliza_fecha_out', null],
-                'RCV' => ['rcv', null],
-                'RACDA' => ['racda', null],
-                'ROTC' => ['rotc_venc', null],
-                'SEMCAMER' => [null, 'semcamer'],
-                'Homologación INTT' => [null, 'homologacion_intt'],
-                'Permiso INTT' => ['permiso_intt', null],
+                'ROTC'                  => [['rotc_venc', null], 'ROTC', 'fecha'],
+                'RACDA'                 => [['racda', null], 'RCDA', 'codigo'],
+                'Certificado Registro'  => [[null, null], 'CERT', 'archivo'],
+                'Póliza'                => [['poliza_fecha_out', null], 'POL', 'fecha'],
+                'Homologación INTT'     => [[null, 'homologacion_intt'], 'HINT', 'codigo'],
+                'Permiso INTT'          => [['permiso_intt', null], 'PINT', 'fecha'],
+                'SENCAMER'              => [[null, 'semcamer'], 'SCMR', 'codigo'],
             ];
 
-            $alertas = ['vencidos' => collect(), 'por_vencer' => collect(), 'sin_registrar' => collect()];
+            $alertas = collect();
 
-            foreach ($documentos as $label => $fields) {
-                $status = $this->getDocumentStatus($label, $fields[0], $fields[1]);
-                
-                // Extraemos días si es por fecha (opcional, para el tooltip)
-                $diasText = "";
-                
-                if (!empty($rawValue) && preg_match('/^\d{4}-\d{2}-\d{2}/', $rawValue)) {
-                    try {
-                        $fecha = \Carbon\Carbon::parse($rawValue)->startOfDay();
-                        $diferencia = \Carbon\Carbon::now()->startOfDay()->diffInDays($fecha, false);
-                        
-                        if ($diferencia < 0) {
-                            $diasText = " (Vencido hace " . abs($diferencia) . " días)";
-                        } else {
-                            $diasText = " (Faltan $diferencia días)";
-                        }
-                    } catch (\Exception $e) {
-                        $diasText = " (Fecha: $rawValue)";
+            foreach ($documentos as $label => $data) {
+                $fields = $data[0];
+                $abreviatura = $data[1];
+                $tipoValidacion = $data[2];
+
+                //Para Vehículos Ligeros (Tipo 6)
+                // SOLO se validan Certificado (CERT) y Póliza (POL). Se ignoran los demás.
+                if ($this->tipo == 6 && !in_array($abreviatura, ['CERT', 'POL'])) {
+                    continue; // Saltamos a la siguiente iteración, ignorando este documento
+                }
+
+                // Regla: Para el resto de tipos, SENCAMER (SCMR) y Homologación INTT (HINT) 
+                // SOLO aplican a Tipos 2 y 5 (Cisternas y Camiones)
+                if (in_array($abreviatura, ['SCMR', 'HINT'])) {
+                    if (!in_array($this->tipo, [2, 5])) {
+                        continue; // No aplica a este vehículo
                     }
-                } elseif (!empty($rawValue)) {
-                    // Si es un texto como "PENDIENTE", solo mostramos el texto
-                    $diasText = " ($rawValue)";
                 }
 
-                if ($status['class'] === 'bg-danger') {
-                    $alertas['vencidos']->push($label . $diasText);
-                } elseif ($status['class'] === 'bg-warning') {
-                    $alertas['por_vencer']->push($label . $diasText);
-                }elseif ($status['class'] === 'bg-secondary') {
-                    $alertas['sin_registrar']->push($label . $diasText);
+                $class = 'bg-success'; // Por defecto asumimos correcto
+                $diasText = "";
+
+                // ---------------------------------------------------------
+                // B. VALIDACIÓN TIPO: ARCHIVO FÍSICO (Certificado)
+                // ---------------------------------------------------------
+                if ($tipoValidacion === 'archivo') {
+                    $filename = "{$abreviatura}_{$this->id}";
+                    $extensions = ['pdf', 'jpg', 'png', 'jpeg'];
+                    $fileExists = false;
+                    
+                    foreach ($extensions as $ext) {
+                        $testPath = "storage/vehiculos/{$this->id}/documentos/{$filename}.{$ext}";
+                        if (file_exists(public_path($testPath))) {
+                            $fileExists = true;
+                            break;
+                        }
+                    }
+
+                    if (!$fileExists) {
+                        $class = 'bg-secondary';
+                        $diasText = "<br>Archivo físico no encontrado";
+                    }
+
+                // ---------------------------------------------------------
+                // C. VALIDACIÓN TIPO: CÓDIGO / REGISTRO (RACDA, SENCAMER, Homologación)
+                // ---------------------------------------------------------
+                } elseif ($tipoValidacion === 'codigo') {
+                    $campoValidar = $fields[0] ?? $fields[1];
+                    $rawValue = $this->{$campoValidar};
+                    $valUpper = strtoupper(trim((string)$rawValue));
+
+                    // Caso 1: N/A -> No Aplica (omitir completamente)
+                    if ($valUpper === 'N/A') {
+                        continue;
+                    }
+
+                    // Caso 2: PENDIENTE, N/T, NULL o Vacío -> Alerta de faltante
+                    if (empty($rawValue) || in_array($valUpper, ['PENDIENTE', 'N/T', 'NULL'])) {
+                        $class = 'bg-secondary';
+                        $diasText = "<br>Estatus: " . ($valUpper ?: 'Sin registrar');
+                    } else {
+                        // Caso 3: Contiene un código válido (ej: N.03-04-TSP-AI-2022-10949)
+                        $class = 'bg-success'; 
+                    }
+
+                // ---------------------------------------------------------
+                // D. VALIDACIÓN TIPO: FECHA (ROTC, Póliza, Permiso INTT)
+                // ---------------------------------------------------------
+                } elseif ($tipoValidacion === 'fecha') {
+                    $campoValidar = $fields[0] ?? $fields[1];
+                    $rawValue = $this->{$campoValidar};
+                    $valUpper = strtoupper(trim((string)$rawValue));
+
+                    // Caso 1: N/A -> No Aplica (omitir)
+                    if ($valUpper === 'N/A') {
+                        continue;
+                    }
+
+                    // Caso 2: PENDIENTE, N/T, NULL o Vacío
+                    if (empty($rawValue) || in_array($valUpper, ['PENDIENTE', 'N/T', 'NULL'])) {
+                        $class = 'bg-secondary';
+                        $diasText = "<br>Estatus: " . ($valUpper ?: 'Sin fecha registrada');
+                    } else {
+                        // Caso 3: Evaluación de Fecha
+                        if (preg_match('/^\d{4}-\d{2}-\d{2}/', $rawValue)) {
+                            try {
+                                $fecha = \Carbon\Carbon::parse($rawValue)->startOfDay();
+                                $diferencia = \Carbon\Carbon::now()->startOfDay()->diffInDays($fecha, false);
+
+                                if ($diferencia < 0) {
+                                    $class = 'bg-danger';
+                                    $diasText = "<br><span class='text-danger'>Vencido hace " . abs((int)$diferencia) . " días</span>";
+                                } elseif ($diferencia <= 30) { // Margen de 30 días para aviso
+                                    $class = 'bg-warning';
+                                    $diasText = "<br><span class='text-warning'>Faltan " . (int)$diferencia . " días</span>";
+                                } else {
+                                    $class = 'bg-success';
+                                }
+                            } catch (\Exception $e) {
+                                $class = 'bg-secondary';
+                                $diasText = "<br>Fecha no válida: $rawValue";
+                            }
+                        } else {
+                            $class = 'bg-secondary';
+                            $diasText = "<br>Estatus: $rawValue";
+                        }
+                    }
                 }
 
-                
+                // ---------------------------------------------------------
+                // E. FILTRO FINAL
+                // ---------------------------------------------------------
+                // Si el estado es correcto (bg-success), se ignora y no se genera ícono
+                if ($class === 'bg-success') {
+                    continue;
+                }
+
+                $alertas->push((object)[
+                    'label'       => $label,
+                    'abreviatura' => $abreviatura,
+                    'class'       => $class,
+                    'tooltip'     => "<b>{$label}</b>" . $diasText
+                ]);
             }
 
             return $alertas;
         }
 
-    public static function getUnidadesConDocumentosVencidos($user)
+    public static function getUnidadesConDocumentosVencidos(int $user)
     {
         $cliente = Cliente::find($user);
           
