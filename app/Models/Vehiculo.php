@@ -490,7 +490,7 @@ class Vehiculo extends Model
 
                     foreach ($extensions as $ext) {
                         // Ruta relativa
-                        $testPath = "storage/vehiculos/{$this->id}/documentos/{$filename}.{$ext}";
+                        $testPath = "storage/app/public/vehiculos/{$this->id}/documentos/{$filename}.{$ext}";
                         
                         // Ruta absoluta en el servidor (la que usa PHP para verificar si existe)
                         $rutaAbsoluta = public_path($testPath); 
