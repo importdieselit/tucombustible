@@ -168,6 +168,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('choferes/upload/doc/{id}',[ChoferController::class, 'uploadDocumento'])->name('choferes.upload.doc');
     Route::post('/choferes/update-cargo/{id}', [App\Http\Controllers\ChoferController::class, 'updateCargo'])
     ->name('choferes.update-cargo');
+
+    Route::get('/vehiculos/{id}/alertas-documentos', [VehiculoController::class, 'checkAlertasDocumentos']);
     Route::get('/vehiculos/import', [VehiculoController::class, 'importForm'])->name('vehiculos.import');
     Route::post('/vehiculos/import', [VehiculoController::class, 'importSave'])->name('vehiculos.import.save');
     Route::get('clientes/import', [PortalClienteController::class, 'import'])->name('clientes.import');

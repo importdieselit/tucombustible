@@ -246,6 +246,55 @@
         const otroVehiculoInput = document.getElementById('otro_vehiculo');
         const otroChoferInput = document.getElementById('otro_chofer');
         const otroAyudanteInput = document.getElementById('otro_ayudante'); // ID original: otro_ayudante
+
+
+        if (vehiculoSelect) {
+            vehiculoSelect.addEventListener('change', function() {
+                const vehiculoId = this.value;
+                
+                // Si vuelve a la opción "Seleccione un Vehículo", no hacemos nada
+                if (!vehiculoId) return;
+
+                // Consultamos al servidor mediante AJAX
+                fetch(`/vehiculos/${vehiculoId}/alertas-documentos`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.tiene_alertas) {
+                            
+                            // 1. Construir la lista de alertas usando los tooltips generados en el backend
+                            let listaHtml = '<div style="text-align: left; background: #f8f9fa; padding: 15px; border-radius: 8px;">';
+                            listaHtml += '<ul class="mb-0 text-danger">';
+                            
+                            data.alertas.forEach(alerta => {
+                                // alerta.tooltip ya trae el texto en HTML desde el Modelo
+                                listaHtml += `<li class="mb-2">${alerta.tooltip}</li>`;
+                            });
+                            
+                            listaHtml += '</ul></div>';
+
+                            // 2. Lanzar SweetAlert
+                            Swal.fire({
+                                title: '¡Vehículo con Alertas!',
+                                icon: 'warning',
+                                html: `Este vehículo tiene problemas en su documentación:<br><br>${listaHtml}<br><b>¿Deseas seleccionarlo de todas formas?</b>`,
+                                showCancelButton: true,
+                                confirmButtonColor: '#3085d6',
+                                cancelButtonColor: '#d33',
+                                confirmButtonText: 'Sí, continuar',
+                                cancelButtonText: 'Cancelar asignación'
+                            }).then((result) => {
+                                if (!result.isConfirmed) {
+                                    // Si el usuario cancela, reseteamos el select a la opción vacía
+                                    vehiculoSelect.value = '';
+                                }
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error consultando documentos:', error);
+                    });
+            });
+        }
         
         // Función para alternar la visibilidad y el atributo 'required'
         function toggleFleteFields() {

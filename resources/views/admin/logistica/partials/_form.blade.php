@@ -52,6 +52,7 @@
                 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
                 <script>
+                    // 1. Configuración de Flatpickr
                     document.addEventListener("DOMContentLoaded", function() {
                         flatpickr("#fecha_programada_picker", {
                             enableTime: true,
@@ -63,31 +64,86 @@
                         });
                     });
 
-                    document.addEventListener('DOMContentLoaded', function () {
-                    // Busca el formulario (asegúrate de que tu etiqueta <form> tenga id="formPlanificacion" o cámbialo por el tuyo)
-                    const form = document.getElementById('formPlanificacion'); 
+                    // 2. Función reutilizable para validación de Alertas de Documentos
+                    function checkAlertasVehiculo(selectElement, typeName) {
+                        const id = selectElement.value;
+                        if (!id) return;
 
-                    if (form) {
-                        form.addEventListener('submit', function (event) {
-                            // Contamos cuántos checkboxes de destino están marcados
-                            const destinosSeleccionados = document.querySelectorAll('input[name="destino_ciudad[]"]:checked');
+                        fetch(`/vehiculos/${id}/alertas-documentos`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.tiene_alertas) {
+                                    // Diseño alineado con los estilos corporativos (border-left-orange y listas limpias)
+                                    const listaHtml = `
+                                        <div style="text-align: left; background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 5px solid #ff6600;">
+                                            <ul class="mb-0 text-danger" style="list-style-type: none; padding-left: 0;">
+                                                ${data.alertas.map(alerta => `<li class="mb-2"><i class="fas fa-exclamation-triangle me-2"></i>${alerta.tooltip}</li>`).join('')}
+                                            </ul>
+                                        </div>
+                                    `;
 
-                            if (destinosSeleccionados.length === 0) {
-                                // 1. Detiene por completo el envío del formulario al servidor
-                                event.preventDefault(); 
-
-                                // 2. Muestra la alerta estética que ya usas en ImporDiesel
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'DATO REQUERIDO',
-                                    text: 'Debe seleccionar al menos un destino en el tabulador de viáticos antes de guardar.',
-                                    confirmButtonColor: '#212529', // El color oscuro corporativo que usas
-                                    confirmButtonText: 'ENTENDIDO'
-                                });
-                            }
-                        });
+                                    Swal.fire({
+                                        title: `¡ALERTA EN DOCUMENTOS!`,
+                                        icon: 'warning',
+                                        html: `El <b>${typeName.toLowerCase()}</b> seleccionado presenta irregularidades:<br><br>${listaHtml}<br><b class="text-dark">¿Deseas continuar con esta asignación de todos modos?</b>`,
+                                        showCancelButton: true,
+                                        confirmButtonColor: '#ff6600', // Naranja branding
+                                        cancelButtonColor: '#212529',  // Oscuro corporativo
+                                        confirmButtonText: '<i class="fas fa-check me-1"></i> Sí, continuar',
+                                        cancelButtonText: '<i class="fas fa-times me-1"></i> Cancelar asignación',
+                                        customClass: {
+                                            title: 'fw-black text-dark text-uppercase', // Misma tipografía de tu vista
+                                        }
+                                    }).then((result) => {
+                                        if (!result.isConfirmed) {
+                                            // Vaciamos el DOM
+                                            selectElement.value = '';
+                                            // Emitimos evento para que Alpine.js actualice su estado interno (x-model)
+                                            selectElement.dispatchEvent(new Event('change'));
+                                        }
+                                    });
+                                }
+                            })
+                            .catch(error => console.error(`Error consultando alertas de ${typeName}:`, error));
                     }
-                });
+
+                    // 3. Validación de formulario y Listeners de Documentos
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const form = document.getElementById('formPlanificacion'); 
+                        
+                        // Validación de Tabulador de Viáticos
+                        if (form) {
+                            form.addEventListener('submit', function (event) {
+                                const destinosSeleccionados = document.querySelectorAll('input[name="destino_ciudad[]"]:checked');
+                                if (destinosSeleccionados.length === 0) {
+                                    event.preventDefault(); 
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'DATO REQUERIDO',
+                                        text: 'Debe seleccionar al menos un destino en el tabulador de viáticos antes de guardar.',
+                                        confirmButtonColor: '#212529',
+                                        confirmButtonText: 'ENTENDIDO'
+                                    });
+                                }
+                            });
+                        }
+
+                        // Eventos para consultas de alertas documentales (usando los IDs correctos de la vista)
+                        const vehiculoSelect = document.getElementById('vehiculo_select');
+                        const cisternaSelect = document.getElementById('cisterna_select');
+
+                        if (vehiculoSelect) {
+                            vehiculoSelect.addEventListener('change', function() {
+                                checkAlertasVehiculo(this, 'Vehículo');
+                            });
+                        }
+
+                        if (cisternaSelect) {
+                            cisternaSelect.addEventListener('change', function() {
+                                checkAlertasVehiculo(this, 'Cisterna');
+                            });
+                        }
+                    });
                 </script>
 
                 {{-- DESTINO PARA TABULADOR (MULTIPLE - ESTILO CHECKBOX PREMIUM) --}}

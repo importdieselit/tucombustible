@@ -382,6 +382,17 @@ class VehiculoController extends BaseController
 
     }
 
+    public function checkAlertasDocumentos($id)
+    {
+        $vehiculo = Vehiculo::findOrFail($id);
+        $alertas = $vehiculo->getDocumentosAlertas();
+
+        return response()->json([
+            'tiene_alertas' => $alertas->isNotEmpty(),
+            'alertas'       => $alertas
+        ]);
+    }
+
      protected function applyBusinessFilters(Builder $query): Builder
     {
         $filterKey = request()->get('filter'); // Usamos el helper global 'request()'
