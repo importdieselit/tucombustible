@@ -16,6 +16,7 @@ use App\Models\Viaje;
 use App\Models\CompraCombustible;
 use Google\Service\ApigeeRegistry\Build;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Log;
 
 class Vehiculo extends Model
 {
@@ -484,9 +485,19 @@ class Vehiculo extends Model
                     $extensions = ['pdf', 'jpg', 'png', 'jpeg'];
                     $fileExists = false;
                     
+                    // Variable para almacenar las rutas probadas y debuggear
+                    $rutasProbadas = []; 
+
                     foreach ($extensions as $ext) {
+                        // Ruta relativa
                         $testPath = "storage/vehiculos/{$this->id}/documentos/{$filename}.{$ext}";
-                        if (file_exists(public_path($testPath))) {
+                        
+                        // Ruta absoluta en el servidor (la que usa PHP para verificar si existe)
+                        $rutaAbsoluta = public_path($testPath); 
+                        
+                        $rutasProbadas[] = $rutaAbsoluta; // Guardamos la ruta en el historial
+
+                        if (file_exists($rutaAbsoluta)) {
                             $fileExists = true;
                             break;
                         }
@@ -494,13 +505,18 @@ class Vehiculo extends Model
 
                     if (!$fileExists) {
                         $class = 'bg-secondary';
-                        $diasText = "<br>Archivo físico no encontrado";
+                        
+                        // OPCIÓN 1: Debug visual (Muestra las rutas directamente en el SweetAlert)
+                        $rutasHtml = implode('<br>', $rutasProbadas);
+                        $diasText = "<br>Archivo físico no encontrado.<br><hr><div style='font-size: 10px; color: gray; text-align: left;'><b>DEBUG RUTAS:</b><br>{$rutasHtml}</div>";
+                        
+                        // OPCIÓN 2: Guardar en el Log de Laravel (storage/logs/laravel.log)
+                        Log::warning("Archivo faltante para Vehículo ID: {$this->id}", [
+                            'documento' => $abreviaturaArchivo,
+                            'rutas_probadas' => $rutasProbadas
+                        ]);
                     }
-
-                // ---------------------------------------------------------
-                // C. VALIDACIÓN TIPO: CÓDIGO / REGISTRO (RACDA, SENCAMER, Homologación)
-                // ---------------------------------------------------------
-                } elseif ($tipoValidacion === 'codigo') {
+                }elseif ($tipoValidacion === 'codigo') {
                     $campoValidar = $fields[0] ?? $fields[1];
                     $rawValue = $this->{$campoValidar};
                     $valUpper = strtoupper(trim((string)$rawValue));
