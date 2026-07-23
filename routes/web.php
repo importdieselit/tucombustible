@@ -164,6 +164,9 @@ Route::middleware(['auth'])->group(function () {
     
     // Importaciones
     Route::get('choferes/importar', [ChoferController::class, 'showImportForm'])->name('choferes.show-import-form');
+    Route::get('choferes/documentacion', [ChoferController::class, 'controlDocumentacion'])->name('choferes.documentacion');
+     Route::post('/choferes/documentacion/update', [ChoferController::class, 'updateDocumento'])->name('choferes.documentacion.update');
+    Route::get('/choferes/documento-detalle/{chofer_id}/{tipo_id}', [ChoferController::class, 'getDocumentoDetalle'])->name('choferes.documentacion.detalle');
     Route::post('choferes/importar', [ChoferController::class, 'importar'])->name('choferes.importar');
     Route::post('choferes/upload/doc/{id}',[ChoferController::class, 'uploadDocumento'])->name('choferes.upload.doc');
     Route::post('/choferes/update-cargo/{id}', [App\Http\Controllers\ChoferController::class, 'updateCargo'])

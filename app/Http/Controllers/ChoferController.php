@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Chofer;
 use App\Models\Vehiculo;
 use App\Models\Persona;
+use App\Models\Cliente;
+use App\Models\Personal;
 use App\Models\User;
 use App\Models\ViaticoViaje;
 use App\Models\TipoDocumento;
+use App\Models\DocumentosChofer;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Schema;
@@ -422,6 +425,144 @@ public function updateCargo(Request $request, $id)
             Session::flash('error', 'Hubo un error en la importación. Ningún registro fue guardado.');
             return Redirect::back()->withInput();
         }
+    }
+
+    public function controlDocumentacion(Request $request)
+    {
+        // Usamos el modelo correspondiente (Chofer o Personal, ajusta según tu backend)
+        $query = Chofer::query(); // O Personal::query()
+
+        // 1. Filtro por cliente/empresa (si aplica para tus choferes)
+        if ($request->filled('cliente_id')) {
+            $query->where('cliente_id', $request->cliente_id);
+        }
+
+        // 2. Filtro de búsqueda general (Cédula, Nombre o Apellido)
+        if ($request->filled('search')) {
+            $search = strtoupper($request->search);
+            
+            // Si los datos están en la misma tabla:
+            /*
+            $query->where(function($q) use ($search) {
+                $q->where('cedula', 'LIKE', "%{$search}%")
+                ->orWhere('nombre', 'LIKE', "%{$search}%")
+                ->orWhere('apellido', 'LIKE', "%{$search}%");
+            });
+            */
+
+            // Si los datos están en una tabla relacionada llamada 'persona' (como vimos en tu select de la vista):
+            $query->whereHas('persona', function($q) use ($search) {
+                $q->where('identificacion', 'LIKE', "%{$search}%") // o 'cedula'
+                ->orWhere('nombre', 'LIKE', "%{$search}%")
+                ->orWhere('apellido', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // 3. Obtenemos los registros (Cargamos la relación 'persona' para evitar el problema N+1 de consultas en la vista)
+        $choferes = $query->with('persona')->paginate(20);
+        
+        // 4. Catálogos para los selects de la vista
+        $clientes = Cliente::orderBy('nombre', 'asc')->get();
+        
+        // Aquí filtramos el tipo de documento por 'ch' (o 'CH') según como esté en BD
+        $docsCh = TipoDocumento::where('tipo', 'CH')->get(); 
+
+        // 5. Retornamos a la nueva vista
+        return view('chofer.documentacion', compact('choferes', 'clientes', 'docsCh'));
+    }
+
+     public function getDocumentoDetalle(int $chofer_id, int $tipo_id)
+    {
+        $chofer = Chofer::findOrFail($chofer_id);
+        $tipoDoc = TipoDocumento::findOrFail($tipo_id);
+
+        // 1. Obtener el valor del campo dinámico si existe (ej: rcv, racda)
+        $valorCampoDestino = null;
+        if ($tipoDoc->campo_destino && isset($chofer->{$tipoDoc->campo_destino})) {
+            $valorCampoDestino = $chofer->{$tipoDoc->campo_destino};
+        }
+
+        // 2. Obtener el registro detallado (el último subido)
+        $registro = DocumentosChofer::where('chofer_id', $chofer_id)
+                                    ->where('tipo', $tipo_id)
+                                    ->first();
+
+        // 3. Verificar si el archivo físico existe (PDF, JPG o PNG)
+        $finalPath = null;
+        $extensions = ['pdf', 'jpg', 'png', 'jpeg'];
+        foreach ($extensions as $ext) {
+            $path = "storage/choferes/{$chofer_id}/documentos/{$tipoDoc->abreviatura}_{$chofer_id}.{$ext}";
+            if (file_exists(public_path($path))) {
+                $finalPath = asset($path);
+                break;
+            }
+        }
+
+        return response()->json([
+            'success'      => true,
+            'label'        => $tipoDoc->nombre,
+            'abreviatura'  => $tipoDoc->abreviatura,
+            'valor_actual' => $valorCampoDestino ?? ($registro->fecha_venc ?? ''),
+            'nro_registro' => $registro->nro ?? '',
+            'file_url'     => $finalPath,
+            'tiene_campo'  => !empty($tipoDoc->campo_destino)
+        ]);
+    }
+
+     public function updateDocumento(Request $request)
+    {
+        $tipoDoc = TipoDocumento::findOrFail($request->doc_id);
+        
+        // Validación dinámica: si el documento tiene campo_destino, la fecha es obligatoria.
+        // Si no (como el Certificado), la fecha puede ser opcional.
+        $rules = [
+            'chofer_id' => 'required',
+            'doc_id'      => 'required',
+            'archivo'     => 'nullable|file|mimes:pdf,jpg,png|max:5120'
+        ];
+        
+        if ($tipoDoc->campo_destino) {
+            $rules['valor_texto'] = 'required';
+        }
+
+        $request->validate($rules);
+
+        $chofer = Chofer::findOrFail($request->chofer_id);
+
+        // 1. Gestión del Archivo (Ruta Estándar)
+        if ($request->hasFile('archivo')) {
+            $extension = $request->file('archivo')->getClientOriginalExtension();
+            $fileName = "{$tipoDoc->abreviatura}_{$chofer->id}.{$extension}";
+            $folder = "public/choferes/{$chofer->id}/documentos";
+            
+            // Borrar archivos viejos con otras extensiones para evitar duplicados (estándar)
+            foreach(['pdf','jpg','png'] as $ext) {
+                Storage::delete("{$folder}/{$tipoDoc->abreviatura}_{$chofer->id}.{$ext}");
+            }
+            
+            $request->file('archivo')->storeAs($folder, $fileName);
+        }
+
+        // 2. Actualización en Tabla Principal (Solo si aplica)
+        if ($tipoDoc->tabla_destino == 'choferes' && $tipoDoc->campo_destino) {
+            $campo = $tipoDoc->campo_destino;
+            $chofer->$campo = $request->valor_texto;
+            $chofer->save();
+        }
+
+        // 3. Registro en Tabla de Documentos (Auditoría/Histórico)
+        // Esto se hace SIEMPRE para tener el rastro de quién subió qué y cuándo
+        DocumentosChofer::updateOrCreate(
+            ['chofer_id' => $chofer->id, 'tipo' => $tipoDoc->id],
+            [
+                'fecha_venc' => $request->fecha_venc ?? null,
+                'nro'        => $request->nro ?? null,
+                'doc'        => "choferes/{$chofer->id}/documentos/{$tipoDoc->abreviatura}_{$chofer->id}", // nombre base
+                'fecha_ing' => now(),
+            ]
+        );
+
+        return back()->with('success', "{$tipoDoc->nombre} gestionado correctamente.");
     }
 
 }
