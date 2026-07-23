@@ -458,7 +458,7 @@ class Vehiculo extends Model
                 $fields = $data[0];
                 $abreviatura = $data[1];
                 $tipoValidacion = $data[2];
-                $abreviaturaArchivo = $data[3] ?? $abreviatura;
+                $abreviaturaArchivo = $data[3];
 
                 //Para Vehículos Ligeros (Tipo 6)
                 // SOLO se validan Certificado (CERT) y Póliza (POL). Se ignoran los demás.
