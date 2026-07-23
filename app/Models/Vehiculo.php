@@ -489,11 +489,8 @@ class Vehiculo extends Model
                     $rutasProbadas = []; 
 
                     foreach ($extensions as $ext) {
-                        // Ruta relativa
-                        $testPath = "storage/app/public/vehiculos/{$this->id}/documentos/{$filename}.{$ext}";
                         
-                        // Ruta absoluta en el servidor (la que usa PHP para verificar si existe)
-                        $rutaAbsoluta = public_path($testPath); 
+                        $rutaAbsoluta = storage_path("app/public/vehiculos/{$this->id}/documentos/{$filename}.{$ext}");
                         
                         $rutasProbadas[] = $rutaAbsoluta; // Guardamos la ruta en el historial
 
