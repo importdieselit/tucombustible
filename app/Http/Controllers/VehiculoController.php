@@ -386,7 +386,7 @@ class VehiculoController extends BaseController
     {
         $vehiculo = Vehiculo::findOrFail($id);
         $alertas = $vehiculo->getDocumentosAlertas();
-
+        
         return response()->json([
             'tiene_alertas' => $alertas->isNotEmpty(),
             'alertas'       => $alertas
