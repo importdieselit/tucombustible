@@ -440,14 +440,15 @@ class Vehiculo extends Model
             // 1. Arreglo ordenado por PRIORIDAD
             // Estructura: 'Nombre' => [['campo1', 'campo2'], 'ABREVIATURA', 'TIPO_VALIDACION']
             // Tipos de validación disponibles: 'codigo', 'fecha', 'archivo'
-            $documentos = [
-                'ROTC'                  => [['rotc_venc', null], 'ROTC', 'fecha'],
-                'RACDA'                 => [['racda', null], 'RCDA', 'codigo'],
-                'Certificado Registro'  => [[null, null], 'CERT', 'archivo'],
-                'Póliza'                => [['poliza_fecha_out', null], 'POL', 'fecha'],
-                'Homologación INTT'     => [[null, 'homologacion_intt'], 'HINT', 'codigo'],
-                'Permiso INTT'          => [['permiso_intt', null], 'PINT', 'fecha'],
-                'SENCAMER'              => [[null, 'semcamer'], 'SCMR', 'codigo'],
+           $documentos = [
+                // Formato: [['campo_v', 'campo_c'], 'Abrev_Icono', 'Tipo_Validacion', 'Abrev_Archivo']
+                'ROTC'                  => [['rotc_venc', null], 'ROTC', 'fecha', 'ROTC'],
+                'RACDA'                 => [['racda', null], 'RACDA', 'codigo', 'RACDA'],
+                'Certificado Registro'  => [[null, null], 'CERT', 'archivo', 'CR'],
+                'Póliza'                => [['poliza_fecha_out', null], 'POL', 'fecha', 'PS'], // Si usas RCV en lugar de PS, cámbialo aquí a 'RCV'
+                'Homologación INTT'     => [[null, 'homologacion_intt'], 'HINT', 'codigo', 'HI'],
+                'Permiso INTT'          => [['permiso_intt', null], 'PINT', 'fecha', 'PINT'],
+                'SENCAMER'              => [[null, 'semcamer'], 'SCMR', 'codigo', 'SENCAMER'],
             ];
 
             $alertas = collect();
@@ -456,6 +457,7 @@ class Vehiculo extends Model
                 $fields = $data[0];
                 $abreviatura = $data[1];
                 $tipoValidacion = $data[2];
+                $abreviaturaArchivo = $config[3] ?? $abreviatura;
 
                 //Para Vehículos Ligeros (Tipo 6)
                 // SOLO se validan Certificado (CERT) y Póliza (POL). Se ignoran los demás.
@@ -478,7 +480,7 @@ class Vehiculo extends Model
                 // B. VALIDACIÓN TIPO: ARCHIVO FÍSICO (Certificado)
                 // ---------------------------------------------------------
                 if ($tipoValidacion === 'archivo') {
-                    $filename = "{$abreviatura}_{$this->id}";
+                    $filename = "{$abreviaturaArchivo}_{$this->id}";
                     $extensions = ['pdf', 'jpg', 'png', 'jpeg'];
                     $fileExists = false;
                     
