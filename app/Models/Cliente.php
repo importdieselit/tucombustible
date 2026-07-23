@@ -175,6 +175,24 @@ class Cliente extends Model
         return $this->hasMany(GascoCupoMensual::class, 'cliente_id');
     }
 
+    public function saldosPendientes()
+    {
+        return $this->hasMany(SaldoPendienteCliente::class, 'cliente_id');
+    }
+
+    public function obtenerSaldosPendientesPorCombustible()
+    {
+        return $this->saldosPendientes()
+            ->select('tipo_combustible_id')
+            ->selectRaw("
+                SUM(CASE WHEN tipo_accion = 'acumulado' THEN cantidad_litros ELSE -cantidad_litros END) as total_litros
+            ")
+            ->groupBy('tipo_combustible_id')
+            ->having('total_litros', '>', 0)
+            ->with('tipoCombustible')
+            ->get();
+    }
+
     // -------------------------------------------------------
     // SCOPES
     // -------------------------------------------------------

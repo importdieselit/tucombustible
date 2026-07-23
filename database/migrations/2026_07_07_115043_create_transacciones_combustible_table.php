@@ -27,7 +27,8 @@ return new class extends Migration
                 'consumo_operativo',
                 'ajuste_positivo',
                 'ajuste_negativo',
-                'despacho_prepagado'
+                'despacho_prepagado',
+                'compromiso_despacho'
             ])->index();
 
             // Cantidad con signo y decimales (Positivo = Entra, Negativo = Sale)

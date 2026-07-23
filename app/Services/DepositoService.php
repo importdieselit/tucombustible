@@ -195,50 +195,28 @@ class DepositoService
     {
         return DB::transaction(function () use ($clienteId, $idDeposito, $litros, $choferClienteId, $placaVehiculoId) {
             
-            // 1. Obtener y validar el tanque
+            // 1. Validar el tanque seleccionado
             $deposito = Deposito::findOrFail($idDeposito);
 
             if (!$deposito->llena_cupo_prepagado) {
                 throw new Exception("Operación denegada: Este tanque no está autorizado para Llenado Prepagado.");
             }
 
-            // Solo el Diésel (ID 2) consume y valida cupo
-            $esDiesel = ($deposito->tipo_combustible_id == 2);
+            // 2. Procesar la cascada de saldos del cliente (Saldo Pendiente -> Cupo GASCO)
+            $resumenCobro = $this->combustibleService->procesarDescuentoSaldosCliente(
+                $clienteId,
+                $deposito->tipo_combustible_id,
+                $litros
+            );
 
-            if ($esDiesel) {
-                // 🆕 ADAPTACIÓN: Forzamos la inicialización segura del mes usando tu repositorio.
-                // Si estamos en Julio de 2026 y no existe, él clonará 'litros_autorizados' correctamente.
-                $cupoMensual = $this->gascoCupoRepo->getOrCreateMonthlyQuota($clienteId);
-
-                if (!$cupoMensual) {
-                    throw new Exception("El cliente seleccionado no tiene ningún Cupo GASCO base configurado en el sistema.");
-                }
-
-                // lockForUpdate previene colisiones si hay consumos simultáneos del mismo cupo
-                $cliente = DB::table('clientes')
-                    ->where('id', $clienteId)
-                    ->lockForUpdate()
-                    ->first();
-
-                if (!$cliente) {
-                    throw new Exception("El cliente seleccionado no existe.");
-                }
-
-                if ($cliente->disponible < $litros) {
-                    throw new Exception("Saldo insuficiente: El cliente solo cuenta con {$cliente->disponible} litros disponibles en su Cupo Gasco.");
-                }
-
-                $this->gascoCupoRepo->updateConsumed($cupoMensual->id, $litros);
-            }
-
-            // Descuento físico del inventario del tanque
+            // 3. Descuento físico del inventario del tanque asignado al llenado
             if ($deposito->nivel_actual_litros >= $litros) {
                 $deposito->decrement('nivel_actual_litros', $litros);
             } else {
                 $deposito->update(['nivel_actual_litros' => 0]);
             }
 
-            // Registro histórico en la tabla de llenados con tu repositorio correspondiente
+            // 4. Registro histórico del llenado
             $llenado = $this->historialRepo->registrar([
                 'cliente_id'          => $clienteId,
                 'id_sede'             => $deposito->id_sede,
@@ -249,13 +227,13 @@ class DepositoService
                 'litros'              => $litros,
             ]);
 
-            // Registramos el Despacho Prepagado en el Ledger, no en la tabla de llenado_cupo_prepagado
+            // 5. Asentar Salida en el Ledger (Bolsa prepagada)
             $this->combustibleService->registrarDespachoPrepagado([
                 'sede_id'             => $deposito->id_sede,
                 'tipo_combustible_id' => $deposito->tipo_combustible_id,
-                'cantidad_litros'     => -$litros, // Negativo porque resta del Ledger
+                'cantidad_litros'     => -$litros,
                 'deposito_id'         => $deposito->id,
-                'referencia_id'       => $llenado->id, // El cordón umbilical de auditoría
+                'referencia_id'       => $llenado->id,
                 'cliente_id'          => $clienteId,
             ]);
 

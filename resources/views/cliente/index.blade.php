@@ -375,8 +375,50 @@
             <i class="fas fa-gas-pump mr-2"></i> Solicitar Combustible
         </button>
 
+        <br>
+
         {{-- CONTENEDOR DE TABLAS CON SCROLL Y FILTROS DEFINITIVO --}}
         <div class="grid grid-cols-1 gap-10">
+
+            {{-- TABLA INFORMATIVA: SALDO PENDIENTE POR TIPO DE COMBUSTIBLE --}}
+            <div>
+                <div class="flex flex-col xl:flex-row justify-between items-center mb-4 gap-4">
+                    <h2 class="text-base font-black uppercase text-gray-700 tracking-widest">
+                        <span class="text-orange-impordiesel">|</span> Litros Pendientes por Entregar
+                    </h2>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-md border border-gray-300 overflow-hidden">
+                    <table class="w-full text-left text-sm border-collapse">
+                        <thead>
+                            <tr class="bg-gray-800 text-white text-xs font-black uppercase tracking-widest">
+                                <th class="px-6 py-4 border-r border-gray-700">Tipo de Combustible</th>
+                                <th class="px-6 py-4 text-right">Cantidad (Litros)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @forelse($saldosPendientes as $saldo)
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 font-black text-gray-800 uppercase">
+                                    <i class="fas fa-gas-pump text-orange-impordiesel mr-2"></i>
+                                    {{ $saldo->tipoCombustible->nombre ?? 'COMBUSTIBLE' }}
+                                </td>
+                                <td class="px-6 py-4 text-right font-black text-gray-900 text-sm">
+                                    {{ number_format($saldo->total_litros, 2, ',', '.') }}
+                                    <span class="text-[10px] text-gray-500 uppercase font-bold">Lts</span>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="2" class="px-6 py-6 text-center text-gray-400 font-black uppercase text-xs">
+                                    Sin saldos pendientes de combustible registrados.
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
             {{-- 1. HISTORIAL DE PEDIDOS RECIENTES --}}
             <div>

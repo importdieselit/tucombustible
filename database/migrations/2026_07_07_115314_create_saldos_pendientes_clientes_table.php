@@ -17,10 +17,6 @@ return new class extends Migration
             $table->enum('tipo_accion', ['acumulado', 'consumido'])->comment('acumulado por reverso, consumido por despacho');
             $table->decimal('cantidad_litros', 12, 2);
             
-            // Origen/Destino del saldo para auditorías
-            $table->unsignedBigInteger('viaje_id')->nullable()->comment('ID del viaje donde se originó el reverso');
-            $table->unsignedBigInteger('llenado_prepagado_id')->nullable()->comment('ID si se consumió en la isla de prepagado');
-            
             $table->unsignedBigInteger('user_id')->nullable()->comment('Usuario que procesó el movimiento');
             $table->text('observaciones')->nullable();
             

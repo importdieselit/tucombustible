@@ -7,18 +7,22 @@ use App\Services\FcmNotificationService;
 use App\Models\Viaje;
 use App\Models\Inspeccion;
 use App\Services\TelegramNotificationService;
+use App\Services\LogisticaInventarioService;
 use Illuminate\Support\Facades\Log;
 
 class VehiculoObserver
 {
     protected $telegramService;
+    protected $inventarioService;
+
     const LIMITE_KM_MANTENIMIENTO = 5000;
     const LIMITE_HRS_MANTENIMIENTO = 200;
 
     // Inyectamos el servicio de notificaciones
-    public function __construct(TelegramNotificationService $telegramService)
+    public function __construct(TelegramNotificationService $telegramService, LogisticaInventarioService $inventarioService)
     {
         $this->telegramService = $telegramService;
+        $this->inventarioService = $inventarioService;
     }
 
     /**
@@ -77,16 +81,17 @@ class VehiculoObserver
 
     public function updated(Vehiculo $vehiculo)
     {
-        // CASO 2: Cambio a EN RUTA (2) sin checklist previo
-        if ($vehiculo->isDirty('estatus') && $vehiculo->estatus == 2) {
+        // CASO 2: Cambio a EN RUTA (2)
+        if ($vehiculo->wasChanged('estatus') && $vehiculo->estatus == 2) {
             
-            // Buscamos el viaje programado para este vehículo hoy
+            // Buscamos el viaje programado asociado a esta unidad
             $viaje = Viaje::where('vehiculo_id', $vehiculo->id)
                 ->where('status', 'Programado')
                 ->latest()
                 ->first();
 
             if ($viaje) {
+                // 1. Validar Checklist
                 $hasChecklist = Inspeccion::where('viaje_id', $viaje->id)
                     ->whereNull('respuesta_in')
                     ->exists();
@@ -97,9 +102,21 @@ class VehiculoObserver
                         FcmNotificationService::enviarNotification(
                             "INCUMPLIMIENTO DE PROCESO",
                             "El vehículo {$vehiculo->flota} pasó a estado EN RUTA sin completar el checklist de salida para el viaje #{$viaje->id}.",
-                            ['viaje_id' => $viaje->id,'user_id' => $userId]
+                            ['viaje_id' => $viaje->id, 'user_id' => $userId]
                         );
                     }
+                }
+
+                // 2. 🚀 ASENTAR SALIDA FÍSICA EN EL LEDGER
+                try {
+                    // Ejecuta el descuento de litros en el Ledger (TransaccionCombustible)
+                    $this->inventarioService->registrarSalidaFisicaDespacho($viaje);
+                    
+                    // Actualizar estatus del viaje a En Ruta
+                    $viaje->update(['status' => 'En Ruta']);
+                    
+                } catch (\Exception $e) {
+                    Log::error("Error registrando salida física en Ledger para Viaje #{$viaje->id}: " . $e->getMessage());
                 }
             }
         }

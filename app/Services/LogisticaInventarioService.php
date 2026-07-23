@@ -2,99 +2,90 @@
 
 namespace App\Services;
 
-use App\Models\Viaje;
 use App\Repositories\TransaccionCombustibleRepository;
+use App\Models\Viaje;
+use Illuminate\Support\Facades\DB;
 
 class LogisticaInventarioService
 {
-    protected $transaccionRepo;
+    protected $ledgerRepo;
 
-    public function __construct(TransaccionCombustibleRepository $transaccionRepo)
+    public function __construct(TransaccionCombustibleRepository $ledgerRepo)
     {
-        $this->transaccionRepo = $transaccionRepo;
+        $this->ledgerRepo = $ledgerRepo;
     }
 
     /**
-     * Registra el impacto en la disponibilidad cuando se CREA una planificación (Tipos 1, 2, 3 o 4)
+     * Compromete combustible únicamente para Planificaciones de Despacho (Tipos 1 y 2) en estado PROGRAMADO.
+     * Las Compras (Tipo 4) y Fletes (Tipo 3) no afectan el Ledger en esta fase.
      */
     public function registrarCompromisoPlanificacion(Viaje $viaje): void
     {
-        // Determinamos el comportamiento según el tipo de planificación
-        switch ($viaje->tipo_planificacion) {
+        switch ((int) $viaje->tipo_planificacion) {
             case 1:
             case 2:
-                $tipoMovimiento = 'combustible_comprometido';
-                $litros = -abs($viaje->litros); // Resta disponibilidad de venta
+                $tipoMovimiento = 'compromiso_despacho';
+                $litros = -abs($viaje->litros);
                 $obs = "Combustible comprometido por Planificación de Despacho #{$viaje->id}.";
                 break;
 
-            case 3:
-                $tipoMovimiento = 'consumo_flete_comprometido';
-                $litros = -abs($viaje->litros); // Resta disponibilidad para consumo operativo de la flota
-                $obs = "Diesel comprometido para consumo operativo del Flete #{$viaje->id}.";
-                break;
-
-            case 4:
-                $tipoMovimiento = 'compra_en_transito';
-                $litros = abs($viaje->litros); // Suma a la disponibilidad proyectada (viene en camino)
-                $obs = "Combustible en tránsito por Planificación de Compra #{$viaje->id}.";
-                break;
-
             default:
-                return; // Si inventan un tipo raro, no hace nada
+                // Fletes (3) y Compras programadas (4) no registran movimiento previo en Ledger
+                return;
         }
 
-        $this->transaccionRepo->registrar([
+        $tipoCombustibleId = $viaje->tipo_combustible_id ?? $viaje->tipo;
+
+        $this->ledgerRepo->registrar([
             'sede_id'             => $viaje->sede_id,
-            'tipo_combustible_id' => $viaje->tipo,
+            'tipo_combustible_id' => $tipoCombustibleId,
             'bolsa_tipo'          => 'general',
             'tipo_movimiento'     => $tipoMovimiento,
+            'tipo_transaccion'    => strtoupper($tipoMovimiento),
             'cantidad_litros'     => $litros,
+            'cliente_id'          => $viaje->cliente_id,
             'user_id'             => auth()->id() ?? 1,
             'viaje_id'            => $viaje->id,
-            'observaciones'       => $obs
+            'referencia_id'       => $viaje->id,
+            'referencia_type'     => Viaje::class,
+            'observaciones'       => $obs,
+            'observacion'         => $obs
         ]);
     }
 
     /**
-     * Genera el contra-asiento exacto para anular o revertir el impacto previo
-     * Se usa al actualizar o cancelar cualquier planificación.
+     * Revierte el compromiso de despacho usando el tipo 'reverso'
      */
     public function revertirCompromisoPlanificacion(Viaje $viaje): void
     {
-        switch ($viaje->tipo_planificacion) {
+        switch ((int) $viaje->tipo_planificacion) {
             case 1:
             case 2:
-                $tipoMovimiento = 'liberacion_compromiso';
-                $litros = abs($viaje->litros); // (+) Neutraliza la resta anterior
-                $obs = "Liberación de compromiso de combustible en Planificación #{$viaje->id}.";
-                break;
-
-            case 3:
-                $tipoMovimiento = 'liberacion_consumo_flete';
-                $litros = abs($viaje->litros); // (+) Neutraliza el consumo del flete
-                $obs = "Anulación de Diesel comprometido para Flete #{$viaje->id}.";
-                break;
-
-            case 4:
-                $tipoMovimiento = 'anulacion_compra_transito';
-                $litros = -abs($viaje->litros); // (-) Resta lo que se había sumado en tránsito
-                $obs = "Anulación de compra en tránsito por Modificación/Cancelación #{$viaje->id}.";
+                $tipoMovimiento = 'reverso';
+                $litros = abs($viaje->litros);
+                $obs = "Reverso de compromiso de combustible por edición/cancelación de Planificación #{$viaje->id}.";
                 break;
 
             default:
                 return;
         }
 
-        $this->transaccionRepo->registrar([
+        $tipoCombustibleId = $viaje->tipo_combustible_id ?? $viaje->tipo;
+
+        $this->ledgerRepo->registrar([
             'sede_id'             => $viaje->sede_id,
-            'tipo_combustible_id' => $viaje->tipo,
+            'tipo_combustible_id' => $tipoCombustibleId,
             'bolsa_tipo'          => 'general',
             'tipo_movimiento'     => $tipoMovimiento,
+            'tipo_transaccion'    => 'REVERSO',
             'cantidad_litros'     => $litros,
+            'cliente_id'          => $viaje->cliente_id,
             'user_id'             => auth()->id() ?? 1,
             'viaje_id'            => $viaje->id,
-            'observaciones'       => $obs
+            'referencia_id'       => $viaje->id,
+            'referencia_type'     => Viaje::class,
+            'observaciones'       => $obs,
+            'observacion'         => $obs
         ]);
     }
 
@@ -103,62 +94,59 @@ class LogisticaInventarioService
      */
     public function registrarSalidaFisicaDespacho(Viaje $viaje): void
     {
-        if (!in_array($viaje->tipo_planificacion, [1, 2])) return;
+        DB::transaction(function () use ($viaje) {
+            foreach ($viaje->detalles as $detalle) {
+                $totalLitros = (float) ($detalle->litros ?? $detalle->cantidad_litros);
 
-        // 1. Libera el compromiso comercial
-        $this->transaccionRepo->registrar([
-            'sede_id'             => $viaje->sede_id,
-            'tipo_combustible_id' => $viaje->tipo,
-            'bolsa_tipo'          => 'general',
-            'tipo_movimiento'     => 'liberacion_compromiso',
-            'cantidad_litros'     => abs($viaje->litros),
-            'user_id'             => auth()->id() ?? 1,
-            'viaje_id'            => $viaje->id,
-            'observaciones'       => "Liberación de compromiso por salida de planta del Viaje #{$viaje->id}."
-        ]);
+                $this->ledgerRepo->registrar([
+                    'sede_id'             => $viaje->sede_id ?? $viaje->sede_origen_id,
+                    'deposito_id'         => $detalle->deposito_origen_id,
+                    'tipo_combustible_id' => $viaje->tipo_combustible_id ?? $viaje->tipo,
+                    'tipo_transaccion'    => 'DESPACHO',
+                    'tipo_movimiento'     => 'despacho',
+                    'cantidad_litros'     => -$totalLitros,
+                    'cliente_id'          => $detalle->cliente_id ?? $viaje->cliente_id,
+                    'bolsa_tipo'          => 'general',
+                    'referencia_id'       => $viaje->id,
+                    'viaje_id'            => $viaje->id,
+                    'referencia_type'     => Viaje::class,
+                    'observacion'         => "Salida física por Despacho #{$viaje->id}",
+                    'observaciones'       => "Salida física por Despacho #{$viaje->id}"
+                ]);
 
-        // 2. Descuenta el STOCK FÍSICO REAL
-        $this->transaccionRepo->registrar([
-            'sede_id'             => $viaje->sede_id,
-            'tipo_combustible_id' => $viaje->tipo,
-            'bolsa_tipo'          => 'general',
-            'tipo_movimiento'     => 'despacho_fisico',
-            'cantidad_litros'     => -abs($viaje->litros),
-            'user_id'             => auth()->id() ?? 1,
-            'viaje_id'            => $viaje->id,
-            'observaciones'       => "Salida física de combustible (Cisterna En Ruta) por Viaje #{$viaje->id}."
-        ]);
+                if ($detalle->deposito_origen_id) {
+                    DB::table('depositos')
+                        ->where('id', $detalle->deposito_origen_id)
+                        ->decrement('nivel_actual_litros', $totalLitros);
+                }
+            }
+        });
     }
 
     /**
-     * Se ejecuta cuando una Compra (Tipo 4) pasa a "COMPLETADO"
+     * Se ejecuta únicamente cuando una Compra (Tipo 4) pasa a "COMPLETADO"
      */
-    public function registrarIngresoFisicoCompra(Viaje $viaje): void
+    public function registrarEntradaCompra(Viaje $viaje, int $depositoDestinoId, float $litrosRecibidos): void
     {
-        if ($viaje->tipo_planificacion != 4) return;
+        DB::transaction(function () use ($viaje, $depositoDestinoId, $litrosRecibidos) {
+            $this->ledgerRepo->registrar([
+                'sede_id'             => $viaje->sede_destino_id ?? $viaje->sede_origen_id ?? $viaje->sede_id,
+                'deposito_id'         => $depositoDestinoId,
+                'tipo_combustible_id' => $viaje->tipo_combustible_id ?? $viaje->tipo,
+                'tipo_transaccion'    => 'COMPRA',
+                'tipo_movimiento'     => 'compra',
+                'cantidad_litros'     => $litrosRecibidos,
+                'bolsa_tipo'          => 'general',
+                'referencia_id'       => $viaje->id,
+                'viaje_id'            => $viaje->id,
+                'referencia_type'     => Viaje::class,
+                'observacion'         => "Ingreso de inventario por Compra #{$viaje->id} (Completada)",
+                'observaciones'       => "Ingreso de inventario por Compra #{$viaje->id} (Completada)"
+            ]);
 
-        // 1. Damos de baja la disponibilidad que estaba "En Tránsito"
-        $this->transaccionRepo->registrar([
-            'sede_id'             => $viaje->sede_id,
-            'tipo_combustible_id' => $viaje->tipo,
-            'bolsa_tipo'          => 'general',
-            'tipo_movimiento'     => 'liquidacion_compra_transito',
-            'cantidad_litros'     => -abs($viaje->litros), // (-) Quita del tránsito
-            'user_id'             => auth()->id() ?? 1,
-            'viaje_id'            => $viaje->id,
-            'observaciones'       => "Liquidación de inventario en tránsito por recepción de Compra #{$viaje->id}."
-        ]);
-
-        // 2. Suma el inventario físico real a los tanques
-        $this->transaccionRepo->registrar([
-            'sede_id'             => $viaje->sede_id,
-            'tipo_combustible_id' => $viaje->tipo,
-            'bolsa_tipo'          => 'general',
-            'tipo_movimiento'     => 'ingreso_compra',
-            'cantidad_litros'     => abs($viaje->litros), // (+) Suma al físico real
-            'user_id'             => auth()->id() ?? 1,
-            'viaje_id'            => $viaje->id,
-            'observaciones'       => "Ingreso físico a fosa por Compra Completada #{$viaje->id}."
-        ]);
+            DB::table('depositos')
+                ->where('id', $depositoDestinoId)
+                ->increment('nivel_actual_litros', $litrosRecibidos);
+        });
     }
 }

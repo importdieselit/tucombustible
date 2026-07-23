@@ -157,6 +157,8 @@ class ClienteController extends Controller
 
         $data['planificaciones'] = $queryPlan->paginate(10, ['*'], 'planificaciones_page')->appends($request->all());
 
+        $data['saldosPendientes'] = $cliente->obtenerSaldosPendientesPorCombustible();
+
         // Lógica de Gasco y Perfiles
         $infoGasco = $this->gascoCupoService->obtenerSaldoActual($cliente->id);
         $cliente->refresh();

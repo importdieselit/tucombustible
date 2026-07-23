@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('reversos_combustible', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('viaje_id')->comment('Viaje fallido en el módulo Logística');
+            $table->unsignedBigInteger('sede_id');
             $table->unsignedBigInteger('cliente_id');
             $table->unsignedBigInteger('tipo_combustible_id');
             $table->decimal('cantidad_litros', 12, 2);

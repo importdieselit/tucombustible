@@ -14,10 +14,12 @@ class SaldoPendienteCliente extends Model
         'tipo_combustible_id',
         'tipo_accion',
         'cantidad_litros',
-        'viaje_id',
-        'llenado_prepagado_id',
         'user_id',
         'observaciones',
+    ];
+
+    protected $casts = [
+        'cantidad_litros' => 'decimal:2',
     ];
 
     public function cliente(): BelongsTo
@@ -28,5 +30,10 @@ class SaldoPendienteCliente extends Model
     public function tipoCombustible(): BelongsTo
     {
         return $this->belongsTo(TipoCombustible::class, 'tipo_combustible_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

@@ -22,7 +22,7 @@ use App\Http\Controllers\{
     ViajesController, TelegramController, PlanificacionMantenimientoController,
     ReportController, ClienteActivosController,NotificationController,LogisticaController,
     ChequeoDepositoController, CombustibleController, LlenadoCupoPrepagadoController, 
-    TransaccionCombustibleController, ConsumoOperativoController, TrasegadoController,
+    TransaccionCombustibleController, ConsumoOperativoController, TrasegadoController, ReversoCombustibleController
 };
 
 /* --- Rutas Públicas y Auth --- */
@@ -358,6 +358,13 @@ Route::middleware(['auth'])->group(function () {
                     Route::get('/crear/externo', [TrasegadoController::class, 'createExterno'])->name('create_externo');
                     Route::post('/guardar', [TrasegadoController::class, 'store'])->name('store');
                 });
+
+                Route::prefix('reversos_combustibles')->name('reversos_combustibles.')->group(function () {
+                Route::get('/', [ReversoCombustibleController::class, 'index'])->name('index');
+                Route::get('/crear', [ReversoCombustibleController::class, 'create'])->name('create');
+                Route::post('/guardar', [ReversoCombustibleController::class, 'store'])->name('store');
+                Route::get('/saldos-pendientes', [ReversoCombustibleController::class, 'show'])->name('show');
+            });
 
                 // Registro Histórico de Transacciones de Combustible
                 Route::prefix('transacciones')->name('transacciones.')->group(function () {
