@@ -209,6 +209,7 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/ordenes/purchase/{id}/delete', [OrdenController::class, 'deleteManualSupply'])->name('ordenes.deleteManualSupply');
         Route::post('/ordenes/{id}/habilitar-unidad', [OrdenController::class, 'habilitarUnidad'])->name('vehiculos.habilitarUnidad');
         Route::get('/planes-mantenimiento/api/{id}', [OrdenController::class, 'getPlanApi'])->name('planes.api');
+        Route::get('/planes-mantenimiento/formato', [OrdenController::class, 'getPlanFormato'])->name('planes.formato');
         Route::get('/ordenes/reporte-gerencial', [OrdenController::class, 'reporteGerencial'])->name('ordenes.reporte_gerencial');
         // Rutas para Evidencias Fotográficas
         Route::post('/ordenes/{id}/fotos/add', [OrdenController::class, 'addFotos'])->name('ordenes.fotos.add');
