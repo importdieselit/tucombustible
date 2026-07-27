@@ -1393,112 +1393,139 @@ class OrdenController extends BaseController
     public function reporteGerencial(Request $request)
     {
         $tokenValido = config('services.reporte.internal_token');
-        // Si no está logueado Y el token no coincide, entonces al login
+        
         if (!auth()->check() && $request->get('token') !== $tokenValido) {
             abort(403, 'Acceso no autorizado');
         }
-        // Por defecto evaluamos el mes en curso, pero permitimos filtrar
+
+        // 1. Manejo dinámico de periodos 
+        // El frontend define el rango exacto (Diario, Semanal, Mensual, Global).
         $inicio = $request->input('fecha_inicio', now()->startOfMonth()->format('Y-m-d'));
         $fin = $request->input('fecha_fin', now()->endOfMonth()->format('Y-m-d'));
 
-        // 1. Consultas Base (Eager Loading para optimizar)
-        // Asumiendo relaciones: vehiculo, suministros, serviciosExternos
-        $ordenesBase = Orden::with(['vehiculoBelong', 'suministros', 'TrabajosExternos', 'trabajos','suministrosCompras'])
-            ->whereBetween('fecha_in', [$inicio, $fin])
-            ->get();
+        // 2. Consultas Base Optimizadas (Eager Loading)
+        $ordenesBase = Orden::with([
+            'vehiculoBelong', 
+            'suministros', 
+            'TrabajosExternos', 
+            'trabajos.mecanico', // Relación necesaria para medir rendimiento por mecánico
+            'trabajos.categoria',
+            'suministrosCompras.detalles'
+        ])
+        ->whereBetween('fecha_in', [$inicio, $fin])
+        ->get();
 
         $ordenesActivas = Orden::whereIn('estatus', [2,3])->get();
 
-        // 2. KPIs Principales
+        // 3. KPIs Principales
         $abiertasHoy = $ordenesBase->count();
-        $cerradasMes = Orden::whereBetween('fecha_out', [$inicio, $fin])->count();
+        $cerradasMes = Orden::whereBetween('fecha_out', [$inicio, $fin])->where('estatus', 1)->count();
         $totalActivas = $ordenesActivas->count();
 
-        // 3. Costos
-        $costoSuministros = $ordenesBase->flatMap->suministros->sum('costo_total');
-        $costoExternos = $ordenesBase->flatMap->trabajosExternos->sum('costo');
-        $costoCompras = $ordenesBase->flatMap->suministrosCompras->flatMap->detalles->whereNotNull('costo_unitario_aprobado')->sum(function($detalle) {
-            return $detalle->costo_unitario_aprobado * $detalle->cantidad_aprobada;
+        // 4. Costos Desglosados
+        $costoSuministrosAlmacen = $ordenesBase->flatMap->suministros->sum('costo_total');
+        $costoExternos = $ordenesBase->flatMap->TrabajosExternos->sum('costo');
+        
+        $costoCompras = $ordenesBase->flatMap->suministrosCompras->flatMap->detalles
+            ->whereNotNull('costo_unitario_aprobado')
+            ->sum(function($detalle) {
+                return $detalle->costo_unitario_aprobado * $detalle->cantidad_aprobada;
             });
-        // Asumimos un estimado de costo interno si tienes horas de mecánicos, o simplemente 0 si es nómina fija.
-        $costoInternos = 0; // O la suma de horas_hombre * tarifa
-        $costoTotalGeneral = $costoSuministros + $costoExternos + $costoInternos + $costoCompras;
-                    
-        // 4. Clasificación por Tipo y Categoría
-        $porTipo = $ordenesBase->groupBy('tipo')->map->count(); // Ej: ['Preventivo' => 15, 'Correctivo' => 20]
+
+        $costoInternos = 0; // Ajustar si decides integrar horas-hombre * tarifa
+        $costoTotalGeneral = $costoSuministrosAlmacen + $costoExternos + $costoInternos + $costoCompras;
+
+        // 5. KPIs Operativos (Clasificaciones)
+        // Distribución por Tipo (Correctivo vs Preventivo)
+        $porTipo = $ordenesBase->groupBy('tipo')->map->count(); 
+        
+        // Distribución por Categoría de Falla
         $porCategoria = $ordenesBase->flatMap->trabajos->groupBy(function($trabajo) {
-            // Si la relación 'categoria' existe, devolvemos el campo 'categoria' (el nombre), si no, 'Sin Categoría'
             return $trabajo->categoria ? $trabajo->categoria->categoria : 'Sin Categoría';
         })->map->count()->sortDesc();
-        
-        // 5. Trabajos Internos vs Externos (Cantidad)
-        $trabajosInternos = $ordenesBase->flatMap->trabajos->count();
-        $trabajosExternos = $ordenesBase->flatMap->trabajosExternos->count();
 
-        // 6. Los "Ofensores" (Lo que más falla)
+        // Desempeño por Mecánico (Conteo de trabajos)
+        $porMecanico = $ordenesBase->flatMap->trabajos->groupBy(function($trabajo) {
+            return $trabajo->mecanico ? $trabajo->mecanico->nombre : 'Sin Asignar';
+        })->map->count()->sortDesc();
+
+        // Volumen Interno vs Externo
+        $trabajosInternos = $ordenesBase->flatMap->trabajos->count();
+        $trabajosExternos = $ordenesBase->flatMap->TrabajosExternos->count();
+
+        // 6. Los "Ofensores" Críticos
         $fallaMasRecurrente = $porCategoria->keys()->first() ?? 'N/A';
         
-        // Unidad con más órdenes abiertas actualmente
         $unidadMasProblematica = $ordenesBase
-        ->filter(function($orden) {
-            // Solo dejamos pasar las órdenes que tengan un ID de vehículo y cuya relación exista
-            return !empty($orden->id_vehiculo) && $orden->vehiculoBelong;
-        })
-        ->groupBy('id_vehiculo')
-        ->map(fn($ordenes) => [
-            'vehiculo' => $ordenes->first()->vehiculoBelong->flota ?? 'S/N',
-            'placa'    => $ordenes->first()->vehiculoBelong->placa ?? 'S/N',
-            'cantidad' => $ordenes->count()
-        ])
-        ->sortByDesc('cantidad')
-        ->first();
+            ->filter(fn($orden) => !empty($orden->id_vehiculo) && $orden->vehiculoBelong)
+            ->groupBy('id_vehiculo')
+            ->map(fn($ordenes) => [
+                'vehiculo' => $ordenes->first()->vehiculoBelong->flota ?? 'S/N',
+                'placa'    => $ordenes->first()->vehiculoBelong->placa ?? 'S/N',
+                'cantidad' => $ordenes->count()
+            ])
+            ->sortByDesc('cantidad')
+            ->first();
 
+        // 7. Movimientos y Logística de Almacén
+        $repuestosSolicitados = $ordenesBase->flatMap->suministros->sum('cantidad');
+        
+        // Adaptar estos queries a tus modelos reales de inventario
+        // Permite ver si el taller está drenando inventario o si está ingresando material nuevo
+        /*
+        $entradasAlmacen = MovimientoAlmacen::where('tipo', 'ENTRADA')
+                            ->whereBetween('created_at', [$inicio . ' 00:00:00', $fin . ' 23:59:59'])
+                            ->sum('cantidad');
+                            
+        $salidasAlmacen = MovimientoAlmacen::where('tipo', 'SALIDA')
+                            ->whereBetween('created_at', [$inicio . ' 00:00:00', $fin . ' 23:59:59'])
+                            ->sum('cantidad');
+        */
+        $entradasAlmacen = 0; // Reemplazar con query real
+        $salidasAlmacen = 0;  // Reemplazar con query real
 
+        // 8. Timeline Dinámico
         $periodo = CarbonPeriod::create($inicio, $fin);
-        $labels = [];
-        $dataAbiertas = [];
-        $dataCerradas = [];
+        $labels = []; $dataAbiertas = []; $dataCerradas = [];
 
-        // Pre-agrupamos para no hacer loops pesados dentro del periodo
-        $ordenesPorDia = $ordenesBase->groupBy(function($item) {
-            return Carbon::parse($item->fecha_in)->format('Y-m-d');
-        });
-
-        $cerradasPorDia = $ordenesBase->where('estatus', 1)->groupBy(function($item) {
-            // Usamos updated_at o fecha_fin si la tienes, para saber cuándo se cerró
-            return Carbon::parse($item->fecha_out)->format('Y-m-d');
-        });
+        $ordenesPorDia = $ordenesBase->groupBy(fn($item) => Carbon::parse($item->fecha_in)->format('Y-m-d'));
+        $cerradasPorDia = $ordenesBase->where('estatus', 1)->groupBy(fn($item) => Carbon::parse($item->fecha_out)->format('Y-m-d'));
 
         foreach ($periodo as $date) {
             $fecha = $date->format('Y-m-d');
-            $labels[] = $date->format('d/m'); // Formato corto para el gráfico
-            
+            $labels[] = $date->format('d/m');
             $dataAbiertas[] = isset($ordenesPorDia[$fecha]) ? $ordenesPorDia[$fecha]->count() : 0;
             $dataCerradas[] = isset($cerradasPorDia[$fecha]) ? $cerradasPorDia[$fecha]->count() : 0;
         }
 
-
-        // 7. Estructurar la data para la vista
+        // 9. Consolidación de la Data
         $reporte = [
             'periodo' => ['inicio' => $inicio, 'fin' => $fin],
             'kpis' => [
-                'abiertas_hoy' => $abiertasHoy,
-                'cerradas_mes' => $cerradasMes,
+                'abiertas_hoy'    => $abiertasHoy,
+                'cerradas_mes'    => $cerradasMes,
                 'activas_totales' => $totalActivas,
             ],
             'financiero' => [
-                'suministros' => $costoSuministros+$costoCompras,
+                'suministros' => $costoSuministrosAlmacen, 
+                'compras'     => $costoCompras,             // Total gastado en compras directas
                 'externos'    => $costoExternos,
                 'internos'    => $costoInternos,
                 'total'       => $costoTotalGeneral,
             ],
             'operativo' => [
                 'por_tipo'      => $porTipo,
-                'por_categoria' => $porCategoria->take(5), // Top 5 categorías
+                'por_categoria' => $porCategoria->take(5),
+                'por_mecanico'  => $porMecanico->take(5),   // Top 5 de mecánicos con más trabajos
                 'internos_qty'  => $trabajosInternos,
                 'externos_qty'  => $trabajosExternos,
                 'falla_top'     => $fallaMasRecurrente,
                 'unidad_top'    => $unidadMasProblematica
+            ],
+            'almacen' => [
+                'solicitados' => $repuestosSolicitados,     // Piezas solicitadas vs instaladas
+                'entradas'    => $entradasAlmacen,
+                'salidas'     => $salidasAlmacen,
             ],
             'timeline' => [
                 'labels'   => $labels,
@@ -1611,5 +1638,10 @@ class OrdenController extends BaseController
         }
 
         return $data;
+    }
+
+    public function getPlanFormato()
+    {
+        return view('orden.formato_mantenimiento');
     }
 }

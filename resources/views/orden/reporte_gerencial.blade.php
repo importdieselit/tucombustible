@@ -216,6 +216,14 @@
             <div class="card-body">
                 <div class="row text-center">
                     <div class="col-md-3 border-end">
+                        <span class="text-muted small d-block">Inventario Consumido</span>
+                        <h5 class="fw-bold text-dark mt-1">${{ number_format($reporte['financiero']['suministros'], 2) }}</h5>
+                    </div>
+                    <div class="col-md-3 border-end">
+                        <span class="text-muted small d-block">Compras Directas</span>
+                        <h5 class="fw-bold text-danger mt-1">${{ number_format($reporte['financiero']['compras'], 2) }}</h5>
+                    </div>
+                    <div class="col-md-3 border-end">
                         <span class="text-muted small d-block">Suministros / Repuestos</span>
                         <h5 class="fw-bold text-dark mt-1">${{ number_format($reporte['financiero']['suministros'], 2) }}</h5>
                     </div>
@@ -259,7 +267,28 @@
                     </div>
                 </div>
             </div>
-
+<div class="col-md-6">
+    <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white py-2 border-bottom">
+            <h6 class="mb-0 small fw-bold text-dark"><i class="fas fa-users-cog me-1"></i> TOP MECÁNICOS</h6>
+        </div>
+        <div class="card-body p-3">
+            @php $maxMec = $reporte['operativo']['por_mecanico']->first() ?: 1; @endphp
+            @foreach($reporte['operativo']['por_mecanico'] as $mecanico => $trabajos)
+                @php $porcentajeMec = ($trabajos / $maxMec) * 100; @endphp
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>{{ $mecanico }}</span>
+                        <span class="fw-bold">{{ $trabajos }} Trabajos</span>
+                    </div>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ $porcentajeMec }}%"></div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+</div>
             <div class="col-md-6">
                 <div class="row g-3 h-100">
                     <div class="col-12">

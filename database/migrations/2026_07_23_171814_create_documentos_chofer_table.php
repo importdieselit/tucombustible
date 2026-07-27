@@ -33,6 +33,6 @@ class CreateDocumentosChoferTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('documentos_chofer');
+        Schema::dropIfExists('documentos_chofer');  
     }
 }
