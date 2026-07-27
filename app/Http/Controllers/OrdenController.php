@@ -1438,17 +1438,27 @@ class OrdenController extends BaseController
 
         // 5. KPIs Operativos (Clasificaciones)
         // Distribución por Tipo (Correctivo vs Preventivo)
-        $porTipo = $ordenesBase->groupBy('tipo')->map->count(); 
-        
+        $porTipo = $ordenesBase->groupBy(function ($orden) {
+            $tipo = strtolower(trim($orden->tipo));
+            return in_array($tipo, ['preventivo', 'mantenimiento']) ? 'Preventivos' : 'Correctivos';
+        })->map->count();
+                
         // Distribución por Categoría de Falla
         $porCategoria = $ordenesBase->flatMap->trabajos->groupBy(function($trabajo) {
             return $trabajo->categoria ? $trabajo->categoria->categoria : 'Sin Categoría';
         })->map->count()->sortDesc();
 
         // Desempeño por Mecánico (Conteo de trabajos)
-        $porMecanico = $ordenesBase->flatMap->trabajos->groupBy(function($trabajo) {
-            return $trabajo->persona ? $trabajo->persona->nombre : 'Sin Asignar';
-        })->map->count()->sortDesc();
+        $porMecanico = $ordenesBase->flatMap->trabajos
+        ->groupBy(function($trabajo) {
+            // Intentar obtener el nombre desde la relación persona/personal
+            return $trabajo->persona?->nombre 
+                ?? $trabajo->personal?->persona?->nombre 
+                ?? $trabajo->personal?->nombre 
+                ?? 'Sin Asignar';
+        })
+        ->map->count()
+        ->sortDesc();
 
         // Volumen Interno vs Externo
         $trabajosInternos = $ordenesBase->flatMap->trabajos->count();
