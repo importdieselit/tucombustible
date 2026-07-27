@@ -55,7 +55,7 @@
     .table-responsive { max-height: none !important; overflow: visible !important; }
         .exec-card { box-shadow: none !important; border: 1px solid #ddd !important; break-inside: avoid; }
         .printableArea { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
-    }
+    }   
 </style>
 @endpush
 
