@@ -1423,16 +1423,17 @@ class OrdenController extends BaseController
         $totalActivas = $ordenesActivas->count();
 
         // 4. Costos Desglosados
-        $costoSuministrosAlmacen = $ordenesBase->flatMap->suministros->sum('costo_total');
-        $costoExternos = $ordenesBase->flatMap->TrabajosExternos->sum('costo');
-        
-        $costoCompras = $ordenesBase->flatMap->suministrosCompras->flatMap->detalles
-            ->whereNotNull('costo_unitario_aprobado')
-            ->sum(function($detalle) {
-                return $detalle->costo_unitario_aprobado * $detalle->cantidad_aprobada;
-            });
+        $coleccionSuministros = $ordenesBase->flatMap->suministros;
+        $coleccionExternos = $ordenesBase->flatMap->TrabajosExternos;
+        $coleccionCompras = $ordenesBase->flatMap->suministrosCompras->flatMap->detalles->whereNotNull('costo_unitario_aprobado');
 
-        $costoInternos = 0; // Ajustar si decides integrar horas-hombre * tarifa
+        $costoSuministrosAlmacen = $coleccionSuministros->sum('costo_total');
+        $costoExternos = $coleccionExternos->sum('costo');
+        $costoCompras = $coleccionCompras->sum(function($detalle) {
+            return $detalle->costo_unitario_aprobado * $detalle->cantidad_aprobada;
+        });
+
+        $costoInternos = 0; 
         $costoTotalGeneral = $costoSuministrosAlmacen + $costoExternos + $costoInternos + $costoCompras;
 
         // 5. KPIs Operativos (Clasificaciones)
@@ -1531,6 +1532,11 @@ class OrdenController extends BaseController
                 'labels'   => $labels,
                 'abiertas' => $dataAbiertas,
                 'cerradas' => $dataCerradas,
+            ],
+            'desglose' => [
+                'almacen'  => $coleccionSuministros,
+                'compras'  => $coleccionCompras,
+                'externos' => $coleccionExternos,
             ]
         ];
 
