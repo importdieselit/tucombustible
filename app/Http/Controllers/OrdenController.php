@@ -39,6 +39,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Proveedor;
 use App\Models\TrabajoExterno;
 use App\Models\PlanMantenimiento;
+use App\Services\WhatsappApiService;
 
 
 class OrdenController extends BaseController
@@ -48,13 +49,17 @@ class OrdenController extends BaseController
 
     protected $fcmService;
     protected $telegramService;
+    protected $whatsappService;
 
     public function __construct(
         FcmNotificationService $fcmService, 
-        TelegramNotificationService $telegramService, Orden $orden
+        TelegramNotificationService $telegramService, 
+        WhatsappApiService $whatsappService,
+        Orden $orden
     ) {
         $this->fcmService = $fcmService;
         $this->telegramService = $telegramService;
+        $this->whatsappService = $whatsappService;
         $this->model = $orden;
     }
 
@@ -1654,6 +1659,61 @@ class OrdenController extends BaseController
         }
 
         return $data;
+    }
+
+    public function enviarReporteWhatsapp(Request $request, WhatsappApiService $whatsappService)
+    {
+        $request->validate([
+            'imagen'  => 'required|string',
+            'caption' => 'nullable|string'
+        ]);
+
+        try {
+            // 1. Decodificar la imagen Base64 que envía html2canvas y guardarla temporalmente
+            $imageParts  = explode(";base64,", $request->imagen);
+            $imageBase64 = base64_decode($imageParts[1] ?? $request->imagen);
+
+            $path = 'temp/reporte_' . time() . '.png';
+            Storage::disk('public')->put($path, $imageBase64);
+
+            // 2. Estructura estándar solicitada
+            $fullPath   = storage_path('app/public/' . $path);
+            $destiny    = config('services.whatsapp.group_test');  
+            $dataImagen = file_get_contents($fullPath);
+            $base64     = base64_encode($dataImagen);
+            $img_ready  = "data:image/png;base64," . $base64;
+
+            // Definir el caption (si no viene en el request, se asigna uno por defecto)
+            $caption = $request->caption ?? "📊 *Reporte Gerencial de Mantenimiento*\n🤖 *Generado:* " . now()->format('d/m/Y H:i');
+
+            $response = $whatsappService->enviarImagen($caption, $img_ready, $destiny);
+            
+            // 3. Eliminar el archivo temporal del disco
+            Storage::disk('public')->delete($path);
+
+            // 4. Evaluar respuesta del servicio
+            if ($response && $response->successful()) {
+                return response()->json(['success' => true]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo procesar el envío mediante la API de WhatsApp.'
+            ], 500);
+
+        } catch (\Exception $e) {
+            // Asegurar la limpieza del archivo en caso de cualquier fallo previo
+            if (isset($path) && Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
+
+            Log::error('Error enviando reporte por WhatsApp: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Excepción interna al procesar la imagen: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function getPlanFormato()

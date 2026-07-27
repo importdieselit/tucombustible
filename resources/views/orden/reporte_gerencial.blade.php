@@ -68,8 +68,8 @@
             <p class="text-muted small mb-0">Dashboard Ejecutivo para Junta Directiva</p>
         </div>
         <div class="d-flex gap-2">
-            <button id="sendTelegramButton" class="btn btn-outline-info shadow-sm fw-bold">
-                <i class="fa fa-telegram me-2"></i> Enviar Telegram
+            <button id="sendWhatsappButton" class="btn btn-outline-success shadow-sm fw-bold">
+                <i class="fab fa-whatsapp me-2"></i> Enviar WhatsApp
             </button>
             <button id="captureButton" class="btn btn-outline-secondary shadow-sm fw-bold">
                 <i class="fa fa-camera me-2"></i> Capturar
@@ -112,7 +112,7 @@
                 <span class="text-muted small fw-bold">DEPARTAMENTO DE MANTENIMIENTO DE FLOTA</span>
             </div>
             <div class="text-end">
-                <span class="badge bg-dark px-3 py-2 fs-6 rounded-pill shadow-sm">
+                <span class="text-dark px-3 py-2 fs-6 shadow-sm">
                     Período: {{ \Carbon\Carbon::parse($reporte['periodo']['inicio'])->format('d/m/Y') }} AL {{ \Carbon\Carbon::parse($reporte['periodo']['fin'])->format('d/m/Y') }}
                 </span>
             </div>
@@ -263,7 +263,7 @@
                                     <h5 class="mb-0 fw-bold text-dark">{{ $reporte['operativo']['unidad_top']['vehiculo'] }} 
                                         <span class="small text-muted">({{ $reporte['operativo']['unidad_top']['placa'] }})</span>
                                     </h5>
-                                    <span class="badge bg-danger mt-1">{{ $reporte['operativo']['unidad_top']['cantidad'] }} Visitas al taller</span>
+                                    <span class="text-danger mt-1">{{ $reporte['operativo']['unidad_top']['cantidad'] }} Visitas al taller</span>
                                 @else
                                     <span class="text-muted small">Flota operando sin reincidencias severas.</span>
                                 @endif
@@ -404,7 +404,7 @@
                                                     @forelse($reporte['desglose']['externos'] as $item)
                                                         <tr>
                                                             <td>{{ $item->id_orden ?? 'N/A' }}</td>
-                                                            <td>{{ $item->proveedor->nombre ?? 'No especificado' }}</td>
+                                                            <td>{{ $item->proveedor->nombre  ?? 'No especificado' }}</td>
                                                             <td>{{ $item->descripcion ?? 'N/A' }}</td>
                                                             <td class="text-end fw-bold">${{ number_format($item->costo, 2) }}</td>
                                                         </tr>
@@ -546,6 +546,65 @@ document.addEventListener('DOMContentLoaded', function() {
             showStatus('Error al generar la captura. Verifica los permisos del navegador.', 'danger');
         } finally {
             // 2. Restaurar los acordeones a su estado original manejado por Bootstrap
+            accordions.forEach(acc => {
+                acc.style.display = '';
+                acc.style.height = '';
+            });
+            btn.disabled = false;
+        }
+    });
+
+    document.getElementById('sendWhatsappButton').addEventListener('click', async function() {
+        const btn = this;
+        btn.disabled = true;
+        showStatus('Generando imagen y enviando a WhatsApp...', 'info');
+
+        // 1. Expandir acordeones para capturar el reporte completo
+        const accordions = document.querySelectorAll('.accordion-collapse');
+        accordions.forEach(acc => {
+            acc.style.display = 'block';
+            acc.style.height = 'auto';
+        });
+
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        try {
+            // 2. Renderizar Canvas y obtener Base64
+            const canvas = await html2canvas(printableArea, { 
+                scale: 2, 
+                useCORS: true, 
+                backgroundColor: '#ffffff',
+                windowHeight: printableArea.scrollHeight 
+            });
+
+            const base64Image = canvas.toDataURL('image/png');
+
+            // 3. Petición AJAX / Fetch al backend Laravel
+            const response = await fetch("{{ route('ordenes.enviar_whatsapp') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    imagen: base64Image,
+                    periodo: "{{ $reporte['periodo']['inicio'] }} al {{ $reporte['periodo']['fin'] }}"
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                showStatus('Reporte enviado a WhatsApp exitosamente.', 'success');
+            } else {
+                showStatus(data.message || 'Error al procesar el envío por WhatsApp.', 'danger');
+            }
+
+        } catch (error) {
+            console.error('Error WhatsApp:', error);
+            showStatus('Ocurrió un error en la comunicación con el servidor.', 'danger');
+        } finally {
+            // 4. Restaurar acordeones y habilitar botón
             accordions.forEach(acc => {
                 acc.style.display = '';
                 acc.style.height = '';

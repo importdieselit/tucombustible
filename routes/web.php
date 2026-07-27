@@ -50,6 +50,7 @@ Route::get('/reporte/mantenimiento-interno', [OrdenController::class, 'reporteGe
 Route::get('/vehiculos/disponibilidad/refresh', [VehiculoController::class, 'refreshDisponibilidad'])->name('vehiculos.disponibilidad.refresh');
 Route::get('/reporte-admon', [GerentialReportController::class, 'admon'])->name('reporte.admon');
 
+
 Route::get('/test-push', function () {
     $user = User::find(1); // Tu usuario
     
@@ -211,6 +212,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/planes-mantenimiento/api/{id}', [OrdenController::class, 'getPlanApi'])->name('planes.api');
         Route::get('/planes-mantenimiento/formato', [OrdenController::class, 'getPlanFormato'])->name('planes.formato');
         Route::get('/ordenes/reporte-gerencial', [OrdenController::class, 'reporteGerencial'])->name('ordenes.reporte_gerencial');
+        Route::post('/ordenes/reporte-gerencial/whatsapp', [OrdenController::class, 'enviarReporteWhatsapp'])->name('ordenes.enviar_whatsapp');
         // Rutas para Evidencias Fotográficas
         Route::post('/ordenes/{id}/fotos/add', [OrdenController::class, 'addFotos'])->name('ordenes.fotos.add');
         Route::delete('/ordenes/fotos/{id}/delete', [OrdenController::class, 'destroyFoto'])->name('ordenes.fotos.destroy');
