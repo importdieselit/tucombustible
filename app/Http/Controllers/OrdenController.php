@@ -1408,7 +1408,7 @@ class OrdenController extends BaseController
             'vehiculoBelong', 
             'suministros', 
             'TrabajosExternos', 
-            'trabajos.mecanico', // Relación necesaria para medir rendimiento por mecánico
+            'trabajos.persona', // Relación necesaria para medir rendimiento por mecánico
             'trabajos.categoria',
             'suministrosCompras.detalles'
         ])
@@ -1447,7 +1447,7 @@ class OrdenController extends BaseController
 
         // Desempeño por Mecánico (Conteo de trabajos)
         $porMecanico = $ordenesBase->flatMap->trabajos->groupBy(function($trabajo) {
-            return $trabajo->mecanico ? $trabajo->mecanico->nombre : 'Sin Asignar';
+            return $trabajo->persona ? $trabajo->persona->nombre : 'Sin Asignar';
         })->map->count()->sortDesc();
 
         // Volumen Interno vs Externo
