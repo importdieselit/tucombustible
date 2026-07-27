@@ -22,7 +22,8 @@ use App\Http\Controllers\{
     ViajesController, TelegramController, PlanificacionMantenimientoController,
     ReportController, ClienteActivosController,NotificationController,LogisticaController,
     ChequeoDepositoController, CombustibleController, LlenadoCupoPrepagadoController, 
-    TransaccionCombustibleController, ConsumoOperativoController, TrasegadoController, ReversoCombustibleController
+    TransaccionCombustibleController, ConsumoOperativoController, TrasegadoController, ReversoCombustibleController,
+    MermasController
 };
 
 /* --- Rutas Públicas y Auth --- */
@@ -360,11 +361,15 @@ Route::middleware(['auth'])->group(function () {
                 });
 
                 Route::prefix('reversos_combustibles')->name('reversos_combustibles.')->group(function () {
-                Route::get('/', [ReversoCombustibleController::class, 'index'])->name('index');
-                Route::get('/crear', [ReversoCombustibleController::class, 'create'])->name('create');
-                Route::post('/guardar', [ReversoCombustibleController::class, 'store'])->name('store');
-                Route::get('/saldos-pendientes', [ReversoCombustibleController::class, 'show'])->name('show');
-            });
+                    Route::get('/', [ReversoCombustibleController::class, 'index'])->name('index');
+                    Route::get('/crear', [ReversoCombustibleController::class, 'create'])->name('create');
+                    Route::post('/guardar', [ReversoCombustibleController::class, 'store'])->name('store');
+                    Route::get('/saldos-pendientes', [ReversoCombustibleController::class, 'show'])->name('show');
+                });
+
+                Route::prefix('mermas')->name('mermas.')->group(function () {
+                    Route::get('/', [MermasController::class, 'index'])->name('index');
+                });
 
                 // Registro Histórico de Transacciones de Combustible
                 Route::prefix('transacciones')->name('transacciones.')->group(function () {

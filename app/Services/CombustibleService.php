@@ -282,4 +282,14 @@ class CombustibleService
             'remanente_litros'          => $litrosRemanentes,
         ];
     }
+
+    public function obtenerHistorialMermas(array $filtros)
+    {
+        return $this->ledgerRepo->getHistorialMermas($filtros);
+    }
+
+    public function obtenerTotalLitrosMermas(array $filtros): float
+    {
+        return $this->ledgerRepo->getTotalLitrosMermas($filtros);
+    }
 }
