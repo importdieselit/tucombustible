@@ -554,8 +554,6 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-
     function toggleFechasPersonales(valor) {
         const bloqueFechas = document.getElementById('bloque_fechas_personales');
         if (valor === 'personalizado') {
@@ -567,6 +565,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.querySelector('input[name="fecha_fin"]').value = '';
         }
     }
+document.addEventListener('DOMContentLoaded', function() {
     
     // --- GRÁFICO 1: TENDENCIA (TIMELINE) ---
     const timelineData = @json($reporte['timeline']);
