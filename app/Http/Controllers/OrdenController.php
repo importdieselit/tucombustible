@@ -1500,12 +1500,35 @@ class OrdenController extends BaseController
             return 'General';
         });
 
+        // Mapeamos cada grupo para calcular la volumetría y el impacto financiero
         $datosAgrupados = $grupos->map(function ($grupo, $nombreLlave) {
+            
+            // 1. Costo de Suministros (Inventario/Almacén)
+            $costoSuministros = $grupo->flatMap->suministros->sum('costo_total');
+            
+            // 2. Costo de Mano de Obra / Trabajos Externos
+            $costoExternos = $grupo->flatMap->trabajosExternos->sum('costo');
+            
+            // 3. Costo de Compras Directas (sumando cantidad * costo unitario)
+            $costoCompras = $grupo->flatMap->suministrosCompras->flatMap->detalles
+                ->whereNotNull('costo_unitario_aprobado')
+                ->sum(function($detalle) {
+                    return $detalle->costo_unitario_aprobado * $detalle->cantidad_aprobada;
+                });
+            
+            // 4. Costo Total del Grupo
+            $costoTotal = $costoSuministros + $costoExternos + $costoCompras;
+
             return [
-                'nombre' => $nombreLlave,
-                'cantidad' => $grupo->count(),
+                'nombre'            => $nombreLlave,
+                'cantidad_ordenes'  => $grupo->count(),
+                'trabajos_internos' => $grupo->flatMap->trabajos->count(),
+                'costo_suministros' => $costoSuministros,
+                'costo_compras'     => $costoCompras,
+                'costo_externos'    => $costoExternos,
+                'costo_total'       => $costoTotal,
             ];
-        })->sortByDesc('cantidad');
+        })->sortByDesc('costo_total'); // Ordenamos por el mayor gasto de mayor a menor
     }
 
     // 3. KPIs Principales

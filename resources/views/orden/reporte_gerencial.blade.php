@@ -345,34 +345,72 @@
                 </div>
             </div>
 
+@if($reporte['agrupar_por'] && $reporte['agrupacion']->isNotEmpty())
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
+            <span>
+                <i class="fas fa-chart-pie me-2"></i> 
+                Análisis Financiero por: <span class="text-uppercase text-warning">{{ str_replace('_', ' ', $reporte['agrupar_por']) }}</span>
+            </span>
+        </div>
+        <div class="card-body p-0 table-responsive">
+            <table class="table table-hover table-striped table-bordered mb-0 text-center align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-start">Categoría / Grupo</th>
+                        <th title="Cantidad de órdenes procesadas">Órdenes</th>
+                        <th title="Cantidad de trabajos internos realizados">Trabajos Int.</th>
+                        <th>Consumo Almacén</th>
+                        <th>Compras Directas</th>
+                        <th>Trabajos Externos</th>
+                        <th class="bg-light fw-bold text-dark">Costo Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @php
+                        $granTotalOrdenes = 0;
+                        $granTotalSuministros = 0;
+                        $granTotalCompras = 0;
+                        $granTotalExternos = 0;
+                        $granTotal = 0;
+                    @endphp
 
-
-            @if($reporte['agrupar_por'] && $reporte['agrupacion']->isNotEmpty())
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-white fw-bold">
-                    <i class="fas fa-layer-group me-2 text-primary"></i> 
-                    Resultados Agrupados por: <span class="text-uppercase text-primary">{{ str_replace('_', ' ', $reporte['agrupar_por']) }}</span>
-                </div>
-                <div class="card-body p-0">
-                    <table class="table table-hover table-striped mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Categoría / Grupo</th>
-                                <th class="text-center">Total Órdenes</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($reporte['agrupacion'] as $grupo)
-                            <tr>
-                                <td class="fw-bold">{{ $grupo['nombre'] }}</td>
-                                <td class="text-center">{{ $grupo['cantidad'] }}</td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        @endif
+                    @foreach($reporte['agrupacion'] as $grupo)
+                        @php
+                            $granTotalOrdenes += $grupo['cantidad_ordenes'];
+                            $granTotalSuministros += $grupo['costo_suministros'];
+                            $granTotalCompras += $grupo['costo_compras'];
+                            $granTotalExternos += $grupo['costo_externos'];
+                            $granTotal += $grupo['costo_total'];
+                        @endphp
+                        <tr>
+                            <td class="text-start fw-bold text-primary">{{ $grupo['nombre'] }}</td>
+                            <td>
+                                <span class="badge bg-secondary rounded-pill px-3">{{ $grupo['cantidad_ordenes'] }}</span>
+                            </td>
+                            <td class="text-muted small">{{ $grupo['trabajos_internos'] }}</td>
+                            <td class="text-success">${{ number_format($grupo['costo_suministros'], 2) }}</td>
+                            <td class="text-info">${{ number_format($grupo['costo_compras'], 2) }}</td>
+                            <td class="text-warning">${{ number_format($grupo['costo_externos'], 2) }}</td>
+                            <td class="bg-light fw-bold text-danger">${{ number_format($grupo['costo_total'], 2) }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+                <tfoot class="table-dark">
+                    <tr>
+                        <td class="text-end fw-bold">TOTALES:</td>
+                        <td class="fw-bold">{{ $granTotalOrdenes }}</td>
+                        <td>-</td>
+                        <td class="text-success">${{ number_format($granTotalSuministros, 2) }}</td>
+                        <td class="text-info">${{ number_format($granTotalCompras, 2) }}</td>
+                        <td class="text-warning">${{ number_format($granTotalExternos, 2) }}</td>
+                        <td class="fw-bold text-white fs-6">${{ number_format($granTotal, 2) }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+@endif
 
             <!-- BLOQUE 4: ANEXOS FINANCIEROS (Nivel de Auditoría) -->
         <div class="row g-4 mb-4 page-break-before mt-5">
