@@ -1454,7 +1454,7 @@ class OrdenController extends BaseController
 
     // 2. Consultas Base Optimizadas (Eager Loading para agrupaciones)
     // Se incluye 'vehiculo.tipoVehiculo' para tener la data disponible sin consultas extra
-    $ordenesBase = Orden::with('vehiculo')
+    $ordenesBase = Orden::with('vehiculoBelong, vehiculoBelong.tipoVehiculo, trabajos, trabajos.categoria, TrabajosExternos, suministros, suministrosCompras.detalles')
         ->when($fechaInicio, function ($q) use ($fechaInicio) {
             $q->whereDate('created_at', '>=', $fechaInicio);
         })
@@ -1483,11 +1483,11 @@ class OrdenController extends BaseController
     if ($agruparPor) {
         $grupos = $ordenesBase->groupBy(function ($orden) use ($agruparPor) {
             if ($agruparPor === 'unidad') {
-                return $orden->vehiculo ? $orden->vehiculo->placa : 'Sin Unidad';
+                return $orden->vehiculoBelong ? $orden->vehiculoBelong->placa : 'Sin Unidad';
             } elseif ($agruparPor === 'tipo_orden') {
                 return ucfirst($orden->tipo) ?: 'Sin Tipo de Orden';
             } elseif ($agruparPor === 'tipo_vehiculo') {
-                return $orden->vehiculo && $orden->vehiculo->tipoVehiculo ? $orden->vehiculo->tipoVehiculo->tipo : 'Sin Tipo Vehículo';
+                return $orden->vehiculoBelong && $orden->vehiculoBelong->tipoVehiculo ? $orden->vehiculoBelong->tipoVehiculo->tipo : 'Sin Tipo Vehículo';
             }
             return 'General';
         });
