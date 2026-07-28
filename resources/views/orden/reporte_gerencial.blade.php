@@ -386,7 +386,7 @@
                         <tr>
                             <td class="text-start fw-bold text-primary">{{ $grupo['nombre'] }}</td>
                             <td>
-                                <span class="badge bg-secondary rounded-pill px-3">{{ $grupo['cantidad_ordenes'] }}</span>
+                                <strong>{{ $grupo['cantidad_ordenes'] }}</strong>
                             </td>
                             <td class="text-muted small">{{ $grupo['trabajos_internos'] }}</td>
                             <td class="text-success">${{ number_format($grupo['costo_suministros'], 2) }}</td>
