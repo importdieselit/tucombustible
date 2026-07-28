@@ -1454,7 +1454,7 @@ class OrdenController extends BaseController
 
     // 2. Consultas Base Optimizadas (Eager Loading para agrupaciones)
     // Se incluye 'vehiculo.tipoVehiculo' para tener la data disponible sin consultas extra
-    $ordenesBase = Orden::with('vehiculo.tipoVehiculo')
+    $ordenesBase = Orden::query()
         ->when($fechaInicio, function ($q) use ($fechaInicio) {
             $q->whereDate('created_at', '>=', $fechaInicio);
         })
