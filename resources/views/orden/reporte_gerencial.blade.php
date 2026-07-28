@@ -83,18 +83,69 @@
     <!-- FORMULARIO DE FILTROS -->
     <div class="exec-card mb-4 no-print">
         <div class="card-body p-3">
-            <form action="{{ route('ordenes.reporte_gerencial') }}" method="GET" class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label class="small fw-bold text-muted mb-1">FECHA INICIO</label>
-                    <input type="date" name="fecha_inicio" class="form-control form-control-sm bg-light" value="{{ $reporte['periodo']['inicio'] }}">
+           <!-- Formulario de Filtros del Reporte -->
+            <form method="GET" action="{{ route('ordenes.reporte_gerencial') }}" class="row g-3 align-items-end mb-4 print-none">
+                
+                <!-- NUEVO: Selector Rápido de Periodo -->
+                <div class="col-md-2">
+                    <label for="tipo_periodo" class="form-label fw-bold small text-muted">Periodo</label>
+                    <select name="tipo_periodo" id="tipo_periodo" class="form-select" onchange="toggleFechasPersonales(this.value)">
+                        <option value="este_mes" {{ $tipoPeriodo == 'este_mes' ? 'selected' : '' }}>Este Mes</option>
+                        <option value="mes_pasado" {{ $tipoPeriodo == 'mes_pasado' ? 'selected' : '' }}>Mes Pasado</option>
+                        <option value="esta_quincena" {{ $tipoPeriodo == 'esta_quincena' ? 'selected' : '' }}>Esta Quincena</option>
+                        <option value="esta_semana" {{ $tipoPeriodo == 'esta_semana' ? 'selected' : '' }}>Esta Semana</option>
+                        <option value="personalizado" {{ $tipoPeriodo == 'personalizado' ? 'selected' : '' }}>Personalizado...</option>
+                    </select>
                 </div>
-                <div class="col-md-3">
-                    <label class="small fw-bold text-muted mb-1">FECHA FIN</label>
-                    <input type="date" name="fecha_fin" class="form-control form-control-sm bg-light" value="{{ $reporte['periodo']['fin'] }}">
+
+                <!-- Fechas Personalizadas (Ocultas por defecto si no es personalizado) -->
+                <div class="col-md-3 d-flex gap-2" id="bloque_fechas_personales" style="{{ $tipoPeriodo == 'personalizado' ? '' : 'display: none !important;' }}">
+                    <div class="w-50">
+                        <label class="form-label fw-bold small text-muted">Desde</label>
+                        <input type="date" name="fecha_inicio" class="form-control" value="{{ request('fecha_inicio') }}">
+                    </div>
+                    <div class="w-50">
+                        <label class="form-label fw-bold small text-muted">Hasta</label>
+                        <input type="date" name="fecha_fin" class="form-control" value="{{ request('fecha_fin') }}">
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <button type="submit" class="btn btn-primary btn-sm px-4 fw-bold me-2"><i class="fas fa-filter me-1"></i> Aplicar Filtro</button>
-                    <a href="{{ route('ordenes.reporte_gerencial') }}" class="btn btn-light btn-sm px-3 text-muted"><i class="fas fa-undo me-1"></i> Limpiar</a>
+
+                <!-- Filtros de Tipo (Orden y Vehículo) -->
+                <div class="col-md-2">
+                    <label for="tipo_orden" class="form-label fw-bold small text-muted">Tipo de Orden</label>
+                    <select name="tipo_orden" class="form-select">
+                        <option value="">-- Todos --</option>
+                        @foreach($tiposOrden as $tipoO)
+                            <option value="{{ $tipoO }}" {{ request('tipo_orden') == $tipoO ? 'selected' : '' }}>{{ ucfirst($tipoO) }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label for="tipo_vehiculo_id" class="form-label fw-bold small text-muted">Tipo Vehículo</label>
+                    <select name="tipo_vehiculo_id" class="form-select">
+                        <option value="">-- Todos --</option>
+                        @foreach($tiposVehiculo as $tipoV)
+                            <option value="{{ $tipoV->id }}" {{ request('tipo_vehiculo_id') == $tipoV->id ? 'selected' : '' }}>{{ $tipoV->tipo }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- NUEVO: Selector de Agrupación (Unidad, etc.) -->
+                <div class="col-md-2">
+                    <label for="agrupar_por" class="form-label fw-bold small text-muted">Agrupar Tabla Por</label>
+                    <select name="agrupar_por" class="form-select border-primary">
+                        <option value="">Global (Sin Agrupar)</option>
+                        <option value="unidad" {{ request('agrupar_por') == 'unidad' ? 'selected' : '' }}>Por Unidad</option>
+                        <option value="tipo_orden" {{ request('agrupar_por') == 'tipo_orden' ? 'selected' : '' }}>Por Tipo de Orden</option>
+                        <option value="tipo_vehiculo" {{ request('agrupar_por') == 'tipo_vehiculo' ? 'selected' : '' }}>Por Tipo de Vehículo</option>
+                    </select>
+                </div>
+
+                <div class="col-md-1 text-end">
+                    <button type="submit" class="btn btn-primary w-100 fw-bold" title="Aplicar Filtros">
+                        <i class="fas fa-search"></i>
+                    </button>
                 </div>
             </form>
         </div>
@@ -294,6 +345,35 @@
                 </div>
             </div>
 
+
+
+            @if($reporte['agrupar_por'] && $reporte['agrupacion']->isNotEmpty())
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white fw-bold">
+                    <i class="fas fa-layer-group me-2 text-primary"></i> 
+                    Resultados Agrupados por: <span class="text-uppercase text-primary">{{ str_replace('_', ' ', $reporte['agrupar_por']) }}</span>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover table-striped mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Categoría / Grupo</th>
+                                <th class="text-center">Total Órdenes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($reporte['agrupacion'] as $grupo)
+                            <tr>
+                                <td class="fw-bold">{{ $grupo['nombre'] }}</td>
+                                <td class="text-center">{{ $grupo['cantidad'] }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
+
             <!-- BLOQUE 4: ANEXOS FINANCIEROS (Nivel de Auditoría) -->
         <div class="row g-4 mb-4 page-break-before mt-5">
             <div class="col-12">
@@ -437,6 +517,18 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+
+    function toggleFechasPersonales(valor) {
+        const bloqueFechas = document.getElementById('bloque_fechas_personales');
+        if (valor === 'personalizado') {
+            bloqueFechas.style.setProperty('display', 'flex', 'important');
+        } else {
+            bloqueFechas.style.setProperty('display', 'none', 'important');
+            // Opcional: Limpiar las cajas de fecha si se ocultan
+            document.querySelector('input[name="fecha_inicio"]').value = '';
+            document.querySelector('input[name="fecha_fin"]').value = '';
+        }
+    }
     
     // --- GRÁFICO 1: TENDENCIA (TIMELINE) ---
     const timelineData = @json($reporte['timeline']);
