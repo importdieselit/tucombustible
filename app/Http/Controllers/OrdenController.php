@@ -1454,7 +1454,15 @@ class OrdenController extends BaseController
 
     // 2. Consultas Base Optimizadas (Eager Loading para agrupaciones)
     // Se incluye 'vehiculo.tipoVehiculo' para tener la data disponible sin consultas extra
-    $ordenesBase = Orden::with('vehiculoBelong, vehiculoBelong.tipoVehiculo, trabajos, trabajos.categoria, TrabajosExternos, suministros, suministrosCompras.detalles')
+    $ordenesBase = Orden::with(
+        'vehiculoBelong', 
+            'vehiculoBelong.tipoVehiculo', 
+            'trabajos', 
+            'trabajos.categoria', 
+            'trabajosExternos', 
+            'suministros', 
+            'suministrosCompras.detalles'
+            )
         ->when($fechaInicio, function ($q) use ($fechaInicio) {
             $q->whereDate('created_at', '>=', $fechaInicio);
         })
@@ -1511,7 +1519,7 @@ class OrdenController extends BaseController
 
     // 4. Costos Desglosados
     $coleccionSuministros = $ordenesBase->flatMap->suministros;
-    $coleccionExternos = $ordenesBase->flatMap->TrabajosExternos;
+    $coleccionExternos = $ordenesBase->flatMap->trabajosExternos;
     $coleccionCompras = $ordenesBase->flatMap->suministrosCompras->flatMap->detalles->whereNotNull('costo_unitario_aprobado');
 
     $costoSuministrosAlmacen = $coleccionSuministros->sum('costo_total');
