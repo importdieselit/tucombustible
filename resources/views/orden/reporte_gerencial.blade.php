@@ -353,6 +353,7 @@
                 Análisis Financiero por: <span class="text-uppercase text-warning">{{ str_replace('_', ' ', $reporte['agrupar_por']) }}</span>
             </span>
         </div>
+        <div id="chart-agrupacion" style="width:100%; height:400px; margin-bottom: 30px;"></div>
         <div class="card-body p-0 table-responsive">
             <table class="table table-hover table-striped table-bordered mb-0 text-center align-middle">
                 <thead class="table-light">
@@ -682,6 +683,83 @@ document.addEventListener('DOMContentLoaded', function() {
             btn.disabled = false;
         }
     });
+
+    @if($reporte['agrupar_por'] && $reporte['agrupacion']->isNotEmpty())
+        // Recibimos los datos del backend y el nombre de la agrupación
+        const dataAgrupada = @json($reporte['agrupacion']->values()); 
+        const tituloAgrupacion = "{{ strtoupper(str_replace('_', ' ', $reporte['agrupar_por'])) }}";
+
+        // Mapeamos los datos dinámicamente para los ejes del gráfico
+        const labelsX = dataAgrupada.map(item => item.nombre);
+        const dataSuministros = dataAgrupada.map(item => parseFloat(item.costo_suministros));
+        const dataCompras = dataAgrupada.map(item => parseFloat(item.costo_compras));
+        const dataExternos = dataAgrupada.map(item => parseFloat(item.costo_externos));
+        const dataOrdenes = dataAgrupada.map(item => parseInt(item.cantidad_ordenes));
+
+        Highcharts.chart('chart-agrupacion', {
+            chart: { type: 'column', backgroundColor: 'transparent', style: { fontFamily: 'inherit' } },
+            title: { 
+                text: 'Comportamiento de Costos por ' + tituloAgrupacion,
+                style: { fontWeight: 'bold', color: '#1B365D' }
+            },
+            xAxis: { 
+                categories: labelsX, 
+                crosshair: true,
+                labels: { style: { fontWeight: '600' } }
+            },
+            yAxis: [
+                { // Eje Y Primario (Izquierda - Dinero)
+                    title: { text: 'Costo Total ($)', style: { color: '#333' } },
+                    labels: { format: '${value}', style: { color: '#333' } }
+                },
+                { // Eje Y Secundario (Derecha - Órdenes)
+                    title: { text: 'Cantidad de Órdenes', style: { color: '#d32f2f' } },
+                    labels: { style: { color: '#d32f2f' } },
+                    opposite: true
+                }
+            ],
+            tooltip: { shared: true },
+            plotOptions: {
+                column: {
+                    stacking: 'normal', // Esto apila los costos para formar el "Costo Total" visualmente
+                    dataLabels: { enabled: false }
+                }
+            },
+            series: [
+                {
+                    name: 'Almacén',
+                    type: 'column',
+                    data: dataSuministros,
+                    color: '#218f4c', // Verde corp
+                    tooltip: { valuePrefix: '$', valueDecimals: 2 }
+                },
+                {
+                    name: 'Compras Directas',
+                    type: 'column',
+                    data: dataCompras,
+                    color: '#0077C8', // Azul corp
+                    tooltip: { valuePrefix: '$', valueDecimals: 2 }
+                },
+                {
+                    name: 'Externos',
+                    type: 'column',
+                    data: dataExternos,
+                    color: '#f39c12', // Naranja/Amarillo alerta
+                    tooltip: { valuePrefix: '$', valueDecimals: 2 }
+                },
+                {
+                    name: 'Órdenes',
+                    type: 'spline', // Línea para contrastar con las barras
+                    yAxis: 1, // Se enlaza al eje secundario
+                    data: dataOrdenes,
+                    color: '#d32f2f', // Rojo corp
+                    marker: { lineWidth: 2, lineColor: '#d32f2f', fillColor: 'white' },
+                    tooltip: { valueSuffix: ' OT(s)' }
+                }
+            ],
+            credits: { enabled: false }
+        });
+    @endif
 
     document.getElementById('sendWhatsappButton').addEventListener('click', async function() {
         const btn = this;
