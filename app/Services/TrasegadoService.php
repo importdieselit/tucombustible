@@ -51,7 +51,7 @@ class TrasegadoService
             // 1. REGLAS DE NEGOCIO Y AFECTACIÓN FÍSICA SEGÚN TIPO
             // =========================================================
 
-            if ($tipoTrasegado === 'interno' || $tipoTrasegado === 'inter_sede') {
+            if ($tipoTrasegado === 'interno' || $tipoTrasegado === 'inter-sede') {
                 if (!$depositoOrigenId || !$depositoDestinoId) {
                     throw new Exception("Debes especificar los depósitos de origen y destino.");
                 }
@@ -67,7 +67,7 @@ class TrasegadoService
                     throw new Exception("En trasegados internos ambos tanques deben pertenecer a la misma sede.");
                 }
 
-                if ($tipoTrasegado === 'inter_sede' && $tanqueOrigen->id_sede === $tanqueDestino->id_sede) {
+                if ($tipoTrasegado === 'inter-sede' && $tanqueOrigen->id_sede === $tanqueDestino->id_sede) {
                     throw new Exception("En trasegados inter-sedes las sedes de origen y destino deben ser distintas.");
                 }
 

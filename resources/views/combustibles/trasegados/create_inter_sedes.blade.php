@@ -49,7 +49,7 @@
         @csrf
 
         {{-- DATOS METADATA REQUERIDOS POR EL CONTROLADOR --}}
-        <input type="hidden" name="tipo_trasegado" value="inter_sede">
+        <input type="hidden" name="tipo_trasegado" value="inter-sede">
         <input type="hidden" name="tipo_combustible_id" id="hidden-tipo-combustible-id" value="{{ old('tipo_combustible_id') }}">
         
         <input type="hidden" name="bolsa_origen_tipo" id="hidden-bolsa-origen-tipo" value="{{ old('bolsa_origen_tipo') }}">

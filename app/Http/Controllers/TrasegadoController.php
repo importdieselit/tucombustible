@@ -150,7 +150,7 @@ class TrasegadoController extends Controller
     {
         // 1. Reglas base obligatorias para todos los tipos
         $rules = [
-            'tipo_trasegado'      => 'required|in:interno,inter_sede,externo',
+            'tipo_trasegado'      => 'required|in:interno,inter-sede,externo',
             'cantidad_litros'     => 'required|numeric|gt:0',
             'tipo_combustible_id' => 'required|exists:tipos_combustible,id',
             'observaciones'       => 'nullable|string',
@@ -168,7 +168,7 @@ class TrasegadoController extends Controller
         }
 
         // 3. Trasegado Inter-Sede
-        if ($request->tipo_trasegado === 'inter_sede') {
+        if ($request->tipo_trasegado === 'inter-sede') {
             $rules['sede_origen_id']      = 'required|exists:sedes,id';
             $rules['sede_destino_id']     = 'required|exists:sedes,id|different:sede_origen_id';
             $rules['deposito_origen_id']  = 'required|exists:depositos,id';
