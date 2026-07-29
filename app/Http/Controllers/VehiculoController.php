@@ -454,8 +454,13 @@ class VehiculoController extends BaseController
         $clientes = $this->repo->getClientes();
         $tiposVehiculo = $this->repo->getTiposVehiculo();
         $documentosRequeridos = $this->repo->getDocumentosRequeridosV();
+        $counts = [
+            'T' => Vehiculo::where('tipo', 2)->count(),
+            'L' => Vehiculo::where('tipo', 6)->count(),
+            'C' => Vehiculo::whereNotIn('tipo', [2, 6])->whereNotNull('tipo')->count(),
+        ];
         
-        return view('vehiculo.create', compact('marcas', 'modelos', 'clientes', 'tiposVehiculo','documentosRequeridos'));
+        return view('vehiculo.create', compact('marcas', 'modelos', 'clientes', 'tiposVehiculo','documentosRequeridos', 'counts'));
     }
 
     public function store(Request $request)
