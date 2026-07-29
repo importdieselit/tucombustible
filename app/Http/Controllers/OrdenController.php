@@ -1485,7 +1485,7 @@ class OrdenController extends BaseController
     $ordenesActivas = Orden::whereIn('estatus', [2,3])->get();
 
     // NUEVO: Lógica de Agrupación Dinámica (Collections)
-    $agruparPor = $request->input('agrupar_por');
+    $agruparPor = $request->input('agrupar_por', 'unidad');
     $datosAgrupados = collect();
 
     if ($agruparPor) {
