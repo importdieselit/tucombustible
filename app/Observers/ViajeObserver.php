@@ -4,8 +4,6 @@ namespace App\Observers;
 
 use App\Models\Viaje;
 use App\Models\Vehiculo;
-use App\Models\Chofer;
-use App\Services\FcmNotificationService;
 use App\Services\LogisticaInventarioService;
 use Illuminate\Support\Facades\DB;
 
@@ -13,18 +11,14 @@ class ViajeObserver
 {
     protected $inventarioService;
 
-    /**
-     * Handle the Viaje "created" event.
-     *
-     * @param  \App\Models\Viaje  $viaje
-     * @return void
-     */
-
     public function __construct(LogisticaInventarioService $inventarioService)
     {
         $this->inventarioService = $inventarioService;
     }
 
+    /**
+     * Handle the Viaje "created" event.
+     */
     public function created(Viaje $viaje)
     {
         $vehiculo = Vehiculo::find($viaje->vehiculo_id);
@@ -32,7 +26,6 @@ class ViajeObserver
         if ($vehiculo) {
             $vehiculo->chofer_id = $viaje->chofer_id;
 
-            // Corrección lógica: Solo hacer esto si la cisterna NO es nula
             if (!is_null($viaje->cisterna)) {
                 // Desacoplar esta cisterna de cualquier otro vehículo
                 Vehiculo::where('acoplado_id', $viaje->cisterna)->update(['acoplado_id' => null]);
@@ -42,25 +35,19 @@ class ViajeObserver
             
             $vehiculo->save();
         }
-        
-        
     }
 
     /**
      * Handle the Viaje "updated" event.
-     *
-     * @param  \App\Models\Viaje  $viaje
-     * @return void
      */
     public function updated(Viaje $viaje)
     {
-        // isDirty() verifica si el campo status cambió en esta actualización
+        // Verificamos si el campo status cambió en esta actualización
         if ($viaje->isDirty('status')) {
             $nuevoStatus = $viaje->status;
-            $viejoStatus = $viaje->getOriginal('status'); // Estado anterior
+            $viejoStatus = $viaje->getOriginal('status');
 
             // 1. TRANSICIÓN A "EN RUTA" (Salida de Planta)
-            // Agregé strtoupper() por seguridad, ya que en LogisticaService guardas 'PROGRAMADO' en mayúsculas
             if (strtoupper($viejoStatus) === 'PROGRAMADO' && $nuevoStatus === 'EN RUTA') {
                 
                 $this->actualizarEstatusFlota($viaje, 2);
@@ -74,11 +61,11 @@ class ViajeObserver
                 Vehiculo::where('id', $viaje->vehiculo_id)->update(['acoplado_id' => null]);
                 $this->actualizarEstatusFlota($viaje, 1);
 
-                // ⚡ LEDGER AUTOMÁTICO: Si es una Compra (Tipo 4), suma los litros físicos reales a la fosa
-                if ($viaje->tipo_planificacion == 4) {
-                    $this->inventarioService->registrarIngresoFisicoCompra($viaje);
+                // ⚡ LEDGER AUTOMÁTICO: Si es una Compra (Tipo 4), suma los litros físicos reales
+                if ((int) $viaje->tipo_planificacion === 4) {
+                    $this->inventarioService->registrarEntradaCompra($viaje);
                     
-                    // Aprovechamos de actualizar el estatus en tu tabla auxiliar de compras
+                    // Actualizamos el estatus en la tabla auxiliar de compras
                     DB::table('compras_combustible')
                         ->where('viaje_id', $viaje->id)
                         ->update(['estatus' => 'COMPLETADO']);
@@ -86,7 +73,6 @@ class ViajeObserver
             }
         }
     }
-
 
     private function actualizarEstatusFlota(Viaje $viaje, int $estatusDestino)
     {
@@ -97,7 +83,7 @@ class ViajeObserver
             $vehiculo->save();
         }
 
-        // 2. Actualizar la Cisterna (Asumiendo que el ID de cisterna guarda otro Vehiculo)
+        // 2. Actualizar la Cisterna
         if (!is_null($viaje->cisterna)) {
             $cisterna = Vehiculo::find($viaje->cisterna);
             if ($cisterna && $cisterna->estatus != $estatusDestino) {
@@ -105,38 +91,5 @@ class ViajeObserver
                 $cisterna->save();
             }
         }
-    }
-
-    /**
-     * Handle the Viaje "deleted" event.
-     *
-     * @param  \App\Models\Viaje  $viaje
-     * @return void
-     */
-    public function deleted(Viaje $viaje)
-    {
-        //
-    }
-
-    /**
-     * Handle the Viaje "restored" event.
-     *
-     * @param  \App\Models\Viaje  $viaje
-     * @return void
-     */
-    public function restored(Viaje $viaje)
-    {
-        //
-    }
-
-    /**
-     * Handle the Viaje "force deleted" event.
-     *
-     * @param  \App\Models\Viaje  $viaje
-     * @return void
-     */
-    public function forceDeleted(Viaje $viaje)
-    {
-        //
     }
 }

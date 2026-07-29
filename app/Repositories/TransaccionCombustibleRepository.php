@@ -3,38 +3,80 @@
 namespace App\Repositories;
 
 use App\Models\TransaccionCombustible;
-use Illuminate\Support\Facades\DB;
 
 class TransaccionCombustibleRepository
 {
-    /**
-     * Registrar un nuevo movimiento en el Ledger.
-     */
     public function registrar(array $data): TransaccionCombustible
     {
         return TransaccionCombustible::create($data);
     }
 
-    public function getDisponibilidadPrepagada(int $sedeId, int $tipoCombustibleId): float
+    public function getDisponibilidadPrepagada(?int $sedeId = null, ?int $tipoCombustibleId = null): float
     {
-        return (float) TransaccionCombustible::where('sede_id', $sedeId)
-            ->where('tipo_combustible_id', $tipoCombustibleId)
-            ->where('bolsa_tipo', 'prepagado')
-            ->sum('cantidad_litros');
+        $query = TransaccionCombustible::where('bolsa_tipo', 'prepagado');
+
+        if ($sedeId) {
+            $query->where('sede_id', $sedeId);
+        }
+
+        if ($tipoCombustibleId) {
+            $query->where('tipo_combustible_id', $tipoCombustibleId);
+        }
+
+        return (float) $query->sum('cantidad_litros');
     }
 
-    
-    public function getSaldoFisicoGeneral(int $sedeId, int $tipoCombustibleId): float
+    public function getSaldoFisicoGeneral(?int $sedeId = null, ?int $tipoCombustibleId = null): float
     {
-        return (float) TransaccionCombustible::where('sede_id', $sedeId)
-            ->where('tipo_combustible_id', $tipoCombustibleId)
-            ->where('bolsa_tipo', 'general')
-            ->sum('cantidad_litros');
+        $query = TransaccionCombustible::where('bolsa_tipo', 'general')
+            ->where('tipo_movimiento', '!=', 'compromiso_despacho');
+
+        if ($sedeId) {
+            $query->where('sede_id', $sedeId);
+        }
+
+        if ($tipoCombustibleId) {
+            $query->where('tipo_combustible_id', $tipoCombustibleId);
+        }
+
+        return (float) $query->sum('cantidad_litros');
+    }
+
+    public function getLitrosComprometidos(?int $sedeId = null, ?int $tipoCombustibleId = null): float
+    {
+        $query = TransaccionCombustible::where('bolsa_tipo', 'general')
+            ->where('tipo_movimiento', 'compromiso_despacho');
+
+        if ($sedeId) {
+            $query->where('sede_id', $sedeId);
+        }
+
+        if ($tipoCombustibleId) {
+            $query->where('tipo_combustible_id', $tipoCombustibleId);
+        }
+
+        return abs((float) $query->sum('cantidad_litros'));
+    }
+
+    public function getDisponibilidadFisicaTotal(?int $sedeId = null, ?int $tipoCombustibleId = null): float
+    {
+        $query = TransaccionCombustible::where('tipo_movimiento', '!=', 'compromiso_despacho');
+
+        if ($sedeId) {
+            $query->where('sede_id', $sedeId);
+        }
+
+        if ($tipoCombustibleId) {
+            $query->where('tipo_combustible_id', $tipoCombustibleId);
+        }
+
+        return (float) $query->sum('cantidad_litros');
     }
 
     public function getSaldoTeoricoPorDeposito(int $depositoId): float
     {
         return (float) TransaccionCombustible::where('deposito_id', $depositoId)
+            ->where('tipo_movimiento', '!=', 'compromiso_despacho')
             ->sum('cantidad_litros');
     }
 

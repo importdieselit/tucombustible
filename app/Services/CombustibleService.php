@@ -292,4 +292,62 @@ class CombustibleService
     {
         return $this->ledgerRepo->getTotalLitrosMermas($filtros);
     }
+
+    public function obtenerMetricasDashboard(?int $sedeId = null): array
+    {
+        // 1. Identificadores de combustible para tanques/capacidad
+        $idDiesel = DB::table('tipos_combustible')->where('nombre', 'LIKE', '%diesel%')->value('id') ?? 1;
+        $idMgo    = DB::table('tipos_combustible')->where('nombre', 'LIKE', '%mgo%')->value('id') ?? 2;
+
+        // 2. Saldos y Disponibilidad Físicos desde el Ledger / Depósitos
+        $generalFisico         = $this->ledgerRepo->getSaldoFisicoGeneral($sedeId);
+        $prepagado             = $this->ledgerRepo->getDisponibilidadPrepagada($sedeId);
+        $totalDisponibleDiesel = $this->ledgerRepo->getDisponibilidadFisicaTotal($sedeId, $idDiesel);
+        $totalDisponibleMgo    = $this->ledgerRepo->getDisponibilidadFisicaTotal($sedeId, $idMgo);
+
+        // 3. Litros Comprometidos REALES (Tabla `viajes`, status PROGRAMADO)
+        $queryViajes = DB::table('viajes')
+            ->where('status', 'PROGRAMADO')
+            ->when($sedeId, fn($q) => $q->where('sede_id', $sedeId));
+
+        // tipo_planificacion: 1 = Diesel, 2 = MGO
+        $comprometidoDiesel = (clone $queryViajes)->where('tipo_planificacion', 1)->sum('litros') ?? 0;
+        $comprometidoMgo    = (clone $queryViajes)->where('tipo_planificacion', 2)->sum('litros') ?? 0;
+        $totalComprometido  = $comprometidoDiesel + $comprometidoMgo;
+
+        // 4. Capacidades para % de Tanques
+        $queryDepositos = Deposito::when($sedeId, fn($q) => $q->where('id_sede', $sedeId));
+
+        $tanquesActivos  = (clone $queryDepositos)->count();
+        $capacidadDiesel = (clone $queryDepositos)->where('tipo_combustible_id', $idDiesel)->sum('capacidad_litros');
+        $capacidadMgo    = (clone $queryDepositos)->where('tipo_combustible_id', $idMgo)->sum('capacidad_litros');
+
+        // 5. Paginación directa con Eloquent
+        $disponibilidades = Deposito::when($sedeId, fn($q) => $q->where('id_sede', $sedeId))
+            ->with(['sedes', 'tipoCombustible', 'ultimaMedicion'])
+            ->paginate(15);
+
+        // 6. Última medición
+        $ultimaMedicion = Deposito::when($sedeId, fn($q) => $q->where('id_sede', $sedeId))
+            ->with('ultimaMedicion')->get()->pluck('ultimaMedicion.created_at')->filter()->max();
+
+        return [
+            'general_fisico'          => $generalFisico,
+            'cupo_prepagado'          => $prepagado,
+            'general_comprometido'    => $totalComprometido,
+            'general_venta'           => $generalFisico - $totalComprometido,
+            
+            'totalDisponibleDiesel'   => $totalDisponibleDiesel,
+            'porcentajeDiesel'        => $capacidadDiesel > 0 ? ($totalDisponibleDiesel / $capacidadDiesel) * 100 : 0,
+            'totalComprometidoDiesel' => $comprometidoDiesel,
+
+            'totalDisponibleMgo'      => $totalDisponibleMgo,
+            'porcentajeMgo'           => $capacidadMgo > 0 ? ($totalDisponibleMgo / $capacidadMgo) * 100 : 0,
+            'totalComprometidoMgo'     => $comprometidoMgo,
+
+            'tanquesActivos'          => $tanquesActivos,
+            'ultimaMedicion'          => $ultimaMedicion,
+            'disponibilidades'        => $disponibilidades,
+        ];
+    }
 }
