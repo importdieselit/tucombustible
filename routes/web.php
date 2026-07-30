@@ -333,6 +333,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/reportes-sistema', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/export-pdf', [ReportController::class, 'exportPdf'])->name('reports.export_pdf');
         Route::post('/api/reports/summary', [ReportController::class, 'getSummary'])->name('reports.summary');
+
+        // Telegram
+        Route::post('/send-telegram-photo', [TelegramController::class, 'sendPhoto'])->name('telegram.send.photo');
+        Route::post('/send-telegram-message', [TelegramController::class, 'sendMessage'])->name('telegram.send.message');
+  
+
   
 
         Route::get('/admin/principal', [DashboardController::class, 'adminPrincipal'])->name('dashboard.admin');
