@@ -9,6 +9,7 @@ use App\Models\PlacaVehiculo;
 use App\Models\RegistroPaso;
 use App\Models\User;
 use App\Models\GascoCupoMensual;
+use App\Models\Documento;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -240,9 +241,17 @@ class ClienteRepository
 
     public function registrarPlaca($clienteId, string $placa): PlacaVehiculo
     {
+        $placaLimpia = strtoupper(str_replace(' ', '', $placa));
+
         return PlacaVehiculo::updateOrCreate(
-            ['cliente_id' => $clienteId, 'placa' => strtoupper(str_replace(' ', '', $placa))],
-            ['activo' => 1, 'updated_at' => now()]
+            // El primer array es el criterio de búsqueda único global
+            ['placa' => $placaLimpia], 
+            // El segundo array contiene lo que se va a insertar o actualizar si se encuentra
+            [
+                'cliente_id' => $clienteId, 
+                'activo' => 1, 
+                'updated_at' => now()
+            ]
         );
     }
 
@@ -266,8 +275,15 @@ class ClienteRepository
     public function registrarChofer($clienteId, string $nombreCompleto, string $cedula): ChoferCliente
     {
         return ChoferCliente::updateOrCreate(
-            ['cliente_id' => $clienteId, 'cedula' => $cedula],
-            ['nombre_completo' => strtoupper($nombreCompleto), 'activo' => 1, 'updated_at' => now()]
+            // Criterio de búsqueda único global
+            ['cedula' => $cedula], 
+            // Datos a actualizar o insertar
+            [
+                'cliente_id' => $clienteId,
+                'nombre_completo' => strtoupper($nombreCompleto), 
+                'activo' => 1, 
+                'updated_at' => now()
+            ]
         );
     }
 
@@ -290,7 +306,7 @@ class ClienteRepository
 
     public function guardarDocumento(array $data)
     {
-        return \App\Models\Documento::updateOrCreate(
+        return Documento::updateOrCreate(
             [
                 'cliente_id'       => $data['cliente_id'],
                 'nombre_documento' => $data['tipo_documento'],
@@ -335,34 +351,6 @@ class ClienteRepository
             })
             ->exists();
     }
-
-    // -------------------------------------------------------
-    // RANKINGS DE CUPO (agregar al final de ClienteRepository)
-    // -------------------------------------------------------
-
-    /**
-     * Los 5 clientes aprobados con el cupo más alto.
-     * Se toma el cupo máximo entre todos sus tipos de combustible.
-     */
-    // public function getTopCuposMayores(int $limit = 5)
-    // {
-    //     return Cliente::aprobados()
-    //         ->whereHas('cupos')
-    //         ->withMax('cupos', 'litros_aprobados')
-    //         ->orderByDesc('cupos_max_litros_aprobados')
-    //         ->limit($limit)
-    //         ->get();
-    // }
-
-    // public function getTopCuposMenores(int $limit = 5)
-    // {
-    //     return Cliente::aprobados()
-    //         ->whereHas('cupos')
-    //         ->withMax('cupos', 'litros_aprobados')
-    //         ->orderBy('cupos_max_litros_aprobados')
-    //         ->limit($limit)
-    //         ->get();
-    // }
 
     public function getTopCuposMayores(int $limit = 5)
     {

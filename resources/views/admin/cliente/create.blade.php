@@ -122,6 +122,18 @@
                                 </div>
                                 @error('email') <div class="text-danger mt-1 small">{{ $message }}</div> @enderror
                             </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-muted">¿Es Aliado Comercial? <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0"><i class="fas fa-handshake text-muted"></i></span>
+                                    <select name="es_aliado_comercial" required class="form-select border-start-0">
+                                        <option value="0" {{ old('es_aliado_comercial', '0') == '0' ? 'selected' : '' }}>No</option>
+                                        <option value="1" {{ old('es_aliado_comercial') == '1' ? 'selected' : '' }}>Sí</option>
+                                    </select>
+                                </div>
+                                @error('es_aliado_comercial') <div class="text-danger mt-1 small">{{ $message }}</div> @enderror
+                            </div>
                         </div>
 
                         {{-- SECCIÓN: PERSONAS DE CONTACTO --}}

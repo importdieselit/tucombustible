@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 
 // IMPORTACIÓN DE CONTROLADORES
 use App\Http\Controllers\Admin\ClienteController as AdminClienteController;
@@ -22,7 +23,10 @@ use App\Http\Controllers\{
     ReporteController, AforoController, SearchController, DataDeletionController,
     ViajesController, TelegramController, PlanificacionMantenimientoController,
     ReportController, ClienteActivosController,NotificationController, PlanMayorController,LogisticaController,
-    AlmacenLayoutController,ConteoController, GerentialReportController, PagoController, GuardiaController
+    AlmacenLayoutController,ConteoController, GerentialReportController, PagoController, GuardiaController,
+    ChequeoDepositoController, CombustibleController, LlenadoCupoPrepagadoController, 
+    TransaccionCombustibleController, ConsumoOperativoController, TrasegadoController, ReversoCombustibleController,
+    MermasController
 };
 use App\Http\Controllers\SalaControlController;
 
@@ -329,10 +333,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/reportes-sistema', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/export-pdf', [ReportController::class, 'exportPdf'])->name('reports.export_pdf');
         Route::post('/api/reports/summary', [ReportController::class, 'getSummary'])->name('reports.summary');
-
-        // Telegram
-        Route::post('/send-telegram-photo', [TelegramController::class, 'sendPhoto'])->name('telegram.send.photo');
-        Route::post('/send-telegram-message', [TelegramController::class, 'sendMessage'])->name('telegram.send.message');
   
 
         Route::get('/admin/principal', [DashboardController::class, 'adminPrincipal'])->name('dashboard.admin');
@@ -393,6 +393,78 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/search', [SearchController::class, 'query'])->name('search');
         });
 
+        // --- MÓDULO DE COMBUSTIBLES ---
+        Route::middleware(['auth', 'role:1,2,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18'])->prefix('combustibles')
+            ->name('combustibles.')
+            ->group(function () {
+                
+                // Dashboard Temporal: Renderiza la vista de registro mientras se desarrolla el panel principal
+                Route::get('/dashboard', [CombustibleController::class, 'index'])->name('dashboard');
+
+                // Gestión de Tanques (Infraestructura de Depósitos)
+                Route::prefix('depositos')->name('depositos.')->group(function () {
+                    Route::get('/', [DepositoController::class, 'index'])->name('index');
+                    Route::get('/crear', [DepositoController::class, 'create'])->name('create');
+                    Route::post('/guardar', [DepositoController::class, 'store'])->name('store');
+                    Route::get('/{id}/editar', [DepositoController::class, 'edit'])->name('edit');
+                    Route::put('/{id}/actualizar', [DepositoController::class, 'update'])->name('update');
+                    Route::delete('/{id}/eliminar', [DepositoController::class, 'destroy'])->name('destroy');
+                    Route::post('update-layout', [DepositoController::class, 'updateLayout'])->name('update-layout');
+                    // Tablas de Varillaje y Cubicaciones (Aforos) integradas al Tanque
+                    Route::get('/{id}/aforo', [AforoController::class, 'showAforoTable'])->name('aforo.show');
+                    Route::get('/{id}/aforo/exportar', [AforoController::class, 'exportAforoTable'])->name('aforo.export');
+                });
+
+                // Auditoría y Registro de Varillaje (Chequeo de Tanques en Patio)
+                Route::prefix('chequeos_depositos')->name('chequeos_depositos.')->group(function () {
+                    Route::get('/', [ChequeoDepositoController::class, 'index'])->name('index');
+                    Route::get('/crear', [ChequeoDepositoController::class, 'create'])->name('create');
+                    Route::post('/guardar', [ChequeoDepositoController::class, 'store'])->name('store');
+                    Route::get('/{id}', [ChequeoDepositoController::class, 'show'])->name('show');
+                });
+
+                // Llenados con Cupos Prepagados
+                Route::prefix('llenados_prepagados')->name('llenados_prepagados.')->group(function () {
+                    Route::get('/', [LlenadoCupoPrepagadoController::class, 'index'])->name('index');
+                    Route::get('/crear', [LlenadoCupoPrepagadoController::class, 'create'])->name('create');
+                    Route::post('/guardar', [LlenadoCupoPrepagadoController::class, 'store'])->name('store');
+                });
+
+                // Consumos Operativos Internos
+                Route::prefix('consumos_operativos')->name('consumos_operativos.')->group(function () {
+                    Route::get('/', [ConsumoOperativoController::class, 'index'])->name('index');
+                    Route::get('/crear', [ConsumoOperativoController::class, 'create'])->name('create');
+                    Route::post('/guardar', [ConsumoOperativoController::class, 'store'])->name('store');
+                });
+
+                // Trasegados de Combustible (Interno, Inter-Sede y Externo)
+                Route::prefix('trasegados')->name('trasegados.')->group(function () {
+                    Route::get('/', [TrasegadoController::class, 'index'])->name('index');
+                    // Formularios independientes para evitar condicionales masivos en la vista
+                    Route::get('/crear/interno', [TrasegadoController::class, 'createInterno'])->name('create_interno');
+                    Route::get('/crear/inter-sede', [TrasegadoController::class, 'createInterSede'])->name('create_inter_sedes');
+                    Route::get('/crear/externo', [TrasegadoController::class, 'createExterno'])->name('create_externo');
+                    Route::post('/guardar', [TrasegadoController::class, 'store'])->name('store');
+                });
+
+                Route::prefix('reversos_combustibles')->name('reversos_combustibles.')->group(function () {
+                    Route::get('/', [ReversoCombustibleController::class, 'index'])->name('index');
+                    Route::get('/crear', [ReversoCombustibleController::class, 'create'])->name('create');
+                    Route::post('/guardar', [ReversoCombustibleController::class, 'store'])->name('store');
+                    Route::get('/saldos-pendientes', [ReversoCombustibleController::class, 'show'])->name('show');
+                });
+
+                Route::prefix('mermas')->name('mermas.')->group(function () {
+                    Route::get('/', [MermasController::class, 'index'])->name('index');
+                });
+
+                // Registro Histórico de Transacciones de Combustible
+                Route::prefix('transacciones')->name('transacciones.')->group(function () {
+                    Route::get('/', [TransaccionCombustibleController::class, 'index'])->name('index');
+                    Route::get('/{id}', [TransaccionCombustibleController::class, 'show'])->name('show');
+                });
+        });
+
         // --- MÓDULO DE LOGÍSTICA ---
         Route::middleware(['auth', 'role:1,2,6,11,12,18'])->prefix('logistica')->name('logistica.')->group(function () {
             
@@ -408,7 +480,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/pedidos/{id}/rechazar', [PedidoAdminController::class, 'rechazar'])->name('rechazar');
         });
 
-        // --- MÓDULO CLIENTES COMBUSTIBLE ---
+        // --- MÓDULO COMBUSTIBLE ---
         Route::prefix('admin-clientes')->name('clientes.')->group(function () {
             Route::get('/',                    [AdminClienteController::class, 'index'])->name('index');
             Route::get('/crear',               [AdminClienteController::class, 'create'])->name('create');
@@ -443,7 +515,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/choferes/{choferId}/inactivar',  [AdminClienteController::class, 'inactivarChofer'])->name('choferes.inactivar');
         });
 
-        // --- MÓDULO CLIENTES LUBRICANTES ---
+        // --- MÓDULO LUBRICANTES ---
         Route::prefix('admin-clientes-lubricantes')->name('clientes.lubricantes.')->group(function () {
             Route::get('/',         [AdminClienteController::class, 'indexLubricantes'])->name('index');
             Route::post('/',        [AdminClienteController::class, 'storeLubricante'])->name('store');

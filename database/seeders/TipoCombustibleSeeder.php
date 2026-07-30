@@ -15,8 +15,8 @@ class TipoCombustibleSeeder extends Seeder
     public function run()
     {
         $tipos = [
-            ['nombre' => 'Diesel', 'created_at' => now(), 'updated_at' => now()],
             ['nombre' => 'MGO', 'created_at' => now(), 'updated_at' => now()],
+            ['nombre' => 'Diesel', 'created_at' => now(), 'updated_at' => now()],
         ];
 
         DB::table('tipos_combustible')->insert($tipos);

@@ -58,6 +58,7 @@ class ClienteService
                 'sector'              => $data['sector'] ?? null,
                 'registro_paso'       => 1,
                 'status'              => Cliente::STATUS_EN_REGISTRO,
+                'es_aliado_comercial' => $data['es_aliado_comercial'] ?? 0,
                 'parent'              => $parentId,
                 'token_registro'      => strtoupper(Str::random(10)),
             ]);

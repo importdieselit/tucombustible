@@ -349,7 +349,7 @@
 
     function cancelarPlanificacion(id) {
         Swal.fire({
-            title: '¿Estás seguro?',
+            title: '¿ESTÁS SEGURO?',
             text: "Esta acción cancelará la planificación y no se podrá revertir.",
             icon: 'warning',
             showCancelButton: true,

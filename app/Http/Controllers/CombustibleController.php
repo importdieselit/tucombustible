@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Services\CombustibleService;
+use App\Models\Sedes; // Ajustar a Sede::class si usas el singular estándar de Eloquent
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Exception;
 
 class CombustibleController extends Controller
@@ -15,35 +17,31 @@ class CombustibleController extends Controller
         $this->combustibleService = $combustibleService;
     }
 
-    /**
-     * Almacena o actualiza el cupo mensual de GASCO para un cliente
-     */
-    public function registrarCupoGasco(Request $request)
+    public function index(Request $request)
     {
-        // 1. Validación básica de los datos de entrada
-        $validated = $request->validate([
-            'cliente_id'         => 'required|exists:clientes,id',
-            'litros_autorizados' => 'required|numeric|min:100',
-            'mes'                => 'nullable|integer|min:1|max:12',
-            'anio'               => 'nullable|integer|min:2025',
-        ], [
-            'cliente_id.required'         => 'Debe seleccionar un cliente.',
-            'cliente_id.exists'           => 'El cliente seleccionado no es válido.',
-            'litros_autorizados.required' => 'Debe ingresar la cantidad de litros.',
-            'litros_autorizados.min'      => 'La cantidad debe ser mayor a 0.',
-        ]);
-
-        // 2. Ejecución a través del Service
         try {
-            $this->combustibleService->registrarCupoMensualGasco($validated);
-            
-            // Si todo sale bien, regresamos con un mensaje de éxito
-            return back()->with('success', 'El cupo de GASCO ha sido actualizado correctamente para este mes.');
-            
+            // Convertimos cadenas vacías a NULL para que el repositorio interprete "Todas las sedes"
+            $sedeId = $request->filled('id_sede') ? $request->input('id_sede') : null;
+
+            // 1. Obtener métricas estructuradas desde el servicio / repositorio
+            $metricas = $this->combustibleService->obtenerMetricasDashboard($sedeId) ?? [];
+
+            // 2. Carga optimizada de sedes para el select del filtro
+            $sedes = Sedes::select('id', 'nombre')->get();
+
+            // 3. Fusionamos los arreglos y retornamos la vista
+            return view('combustibles.dashboard', array_merge($metricas, [
+                'sedeId' => $sedeId,
+                'sedes'  => $sedes,
+            ]));
+
         } catch (Exception $e) {
-            // Si el servicio lanza una excepción (ej: supera el cupo aprobado general),
-            // la capturamos y mostramos el error sin que la aplicación colapse.
-            return back()->with('error', $e->getMessage())->withInput();
+            Log::error('Error en CombustibleController@index: ' . $e->getMessage(), [
+                'sede_id' => $request->input('id_sede'),
+                'trace'   => $e->getTraceAsString()
+            ]);
+
+            return back()->with('error', 'Error al cargar las métricas del dashboard. Por favor, intente de nuevo.');
         }
     }
 }
