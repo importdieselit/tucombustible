@@ -7,7 +7,7 @@ use App\Repositories\ChequeoDepositoRepository;
 use App\Repositories\HistorialLlenadoRepository;
 use App\Repositories\GascoCupoRepository;
 use App\Services\AforoCalculoService;
-use App\Services\WhatsAppApiService;
+use App\Services\WhatsappApiService;
 use App\Services\CombustibleService;
 use App\Models\Deposito;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +25,7 @@ class DepositoService
     protected $combustibleService;
 
     public function __construct(DepositoRepository $depositoRepo, ChequeoDepositoRepository $chequeoRepo, 
-    AforoCalculoService $aforoService, WhatsAppApiService $whatsappService, HistorialLlenadoRepository $historialRepo, 
+    AforoCalculoService $aforoService, WhatsappApiService $whatsappService, HistorialLlenadoRepository $historialRepo, 
     GascoCupoRepository $gascoCupoRepo, CombustibleService $combustibleService
     ) {
         $this->depositoRepo = $depositoRepo;
