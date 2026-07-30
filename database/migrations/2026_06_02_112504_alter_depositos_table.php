@@ -10,10 +10,10 @@ return new class extends Migration
     {
         Schema::table('depositos', function (Blueprint $blueprint) {
             // 1. Añadimos la relación formal con Sedes
-            $blueprint->foreignId('id_sede')->nullable()->after('id')->constrained('sedes')->nullOnDelete();
+            $blueprint->foreign('id_sede')->nullable()->after('id')->references('id')->on('sedes')->nullOnDelete();
             
             // 2. Añadimos la relación formal con Tipos de Combustible
-            $blueprint->foreignId('tipo_combustible_id')->nullable()->after('producto')->constrained('tipos_combustible')->nullOnDelete();
+            $blueprint->foreign('tipo_combustible_id')->nullable()->after('producto')->references('id')->on('tipos_combustible')->nullOnDelete();
             
             // 3. Añadimos el campo geométrico faltante para tanques rectangulares
             $blueprint->double('ancho', 8, 2)->nullable()->after('longitud')->comment('Ancho en centímetros (cm) para formas rectangulares.');
