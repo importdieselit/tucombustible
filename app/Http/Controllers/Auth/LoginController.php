@@ -91,18 +91,22 @@ class LoginController extends Controller
      */
     protected function authenticated(Request $request, $user)
     {
-        // Si es Administrador o Perfil de Gerencia (1, 2, 4, 5...)
-        // Ajusta los IDs según tu tabla de perfiles
-        if (in_array($user->id_perfil, [1, 2, 4, 5, 6, 7, 8, 9, 10])) {
-            return redirect()->route('dashboard.admin'); 
-        }
+         $request->session()->regenerate();
 
-        // Si es Cliente (Perfil 3)
-        if ($user->id_perfil == 3) {
-            return redirect()->route('dashboard'); 
-        }
+        return match ((int)$user->id_perfil) {
 
-        return redirect()->intended($this->redirectPath());
+            1,2,5,6,7,8,9,10,11,12,13,14,15,16,17,18
+                => redirect()->route('vehiculos.index'),
+
+            3
+                => redirect()->route('portal.clientes.index'),
+
+            4
+                => redirect()->route('inspecciones.index'),
+
+            default
+                => abort(403)
+        };
     }
 
 

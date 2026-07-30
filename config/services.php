@@ -40,6 +40,8 @@ return [
         'group_id' => env('WHATSAPP_GROUP_ID'),
         'operaciones_group_id' => env('WS_OPERACIONES_GROUP_ID'),
         'dev_group_id' => env('WHATSAPP_DEV_GROUP_ID'),
+        'group_operaciones' => env('WS_OPERACIONES_GROUP_ID'),
+        'group_test' => env('WS_TEST_GROUP_ID'),
     ],
     's24' => [
         'apikey'   => env('S24_APIKEY'),
@@ -48,8 +50,15 @@ return [
         'url'      => env('S24_URL'),
         'token'    => env('S24_TOKEN')
     ],
+    'tv' => [
+        'token' => env('TV_DASHBOARD_TOKEN'),
+    ],
     'reporte' => [
         'internal_token' => env('REPORTE_INTERNAL_TOKEN'),
+    ],
+    'google' => [
+        'credentials' => storage_path('app/' . env('GOOGLE_APPLICATION_CREDENTIALS')),
+        'spreadsheet_id' => env('GOOGLE_SHEETS_SPREADSHEET_ID'),
     ],
 
 ];

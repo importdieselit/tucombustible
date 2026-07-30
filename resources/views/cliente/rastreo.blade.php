@@ -138,7 +138,11 @@
                     fullscreenControl: true,
                 }).setView([lat, lng], 14);
 
+<<<<<<< HEAD
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+=======
+                 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+>>>>>>> main
                     maxZoom: 19,
                     attribution: '© OpenStreetMap'
                 }).addTo(map);

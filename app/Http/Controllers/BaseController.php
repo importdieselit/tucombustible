@@ -206,7 +206,7 @@ abstract class BaseController extends Controller
                 'item' => $item,
                 'modelName' => class_basename($this->model)
             ], $additionalDetails);
-
+            
             return view($this->getModelNameLowerCase() . '.show', $viewData);
         } catch (ModelNotFoundException $e) {
             Session::flash('error', 'El registro no fue encontrado.');
@@ -247,7 +247,8 @@ abstract class BaseController extends Controller
     {
         try {
             $item = $this->model->findOrFail($id);
-            $item->update($request->all());
+            $item->fill($request->all());
+            $item->save();
             Session::flash('success', class_basename($this->model) . ' actualizado exitosamente.');
         } catch (ModelNotFoundException $e) {
             Session::flash('error', 'El registro no fue encontrado.');

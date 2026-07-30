@@ -16,7 +16,22 @@
         </div>
     </div>
 
-    <form action="{{ route('logistica.store') }}" method="POST">
+    @if ($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <h5 class="fw-bold text-uppercase small"><i class="fas fa-exclamation-triangle me-2"></i> Campos con errores:</h5>
+            <ul class="mb-0 small">
+                @foreach ($errors->getMessages() as $campo => $mensajes)
+                    <li>
+                        <strong>Error en el campo [ <span class="text-primary">{{ $campo }}</span> ]:</strong> 
+                        {{ $mensajes[0] }}
+                    </li>
+                @endforeach
+            </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    <form action="{{ route('logistica.store') }}" id="formPlanificacion" method="POST">
         @csrf
         <input type="hidden" name="tipo_planificacion" value="{{ $tipoPlanificacionId }}">
         

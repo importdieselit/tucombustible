@@ -16,7 +16,7 @@ class CompraCombustible extends Model
     protected $table = 'compras_combustible';
 
     protected $fillable = [
-        'proveedor_id',
+        'planta_proveedor_id',
         'cantidad_litros',
         'cantidad_recibida',
         'planta_destino_id',
@@ -42,9 +42,9 @@ class CompraCombustible extends Model
     /**
      * Relación con el Proveedor.
      */
-    public function proveedor()
+    public function planta()
     {
-        return $this->belongsTo(Proveedor::class, 'proveedor_id');
+        return $this->belongsTo(Planta::class, 'planta_proveedor_id');
     }
 
     /**

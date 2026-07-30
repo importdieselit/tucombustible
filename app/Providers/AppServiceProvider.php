@@ -8,6 +8,9 @@ use App\View\Composers\AlertsComposer;
 use App\Models\BitacoraSistema;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Notification;
+use App\Channels\WhatsAppChannel;
+use App\Services\GoogleSheetsService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,6 +25,10 @@ class AppServiceProvider extends ServiceProvider
         if (file_exists($file)) {
             require_once($file);
         }
+
+        $this->app->singleton(GoogleSheetsService::class, function ($app) {
+            return new GoogleSheetsService();
+        });
     }
 
     /**
@@ -35,6 +42,10 @@ class AppServiceProvider extends ServiceProvider
         if (app()->environment('local')) {
             error_reporting(E_ALL & ~E_DEPRECATED & ~E_WARNING);
         }
+
+        Notification::extend('whatsapp', function ($app) {
+            return new WhatsAppChannel();
+        });
 
         // Escuchar CUALQUIER actualización en CUALQUIER modelo
         Event::listen('eloquent.updated: *', function ($eventName, array $data) {

@@ -13,8 +13,8 @@ class Reporte extends Model
 
     protected $fillable = [
         'id_tipo_reporte',
-        'origen_usuario_id',
-        'origen_cliente_id',
+        'usuario_id',
+        'cliente_id',
         'descripcion',
         'lugar_reporte',
         'url_imagen_evidencia',

@@ -5,7 +5,7 @@
     <div class="d-flex align-items-center justify-content-between mb-4">
         <div>
             <h2 class="fw-bold text-dark mb-0">
-                <i class="fas fa-clipboard-check text-primary me-2"></i>Inspección de Salida
+                <i class="fas fa-clipboard-check text-primary me-2"></i>Inspección de <span class="text-uppercase text-danger">{{ $tipo ?? 'Salida' }}</span> - {{ $vehiculo->placa }}
             </h2>
         </div>
         <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-sm">

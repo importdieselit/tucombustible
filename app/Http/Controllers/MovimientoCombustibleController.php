@@ -15,6 +15,7 @@ use App\Models\VehiculoPrecargado;
 use App\Models\Planta;
 use App\Models\Chofer;
 use App\Models\CompraCombustible;
+use App\Models\RepostajeVehiculo;
 use App\Models\Viaje;
 use App\Models\User;
 use App\Models\Persona;
@@ -98,9 +99,9 @@ class MovimientoCombustibleController extends Controller
         }
        // dd($tipoDeposito);
        $resguardo=Parametro::where('nombre','resguardo')->first()->valor;
-        $totalCombustible = Deposito::whereIn('serial',['1','2','3','4'])->sum('nivel_actual_litros');
+        $totalCombustible = Deposito::whereIn('serial',['1','2','3','4','5','6'])->sum('nivel_actual_litros');
         $tanque00=Deposito::where('serial','00')->first();
-        $capacidadTotal = Deposito::whereIn('serial',['1','2','3','4'])->sum('capacidad_litros');
+        $capacidadTotal = Deposito::whereIn('serial',['1','2','3','4','5','6'])->sum('capacidad_litros');
         $totalCombustible=$totalCombustible-$resguardo;
         $nivelPromedio = $capacidadTotal > 0 ? ($totalCombustible / $capacidadTotal) * 100 : 0;
         $nivelPromedio = round($nivelPromedio, 2);
@@ -273,7 +274,6 @@ class MovimientoCombustibleController extends Controller
                     'aprobado',
                     $validatedData['observaciones_admin']
                 );
-                Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por aprobación de pedido");
             } catch (\Exception $e) {
                 Log::error("Error enviando notificación FCM: " . $e->getMessage());
                 // No fallar la operación principal por error en notificación
@@ -665,9 +665,11 @@ public function storeDespachoIndustrial(Request $request)
             'id_tanque' => $tanque00->id,
             'id_us' => $user->id,
             'qty' => $cantidad,
-            'qtya' => $tanque00->nivel_actual_litros,
-            'rest' => $tanque00->nivel_actual_litros - $cantidad,
+            'qtya' => $cliente->prepagado, // Saldo antes del despacho
+            'rest' => $cliente->prepagado - $cantidad,
             'fecha' => $request->fecha,
+            'ticket' => $request->nro_ticket,
+            'ref'=> $mov->id, // Referencia al movimiento registrado
             'obs' => "Despacho a vehiculo: " . ($request->observaciones ?? 'Sin notas'),
             // => $mov->id,
             'created_at' => now()
@@ -692,7 +694,7 @@ public function storeDespachoIndustrial(Request $request)
         $grupoId = "-1002935486238"; 
         
         // Enviar al grupo principal
-       // $this->telegramService->sendSimpleMessage($grupoId, $ticket, $token);
+        $this->telegramService->sendSimpleMessage($grupoId, $ticket, $token);
 
         // Enviar a la persona designada (si el cliente tiene un telegram_id vinculado)
         // $usuarioCliente = User::where('id_cliente', $request->cliente_id)->whereNotNull('telegram_id')->first();
@@ -946,7 +948,7 @@ public function storeDespachoIndustrial(Request $request)
     public function historialDespachosIndustrial()
     {
         // Obtenemos los despachos de forma descendente (los más recientes primero)
-        $historial = MovimientoCombustible::with(['cliente', 'vehiculo', 'deposito'])
+        $historial = MovimientoCombustible::with(['cliente', 'vehiculo', 'deposito','repostajeVehiculo'])
             ->whereIn('deposito_id', [0,3]) // TanqInue 00
              ->whereIn('tipo_movimiento', ['salida','recarga_prepago'])
             ->orWhere('deposito_id',3)->where('observaciones','like','%traspaso%')
@@ -1041,7 +1043,6 @@ public function storeDespachoIndustrial(Request $request)
                     'aprobado',
                     $pedido->observaciones_admin
                 );
-                Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por aprobación de pedido");
             } catch (\Exception $e) {
                 Log::error("Error enviando notificación FCM: " . $e->getMessage());
                 // No fallar la operación principal por error en notificación
@@ -1274,7 +1275,6 @@ public function storeDespachoIndustrial(Request $request)
                     'en_proceso',
                     $pedido->observaciones_admin
                 );
-                Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por aprobación de pedido");
             } catch (\Exception $e) {
                 Log::error("Error enviando notificación FCM: " . $e->getMessage());
                 // No fallar la operación principal por error en notificación
@@ -1288,7 +1288,6 @@ public function storeDespachoIndustrial(Request $request)
                     'Baja Disponibilidad', 
                     'Estimado cliente su disponibilidad actual es de '.($cliente->disponible - $cantidadDespachar).' Litros de su cupo de '.$cliente->cupo.' se recomienda tomar previsiones'
                 );
-                Log::info("Notificación FCM enviada al cliente {$pedido->cliente_id} por aprobación de pedido");
             } catch (\Exception $e) {
                 Log::error("Error enviando notificación FCM: " . $e->getMessage());
                 // No fallar la operación principal por error en notificación
@@ -1413,6 +1412,7 @@ public function storeDespachoIndustrial(Request $request)
                 'cisterna' => $request->cisterna_id,
                 'chofer_id' => $request->chofer_id,
                 'ayudante' => $request->ayudante ?? null, // Ayudante es opcional
+                'ayudante_id' => $request->ayudante ?? null, // Ayudante es opcional
                 'destino_ciudad' => $destino->destino ?? 'N/A', 
                 'fecha_salida' => $fecha,
                 'litros' =>$request->litros,
@@ -1522,6 +1522,7 @@ public function storeDespachoIndustrial(Request $request)
                 'vehiculo_id' => $request->vehiculo_id,
                 'chofer_id' => $request->chofer_id,
                 'ayudante' => $request->ayudante ?? null, // Ayudante es opcional
+                'ayudante_id' => $request->ayudante ?? null, // Ayudante es opcional
                 'destino_ciudad' => 'FLETE -> '. $request->planta_destino_id.' -> '.$request->destino_ciudad ?? 'FLETE N/A', 
                 'fecha_salida' => $request->fecha_salida,
                 'status' => 'Programado',
@@ -1595,42 +1596,45 @@ public function storeDespachoIndustrial(Request $request)
      */
     protected function enviarNotificaciones(Viaje $viaje, CompraCombustible $solicitud, ?Chofer $chofer, ?Chofer $ayudante): void
     {
-            $chofer=null;
-            $choferU=null;
-            if(!is_null($chofer)){
-                $choferP = Persona::find($chofer->persona_id) ?? null;
-                $choferU=User::find($chofer->user_id) ??null;
-                $chofer=$choferP->nombre;
-
-            }else{
-                $chofer=$viaje->otro_chofer;
-
-            }
-            $ayudanteP = null;
-            $ayudanteU=null;
-            if ($ayudante) {
-                $ayudanteP = Persona::find($ayudante->persona_id)??null;
-                $ayudanteU=User::find($ayudante->user_id)??null;
-                $ayudante=$ayudanteP->nombre;
-            }else{
-                $ayudante=$viaje->otro_ayudante;
-            }
-
-        $vehiculo=Vehiculo::find($viaje->vehiculo_id)??null;
-        if($vehiculo){
-            $vehiculo=$vehiculo->flota;
-        }else{
-            $vehiculo=$viaje->otro_vehiculo;
+        $choferNombre = null;
+        $choferU = null;
+        if (!is_null($chofer)) {
+            $choferP = Persona::find($chofer->persona_id);
+            $choferU = User::find($chofer->user_id);
+            $choferNombre = $choferP->nombre ?? null;
         }
-        $fecha=date('d/m/Y',strtotime($viaje->fecha_salida));
+
+        if (empty($choferNombre)) {
+            $choferNombre = $viaje->otro_chofer;
+        }
+
+        $ayudanteNombre = null;
+        $ayudanteU = null;
+        if ($ayudante) {
+            $ayudanteP = Persona::find($ayudante->persona_id);
+            $ayudanteU = User::find($ayudante->user_id);
+            $ayudanteNombre = $ayudanteP->nombre ?? null;
+        }
+
+        if (empty($ayudanteNombre)) {
+            $ayudanteNombre = $viaje->otro_ayudante;
+        }
+
+        $vehiculo = Vehiculo::find($viaje->vehiculo_id) ?? null;
+        if ($vehiculo) {
+            $vehiculo = $vehiculo->flota;
+        } else {
+            $vehiculo = $viaje->otro_vehiculo;
+        }
+        $fecha = date('d/m/Y', strtotime($viaje->fecha_salida));
 
         $mensaje = "✅ Planificación de Carga de Combustible CREADA:\n"
                  . "Carga: {$solicitud->cantidad_litros} Litros\n"
                  . "Ruta: PDVSA {$viaje->destino_ciudad}\n"
                  . "Fecha: {$fecha}\n"
                  . "Unidad Asignada: {$vehiculo}\n"
-                 . "Chofer: {$chofer}\n"
-                 . ($ayudante ? "Ayudante: {$ayudante }" : "Ayudante: No Asignado")
+                 . "Chofer: {$choferNombre}\n"
+                 . ($ayudanteNombre ? "Ayudante: {$ayudanteNombre }" : "Ayudante: No Asignado")
                  . "\n\n{$solicitud->observaciones}";
 
         // 1. Notificación a Telegram (Ejemplo de Alerta General)
@@ -1644,24 +1648,28 @@ public function storeDespachoIndustrial(Request $request)
         // 2. Notificación FCM (Alertas y fcmNotification)
         // Podrías enviar la notificación al token del chofer y a los usuarios de logística
          try {
-            $logisticaTokens=User::whereIn('perfil_id', [1,2,6,7,8,11,12,18] )->whereNotNull('fcm_token')->pluck('fcm_token')->toArray();
-             $tokens = [];
-             // Asume que el modelo Chofer tiene el token_fcm relacionado con su usuario
-             if ($choferU && $choferU->token_fcm) {
-                 $tokens[] = $choferU->token_fcm;
-             }
-             if ($ayudanteU && $ayudanteU->token_fcm) {
-                 $tokens[] = $ayudanteU->token_fcm;
-             }  
-             // Tokens de usuarios de logística/administración
-             $tokens = array_merge($tokens, $logisticaTokens);
-            if (!empty($tokens)) {
-                  $this->fcmService->sendNotification(
-                     $tokens, 
-                     "Carga de Combustible Planificada (ID Viaje: {$viaje->id})", 
-                     "{$chofer->persona->nombre} Tienes asignada una carga de {$solicitud->cantidad_litros} para el {$viaje->fecha_salida}."
-                 );
-             }
+            $logisticaUsers = User::whereIn('id_perfil', [1,2,6,7,8,11,12,18])
+                ->whereNotNull('fcm_token')
+                ->get();
+
+            $recipients = collect();
+            if ($choferU && $choferU->token_fcm) {
+                $recipients->push($choferU);
+            }
+            if ($ayudanteU && $ayudanteU->token_fcm) {
+                $recipients->push($ayudanteU);
+            }
+            $recipients = $recipients->merge($logisticaUsers)->unique('id');
+
+            if ($recipients->isNotEmpty()) {
+                foreach ($recipients as $recipient) {
+                    $this->fcmService->sendNotification(
+                        $recipient,
+                        "Carga de Combustible Planificada (ID Viaje: {$viaje->id})",
+                        "{$choferNombre} Tienes asignada una carga de {$solicitud->cantidad_litros} para el {$viaje->fecha_salida}."
+                    );
+                }
+            }
          } catch (\Exception $e) {
              Log::error("Error enviando notificación FCM: " . $e->getMessage());
         }
@@ -1671,7 +1679,7 @@ public function storeDespachoIndustrial(Request $request)
         // Alert::create(['mensaje' => "Nueva Planificación de Combustible: ID {$viaje->id}", 'tipo' => 'info']);
     }
 
-    private function generarCuadroViaticos(Viaje $viaje, TabuladorViatico $tabulador,$cantidadDespachos): void
+    private function generarCuadroViaticos(Viaje $viaje, TabuladorViatico $tabulador, int $cantidadDespachos): void
     {
         $fecha_salida = $viaje->fecha_salida;
         $viatico=false;

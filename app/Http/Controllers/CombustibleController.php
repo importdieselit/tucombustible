@@ -10,7 +10,7 @@ use Exception;
 
 class CombustibleController extends Controller
 {
-    protected $combustibleService;
+    protected CombustibleService $combustibleService;
 
     public function __construct(CombustibleService $combustibleService)
     {

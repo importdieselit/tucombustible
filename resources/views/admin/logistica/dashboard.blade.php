@@ -148,12 +148,12 @@
                                                 };
 
                                                 $productoEspecifico = match($viaje->tipo_planificacion) {
-                                                    1       => 'DIESEL',
-                                                    2       => 'MGO',
+                                                    2       => 'DIESEL',
+                                                    1       => 'MGO',
                                                     3       => $viaje->producto_flete ?? 'Sin Especificar',
                                                     4       => match((int)$viaje->tipo) {
-                                                                1 => 'DIESEL',
-                                                                2 => 'MGO',
+                                                                2 => 'DIESEL',
+                                                                1 => 'MGO',
                                                                 default => 'Sin Especificar'
                                                             },
                                                     default => 'Sin especificar'
@@ -212,7 +212,6 @@
                                                     </a>
                                                 @endif
 
-                                                {{-- Botón Cancelar (Visible en PROGRAMADO y EN RUTA / Oculto en CANCELADO y COMPLETADO) --}}
                                                 @if($viaje->status !== 'CANCELADO' && $viaje->status !== 'COMPLETADO' && $viaje->status !== 'EN RUTA')
                                                     <button class="btn btn-sm btn-light border shadow-sm" onclick="cancelarPlanificacion({{ $viaje->id }})" title="Cancelar">
                                                         <i class="fas fa-times-circle text-danger"></i>
@@ -326,8 +325,12 @@
                 <p class="mt-2 fw-bold text-uppercase small">Cargando información...</p>
             </div>`;
         modal.show();
+        let urlBase = "{{ route('logistica.show', ':id') }}";
 
-        fetch(`/logistica/${id}`)
+        let urlFinal = urlBase.replace(':id', id);
+
+        // Usamos el helper url() de Laravel para evitar problemas de rutas relativas
+        fetch(urlFinal)
             .then(response => {
                 if (!response.ok) throw new Error('Error al cargar datos');
                 return response.text();
@@ -356,7 +359,10 @@
             cancelButtonText: 'NO'
         }).then((result) => {
             if (result.isConfirmed) {
-                fetch(`/logistica/${id}/cancelar`, {
+                let urlBase = "{{ route('logistica.cancelar', ':id') }}";
+                let urlFinal = urlBase.replace(':id', id);
+                
+                fetch(urlFinal, {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -371,7 +377,42 @@
                     } else {
                         Swal.fire('ERROR', data.error, 'error');
                     }
+                })
+                .catch(err => {
+                    Swal.fire('ERROR', 'No se pudo procesar la solicitud.', 'error');
                 });
+            }
+        });
+    }
+
+     function enviarCapturaWa(idViaje) {
+        let btn = $('#btnWs_' + idViaje);
+        let originalHtml = btn.html();
+        
+        // Estado de carga
+        btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Enviando...').prop('disabled', true);
+
+        $.ajax({
+            url: `/viajes/${idViaje}/enviar-whatsapp`, // Ajusta la ruta a tu estandar
+            type: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                if(response.success) {
+                    // Puedes cambiar esto por SweetAlert2 si lo usas en el sistema
+                    alert('Captura enviada exitosamente a WhatsApp.');
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            },
+            error: function(xhr) {
+                console.error(xhr.responseText);
+                alert('Ocurrió un error de comunicación con el servidor.');
+            },
+            complete: function() {
+                // Restaurar botón
+                btn.html(originalHtml).prop('disabled', false);
             }
         });
     }

@@ -6,7 +6,7 @@
     $user = Auth::user();
 
     // 1. Lógica de Permisos (Centralizada)
-    if ($user && $user->id_perfil == 1) {
+    if ($user && $user->id_perfil === 1) {
         $modulos = Modulo::where('id_padre', 0)
             ->where('visible', 1)
             ->orderBy('orden')
@@ -219,6 +219,34 @@
                 @endif
             </li>
         @endforeach
+        <li class="nav-item dropdown">
+            <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="fas fa-user-cog nav-icon"></i> Gestion Humana
+            </a>
+            <ul class="nav flex-column submenu">
+                <li class="nav-item">
+                    <a href="{{ route('evaluacion_form.create', ['id' => $user->id]) }}" class="nav-link {{ Request::routeIs('evaluacion_form.create') ? 'active' : '' }}">
+                        <i class="fas fa-clipboard-list nav-icon"></i> Evaluación de Desempeño
+                    </a>
+                </li>
+                @if($user->id_perfil == 1)
+                    <li class="nav-item">
+                        <a href="{{ route('reportes.sheets') }}" class="nav-link {{ Request::routeIs('reportes.sheets') ? 'active' : '' }}">
+                            <i class="fas fa-chart-line nav-icon"></i> Reportes de Evaluaciones
+                        </a>
+                    </li>
+                @endif
+            </ul>
+        </li>
+        <li class="nav-item">
+            <a href="{{ route('logout') }}" class="nav-link" 
+               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                <i class="fas fa-sign-out-alt nav-icon"></i> Cerrar Sesión
+            </a>
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                @csrf
+            </form>
+        </li>
     </ul>
     
     <button id="install-button" class="btn btn-orange shadow-sm px-4 text-white fw-bold" style="display:none;">

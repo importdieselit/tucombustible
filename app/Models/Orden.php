@@ -11,7 +11,7 @@ use App\Models\TipoFalla;
 use App\Models\TipoRequerimiento;
 use App\Models\OrdenFoto;
 use App\Models\Trabajos;
-use App\Models\InventarioSuministro;
+use App\Models\InventarioDespacho;
 use App\Models\SuministroCompra;
 use App\Models\TrabajoExterno;
 use App\Models\Taller;
@@ -156,7 +156,7 @@ class Orden extends Model
 
     public function suministros()
     {
-        return $this->hasMany(InventarioSuministro::class, 'id_orden', 'id');
+        return $this->hasMany(InventarioDespacho::class, 'id_orden', 'id');
     }
 
     public function tipoRequerimiento()

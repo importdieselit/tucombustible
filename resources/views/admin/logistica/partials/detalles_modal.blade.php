@@ -8,6 +8,30 @@
 
 <div id="areaCapturaViaje" class="modal-body p-4" style="background-color: #ffffff;">
     
+    {{-- 📊 LÓGICA DE MOVIMIENTO Y PRODUCTO --}}
+    @php
+        // 1. Identificamos el tipo de movimiento general
+        $movimiento = match($viaje->tipo_planificacion) {
+            1, 2    => ['text' => 'DESPACHO', 'color' => 'bg-success'],
+            3       => ['text' => 'FLETE', 'color' => 'bg-secondary'],
+            4       => ['text' => 'COMPRA', 'color' => 'bg-info'],
+            default => ['text' => 'OTRO', 'color' => 'bg-light text-dark']
+        };
+
+        // 2. Identificamos el producto o combustible específico
+        $productoEspecifico = match($viaje->tipo_planificacion) {
+            2       => 'DIESEL',
+            1       => 'MGO',
+            3       => $viaje->producto_flete ?? 'Sin Especificar',
+            4       => match((int)$viaje->tipo) {
+                        2 => 'DIESEL',
+                        1 => 'MGO',
+                        default => 'Sin Especificar'
+                       },
+            default => 'Sin especificar'
+        };
+    @endphp
+
     {{-- 🏢 MEMBRETE CORPORATIVO OPTIMIZADO PARA CAPTURAS --}}
     <div class="row align-items-center border-bottom pb-3 mb-4">
         <div class="col-6">
@@ -19,7 +43,15 @@
                 <span class="badge bg-dark text-white fw-bold px-2 py-1 text-uppercase" style="font-size: 13px; display: inline-block;">
                     ID: V-{{ str_pad($viaje->id, 5, '0', STR_PAD_LEFT) }}
                 </span>
+                <span class="badge {{ $movimiento['color'] }} text-white fw-bold px-2 py-1 text-uppercase ms-1" style="font-size: 13px; display: inline-block; vertical-align: middle;">
+                    {{ $movimiento['text'] }}
+                </span>
             </div>
+
+            <span class="d-block text-dark fw-black text-uppercase mt-1" style="font-size: 14px; letter-spacing: 0.5px;">
+                <i class="fas fa-gas-pump text-orange me-1"></i> {{ $productoEspecifico }}
+            </span>
+
             <span class="d-block text-dark fw-black small mt-1" style="font-size: 13px;">
                 <i class="far fa-calendar-alt text-muted me-1"></i> {{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y') }} 
                 <i class="far fa-clock text-orange ms-2 me-1"></i> {{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('h:i A') }}
@@ -62,7 +94,7 @@
             </div>
         </div>
         
-        {{-- Tarjeta: Ayudante --}}
+        {{-- Tarjeta: Alludante --}}
         <div class="col-md-3">
             <div class="p-3 rounded shadow-sm h-100" style="background-color: #f5f3ff; border-left: 4px solid #6366f1;">
                 <label class="small fw-bold d-block text-uppercase mb-1" style="font-size: 11px; letter-spacing: 0.5px; color: #4f46e5;">Ayudante de Ruta</label>
@@ -113,8 +145,10 @@
                             <tr>
                                 <th class="ps-3">Cliente / RIF</th>
                                 <th>Dirección</th>
+                                <th>Persona de Contacto</th>
+                                <th>Persona Alternativa</th>
                                 <th class="text-center" style="width: 15%;">Litros</th>
-                                @if($viaje->tipo_planificacion == 2) 
+                                @if($viaje->tipo_planificacion == 1) 
                                     <th style="width: 30%;">Buque / IMO / Bandera</th> 
                                 @endif
                             </tr>
@@ -123,18 +157,22 @@
                             @foreach($viaje->detalles as $detalle)
                             <tr class="align-middle">
                                 <td class="ps-3">
-                                    <strong>{{ $detalle->cliente->nombre ?? $viaje->nombre_cliente_externo }}</strong><br>
+                                    <strong>{{ $detalle->cliente->nombre ?? $viaje->nombre_cliente_externo ?? $detalle->otro_cliente ?? 'N/A'}}</strong><br>
                                     <small class="text-muted">{{ $detalle->cliente->rif ?? 'S/R' }}</small>
                                 </td>
-                                <td>{{ $detalle->direccion_despacho ?? $detalle->cliente->direccion_operativa }}</td>
+                                <td>{{ $detalle->direccion_despacho ?? $detalle->cliente->direccion_operativa ?? 'S/D' }}</td>
+                                <td>{{ $detalle->cliente->contacto ?? 'N/A' }}
+                                    {{ $detalle->cliente->telefono ?? 'N/A' }}</td>
+                                <td>{{ $detalle->cliente->contacto_alt ?? 'N/A' }}
+                                    {{ $detalle->cliente->telefono_alt ?? 'N/A' }}</td>
                                 <td class="text-center fw-black text-dark fs-6">{{ number_format($detalle->litros_despachados ?? $detalle->litros ?? 0, 0) }} L</td>
                                 
-                                @if($viaje->tipo_planificacion == 2)
+                                @if($viaje->tipo_planificacion == 1)
                                     <td>
                                         <div class="x-small p-1" style="font-size: 11px; line-height: 1.3;">
                                             <strong>Buque:</strong> {{ $detalle->buques->nombre ?? $detalle->buque_nombre_manual ?? 'N/A' }}<br>
-                                            <strong>IMO:</strong> {{ $detalle->imo ?? 'N/A' }}<br>
-                                            <strong>Bandera:</strong> {{ $detalle->bandera ?? 'N/A' }}
+                                            <strong>IMO:</strong> {{ $detalle->buques->imo ?? $detalle->imo ?? 'N/A' }}<br>
+                                            <strong>Bandera:</strong> {{ $detalle->buques->bandera ?? $detalle->bandera ?? 'N/A' }}
                                             @if($detalle->muelle_atraque)
                                                 <br><strong>Muelle:</strong> {{ $detalle->muelle_atraque }}
                                             @endif
@@ -164,17 +202,58 @@
                 </div>
             </div>
 
+            {{-- 🏢 CONTACTOS DEL CLIENTE ASOCIADO AL FLETE (NUEVO BLOQUE COHESIVO) --}}
+            @if($viaje->cliente_id && $viaje->cliente)
+                <div class="col-12 mt-3">
+                    <h6 class="fw-black text-orange small text-uppercase mb-2">
+                        <i class="fas fa-user-tie me-1"></i> Cliente Asociado y Contactos
+                    </h6>
+                    <div class="p-3 rounded border shadow-sm" style="background-color: #f8fafc; border-left: 4px solid #fd7e14 !important;">
+                        <div class="row g-2">
+                            {{-- Razón Social --}}
+                            <div class="col-md-4 border-end border-2">
+                                <small class="text-muted fw-bold text-uppercase d-block mb-1" style="font-size: 10px; letter-spacing: 0.5px;">Cliente / Empresa</small>
+                                <strong class="text-dark d-block text-uppercase" style="font-size: 13px;">{{ $viaje->cliente->nombre }}</strong>
+                                <small class="text-muted fw-bold">RIF: {{ $viaje->cliente->rif }}</small>
+                            </div>
+                            
+                            {{-- Contacto Principal --}}
+                            <div class="col-md-4 border-end border-2 ps-md-3">
+                                <small class="fw-bold text-uppercase d-block mb-1" style="font-size: 10px; letter-spacing: 0.5px; color: #16a34a;">Contacto Principal</small>
+                                <span class="text-dark fw-bold d-block small">
+                                    <i class="fas fa-user text-success me-1"></i> {{ $viaje->cliente->contacto ?? 'S/N' }}
+                                </span>
+                                <span class="text-muted small">
+                                    <i class="fas fa-phone text-muted me-1"></i> {{ $viaje->cliente->telefono ?? 'S/T' }}
+                                </span>
+                            </div>
+
+                            {{-- Contacto Alternativo --}}
+                            <div class="col-md-4 ps-md-3">
+                                <small class="fw-bold text-uppercase d-block mb-1" style="font-size: 10px; letter-spacing: 0.5px; color: #4f46e5;">Contacto Alternativo</small>
+                                <span class="text-dark fw-bold d-block small">
+                                    <i class="far fa-user text-indigo me-1"></i> {{ $viaje->cliente->contacto_alt ?? 'S/N' }}
+                                </span>
+                                <span class="text-muted small">
+                                    <i class="fas fa-phone text-muted me-1"></i> {{ $viaje->cliente->telefono_alt ?? 'S/T' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
         {{-- COMPRAS --}}
         @elseif($viaje->tipo_planificacion == 4)
             @php 
                 $compra = $viaje->compraCombustible->first(); 
             @endphp
             <div class="col-md-6">
-                <label class="small text-muted fw-bold text-uppercase d-block mb-1">Proveedor y SAP</label>
+                <label class="small text-muted fw-bold text-uppercase d-block mb-1">Planta y SAP</label>
                 <div class="bg-light p-2 rounded">
                     <p class="mb-1 text-dark">
-                        <strong>Proveedor:</strong> 
-                        {{ $compra->proveedor->nombre ?? $viaje->proveedor->nombre ?? $viaje->nombre_cliente_externo ?? 'No asignado' }}
+                        <strong>Planta:</strong> 
+                        {{ $compra->planta->nombre ?? $viaje->planta->nombre ?? $viaje->nombre_cliente_externo ?? 'No asignado' }}
                     </p>
                     <p class="mb-0"><strong>Código SAP:</strong> <span class="badge bg-info text-dark fw-bold">{{ $viaje->codigo_sap ?? 'N/A' }}</span></p>
                 </div>
@@ -228,6 +307,9 @@
         <span class="badge bg-{{ $statusColor }} fw-bold text-uppercase px-3 py-2 shadow-sm" style="font-size: 11px; letter-spacing: 0.5px;">
             <i class="fas fa-info-circle me-1"></i> {{ $viaje->status }}
         </span>
+        <button type="button" class="btn btn-success fw-bold text-uppercase btn-sm px-3 me-2" id="btnWs_{{ $viaje->id }}" onclick="enviarCapturaWa({{ $viaje->id }})" style="font-size: 11px;">
+                <i class="fab fa-whatsapp me-1"></i> Enviar a WA
+        </button>
         <button type="button" class="btn btn-dark fw-bold text-uppercase btn-sm px-3" data-bs-dismiss="modal" style="font-size: 11px;">Cerrar</button>
     </div>
 </div>

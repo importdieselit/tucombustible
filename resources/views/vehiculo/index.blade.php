@@ -32,13 +32,23 @@
                         <i class="fas fa-file-alt me-1 me-md-2"></i> <span class="d-none d-sm-inline">Documentación</span>
                     </a>
                 </div>
-                <div class="col">
-                    <a href="{{ route('mantenimiento.planificacion.index') }}" class="btn btn-sm btn-dark w-100 h-100 d-flex align-items-center justify-content-center">
-                        <i class="fas fa-wrench me-1 me-md-2"></i> Planificar
+                 <div class="col">
+                    <a href="{{ route('plan_mayor.index') }}" class="btn btn-sm btn-dark w-100 h-100 d-flex align-items-center justify-content-center">
+                        <i class="fas fa-table-cells me-1 me-md-2"></i> <span class="d-none d-sm-inline">Plan Mayor</span>
                     </a>
                 </div>
                 <div class="col">
-                    <a href="{{ route('vehiculos.create') }}" class="btn btn-sm text-white w-100 h-100 d-flex align-items-center justify-content-center" style="background-color: #f2A435;">
+                    <a href="{{ route('mantenimiento.planificacion.index') }}" class="btn btn-sm text-white w-100 h-100 d-flex align-items-center justify-content-center" style="background-color: #f2A435;">
+                        <i class="fas fa-wrench me-1 me-md-2"></i> Planificar Mantenimiento
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="{{ route('guardias.index') }}" class="btn btn-sm btn-dark w-100 h-100 d-flex align-items-center justify-content-center">
+                        <i class="fas fa-table-cells me-1 me-md-2"></i> <span class="d-none d-sm-inline">Calendario Guardias</span>
+                    </a>
+                </div>
+                <div class="col">
+                    <a href="{{ route('vehiculos.create') }}" class="btn btn-sm btn-outline-dark w-100 h-100 d-flex align-items-center justify-content-center">
                         <i class="fas fa-plus me-1 me-md-2"></i> Nuevo
                     </a>
                 </div>

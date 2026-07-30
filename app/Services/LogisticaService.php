@@ -12,6 +12,7 @@ use App\Models\Cliente;
 use App\Models\Viaje;
 use App\Models\Buques;
 use App\Models\Pedido;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Exception;
@@ -351,7 +352,7 @@ class LogisticaService
     {
         DB::table('compras_combustible')->insert([
             'viaje_id'          => $viaje->id,
-            'proveedor_id'      => $data['proveedor_id'],
+            'planta_proveedor_id' => $data['planta_proveedor_id'],
             'cantidad_litros'   => $totalLitros,
             'planta_destino_id' => $data['sede_id'],
             'fecha'             => $data['fecha_programada'],

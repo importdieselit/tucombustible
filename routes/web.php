@@ -12,6 +12,8 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Notifications\OrdenTrabajoCreada;
 use App\Models\User;
 use App\Models\Orden;
+use App\Http\Controllers\ReporteEficienciaController;
+use App\Http\Controllers\RRHH\EvaluacionesController;
 use App\Http\Controllers\{
     DashboardController, VehiculoController, MarcaController, ModeloController,
     OrdenController, TanqueController, MovimientoCombustibleController,
@@ -20,20 +22,38 @@ use App\Http\Controllers\{
     AlertaController, AccesoController, InspeccionController, PedidoController,
     ReporteController, AforoController, SearchController, DataDeletionController,
     ViajesController, TelegramController, PlanificacionMantenimientoController,
-    ReportController, ClienteActivosController,NotificationController,LogisticaController,
+    ReportController, ClienteActivosController,NotificationController, PlanMayorController,LogisticaController,
+    AlmacenLayoutController,ConteoController, GerentialReportController, PagoController, GuardiaController,
     ChequeoDepositoController, CombustibleController, LlenadoCupoPrepagadoController, 
     TransaccionCombustibleController, ConsumoOperativoController, TrasegadoController, ReversoCombustibleController,
     MermasController
 };
+use App\Http\Controllers\SalaControlController;
+
+;
+
+Route::get('/sala-control', [SalaControlController::class, 'index'])
+     ->middleware('tv.auth')->name('sala.control');
+Route::get('/api/sala-control/stream', [SalaControlController::class, 'getDataStream'])
+     ->middleware('tv.auth')->name('api.sala.control.stream');
+
+
 
 /* --- Rutas Públicas y Auth --- */
 Auth::routes(['reset' => false]);
+
+
 Route::get('/', function () { return redirect()->route('login'); });
 Route::get('/viajes/reporte-interno', [ViajesController::class, 'reporteDiario'])
     ->name('reporte.operaciones.interno');
+
+
+Route::get('/viajes/{id}/imprimir', [ViajesController::class, 'imprimir'])->name('viajes.imprimir');
 Route::get('/reporte/flota-interno', [VehiculoController::class, 'reporteDisponibilidad'])->name('reporte.flota.interno');
 Route::get('/reporte/mantenimiento-interno', [OrdenController::class, 'reporteGerencial'])->name('reporte.mantenimiento.interno');
 Route::get('/vehiculos/disponibilidad/refresh', [VehiculoController::class, 'refreshDisponibilidad'])->name('vehiculos.disponibilidad.refresh');
+Route::get('/reporte-admon', [GerentialReportController::class, 'admon'])->name('reporte.admon');
+
 
 Route::get('/test-push', function () {
     $user = User::find(1); // Tu usuario
@@ -64,6 +84,8 @@ Route::get('/registro-cliente', [PortalClienteController::class, 'showRegistrati
 Route::post('/registro-cliente', [PortalClienteController::class, 'store'])->name('cliente.register.store');
 Route::get('/obtener-ciudades/{estado_id}', [PortalClienteController::class, 'getCiudades'])->name('ciudades.get');
 
+
+
 /* --- Rutas Protegidas --- */
 Route::middleware(['auth'])->group(function () {
 
@@ -89,6 +111,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/vehiculos/inspeccion/{vehiculo_id}/{tipo}', [InspeccionController::class, 'create'])->name('inspeccion.create');
     Route::put('vehiculos/updatev/{id}', [VehiculoController::class, 'updateV'])->name('vehiculos.updatev');
     Route::get('/inspecciones/{inspeccion_id}/pdf', [InspeccionController::class, 'exportPdf'])->name('inspecciones.pdf');
+    Route::get('/inspecciones/reporte/{fecha_inicio?}/{fecha_fin?}', [InspeccionController::class, 'reporte'])->name('inspecciones.reporte');
     Route::get('/reporte/vehiculos-disponibilidad', [VehiculoController::class, 'reporteDisponibilidad'])->name('vehiculos.reporte.disponibilidad');
     Route::get('/vehiculos/disponibilidad/print', [VehiculoController::class, 'printDisponibilidad'])->name('vehiculos.disponibilidad.print');
 
@@ -106,10 +129,26 @@ Route::middleware(['auth'])->group(function () {
 
     // Reportes y OT
     Route::put('reportes/{reporte}/estatus', [ReporteController::class, 'updateStatus'])->name('reportes.update.estatus'); 
-    Route::post('reportes/{reporte}/generarot', [ReporteController::class, 'generarOT'])->name('reportes.generarot');   
-
+    Route::post('reportes/{reporte}/generarot', [ReporteController::class, 'generarOT'])->name('reportes.generarot');  
+    
+    Route::prefix('reportes/eficiencia')->group(function () {
+        Route::get('/', [ReporteEficienciaController::class, 'index'])->name('reporte.eficiencia');
+        Route::post('/cerrar', [ReporteEficienciaController::class, 'cerrarMes'])->name('reporte.eficiencia.cerrar');
+    });
+        
+    // Depósitos y Aforo
+    Route::get('/depositos/{deposito}/aforo', [AforoController::class, 'showAforoTable'])->name('depositos.aforo.show');
+    Route::get('/depositos/{deposito}/aforo/exportar', [AforoController::class, 'exportAforoTable'])->name('depositos.aforo.export');
+    Route::put('/depositos/ajustedinamic', [DepositoController::class, 'ajusteDinamic'])->name('deposito.ajusteD');
+    Route::put('/depositos/ajusteresguardo', [DepositoController::class, 'ajusteResguardo'])->name('deposito.ajusteR');
+    
+    Route::get('/reportes/gerencial', [ReportController::class, 'reporteGerencial'])->name('reportes.gerencial');
+    Route::post('/whatsapp/send', [GerentialReportController::class, 'sendWhatsapp'])->name('whatsapp.send');
+    Route::post('/guardias/send', [GuardiaController::class, 'sendWhatsapp'])->name('guardia.send');
+    
     // Inventario y Almacén
-    Route::get('inventario/entry', [InventarioController::class, 'entry'])->name('inventario.entry');
+    Route::post('store/entry', [InventarioController::class, 'entry'])->name('store.entry');
+    Route::get('inventario/entry/{id?}', [InventarioController::class, 'createEntry'])->name('inventario.entry');
     Route::get('inventario/adjustment', [InventarioController::class, 'adjustment'])->name('inventario.adjustment');
     Route::get('/inventario/solicitudes', [InventarioController::class, 'requests'])->name('inventario.requests');
     Route::post('/inventario/solicitudes/{id}/approve', [InventarioController::class, 'approve'])->name('inventario.requests.approve');
@@ -117,18 +156,28 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/inventario/solicitudes/{id}/dispatch', [InventarioController::class, 'dispatch'])->name('inventario.requests.dispatch');
     Route::post('/inventario/import/excel', [InventarioController::class, 'import'])->name('inventario.import');
     Route::get('/inventario/export/excel', [InventarioController::class, 'export'])->name('inventario.export');
+    Route::get('inventario/compras/crear', [InventarioController::class, 'create'])->name('compras.create');
+    Route::post('inventario/compras/guardar', [InventarioController::class, 'store'])->name('compras.store');
     Route::get('/ventas/create', [InventarioController::class, 'ventaCreate'])->name('ventas.create');
     Route::post('/ventas/store', [InventarioController::class, 'ventaStore'])->name('ventas.store');
     Route::post('/clientes/store-ajax', [PortalClienteController::class, 'storeAjax'])->name('clientes.storeAjax');  
     Route::get('/ventas/list', [InventarioController::class, 'ventaList'])->name('ventas.list'); 
     Route::get('/ventas/show/{id}', [InventarioController::class, 'ventaShow'])->name('ventas.show'); 
-
+    Route::get('inventario/conteo/', [ConteoController::class, 'create'])->name('inventario.conteo');
+    Route::post('inventario/conteo/guardar', [ConteoController::class, 'store'])->name('inventario.conteo.store');
+    Route::get('inventario/conteo/estadisticas', [ConteoController::class, 'estadisticas'])->name('conteo.estadisticas');
+    
     // Importaciones
     Route::get('choferes/importar', [ChoferController::class, 'showImportForm'])->name('choferes.show-import-form');
+    Route::get('choferes/documentacion', [ChoferController::class, 'controlDocumentacion'])->name('choferes.documentacion');
+     Route::post('/choferes/documentacion/update', [ChoferController::class, 'updateDocumento'])->name('choferes.documentacion.update');
+    Route::get('/choferes/documento-detalle/{chofer_id}/{tipo_id}', [ChoferController::class, 'getDocumentoDetalle'])->name('choferes.documentacion.detalle');
     Route::post('choferes/importar', [ChoferController::class, 'importar'])->name('choferes.importar');
     Route::post('choferes/upload/doc/{id}',[ChoferController::class, 'uploadDocumento'])->name('choferes.upload.doc');
     Route::post('/choferes/update-cargo/{id}', [App\Http\Controllers\ChoferController::class, 'updateCargo'])
     ->name('choferes.update-cargo');
+
+    Route::get('/vehiculos/{id}/alertas-documentos', [VehiculoController::class, 'checkAlertasDocumentos']);
     Route::get('/vehiculos/import', [VehiculoController::class, 'importForm'])->name('vehiculos.import');
     Route::post('/vehiculos/import', [VehiculoController::class, 'importSave'])->name('vehiculos.import.save');
     Route::get('clientes/import', [PortalClienteController::class, 'import'])->name('clientes.import');
@@ -146,6 +195,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/ordenes/{orden}/reactivar', [OrdenController::class, 'reactivarOrden'])->name('ordenes.reactivar');
         Route::get('ordenes/search-supplies', [OrdenController::class, 'searchSupplies'])->name('ordenes.search-supplies');
         Route::post('/ordenes/{id}/trabajo-externo', [OrdenController::class, 'addTrabajoExterno'])->name('ordenes.addTrabajoExterno');
+        Route::delete('/ordenes/trabajos-externos/{id}/delete', [OrdenController::class, 'deleteTrabajoExterno'])->name('ordenes.deleteTrabajoExterno');
         Route::post('/ordenes/supplies/receive/{supply}', [OrdenController::class, 'markAsReceived'])->name('ordenes.supplies.receive');
         Route::post('/ordenes/compras/receive/{supply}', [OrdenController::class, 'markRequestReceived'])->name('ordenes.compras.receive');
         Route::get('ordenes/compras/{id_order?}/{id?}', [OrdenController::class, 'purchaseOrder'])->name('ordenes.compra');
@@ -157,16 +207,24 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/ordenes/{id}/addTrabajosMasivo', [OrdenController::class, 'addTrabajosMasivo'])->name('ordenes.addTrabajosMasivo');
         Route::post('/ordenes/trabajo/{id}/finalizar', [OrdenController::class, 'finalizarTrabajo'])->name('ordenes.trabajo.finalizar');
         Route::post('/ordenes/{id}/insumos/add', [OrdenController::class, 'addInsumo'])->name('ordenes.addInsumo');
+        Route::get('/ordenes/{id}/imprimir', [OrdenController::class, 'imprimir'])->name('ordenes.imprimir');
+        Route::put('/ordenes/{id}/insumos/edit', [OrdenController::class, 'editInsumo'])->name('ordenes.editInsumo');
         Route::get('/vehiculos/{id}/orden-abierta', [OrdenController::class, 'verificarOrdenAbierta'])->name('vehiculos.checkOrden');
         Route::post('ordenes/{id}/add-manual-supply', [OrdenController::class, 'addManualSupply'])->name('ordenes.addManualSupply');
         Route::delete('/ordenes/purchase/{id}/delete', [OrdenController::class, 'deleteManualSupply'])->name('ordenes.deleteManualSupply');
         Route::post('/ordenes/{id}/habilitar-unidad', [OrdenController::class, 'habilitarUnidad'])->name('vehiculos.habilitarUnidad');
         Route::get('/planes-mantenimiento/api/{id}', [OrdenController::class, 'getPlanApi'])->name('planes.api');
+        Route::get('/planes-mantenimiento/formato', [OrdenController::class, 'getPlanFormato'])->name('planes.formato');
         Route::get('/ordenes/reporte-gerencial', [OrdenController::class, 'reporteGerencial'])->name('ordenes.reporte_gerencial');
+        Route::post('/ordenes/reporte-gerencial/whatsapp', [OrdenController::class, 'enviarReporteWhatsapp'])->name('ordenes.enviar_whatsapp');
         // Rutas para Evidencias Fotográficas
         Route::post('/ordenes/{id}/fotos/add', [OrdenController::class, 'addFotos'])->name('ordenes.fotos.add');
         Route::delete('/ordenes/fotos/{id}/delete', [OrdenController::class, 'destroyFoto'])->name('ordenes.fotos.destroy');
-    
+        Route::get('/plan-mayor', [PlanMayorController::class, 'index'])->name('plan_mayor.index');
+        Route::post('/plan-mayor/toggle', [PlanMayorController::class, 'toggleItem'])->name('plan_mayor.toggle');
+        Route::post('/plan-mayor/baremo/store', [PlanMayorController::class, 'storeBaremo'])->name('plan_mayor.baremo.store');
+        Route::post('/plan-mayor/baremo/update', [PlanMayorController::class, 'updateBaremo'])->name('plan_mayor.baremo.update');
+        Route::delete('/plan-mayor/baremo/{id}', [PlanMayorController::class, 'destroyBaremo'])->name('plan_mayor.baremo.destroy');
 
         // Permisos y Perfiles
         Route::get('/permisos', [AccesoController::class, 'index'])->name('permisos.index');
@@ -179,6 +237,18 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/api/permisos/{user}/get', [AccesoController::class, 'getPermissionsForUser'])->name('permisos.get');
         Route::post('/api/permisos/{user}/update', [AccesoController::class, 'updatePermissions'])->name('permisos.update');
         Route::post('/perfiles/{perfil}/permisos', [PerfilController::class, 'updatePermisos'])->name('perfiles.updatePermisos');
+        Route::get('/rrhh/evaluacion-form/{id}/edit', [EvaluacionesController::class, 'edit'])->name('evaluacion_form.edit');
+        Route::put('/rrhh/evaluacion-form/{id}/update', [EvaluacionesController::class, 'update'])->name('evaluacion_form.update');
+        Route::get('/rrhh/evaluacion-form/{id}', [EvaluacionesController::class, 'create'])->name('evaluacion_form.create');
+        Route::post('/rrhh/evaluacion-form/{id}', [EvaluacionesController::class, 'store'])->name('evaluacion_form.store');
+
+        Route::get('/rrhh/resultados-sheets', [EvaluacionesController::class, 'generarReporte'])
+         ->name('reportes.sheets');
+
+        Route::get('/guardias', [GuardiaController::class, 'index'])->name('guardias.index');
+        Route::post('/guardias/store-ajax', [GuardiaController::class, 'storeAjax'])->name('guardias.storeAjax');
+        Route::delete('/guardias/delete-ajax/{id}', [GuardiaController::class, 'destroyAjax'])->name('guardias.destroyAjax');
+        Route::get('/guardias/reporte', [GuardiaController::class, 'report'])->name('guardias.reporte');
     
         // Combustible (Pedidos y Despachos)
         Route::prefix('combustible')->name('combustible.')->group(function () {
@@ -240,10 +310,11 @@ Route::middleware(['auth'])->group(function () {
         Route::put('viaticos/tabulador/update', [ViajesController::class, 'tabuladorUpdate'])->name('viaticos.tabulador.update');
         Route::put('viaticos/parametros/update', [ViajesController::class, 'parametrosUpdate'])->name('viaticos.parametros.update');
         Route::get('eventos', [ViajesController::class, 'getCombinedEventos'])->name('eventos');
+        Route::post('/viajes/{id}/enviar-whatsapp', [ViajesController::class, 'enviarWhatsappAjax']);
         Route::get('/viajes/reporte/{fecha?}', [ViajesController::class, 'reporteDiario'])->name('viajes.reporteDiario');
         Route::get('/viajes/reporte/print/{fecha?}', [ViajesController::class, 'reporteDiarioPrint'])->name('viajes.reporteDiario.print');
 
-
+        Route::get('/reporte-gerencial', [GerentialReportController::class, 'index'])->name('reporte.gerencial');
         // Boletas y Nominaciones
         Route::get('/despachos/guia-distribucion/{viajeId}', [ViajesController::class, 'printGuiaDistribucion'])->name('despachos.guia_distribucion');
         Route::get('/despachos/boleta/{viajeId}', [ViajesController::class, 'showBoleta'])->name('despachos.boleta');
@@ -267,10 +338,25 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/admin/principal', [DashboardController::class, 'adminPrincipal'])->name('dashboard.admin');
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+        Route::get('/logistica/almacen/{id}/disenar', [AlmacenLayoutController::class, 'disenar'])->name('almacen.layout.disenar');
+        Route::post('/logistica/almacen/layout/guardar', [AlmacenLayoutController::class, 'guardarEstructura'])->name('almacen.layout.guardar');
+        Route::post('/logistica/almacen/layout/guardar-drag', [AlmacenLayoutController::class, 'guardarEstructuraDrag'])->name('almacen.layout.guardar_drag');
+        Route::post('/logistica/almacen/layout/inspeccionar', [AlmacenLayoutController::class, 'inspeccionarEstante'])->name('almacen.layout.inspeccionar');
+        Route::post('/logistica/almacen/layout/redimensionar', [AlmacenLayoutController::class, 'redimensionarGrid'])->name('almacen.layout.redimensionar');
+        Route::get('/logistica/almacen/{id}/3d', [AlmacenLayoutController::class, 'vista3D'])->name('almacen.layout.3d');
+        // Rutas para gestión de tráfico Drag & Drop en Planta
+        Route::post('/almacen/layout/buscar-items', [AlmacenLayoutController::class, 'buscarItemsAAsignar'])->name('almacen.layout.buscar_items');
+        Route::post('/almacen/layout/asignar-item', [AlmacenLayoutController::class, 'asignarItemUbicacion'])->name('almacen.layout.asignar_item');
+        Route::post('/almacen/layout/reubicar-item', [AlmacenLayoutController::class, 'reubicarItemUbicacion'])->name('almacen.layout.reubicar_item');
+        Route::post('/almacen/layout/vaciar-slot', [AlmacenLayoutController::class, 'vaciarItemUbicacion'])->name('almacen.layout.vaciar_slot');
+        Route::post('/almacen/layout/actualizar-posicion-3d', [AlmacenLayoutController::class, 'actualizarPosicion3D'])->name('almacen.layout.actualizar_posicion_3d');
+        Route::post('/almacen/layout/subdividir-slot', [AlmacenLayoutController::class, 'subdividirSlot'])->name('almacen.layout.subdividir_slot');
+        Route::post('/almacen/layout/combinar-slots', [AlmacenLayoutController::class, 'combinarSlots'])->name('almacen.layout.combinar_slots');
+
         /**
          * MÓDULOS DE ADMINISTRACIÓN (Perfiles 1 y 2: Admin y Super)
          */
-        Route::middleware(['role:1,2,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18'])->group(function () {
+        Route::middleware(['role:1,2,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19'])->group(function () {
             
             
             // CRUDs MAESTROS Y RECURSOS
@@ -291,7 +377,8 @@ Route::middleware(['auth'])->group(function () {
                 'inspecciones'                => InspeccionController::class,
                 'pedidos'                     => PedidoController::class,
                 'reportes'                    => ReporteController::class,
-                'combustible'                 => MovimientoCombustibleController::class
+                'combustible'                 => MovimientoCombustibleController::class,
+                'pagos'                       => PagoController::class
             ]; 
 
             foreach ($resourceControllers as $prefix => $controller) {
