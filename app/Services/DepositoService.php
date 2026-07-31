@@ -173,8 +173,8 @@ class DepositoService
         $mensaje .= "Los siguientes tanques están por debajo del *20%* de su capacidad:\n\n";
 
         foreach ($tanques as $tanque) {
-        $litrosFormateados     = number_format($tanque['litros'], 2, ',', '.');
-        $limiteFormateado      = number_format($tanque['limite'], 2, ',', '.');
+        $litrosFormateados     = number_format($tanque['nivel_actual_litros'], 2, ',', '.');
+        $limiteFormateado      = number_format($tanque['nivel_alerta_litros'], 2, ',', '.');
 
             $mensaje .= "🛢️ *Tanque:* {$tanque['serial']}\n";
             $mensaje .= "🔹 *Nivel actual:* {$litrosFormateados} Lts\n";
