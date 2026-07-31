@@ -185,7 +185,7 @@ class DepositoService
         $mensaje .= "\nSe recomienda coordinar la logística de reabastecimiento.";
 
         try {
-            $this->whatsappService->enviarMensaje($idDestino, $mensaje);
+            $this->whatsappService->enviarMensaje($mensaje, $idDestino);
         } catch (Exception $e) {
             logger()->error("No se pudo enviar la alerta de WhatsApp: " . $e->getMessage());
         }
