@@ -15,7 +15,7 @@ class WhatsAppApiService
         $this->key = config('services.whatsapp.key');
     }
 
-    public function enviarMensaje($idDestino, $mensaje) {
+    public function enviarMensaje($mensaje,$idDestino) {
         return Http::post("{$this->url}/messages/chat", [
             'token' => $this->key,
             'to'    => $idDestino,
