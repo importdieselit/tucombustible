@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Repositories\ChequeoDepositoRepository;
-use App\Services\WhatsAppApiService;
+use App\Services\WhatsappApiService;
 use App\Models\Sedes;
 use Carbon\Carbon;
 use Exception;
@@ -54,7 +54,7 @@ class VerificarChequeoHorario extends Command
                 $mensaje .= "⚠️ Por favor, proceder con el varillaje y la carga de datos en el sistema a la brevedad.";
 
                 try {
-                    $this->whatsappService->enviarMensaje($idDestino, $mensaje);
+                    $this->whatsappService->enviarMensaje($mensaje, $idDestino);
                     $this->info("Alerta enviada para la sede: {$sede->nombre}");
                 } catch (Exception $e) {
                     logger()->error("Fallo al enviar recordatorio de horario a WhatsApp: " . $e->getMessage());

@@ -7,7 +7,7 @@ use App\Repositories\ChequeoDepositoRepository;
 use App\Repositories\HistorialLlenadoRepository;
 use App\Repositories\GascoCupoRepository;
 use App\Services\AforoCalculoService;
-use App\Services\WhatsAppApiService;
+use App\Services\WhatsappApiService;
 use App\Services\CombustibleService;
 use App\Models\Deposito;
 use Illuminate\Support\Facades\DB;
@@ -124,8 +124,8 @@ class DepositoService
 
                     $tanquesCriticos[] = [
                         'serial' => $deposito->serial,
-                        'litros' => round($litrosCalculados, 2),
-                        'limite' => round($deposito->nivel_alerta_litros, 2),
+                        'nivel_actual_litros' => round($litrosCalculados, 2),
+                        'nivel_alerta_litros' => round($deposito->nivel_alerta_litros, 2),
                         'porcentaje' => $porcentajeActual
                     ];
                 }
