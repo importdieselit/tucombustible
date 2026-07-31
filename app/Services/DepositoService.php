@@ -125,8 +125,8 @@ class DepositoService
 
                     $tanquesCriticos[] = [
                         'serial' => $deposito->serial,
-                        'litros' => round($litrosCalculados, 2),
-                        'limite' => round($deposito->nivel_alerta_litros, 2),
+                        'nivel_actual_litros' => round($litrosCalculados, 2),
+                        'nivel_alerta_litros' => round($deposito->nivel_alerta_litros, 2),
                         'porcentaje' => $porcentajeActual
                     ];
                 }
