@@ -12,6 +12,7 @@ use App\Services\CombustibleService;
 use App\Models\Deposito;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 use Exception;
 
 class DepositoService
@@ -167,6 +168,8 @@ class DepositoService
     protected function notificarTanquesCriticos(array $tanques, string $turno, string $nombreSede)
     {
         $idDestino = config('services.whatsapp.dev_group_id', 'WHATSAPP_DEV_GROUP_ID');
+        Log::info("Enviando alerta de WhatsApp para tanques críticos en la sede: {$nombreSede}, turno: {$turno}");
+        Log::info("idDestino: {$idDestino}, Tanques críticos: " . json_encode($tanques));
 
         $mensaje = "⚠️ *ALERTA DE NIVELES CRÍTICOS* ⚠️\n";
         $mensaje .= "Se ha registrado el varillaje del turno: *{$turno}* en la sede *{$nombreSede}*.\n\n";
