@@ -30,7 +30,7 @@ class VerificarChequeoHorario extends Command
         $horaActual = $ahora->format('H:i');
 
         // Determinamos el turno
-        if ($horaActual >= '08:00' && $horaActual < '13:00') {
+        if ($horaActual >= '08:00' && $horaActual < '12:00') {
             $turnoAVerificar = 'Matutino';
         } elseif ($horaActual >= '16:00' && $horaActual < '20:00') {
             $turnoAVerificar = 'Nocturno';
