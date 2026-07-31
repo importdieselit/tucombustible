@@ -135,6 +135,9 @@ return [
     |
     */
 
+    'latest_apk_version' => env('LATEST_APK_VERSION', 1),
+    'latest_apk_name'    => env('LATEST_APK_NAME', '1.0.0'),
+
     'providers' => [
 
         /*

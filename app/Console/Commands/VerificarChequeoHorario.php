@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Repositories\ChequeoDepositoRepository;
-use App\Services\WhatsAppApiService;
+use App\Services\WhatsappApiService;
 use App\Models\Sedes;
 use Carbon\Carbon;
 use Exception;
@@ -17,7 +17,7 @@ class VerificarChequeoHorario extends Command
     protected $chequeoRepo;
     protected $whatsappService;
 
-    public function __construct(ChequeoDepositoRepository $chequeoRepo, WhatsAppApiService $whatsappService)
+    public function __construct(ChequeoDepositoRepository $chequeoRepo, WhatsappApiService $whatsappService)
     {
         parent::__construct();
         $this->chequeoRepo = $chequeoRepo;

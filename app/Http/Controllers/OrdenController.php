@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Orden;
 use App\Models\Vehiculo; 
+use App\Models\TipoVehiculo;
 use App\Models\Personal; 
 use App\Services\FcmNotificationService;
 use Illuminate\Http\Request;
@@ -15,10 +16,10 @@ use App\Models\TipoFalla;
 use App\Models\EstatusData; 
 use Carbon\Carbon; 
 use Illuminate\Support\Facades\Auth;
-use App\Models\InventarioSuministro; 
 use App\Traits\GenerateAlerts;
 use Illuminate\Support\Facades\Redirect;
 use App\Models\Inventario; 
+use App\Models\InventarioDespacho;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use App\Models\SuministroCompra;
@@ -39,6 +40,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Proveedor;
 use App\Models\TrabajoExterno;
 use App\Models\PlanMantenimiento;
+use App\Services\WhatsappApiService;
 
 
 class OrdenController extends BaseController
@@ -48,13 +50,17 @@ class OrdenController extends BaseController
 
     protected $fcmService;
     protected $telegramService;
+    protected $whatsappService;
 
     public function __construct(
         FcmNotificationService $fcmService, 
-        TelegramNotificationService $telegramService, Orden $orden
+        TelegramNotificationService $telegramService, 
+        WhatsappApiService $whatsappService,
+        Orden $orden
     ) {
         $this->fcmService = $fcmService;
         $this->telegramService = $telegramService;
+        $this->whatsappService = $whatsappService;
         $this->model = $orden;
     }
 
@@ -276,7 +282,7 @@ class OrdenController extends BaseController
 
     protected function getDetailsForView($item){
 
-        $insumos= InventarioSuministro::where('id_orden', $item->id)->get();
+        $insumos= InventarioDespacho::where('id_orden', $item->id)->get();
         $trabajos= Trabajos::where('id_orden', $item->id)->get();
         $trabajosExternos = TrabajoExterno::where('id_orden', $item->id)->with(['proveedor'])->get();
         $fotos= OrdenFoto::where('orden_id',$item->id)->get();
@@ -524,8 +530,8 @@ class OrdenController extends BaseController
             $fotos= OrdenFoto::where('orden_id',$id)->get();
             $personal = Personal::with('persona')->where('cargo', 'Mecánico')->get(); // Cargar relación con Persona para obtener nombres completos
             $inventario = Inventario::where('id_almacen',2)->orderBy('descripcion')->get();
-            $suministros= InventarioSuministro::where('id_orden', $id)->with('inventario')->get();
-            $proveedores = Proveedor::whereIn('id_tipo_proveedor', [2])->orderBy('nombre')->get();
+            $suministros= InventarioDespacho::where('id_orden', $id)->with('inventario')->get();
+            $proveedores = Proveedor::whereIn('id_tipo_proveedor', [2,4])->orderBy('nombre')->get();
         
             $categorias_tempario = TemparioCategoria::orderBy('categoria')->get();
             
@@ -702,28 +708,54 @@ class OrdenController extends BaseController
         return response()->json(['success' => true]);
     }
 
-    
+    public function deleteTrabajoExterno($id)
+    {
+        $trabajo= TrabajoExterno::find($id);
+        $trabajo->delete();
+
+        return response()->json(['success' => true]);
+    }
     
 
     public function addInsumo(Request $request, $id)
     {
-        // Lógica para agregar insumo a la orden
-        // Esto podría incluir validación, creación de registros en tablas pivot, etc.
-
-        // Ejemplo básico:
-        $orden = Orden::findOrFail($id);
-        $orden->suministros()->create([
-            'id_inventario' => $request->id_inventario,
-            'cantidad' => $request->cantidad,
-            'precio_unitario' => Inventario::find($request->id_inventario)->costo_div ?? 0,
-            'id_orden' => $orden->id,
-            'id_auto' => $orden->id_vehiculo,
-            'id_usuario' => Auth::id(),
-            'id_emisor' => Auth::id(),
-            'estatus' => 2, // 2 = Solicitado/En Uso
+        $request->validate([
+            'id_inventario' => 'required|exists:inventario,id',
+            'cantidad'      => 'required|integer|min:1',
         ]);
 
-        return back()->with('success', 'Insumo agregado correctamente.');
+        $orden = Orden::findOrFail($id);
+
+        // Creamos el registro usando tu modelo InventarioDespacho
+        InventarioDespacho::create([
+            'id_orden'            => $orden->id,
+            'inventario_id'       => $request->id_inventario,
+            'cantidad_solicitada' => $request->cantidad,
+            'estatus'             => 2, // 2 = Solicitado / En Uso
+            'usuario_solicita_id' => Auth::id(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Insumo asignado correctamente a la orden.'
+        ]);
+    }
+
+    public function editInsumo(Request $request, $id)
+    {
+        $request->validate([
+            'cantidad'      => 'required|integer|min:1',
+        ]);
+
+        $insumo = InventarioDespacho::findOrFail($id);
+        $insumo->cantidad_solicitada = $request->cantidad;
+        $insumo->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Insumo actualizado correctamente.'
+        ]);
+                    
     }
 
     public function addManualSupply(Request $request, $id)
@@ -788,7 +820,7 @@ class OrdenController extends BaseController
     public function destroy($id)
     {
         $orden = Orden::findOrFail($id);
-        $supply = InventarioSuministro::where('id_orden', $id)->delete();
+        $supply = InventarioDespacho::where('id_orden', $id)->delete();
         $compras = SuministroCompra::where('orden_id', $id)->get();
         foreach($compras as $compra){
             $compra->detalles()->delete();
@@ -842,23 +874,18 @@ class OrdenController extends BaseController
                 str_contains($item['id'], 'MANUAL') ? $solicitudCompra[] = $item : $usoInventario[] = $item;
             }
 
-            // USO (Descuento de Inventario)
             foreach ($usoInventario as $usoItem) {
                 $inv = Inventario::find($usoItem['id']);
                 $orden->suministros()->create([
-                    'id_inventario' => $usoItem['id'],
-                    'cantidad' => $usoItem['cantidad'],
+                    'inventario_id' => $usoItem['id'],
+                    'cantidad_solicitada' => $usoItem['cantidad'],
                     'precio_unitario' => $inv->costo_div ?? 0,
                     'id_orden' => $orden->id,
-                    'id_auto' => $orden->id_vehiculo,
-                    'id_usuario' => $userId,
-                    'id_emisor' => $userId,
+                    'usuario_solicitante_id' => $userId,
                     'estatus' => 2,
                 ]);
-                // RECOMENDACIÓN: $inv->decrement('stock', $usoItem['cantidad']);
             }
 
-            // COMPRA (Generar Solicitud)
             $compra = null;
         
             if (count($solicitudCompra) > 0) {
@@ -1005,10 +1032,9 @@ class OrdenController extends BaseController
         }
 
         Session::flash('success', 'Orden creada exitosamente.');
-        
         return ($result['compra']) 
-            ? redirect()->route('ordenes.compra', ['id_order' => $orden->id, 'id' => $result['compra']->id])
-            : redirect()->route('ordenes.list');
+            ? redirect()->route('ordenes.compra', ['id_order' => $result['orden']['id'], 'id' => $result['compra']['id']])
+            : redirect()->route('ordenes.show', ['ordene' => $result['orden']['id']]);
     }
 
     public function addFotos(Request $request, $id)
@@ -1082,17 +1108,15 @@ class OrdenController extends BaseController
             $userId = Auth::id();
             $orden = Orden::findOrFail($request->id_orden);
     
-            $supply = InventarioSuministro::create([
+            $supply = InventarioDespacho::create([
                 'id_orden' => $orden->id,
                 'id_inventario' => $request->id_inventario,
-                'cantidad' => $request->cantidad,
+                'cantidad_solicitada' => $request->cantidad,
                 'precio_unitario' => Inventario::find($request->id_inventario)->costo_div ?? 0, // Obtener el costo del inventario
-                'id_usuario' => $userId, // Usuario que registra el suministro
-                'id_auto' => $orden->id_vehiculo,
-                'id_emisor' => $userId,
+                'usuario_solicita_id' => $userId, // Usuario que registra el suministro
                 'estatus' => 2, // 2 = 'Solicitado'
             ]);
-            $result= InventarioSuministro::with('inventario')->where('id_inventario_suministro', $supply->id_inventario_suministro)->first();
+            $result= InventarioDespacho::with('inventario')->find($supply->id);
     
             Session::flash('success', 'Suministro agregado exitosamente.');
 
@@ -1120,9 +1144,9 @@ class OrdenController extends BaseController
         ]);
 
         try {
-            $supply = InventarioSuministro::findOrFail($id);
+            $supply = InventarioDespacho::findOrFail($id);
             $supply->update([
-                'cantidad' => $request->cantidad,
+                'cantidad_solicitada' => $request->cantidad,
                 // Puedes actualizar otros campos aquí
             ]);
 
@@ -1144,7 +1168,7 @@ class OrdenController extends BaseController
      */
     public function deleteSupply($id)
     {
-            $supply = InventarioSuministro::findOrFail($id);
+            $supply = InventarioDespacho::findOrFail($id);
             $supply->delete();
 
             Session::flash('success', 'Suministro eliminado exitosamente.');
@@ -1170,8 +1194,18 @@ class OrdenController extends BaseController
             $orden->hora_out = Carbon::now()->toTimeString();
             $orden->id_us_out = Auth::id(); // Usuario que cierra la orden
             $orden->save();
+            
+            $vehiculo = Vehiculo::find($orden->id_vehiculo);
+            if($vehiculo){
+                $vehiculo->estatus = 1; // Disponible
+                $vehiculo->save();
+            }
 
             if($orden->tipo == 'Mantenimiento' || $orden->tipo == 'Preventivo'){
+                $vehiculo->km_mantt = 0;
+                $vehiculo->hrs_mantt = 0;
+                 // Reiniciar contador de mantenimiento
+                $vehiculo->save();
                 $mantenimiento = MantenimientoProgramado::where('orden_id', $orden->id)->first();
                 if($mantenimiento){
                     $mantenimiento->estatus = 3; // Cerrada
@@ -1362,60 +1396,192 @@ class OrdenController extends BaseController
 
     }
 
-    public function reporteGerencial(Request $request)
-    {
-        $tokenValido = config('services.reporte.internal_token');
-        // Si no está logueado Y el token no coincide, entonces al login
-        if (!auth()->check() && $request->get('token') !== $tokenValido) {
-            abort(403, 'Acceso no autorizado');
-        }
-        // Por defecto evaluamos el mes en curso, pero permitimos filtrar
-        $inicio = $request->input('fecha_inicio', now()->startOfMonth()->format('Y-m-d'));
-        $fin = $request->input('fecha_fin', now()->endOfMonth()->format('Y-m-d'));
+   public function reporteGerencial(Request $request)
+{
+    $tokenValido = config('services.reporte.internal_token');
+    
+    if (!auth()->check() && $request->get('token') !== $tokenValido) {
+        abort(403, 'Acceso no autorizado');
+    }
 
-        // 1. Consultas Base (Eager Loading para optimizar)
-        // Asumiendo relaciones: vehiculo, suministros, serviciosExternos
-        $ordenesBase = Orden::with(['vehiculoBelong', 'suministros', 'TrabajosExternos', 'trabajos','suministrosCompras'])
-            ->whereBetween('fecha_in', [$inicio, $fin])
-            ->get();
+    $unidades = Vehiculo::select('id', 'placa', 'marca', 'modelo')
+        ->orderBy('placa', 'asc')
+        ->get();
 
-        $ordenesActivas = Orden::whereIn('estatus', [2,3])->get();
+    $tiposVehiculo = TipoVehiculo::select('id', 'tipo')
+        ->orderBy('tipo', 'asc')
+        ->get();
 
-        // 2. KPIs Principales
-        $abiertasHoy = $ordenesBase->count();
-        $cerradasMes = Orden::whereBetween('fecha_out', [$inicio, $fin])->count();
-        $totalActivas = $ordenesActivas->count();
+    $tiposOrden = Orden::whereNotNull('tipo')
+        ->select('tipo')
+        ->distinct()
+        ->orderBy('tipo', 'asc')
+        ->pluck('tipo');
 
-        // 3. Costos
-        $costoSuministros = $ordenesBase->flatMap->suministros->sum('costo_total');
-        $costoExternos = $ordenesBase->flatMap->trabajosExternos->sum('costo');
-        $costoCompras = $ordenesBase->flatMap->suministrosCompras->flatMap->detalles->whereNotNull('costo_unitario_aprobado')->sum(function($detalle) {
-            return $detalle->costo_unitario_aprobado * $detalle->cantidad_aprobada;
-            });
-        // Asumimos un estimado de costo interno si tienes horas de mecánicos, o simplemente 0 si es nómina fija.
-        $costoInternos = 0; // O la suma de horas_hombre * tarifa
-        $costoTotalGeneral = $costoSuministros + $costoExternos + $costoInternos + $costoCompras;
-                    
-        // 4. Clasificación por Tipo y Categoría
-        $porTipo = $ordenesBase->groupBy('tipo')->map->count(); // Ej: ['Preventivo' => 15, 'Correctivo' => 20]
-        $porCategoria = $ordenesBase->flatMap->trabajos->groupBy(function($trabajo) {
-            // Si la relación 'categoria' existe, devolvemos el campo 'categoria' (el nombre), si no, 'Sin Categoría'
-            return $trabajo->categoria ? $trabajo->categoria->categoria : 'Sin Categoría';
-        })->map->count()->sortDesc();
-        
-        // 5. Trabajos Internos vs Externos (Cantidad)
-        $trabajosInternos = $ordenesBase->flatMap->trabajos->count();
-        $trabajosExternos = $ordenesBase->flatMap->trabajosExternos->count();
+    // 1. Manejo dinámico de periodos 
+    $fechaInicio = null;
+    $fechaFin = null;
+    $tipoPeriodo = $request->input('tipo_periodo', 'este_mes'); 
 
-        // 6. Los "Ofensores" (Lo que más falla)
-        $fallaMasRecurrente = $porCategoria->keys()->first() ?? 'N/A';
-        
-        // Unidad con más órdenes abiertas actualmente
-        $unidadMasProblematica = $ordenesBase
-        ->filter(function($orden) {
-            // Solo dejamos pasar las órdenes que tengan un ID de vehículo y cuya relación exista
-            return !empty($orden->id_vehiculo) && $orden->vehiculoBelong;
+    switch ($tipoPeriodo) {
+        case 'este_mes':
+            $fechaInicio = Carbon::now()->startOfMonth();
+            $fechaFin = Carbon::now()->endOfMonth();
+            break;
+        case 'mes_pasado':
+            $fechaInicio = Carbon::now()->subMonth()->startOfMonth();
+            $fechaFin = Carbon::now()->subMonth()->endOfMonth();
+            break;
+        case 'esta_quincena':
+            $diaActual = Carbon::now()->day;
+            if ($diaActual <= 15) {
+                $fechaInicio = Carbon::now()->startOfMonth();
+                $fechaFin = Carbon::now()->setDay(15)->endOfDay();
+            } else {
+                $fechaInicio = Carbon::now()->setDay(16)->startOfDay();
+                $fechaFin = Carbon::now()->endOfMonth();
+            }
+            break;
+        case 'esta_semana':
+            $fechaInicio = Carbon::now()->startOfWeek();
+            $fechaFin = Carbon::now()->endOfWeek();
+            break;
+        case 'personalizado':
+            $fechaInicio = $request->filled('fecha_inicio') ? Carbon::parse($request->fecha_inicio)->startOfDay() : null;
+            $fechaFin = $request->filled('fecha_fin') ? Carbon::parse($request->fecha_fin)->endOfDay() : null;
+            break;
+    }
+
+    // 2. Consultas Base Optimizadas (Eager Loading para agrupaciones)
+    // Se incluye 'vehiculo.tipoVehiculo' para tener la data disponible sin consultas extra
+    $ordenesBase = Orden::with(
+        'vehiculoBelong', 
+            'vehiculoBelong.tipoVehiculo', 
+            'trabajos', 
+            'trabajos.categoria', 
+            'trabajosExternos', 
+            'suministros', 
+            'suministrosCompras.detalles'
+            )
+        ->when($fechaInicio, function ($q) use ($fechaInicio) {
+            $q->whereDate('created_at', '>=', $fechaInicio);
         })
+        ->when($fechaFin, function ($q) use ($fechaFin) {
+            $q->whereDate('created_at', '<=', $fechaFin);
+        })
+        ->when($request->filled('tipo_orden'), function ($q) use ($request) {
+            $q->where('tipo', $request->tipo_orden);
+        })
+        ->when($request->filled('tipo_vehiculo_id'), function ($q) use ($request) {
+            // Solución al problema de getRelated()
+            $vehiculosIds = Vehiculo::where('tipo', $request->tipo_vehiculo_id)->pluck('id');
+            $q->whereIn('id_vehiculo', $vehiculosIds);
+        })
+        ->when($request->filled('unidad_id'), function ($q) use ($request) {
+            $q->where('id_vehiculo', $request->unidad_id); 
+        })
+        ->get();
+
+    $ordenesActivas = Orden::whereIn('estatus', [2,3])->get();
+
+    // NUEVO: Lógica de Agrupación Dinámica (Collections)
+    $agruparPor = $request->input('agrupar_por', 'unidad');
+    $datosAgrupados = collect();
+
+    if ($agruparPor) {
+        $grupos = $ordenesBase->groupBy(function ($orden) use ($agruparPor) {
+            if ($agruparPor === 'unidad') {
+                return $orden->vehiculoBelong ? $orden->vehiculoBelong->placa : 'Sin Unidad';
+            } elseif ($agruparPor === 'tipo_orden') {
+                return ucfirst($orden->tipo) ?: 'Sin Tipo de Orden';
+            } elseif ($agruparPor === 'tipo_vehiculo') {
+                return $orden->vehiculoBelong && $orden->vehiculoBelong->tipoVehiculo ? $orden->vehiculoBelong->tipoVehiculo->tipo : 'Sin Tipo Vehículo';
+            }
+            return 'General';
+        });
+
+        // Mapeamos cada grupo para calcular la volumetría y el impacto financiero
+        $datosAgrupados = $grupos->map(function ($grupo, $nombreLlave) {
+            
+            // 1. Costo de Suministros (Inventario/Almacén)
+            $costoSuministros = $grupo->flatMap->suministros->sum('costo_total');
+            
+            // 2. Costo de Mano de Obra / Trabajos Externos
+            $costoExternos = $grupo->flatMap->trabajosExternos->sum('costo');
+            
+            // 3. Costo de Compras Directas (sumando cantidad * costo unitario)
+            $costoCompras = $grupo->flatMap->suministrosCompras->flatMap->detalles
+                ->whereNotNull('costo_unitario_aprobado')
+                ->sum(function($detalle) {
+                    return $detalle->costo_unitario_aprobado * $detalle->cantidad_aprobada;
+                });
+            
+            // 4. Costo Total del Grupo
+            $costoTotal = $costoSuministros + $costoExternos + $costoCompras;
+
+            return [
+                'nombre'            => $nombreLlave,
+                'cantidad_ordenes'  => $grupo->count(),
+                'trabajos_internos' => $grupo->flatMap->trabajos->count(),
+                'costo_suministros' => $costoSuministros,
+                'costo_compras'     => $costoCompras,
+                'costo_externos'    => $costoExternos,
+                'costo_total'       => $costoTotal,
+            ];
+        })->sortByDesc('costo_total'); // Ordenamos por el mayor gasto de mayor a menor
+    }
+
+    // 3. KPIs Principales
+    $abiertasHoy = $ordenesBase->count();
+    // Se ajustó $fechaInicio y $fechaFin para evitar errores
+    $cerradasMes = Orden::when($fechaInicio, fn($q) => $q->whereDate('fecha_out', '>=', $fechaInicio))
+                        ->when($fechaFin, fn($q) => $q->whereDate('fecha_out', '<=', $fechaFin))
+                        ->where('estatus', 1)
+                        ->count();
+    $totalActivas = $ordenesActivas->count();
+
+    // 4. Costos Desglosados
+    $coleccionSuministros = $ordenesBase->flatMap->suministros;
+    $coleccionExternos = $ordenesBase->flatMap->trabajosExternos;
+    $coleccionCompras = $ordenesBase->flatMap->suministrosCompras->flatMap->detalles->whereNotNull('costo_unitario_aprobado');
+
+    $costoSuministrosAlmacen = $coleccionSuministros->sum('costo_total');
+    $costoExternos = $coleccionExternos->sum('costo');
+    $costoCompras = $coleccionCompras->sum(function($detalle) {
+        return $detalle->costo_unitario_aprobado * $detalle->cantidad_aprobada;
+    });
+
+    $costoInternos = 0; 
+    $costoTotalGeneral = $costoSuministrosAlmacen + $costoExternos + $costoInternos + $costoCompras;
+
+    // 5. KPIs Operativos (Clasificaciones)
+    $porTipo = $ordenesBase->groupBy(function ($orden) {
+        $tipo = strtolower(trim($orden->tipo));
+        return in_array($tipo, ['preventivo', 'mantenimiento']) ? 'Preventivos' : 'Correctivos';
+    })->map->count();
+                
+    $porCategoria = $ordenesBase->flatMap->trabajos->groupBy(function($trabajo) {
+        return $trabajo->categoria ? $trabajo->categoria->categoria : 'Sin Categoría';
+    })->map->count()->sortDesc();
+
+    $porMecanico = $ordenesBase->flatMap->trabajos
+    ->groupBy(function($trabajo) {
+        return $trabajo->persona?->nombre 
+            ?? $trabajo->personal?->persona?->nombre 
+            ?? $trabajo->personal?->nombre 
+            ?? 'Sin Asignar';
+    })
+    ->map->count()
+    ->sortDesc();
+
+    $trabajosInternos = $ordenesBase->flatMap->trabajos->count();
+    $trabajosExternos = $ordenesBase->flatMap->TrabajosExternos->count();
+
+    // 6. Los "Ofensores" Críticos
+    $fallaMasRecurrente = $porCategoria->keys()->first() ?? 'N/A';
+    
+    $unidadMasProblematica = $ordenesBase
+        ->filter(fn($orden) => !empty($orden->id_vehiculo) && $orden->vehiculoBelong)
         ->groupBy('id_vehiculo')
         ->map(fn($ordenes) => [
             'vehiculo' => $ordenes->first()->vehiculoBelong->flota ?? 'S/N',
@@ -1425,60 +1591,239 @@ class OrdenController extends BaseController
         ->sortByDesc('cantidad')
         ->first();
 
+    // 7. Movimientos y Logística de Almacén
+    $repuestosSolicitados = $ordenesBase->flatMap->suministros->sum('cantidad');
+    $entradasAlmacen = 0; 
+    $salidasAlmacen = 0;  
 
-        $periodo = CarbonPeriod::create($inicio, $fin);
-        $labels = [];
-        $dataAbiertas = [];
-        $dataCerradas = [];
+    // 8. Timeline Dinámico
+    // Respaldo en caso de que $fechaInicio o $fechaFin sean nulos (Ej: vista global)
+    $inicioTimeline = $fechaInicio ?? Carbon::now()->subDays(30)->startOfDay();
+    $finTimeline = $fechaFin ?? Carbon::now()->endOfDay();
+    
+    $periodo = CarbonPeriod::create($inicioTimeline, $finTimeline);
+    $labels = []; $dataAbiertas = []; $dataCerradas = [];
 
-        // Pre-agrupamos para no hacer loops pesados dentro del periodo
-        $ordenesPorDia = $ordenesBase->groupBy(function($item) {
-            return Carbon::parse($item->fecha_in)->format('Y-m-d');
-        });
+    $ordenesPorDia = $ordenesBase->groupBy(fn($item) => Carbon::parse($item->fecha_in)->format('Y-m-d'));
+    $cerradasPorDia = $ordenesBase->where('estatus', 1)->groupBy(fn($item) => Carbon::parse($item->fecha_out)->format('Y-m-d'));
 
-        $cerradasPorDia = $ordenesBase->where('estatus', 1)->groupBy(function($item) {
-            // Usamos updated_at o fecha_fin si la tienes, para saber cuándo se cerró
-            return Carbon::parse($item->fecha_out)->format('Y-m-d');
-        });
+    foreach ($periodo as $date) {
+        $fecha = $date->format('Y-m-d');
+        $labels[] = $date->format('d/m');
+        $dataAbiertas[] = isset($ordenesPorDia[$fecha]) ? $ordenesPorDia[$fecha]->count() : 0;
+        $dataCerradas[] = isset($cerradasPorDia[$fecha]) ? $cerradasPorDia[$fecha]->count() : 0;
+    }
 
-        foreach ($periodo as $date) {
-            $fecha = $date->format('Y-m-d');
-            $labels[] = $date->format('d/m'); // Formato corto para el gráfico
-            
-            $dataAbiertas[] = isset($ordenesPorDia[$fecha]) ? $ordenesPorDia[$fecha]->count() : 0;
-            $dataCerradas[] = isset($cerradasPorDia[$fecha]) ? $cerradasPorDia[$fecha]->count() : 0;
+    // 9. Consolidación de la Data
+    $reporte = [
+        // Se cambió $inicio y $fin por $fechaInicio y $fechaFin para evitar el error de variable indefinida
+        'periodo' => ['inicio' => $fechaInicio, 'fin' => $fechaFin],
+        // Nuevas variables de agrupación
+        'agrupacion' => $datosAgrupados,
+        'agrupar_por' => $agruparPor,
+        
+        'kpis' => [
+            'abiertas_hoy'    => $abiertasHoy,
+            'cerradas_mes'    => $cerradasMes,
+            'activas_totales' => $totalActivas,
+        ],
+        'financiero' => [
+            'suministros' => $costoSuministrosAlmacen, 
+            'compras'     => $costoCompras,             
+            'externos'    => $costoExternos,
+            'internos'    => $costoInternos,
+            'total'       => $costoTotalGeneral,
+        ],
+        'operativo' => [
+            'por_tipo'      => $porTipo,
+            'por_categoria' => $porCategoria->take(5),
+            'por_mecanico'  => $porMecanico->take(5),   
+            'internos_qty'  => $trabajosInternos,
+            'externos_qty'  => $trabajosExternos,
+            'falla_top'     => $fallaMasRecurrente,
+            'unidad_top'    => $unidadMasProblematica
+        ],
+        'almacen' => [
+            'solicitados' => $repuestosSolicitados,     
+            'entradas'    => $entradasAlmacen,
+            'salidas'     => $salidasAlmacen,
+        ],
+        'timeline' => [
+            'labels'   => $labels,
+            'abiertas' => $dataAbiertas,
+            'cerradas' => $dataCerradas,
+        ],
+        'desglose' => [
+            'almacen'  => $coleccionSuministros,
+            'compras'  => $coleccionCompras,
+            'externos' => $coleccionExternos,
+        ]
+    ];
+
+    // Incluimos tipoPeriodo en el compact para que la vista sepa qué selector marcar
+    return view('orden.reporte_gerencial', compact('reporte', 'unidades', 'tiposVehiculo', 'tiposOrden', 'tipoPeriodo'));
+}
+
+    public function imprimir($id)
+    {
+        $orden = $this->model->where('id', $id)->with(['vehiculoBelong'])->first();
+            if (!$orden) {
+                 Session::flash('error', 'La orden de trabajo no fue encontrada.');
+                return Redirect::route('ordenes.list');
+            }
+            $trabajos = Trabajos::where('id_orden', $id)->with(['categoria', 'servicio'])->get();
+            $trabajosExternos = TrabajoExterno::where('id_orden', $id)->with(['proveedor'])->get();
+
+            // 1. Extraemos los IDs asegurando que no haya nulos y limpiando el array
+            $todosLosIds = $trabajos->pluck('id_mecanico')
+                ->flatten()
+                ->filter()
+                ->unique();
+
+            // 2. Pedimos el Personal e INCLUIMOS la relación 'persona' aquí (Eager Loading)
+            $personalRelacionado = Personal::with('persona')
+                ->whereIn('id_personal', $todosLosIds)
+                ->get()
+                ->keyBy('id_personal'); // Esto nos permite buscar por ID rápidamente
+
+            // 3. Asignamos los datos a cada trabajo usando los datos ya cargados en memoria
+            $trabajos->each(function ($trabajo) use ($personalRelacionado) {
+                // Normalizamos los IDs (por si vienen como string "1,2" o array [1,2])
+                $ids = is_array($trabajo->id_mecanico) 
+                    ? $trabajo->id_mecanico 
+                    : explode(',', (string)$trabajo->id_mecanico);
+                if($trabajo->fecha_fin){
+                    $fechaInicio = Carbon::parse($trabajo->created_at);
+                    $fechaFin = Carbon::parse($trabajo->fecha_fin);
+                    $minutos = $fechaInicio->diffInMinutes($fechaFin);
+                    $horas = floor($minutos / 60);
+                    $minRestantes = $minutos % 60;
+                    $tiempoTexto = ($horas > 0) ? "{$horas}h {$minRestantes}m" : "{$minRestantes}min";
+                    $trabajo->tiempo_ejecucion = $tiempoTexto;
+                // Filtramos la colección que ya tenemos en memoria (sin ir a la base de datos otra vez)
+                }else{
+                    $trabajo->tiempo_ejecucion = null;
+                }
+                $trabajo->mecanicos_lista = $personalRelacionado->whereIn('id_personal', $ids)->values();
+            });
+            $requerimientos = SuministroCompra::where('orden_id', $id)->with('detalles')->get();
+            $estatusData = EstatusData::find($orden->estatus);
+            $fotos= OrdenFoto::where('orden_id',$id)->get();
+            $personal = Personal::with('persona')->where('cargo', 'Mecánico')->get(); // Cargar relación con Persona para obtener nombres completos
+            $inventario = Inventario::where('id_almacen',2)->orderBy('descripcion')->get();
+            $suministros= InventarioDespacho::where('id_orden', $id)->with('inventario')->get();
+            $proveedores = Proveedor::whereIn('id_tipo_proveedor', [2,4])->orderBy('nombre')->get();
+        
+            $categorias_tempario = TemparioCategoria::orderBy('categoria')->get();
+
+        // 5. Estructuramos el objeto de estatus que espera tu vista
+        // Mapeamos los códigos o textos a los iconos y colores corporativos
+        $estatusData = $this->getEstatusData($orden->estatus);
+
+        // 6. Retornamos la vista optimizada que creamos en el paso anterior
+        return view('orden.imprimir', compact(
+            'orden', 
+            'trabajos', 
+            'suministros', 
+            'requerimientos', 
+            'estatusData'
+        ));
+    }
+
+    /**
+     * Helper estandarizado para resolver los badges y estilos del estatus
+     */
+    private function getEstatusData($estatus)
+    {
+        // Creamos un objeto rápido para mantener la compatibilidad con tu vista: $estatusData->css
+        $data = new \stdClass();
+
+        switch ($estatus) {
+            case 'ABIERTA':
+            case 2:
+                $data->orden = 'ABIERTA';
+                $data->css = 'warning text-dark';
+                $data->icon_orden = 'fa-folder-open';
+                break;
+            case 'CERRADA':
+            case 4:
+                $data->orden = 'CERRADA';
+                $data->css = 'success';
+                $data->icon_orden = 'fa-check-double';
+                break;
+            case 'ANULADA':
+            case 1:
+                $data->orden = 'ANULADA';
+                $data->css = 'danger';
+                $data->icon_orden = 'fa-times-circle';
+                break;
+            default:
+                $data->orden = 'EN PROCESO';
+                $data->css = 'secondary';
+                $data->icon_orden = 'fa-tools';
+                break;
         }
 
+        return $data;
+    }
 
-        // 7. Estructurar la data para la vista
-        $reporte = [
-            'periodo' => ['inicio' => $inicio, 'fin' => $fin],
-            'kpis' => [
-                'abiertas_hoy' => $abiertasHoy,
-                'cerradas_mes' => $cerradasMes,
-                'activas_totales' => $totalActivas,
-            ],
-            'financiero' => [
-                'suministros' => $costoSuministros+$costoCompras,
-                'externos'    => $costoExternos,
-                'internos'    => $costoInternos,
-                'total'       => $costoTotalGeneral,
-            ],
-            'operativo' => [
-                'por_tipo'      => $porTipo,
-                'por_categoria' => $porCategoria->take(5), // Top 5 categorías
-                'internos_qty'  => $trabajosInternos,
-                'externos_qty'  => $trabajosExternos,
-                'falla_top'     => $fallaMasRecurrente,
-                'unidad_top'    => $unidadMasProblematica
-            ],
-            'timeline' => [
-                'labels'   => $labels,
-                'abiertas' => $dataAbiertas,
-                'cerradas' => $dataCerradas,
-            ]
-        ];
+    public function enviarReporteWhatsapp(Request $request, WhatsappApiService $whatsappService)
+    {
+        $request->validate([
+            'imagen'  => 'required|string',
+            'caption' => 'nullable|string'
+        ]);
 
-        return view('orden.reporte_gerencial', compact('reporte'));
+        try {
+            // 1. Decodificar la imagen Base64 que envía html2canvas y guardarla temporalmente
+            $imageParts  = explode(";base64,", $request->imagen);
+            $imageBase64 = base64_decode($imageParts[1] ?? $request->imagen);
+
+            $path = 'temp/reporte_' . time() . '.png';
+            Storage::disk('public')->put($path, $imageBase64);
+
+            // 2. Estructura estándar solicitada
+            $fullPath   = storage_path('app/public/' . $path);
+            $destiny    = config('services.whatsapp.group_test');  
+            $dataImagen = file_get_contents($fullPath);
+            $base64     = base64_encode($dataImagen);
+            $img_ready  = "data:image/png;base64," . $base64;
+
+            // Definir el caption (si no viene en el request, se asigna uno por defecto)
+            $caption = $request->caption ?? "📊 *Reporte Gerencial de Mantenimiento*\n🤖 *Generado:* " . now()->format('d/m/Y H:i');
+
+            $response = $whatsappService->enviarImagen($caption, $img_ready, $destiny);
+            
+            // 3. Eliminar el archivo temporal del disco
+            Storage::disk('public')->delete($path);
+
+            // 4. Evaluar respuesta del servicio
+            if ($response && $response->successful()) {
+                return response()->json(['success' => true]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'No se pudo procesar el envío mediante la API de WhatsApp.'
+            ], 500);
+
+        } catch (\Exception $e) {
+            // Asegurar la limpieza del archivo en caso de cualquier fallo previo
+            if (isset($path) && Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
+
+            Log::error('Error enviando reporte por WhatsApp: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Excepción interna al procesar la imagen: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getPlanFormato()
+    {
+        return view('orden.formato_mantenimiento');
     }
 }

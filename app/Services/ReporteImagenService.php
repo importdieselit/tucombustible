@@ -10,7 +10,7 @@ class ReporteImagenService
     {
         $path = storage_path("app/public/reportes/{$nombreBaseArchivo}_" . date('Y_m_d') . ".png");
         
-        Log::info("Generando reporte: {$nombreBaseArchivo} en {$path}");
+       // Log::info("Generando reporte: {$nombreBaseArchivo} en {$path}");
 
         $response = Http::timeout(60)
             ->withoutVerifying() 

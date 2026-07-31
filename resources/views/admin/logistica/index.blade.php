@@ -4,6 +4,23 @@
 @section('content')
 <div class="container-fluid py-4 px-4">
 
+    {{-- ALERTAS DE SESIÓN (SUCCESS Y WARNING) --}}
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0" role="alert" style="border-left: 4px solid #198754 !important;">
+            <i class="fas fa-check-circle me-2 text-success"></i>
+            <span class="fw-bold text-dark small">{{ session('success') }}</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if (session('warning'))
+        <div class="alert alert-warning alert-dismissible fade show shadow-sm border-0" role="alert" style="border-left: 4px solid #ffc107 !important;">
+            <i class="fas fa-exclamation-triangle me-2 text-warning"></i>
+            <span class="fw-bold text-dark small">{{ session('warning') }}</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     {{-- ENCABEZADO --}}
     <div class="mb-4">
         <h2 class="h4 fw-black text-dark text-uppercase mb-1">
@@ -151,8 +168,8 @@
             <label class="small fw-bold text-uppercase text-muted mb-1">Tipo</label>
             <select name="tipo" class="form-select form-select-sm fw-bold">
                 <option value="">TODAS</option>
-                <option value="1" {{ request('tipo') == '1' ? 'selected' : '' }}>Despacho Diesel</option>
-                <option value="2" {{ request('tipo') == '2' ? 'selected' : '' }}>Despacho MGO</option>
+                <option value="2" {{ request('tipo') == '2' ? 'selected' : '' }}>Despacho Diesel</option>
+                <option value="1" {{ request('tipo') == '1' ? 'selected' : '' }}>Despacho MGO</option>
                 <option value="3" {{ request('tipo') == '3' ? 'selected' : '' }}>Fletes</option>
                 {{-- Abrimos las compras en dos opciones independientes --}}
                 <option value="4_diesel" {{ request('tipo') == '4_diesel' ? 'selected' : '' }}>Compras Diesel</option>
@@ -240,13 +257,13 @@
 
                                         // 2. Identificamos el producto o combustible específico
                                         $productoEspecifico = match($viaje->tipo_planificacion) {
-                                            1       => 'DIESEL',
-                                            2       => 'MGO',
+                                            2       => 'DIESEL',
+                                            1       => 'MGO',
                                             3       => $viaje->producto_flete ?? 'Sin Especificar',
                                             // Evaluamos directamente el campo entero 'tipo' de la tabla viajes
                                             4       => match((int)$viaje->tipo) {
-                                                        1 => 'DIESEL',
-                                                        2 => 'MGO'
+                                                        2 => 'DIESEL',
+                                                        1 => 'MGO'
                                                     },
                                             default => 'Sin especificar'
                                         };
@@ -365,7 +382,7 @@
         </div>
     </div>
 </div>
-
+@push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     // Función para Cargar Detalles
@@ -378,8 +395,12 @@
         container.innerHTML = '<div class="p-5 text-center"><div class="spinner-border text-orange"></div></div>';
         modal.show();
 
+        let urlBase = "{{ route('logistica.show', ':id') }}";
+
+        let urlFinal = urlBase.replace(':id', id);
+
         // Usamos el helper url() de Laravel para evitar problemas de rutas relativas
-        fetch(`{{ url('logistica') }}/${id}`)
+         fetch(urlFinal)
             .then(response => {
                 if(!response.ok) throw new Error('Error de servidor al cargar los detalles');
                 return response.text();
@@ -393,7 +414,7 @@
             });
     }
 
-    // Función para Cancelar
+    // Función para Cancelar (en test)
     function cancelarPlanificacion(id) {
         Swal.fire({
             title: '¿ESTÁS SEGURO?',
@@ -406,7 +427,10 @@
             cancelButtonText: 'NO'
         }).then((result) => {
             if (result.isConfirmed) {
-                fetch(`/logistica/${id}/cancelar`, {
+                let urlBase = "{{ route('logistica.cancelar', ':id') }}";
+                let urlFinal = urlBase.replace(':id', id);
+                // Usamos el helper url() de Laravel para evitar problemas de rutas relativas
+                fetch(urlFinal, {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -425,5 +449,38 @@
             }
         });
     }
+
+     function enviarCapturaWa(idViaje) {
+        let btn = $('#btnWs_' + idViaje);
+        let originalHtml = btn.html();
+        
+        // Estado de carga
+        btn.html('<i class="fas fa-spinner fa-spin me-1"></i> Enviando...').prop('disabled', true);
+
+        $.ajax({
+            url: `/viajes/${idViaje}/enviar-whatsapp`, // Ajusta la ruta a tu estandar
+            type: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                if(response.success) {
+                    // Puedes cambiar esto por SweetAlert2 si lo usas en el sistema
+                    alert('Captura enviada exitosamente a WhatsApp.');
+                } else {
+                    alert('Error: ' + response.message);
+                }
+            },
+            error: function(xhr) {
+                console.error(xhr.responseText);
+                alert('Ocurrió un error de comunicación con el servidor.');
+            },
+            complete: function() {
+                // Restaurar botón
+                btn.html(originalHtml).prop('disabled', false);
+            }
+        });
+    }
 </script>
+@endpush
 @endsection

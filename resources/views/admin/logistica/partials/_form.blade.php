@@ -52,6 +52,7 @@
                 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
                 <script>
+                    // 1. Configuración de Flatpickr
                     document.addEventListener("DOMContentLoaded", function() {
                         flatpickr("#fecha_programada_picker", {
                             enableTime: true,
@@ -61,6 +62,87 @@
                             dateFormat: "Y-m-d H:i:s", // Formato REAL que se envía a Laravel/MySQL (24 horas obligatorio con 'H' mayúscula)
                             @if(!isset($viaje)) minDate: "today" @endif
                         });
+                    });
+
+                    // 2. Función reutilizable para validación de Alertas de Documentos
+                    function checkAlertasVehiculo(selectElement, typeName) {
+                        const id = selectElement.value;
+                        if (!id) return;
+
+                        fetch(`/vehiculos/${id}/alertas-documentos`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.tiene_alertas) {
+                                    // Diseño alineado con los estilos corporativos (border-left-orange y listas limpias)
+                                    const listaHtml = `
+                                        <div style="text-align: left; background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 5px solid #ff6600;">
+                                            <ul class="mb-0 text-danger" style="list-style-type: none; padding-left: 0;">
+                                                ${data.alertas.map(alerta => `<li class="mb-2"><i class="fas fa-exclamation-triangle me-2"></i>${alerta.tooltip}</li>`).join('')}
+                                            </ul>
+                                        </div>
+                                    `;
+
+                                    Swal.fire({
+                                        title: `¡ALERTA EN DOCUMENTOS!`,
+                                        icon: 'warning',
+                                        html: `El <b>${typeName.toLowerCase()}</b> seleccionado presenta irregularidades:<br><br>${listaHtml}<br><b class="text-dark">¿Deseas continuar con esta asignación de todos modos?</b>`,
+                                        showCancelButton: true,
+                                        confirmButtonColor: '#ff6600', // Naranja branding
+                                        cancelButtonColor: '#212529',  // Oscuro corporativo
+                                        confirmButtonText: '<i class="fas fa-check me-1"></i> Sí, continuar',
+                                        cancelButtonText: '<i class="fas fa-times me-1"></i> Cancelar asignación',
+                                        customClass: {
+                                            title: 'fw-black text-dark text-uppercase', // Misma tipografía de tu vista
+                                        }
+                                    }).then((result) => {
+                                        if (!result.isConfirmed) {
+                                            // Vaciamos el DOM
+                                            selectElement.value = '';
+                                            // Emitimos evento para que Alpine.js actualice su estado interno (x-model)
+                                            selectElement.dispatchEvent(new Event('change'));
+                                        }
+                                    });
+                                }
+                            })
+                            .catch(error => console.error(`Error consultando alertas de ${typeName}:`, error));
+                    }
+
+                    // 3. Validación de formulario y Listeners de Documentos
+                    document.addEventListener('DOMContentLoaded', function () {
+                        const form = document.getElementById('formPlanificacion'); 
+                        
+                        // Validación de Tabulador de Viáticos
+                        if (form) {
+                            form.addEventListener('submit', function (event) {
+                                const destinosSeleccionados = document.querySelectorAll('input[name="destino_ciudad[]"]:checked');
+                                if (destinosSeleccionados.length === 0) {
+                                    event.preventDefault(); 
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'DATO REQUERIDO',
+                                        text: 'Debe seleccionar al menos un destino en el tabulador de viáticos antes de guardar.',
+                                        confirmButtonColor: '#212529',
+                                        confirmButtonText: 'ENTENDIDO'
+                                    });
+                                }
+                            });
+                        }
+
+                        // Eventos para consultas de alertas documentales (usando los IDs correctos de la vista)
+                        const vehiculoSelect = document.getElementById('vehiculo_select');
+                        const cisternaSelect = document.getElementById('cisterna_select');
+
+                        if (vehiculoSelect) {
+                            vehiculoSelect.addEventListener('change', function() {
+                                checkAlertasVehiculo(this, 'Vehículo');
+                            });
+                        }
+
+                        if (cisternaSelect) {
+                            cisternaSelect.addEventListener('change', function() {
+                                checkAlertasVehiculo(this, 'Cisterna');
+                            });
+                        }
                     });
                 </script>
 
@@ -176,20 +258,20 @@
                     <div class="row g-2">
                         <div class="col-6 mb-2">
                             <label class="small fw-bold text-muted text-uppercase">Placa Vehículo</label>
-                            <input type="text" name="vehiculo_externo" x-model="externo_vehiculo" class="form-control form-control-sm border-orange uppercase" placeholder="ABC-123" :required="esPropio == '0'">
+                            <input type="text" name="vehiculo_externo" x-model="vehiculo_externo" class="form-control form-control-sm border-orange uppercase" placeholder="ABC-123" :required="esPropio == '0'">
                         </div>
                         <div class="col-6 mb-2">
                             <label class="small fw-bold text-muted text-uppercase">Placa Cisterna</label>
-                            <input type="text" name="cisterna_externo" x-model="externo_cisterna" class="form-control form-control-sm border-orange uppercase" placeholder="Opcional">
+                            <input type="text" name="cisterna_externo" x-model="cisterna_externo" class="form-control form-control-sm border-orange uppercase" placeholder="Opcional">
                         </div>
                         <div class="col-12">
                             <div class="input-group input-group-sm mb-1">
                                 <span class="input-group-text">Chofer</span>
-                                <input type="text" name="chofer_externo" x-model="externo_chofer" class="form-control uppercase" placeholder="Nombre completo" :required="esPropio == '0'">
+                                <input type="text" name="chofer_externo" x-model="chofer_externo" class="form-control uppercase" placeholder="Nombre completo" :required="esPropio == '0'">
                             </div>
                             <div class="input-group input-group-sm mb-1">
                                 <span class="input-group-text">Ayudante</span>
-                                <input type="text" name="ayudante_externo" x-model="externo_ayudante" class="form-control uppercase" placeholder="Nombre completo">
+                                <input type="text" name="ayudante_externo" x-model="ayudante_externo" class="form-control uppercase" placeholder="Nombre completo">
                             </div>
                         </div>
                     </div>
@@ -231,11 +313,13 @@
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="small fw-bold text-muted text-uppercase">Proveedor</label>
-                            <select name="proveedor_id" class="form-select border-orange fw-bold" required>
-                                <option value="">-- Seleccione --</option>
-                                @foreach($proveedores as $prov)
-                                    <option value="{{ $prov->id }}" {{ old('proveedor_id', $compra->proveedor_id ?? '') == $prov->id ? 'selected' : '' }}>{{ $prov->nombre }}</option>
+                            <label class="small fw-bold text-muted text-uppercase">Planta de Despacho (Origen)</label>
+                            <select name="planta_proveedor_id" class="form-select border-orange fw-bold" required>
+                                <option value="">-- Seleccione Planta --</option>
+                                @foreach($plantasProveedor as $planta)
+                                    <option value="{{ $planta->id }}" {{ old('planta_proveedor_id', $compra->planta_proveedor_id ?? '') == $planta->id ? 'selected' : '' }}>
+                                        {{ $planta->nombre }} {{ $planta->alias ? "({$planta->alias})" : '' }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>

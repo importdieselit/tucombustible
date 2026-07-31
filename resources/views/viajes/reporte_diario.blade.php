@@ -180,57 +180,60 @@
             <span class="badge bg-white text-dark">{{ \Carbon\Carbon::parse($reporte['fecha'])->format('d/m/Y') }}</span>
         </div>
         <div class="row g-2 mb-4 mx-1">
-    <div class="col-md-2 col-sm-6">
-        <div class="card border-0 shadow-sm border-start border-4 border-camionetas">
-            <div class="card-body p-2 text-center">
-                <small class="text-muted fw-bold d-block text-uppercase" style="font-size: 0.65rem;">Disponibles</small>
-                <h5 class="mb-0 fw-bold text-dark">{{ number_format($stats['disponibles'], 0, ',', '.') }} <span class="small">L</span></h5>
-                <i class="fas fa-warehouse text-muted mt-1"></i>
+            <div class="col-12">
+                <div class="border-0 shadow-sm   border-4 border-camionetas">
+                    <div class="card-header bg-light text-center p-2">
+                        <small class="text-muted fw-bold d-block text-uppercase">Disponibles</small>
+                    </div>
+                    <div class="card-body p-2 row text-center">
+                        <h5 class="mb-0 col-4 d-inline fw-bold text-dark">Para Venta: {{ number_format($stats['disponibles'] - $stats['tanque00'], 0, ',', '.') }} <span class="small">L</span></h5>
+                        <h5 class="mb-0 col-4 d-inline fw-bold text-dark">Tanque 00 (prepagado): {{ number_format($stats['tanque00'], 0, ',', '.') }} <span class="small">L</span></h5>
+                        <h5 class="mb-0 col-4 d-inline fw-bold text-dark">Total: {{ number_format($stats['disponibles'], 0, ',', '.') }} <span class="small">L</span></h5>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
 
-    <div class="col-md-2 col-sm-6">
-        <div class="card border-0 shadow-sm border-start border-4 border-cisternas">
-            <div class="card-body p-2 text-center">
-                <small class="text-muted fw-bold d-block text-uppercase" style="font-size: 0.65rem;">Despachados</small>
-                <h5 class="mb-0 fw-bold text-success">{{ number_format($stats['despachados'], 0, ',', '.') }} <span class="small">L</span></h5>
-                <i class="fas fa-sign-out-alt text-success mt-1"></i>
+            <div class="col-md-3 col-sm-6">
+                <div class="card border-0 shadow-sm border-start border-4 border-cisternas">
+                    <div class="card-body p-2 text-center">
+                        <small class="text-muted fw-bold d-block text-uppercase" style="font-size: 0.65rem;">Despachados</small>
+                        <h5 class="mb-0 fw-bold text-success">{{ number_format($stats['despachados'], 0, ',', '.') }} <span class="small">L</span></h5>
+                        <i class="fas fa-sign-out-alt text-success mt-1"></i>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
 
-    <div class="col-md-2 col-sm-6">
-        <div class="card border-0 shadow-sm border-start border-4 border-camiones">
-            <div class="card-body p-2 text-center">
-                <small class="text-muted fw-bold d-block text-uppercase" style="font-size: 0.65rem;">Cargas</small>
-                <h5 class="mb-0 fw-bold text-warning">{{ number_format($stats['cargas'], 0, ',', '.') }} <span class="small">L</span></h5>
-                <i class="fas fa-truck-loading text-warning mt-1"></i>
+            <div class="col-md-3 col-sm-6">
+                <div class="card border-0 shadow-sm border-start border-4 border-camiones">
+                    <div class="card-body p-2 text-center">
+                        <small class="text-muted fw-bold d-block text-uppercase" style="font-size: 0.65rem;">Cargas</small>
+                        <h5 class="mb-0 fw-bold text-warning">{{ number_format($stats['cargas'], 0, ',', '.') }} <span class="small">L</span></h5>
+                        <i class="fas fa-truck-loading text-warning mt-1"></i>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
 
-    <div class="col-md-3 col-sm-6">
-        <div class="card border-0 shadow-sm border-start border-4 border-chutos">
-            <div class="card-body p-2 text-center">
-                <small class="text-muted fw-bold d-block text-uppercase" style="font-size: 0.65rem;">Despachos Programados</small>
-                <h5 class="mb-0 fw-bold text-chutos">{{ number_format($stats['prog_desp'], 0, ',', '.') }} <span class="small">L</span></h5>
-                <i class="fas fa-calendar-alt text-chutos mt-1"></i>
+            <div class="col-md-3 col-sm-6">
+                <div class="card border-0 shadow-sm border-start border-4 border-chutos">
+                    <div class="card-body p-2 text-center">
+                        <small class="text-muted fw-bold d-block text-uppercase" style="font-size: 0.65rem;">Despachos Programados</small>
+                        <h5 class="mb-0 fw-bold text-chutos">{{ number_format($stats['prog_desp'], 0, ',', '.') }} <span class="small">L</span></h5>
+                        <i class="fas fa-calendar-alt text-chutos mt-1"></i>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
 
-    <div class="col-md-3 col-sm-6">
-         
-        <div class="card border-0 shadow-sm border-start border-4 border-info">
-            <div class="card-body p-2 text-center">
-                <small class="text-muted fw-bold d-block text-uppercase" style="font-size: 0.65rem;">Carga Programada</small>
-                <h5 class="mb-0 fw-bold text-info">{{ number_format($stats['prog_carg'], 0, ',', '.') }} <span class="small">L</span></h5>
-                <i class="fas fa-clock text-info mt-1"></i>
+            <div class="col-md-3 col-sm-6">
+                
+                <div class="card border-0 shadow-sm border-start border-4 border-info">
+                    <div class="card-body p-2 text-center">
+                        <small class="text-muted fw-bold d-block text-uppercase" style="font-size: 0.65rem;">Carga Programada</small>
+                        <h5 class="mb-0 fw-bold text-info">{{ number_format($stats['prog_carg'], 0, ',', '.') }} <span class="small">L</span></h5>
+                        <i class="fas fa-clock text-info mt-1"></i>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-</div>
         <div class="card-body">
             <div class="table-responsive">
                 <table class="table table-bordered mb-0 text-center align-middle">

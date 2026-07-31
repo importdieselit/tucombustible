@@ -41,11 +41,6 @@
                     <div class="form-text small">Indique la unidad en la que se desplaza actualmente.</div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Descripción</label>
-                    <textarea name="descripcion" class="form-control" rows="3" placeholder="Detalle lo sucedido..."></textarea>
-                </div>
-
                 <div class="mb-3 text-center">
                     <label class="form-label fw-bold d-block text-start">Evidencia Fotográfica</label>
                     <div class="upload-area p-4 border rounded bg-light" onclick="document.getElementById('foto').click()">
@@ -107,7 +102,7 @@ $(document).ready(function() {
         $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-2"></i>ENVIANDO...');
 
         $.ajax({
-            url: "{{ route('reportes.store') }}",
+            url: "{{ route('reporte.store') }}",
             method: 'POST',
             data: formData,
             processData: false,

@@ -27,6 +27,7 @@ use App\Models\Muelles;
 use App\Models\CaptacionCliente;
 use App\Models\Deposito;
 use App\Models\CompraCombustible;
+use Illuminate\Support\Facades\Http;
 
 class ViajesController extends Controller
 {
@@ -67,7 +68,7 @@ class ViajesController extends Controller
         $vehiculos = Vehiculo::where('es_flota',true)->get(['id', 'placa', 'flota']);
         $cisternas = Vehiculo::where('es_flota',true)->where('tipo',2)->get(['id', 'placa', 'flota']);
         $destino = TabuladorViatico::orderBy('destino', 'asc')->pluck('destino')->unique();
-        $clientes = Cliente::where('status',1)->orderBy('nombre', 'asc')->get(['id','nombre','alias']);
+        $clientes = Cliente::where('status',2)->orderBy('nombre', 'asc')->get(['id','nombre','alias']);
         
         return view('viajes.create', compact('choferes', 'vehiculos', 'destino', 'clientes', 'cisternas'));
     }
@@ -244,6 +245,7 @@ class ViajesController extends Controller
                 'vehiculo_id' => $request->vehiculo_id ?? 0,
                 'cisterna' =>   $request->cisterna ?? null,
                 'ayudante' => $request->ayudante ?? 0,
+                'ayudante_id' => $request->ayudante ?? 0,
                 'otro_chofer' => $request->otro_chofer ?? null,
                 'otro_vehiculo' => $request->otro_vehiculo ?? null,
                 'otro_ayudante' => $request->otro_ayudante?? null,
@@ -311,26 +313,6 @@ class ViajesController extends Controller
                 $producto->stock-=$totalLitros;
                 $producto->save();
 
-                if ($request->has('chofer_id') && $request->chofer_id !== null) {
-                try {
-                    FcmNotificationService::sendPedidoAsignadoConductorNotification(
-                        $pedido->fresh(['cliente']),
-                        $request->chofer_id
-                    );
-                } catch (\Exception $e) {
-                    Log::error("Error enviando notificación FCM al conductor: " . $e->getMessage());
-                    // No fallar la operación principal por error en notificación
-                }
-            }
-
-                            // Crear el pedido (sin depósito específico)
-            
-
-                 FcmNotificationService::enviarNotification(
-                        "Nuevo viaje creado a {$viaje->destino_ciudad} con {$cantidadDespachos} despachos. Total Litros: {$totalLitros}",  
-                        "Nuevo viaje creado a {$viaje->destino_ciudad} con {$cantidadDespachos} despachos. Total Litros: {$totalLitros}",
-                        $data
-                    );
             // 5. Generar el Cuadro de Viáticos automáticamente (con correcciones y desglose)
             $this->generarCuadroViaticos($viaje, $tabulador, $cantidadDespachos);
             
@@ -1148,6 +1130,7 @@ public function updateGuiaData(Request $request, $viajeId)
                 'vehiculo_id' => $request->vehiculo_id ?? 0,
                 'cisterna' => $request->cisterna ?? 0,
                 'ayudante' => $request->ayudante ?? 0,
+                'ayudante_id' => $request->ayudante ?? 0,
                 'otro_chofer' => $request->otro_chofer_id ?? null,
                 'otro_vehiculo' => $request->otro_vehiculo_id ?? null,
                 'otro_ayudante' => $request->otro_ayudante_id ?? null,
@@ -1303,162 +1286,266 @@ public function updateGuiaData(Request $request, $viajeId)
     }
 
   public function reporteDiario(Request $request)
-{
-    $tokenValido = config('services.reporte.internal_token');
-    // Si no está logueado Y el token no coincide, entonces al login
-    if (!auth()->check() && $request->get('token') !== $tokenValido) {
-        abort(403, 'Acceso no autorizado');
-    }
+    {
+        $tokenValido = config('services.reporte.internal_token');
+        // Si no está logueado Y el token no coincide, entonces al login
+        if (!auth()->check() && $request->get('token') !== $tokenValido) {
+            abort(403, 'Acceso no autorizado');
+        }
 
-    $fechaInicio = $request->filled('fecha_inicio') 
-        ? Carbon::parse($request->fecha_inicio)->startOfDay() 
-        : Carbon::now()->startOfDay();
+        $fechaInicio = $request->filled('fecha_inicio') 
+            ? Carbon::parse($request->fecha_inicio)->startOfDay() 
+            : Carbon::now()->startOfDay();
 
-    $fechaFin = $request->filled('fecha_fin') 
-        ? Carbon::parse($request->fecha_fin)->endOfDay() 
-        : Carbon::now()->addDays(2)->endOfDay();
+        $fechaFin = $request->filled('fecha_fin') 
+            ? Carbon::parse($request->fecha_fin)->endOfDay() 
+            : Carbon::now()->addDays(2)->endOfDay();
 
-    // 2. Generar el arreglo de días dinámico para las columnas de la tabla
-    // Esto reemplaza tu generación estática de "$rangoDias"
-    $rangoDias = [];
-    $periodo = \Carbon\CarbonPeriod::create($fechaInicio, $fechaFin);
-    foreach ($periodo as $fecha) {
-        $rangoDias[] = $fecha->format('Y-m-d');
-    }
+        // 2. Generar el arreglo de días dinámico para las columnas de la tabla
+        // Esto reemplaza tu generación estática de "$rangoDias"
+        $rangoDias = [];
+        $periodo = \Carbon\CarbonPeriod::create($fechaInicio, $fechaFin);
+        foreach ($periodo as $fecha) {
+            $rangoDias[] = $fecha->format('Y-m-d');
+        }
 
 
-    $fecha = $request->input('fecha', now()->format('Y-m-d'));
+        $fecha = $request->input('fecha', now()->format('Y-m-d'));
 
-    // 1. Eager Loading: Traemos relaciones necesarias para evitar N+1
-    $viajesRaw = Viaje::with([
-            'vehiculo', 'chofer', 'producto', 'despachos.cliente', 
-            'cliente', 'cisternaAcoplada'
-        ])
-        ->whereBetween('fecha_salida', [$fechaInicio, $fechaFin])->orderBy('fecha_salida', 'asc')
-        ->get();
+        // 1. Eager Loading: Traemos relaciones necesarias para evitar N+1
+        $viajesRaw = Viaje::with([
+                'vehiculo', 'chofer', 'producto', 'despachos.cliente', 
+                'cliente', 'cisternaAcoplada'
+            ])
+            ->whereBetween('fecha_salida', [$fechaInicio, $fechaFin])->orderBy('fecha_salida', 'asc')
+            ->get();
 
-    // 2. Procesamiento y Enriquecimiento de la data
-    $viajesDelDia = $viajesRaw->map(function($v) {
-        $destinoRaw = strtoupper($v->destino_ciudad);
-        $v->es_flete = str_contains($destinoRaw, 'FLETE');
-        $v->es_despacho = is_null($v->litros);
-        $v->es_carga = !$v->es_despacho && !$v->es_flete;
+        // 2. Procesamiento y Enriquecimiento de la data
+        $viajesDelDia = $viajesRaw->map(function($v) {
+            $destinoRaw = strtoupper($v->destino_ciudad);
+            $v->es_flete = str_contains($destinoRaw, 'FLETE');
+            $v->es_despacho = is_null($v->litros);
+            $v->es_carga = !$v->es_despacho && !$v->es_flete;
 
-        // Limpieza de destino
-        $v->destino_limpio = trim(str_ireplace(['FLETE', ' ->'], ['', ''], $v->destino_ciudad));
+            // Limpieza de destino
+            $v->destino_limpio = trim(str_ireplace(['FLETE', ' ->'], ['', ''], $v->destino_ciudad));
 
-        // Cálculo de Litros Totales (Centralizado)
-        $v->litros_totales = $v->es_despacho 
-            ? $v->despachos->sum('litros') 
-            : ($v->litros ?? 0);
+            // Cálculo de Litros Totales (Centralizado)
+            $v->litros_totales = $v->es_despacho 
+                ? $v->despachos->sum('litros') 
+                : ($v->litros ?? 0);
 
-        // Lógica de Jerarquía de Cliente
-        $clienteFinal = null;
-        if (!$v->es_carga) {
-            // A. Cliente directo del viaje
-            $clienteFinal = $v->cliente ? ($v->cliente->alias ?? $v->cliente->nombre) : null;
+            // Lógica de Jerarquía de Cliente
+            $clienteFinal = null;
+            if (!$v->es_carga) {
+                // A. Cliente directo del viaje
+                $clienteFinal = $v->cliente ? ($v->cliente->alias ?? $v->cliente->nombre) : null;
 
-            // B. Si no hay, buscar en el primer despacho que tenga cliente
-            if (!$clienteFinal && $v->despachos->isNotEmpty()) {
-                $conCliente = $v->despachos->whereNotNull('cliente_id')->first();
-                if ($conCliente && $conCliente->cliente) {
-                    $clienteFinal = $conCliente->cliente->alias ?? $conCliente->cliente->nombre;
-                }else{
-                    // Si no hay cliente_id, pero hay otro_cliente en el despacho
-                    $conOtroCliente = $v->despachos->whereNotNull('otro_cliente')->first();
-                    if ($conOtroCliente) {
-                        $clienteFinal = $conOtroCliente->otro_cliente;
+                // B. Si no hay, buscar en el primer despacho que tenga cliente
+                if (!$clienteFinal && $v->despachos->isNotEmpty()) {
+                    $conCliente = $v->despachos->whereNotNull('cliente_id')->first();
+                    if ($conCliente && $conCliente->cliente) {
+                        $clienteFinal = $conCliente->cliente->alias ?? $conCliente->cliente->nombre;
+                    }else{
+                        // Si no hay cliente_id, pero hay otro_cliente en el despacho
+                        $conOtroCliente = $v->despachos->whereNotNull('otro_cliente')->first();
+                        if ($conOtroCliente) {
+                            $clienteFinal = $conOtroCliente->otro_cliente;
+                        }
                     }
                 }
+
+                // C. Si aún no hay, usar el campo manual
+                if (!$clienteFinal) {
+                    $clienteFinal = $v->otro_cliente;
+                }
+            }
+            $v->cliente_reporte = $clienteFinal;
+
+            
+
+            return $v;
+        });
+
+        $fechaReferencia = \Carbon\Carbon::parse($fecha)->startOfDay();
+        $fechaLimite = $fechaReferencia->copy()->addDays(3)->endOfDay();
+
+        // 2. Extraemos solo las fechas que tienen viajes, dentro del rango permitido
+        $rangoDias = $viajesDelDia->map(function($v) {
+                return \Carbon\Carbon::parse($v->fecha_salida)->format('Y-m-d');
+            })
+            ->filter(function($fecha) use ($fechaReferencia, $fechaLimite) {
+                $f = \Carbon\Carbon::parse($fecha);
+                // Solo días entre hoy y hoy + 3
+                return $f->between($fechaReferencia, $fechaLimite);
+            })
+            ->unique() // Eliminamos duplicados para tener una columna por día
+            ->sort()   // Ordenamos cronológicamente
+            ->values();
+
+        // 3. Agrupamos por unidad para el cuerpo de la tabla
+        $viajesPorUnidad = $viajesDelDia->groupBy('vehiculo_id');    
+
+        // 3. Función de ayuda para clasificación (Usa los nuevos atributos)
+        $contarGranular = function($coleccion, $status, $productoNombre) {
+            return $coleccion->where('status', $status)
+                ->filter(fn($v) => $v->producto && str_contains(strtoupper($v->producto->nombre), strtoupper($productoNombre)))
+                ->count();
+        };
+
+        // 4. Clasificación para las tablas
+        $fletes = $viajesDelDia->filter(fn($v) => $v->es_flete);
+        $operacionesBase = $viajesDelDia->reject(fn($v) => $v->es_flete);
+        $cargas = $operacionesBase->where('es_carga', true);
+        $despachos = $operacionesBase->where('es_despacho', true);
+
+        $reporte = [
+            'fecha' => $fecha,
+            'despachos' => $this->generarEstructuraEstatus($despachos, $contarGranular),
+            'cargas'    => $this->generarEstructuraEstatus($cargas, $contarGranular),
+            'fletes'    => $this->generarEstructuraEstatus($fletes, $contarGranular),
+        ];
+
+        // 5. Estadísticas para las Cards (Usando los litros ya procesados)
+        $totalDisponibles = Deposito::sum('nivel_actual_litros');
+        $tanque00=Deposito::where('serial', '00')->first()?->nivel_actual_litros ?? 0;
+
+        $totalDespachados = $despachos->whereIn('status', ['EN RUTA', 'COMPLETADO'])
+            ->sum('litros_totales');
+
+        $totalCarga = $cargas->whereIn('status', ['EN RUTA', 'COMPLETADO'])
+            ->sum('litros_totales');
+
+        $totalProgDespacho = $despachos->where('status', 'Programado')
+            ->sum('litros_totales');
+
+        $totalProgCarga = $cargas->where('status', 'Programado')
+            ->sum('litros_totales');
+
+        return view('viajes.reporte_diario', [
+            'fecha' => $fecha,
+            'viajesDelDia' => $viajesDelDia,
+            'reporte' => $reporte,
+            'viajesPorUnidad' => $viajesPorUnidad,
+            'rangoDias' => $rangoDias,
+            'stats' => [
+                'disponibles' => $totalDisponibles,
+                'despachados' => $totalDespachados,
+                'cargas'      => $totalCarga,
+                'prog_desp'   => $totalProgDespacho,
+                'prog_carg'   => $totalProgCarga,
+                'tanque00'    => $tanque00
+            ]
+        ]);
+    }
+
+    private function generarEstructuraEstatus($coleccion, $callback) {
+        return [
+            'programados' => ['ind' => $callback($coleccion, 'Programado', 'DIESEL'), 'mgo' => $callback($coleccion, 'Programado', 'M.G.O.')],
+            'en_ruta'     => ['ind' => $callback($coleccion, 'EN RUTA', 'DIESEL'),     'mgo' => $callback($coleccion, 'EN RUTA', 'M.G.O.')],
+            'completados' => ['ind' => $callback($coleccion, 'COMPLETADO', 'DIESEL'),  'mgo' => $callback($coleccion, 'COMPLETADO', 'M.G.O.')],
+        ];
+    }
+
+    public function enviarWhatsappAjax($id)
+    {
+        try {
+            $viaje = Viaje::findOrFail($id);
+            $tokenInterno = config('services.reporte.internal_token');
+
+            // 1. URL que ScreenshotOne visitará
+            $urlInterna = route('viajes.imprimir', $id) . "?token=" . $tokenInterno;
+            
+            // 2. Construir URL de ScreenshotOne
+            $accessKey = 'm7uxLbNHYl45Tg'; // O config('services.screenshotone.key')
+            $apiUrl = "https://api.screenshotone.com/take?" . http_build_query([
+                'access_key' => $accessKey,
+                'url' => $urlInterna,
+                'format' => 'png',
+                'block_ads' => 'true',
+                'block_cookie_banners' => 'true',
+                'delay' => 2, 
+                'timeout' => 60,
+                'selector' => '#areaCapturaViaje', 
+                'image_quality' => 80
+            ]);
+
+            // 3. OBTENER CAPTURA EN MEMORIA (Sin tocar el disco)
+            // Hacemos una petición GET directa a ScreenshotOne esperando la imagen
+            $screenshotResponse = Http::timeout(65)->get($apiUrl);
+
+            if (!$screenshotResponse->successful()) {
+                Log::error("Error de ScreenshotOne para viaje {$id}: " . $screenshotResponse->body());
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'La API de captura falló al generar la imagen.'
+                ], 500);
             }
 
-            // C. Si aún no hay, usar el campo manual
-            if (!$clienteFinal) {
-                $clienteFinal = $v->otro_cliente;
+            // Convertimos el cuerpo binario de la respuesta directamente a Base64
+            $base64 = base64_encode($screenshotResponse->body());
+            $img_ready = "data:image/png;base64," . $base64;
+
+            // 4. Preparar envío a WhatsApp
+            $baseUrl = rtrim(config('services.whatsapp.url'), '/');
+            $tokenWA = config('services.whatsapp.key');
+            $endpoint = "{$baseUrl}/messages/image?token={$tokenWA}";
+            
+            $tituloCaption = "Planificación V-" . str_pad($viaje->id, 5, '0', STR_PAD_LEFT) . " - ".$viaje->destino_ciudad. " - " . date('d/m/Y');
+
+
+            // Grupo 2: Operaciones
+            $response = Http::asForm()->post($endpoint, [
+                'token' => $tokenWA,
+                'to' => config('services.whatsapp.group_operaciones'),
+                'image' => $img_ready,
+                'caption' => $tituloCaption,
+            ]);
+
+            if ($response->successful()) {
+                return response()->json([
+                    'success' => true, 
+                    'message' => 'Captura enviada a ambos grupos exitosamente.'
+                ]);
             }
+
+            return response()->json([
+                'success' => false, 
+                'message' => 'Error en la API de WhatsApp al despachar los mensajes.'
+            ], 500);
+
+        } catch (\Exception $e) {
+            Log::error("Error captura asíncrona en memoria viaje {$id}: " . $e->getMessage());
+            return response()->json([
+                'success' => false, 
+                'message' => 'Error de proceso: ' . $e->getMessage()
+            ], 500);
         }
-        $v->cliente_reporte = $clienteFinal;
+    }
 
-        
+    public function imprimir($id, Request $request)
+    {
+        $tokenValido = config('services.reporte.internal_token');
 
-        return $v;
-    });
+        // Validación de seguridad para accesos anónimos/bots
+        if (!auth()->check() && $request->get('token') !== $tokenValido) {
+            abort(403, 'Acceso no autorizado');
+        }
 
-    $fechaReferencia = \Carbon\Carbon::parse($fecha)->startOfDay();
-    $fechaLimite = $fechaReferencia->copy()->addDays(3)->endOfDay();
+        // Carga optimizada de relaciones para evitar queries N+1 en el Blade
+        $viaje = Viaje::with([
+            'vehiculo', 
+            'chofer.persona', 
+            'ayudante.persona', 
+            'sede', 
+            'detalles.cliente',
+            'detalles.buques',
+            'chofer.persona',
+            'ayudante.persona',
+            'compraCombustible',
+            'compraCombustible.planta'
+            ])->findOrFail($id);
 
-    // 2. Extraemos solo las fechas que tienen viajes, dentro del rango permitido
-    $rangoDias = $viajesDelDia->map(function($v) {
-            return \Carbon\Carbon::parse($v->fecha_salida)->format('Y-m-d');
-        })
-        ->filter(function($fecha) use ($fechaReferencia, $fechaLimite) {
-            $f = \Carbon\Carbon::parse($fecha);
-            // Solo días entre hoy y hoy + 3
-            return $f->between($fechaReferencia, $fechaLimite);
-        })
-        ->unique() // Eliminamos duplicados para tener una columna por día
-        ->sort()   // Ordenamos cronológicamente
-        ->values();
-
-    // 3. Agrupamos por unidad para el cuerpo de la tabla
-    $viajesPorUnidad = $viajesDelDia->groupBy('vehiculo_id');    
-
-    // 3. Función de ayuda para clasificación (Usa los nuevos atributos)
-    $contarGranular = function($coleccion, $status, $productoNombre) {
-        return $coleccion->where('status', $status)
-            ->filter(fn($v) => $v->producto && str_contains(strtoupper($v->producto->nombre), strtoupper($productoNombre)))
-            ->count();
-    };
-
-    // 4. Clasificación para las tablas
-    $fletes = $viajesDelDia->filter(fn($v) => $v->es_flete);
-    $operacionesBase = $viajesDelDia->reject(fn($v) => $v->es_flete);
-    $cargas = $operacionesBase->where('es_carga', true);
-    $despachos = $operacionesBase->where('es_despacho', true);
-
-    $reporte = [
-        'fecha' => $fecha,
-        'despachos' => $this->generarEstructuraEstatus($despachos, $contarGranular),
-        'cargas'    => $this->generarEstructuraEstatus($cargas, $contarGranular),
-        'fletes'    => $this->generarEstructuraEstatus($fletes, $contarGranular),
-    ];
-
-    // 5. Estadísticas para las Cards (Usando los litros ya procesados)
-    $totalDisponibles = Deposito::sum('nivel_actual_litros');
-
-    $totalDespachados = $despachos->whereIn('status', ['EN RUTA', 'COMPLETADO'])
-        ->sum('litros_totales');
-
-    $totalCarga = $cargas->whereIn('status', ['EN RUTA', 'COMPLETADO'])
-        ->sum('litros_totales');
-
-    $totalProgDespacho = $despachos->where('status', 'Programado')
-        ->sum('litros_totales');
-
-    $totalProgCarga = $cargas->where('status', 'Programado')
-        ->sum('litros_totales');
-
-    return view('viajes.reporte_diario', [
-        'fecha' => $fecha,
-        'viajesDelDia' => $viajesDelDia,
-        'reporte' => $reporte,
-        'viajesPorUnidad' => $viajesPorUnidad,
-        'rangoDias' => $rangoDias,
-        'stats' => [
-            'disponibles' => $totalDisponibles,
-            'despachados' => $totalDespachados,
-            'cargas'      => $totalCarga,
-            'prog_desp'   => $totalProgDespacho,
-            'prog_carg'   => $totalProgCarga
-        ]
-    ]);
-}
-
-private function generarEstructuraEstatus($coleccion, $callback) {
-    return [
-        'programados' => ['ind' => $callback($coleccion, 'Programado', 'DIESEL'), 'mgo' => $callback($coleccion, 'Programado', 'M.G.O.')],
-        'en_ruta'     => ['ind' => $callback($coleccion, 'EN RUTA', 'DIESEL'),     'mgo' => $callback($coleccion, 'EN RUTA', 'M.G.O.')],
-        'completados' => ['ind' => $callback($coleccion, 'COMPLETADO', 'DIESEL'),  'mgo' => $callback($coleccion, 'COMPLETADO', 'M.G.O.')],
-    ];
-}
+        return view('viajes.imprimir', compact('viaje'));
+    }
 }
