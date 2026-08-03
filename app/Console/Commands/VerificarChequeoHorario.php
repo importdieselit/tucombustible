@@ -71,7 +71,8 @@ class VerificarChequeoHorario extends Command
                 $mensaje .= "⚠️ Por favor, proceder con el varillaje y la carga de datos en el sistema a la brevedad.";
 
                 try {
-                    $this->whatsappService->enviarMensaje($mensaje, $idDestino);
+                    //, $idDestino
+                    $this->whatsappService->enviarMensaje($mensaje);
                     $status = '<fg=red>PENDIENTE</>';
                     $alerta = '<fg=yellow>Enviada</>';
                 } catch (Exception $e) {
