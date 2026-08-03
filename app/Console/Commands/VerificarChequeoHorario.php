@@ -46,7 +46,7 @@ class VerificarChequeoHorario extends Command
             return Command::FAILURE;
         }
 
-        $idDestino = config('services.whatsapp.dev_group_id', 'WHATSAPP_DEV_GROUP_ID');
+        //$idDestino = config('services.whatsapp.dev_group_id', 'WHATSAPP_DEV_GROUP_ID');
         $resumenAuditoria = [];
 
         // Encabezado visual
