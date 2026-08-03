@@ -35,12 +35,14 @@ class Cliente extends Model
         'prepagado',
         'registro_paso',
         'status',
+        'es_aliado_comercial',
         'fecha_aprobacion',
         'telegram_id',
     ];
 
     protected $casts = [
         'fecha_aprobacion' => 'datetime',
+        'es_aliado_comercial' => 'boolean',
     ];
 
     // -------------------------------------------------------
@@ -171,6 +173,24 @@ class Cliente extends Model
     public function cuposGasco()
     {
         return $this->hasMany(GascoCupoMensual::class, 'cliente_id');
+    }
+
+    public function saldosPendientes()
+    {
+        return $this->hasMany(SaldoPendienteCliente::class, 'cliente_id');
+    }
+
+    public function obtenerSaldosPendientesPorCombustible()
+    {
+        return $this->saldosPendientes()
+            ->select('tipo_combustible_id')
+            ->selectRaw("
+                SUM(CASE WHEN tipo_accion = 'acumulado' THEN cantidad_litros ELSE -cantidad_litros END) as total_litros
+            ")
+            ->groupBy('tipo_combustible_id')
+            ->having('total_litros', '>', 0)
+            ->with('tipoCombustible')
+            ->get();
     }
 
     // -------------------------------------------------------

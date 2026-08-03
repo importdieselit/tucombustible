@@ -7,6 +7,7 @@ use App\Models\Viaje;
 use App\Models\Inspeccion;
 use App\Services\FcmNotificationService;
 use App\Services\TelegramNotificationService;
+use App\Services\LogisticaInventarioService;
 use App\Services\WhatsappApiService;
 use Illuminate\Support\Facades\Log;
 
@@ -14,13 +15,14 @@ use Illuminate\Support\Facades\Log;
 class VehiculoObserver
 {
     protected $telegramService;
-    protected $whatsappService;
-    protected static $viajesProcesados = [];
-    
+    protected $inventarioService;
+
     const LIMITE_KM_MANTENIMIENTO = 5000;
     const LIMITE_HRS_MANTENIMIENTO = 200;
 
-    public function __construct(TelegramNotificationService $telegramService, WhatsappApiService $whatsappService)
+    // Inyectamos el servicio de notificaciones
+
+    public function __construct(TelegramNotificationService $telegramService, WhatsappApiService $whatsappService, LogisticaInventarioService $inventarioService)
     {
         $this->telegramService = $telegramService;
         $this->whatsappService = $whatsappService;
@@ -185,7 +187,7 @@ class VehiculoObserver
                     foreach ([1, 2] as $userId) {
                         FcmNotificationService::enviarNotification(
                             "INCUMPLIMIENTO DE PROCESO",
-                            "El vehículo {$vehiculo->flota} salió sin completar el checklist para el viaje #{$viaje->id}.",
+                            "El vehículo {$vehiculo->flota} pasó a estado EN RUTA sin completar el checklist de salida para el viaje #{$viaje->id}.",
                             ['viaje_id' => $viaje->id, 'user_id' => $userId]
                         );
                     }
@@ -202,6 +204,18 @@ class VehiculoObserver
                                "La Unidad *{$vehiculo->flota}* ({$vehiculo->placa}) va en ruta bajo la conducción de {$choferNombre}.\n\n" .
                                "• *Viaje:* #{$viaje->id}\n" .
                                "• *Destino:* {$viaje->destino_ciudad}";
+                }
+
+                // 2. 🚀 ASENTAR SALIDA FÍSICA EN EL LEDGER
+                try {
+                    // Ejecuta el descuento de litros en el Ledger (TransaccionCombustible)
+                    $this->inventarioService->registrarSalidaFisicaDespacho($viaje);
+                    
+                    // Actualizar estatus del viaje a En Ruta
+                    $viaje->update(['status' => 'En Ruta']);
+                    
+                } catch (\Exception $e) {
+                    Log::error("Error registrando salida física en Ledger para Viaje #{$viaje->id}: " . $e->getMessage());
                 }
                 
                 $this->whatsappService->enviarMensaje($message, config('services.whatsapp.group_operaciones'));

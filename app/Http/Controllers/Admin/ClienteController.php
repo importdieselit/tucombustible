@@ -155,6 +155,7 @@ class ClienteController extends Controller
             'nombre'              => 'required|string|max:255',
             'rif'                 => 'required|string|max:12',
             'email'               => 'required|email:rfc|max:255',
+            'es_aliado_comercial' => 'required|boolean',
             'contacto'            => 'required|string|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u|max:255',
             'telefono'            => 'nullable|digits_between:10,11',
             'contacto_alt'        => 'nullable|string|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u|max:255',
@@ -166,11 +167,14 @@ class ClienteController extends Controller
             'tipo_cliente'        => 'nullable|in:padre,sucursal',
             'token_padre'         => 'nullable|string|exists:clientes,token_registro',
         ], [
+            'es_aliado_comercial.required' => 'Debe indicar si el cliente es un aliado comercial.',
+            'es_aliado_comercial.boolean'  => 'El valor seleccionado no es válido.',
             'contacto.regex'          => 'El nombre de contacto solo debe contener letras.',
             'contacto_alt.regex'      => 'El nombre de contacto alternativo solo debe contener letras.',
             'telefono.digits_between' => 'El teléfono debe tener entre 10 y 11 dígitos.',
             'telefono_alt.digits_between' => 'El teléfono alternativo debe tener entre 10 y 11 dígitos.',
             'token_padre.exists'      => 'El Token de la empresa principal no es válido.',
+            'email.email'             => 'El correo electrónico debe ser una dirección válida con @.',
         ]);
 
         try {
@@ -201,8 +205,9 @@ class ClienteController extends Controller
 
         $request->validate([
             'nombre'              => 'required|string|max:255',
-            'rif'                 => 'required|string|max:15,' . $id,
+            'rif'                 => 'required|string|max:15|unique:clientes,rif,' . $id,
             'email'               => 'required|email:rfc|max:255',
+            'es_aliado_comercial' => 'required|boolean',
             'contacto'            => 'required|string|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u|max:255',
             'telefono'            => 'nullable|digits_between:10,11',
             'contacto_alt'        => 'nullable|string|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u|max:255',
@@ -212,6 +217,7 @@ class ClienteController extends Controller
             'direccion'           => 'nullable|string',
             'direccion_operativa' => 'nullable|string',
         ], [
+            'es_aliado_comercial.required' => 'Debe indicar si el cliente es un aliado comercial.',
             'contacto.regex'              => 'El campo Persona de Contacto solo debe contener letras.',
             'contacto_alt.regex'          => 'El campo Contacto Alternativo solo debe contener letras.',
             'email.email'                 => 'El correo electrónico debe ser una dirección válida con @.',
@@ -223,7 +229,7 @@ class ClienteController extends Controller
             $this->clienteService->obtenerExpediente($id);
 
             app(\App\Repositories\ClienteRepository::class)->update($id, $request->only([
-                'nombre', 'rif', 'email', 'contacto', 'telefono',
+                'nombre', 'rif', 'email', 'es_aliado_comercial', 'contacto', 'telefono',
                 'contacto_alt', 'telefono_alt',
                 'estado_id', 'ciudad_id', 'direccion', 'direccion_operativa',
             ]));
