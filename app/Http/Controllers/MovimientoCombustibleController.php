@@ -193,6 +193,7 @@ class MovimientoCombustibleController extends Controller
         // 1. Obtener todos los depósitos/tanques
         // Asumiendo que el modelo Deposito tiene campos para 'serial', 'nivel' (cm) y 'stock' (litros)
         $tanques = Deposito::orderBy('serial', 'asc')->get(); 
+        $precargaLitros = VehiculoPrecargado::with('vehiculo')->where('estatus', 0)->get();
 
         $totalVenta = 0;
         $resguardoLitros = Parametro::where('nombre','resguardo')->first()->valor; // Valor fijo según tu requerimiento, se recomienda moverlo a un Parametro
