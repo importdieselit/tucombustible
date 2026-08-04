@@ -15,7 +15,11 @@ use Illuminate\Support\Facades\Log;
 class VehiculoObserver
 {
     protected $telegramService;
+    protected $whatsappService;
     protected $inventarioService;
+
+    // Control anti-rebote en memoria por petición (Solución al error principal)
+    protected static $viajesProcesados = [];
 
     const LIMITE_KM_MANTENIMIENTO = 5000;
     const LIMITE_HRS_MANTENIMIENTO = 200;
@@ -26,6 +30,7 @@ class VehiculoObserver
     {
         $this->telegramService = $telegramService;
         $this->whatsappService = $whatsappService;
+        $this->inventarioService = $inventarioService;
     }
 
     /**
