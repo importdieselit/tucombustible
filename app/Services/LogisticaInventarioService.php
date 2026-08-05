@@ -32,7 +32,7 @@ class LogisticaInventarioService
         $tipoCombustibleId = $viaje->tipo_combustible_id ?? $viaje->tipo;
 
         $this->ledgerRepo->registrar([
-            'sede_id'             => $viaje->sede_id ?? $viaje->sede_origen_id,
+            'sede_id'             => $viaje->sede_id ?? 1,
             'tipo_combustible_id' => $tipoCombustibleId,
             'bolsa_tipo'          => 'general',
             'tipo_movimiento'     => $tipoMovimiento,
@@ -61,7 +61,7 @@ class LogisticaInventarioService
         $tipoCombustibleId = $viaje->tipo_combustible_id ?? $viaje->tipo;
 
         $this->ledgerRepo->registrar([
-            'sede_id'             => $viaje->sede_id ?? $viaje->sede_origen_id,
+            'sede_id'             => $viaje->sede_id ?? 1,
             'tipo_combustible_id' => $tipoCombustibleId,
             'bolsa_tipo'          => 'general',
             'tipo_movimiento'     => 'reverso',
@@ -80,7 +80,7 @@ class LogisticaInventarioService
         }
 
         $tipoCombustibleId = $viaje->tipo_combustible_id ?? $viaje->tipo;
-        $sedeId = $viaje->sede_id ?? $viaje->sede_origen_id;
+        $sedeId = $viaje->sede_id ?? 1;
 
         DB::transaction(function () use ($viaje, $tipoCombustibleId, $sedeId) {
 
@@ -104,7 +104,7 @@ class LogisticaInventarioService
 
                     $this->ledgerRepo->registrar([
                         'sede_id'             => $sedeId,
-                        'deposito_id'         => $detalle->deposito_origen_id,
+                       // 'deposito_id'         => $detalle->deposito_origen_id,
                         'tipo_combustible_id' => $tipoCombustibleId,
                         'bolsa_tipo'          => 'general',
                         'tipo_movimiento'     => 'despacho',
@@ -147,7 +147,7 @@ class LogisticaInventarioService
 
         $litros = abs($litrosRecibidos ?? (float) $viaje->litros);
         $depositoId = $depositoDestinoId ?? $viaje->deposito_destino_id ?? null;
-        $sedeId = $viaje->sede_destino_id ?? $viaje->sede_origen_id ?? $viaje->sede_id;
+        $sedeId = $viaje->sede_id ?? 1;
         $tipoCombustibleId = $viaje->tipo_combustible_id ?? $viaje->tipo;
 
         DB::transaction(function () use ($viaje, $sedeId, $depositoId, $tipoCombustibleId, $litros) {
