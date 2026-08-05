@@ -70,9 +70,17 @@ class UserController extends BaseController
             ->orderBy('total', 'desc')
             ->get();
 
+            // Directorio de usuarios con relaciones precargadas
+    $usuarios = User::with(['perfil', 'persona'])
+        ->when($clienteId !== 0, function ($query) use ($clienteId) {
+            $query->where('cliente_id', $clienteId);
+        })
+        ->latest()
+        ->get();
+
         $totalGeneral = $perfilesConteo->sum('total');
 
-        return view('usuario.index', compact('perfilesConteo', 'totalGeneral'));
+        return view('usuario.index', compact('perfilesConteo', 'totalGeneral', 'usuarios'));
     }
 
     /**
