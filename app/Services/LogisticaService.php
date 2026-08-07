@@ -15,7 +15,6 @@ use App\Models\Pedido;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Exception;
-use Carbon\Carbon;
 
 class LogisticaService
 {
