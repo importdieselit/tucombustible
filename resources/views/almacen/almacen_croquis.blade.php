@@ -250,6 +250,8 @@
                     </div>
                 </div>
             </div>
+            <a class="btn btn-sm btn-outline-primary w-100" href="{{ route('almacen.layout.3d', $almacen->id) }}"> Ver 3d</a>
+   
         </div>
 
         <div class="col-md-9" style="max-height: 80vh; overflow-y: auto;">
