@@ -432,5 +432,32 @@ class UserController extends BaseController
         return $validated;
     }
 
+    public function toggleEstatus($id)
+    {
+        try {
+            $usuario = User::findOrFail($id);
+
+            // Soporta formatos numéricos (1/0) o en texto ('activo'/'bloqueado')
+            if (is_numeric($usuario->status)) {
+                $usuario->status = ($usuario->status == 1) ? 0 : 1;
+            } else {
+                $usuario->status = (strtolower($usuario->status) === 'activo') ? 'bloqueado' : 'activo';
+            }
+
+            $usuario->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'El estatus del usuario ha sido actualizado correctamente.',
+                'nuevo_estatus' => $usuario->status
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al procesar el cambio de estatus: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     
 }

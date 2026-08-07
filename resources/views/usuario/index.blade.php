@@ -155,10 +155,17 @@
 
                             <!-- Estatus de Cuenta -->
                             <td class="text-center">
-                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1 fw-semibold d-inline-flex align-items-center gap-1">
-                                    <span class="spinner-grow spinner-grow-sm text-success" style="width: 6px; height: 6px;" role="status"></span>
-                                    Activo
-                                </span>
+                                @if($user->status == 1 || strtolower($user->status ?? '') === 'activo')
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1 fw-semibold d-inline-flex align-items-center gap-1">
+                                        <span class="spinner-grow spinner-grow-sm text-success" style="width: 6px; height: 6px;" role="status"></span>
+                                        Activo
+                                    </span>
+                                @else
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2.5 py-1 fw-semibold d-inline-flex align-items-center gap-1">
+                                        <i class="fas fa-user-slash extra-small"></i>
+                                        Inactivo
+                                    </span>
+                                @endif
                             </td>
 
                             <!-- Acciones -->
@@ -170,8 +177,17 @@
                                     <a href="{{ route('usuarios.edit', $user->id) }}" class="btn btn-light border text-secondary" title="Editar Usuario" data-bs-toggle="tooltip">
                                         <i class="fas fa-pen text-warning"></i>
                                     </a>
-                                    <button type="button" class="btn btn-light border text-secondary btn-permisos" data-user-id="{{ $user->id }}" title="bloquear" data-bs-toggle="tooltip">
-                                        <i class="fas fa-shield-halved text-info"></i>
+                                    {{-- Botón dinámico para Bloquear/Desbloquear --}}
+                                    @php
+                                        $esActivo = ($user->status == 1 || strtolower($user->status ?? '') === 'activo');
+                                    @endphp
+                                    <button type="button" 
+                                            class="btn btn-light border text-secondary btn-toggle-estatus" 
+                                            data-user-id="{{ $user->id }}" 
+                                            data-estatus="{{ $user->status }}"
+                                            title="{{ $esActivo ? 'Bloquear Usuario' : 'Desbloquear Usuario' }}" 
+                                            data-bs-toggle="tooltip">
+                                        <i class="fas {{ $esActivo ? 'fa-user-slash text-danger' : 'fa-user-check text-success' }}"></i>
                                     </button>
                                     @if(auth()->user()->canAccess('delete', $moduloIdUsuarios ?? 51))
                                         <form action="{{ route('usuarios.destroy', $user->id) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Está seguro de eliminar permanentemente a este usuario?');">
@@ -213,43 +229,58 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Abrir Modal de Permisos por AJAX
-    $('.btn-permisos').on('click', function() {
-        const userId = $(this).data('user-id');
-        $('#modalUserId').val(userId);
-        $('#modalLoading').show();
-        $('#modalContent').hide();
-        
-        const modal = new bootstrap.Modal(document.getElementById('permissionsModal'));
-        modal.show();
+   // Cambiar Estatus (Bloquear / Desbloquear)
+    $(document).on('click', '.btn-toggle-estatus', function() {
+        const button = $(this);
+        const userId = button.data('user-id');
+        const currentStatus = button.data('status');
+        const esActivo = (currentStatus == 1 || String(currentStatus).toLowerCase() === 'activo');
 
-        fetch(`/api/permisos/${userId}/get`)
-            .then(res => res.json())
-            .then(data => {
-                $('#modalUserName').text(data.user.name);
-                let html = '';
-                
-                data.modules.forEach(mod => {
-                    const p = data.permissions[mod.id] || {};
-                    html += `
-                        <tr>
-                            <td class="fw-bold">${mod.modulo}</td>
-                            <td class="text-center"><input class="form-check-input perm-read" type="checkbox" data-mod="${mod.id}" ${p.read ? 'checked' : ''}></td>
-                            <td class="text-center"><input class="form-check-input perm-create" type="checkbox" data-mod="${mod.id}" ${p.create ? 'checked' : ''}></td>
-                            <td class="text-center"><input class="form-check-input perm-update" type="checkbox" data-mod="${mod.id}" ${p.update ? 'checked' : ''}></td>
-                            <td class="text-center"><input class="form-check-input perm-delete" type="checkbox" data-mod="${mod.id}" ${p.delete ? 'checked' : ''}></td>
-                        </tr>
-                    `;
+        const accion = esActivo ? 'bloquear' : 'desbloquear';
+        const confirmButtonColor = esActivo ? '#dc3545' : '#198754';
+
+        Swal.fire({
+            title: `¿Confirmar acción?`,
+            text: `¿Está seguro de que desea ${accion} a este usuario?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: confirmButtonColor,
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: `Sí, ${accion}`,
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/usuarios/${userId}/toggle-estatus`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Error en la respuesta del servidor');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Estatus Actualizado!',
+                            text: data.message,
+                            timer: 1300,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', data.message || 'No se pudo cambiar el estatus', 'error');
+                    }
+                })
+                .catch(() => {
+                    Swal.fire('Error', 'Ocurrió un fallo en el servidor al cambiar el estatus', 'error');
                 });
-
-                $('#modalPermissionsBody').html(html);
-                $('#modalLoading').hide();
-                $('#modalContent').show();
-            })
-            .catch(() => {
-                Swal.fire('Error', 'No se pudieron obtener los permisos', 'error');
-                modal.hide();
-            });
+            }
+        });
     });
 });
 </script>
