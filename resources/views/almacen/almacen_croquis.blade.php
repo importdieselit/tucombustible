@@ -250,6 +250,7 @@
                     </div>
                 </div>
             </div>
+            <a href="{{ route('almacen.3d', $almacen->id) }}"> Ver 3d</a>
         </div>
 
         <div class="col-md-9" style="max-height: 80vh; overflow-y: auto;">
