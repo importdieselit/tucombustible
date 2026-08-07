@@ -184,6 +184,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('clientes/handle', [PortalClienteController::class, 'handleImport'])->name('clientes.handleImport');
     Route::get('/usuarios/importar', [UserController::class, 'import'])->name('usuarios.importar');
     Route::post('/usuarios/importarP', [UserController::class, 'handleImport'])->name('usuarios.importarprocess');
+    Route::get('/usuarios-adm', [UserController::class, 'index_adm'])->name('usuarios.index-adm');
+    Route::patch('/usuarios/{id}/toggle-estatus', [UserController::class, 'toggleEstatus'])->name('usuarios.toggle-estatus');
 
      // Órdenes (OT)
         Route::post('ordenes/supplies', [OrdenController::class, 'storeSupply'])->name('ordenes.supplies.store');

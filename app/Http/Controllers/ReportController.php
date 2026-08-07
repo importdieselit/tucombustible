@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use App\Models\Viaje; // Para ventas/litros
 use App\Models\Orden; // Para órdenes abiertas y fallas
 use App\Models\Cliente; // Para nuevos clientes
@@ -446,7 +447,7 @@ public function exportPdf(Request $request)
         // 2. Generar el arreglo de días dinámico para las columnas de la tabla
         // Esto reemplaza tu generación estática de "$rangoDias"
         $rangoDias = [];
-        $periodo = \Carbon\CarbonPeriod::create($fechaInicio, $fechaFin);
+        $periodo = CarbonPeriod::create($fechaInicio, $fechaFin);
         foreach ($periodo as $fecha) {
             $rangoDias[] = $fecha->format('Y-m-d');
         }
@@ -468,7 +469,7 @@ public function exportPdf(Request $request)
             ->whereIn('estatus', [2, 3]) // 2: Abierta, 3: Espera de repuesto
             ->get()
             ->map(function($orden) {
-                $fechaEntrada = \Carbon\Carbon::parse($orden->fecha_in);
+                $fechaEntrada = Carbon::parse($orden->fecha_in);
                 $orden->dias_abierta = $fechaEntrada->diffInDays(now());
                 // Marcador de criticidad basado en tiempo
                 $orden->semaforo = $orden->dias_abierta > 7 ? 'danger' : ($orden->dias_abierta > 3 ? 'warning' : 'success');
@@ -531,15 +532,15 @@ public function exportPdf(Request $request)
             return $v;
         });
 
-        $fechaReferencia = \Carbon\Carbon::parse($fecha)->startOfDay();
+        $fechaReferencia = Carbon::parse($fecha)->startOfDay();
         $fechaLimite = $fechaReferencia->copy()->addDays(3)->endOfDay();
 
         // 2. Extraemos solo las fechas que tienen viajes, dentro del rango permitido
         $rangoDias = $viajesDelDia->map(function($v) {
-                return \Carbon\Carbon::parse($v->fecha_salida)->format('Y-m-d');
+                return Carbon::parse($v->fecha_salida)->format('Y-m-d');
             })
             ->filter(function($fecha) use ($fechaReferencia, $fechaLimite) {
-                $f = \Carbon\Carbon::parse($fecha);
+                $f = Carbon::parse($fecha);
                 // Solo días entre hoy y hoy + 3
                 return $f->between($fechaReferencia, $fechaLimite);
             })

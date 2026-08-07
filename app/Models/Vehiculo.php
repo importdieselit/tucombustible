@@ -17,6 +17,7 @@ use App\Models\CompraCombustible;
 use Google\Service\ApigeeRegistry\Build;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
+use Carbon\CarbonPeriod;
 
 class Vehiculo extends Model
 {
@@ -399,8 +400,8 @@ class Vehiculo extends Model
     // 3. MANEJO DE FECHAS (Solo si pasó las validaciones anteriores)
     try {
         
-        $date = \Carbon\Carbon::parse($rawValue)->startOfDay();
-        $now = \Carbon\Carbon::now()->startOfDay();
+        $date = Carbon::parse($rawValue)->startOfDay();
+        $now = Carbon::now()->startOfDay();
         $oneMonthFromNow = $now->copy()->addMonth();
 
         if ($date->lessThan($now)) {
@@ -553,8 +554,8 @@ class Vehiculo extends Model
                         // Caso 3: Evaluación de Fecha
                         if (preg_match('/^\d{4}-\d{2}-\d{2}/', $rawValue)) {
                             try {
-                                $fecha = \Carbon\Carbon::parse($rawValue)->startOfDay();
-                                $diferencia = \Carbon\Carbon::now()->startOfDay()->diffInDays($fecha, false);
+                                $fecha = Carbon::parse($rawValue)->startOfDay();
+                                $diferencia = Carbon::now()->startOfDay()->diffInDays($fecha, false);
 
                                 if ($diferencia < 0) {
                                     $class = 'bg-danger';

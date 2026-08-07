@@ -12,10 +12,10 @@ use App\Models\Cliente;
 use App\Models\Viaje;
 use App\Models\Buques;
 use App\Models\Pedido;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Exception;
+use Carbon\Carbon;
 
 class LogisticaService
 {

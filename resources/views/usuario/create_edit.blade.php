@@ -94,22 +94,27 @@
                             </thead>
                             <tbody>
                                 @foreach($modulos as $modulo)
-                                <tr>
-                                    <td class="fw-bold">{{ $modulo->nombre }}</td>
-                                    @foreach(['read', 'update', 'delete'] as $accion)
-                                    <td class="text-center">
-                                        <div class="form-check form-switch d-inline-block">
-                                            <input class="form-check-input permission-switch" type="checkbox" 
-                                                role="switch"
-                                                id="sw_{{ $modulo->id }}_{{ $accion }}"
-                                                data-modulo="{{ $modulo->id }}"
-                                                data-accion="{{ $accion }}"
-                                                data-user="{{ $item->id }}"
-                                                {{ $item->canAccess($accion, $modulo->id) ? 'checked' : '' }}>
-                                        </div>
-                                    </td>
-                                    @endforeach
-                                </tr>
+                                    <tr class="{{ $modulo->id_padre == 0 ? 'table-light fw-bold' : '' }}">
+                                        <td class="{{ $modulo->id_padre > 0 ? 'ps-4 text-muted' : 'fw-bold' }}">
+                                            @if($modulo->id_padre > 0)
+                                                <small class="me-1">└─</small>
+                                            @endif 
+                                            {{ $modulo->modulo }}
+                                        </td>
+                                        @foreach(['read', 'update', 'delete'] as $accion)
+                                            <td class="text-center">
+                                                <div class="form-check form-switch d-inline-block">
+                                                    <input class="form-check-input permission-switch" type="checkbox" 
+                                                        role="switch"
+                                                        id="sw_{{ $modulo->id }}_{{ $accion }}"
+                                                        data-modulo="{{ $modulo->id }}"
+                                                        data-accion="{{ $accion }}"
+                                                        data-user="{{ $item->id }}"
+                                                        {{ $item->canAccess($accion, $modulo->id) ? 'checked' : '' }}>
+                                                </div>
+                                            </td>
+                                        @endforeach
+                                    </tr>
                                 @endforeach
                             </tbody>
                         </table>
