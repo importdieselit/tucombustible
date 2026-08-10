@@ -12,11 +12,15 @@ use Illuminate\Support\Facades\Redirect;
 use App\Models\User;
 use App\Models\Perfil;
 use App\Models\Cliente;
+use App\Models\Personal;
+use App\Models\Chofer;
+use App\Models\Cargo;
 use App\Models\Persona;
 use App\Models\Modulo;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends BaseController
 {
@@ -121,8 +125,9 @@ class UserController extends BaseController
         
         $perfiles = Perfil::all();
         $clientes = Cliente::all();
+        $cargos   = Cargo::all();
         
-        return view('usuario.create_edit', compact('perfiles', 'clientes'));
+        return view('usuario.create_edit', compact('perfiles', 'clientes', 'cargos'));
     }
 
     /**
