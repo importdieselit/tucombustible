@@ -424,61 +424,63 @@
 
                                     <td class="p-2" style="vertical-align: top; min-width: 450px;"> <div class="d-flex flex-wrap gap-2">
         @foreach($viajesEseDia as $v)
-            @php
-                if ($v->es_flete) {
-                    $tipo = ['label' => 'FLETE', 'icon' => 'fa-truck-loading', 'color' => 'purple', 'border' => '#6f42c1'];
-                } else {
-                    $tipo = $v->es_despacho 
-                        ? ['label' => 'DESPACHO', 'icon' => 'fa-arrow-up', 'color' => 'primary', 'border' => '#0d6efd']
-                        : ['label' => 'CARGA', 'icon' => 'fa-arrow-down', 'color' => 'danger', 'border' => '#dc3545'];
-                }
+            @if($v->status !== 'CANCELADO')
+                @php
+                    if ($v->es_flete) {
+                        $tipo = ['label' => 'FLETE', 'icon' => 'fa-truck-loading', 'color' => 'purple', 'border' => '#6f42c1'];
+                    } else {
+                        $tipo = $v->es_despacho 
+                            ? ['label' => 'DESPACHO', 'icon' => 'fa-arrow-up', 'color' => 'primary', 'border' => '#0d6efd']
+                            : ['label' => 'CARGA', 'icon' => 'fa-arrow-down', 'color' => 'danger', 'border' => '#dc3545'];
+                    }
 
-                $statusConfig = match(strtoupper($v->status)) {
-                    'PROGRAMADO' => ['class' => 'bg-info', 'icon' => 'fa-clock'],
-                    'EN RUTA'    => ['class' => 'bg-warning text-dark', 'icon' => 'fa-truck-moving'],
-                    'COMPLETADO' => ['class' => 'bg-success text-white', 'icon' => 'fa-check-double'],
-                    default      => ['class' => 'bg-secondary', 'icon' => 'fa-info-circle']
-                };
-            @endphp
+                    $statusConfig = match(strtoupper($v->status)) {
+                        'PROGRAMADO' => ['class' => 'bg-info', 'icon' => 'fa-clock'],
+                        'EN RUTA'    => ['class' => 'bg-warning text-dark', 'icon' => 'fa-truck-moving'],
+                        'COMPLETADO' => ['class' => 'bg-success text-white', 'icon' => 'fa-check-double'],
+                        default      => ['class' => 'bg-secondary', 'icon' => 'fa-info-circle']
+                    };
+                @endphp
 
-            <div class="card shadow-sm border-0 border-start border-4 flex-grow-1" 
-                 style="border-color: {{ $tipo['border'] }} !important; 
-                        flex: 1 1 calc(50% - 0.5rem); /* Esto obliga a intentar ocupar el 50% menos el espacio del gap */
-                        min-width: 200px; /* Ancho mínimo para que no se rompa el texto */
-                        max-width: 100%;">
-                
-                <div class="p-2">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="badge {{ $statusConfig['class'] }} p-1 px-2" style="font-size: 0.6rem;">
-                            <i class="fas {{ $tipo['icon'] }} me-1"></i>
-                        </span>
-                        <span class="x-small text-dark  text-truncate" style="font-size: 0.65rem; max-width: 120px;" title="{{ $v->producto->nombre ?? 'N/A' }} | {{ $v->cliente_reporte }}">
-                            {{ $v->cliente_reporte }}
-                        </span>
-                        <span class="fw-bold text-muted" style="font-size: 0.75rem;">
-                            {{ \Carbon\Carbon::parse($v->fecha_salida)->format('H:i') }}
-                        </span>
-                    </div>
-
-                    <div class="fw-bold text-uppercase mb-1" style="font-size: 0.85rem; color: {{ $tipo['border'] }}; white-space: nowrap; overflow: hidden; text-wrap:auto;">
-                         {{ $v->destino_limpio   ?? 'N/A' }}
-                    </div>
-
-                    <div class="row g-0 border-top pt-1 mt-1 align-items-center" style="font-size: 0.75rem;">
-                        <div class="col-4 text-truncate">
-                            <i class="fas fa-user text-secondary me-1"></i>
-                            <strong>{{ explode(' ', $v->chofer->persona->nombre ?? $v->otro_chofer ?? 'N/A')[0] }}</strong>
+                <div class="card shadow-sm border-0 border-start border-4 flex-grow-1" 
+                    style="border-color: {{ $tipo['border'] }} !important; 
+                            flex: 1 1 calc(50% - 0.5rem); /* Esto obliga a intentar ocupar el 50% menos el espacio del gap */
+                            min-width: 200px; /* Ancho mínimo para que no se rompa el texto */
+                            max-width: 100%;">
+                    
+                    <div class="p-2">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="badge {{ $statusConfig['class'] }} p-1 px-2" style="font-size: 0.6rem;">
+                                <i class="fas {{ $tipo['icon'] }} me-1"></i>
+                            </span>
+                            <span class="x-small text-dark  text-truncate" style="font-size: 0.65rem; max-width: 120px;" title="{{ $v->producto->nombre ?? 'N/A' }} | {{ $v->cliente_reporte }}">
+                                {{ $v->cliente_reporte }}
+                            </span>
+                            <span class="fw-bold text-muted" style="font-size: 0.75rem;">
+                                {{ \Carbon\Carbon::parse($v->fecha_salida)->format('H:i') }}
+                            </span>
                         </div>
-                        <div class="col-4 x-small text-dark  text-truncate" style="font-size: 0.65rem; max-width: 100px;" title="{{ $v->producto->nombre ?? 'N/A' }} | {{ $v->cliente_reporte }}">
-                                                {{ $v->producto->nombre ?? 'N/A' }}
+
+                        <div class="fw-bold text-uppercase mb-1" style="font-size: 0.85rem; color: {{ $tipo['border'] }}; white-space: nowrap; overflow: hidden; text-wrap:auto;">
+                            {{ $v->destino_limpio   ?? 'N/A' }}
                         </div>
-                        <div class="col-4 text-end">
-                            <span class="fw-bolder">{{ number_format($v->litros_totales, 0) }}</span> 
-                            <small class="text-muted">L</small>
+
+                        <div class="row g-0 border-top pt-1 mt-1 align-items-center" style="font-size: 0.75rem;">
+                            <div class="col-4 text-truncate">
+                                <i class="fas fa-user text-secondary me-1"></i>
+                                <strong>{{ explode(' ', $v->chofer->persona->nombre ?? $v->otro_chofer ?? 'N/A')[0] }}</strong>
+                            </div>
+                            <div class="col-4 x-small text-dark  text-truncate" style="font-size: 0.65rem; max-width: 100px;" title="{{ $v->producto->nombre ?? 'N/A' }} | {{ $v->cliente_reporte }}">
+                                                    {{ $v->producto->nombre ?? 'N/A' }}
+                            </div>
+                            <div class="col-4 text-end">
+                                <span class="fw-bolder">{{ number_format($v->litros_totales, 0) }}</span> 
+                                <small class="text-muted">L</small>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            @endif
         @endforeach
     </div>
 </td>
