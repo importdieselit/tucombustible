@@ -10,44 +10,49 @@ class VehiculoPrecargado extends Model
 {
     use HasFactory;
 
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
     protected $table = 'vehiculos_precargados';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'id_vehiculo',
-        'cantidad_cargada',
+        'id_sede',
+        'id_deposito',
+        'id_tipo_combustible',
+        'id_usuario',
+        'cantidad_litros',
+        'esta_precintado',
         'fecha_hora_carga',
         'estatus',
-        'fecha_hora_despacho',
-        'tipo_producto',
     ];
 
-    /**
-     * The attributes that should be cast to native types.
-     *
-     * @var array
-     */
     protected $casts = [
         'fecha_hora_carga' => 'datetime',
-        'fecha_hora_despacho' => 'datetime',
-        'estatus' => 'integer',
-        'cantidad_cargada' => 'decimal:2',
+        'estatus'          => 'integer',
+        'cantidad_litros'  => 'float',
+        'esta_precintado'  => 'boolean',
     ];
 
-    /**
-     * Get the vehiculo that owns the carga.
-     */
     public function vehiculo(): BelongsTo
     {
         return $this->belongsTo(Vehiculo::class, 'id_vehiculo');
+    }
+
+    public function sede(): BelongsTo
+    {
+        return $this->belongsTo(Sedes::class, 'id_sede');
+    }
+
+    public function deposito(): BelongsTo
+    {
+        return $this->belongsTo(Deposito::class, 'id_deposito');
+    }
+
+    public function tipoCombustible(): BelongsTo
+    {
+        return $this->belongsTo(TipoCombustible::class, 'id_tipo_combustible');
+    }
+
+    public function usuario(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'id_usuario');
     }
 }

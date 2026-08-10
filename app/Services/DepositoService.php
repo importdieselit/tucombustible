@@ -97,12 +97,14 @@ class DepositoService
 
     public function procesarChequeo(array $data)
     {
-        // 1. Regla de Validación: Evitar duplicar auditorías en la misma fecha y turno
-        if ($this->chequeoRepo->existeChequeo($data['id_sede'], $data['fecha'], $data['turno'])) {
-            throw new Exception("Ya se encuentra registrado un varillaje para esta sede en la fecha y turno especificados.");
+        // 1. Regla de Validación: Si existe un varillaje registrado y el usuario NO ha confirmado el duplicado, se detiene
+        $existeDuplicado = $this->chequeoRepo->existeChequeo($data['id_sede'], $data['fecha'], $data['turno']);
+        $confirmado = !empty($data['confirmar_duplicado']);
+
+        if ($existeDuplicado && !$confirmado) {
+            throw new Exception("DUPLICADO_DETECTADO");
         }
 
-        // Envolvemos todo el proceso en una transacción global para blindar la operación
         return DB::transaction(function () use ($data) {
             
             $detallesProcesados = [];

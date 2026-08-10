@@ -23,7 +23,7 @@ use App\Http\Controllers\{
     ReportController, ClienteActivosController,NotificationController,LogisticaController,
     ChequeoDepositoController, CombustibleController, LlenadoCupoPrepagadoController, 
     TransaccionCombustibleController, ConsumoOperativoController, TrasegadoController, ReversoCombustibleController,
-    MermasController
+    MermasController, VehiculoPrecargadoController
 };
 
 /* --- Rutas Públicas y Auth --- */
@@ -369,6 +369,14 @@ Route::middleware(['auth'])->group(function () {
 
                 Route::prefix('mermas')->name('mermas.')->group(function () {
                     Route::get('/', [MermasController::class, 'index'])->name('index');
+                });
+
+                Route::prefix('precargas_vehiculos')->name('precargas_vehiculos.')->group(function () {
+                    Route::get('/', [VehiculoPrecargadoController::class, 'index'])->name('index');
+                    Route::get('/crear', [VehiculoPrecargadoController::class, 'create'])->name('create');
+                    Route::post('/guardar', [VehiculoPrecargadoController::class, 'store'])->name('store');
+                    Route::get('/historico', [VehiculoPrecargadoController::class, 'historico'])->name('historico');
+                    Route::patch('/{id}/finalizar', [VehiculoPrecargadoController::class, 'finalizar'])->name('finalizar');
                 });
 
                 // Registro Histórico de Transacciones de Combustible

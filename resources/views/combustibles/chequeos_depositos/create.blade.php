@@ -106,9 +106,10 @@
         @endif
 
         {{-- FORMULARIO PRINCIPAL DE ENVÍO POST --}}
-        <form action="{{ route('combustibles.chequeos_depositos.store') }}" method="POST">
+        <form action="{{ route('combustibles.chequeos_depositos.store') }}" method="POST" id="form-chequeo">
             @csrf
             <input type="hidden" name="id_sede" value="{{ request('id_sede') }}">
+            <input type="hidden" name="confirmar_duplicado" id="input_confirmar_duplicado" value="0">
 
             {{-- 1. SELECCIÓN DE TURNO --}}
             <div class="card shadow-sm border-0 mb-3 bg-light">
@@ -540,4 +541,48 @@
     .text-orange { color: #ff6600 !important; }
     .fw-black { font-weight: 900; }
 </style>
+
+{{-- MODAL DE CONFIRMACIÓN DE CHEQUEO DUPLICADO --}}
+@if(session('confirmar_duplicado_modal'))
+    <div class="modal fade" id="modalConfirmarDuplicado" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="modalConfirmarDuplicadoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-warning text-dark border-0">
+                    <h5 class="modal-title fw-black text-uppercase" id="modalConfirmarDuplicadoLabel" style="font-size: 15px;">
+                        <i class="fas fa-exclamation-triangle me-2"></i> Chequeo Ya Registrado
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-4">
+                    <p class="mb-0 text-dark fw-bold" style="font-size: 14px;">
+                        {{ session('mensaje_duplicado') }}
+                    </p>
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-secondary btn-sm fw-bold text-uppercase" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn btn-warning btn-sm fw-black text-uppercase shadow-sm" style="background-color: #ff6600; border-color: #ff6600; color: #fff;" onclick="confirmarYGuardarDuplicado()">
+                        <i class="fas fa-check-circle me-1"></i> Sí, Registrar de Todos Modos
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var modalElement = document.getElementById('modalConfirmarDuplicado');
+            if (modalElement) {
+                var modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            }
+        });
+
+        function confirmarYGuardarDuplicado() {
+            document.getElementById('input_confirmar_duplicado').value = "1";
+            document.getElementById('form-chequeo').submit();
+        }
+    </script>
+@endif
 @endsection

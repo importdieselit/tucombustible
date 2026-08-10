@@ -80,6 +80,7 @@ class ChequeoDepositoController extends Controller
             'id_sede' => 'required|exists:sedes,id',
             'turno' => 'required|string|in:Matutino,Nocturno',
             'observaciones' => 'nullable|string|max:500',
+            'confirmar_duplicado' => 'nullable|boolean',
             'detalles' => 'required|array|min:1',
             'detalles.*.id_deposito' => 'required|exists:depositos,id',
             'detalles.*.id_tipos_combustible'  => 'required|exists:tipos_combustible,id',
@@ -96,6 +97,13 @@ class ChequeoDepositoController extends Controller
                 ->with('success', '¡Auditoría de varillaje registrada y cubicada correctamente!');
 
         } catch (Exception $e) {
+            if ($e->getMessage() === 'DUPLICADO_DETECTADO') {
+                $turno = strtolower($data['turno']);
+                return redirect()->back()
+                    ->withInput()
+                    ->with('confirmar_duplicado_modal', true)
+                    ->with('mensaje_duplicado', "Ya existe un chequeo de tanques registrado para el turno {$turno} el día de hoy. ¿Deseas registrar este nuevo chequeo de todas formas?");
+            }
 
             return redirect()->back()
                 ->withInput()
