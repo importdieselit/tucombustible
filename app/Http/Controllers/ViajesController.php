@@ -15,6 +15,7 @@ use App\Models\Chofer;
 use App\Models\Cliente;
 use App\Models\Persona;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\Log;
 use App\Models\DespachoViaje;
 use Illuminate\Support\Facades\DB;
