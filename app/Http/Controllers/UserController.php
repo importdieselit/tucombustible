@@ -131,20 +131,124 @@ class UserController extends BaseController
     public function store(Request $request)
     {
         if (!auth()->user()->canAccess('create', $this->moduloIdUsuarios)) {
-             abort(403, 'No tiene permiso para crear usuarios.');
+            abort(403, 'No tiene permiso para crear usuarios.');
         }
 
-        $data = $this->prepareData($request);
-        
+        // Validaciones base y condicionales para choferes
+        $validated = $request->validate([
+            // Datos de Persona / Usuario
+            'nombre'                         => 'required|string|max:255',
+            'dni'                            => 'required|string|max:50|unique:personas,dni',
+            'email'                          => 'required|email|unique:users,email',
+            'password'                       => 'required|min:6',
+            'id_perfil'                      => 'required|exists:perfiles,id',
+            'id_sede'                        => 'nullable|integer',
+            'cargo_id'                       => 'nullable|exists:cargo,id',
+            'telefono'                       => 'nullable|string|max:20',
+            
+            // Checkbox de Chofer o validación condicional
+            'es_chofer'                      => 'nullable|boolean',
+            'licencia_numero'                => 'required_if:es_chofer,1|nullable|string|max:100',
+            'licencia_vencimiento'           => 'required_if:es_chofer,1|nullable|date',
+            'tipo_licencia'                  => 'nullable|string|max:50',
+            'documento_vialidad_numero'      => 'nullable|string|max:100',
+            'documento_vialidad_vencimiento' => 'nullable|date',
+            'certificado_medico'             => 'nullable|string|max:100',
+            'certificado_medico_vencimiento' => 'nullable|date',
+            
+            // Archivos adjuntos para choferes
+            'foto'                           => 'nullable|image|max:2048',
+            'soporte_licencia'               => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'soporte_certificado'            => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'soporte_documento'              => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+        ]);
+
+        DB::beginTransaction();
+
         try {
-            User::create($data);
-            Session::flash('success', 'Usuario creado exitosamente.');
+            // 1. Crear Registro en 'personas'
+            $persona = Persona::create([
+                'nombre'        => $request->input('nombre'),
+                'dni'           => $request->input('dni'),
+                'dni_exp'       => $request->input('dni_exp'),
+                'telefono'      => $request->input('telefono'),
+                'address'       => $request->input('address'),
+                'city'          => $request->input('city'),
+                'state'         => $request->input('state'),
+                'country'       => $request->input('country'),
+                'date_of_birth' => $request->input('date_of_birth'),
+                'gender'        => $request->input('gender'),
+                'notes'         => $request->input('notes'),
+                'cargo_id'      => $request->input('cargo_id'),
+            ]);
+
+            // 2. Crear Registro en 'users' (asociado al id_persona)
+            $user = User::create([
+                'name'       => $request->input('name', $request->input('nombre')),
+                'email'      => $request->input('email'),
+                'password'   => Hash::make($request->input('password')),
+                'id_perfil'  => $request->input('id_perfil'),
+                'id_persona' => $persona->id,
+                'id_sede'    => $request->input('id_sede'),
+                'cliente_id' => $request->input('id_cliente'),
+                'status'     => 1,
+            ]);
+
+            // 3. Crear Registro en 'personal' (Si aplica cargo o sede)
+            if ($request->filled('cargo_id') || $request->filled('id_sede')) {
+                Personal::create([
+                    'id_persona' => $persona->id,
+                    'id_usuario' => $user->id,
+                    'id_sede'    => $request->input('id_sede'),
+                    'cargo_id'   => $request->input('cargo_id'),
+                    'telefono'   => $request->input('telefono'),
+                    'email'      => $request->input('email'),
+                    'estatus'    => 1,
+                    'fecha_in'   => now(),
+                ]);
+            }
+
+            // 4. Crear Registro en 'choferes' (Si está marcado como chofer o llenó licencia)
+            if ($request->boolean('es_chofer') || $request->filled('licencia_numero')) {
+                $choferData = [
+                    'persona_id'                     => $persona->id,
+                    'licencia_numero'                => $request->input('licencia_numero'),
+                    'licencia_vencimiento'           => $request->input('licencia_vencimiento'),
+                    'tipo_licencia'                  => $request->input('tipo_licencia'),
+                    'documento_vialidad_numero'      => $request->input('documento_vialidad_numero'),
+                    'documento_vialidad_vencimiento' => $request->input('documento_vialidad_vencimiento'),
+                    'certificado_medico'             => $request->input('certificado_medico'),
+                    'certificado_medico_vencimiento' => $request->input('certificado_medico_vencimiento'),
+                    'vehiculo_id'                    => $request->input('vehiculo_id'),
+                ];
+
+                // Subida de archivos / soportes digitales
+                if ($request->hasFile('foto')) {
+                    $choferData['foto'] = $request->file('foto')->store('choferes/fotos', 'public');
+                }
+                if ($request->hasFile('soporte_licencia')) {
+                    $choferData['soporte_licencia'] = $request->file('soporte_licencia')->store('choferes/licencias', 'public');
+                }
+                if ($request->hasFile('soporte_certificado')) {
+                    $choferData['soporte_certificado'] = $request->file('soporte_certificado')->store('choferes/certificados', 'public');
+                }
+                if ($request->hasFile('soporte_documento')) {
+                    $choferData['soporte_documento'] = $request->file('soporte_documento')->store('choferes/documentos', 'public');
+                }
+
+                Chofer::create($choferData);
+            }
+
+            DB::commit();
+
+            Session::flash('success', 'Usuario y registros asociados creados exitosamente.');
+            return Redirect::route('usuarios.index');
+
         } catch (\Exception $e) {
+            DB::rollBack();
             Session::flash('error', 'Error al registrar el usuario: ' . $e->getMessage());
             return Redirect::back()->withInput();
         }
-
-        return Redirect::route('usuarios.index');
     }
 
     /**
