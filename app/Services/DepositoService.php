@@ -168,6 +168,7 @@ class DepositoService
     protected function notificarTanquesCriticos(array $tanques, string $turno, string $nombreSede)
     {
         //$idDestino = config('services.whatsapp.dev_group_id', 'WHATSAPP_DEV_GROUP_ID');
+        $idDestino = config('services.whatsapp.group_operaciones');
         //Log::info("Enviando alerta de WhatsApp para tanques críticos en la sede: {$nombreSede}, turno: {$turno}");
         //Log::info("idDestino: {$idDestino}, Tanques críticos: " . json_encode($tanques));
 
@@ -188,7 +189,7 @@ class DepositoService
         $mensaje .= "\nSe recomienda coordinar la logística de reabastecimiento.";
 
         try {
-            $this->whatsappService->enviarMensaje($mensaje);
+            $this->whatsappService->enviarMensaje($mensaje, $idDestino);
         } catch (Exception $e) {
             logger()->error("No se pudo enviar la alerta de WhatsApp: " . $e->getMessage());
         }
