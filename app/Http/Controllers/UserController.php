@@ -17,6 +17,7 @@ use App\Models\Chofer;
 use App\Models\Cargo;
 use App\Models\Persona;
 use App\Models\Modulo;
+use App\Models\Sedes;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Validator;
@@ -126,8 +127,9 @@ class UserController extends BaseController
         $perfiles = Perfil::all();
         $clientes = Cliente::all();
         $cargos   = Cargo::all();
+        $sedes = Sedes::all();
         
-        return view('usuario.create_edit', compact('perfiles', 'clientes', 'cargos'));
+        return view('usuario.create_edit', compact('perfiles', 'clientes', 'cargos', 'sedes'));
     }
 
     /**
