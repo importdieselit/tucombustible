@@ -433,8 +433,8 @@
                         : ['label' => 'CARGA', 'icon' => 'fa-arrow-down', 'color' => 'danger', 'border' => '#dc3545'];
                 }
 
-                $statusConfig = match($v->status) {
-                    'Programado' => ['class' => 'bg-info', 'icon' => 'fa-clock'],
+                $statusConfig = match(strtoupper($v->status)) {
+                    'PROGRAMADO' => ['class' => 'bg-info', 'icon' => 'fa-clock'],
                     'EN RUTA'    => ['class' => 'bg-warning text-dark', 'icon' => 'fa-truck-moving'],
                     'COMPLETADO' => ['class' => 'bg-success text-white', 'icon' => 'fa-check-double'],
                     default      => ['class' => 'bg-secondary', 'icon' => 'fa-info-circle']
