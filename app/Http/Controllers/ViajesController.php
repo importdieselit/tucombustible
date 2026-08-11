@@ -1559,7 +1559,7 @@ public function updateGuiaData(Request $request, $viajeId)
         $status = $request->input('status');
         $agruparPor = $request->input('agrupar_por', 'ninguno');
 
-        // Query Base con relaciones optimizadas
+        // Query Base
         $query = Viaje::with(['chofer.persona', 'ayudante_chofer.persona', 'despachos', 'vehiculo'])
             ->whereBetween('fecha_salida', [$fechaInicio . ' 00:00:00', $fechaFin . ' 23:59:59']);
 
@@ -1575,27 +1575,27 @@ public function updateGuiaData(Request $request, $viajeId)
             return $v->despachos->sum('litros') + ($v->litros ?? 0);
         });
 
-        // 1. Agrupación: Top Destinos
+        // Agrupaciones para Highcharts
         $viajesPorDestino = $viajes->groupBy(fn($v) => $v->destino_ciudad ?: 'Sin Destino')
             ->map->count()->sortDesc()->take(5);
 
-        // 2. Agrupación: Estatus
         $viajesPorStatus = $viajes->groupBy(fn($v) => $v->status ?: 'Sin Estatus')
             ->map->count();
 
-        // 3. Agrupación: Choferes
         $viajesPorChofer = $viajes->groupBy(function($v) {
             return $v->chofer ? ($v->chofer->persona->nombre . ' ' . $v->chofer->persona->apellido) : 'Sin Chofer';
         })->map->count()->sortDesc();
 
-        // 4. Agrupación: Ayudantes
         $viajesPorAyudante = $viajes->filter(fn($v) => $v->ayudante_chofer != null)
             ->groupBy(fn($v) => $v->ayudante_chofer->persona->nombre . ' ' . $v->ayudante_chofer->persona->apellido)
             ->map->count()->sortDesc();
 
-        // Lógica de agrupación para la tabla
+        // LÓGICA DE TABLAS AGRUPADAS
         $tablaAgrupada = null;
+        $tablaAgrupadaAyudantes = null; // Variable para la segunda tabla requerida
+
         if ($agruparPor === 'chofer') {
+            // Tabla 1: Choferes
             $tablaAgrupada = $viajes->groupBy(function($v) {
                 return $v->chofer ? ($v->chofer->persona->nombre . ' ' . $v->chofer->persona->apellido) : 'Sin Chofer';
             })->map(function($items, $key) {
@@ -1605,6 +1605,18 @@ public function updateGuiaData(Request $request, $viajeId)
                     'total_litros' => $items->sum(fn($v) => $v->despachos->sum('litros') + ($v->litros ?? 0))
                 ];
             })->sortByDesc('total_viajes');
+
+            // Tabla 2: Ayudantes (se genera automáticamente)
+            $tablaAgrupadaAyudantes = $viajes->filter(fn($v) => $v->ayudante_chofer != null)
+                ->groupBy(function($v) {
+                    return $v->ayudante_chofer->persona->nombre . ' ' . $v->ayudante_chofer->persona->apellido;
+                })->map(function($items, $key) {
+                    return [
+                        'criterio' => $key,
+                        'total_viajes' => $items->count(),
+                        'total_litros' => $items->sum(fn($v) => $v->despachos->sum('litros') + ($v->litros ?? 0))
+                    ];
+                })->sortByDesc('total_viajes');
             
         } elseif ($agruparPor === 'destino') {
             $tablaAgrupada = $viajes->groupBy('destino_ciudad')->map(function($items, $key) {
@@ -1621,7 +1633,7 @@ public function updateGuiaData(Request $request, $viajeId)
         $estadosDisponibles = Viaje::distinct()->pluck('status')->filter();
 
         return view('viajes.reporte_estrategico', compact(
-            'viajes', 'tablaAgrupada', 'agruparPor',
+            'viajes', 'tablaAgrupada', 'tablaAgrupadaAyudantes', 'agruparPor',
             'totalViajes', 'totalLitros',
             'viajesPorDestino', 'viajesPorChofer', 'viajesPorAyudante', 'viajesPorStatus',
             'choferes', 'destinos', 'estadosDisponibles',
