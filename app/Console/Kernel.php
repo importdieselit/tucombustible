@@ -30,8 +30,8 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('summary:daily-report')->dailyAt('00:00');
         $schedule->command('cupos:reset')->monthlyOn(1, '00:00');
-        $schedule->command('check:varillaje-horario')->dailyAt('08:00')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));
-        $schedule->command('check:varillaje-horario')->dailyAt('16:00')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));
+       // $schedule->command('check:varillaje-horario')->dailyAt('08:30')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));
+       // $schedule->command('check:varillaje-horario')->dailyAt('16:00')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));
         $schedule->command('reports:watch')
         ->everyMinute()
         ->timezone('America/Caracas')
