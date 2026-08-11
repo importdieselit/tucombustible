@@ -50,7 +50,7 @@
         </form>
     </div>
 
-    {{-- TABLA HISTÓRICA --}}
+    {{-- TABLA HISTÓRICA CON SCROLL --}}
     <div class="card shadow-sm border-0 mb-4" style="border-left: 4px solid #ff6600;">
         <div class="card-header bg-white border-bottom py-3">
             <h6 class="mb-0 fw-black text-uppercase small text-dark">
@@ -58,9 +58,9 @@
             </h6>
         </div>
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" style="min-width: 950px;">
-                    <thead class="bg-light">
+            <div class="table-responsive" style="max-height: 560px; overflow-y: auto;">
+                <table class="table table-hover align-middle mb-0" style="min-width: 1050px;">
+                    <thead class="bg-light sticky-top" style="z-index: 2;">
                         <tr class="text-uppercase text-muted" style="font-size: 12px; letter-spacing: 0.5px;">
                             <th class="ps-4"># ID / Fecha Carga</th>
                             <th>Vehículo</th>
@@ -68,6 +68,7 @@
                             <th>Origen</th>
                             <th>Combustible</th>
                             <th>Estado</th>
+                            <th class="text-center">Usuario</th>
                             <th class="pe-4 text-end">Cantidad Litros</th>
                         </tr>
                     </thead>
@@ -117,8 +118,12 @@
                                     @if($precarga->estatus == 0)
                                         <span class="badge bg-success text-white fw-bold text-uppercase" style="font-size: 10px;">EN PATIO (ACTIVA)</span>
                                     @else
-                                        <span class="badge bg-secondary text-white fw-bold text-uppercase" style="font-size: 10px;">PROCESADA / FINALIZADA</span>
+                                        <span class="badge bg-secondary text-white fw-bold text-uppercase" style="font-size: 10px;">FINALIZADA</span>
                                     @endif
+                                </td>
+
+                                <td class="text-center small fw-bold text-muted" style="font-size: 11px;">
+                                    <i class="fas fa-user-circle me-1"></i> {{ $precarga->usuario->name ?? ($precarga->usuario->nombre ?? 'N/A') }}
                                 </td>
 
                                 <td class="pe-4 text-end fw-black text-orange" style="font-size: 15px;">
@@ -127,7 +132,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center py-5 text-muted small fw-bold">
+                                <td colspan="8" class="text-center py-5 text-muted small fw-bold">
                                     <i class="fas fa-info-circle me-1 text-warning"></i> No se han encontrado registros en el historial de precargas.
                                 </td>
                             </tr>
@@ -147,5 +152,21 @@
 <style>
     .text-orange { color: #ff6600 !important; }
     .fw-black { font-weight: 900; }
+
+    /* Scrollbar personalizada */
+    .table-responsive::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    .table-responsive::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 4px;
+    }
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: #ff6600;
+    }
 </style>
 @endsection

@@ -64,7 +64,7 @@
                                 <option value="{{ $vehiculo->id }}" 
                                         data-carga="{{ $vehiculo->carga_max ?? 0 }}"
                                         {{ old('id_vehiculo') == $vehiculo->id ? 'selected' : '' }}>
-                                    {{ $vehiculo->placa }} {{ isset($vehiculo->modelo) ? '- '.$vehiculo->modelo : '' }} (Capacidad: {{ number_format($vehiculo->carga_max ?? 0, 2, ',', '.') }} Lts)
+                                    {{ $vehiculo->placa }} (Capacidad: {{ number_format($vehiculo->carga_max ?? 0, 2, ',', '.') }} Lts)
                                 </option>
                             @endforeach
                         </select>

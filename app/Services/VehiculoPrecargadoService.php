@@ -56,31 +56,31 @@ class VehiculoPrecargadoService
                 // 1. Descuento del inventario físico en el depósito
                 $deposito->decrement('nivel_actual_litros', $cantidadLitros);
 
-                // 2. Asentar salida física en el Ledger
+                // 2. Asentar salida física en el Ledger como 'precarga'
                 $this->ledgerRepo->registrar([
                     'sede_id'             => $data['id_sede'],
                     'deposito_id'         => $data['id_deposito'],
                     'tipo_combustible_id' => $data['id_tipo_combustible'],
                     'bolsa_tipo'          => 'general',
-                    'tipo_movimiento'     => 'despacho',
-                    'cantidad_litros'     => -$cantidadLitros,
+                    'tipo_movimiento'     => 'precarga',
+                    'cantidad_litros'     => -$cantidadLitros, // Negativo (-) porque sale del tanque físico
                     'user_id'             => $userId,
-                    'observaciones'       => "Salida física por Precarga de Vehículo (ID Vehículo: {$data['id_vehiculo']})",
+                    'observaciones'       => "Salida física por Precarga de Vehículo (Placa: {$vehiculo->placa}, ID Vehículo: {$data['id_vehiculo']})",
                 ]);
 
             } else {
                 $data['id_deposito'] = null;
 
-                // Asentar ingreso de compra externa en el Ledger
+                // Asentar ingreso por precarga externa precintada
                 $this->ledgerRepo->registrar([
                     'sede_id'             => $data['id_sede'],
                     'deposito_id'         => null,
                     'tipo_combustible_id' => $data['id_tipo_combustible'],
                     'bolsa_tipo'          => 'general',
-                    'tipo_movimiento'     => 'compra',
+                    'tipo_movimiento'     => 'precarga',
                     'cantidad_litros'     => $cantidadLitros,
                     'user_id'             => $userId,
-                    'observaciones'       => "Ingreso por Precarga Externa Precintada (ID Vehículo: {$data['id_vehiculo']})",
+                    'observaciones'       => "Ingreso por Precarga Externa Precintada (Placa: {$vehiculo->placa}, ID Vehículo: {$data['id_vehiculo']})",
                 ]);
             }
 

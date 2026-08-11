@@ -427,6 +427,24 @@
                     </div>
                 </div>
 
+                {{-- 10: ABASTECIMIENTO DE TANQUES --}}
+                <div class="col-xl-3 col-md-6">
+                    <div class="card h-100 shadow-sm border border-gray-300 card-modulo transition-all">
+                        <div class="card-body p-4 d-flex flex-column align-items-center text-center">
+                            <div class="icon-shape bg-light rounded-circle p-3 mb-3 text-orange shadow-inner d-flex align-items-center justify-content-center">
+                                <i class="fas fa-dolly-flatbed fa-2x"></i>
+                            </div>
+                            <h5 class="fw-black text-uppercase text-dark mb-2 style-title">Abastecimiento Tanques</h5>
+                            <p class="text-muted text-xs mb-4 flex-grow-1">
+                                Trasegados de combustible desde vehículos hacia depósitos.
+                            </p>
+                            <a href="{{ route('combustibles.abastecimientos_tanques.index') }}" class="btn btn-warning w-100 fw-black text-uppercase py-2 text-dark text-xs bg-orange border-0">
+                                <i class="fas fa-dolly-flatbed me-1"></i> Ver Abastecimientos
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>

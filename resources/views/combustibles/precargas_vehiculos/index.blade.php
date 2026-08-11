@@ -65,7 +65,7 @@
         </div>
     @endif
 
-    {{-- TABLA DE PRECARGAS ACTIVAS --}}
+    {{-- TABLA DE PRECARGAS ACTIVAS CON SCROLL --}}
     <div class="card shadow-sm border-0 mb-4" style="border-left: 4px solid #ff6600;">
         <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
             <h6 class="mb-0 fw-black text-uppercase small text-dark">
@@ -76,9 +76,9 @@
             </span>
         </div>
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" style="min-width: 950px;">
-                    <thead class="bg-light">
+            <div class="table-responsive" style="max-height: 560px; overflow-y: auto;">
+                <table class="table table-hover align-middle mb-0" style="min-width: 1050px;">
+                    <thead class="bg-light sticky-top" style="z-index: 2;">
                         <tr class="text-uppercase text-muted" style="font-size: 12px; letter-spacing: 0.5px;">
                             <th class="ps-4"># ID / Fecha Carga</th>
                             <th>Vehículo / Placa</th>
@@ -87,6 +87,7 @@
                             <th>Combustible</th>
                             <th>Tipo Precarga</th>
                             <th class="text-end">Cantidad Cargada</th>
+                            <th class="text-center">Usuario</th>
                             <th class="pe-4 text-center">Acciones</th>
                         </tr>
                     </thead>
@@ -148,6 +149,10 @@
                                     {{ number_format($precarga->cantidad_litros, 2, ',', '.') }} Lts
                                 </td>
 
+                                <td class="text-center small fw-bold text-muted" style="font-size: 11px;">
+                                    <i class="fas fa-user-circle me-1"></i> {{ $precarga->usuario->name ?? ($precarga->usuario->nombre ?? 'N/A') }}
+                                </td>
+
                                 <td class="pe-4 text-center">
                                     <form action="{{ route('combustibles.precargas_vehiculos.finalizar', $precarga->id) }}" method="POST" onsubmit="return confirm('¿Confirmas que este vehículo ya despachó/utilizó el combustible precargado?');" class="d-inline">
                                         @csrf
@@ -160,7 +165,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center py-5 text-muted small fw-bold">
+                                <td colspan="9" class="text-center py-5 text-muted small fw-bold">
                                     <i class="fas fa-info-circle me-1 text-warning"></i> No hay vehículos precargados actualmente en patio.
                                 </td>
                             </tr>
@@ -175,5 +180,21 @@
 <style>
     .text-orange { color: #ff6600 !important; }
     .fw-black { font-weight: 900; }
+    
+    /* Scrollbar personalizada para que coincida con el estilo del sistema */
+    .table-responsive::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    .table-responsive::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 4px;
+    }
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: #ff6600;
+    }
 </style>
 @endsection

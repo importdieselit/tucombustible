@@ -20,7 +20,8 @@ class VehiculoPrecargadoRepository
                 'vehiculo', 
                 'sede', 
                 'deposito', 
-                'tipoCombustible'
+                'tipoCombustible',
+                'usuario'
             ])
             ->where('estatus', 0)
             ->when($idSede, function ($query, $idSede) {
@@ -36,7 +37,8 @@ class VehiculoPrecargadoRepository
                 'vehiculo', 
                 'sede', 
                 'deposito', 
-                'tipoCombustible'
+                'tipoCombustible',
+                'usuario'
             ])
             ->when($idSede, function ($query, $idSede) {
                 return $query->where('id_sede', $idSede);
