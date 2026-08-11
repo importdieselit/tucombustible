@@ -360,7 +360,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/almacen/layout/actualizar-posicion-3d', [AlmacenLayoutController::class, 'actualizarPosicion3D'])->name('almacen.layout.actualizar_posicion_3d');
         Route::post('/almacen/layout/subdividir-slot', [AlmacenLayoutController::class, 'subdividirSlot'])->name('almacen.layout.subdividir_slot');
         Route::post('/almacen/layout/combinar-slots', [AlmacenLayoutController::class, 'combinarSlots'])->name('almacen.layout.combinar_slots');
-
+        Route::get('/viajes/reporte-estrategico', [ViajesController::class, 'reporteEstrategico'])->name('viajes.reporte_estrategico');
         /**
          * MÓDULOS DE ADMINISTRACIÓN (Perfiles 1 y 2: Admin y Super)
          */

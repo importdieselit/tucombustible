@@ -1549,4 +1549,55 @@ public function updateGuiaData(Request $request, $viajeId)
 
         return view('viajes.imprimir', compact('viaje'));
     }
+
+    public function reporteEstrategico(Request $request)
+    {
+        $fechaInicio = $request->input('fecha_inicio', now()->startOfMonth()->toDateString());
+        $fechaFin = $request->input('fecha_fin', now()->endOfMonth()->toDateString());
+        $choferId = $request->input('chofer_id');
+        $destino = $request->input('destino_ciudad');
+        $status = $request->input('status');
+
+        // 1. Agregamos 'ayudante_chofer.persona' a la consulta base[cite: 19]
+        $query = Viaje::with(['chofer.persona', 'ayudante_chofer.persona', 'despachos', 'vehiculo'])
+            ->whereBetween('fecha_salida', [$fechaInicio . ' 00:00:00', $fechaFin . ' 23:59:59']);
+
+        if ($choferId) $query->where('chofer_id', $choferId);
+        if ($destino) $query->where('destino_ciudad', $destino);
+        if ($status) $query->where('status', $status);
+
+        $viajes = $query->get();
+
+        $totalViajes = $viajes->count();
+        $totalLitros = $viajes->sum(function($v) {
+            return $v->despachos->sum('litros') + ($v->litros ?? 0);
+        });
+
+        // 2. Agrupaciones (Removimos el take(5) para que puedas ver la lista completa si filtras por destino)
+        $viajesPorDestino = $viajes->groupBy('destino_ciudad')->map->count()->sortDesc();
+        $viajesPorStatus = $viajes->groupBy('status')->map->count();
+
+        // Conteo de viajes por Chofer[cite: 19]
+        $viajesPorChofer = $viajes->groupBy(function($v) {
+            return $v->chofer ? ($v->chofer->persona->nombre . ' ' . $v->chofer->persona->apellido) : 'Sin Chofer';
+        })->map->count()->sortDesc();
+
+        // 3. NUEVO: Conteo de viajes por Ayudante[cite: 19]
+        $viajesPorAyudante = $viajes->filter(function($v) {
+            return $v->ayudante_chofer != null; // Descartamos los viajes que no llevaron ayudante
+        })->groupBy(function($v) {
+            return $v->ayudante_chofer->persona->nombre . ' ' . $v->ayudante_chofer->persona->apellido;
+        })->map->count()->sortDesc();
+
+        $choferes = \App\Models\Chofer::with('persona')->get();
+        $destinos = Viaje::distinct()->pluck('destino_ciudad')->filter();
+        $estadosDisponibles = Viaje::distinct()->pluck('status')->filter();
+
+        return view('viajes.reporte_estrategico', compact(
+            'viajes', 'totalViajes', 'totalLitros',
+            'viajesPorDestino', 'viajesPorChofer', 'viajesPorAyudante', 'viajesPorStatus',
+            'choferes', 'destinos', 'estadosDisponibles',
+            'fechaInicio', 'fechaFin', 'choferId', 'destino', 'status'
+        ));
+    }
 }
