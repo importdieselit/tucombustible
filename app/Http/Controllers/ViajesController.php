@@ -1557,8 +1557,9 @@ public function updateGuiaData(Request $request, $viajeId)
         $choferId = $request->input('chofer_id');
         $destino = $request->input('destino_ciudad');
         $status = $request->input('status');
+        $agruparPor = $request->input('agrupar_por', 'ninguno');
 
-        // 1. Agregamos 'ayudante_chofer.persona' a la consulta base[cite: 19]
+        // Query Base con relaciones optimizadas
         $query = Viaje::with(['chofer.persona', 'ayudante_chofer.persona', 'despachos', 'vehiculo'])
             ->whereBetween('fecha_salida', [$fechaInicio . ' 00:00:00', $fechaFin . ' 23:59:59']);
 
@@ -1568,33 +1569,60 @@ public function updateGuiaData(Request $request, $viajeId)
 
         $viajes = $query->get();
 
+        // KPIs
         $totalViajes = $viajes->count();
         $totalLitros = $viajes->sum(function($v) {
             return $v->despachos->sum('litros') + ($v->litros ?? 0);
         });
 
-        // 2. Agrupaciones (Removimos el take(5) para que puedas ver la lista completa si filtras por destino)
-        $viajesPorDestino = $viajes->groupBy('destino_ciudad')->map->count()->sortDesc();
-        $viajesPorStatus = $viajes->groupBy('status')->map->count();
+        // 1. Agrupación: Top Destinos
+        $viajesPorDestino = $viajes->groupBy(fn($v) => $v->destino_ciudad ?: 'Sin Destino')
+            ->map->count()->sortDesc()->take(5);
 
-        // Conteo de viajes por Chofer[cite: 19]
+        // 2. Agrupación: Estatus
+        $viajesPorStatus = $viajes->groupBy(fn($v) => $v->status ?: 'Sin Estatus')
+            ->map->count();
+
+        // 3. Agrupación: Choferes
         $viajesPorChofer = $viajes->groupBy(function($v) {
             return $v->chofer ? ($v->chofer->persona->nombre . ' ' . $v->chofer->persona->apellido) : 'Sin Chofer';
         })->map->count()->sortDesc();
 
-        // 3. NUEVO: Conteo de viajes por Ayudante[cite: 19]
-        $viajesPorAyudante = $viajes->filter(function($v) {
-            return $v->ayudante_chofer != null; // Descartamos los viajes que no llevaron ayudante
-        })->groupBy(function($v) {
-            return $v->ayudante_chofer->persona->nombre . ' ' . $v->ayudante_chofer->persona->apellido;
-        })->map->count()->sortDesc();
+        // 4. Agrupación: Ayudantes
+        $viajesPorAyudante = $viajes->filter(fn($v) => $v->ayudante_chofer != null)
+            ->groupBy(fn($v) => $v->ayudante_chofer->persona->nombre . ' ' . $v->ayudante_chofer->persona->apellido)
+            ->map->count()->sortDesc();
+
+        // Lógica de agrupación para la tabla
+        $tablaAgrupada = null;
+        if ($agruparPor === 'chofer') {
+            $tablaAgrupada = $viajes->groupBy(function($v) {
+                return $v->chofer ? ($v->chofer->persona->nombre . ' ' . $v->chofer->persona->apellido) : 'Sin Chofer';
+            })->map(function($items, $key) {
+                return [
+                    'criterio' => $key,
+                    'total_viajes' => $items->count(),
+                    'total_litros' => $items->sum(fn($v) => $v->despachos->sum('litros') + ($v->litros ?? 0))
+                ];
+            })->sortByDesc('total_viajes');
+            
+        } elseif ($agruparPor === 'destino') {
+            $tablaAgrupada = $viajes->groupBy('destino_ciudad')->map(function($items, $key) {
+                return [
+                    'criterio' => $key ?: 'Sin Destino',
+                    'total_viajes' => $items->count(),
+                    'total_litros' => $items->sum(fn($v) => $v->despachos->sum('litros') + ($v->litros ?? 0))
+                ];
+            })->sortByDesc('total_viajes');
+        }
 
         $choferes = \App\Models\Chofer::with('persona')->get();
         $destinos = Viaje::distinct()->pluck('destino_ciudad')->filter();
         $estadosDisponibles = Viaje::distinct()->pluck('status')->filter();
 
         return view('viajes.reporte_estrategico', compact(
-            'viajes', 'totalViajes', 'totalLitros',
+            'viajes', 'tablaAgrupada', 'agruparPor',
+            'totalViajes', 'totalLitros',
             'viajesPorDestino', 'viajesPorChofer', 'viajesPorAyudante', 'viajesPorStatus',
             'choferes', 'destinos', 'estadosDisponibles',
             'fechaInicio', 'fechaFin', 'choferId', 'destino', 'status'
