@@ -6,7 +6,6 @@
         .no-print, nav, .sidebar, form, .btn, footer, .navbar {
             display: none !important;
         }
-        /* Oculta los gráficos desmarcados mediante JS */
         .no-print-chart {
             display: none !important;
         }
@@ -51,6 +50,17 @@
                     <input type="date" name="fecha_fin" class="form-control" value="{{ $fechaFin }}">
                 </div>
                 <div class="col-md-2">
+                    <label>Tipo Operación</label>
+                    <select name="tipo_operacion" class="form-control">
+                        <option value="">Todas</option>
+                        <option value="ventas" {{ $tipoOperacion == 'ventas' ? 'selected' : '' }}>Todas las Ventas (MGO e Ind.)</option>
+                        <option value="1" {{ $tipoOperacion == '1' ? 'selected' : '' }}>Venta MGO</option>
+                        <option value="2" {{ $tipoOperacion == '2' ? 'selected' : '' }}>Venta Industrial</option>
+                        <option value="3" {{ $tipoOperacion == '3' ? 'selected' : '' }}>Fletes</option>
+                        <option value="4" {{ $tipoOperacion == '4' ? 'selected' : '' }}>Compras</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
                     <label>Chofer</label>
                     <select name="chofer_id" class="form-control">
                         <option value="">Todos</option>
@@ -74,12 +84,13 @@
                     <label>Agrupar Tabla</label>
                     <select name="agrupar_por" class="form-control border-primary fw-bold">
                         <option value="ninguno" {{ $agruparPor == 'ninguno' ? 'selected' : '' }}>Sin Agrupar (Detalle)</option>
+                        <option value="tipo_operacion" {{ $agruparPor == 'tipo_operacion' ? 'selected' : '' }}>Por Tipo de Operación</option>
                         <option value="chofer" {{ $agruparPor == 'chofer' ? 'selected' : '' }}>Por Chofer</option>
                         <option value="destino" {{ $agruparPor == 'destino' ? 'selected' : '' }}>Por Destino</option>
                     </select>
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-success w-100"><i class="fas fa-search"></i> Aplicar</button>
+                <div class="col-md-12 d-flex justify-content-end">
+                    <button type="submit" class="btn btn-success px-4"><i class="fas fa-search"></i> Aplicar Filtros</button>
                 </div>
             </form>
         </div>
@@ -105,7 +116,7 @@
         </div>
     </div>
 
-    <!-- GRILLA DE CUALQUIER GRÁFICO CON SWITCH DE IMPRESIÓN -->
+    <!-- GRILLA DE GRÁFICOS -->
     <div class="row">
         <!-- 1. Choferes -->
         <div class="col-md-6 mb-4 chart-container" id="cardChartChoferes">
@@ -165,8 +176,90 @@
     </div>
 
     <!-- SECCIÓN DE TABLAS -->
-    @if($agruparPor === 'chofer')
-        <!-- TABLA 1: CHOFERES -->
+    @if($agruparPor === 'tipo_operacion')
+        <!-- TABLA RESUMEN POR TIPO DE OPERACIÓN -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-dark text-white">
+                <h6 class="m-0 font-weight-bold"><i class="fas fa-list-alt"></i> Resumen General por Tipo de Operación</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped" width="100%">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>Tipo de Operación</th>
+                                <th class="text-center">Total Viajes</th>
+                                <th class="text-end">Volumen Total (Lts)</th>
+                                <th class="text-center">% Part. Viajes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($tablaAgrupada as $item)
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td class="fw-bold">{{ $item['criterio'] }}</td>
+                                    <td class="text-center">{{ $item['total_viajes'] }}</td>
+                                    <td class="text-end">{{ number_format($item['total_litros'], 2) }}</td>
+                                    <td class="text-center">
+                                        {{ $totalViajes > 0 ? number_format(($item['total_viajes'] / $totalViajes) * 100, 1) : 0 }}%
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="5" class="text-center">Sin datos de operaciones.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABLAS DETALLADAS POR CADA TIPO DE OPERACIÓN -->
+        @if($tablasPorTipo)
+            @foreach($tablasPorTipo as $nombreTipo => $viajesTipo)
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3 bg-light border-left-primary">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <i class="fas fa-truck-loading"></i> Detalle de Operación: {{ $nombreTipo }}
+                            <span class="badge bg-primary ms-2">{{ $viajesTipo->count() }} Viajes</span>
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped" width="100%">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Fecha</th>
+                                        <th>Destino</th>
+                                        <th>Chofer</th>
+                                        <th>Ayudante</th>
+                                        <th class="text-end">Volumen (Lts)</th>
+                                        <th class="text-center">Estatus</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($viajesTipo as $viaje)
+                                        <tr>
+                                            <td>#{{ $viaje->id }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y H:i') }}</td>
+                                            <td>{{ $viaje->destino_ciudad ?? 'N/A' }}</td>
+                                            <td>{{ $viaje->chofer->persona->nombre ?? 'N/A' }} {{ $viaje->chofer->persona->apellido ?? '' }}</td>
+                                            <td>{{ $viaje->ayudante_chofer->persona->nombre ?? 'N/A' }} {{ $viaje->ayudante_chofer->persona->apellido ?? '' }}</td>
+                                            <td class="text-end">{{ number_format($viaje->despachos->sum('litros') + ($viaje->litros ?? 0), 2) }}</td>
+                                            <td class="text-center"><span class="badge bg-secondary">{{ $viaje->status }}</span></td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        @endif
+
+    @elseif($agruparPor === 'chofer')
+        <!-- TABLA CHOFERES -->
         <div class="card shadow mb-4">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">Resumen Agrupado por Chofer</h6>
@@ -203,7 +296,7 @@
             </div>
         </div>
 
-        <!-- TABLA 2: SEGUNDA TABLA AUTOMÁTICA PARA AYUDANTES -->
+        <!-- TABLA AYUDANTES -->
         <div class="card shadow mb-4">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-info">Resumen Agrupado por Ayudante</h6>
@@ -232,7 +325,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="5" class="text-center">Sin información de ayudantes para estos viajes.</td></tr>
+                                <tr><td colspan="5" class="text-center">Sin información de ayudantes.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -241,7 +334,7 @@
         </div>
 
     @elseif($agruparPor === 'destino')
-        <!-- TABLA AGRUPADA POR DESTINO -->
+        <!-- TABLA DESTINOS -->
         <div class="card shadow mb-4">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">Resumen Agrupado por Destino</h6>
@@ -279,7 +372,7 @@
         </div>
 
     @else
-        <!-- TABLA DETALLADA SIN AGRUPAR -->
+        <!-- TABLA DETALLADA GENERAL -->
         <div class="card shadow mb-4">
             <div class="card-header py-3">
                 <h6 class="m-0 font-weight-bold text-primary">Detalle General de Viajes</h6>
@@ -291,11 +384,12 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Fecha</th>
+                                <th>Tipo Operación</th>
                                 <th>Destino</th>
                                 <th>Chofer</th>
                                 <th>Ayudante</th>
-                                <th>Volumen (Lts)</th>
-                                <th>Estatus</th>
+                                <th class="text-end">Volumen (Lts)</th>
+                                <th class="text-center">Estatus</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -303,14 +397,19 @@
                                 <tr>
                                     <td>#{{ $viaje->id }}</td>
                                     <td>{{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y H:i') }}</td>
+                                    <td>
+                                        <span class="badge bg-info text-dark">
+                                            {{ $mapaTipos[$viaje->tipo_planificacion] ?? 'N/A' }}
+                                        </span>
+                                    </td>
                                     <td>{{ $viaje->destino_ciudad }}</td>
                                     <td>{{ $viaje->chofer->persona->nombre ?? 'N/A' }}</td>
                                     <td>{{ $viaje->ayudante_chofer->persona->nombre ?? 'N/A' }}</td>
-                                    <td>{{ number_format($viaje->despachos->sum('litros') + ($viaje->litros ?? 0), 2) }}</td>
-                                    <td><span class="badge bg-secondary">{{ $viaje->status }}</span></td>
+                                    <td class="text-end">{{ number_format($viaje->despachos->sum('litros') + ($viaje->litros ?? 0), 2) }}</td>
+                                    <td class="text-center"><span class="badge bg-secondary">{{ $viaje->status }}</span></td>
                                 </tr>
                             @empty
-                                <tr><td colspan="7" class="text-center">No se encontraron registros.</td></tr>
+                                <tr><td colspan="8" class="text-center">No se encontraron registros.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -319,13 +418,13 @@
         </div>
     @endif
 </div>
-
-<!-- CARGA DIRECTA DE HIGHCHARTS Y SCRIPT AUTOSUFICIENTE -->
+@push('scripts')
+    
+<!-- HIGHCHARTS Y SCRIPT -->
 <script src="https://code.highcharts.com/highcharts.js"></script>
 
 <script>
     (function() {
-        // 1. Escuchador para los Switches de Impresión
         document.addEventListener('change', function(e) {
             if (e.target && e.target.classList.contains('print-toggle')) {
                 const targetId = e.target.getAttribute('data-target');
@@ -340,7 +439,6 @@
             }
         });
 
-        // 2. Inicializador de Highcharts
         function initDashboardCharts() {
             if (typeof Highcharts === 'undefined') return;
 
@@ -406,4 +504,6 @@
         }
     })();
 </script>
+@endpush
+
 @endsection

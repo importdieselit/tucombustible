@@ -9,33 +9,42 @@ class Modulo extends Model
 {
     use HasFactory;
 
-    protected $table = 'modulos'; // Nombre explícito de la tabla
+    protected $table = 'modulos';
 
     protected $fillable = [
-        'nombre',
+        'modulo',
+        'ruta',
         'icono',
         'orden',
-        'activo',
+        'id_padre',
+        'url_directa',
+        'visible',
+        'descripcion',
     ];
 
     protected $casts = [
-        'activo' => 'boolean',
+        'url_directa' => 'boolean',
+        'visible'     => 'boolean',
+        'orden'       => 'integer',
+        'id_padre'    => 'integer',
     ];
 
     /**
-     * Un módulo tiene muchas secciones.
+     * Módulo Padre
      */
-    public function secciones()
+    public function padre()
     {
-        return $this->hasMany(Seccion::class, 'modulo_id');
-    }
-    public function parent()
-    {
-        return $this->belongsTo(Modulo::class, 'id_parent', 'id_modulo-data');
+        return $this->belongsTo(Modulo::class, 'id_padre')->withDefault([
+            'modulo' => 'Módulo Raíz (Sin Padre)'
+        ]);
     }
 
-    public function children()
+    /**
+     * Submódulos o ítems hijos
+     */
+    public function hijos()
     {
-        return $this->hasMany(Modulo::class, 'id_parent', 'id_modulo-data');
+        return $this->hasMany(Modulo::class, 'id_padre')->orderBy('orden', 'asc');
     }
+
 }

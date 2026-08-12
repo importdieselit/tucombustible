@@ -1551,93 +1551,129 @@ public function updateGuiaData(Request $request, $viajeId)
     }
 
     public function reporteEstrategico(Request $request)
-    {
-        $fechaInicio = $request->input('fecha_inicio', now()->startOfMonth()->toDateString());
-        $fechaFin = $request->input('fecha_fin', now()->endOfMonth()->toDateString());
-        $choferId = $request->input('chofer_id');
-        $destino = $request->input('destino_ciudad');
-        $status = $request->input('status');
-        $agruparPor = $request->input('agrupar_por', 'ninguno');
+{
+    $fechaInicio   = $request->input('fecha_inicio', now()->startOfMonth()->toDateString());
+    $fechaFin      = $request->input('fecha_fin', now()->endOfMonth()->toDateString());
+    $choferId      = $request->input('chofer_id');
+    $destino       = $request->input('destino_ciudad');
+    $status        = $request->input('status');
+    $tipoOperacion = $request->input('tipo_operacion');
+    $agruparPor    = $request->input('agrupar_por', 'ninguno');
 
-        // Query Base
-        $query = Viaje::with(['chofer.persona', 'ayudante_chofer.persona', 'despachos', 'vehiculo'])
-            ->whereBetween('fecha_salida', [$fechaInicio . ' 00:00:00', $fechaFin . ' 23:59:59']);
+    // Mapeo legible de tipos de planificación
+    $mapaTipos = [
+        1 => 'Venta MGO',
+        2 => 'Venta Industrial',
+        3 => 'Fletes',
+        4 => 'Compras'
+    ];
 
-        if ($choferId) $query->where('chofer_id', $choferId);
-        if ($destino) $query->where('destino_ciudad', $destino);
-        if ($status) $query->where('status', $status);
+    // Query Base
+    $query = Viaje::with(['chofer.persona', 'ayudante_chofer.persona', 'despachos', 'vehiculo'])
+        ->whereBetween('fecha_salida', [$fechaInicio . ' 00:00:00', $fechaFin . ' 23:59:59']);
 
-        $viajes = $query->get();
+    if ($choferId) $query->where('chofer_id', $choferId);
+    if ($destino)  $query->where('destino_ciudad', $destino);
+    if ($status)   $query->where('status', $status);
 
-        // KPIs
-        $totalViajes = $viajes->count();
-        $totalLitros = $viajes->sum(function($v) {
-            return $v->despachos->sum('litros') + ($v->litros ?? 0);
-        });
+    // Filtro por Tipo de Operación
+    if ($tipoOperacion) {
+        if ($tipoOperacion === 'ventas') {
+            $query->whereIn('tipo_planificacion', [1, 2]); // General Ventas
+        } elseif (in_array((int)$tipoOperacion, [1, 2, 3, 4])) {
+            $query->where('tipo_planificacion', (int)$tipoOperacion);
+        }
+    }
 
-        // Agrupaciones para Highcharts
-        $viajesPorDestino = $viajes->groupBy(fn($v) => $v->destino_ciudad ?: 'Sin Destino')
-            ->map->count()->sortDesc()->take(5);
+    $viajes = $query->get();
 
-        $viajesPorStatus = $viajes->groupBy(fn($v) => $v->status ?: 'Sin Estatus')
-            ->map->count();
+    // KPIs
+    $totalViajes = $viajes->count();
+    $totalLitros = $viajes->sum(function($v) {
+        return $v->despachos->sum('litros') + ($v->litros ?? 0);
+    });
 
-        $viajesPorChofer = $viajes->groupBy(function($v) {
+    // Agrupaciones para Highcharts
+    $viajesPorDestino = $viajes->groupBy(fn($v) => $v->destino_ciudad ?: 'Sin Destino')
+        ->map->count()->sortDesc()->take(5);
+
+    $viajesPorStatus = $viajes->groupBy(fn($v) => $v->status ?: 'Sin Estatus')
+        ->map->count();
+
+    $viajesPorChofer = $viajes->groupBy(function($v) {
+        return $v->chofer ? ($v->chofer->persona->nombre . ' ' . $v->chofer->persona->apellido) : 'Sin Chofer';
+    })->map->count()->sortDesc();
+
+    $viajesPorAyudante = $viajes->filter(fn($v) => $v->ayudante_chofer != null)
+        ->groupBy(fn($v) => $v->ayudante_chofer->persona->nombre . ' ' . $v->ayudante_chofer->persona->apellido)
+        ->map->count()->sortDesc();
+
+    // LÓGICA DE TABLAS AGRUPADAS
+    $tablaAgrupada = null;
+    $tablaAgrupadaAyudantes = null;
+    $tablasPorTipo = null; // Variable para almacenar sub-tablas por cada tipo de operación
+
+    if ($agruparPor === 'chofer') {
+        // Tabla 1: Choferes
+        $tablaAgrupada = $viajes->groupBy(function($v) {
             return $v->chofer ? ($v->chofer->persona->nombre . ' ' . $v->chofer->persona->apellido) : 'Sin Chofer';
-        })->map->count()->sortDesc();
+        })->map(function($items, $key) {
+            return [
+                'criterio'     => $key,
+                'total_viajes' => $items->count(),
+                'total_litros' => $items->sum(fn($v) => $v->despachos->sum('litros') + ($v->litros ?? 0))
+            ];
+        })->sortByDesc('total_viajes');
 
-        $viajesPorAyudante = $viajes->filter(fn($v) => $v->ayudante_chofer != null)
-            ->groupBy(fn($v) => $v->ayudante_chofer->persona->nombre . ' ' . $v->ayudante_chofer->persona->apellido)
-            ->map->count()->sortDesc();
-
-        // LÓGICA DE TABLAS AGRUPADAS
-        $tablaAgrupada = null;
-        $tablaAgrupadaAyudantes = null; // Variable para la segunda tabla requerida
-
-        if ($agruparPor === 'chofer') {
-            // Tabla 1: Choferes
-            $tablaAgrupada = $viajes->groupBy(function($v) {
-                return $v->chofer ? ($v->chofer->persona->nombre . ' ' . $v->chofer->persona->apellido) : 'Sin Chofer';
+        // Tabla 2: Ayudantes
+        $tablaAgrupadaAyudantes = $viajes->filter(fn($v) => $v->ayudante_chofer != null)
+            ->groupBy(function($v) {
+                return $v->ayudante_chofer->persona->nombre . ' ' . $v->ayudante_chofer->persona->apellido;
             })->map(function($items, $key) {
                 return [
-                    'criterio' => $key,
+                    'criterio'     => $key,
                     'total_viajes' => $items->count(),
                     'total_litros' => $items->sum(fn($v) => $v->despachos->sum('litros') + ($v->litros ?? 0))
                 ];
             })->sortByDesc('total_viajes');
+        
+    } elseif ($agruparPor === 'destino') {
+        $tablaAgrupada = $viajes->groupBy('destino_ciudad')->map(function($items, $key) {
+            return [
+                'criterio'     => $key ?: 'Sin Destino',
+                'total_viajes' => $items->count(),
+                'total_litros' => $items->sum(fn($v) => $v->despachos->sum('litros') + ($v->litros ?? 0))
+            ];
+        })->sortByDesc('total_viajes');
 
-            // Tabla 2: Ayudantes (se genera automáticamente)
-            $tablaAgrupadaAyudantes = $viajes->filter(fn($v) => $v->ayudante_chofer != null)
-                ->groupBy(function($v) {
-                    return $v->ayudante_chofer->persona->nombre . ' ' . $v->ayudante_chofer->persona->apellido;
-                })->map(function($items, $key) {
-                    return [
-                        'criterio' => $key,
-                        'total_viajes' => $items->count(),
-                        'total_litros' => $items->sum(fn($v) => $v->despachos->sum('litros') + ($v->litros ?? 0))
-                    ];
-                })->sortByDesc('total_viajes');
-            
-        } elseif ($agruparPor === 'destino') {
-            $tablaAgrupada = $viajes->groupBy('destino_ciudad')->map(function($items, $key) {
-                return [
-                    'criterio' => $key ?: 'Sin Destino',
-                    'total_viajes' => $items->count(),
-                    'total_litros' => $items->sum(fn($v) => $v->despachos->sum('litros') + ($v->litros ?? 0))
-                ];
-            })->sortByDesc('total_viajes');
-        }
+    } elseif ($agruparPor === 'tipo_operacion') {
+        // Tabla Resumen
+        $tablaAgrupada = $viajes->groupBy(function($v) use ($mapaTipos) {
+            return $mapaTipos[$v->tipo_planificacion] ?? 'Otros / No Definido';
+        })->map(function($items, $key) {
+            return [
+                'criterio'     => $key,
+                'total_viajes' => $items->count(),
+                'total_litros' => $items->sum(fn($v) => $v->despachos->sum('litros') + ($v->litros ?? 0))
+            ];
+        })->sortByDesc('total_viajes');
 
-        $choferes = \App\Models\Chofer::with('persona')->get();
-        $destinos = Viaje::distinct()->pluck('destino_ciudad')->filter();
-        $estadosDisponibles = Viaje::distinct()->pluck('status')->filter();
-
-        return view('viajes.reporte_estrategico', compact(
-            'viajes', 'tablaAgrupada', 'tablaAgrupadaAyudantes', 'agruparPor',
-            'totalViajes', 'totalLitros',
-            'viajesPorDestino', 'viajesPorChofer', 'viajesPorAyudante', 'viajesPorStatus',
-            'choferes', 'destinos', 'estadosDisponibles',
-            'fechaInicio', 'fechaFin', 'choferId', 'destino', 'status'
-        ));
+        // Colección de colecciones para generar una tabla por cada tipo
+        $tablasPorTipo = $viajes->groupBy(function($v) use ($mapaTipos) {
+            return $mapaTipos[$v->tipo_planificacion] ?? 'Otros / No Definido';
+        });
     }
+
+    $choferes           = \App\Models\Chofer::with('persona')->get();
+    $destinos           = Viaje::distinct()->pluck('destino_ciudad')->filter();
+    $estadosDisponibles = Viaje::distinct()->pluck('status')->filter();
+
+    return view('viajes.reporte_estrategico', compact(
+        'viajes', 'tablaAgrupada', 'tablaAgrupadaAyudantes', 'tablasPorTipo', 'agruparPor',
+        'totalViajes', 'totalLitros',
+        'viajesPorDestino', 'viajesPorChofer', 'viajesPorAyudante', 'viajesPorStatus',
+        'choferes', 'destinos', 'estadosDisponibles', 'mapaTipos',
+        'fechaInicio', 'fechaFin', 'choferId', 'destino', 'status', 'tipoOperacion'
+    ));
+}
 }

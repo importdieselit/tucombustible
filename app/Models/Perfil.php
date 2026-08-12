@@ -26,7 +26,7 @@ class Perfil extends Model
      */
     public function users()
     {
-        return $this->hasMany(User::class, 'perfil_id');
+        return $this->hasMany(User::class, 'id_perfil');
     }
     /**
      * Un perfil tiene muchos permisos.

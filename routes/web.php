@@ -14,6 +14,8 @@ use App\Models\User;
 use App\Models\Orden;
 use App\Http\Controllers\ReporteEficienciaController;
 use App\Http\Controllers\RRHH\EvaluacionesController;
+use App\Http\Controllers\ModuloController;
+
 use App\Http\Controllers\{
     DashboardController, VehiculoController, MarcaController, ModeloController,
     OrdenController, TanqueController, MovimientoCombustibleController,
@@ -229,16 +231,24 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/plan-mayor/baremo/{id}', [PlanMayorController::class, 'destroyBaremo'])->name('plan_mayor.baremo.destroy');
 
         // Permisos y Perfiles
+
+        // Gestión Dinámica del Menú / Módulos
+        Route::resource('modulos', ModuloController::class)->except(['create', 'edit', 'show']);
+        Route::post('modulos/{id}/toggle-visible', [ModuloController::class, 'toggleVisible'])->name('modulos.toggle-visible');
+        Route::post('modulos/{id}/toggle-url-directa', [ModuloController::class, 'toggleUrlDirecta'])->name('modulos.toggle-url-directa');
         Route::get('/permisos', [AccesoController::class, 'index'])->name('permisos.index');
         Route::get('usuarios/{usuario}/permissions', [UserController::class, 'editPermissions'])->name('usuarios.edit_permissions');
         Route::put('usuarios/{usuario}/permissions', [UserController::class, 'updatePermissions'])->name('usuarios.update_permissions');
         Route::post('usuarios/{id}/update-single-permission', [UserController::class, 'updateSinglePermission'])->name('usuarios.update_single_permission');
-        Route::resource('perfiles', PerfilController::class)->except(['edit', 'update']); 
+        Route::resource('perfiles', PerfilController::class)->except(['edit']);
         Route::get('perfiles/{perfil}/permissions', [PerfilController::class, 'editPermissions'])->name('perfiles.edit_permissions');
         Route::put('perfiles/{perfil}/permissions', [PerfilController::class, 'updatePermissions'])->name('perfiles.update_permissions');
         Route::get('/api/permisos/{user}/get', [AccesoController::class, 'getPermissionsForUser'])->name('permisos.get');
         Route::post('/api/permisos/{user}/update', [AccesoController::class, 'updatePermissions'])->name('permisos.update');
-        Route::post('/perfiles/{perfil}/permisos', [PerfilController::class, 'updatePermisos'])->name('perfiles.updatePermisos');
+        Route::get('perfiles/{id}/permisos', [PerfilController::class, 'getPermissions'])->name('perfiles.permisos');
+        Route::get('perfiles/list', [PerfilController::class, 'list'])->name('perfiles.list');
+        Route::post('perfiles/{id}/permisos', [PerfilController::class, 'updatePermissions'])->name('perfiles.permisos.update');
+        Route::post('perfiles/{id}/toggle-estatus', [PerfilController::class, 'toggleEstatus'])->name('perfiles.toggle-estatus');
         Route::get('/rrhh/evaluacion-form/{id}/edit', [EvaluacionesController::class, 'edit'])->name('evaluacion_form.edit');
         Route::put('/rrhh/evaluacion-form/{id}/update', [EvaluacionesController::class, 'update'])->name('evaluacion_form.update');
         Route::get('/rrhh/evaluacion-form/{id}', [EvaluacionesController::class, 'create'])->name('evaluacion_form.create');
@@ -380,7 +390,6 @@ Route::middleware(['auth'])->group(function () {
                 'almacenes'                   => AlmacenController::class,
                 'inventario'                  => InventarioController::class,
                 'proveedores'                 => ProveedorController::class,
-                'perfiles'                    => PerfilController::class,
                 'usuarios'                    => UserController::class,
                 'inspecciones'                => InspeccionController::class,
                 'pedidos'                     => PedidoController::class,

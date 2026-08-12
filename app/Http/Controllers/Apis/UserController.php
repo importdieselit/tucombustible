@@ -210,7 +210,7 @@ class UserController extends Controller
             $updateData = [];
             if ($request->has('email')) $updateData['email'] = $request->email;
             if ($request->has('password')) $updateData['password'] = Hash::make($request->password);
-            if ($request->has('perfil_id')) $updateData['id_perfil'] = $request->perfil_id;
+            if ($request->has('id_perfil')) $updateData['id_perfil'] = $request->perfil_id;
             if ($request->has('nombre') || $request->has('apellido')) {
                 $nombre = $request->get('nombre', $user->persona->nombre);
                 $apellido = $request->get('apellido', $user->persona->apellido);
