@@ -15,6 +15,7 @@ use App\Models\TipoCombustible;
 use App\Models\Pedido;
 use App\Models\Viaje;
 use App\Models\Sedes;
+use Carbon\Carbon;
 use Exception;
 
 class LogisticaController extends Controller
@@ -473,6 +474,79 @@ class LogisticaController extends Controller
             'tablaPedidos', 'graficoPedidos',
             'clientesPareto', 'tasaCumplimiento', 'viajesTotales', 'viajesCompletados',
             'volumenTotalProducto', 'search', 'fechaDesde', 'fechaHasta', 'statusPlanificacion', 'statusPedido'
+        ));
+    }
+
+    public function sobreconsumo(Request $request)
+    {
+        $mesActual = Carbon::now()->month;
+        $anioActual = Carbon::now()->year;
+
+        $mesSeleccionado = (int) ($request->get('mes', $mesActual));
+        $anioSeleccionado = (int) ($request->get('anio', $anioActual));
+
+        // Consulta agrupada por cliente sumando todos los despachos del mes evaluado
+        $query = DB::table('gasco_cupos_mensuales as gcm')
+            ->join('clientes as c', 'c.id', '=', 'gcm.cliente_id')
+            ->leftJoin('estados as e', 'e.id', '=', 'c.estado_id')
+            ->select([
+                'c.id as cliente_id',
+                'c.nombre as cliente_nombre',
+                'c.rif',
+                'c.contacto',
+                'c.telefono',
+                'c.email',
+                'e.nombre as estado_nombre',
+                DB::raw('MAX(gcm.litros_autorizados) as litros_autorizados'),
+                DB::raw('SUM(gcm.litros_consumidos) as litros_consumidos'),
+                DB::raw('(SUM(gcm.litros_consumidos) - MAX(gcm.litros_autorizados)) as litros_excedidos'),
+                DB::raw('ROUND(((SUM(gcm.litros_consumidos) - MAX(gcm.litros_autorizados)) / NULLIF(MAX(gcm.litros_autorizados), 0)) * 100, 2) as porcentaje_exceso')
+            ])
+            ->where('gcm.mes', $mesSeleccionado)
+            ->where('gcm.anio', $anioSeleccionado)
+            ->groupBy('c.id', 'c.nombre', 'c.rif', 'c.contacto', 'c.telefono', 'c.email', 'e.nombre')
+            ->havingRaw('SUM(gcm.litros_consumidos) > MAX(gcm.litros_autorizados)')
+            ->orderByDesc('litros_excedidos');
+
+        $sobreconsumos = $query->paginate(20)->appends($request->query());
+
+        // Subconsulta para calcular los totales de las tarjetas KPI superiores
+        $subqueryTotales = DB::table('gasco_cupos_mensuales as gcm')
+            ->select([
+                'gcm.cliente_id',
+                DB::raw('MAX(gcm.litros_autorizados) as autorizado'),
+                DB::raw('SUM(gcm.litros_consumidos) as consumido'),
+                DB::raw('(SUM(gcm.litros_consumidos) - MAX(gcm.litros_autorizados)) as excedido')
+            ])
+            ->where('gcm.mes', $mesSeleccionado)
+            ->where('gcm.anio', $anioSeleccionado)
+            ->groupBy('gcm.cliente_id')
+            ->havingRaw('SUM(gcm.litros_consumidos) > MAX(gcm.litros_autorizados)');
+
+        $totales = DB::query()->fromSub($subqueryTotales, 't')
+            ->selectRaw('COUNT(*) as total_clientes, COALESCE(SUM(excedido), 0) as total_litros_excedidos')
+            ->first();
+
+        // Años disponibles en la base de datos
+        $aniosDisponibles = DB::table('gasco_cupos_mensuales')
+            ->select('anio')
+            ->distinct()
+            ->orderByDesc('anio')
+            ->pluck('anio');
+
+        if ($aniosDisponibles->isEmpty() || !$aniosDisponibles->contains($anioActual)) {
+            $aniosDisponibles = collect([$anioActual, $anioActual - 1])
+                ->merge($aniosDisponibles)
+                ->unique()
+                ->sortDesc();
+        }
+
+        return view('admin.logistica.sobreconsumo', compact(
+            'sobreconsumos',
+            'mesSeleccionado',
+            'anioSeleccionado',
+            'totales',
+            'aniosDisponibles'
         ));
     }
 }

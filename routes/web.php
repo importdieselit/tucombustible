@@ -397,6 +397,7 @@ Route::middleware(['auth'])->group(function () {
             
             Route::get('/dashboard', [LogisticaController::class, 'dashboardLogistica'])->name('dashboard');
             Route::get('/planificacion', [LogisticaController::class, 'index'])->name('index');
+            Route::get('/sobreconsumo', [LogisticaController::class, 'sobreconsumo'])->name('sobreconsumo');
             Route::get('/crear/{tipo?}', [LogisticaController::class, 'create'])->name('create');
             Route::post('/guardar', [LogisticaController::class, 'store'])->name('store');
             // Rutas para Edición
