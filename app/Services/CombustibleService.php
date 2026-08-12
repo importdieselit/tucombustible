@@ -30,7 +30,7 @@ class CombustibleService
         TrasegadoRepository $trasegadoRepo,
         ConsumoOperativoRepository $consumoRepo,
         ReversoCombustibleRepository $reversoRepo,
-        GascoCupoRepository $gascoCupoRepo,
+        GascoCupoRepository $gascoCupoRepo
     ) {
         $this->ledgerRepo = $ledgerRepo;
         $this->saldoClienteRepo = $saldoClienteRepo;
@@ -46,18 +46,11 @@ class CombustibleService
      */
     public function obtenerDisponibilidadPorSede(int $sedeId, int $tipoCombustibleId): array
     {
-        // Si es la Sede Principal (Caracas), tiene permisos para ver balances globales
-        if ($sedeId === self::SEDE_PRINCIPAL_ID) {
-            // Aquí podrás retornar el consolidado de todas las sedes cuando operen las demás
-        }
-
-        // Retorno estándar del Ledger para la sede consultada
         return [
             'general'   => $this->ledgerRepo->getSaldoFisicoGeneral($sedeId, $tipoCombustibleId),
             'prepagado' => $this->ledgerRepo->getDisponibilidadPrepagada($sedeId, $tipoCombustibleId)
         ];
     }
-
 
     /**
      * CASO DE USO: Interceptar el varillaje, calcular la merma matemática 
@@ -68,47 +61,47 @@ class CombustibleService
         foreach ($detallesTanques as &$detalle) {
             $idDeposito = $detalle['id_deposito'];
             
-            // 1. Obtener los litros que el sistema calcula que deberían haber en base a transacciones
+            // 1. Obtener los litros teóricos del Ledger
             $saldoTeoricoSistema = $this->ledgerRepo->getSaldoTeoricoPorDeposito($idDeposito) ?? 0.0;
 
             // 2. Calcular Merma: Real de la Vara - Teórico del Sistema
             $litrosMedidosVara = (float) $detalle['litros_calculados'];
             $merma = $litrosMedidosVara - $saldoTeoricoSistema;
 
-            // 3. Inyectar al arreglo por referencia para la persistencia del repositorio
+            // 3. Inyectar al arreglo por referencia
             $detalle['litros_teoricos'] = $saldoTeoricoSistema;
             $detalle['merma_calculada'] = $merma;
 
-            // 4. Si hay discrepancia, se asienta el ajuste en el Ledger para calibrar el sistema con la fosa
+            // 4. Registrar ajuste en el Ledger si hay discrepancia
             if ($merma != 0) {
                 $this->ledgerRepo->registrar([
-                    'sede_id' => $sedeId,
+                    'sede_id'             => $sedeId,
                     'tipo_combustible_id' => $detalle['id_tipos_combustible'],
-                    'bolsa_tipo' => 'general', // Las mermas físicas afectan directamente el inventario base
-                    'tipo_movimiento' => $merma > 0 ? 'ajuste_positivo' : 'ajuste_negativo',
-                    'cantidad_litros' => $merma, // Negativo resta (pérdida), positivo suma (ganancia térmica)
-                    'deposito_id' => $idDeposito,
-                    'user_id' => auth()->id() ?? 1,
-                    'observaciones' => 'Ajuste automático generado por conciliación de varillaje.'
+                    'bolsa_tipo'          => 'general',
+                    'tipo_movimiento'     => $merma > 0 ? 'ajuste_positivo' : 'ajuste_negativo',
+                    'cantidad_litros'     => $merma,
+                    'deposito_id'         => $idDeposito,
+                    'user_id'             => auth()->id() ?? 1,
+                    'observaciones'       => 'Ajuste automático generado por conciliación de varillaje.'
                 ]);
             }
         }
     }
 
     /**
-     * 🆕 Registra el Despacho Prepagado en el Ledger, no en las tablas llenado_cupo_prepagado
+     * Registra el Despacho Prepagado en el Ledger
      */
     public function registrarDespachoPrepagado(array $data): void
     {
         $this->ledgerRepo->registrar([
             'sede_id'             => $data['sede_id'],
             'tipo_combustible_id' => $data['tipo_combustible_id'],
-            'bolsa_tipo'          => 'prepagado',         // Forzado por regla de negocio
-            'tipo_movimiento'     => 'despacho_prepagado', // Nombre semántico elegido
-            'cantidad_litros'     => -abs($data['cantidad_litros']), // Forzamos negativo por seguridad contable
+            'bolsa_tipo'          => 'prepagado',
+            'tipo_movimiento'     => 'despacho_prepagado',
+            'cantidad_litros'     => -abs($data['cantidad_litros']),
             'deposito_id'         => $data['deposito_id'],
             'user_id'             => auth()->id() ?? 1,
-            'referencia_id'       => $data['referencia_id'] ?? null, // Enlace directo con historial_llenados
+            'referencia_id'       => $data['referencia_id'] ?? null,
             'cliente_id'          => $data['cliente_id'] ?? null,
         ]);
     }
@@ -123,19 +116,13 @@ class CombustibleService
                 throw new Exception("La cantidad de litros para el consumo operativo debe ser mayor a cero.");
             }
 
-            // 1. Bloqueamos el tanque para asegurar consistencia en la fosa física
             $depositoId = $data['deposito_id'];
-            
-            // Usamos directamente el modelo Deposito (puedes importarlo arriba como App\Models\Deposito)
             $deposito = Deposito::lockForUpdate()->findOrFail($depositoId);
 
-            // 2. Descontamos físicamente del tanque sin validar disponibilidad.
-            // Si el nivel actual es menor, Laravel decrementará y quedará en números rojos de forma natural.
             $deposito->decrement('nivel_actual_litros', $cantidadLitros);
 
-            // 3. Guardar la causa en la tabla de consumos operativos
             $consumo = $this->consumoRepo->create([
-                'sede_id'             => $data['id_sede'] ?? $data['sede_id'], // Manejo flexible de la llave
+                'sede_id'             => $data['id_sede'] ?? $data['sede_id'],
                 'deposito_id'         => $depositoId,
                 'tipo_combustible_id' => $data['tipo_combustible_id'],
                 'cantidad_litros'     => $cantidadLitros,
@@ -147,13 +134,12 @@ class CombustibleService
 
             $consumoId = is_object($consumo) ? $consumo->id : $consumo;
 
-            // 4. Asentar la salida física en el Ledger (Restar de la fosa en el libro contable)
             $this->ledgerRepo->registrar([
                 'sede_id'             => $data['id_sede'] ?? $data['sede_id'],
                 'tipo_combustible_id' => $data['tipo_combustible_id'],
                 'bolsa_tipo'          => 'general',
                 'tipo_movimiento'     => 'consumo_operativo',
-                'cantidad_litros'     => -abs($cantidadLitros), // (-) Resta
+                'cantidad_litros'     => -abs($cantidadLitros),
                 'deposito_id'         => $depositoId,
                 'user_id'             => $userId,
                 'observaciones'       => "Salida por Consumo Operativo #{$consumoId}."
@@ -163,11 +149,6 @@ class CombustibleService
         });
     }
 
-    /**
-     * CASO DE USO: Registrar un Reverso de Combustible (Producto devuelto por el cliente).
-     * 1. Registra el reverso logístico.
-     * 2. Acumula el saldo a favor del cliente para futuros consumos.
-     */
     public function registrarReversoCombustible(array $data): int
     {
         return DB::transaction(function () use ($data) {
@@ -178,9 +159,8 @@ class CombustibleService
                 throw new Exception("La cantidad de litros a reversar debe ser mayor a cero.");
             }
 
-            // 1. Insertar soporte en la tabla 'reversos_combustible'
             $reverso = $this->reversoRepo->create([
-                'sede_id'            => $data['sede_id'] ?? null,
+                'sede_id'             => $data['sede_id'] ?? null,
                 'cliente_id'          => $data['cliente_id'],
                 'tipo_combustible_id' => $data['tipo_combustible_id'],
                 'cantidad_litros'     => $cantidadLitros,
@@ -190,25 +170,22 @@ class CombustibleService
 
             $reversoId = is_object($reverso) ? $reverso->id : $reverso;
 
-            // 2. Crear el saldo a favor del cliente en 'saldos_pendientes_clientes' (Tipo: acumulado)
             $this->saldoClienteRepo->registrar([
                 'cliente_id'           => $data['cliente_id'],
                 'tipo_combustible_id'  => $data['tipo_combustible_id'],
-                'tipo_accion'          => 'acumulado', // Acumula por reverso
+                'tipo_accion'          => 'acumulado',
                 'cantidad_litros'      => $cantidadLitros,
                 'user_id'              => $userId,
                 'observaciones'        => "Saldo a favor generado por Reverso #{$reversoId}.",
             ]);
 
-            // 3. Registrar el INGRESO en el Ledger a nivel de Sede (deposito_id = null)
-            // Incrementa la disponibilidad general de la sede sin atarse a un tanque físico.
             $this->ledgerRepo->registrar([
                 'sede_id'             => $data['sede_id'],
                 'tipo_combustible_id' => $data['tipo_combustible_id'],
                 'bolsa_tipo'          => 'general', 
                 'tipo_movimiento'     => 'reverso',
-                'cantidad_litros'     => abs($cantidadLitros), // (+) Suma a disponibilidad general
-                'deposito_id'         => null, // 💡 Libero el amarre al tanque físico
+                'cantidad_litros'     => abs($cantidadLitros),
+                'deposito_id'         => null,
                 'cliente_id'          => $data['cliente_id'],
                 'user_id'             => $userId,
                 'observaciones'       => "Ingreso por retorno de producto (Reverso #{$reversoId})."
@@ -220,44 +197,45 @@ class CombustibleService
 
     /**
      * REGLA DE NEGOCIO: Procesa el descuento del cliente evaluando la prioridad:
-     * Primero Saldo Pendiente (Reversos acumulados) -> Luego Cupo GASCO (Si es Diésel).
+     * 1. Saldo Pendiente (Reversos acumulados a favor).
+     * 2. Cupo GASCO (Si es Diésel tipo 2).
+     * Si no tiene cupo base, se asume 0 y el disponible pasa a saldo negativo.
      */
-    public function procesarDescuentoSaldosCliente(int $clienteId, int $tipoCombustibleId, float $litrosRequeridos,
-        ?int $llenadoPrepagadoId = null, ?int $userId = null): array {$userId = $userId ?? (auth()->id() ?? 1);
+    public function procesarDescuentoSaldosCliente(
+        int $clienteId,
+        int $tipoCombustibleId,
+        float $litrosRequeridos,
+        ?int $llenadoPrepagadoId = null,
+        ?int $userId = null
+    ): array {
+        $userId = $userId ?? (auth()->id() ?? 1);
         
         // 1. Verificar si el cliente tiene saldo a favor acumulado
-        $saldoPendienteDisponible = $this->saldoClienteRepo->getBalancePendiente($clienteId, $tipoCombustibleId);
+        $saldoPendienteDisponible = (float) $this->saldoClienteRepo->getBalancePendiente($clienteId, $tipoCombustibleId);
 
         $consumidoSaldoPendiente = 0.0;
         $litrosRemanentes = $litrosRequeridos;
 
-        // --- PASO 1: Consumir de Saldo Pendiente ---
+        // --- PASO 1: Consumir de Saldo Pendiente (a favor) ---
         if ($saldoPendienteDisponible > 0) {
-            // Se consume el máximo posible entre lo que necesita y lo que tiene a favor
             $consumidoSaldoPendiente = min($saldoPendienteDisponible, $litrosRequeridos);
             $litrosRemanentes -= $consumidoSaldoPendiente;
 
             $this->saldoClienteRepo->registrar([
                 'cliente_id'           => $clienteId,
                 'tipo_combustible_id'  => $tipoCombustibleId,
-                'tipo_accion'          => 'consumido', // 💡 Registra el descuento del saldo a favor
+                'tipo_accion'          => 'consumido',
                 'cantidad_litros'      => $consumidoSaldoPendiente,
                 'user_id'              => $userId,
                 'observaciones'        => "Consumo de saldo a favor aplicado a despacho/llenado.",
             ]);
         }
 
-        // --- PASO 2: Si queda remanente y es Diésel (ID 2), descontar de Cupo GASCO ---
+        // --- PASO 2: Descontar de Cupo GASCO si es Diésel (ID 2) ---
         $esDiesel = ($tipoCombustibleId == 2);
         $consumidoCupoGasco = 0.0;
 
         if ($esDiesel && $litrosRemanentes > 0) {
-            $cupoMensual = $this->gascoCupoRepo->getOrCreateMonthlyQuota($clienteId);
-
-            if (!$cupoMensual) {
-                throw new Exception("El cliente seleccionado no tiene un Cupo GASCO base configurado en el sistema.");
-            }
-
             $cliente = DB::table('clientes')
                 ->where('id', $clienteId)
                 ->lockForUpdate()
@@ -267,17 +245,60 @@ class CombustibleService
                 throw new Exception("El cliente seleccionado no existe.");
             }
 
-            if ($cliente->disponible < $litrosRemanentes) {
-                throw new Exception("Saldo insuficiente: El cliente requiere {$litrosRemanentes} Lts de su Cupo GASCO, pero solo cuenta con {$cliente->disponible} Lts disponibles.");
+            $mes = (int) now()->month;
+            $anio = (int) now()->year;
+
+            // 2.1. Intentar obtener el cupo mensual o crearlo con base 0 si no existe
+            $cupoMensual = null;
+            try {
+                $cupoMensual = $this->gascoCupoRepo->getOrCreateMonthlyQuota($clienteId);
+            } catch (\Throwable $e) {
+                $cupoMensual = null;
             }
 
-            // Se actualiza el consumo en el cupo mensual
-            $this->gascoCupoRepo->updateConsumed($cupoMensual->id, $litrosRemanentes);
+            if ($cupoMensual) {
+                $this->gascoCupoRepo->updateConsumed($cupoMensual->id, $litrosRemanentes);
+            } else {
+                $registroExistente = DB::table('gasco_cupos_mensuales')
+                    ->where('cliente_id', $clienteId)
+                    ->where('mes', $mes)
+                    ->where('anio', $anio)
+                    ->first();
+
+                if ($registroExistente) {
+                    DB::table('gasco_cupos_mensuales')
+                        ->where('id', $registroExistente->id)
+                        ->increment('litros_consumidos', $litrosRemanentes);
+                } else {
+                    DB::table('gasco_cupos_mensuales')->insert([
+                        'cliente_id'         => $clienteId,
+                        'mes'                => $mes,
+                        'anio'               => $anio,
+                        'litros_autorizados' => (float) ($cliente->cupo ?? 0.00),
+                        'litros_consumidos'  => $litrosRemanentes,
+                        'created_at'         => now(),
+                        'updated_at'         => now(),
+                    ]);
+                }
+            }
+
+            // 2.2. Actualizar disponible en clientes (evita fallos de NULL en MySQL)
+            $disponibleActual = (float) ($cliente->disponible ?? 0.00);
+            DB::table('clientes')
+                ->where('id', $clienteId)
+                ->update([
+                    'disponible' => $disponibleActual - $litrosRemanentes,
+                    'updated_at' => now(),
+                ]);
+
             $consumidoCupoGasco = $litrosRemanentes;
+            $litrosRemanentes = 0.0;
         }
 
         return [
+            'consumido_saldo'           => $consumidoSaldoPendiente,
             'consumido_saldo_pendiente' => $consumidoSaldoPendiente,
+            'consumido_cupo'            => $consumidoCupoGasco,
             'consumido_cupo_gasco'      => $consumidoCupoGasco,
             'remanente_litros'          => $litrosRemanentes,
         ];
@@ -295,39 +316,32 @@ class CombustibleService
 
     public function obtenerMetricasDashboard(?int $sedeId = null): array
     {
-        // 1. Identificadores de combustible para tanques/capacidad
         $idDiesel = DB::table('tipos_combustible')->where('nombre', 'LIKE', '%diesel%')->value('id') ?? 1;
         $idMgo    = DB::table('tipos_combustible')->where('nombre', 'LIKE', '%mgo%')->value('id') ?? 2;
 
-        // 2. Saldos y Disponibilidad Físicos desde el Ledger / Depósitos
         $generalFisico         = $this->ledgerRepo->getSaldoFisicoGeneral($sedeId);
         $prepagado             = $this->ledgerRepo->getDisponibilidadPrepagada($sedeId);
         $totalDisponibleDiesel = $this->ledgerRepo->getDisponibilidadFisicaTotal($sedeId, $idDiesel);
         $totalDisponibleMgo    = $this->ledgerRepo->getDisponibilidadFisicaTotal($sedeId, $idMgo);
 
-        // 3. Litros Comprometidos REALES (Tabla `viajes`, status PROGRAMADO)
         $queryViajes = DB::table('viajes')
             ->where('status', 'PROGRAMADO')
             ->when($sedeId, fn($q) => $q->where('sede_id', $sedeId));
 
-        // tipo_planificacion: 1 = Diesel, 2 = MGO
         $comprometidoDiesel = (clone $queryViajes)->where('tipo_planificacion', 1)->sum('litros') ?? 0;
         $comprometidoMgo    = (clone $queryViajes)->where('tipo_planificacion', 2)->sum('litros') ?? 0;
         $totalComprometido  = $comprometidoDiesel + $comprometidoMgo;
 
-        // 4. Capacidades para % de Tanques
         $queryDepositos = Deposito::when($sedeId, fn($q) => $q->where('id_sede', $sedeId));
 
         $tanquesActivos  = (clone $queryDepositos)->count();
         $capacidadDiesel = (clone $queryDepositos)->where('tipo_combustible_id', $idDiesel)->sum('capacidad_litros');
         $capacidadMgo    = (clone $queryDepositos)->where('tipo_combustible_id', $idMgo)->sum('capacidad_litros');
 
-        // 5. Paginación directa con Eloquent
         $disponibilidades = Deposito::when($sedeId, fn($q) => $q->where('id_sede', $sedeId))
             ->with(['sedes', 'tipoCombustible', 'ultimaMedicion'])
             ->paginate(15);
 
-        // 6. Última medición
         $ultimaMedicion = Deposito::when($sedeId, fn($q) => $q->where('id_sede', $sedeId))
             ->with('ultimaMedicion')->get()->pluck('ultimaMedicion.created_at')->filter()->max();
 
