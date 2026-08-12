@@ -218,7 +218,7 @@
                                     @endphp
 
                                     @if($existeQr)
-                                        <img src="{{ asset('storage/' . $qrPath) }}" alt="QR Cliente" style=" width: 10cm;">
+                                        <img src="{{ asset('storage/' . $qrPath) }}" alt="QR Cliente" style=" width: 5cm;">
                                     @else
                                         <span class="text-muted small fw-normal">No posee QR registrado</span>
                                     @endif
