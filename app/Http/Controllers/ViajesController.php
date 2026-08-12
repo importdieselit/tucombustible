@@ -1702,8 +1702,10 @@ public function updateGuiaData(Request $request, $viajeId)
         // KPIs Generales
         $totalViajes    = $viajes->count();
         $totalDespachos = $despachosDetalle->count();
+        $totalDespachos = $viajes->whereIn('tipo_planificacion', [1, 2])->count();
         $totalCompras   = $viajes->where('tipo_planificacion', 4)->count();
         $totalLitros    = $despachosDetalle->sum('litros');
+        $totalLitros = $viajes->whereIn('tipo_planificacion', [1, 2])->sum('litros');
         $totalLitrosCompras = $viajes->where('tipo_planificacion', 4)->sum('litros');
 
         // Agrupaciones de gráficos
