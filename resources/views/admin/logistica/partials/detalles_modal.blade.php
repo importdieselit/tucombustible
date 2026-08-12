@@ -146,11 +146,11 @@
                                 <th class="ps-3">Cliente / RIF</th>
                                 <th>Dirección</th>
                                 <th>Persona de Contacto</th>
-                                <th>Persona Alternativa</th>
                                 <th class="text-center" style="width: 15%;">Litros</th>
                                 @if($viaje->tipo_planificacion == 1) 
                                     <th style="width: 30%;">Buque / IMO / Bandera</th> 
                                 @endif
+                                <th>QR</th>
                             </tr>
                         </thead>
                         <tbody class="small">
@@ -162,10 +162,14 @@
                                 </td>
                                 <td>{{ $detalle->direccion_despacho ?? $detalle->cliente->direccion_operativa ?? 'S/D' }}</td>
                                 <td>{{ $detalle->cliente->contacto ?? 'N/A' }}
-                                    {{ $detalle->cliente->telefono ?? 'N/A' }}</td>
-                                <td>{{ $detalle->cliente->contacto_alt ?? 'N/A' }}
-                                    {{ $detalle->cliente->telefono_alt ?? 'N/A' }}</td>
-                                <td class="text-center fw-black text-dark fs-6">{{ number_format($detalle->litros_despachados ?? $detalle->litros ?? 0, 0) }} L</td>
+                                    {{ $detalle->cliente->telefono ?? 'N/A' }}
+                                    {{ $detalle->cliente->contacto_alt ?? 'N/A' }}
+                                    {{ $detalle->cliente->telefono_alt ?? 'N/A' }}
+                                </td>
+                                <td>
+                                    {{ number_format($detalle->litros_despachados ?? $detalle->litros ?? 0, 0) }} L
+                                </td>
+                                
                                 
                                 @if($viaje->tipo_planificacion == 1)
                                     <td>
@@ -179,6 +183,7 @@
                                         </div>
                                     </td>
                                 @endif
+                                <td class="text-center fw-black text-dark fs-6"> <i class="fas fa-qrcode" src="{{ asset('clientes/qr/' . ($detalle->cliente->id ?? '') . '.png') }}"></i> </td>
                             </tr>
                             @endforeach
                         </tbody>
