@@ -158,7 +158,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-2 mb-2">
+            <div class="col-md-3 mb-2">
                 <div class="card border-left-success shadow h-100 py-2">
                     <div class="card-body">
                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Volumen Total Ventas</div>
@@ -174,7 +174,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-2 mb-2">
+            <div class="col-md-3 mb-2">
                 <div class="card border-left-success shadow h-100 py-2">
                     <div class="card-body">
                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Volumen Total Compras</div>
