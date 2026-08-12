@@ -1561,7 +1561,6 @@ public function updateGuiaData(Request $request, $viajeId)
         $tipoOperacion = $request->input('tipo_operacion');
         $agruparPor    = $request->input('agrupar_por', 'ninguno');
 
-        // Mapeo legible de tipos de planificación
         $mapaTipos = [
             1 => 'Venta MGO',
             2 => 'Venta Industrial',
@@ -1569,7 +1568,7 @@ public function updateGuiaData(Request $request, $viajeId)
             4 => 'Compras'
         ];
 
-        // Resolver Jerarquía de Cliente (Principal vs Sucursal)
+        // 1. RESOLVER JERARQUÍA DE CLIENTES (PRINCIPAL Y SUCURSALES)
         $clienteSeleccionado = null;
         $clientIds = [];
         $esClientePrincipal = false;
@@ -1579,7 +1578,7 @@ public function updateGuiaData(Request $request, $viajeId)
             if ($clienteSeleccionado) {
                 if ($clienteSeleccionado->parent == 0 || is_null($clienteSeleccionado->parent)) {
                     $esClientePrincipal = true;
-                    // Incluir el ID del principal y los IDs de todas sus sucursales
+                    // Incluye el ID principal + IDs de sus sucursales
                     $clientIds = array_merge([$clienteSeleccionado->id], $clienteSeleccionado->sucursales->pluck('id')->toArray());
                 } else {
                     // Es una sucursal específica
@@ -1588,7 +1587,7 @@ public function updateGuiaData(Request $request, $viajeId)
             }
         }
 
-        // Query Base con Eager Loading
+        // 2. QUERY BASE CON EAGER LOADING
         $query = Viaje::with(['chofer.persona', 'ayudante_chofer.persona', 'despachos.cliente.padre', 'cliente.padre', 'vehiculo'])
             ->whereBetween('fecha_salida', [$fechaInicio . ' 00:00:00', $fechaFin . ' 23:59:59']);
 
@@ -1596,7 +1595,7 @@ public function updateGuiaData(Request $request, $viajeId)
         if ($destino)  $query->where('destino_ciudad', $destino);
         if ($status)   $query->where('status', $status);
 
-        // Filtro por Cliente (en viaje directo o en despachos)
+        // Filtro a nivel de BD para traer solo viajes donde participó el cliente o sus sucursales
         if (!empty($clientIds)) {
             $query->where(function($q) use ($clientIds) {
                 $q->whereIn('cliente_id', $clientIds)
@@ -1606,7 +1605,6 @@ public function updateGuiaData(Request $request, $viajeId)
             });
         }
 
-        // Filtro por Tipo de Operación
         if ($tipoOperacion) {
             if ($tipoOperacion === 'ventas') {
                 $query->whereIn('tipo_planificacion', [1, 2]);
@@ -1617,53 +1615,52 @@ public function updateGuiaData(Request $request, $viajeId)
 
         $viajes = $query->get();
 
-        // Mapeo y cálculo de litros por viaje en base a cliente(s) filtrado(s)
+        // 3. TRANSFORMACIÓN: SUMAR LITROS Y ARMAN NOMBRES EXCLUSIVAMENTE DEL CLIENTE FILTRADO
         $viajes->transform(function($v) use ($clientIds) {
             $nombres = collect();
-            if ($v->cliente) $nombres->push($v->cliente->nombre);
-            if ($v->otro_cliente) $nombres->push($v->otro_cliente);
-            if ($v->nombre_cliente_externo) $nombres->push($v->nombre_cliente_externo);
-
             $litrosFiltrados = 0;
             $tieneDespachos = $v->despachos->count() > 0;
 
-            foreach ($v->despachos as $despacho) {
-                if ($despacho->cliente) {
-                    $nombres->push($despacho->cliente->nombre);
-                } elseif ($despacho->otro_cliente) {
-                    $nombres->push($despacho->otro_cliente);
-                }
+            if ($tieneDespachos) {
+                foreach ($v->despachos as $despacho) {
+                    // Verificar si el despacho pertenece al cliente/sucursales filtrados (o si no hay filtro activo)
+                    $perteneceAlFiltro = empty($clientIds) || in_array($despacho->cliente_id, $clientIds);
 
-                if (!empty($clientIds)) {
-                    if (in_array($despacho->cliente_id, $clientIds)) {
+                    if ($perteneceAlFiltro) {
                         $litrosFiltrados += $despacho->litros;
+
+                        if ($despacho->cliente) {
+                            $nombres->push($despacho->cliente->nombre);
+                        } elseif ($despacho->otro_cliente) {
+                            $nombres->push($despacho->otro_cliente);
+                        }
                     }
                 }
-            }
+            } else {
+                // Si el viaje no tiene desglosada la tabla despachos_viajes
+                $perteneceAlFiltro = empty($clientIds) || in_array($v->cliente_id, $clientIds);
 
-            if (!$tieneDespachos) {
-                if (!empty($clientIds)) {
-                    if (in_array($v->cliente_id, $clientIds)) {
-                        $litrosFiltrados = $v->litros ?? 0;
-                    }
-                } else {
+                if ($perteneceAlFiltro) {
                     $litrosFiltrados = $v->litros ?? 0;
+
+                    if ($v->cliente) $nombres->push($v->cliente->nombre);
+                    if ($v->otro_cliente) $nombres->push($v->otro_cliente);
+                    if ($v->nombre_cliente_externo) $nombres->push($v->nombre_cliente_externo);
                 }
-            } elseif (empty($clientIds)) {
-                $litrosFiltrados = $v->despachos->sum('litros');
             }
 
-            $v->clientes_despachados = $nombres->unique()->filter()->implode(' | ') ?: 'Sin Cliente';
+            $v->clientes_despachados = $nombres->unique()->filter()->implode(', ') ?: 'Sin Cliente';
             $v->litros_filtrados = $litrosFiltrados;
 
             return $v;
         });
 
-        // Desglose Individual de Despachos (Para la vista detallada por cliente/sucursales)
+        // 4. DESGLOSE INDIVIDUAL DE DESPACHOS (DISCRIMINA CLIENTES DE OTROS TERCEROS)
         $despachosDetalle = collect();
         foreach ($viajes as $viaje) {
             if ($viaje->despachos->count() > 0) {
                 foreach ($viaje->despachos as $despacho) {
+                    // Omitir despachos que pertenezcan a otros clientes no filtrados
                     if (!empty($clientIds) && !in_array($despacho->cliente_id, $clientIds)) {
                         continue;
                     }
@@ -1707,7 +1704,7 @@ public function updateGuiaData(Request $request, $viajeId)
         $totalDespachos = $despachosDetalle->count();
         $totalLitros    = $despachosDetalle->sum('litros');
 
-        // Agrupaciones para Highcharts
+        // Agrupaciones de gráficos
         $viajesPorDestino = $viajes->groupBy(fn($v) => $v->destino_ciudad ?: 'Sin Destino')->map->count()->sortDesc()->take(5);
         $viajesPorStatus  = $viajes->groupBy(fn($v) => $v->status ?: 'Sin Estatus')->map->count();
         $viajesPorChofer  = $viajes->groupBy(function($v) {
@@ -1717,7 +1714,7 @@ public function updateGuiaData(Request $request, $viajeId)
             ->groupBy(fn($v) => $v->ayudante_chofer->persona->nombre . ' ' . $v->ayudante_chofer->persona->apellido)
             ->map->count()->sortDesc();
 
-        // LÓGICA DE TABLAS AGRUPADAS
+        // 5. LÓGICA DE AGRUPACIÓN EN TABLAS
         $tablaAgrupada = null;
         $tablaAgrupadaAyudantes = null;
         $tablasPorTipo = null;
@@ -1756,7 +1753,6 @@ public function updateGuiaData(Request $request, $viajeId)
         } elseif ($agruparPor === 'cliente') {
             $todosClientes = Cliente::all()->keyBy('id');
 
-            // Agrupar despachos asociando sucursales a su cliente principal
             $tablaAgrupada = $despachosDetalle->groupBy(function($item) use ($todosClientes) {
                 $cli = $todosClientes->get($item['cliente_id']);
                 if ($cli) {
@@ -1791,10 +1787,9 @@ public function updateGuiaData(Request $request, $viajeId)
             });
         }
 
-        // Cargar clientes agrupando/ordenando por jerarquía
-        $clientes = Cliente::with('padre')->orderBy('parent')->orderBy('nombre')->get();
-        $choferes = \App\Models\Chofer::with('persona')->get();
-        $destinos = Viaje::distinct()->pluck('destino_ciudad')->filter();
+        $clientes           = Cliente::with('padre')->orderBy('parent')->orderBy('nombre')->get();
+        $choferes           = \App\Models\Chofer::with('persona')->get();
+        $destinos           = Viaje::distinct()->pluck('destino_ciudad')->filter();
         $estadosDisponibles = Viaje::distinct()->pluck('status')->filter();
 
         return view('viajes.reporte_estrategico', compact(
