@@ -61,6 +61,17 @@
                     </select>
                 </div>
                 <div class="col-md-2">
+                    <label>Cliente</label>
+                    <select name="cliente_id" class="form-control">
+                        <option value="">Todos</option>
+                        @foreach($clientes as $cli)
+                            <option value="{{ $cli->id }}" {{ $clienteId == $cli->id ? 'selected' : '' }}>
+                                {{ $cli->nombre }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
                     <label>Chofer</label>
                     <select name="chofer_id" class="form-control">
                         <option value="">Todos</option>
@@ -85,11 +96,12 @@
                     <select name="agrupar_por" class="form-control border-primary fw-bold">
                         <option value="ninguno" {{ $agruparPor == 'ninguno' ? 'selected' : '' }}>Sin Agrupar (Detalle)</option>
                         <option value="tipo_operacion" {{ $agruparPor == 'tipo_operacion' ? 'selected' : '' }}>Por Tipo de Operación</option>
+                        <option value="cliente" {{ $agruparPor == 'cliente' ? 'selected' : '' }}>Por Cliente</option>
                         <option value="chofer" {{ $agruparPor == 'chofer' ? 'selected' : '' }}>Por Chofer</option>
                         <option value="destino" {{ $agruparPor == 'destino' ? 'selected' : '' }}>Por Destino</option>
                     </select>
                 </div>
-                <div class="col-md-12 d-flex justify-content-end">
+                <div class="col-md-10 d-flex justify-content-end align-items-end">
                     <button type="submit" class="btn btn-success px-4"><i class="fas fa-search"></i> Aplicar Filtros</button>
                 </div>
             </form>
@@ -235,7 +247,7 @@
                                         <th>Chofer</th>
                                         <th>Ayudante</th>
                                         <th class="text-end">Volumen (Lts)</th>
-                                        <th class="text-center">Estatus</th>
+                                        <th>Cliente(s) Despachado(s)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -247,7 +259,7 @@
                                             <td>{{ $viaje->chofer->persona->nombre ?? 'N/A' }} {{ $viaje->chofer->persona->apellido ?? '' }}</td>
                                             <td>{{ $viaje->ayudante_chofer->persona->nombre ?? 'N/A' }} {{ $viaje->ayudante_chofer->persona->apellido ?? '' }}</td>
                                             <td class="text-end">{{ number_format($viaje->despachos->sum('litros') + ($viaje->litros ?? 0), 2) }}</td>
-                                            <td class="text-center"><span class="badge bg-secondary">{{ $viaje->status }}</span></td>
+                                            <td>{{ $viaje->clientes_despachados }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -257,6 +269,44 @@
                 </div>
             @endforeach
         @endif
+
+    @elseif($agruparPor === 'cliente')
+        <!-- TABLA CLIENTES -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-dark text-white">
+                <h6 class="m-0 font-weight-bold"><i class="fas fa-user-tag"></i> Resumen Agrupado por Cliente</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped" width="100%">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>#</th>
+                                <th>Cliente</th>
+                                <th class="text-center">Total Viajes</th>
+                                <th class="text-end">Volumen Total (Lts)</th>
+                                <th class="text-center">% Part. Viajes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($tablaAgrupada as $item)
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td class="fw-bold">{{ $item['criterio'] }}</td>
+                                    <td class="text-center">{{ $item['total_viajes'] }}</td>
+                                    <td class="text-end">{{ number_format($item['total_litros'], 2) }}</td>
+                                    <td class="text-center">
+                                        {{ $totalViajes > 0 ? number_format(($item['total_viajes'] / $totalViajes) * 100, 1) : 0 }}%
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="5" class="text-center">Sin información de clientes.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
     @elseif($agruparPor === 'chofer')
         <!-- TABLA CHOFERES -->
@@ -389,7 +439,7 @@
                                 <th>Chofer</th>
                                 <th>Ayudante</th>
                                 <th class="text-end">Volumen (Lts)</th>
-                                <th class="text-center">Estatus</th>
+                                <th>Cliente(s) Despachado(s)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -406,7 +456,7 @@
                                     <td>{{ $viaje->chofer->persona->nombre ?? 'N/A' }}</td>
                                     <td>{{ $viaje->ayudante_chofer->persona->nombre ?? 'N/A' }}</td>
                                     <td class="text-end">{{ number_format($viaje->despachos->sum('litros') + ($viaje->litros ?? 0), 2) }}</td>
-                                    <td class="text-center"><span class="badge bg-secondary">{{ $viaje->status }}</span></td>
+                                    <td>{{ $viaje->clientes_despachados }}</td>
                                 </tr>
                             @empty
                                 <tr><td colspan="8" class="text-center">No se encontraron registros.</td></tr>
@@ -419,7 +469,6 @@
     @endif
 </div>
 @push('scripts')
-    
 <!-- HIGHCHARTS Y SCRIPT -->
 <script src="https://code.highcharts.com/highcharts.js"></script>
 
@@ -505,5 +554,4 @@
     })();
 </script>
 @endpush
-
 @endsection
