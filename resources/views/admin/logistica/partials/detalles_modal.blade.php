@@ -183,7 +183,19 @@
                                         </div>
                                     </td>
                                 @endif
-                                <td class="text-center fw-black text-dark fs-6"> <i class="fas fa-qrcode" src="{{ asset('clientes/qr/' . ($detalle->cliente->id ?? '') . '.png') }}"></i> </td>
+                                <td class="text-center fw-black text-dark fs-6">
+                                    @php
+                                        $clienteId = $detalle->cliente_id ?? ($detalle->cliente->id ?? null);
+                                        $qrPath = $clienteId ? 'clientes/qr/' . $clienteId . '.png' : null;
+                                        $existeQr = $qrPath && \Illuminate\Support\Facades\Storage::disk('public')->exists($qrPath);
+                                    @endphp
+
+                                    @if($existeQr)
+                                        <img src="{{ asset('storage/' . $qrPath) }}" alt="QR Cliente" style="max-height: 45px; width: auto;">
+                                    @else
+                                        <span class="text-muted small fw-normal">No posee QR registrado</span>
+                                    @endif
+                                </td>
                             </tr>
                             @endforeach
                         </tbody>
