@@ -1702,7 +1702,9 @@ public function updateGuiaData(Request $request, $viajeId)
         // KPIs Generales
         $totalViajes    = $viajes->count();
         $totalDespachos = $despachosDetalle->count();
+        $totalCompras   = $viajes->where('tipo_planificacion', 4)->count();
         $totalLitros    = $despachosDetalle->sum('litros');
+        $totalLitrosCompras = $viajes->where('tipo_planificacion', 4)->sum('litros');
 
         // Agrupaciones de gráficos
         $viajesPorDestino = $viajes->groupBy(fn($v) => $v->destino_ciudad ?: 'Sin Destino')->map->count()->sortDesc()->take(5);
@@ -1794,7 +1796,7 @@ public function updateGuiaData(Request $request, $viajeId)
 
         return view('viajes.reporte_estrategico', compact(
             'viajes', 'tablaAgrupada', 'tablaAgrupadaAyudantes', 'tablasPorTipo', 'despachosDetalle',
-            'agruparPor', 'totalViajes', 'totalDespachos', 'totalLitros',
+            'agruparPor', 'totalViajes', 'totalDespachos', 'totalLitros', 'totalCompras', 'totalLitrosCompras',
             'clienteSeleccionado', 'esClientePrincipal',
             'viajesPorDestino', 'viajesPorChofer', 'viajesPorAyudante', 'viajesPorStatus',
             'choferes', 'clientes', 'destinos', 'estadosDisponibles', 'mapaTipos',

@@ -142,7 +142,7 @@
     @else
         <!-- KPIs GENERALES -->
         <div class="row mb-4">
-            <div class="col-md-4 mb-2">
+            <div class="col-md-2 mb-2">
                 <div class="card border-left-primary shadow h-100 py-2">
                     <div class="card-body">
                         <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Viajes Procesados</div>
@@ -150,7 +150,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4 mb-2">
+            <div class="col-md-2 mb-2">
                 <div class="card border-left-info shadow h-100 py-2">
                     <div class="card-body">
                         <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Despachos Realizados</div>
@@ -158,11 +158,27 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-4 mb-2">
+            <div class="col-md-2 mb-2">
                 <div class="card border-left-success shadow h-100 py-2">
                     <div class="card-body">
-                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Volumen Total Cargado/Movilizado</div>
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Volumen Total Ventas</div>
                         <div class="h4 mb-0 font-weight-bold text-gray-800">{{ number_format($totalLitros, 2) }} Lts</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 mb-2">
+                <div class="card border-left-info shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Compras Realizadas</div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800">{{ number_format($totalCompras) }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2 mb-2">
+                <div class="card border-left-success shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Volumen Total Compras</div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800">{{ number_format($totalLitrosCompras, 2) }} Lts</div>
                     </div>
                 </div>
             </div>
