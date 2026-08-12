@@ -49,7 +49,7 @@
         </form>
     </div>
 
-    {{-- TABLA 1: SALDOS ACTUALES DISPONIBLES POR CLIENTE (LO QUE HACÍA FALTA) --}}
+    {{-- TABLA 1: SALDOS ACTUALES DISPONIBLES POR CLIENTE --}}
     <div class="card shadow-sm border-0 mb-4" style="border-left: 4px solid #ff6600;">
         <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
             <h6 class="mb-0 fw-black text-uppercase small text-dark">
@@ -60,9 +60,10 @@
             </span>
         </div>
         <div class="card-body p-0">
-            <div class="table-responsive">
+            {{-- SCROLL HORIZONTAL Y VERTICAL TABLA 1 --}}
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                 <table class="table table-hover align-middle mb-0" style="min-width: 800px;">
-                    <thead class="bg-light">
+                    <thead class="bg-light sticky-top" style="top: 0; z-index: 1;">
                         <tr class="text-uppercase text-muted" style="font-size: 12px; letter-spacing: 0.5px;">
                             <th class="ps-4">Cliente</th>
                             <th>Combustible</th>
@@ -128,9 +129,10 @@
             </h6>
         </div>
         <div class="card-body p-0">
-            <div class="table-responsive">
+            {{-- SCROLL HORIZONTAL Y VERTICAL TABLA 2 --}}
+            <div class="table-responsive" style="max-height: 450px; overflow-y: auto;">
                 <table class="table table-hover align-middle mb-0" style="min-width: 900px;">
-                    <thead class="bg-light">
+                    <thead class="bg-light sticky-top" style="top: 0; z-index: 1;">
                         <tr class="text-uppercase text-muted" style="font-size: 12px; letter-spacing: 0.5px;">
                             <th class="ps-4">Fecha</th>
                             <th>Cliente</th>

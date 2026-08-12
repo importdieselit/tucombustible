@@ -153,7 +153,7 @@
             </div>
 
             {{-- DETALLE DE DISPONIBILIDAD POR TANQUE / SEDE --}}
-            <div class="card border border-gray-300 shadow-sm">
+            <div class="card border border-gray-300 shadow-sm mb-4">
                 <div class="card-header bg-white border-bottom py-2">
                     <h6 class="mb-0 fw-black text-uppercase small text-dark">
                         <i class="fas fa-list-ul text-orange me-2"></i> Desglose de Volúmenes por Tanque
@@ -176,38 +176,26 @@
                             <tbody>
                                 @forelse($disponibilidades ?? [] as $tanque)
                                     @php
-                                        // Mapeo correcto contra la tabla 'depositos'
                                         $capacidad = $tanque->capacidad_litros ?? 0;
                                         $volumenActual = $tanque->nivel_actual_litros ?? 0;
                                         $porcentaje = $capacidad > 0 ? ($volumenActual / $capacidad) * 100 : 0;
                                         
-                                        // Color del badge según nivel
                                         $badgeColor = match(true) {
                                             $porcentaje < 20 => 'bg-danger text-white',
                                             $porcentaje < 50 => 'bg-warning text-dark',
                                             default          => 'bg-success text-white'
                                         };
 
-                                        // Nombre de la sede (por relación Eloquent o alias de JOIN)
                                         $nombreSede = $tanque->sedes->nombre ?? $tanque->sede->nombre ?? $tanque->nombre_sede ?? 'Sin Sede';
-                                        $producto = $tanque->producto ?? 'N/A';
-                                        $isDiesel = str_contains(strtoupper($producto), 'DIESEL');
+                                        $nombreProducto = $tanque->tipoCombustible->nombre 
+                                                    ?? $tanque->tipoCombustible->descripcion 
+                                                    ?? null;
+                                        $producto = $nombreProducto ?? 'Sin Tipo (' . $tanque->tipo_combustible_id . ')';
+                                        $isDiesel = \Illuminate\Support\Str::contains(strtolower($producto), ['diesel', 'diésel', 'gasoil']);
                                     @endphp
                                     <tr>
                                         <td class="ps-3 fw-bold text-dark text-uppercase">{{ $nombreSede }}</td>
                                         <td class="fw-black text-uppercase">{{ $tanque->serial ?? 'N/A' }}</td>
-                                        @php
-                                            // 1. Obtenemos el nombre del tipo desde la relación tipoCombustible
-                                            $nombreProducto = $tanque->tipoCombustible->nombre 
-                                                        ?? $tanque->tipoCombustible->descripcion 
-                                                        ?? null;
-
-                                            // Respaldamos por si la relación viene null
-                                            $producto = $nombreProducto ?? 'Sin Tipo (' . $tanque->tipo_combustible_id . ')';
-
-                                            // 2. Verificamos si es diésel o gasoil para alternar el color del badge
-                                            $isDiesel = \Illuminate\Support\Str::contains(strtolower($producto), ['diesel', 'diésel', 'gasoil']);
-                                        @endphp
                                         <td>
                                             <span class="badge {{ $isDiesel ? 'bg-primary' : 'bg-warning text-dark' }} text-uppercase">
                                                 {{ $producto }}
@@ -242,7 +230,6 @@
                     </div>
                 </div>
 
-                {{-- PAGINACIÓN --}}
                 @if(isset($disponibilidades) && method_exists($disponibilidades, 'hasPages') && $disponibilidades->hasPages())
                     <div class="card-footer bg-white border-top py-2 d-flex justify-content-between align-items-center">
                         <div class="text-xs text-muted font-bold">
@@ -254,6 +241,90 @@
                     </div>
                 @endif
             </div>
+
+            {{-- NUEVA TABLA: VEHÍCULOS PRECARGADOS ACTIVOS --}}
+            <div class="card border border-gray-300 shadow-sm">
+                <div class="card-header bg-white border-bottom py-2 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-black text-uppercase small text-dark">
+                        <i class="fas fa-truck-loading text-orange me-2"></i> Vehículos Precargados Actuales
+                    </h6>
+                    <span class="badge bg-orange text-white text-uppercase" style="font-size: 10px;">
+                        {{ count($vehiculosPrecargados ?? []) }} Vehículo(s)
+                    </span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                        <table class="table table-hover table-sm align-middle mb-0 text-xs">
+                            <thead class="bg-light font-black text-uppercase text-muted sticky-top shadow-sm" style="font-size: 11px; top: 0; z-index: 10;">
+                                <tr>
+                                    <th class="ps-3 py-2 bg-light">Sede</th>
+                                    <th class="bg-light">Vehículo / Placa</th>
+                                    <th class="bg-light">Combustible</th>
+                                    <th class="bg-light">Tanque Origen</th>
+                                    <th class="bg-light">Fecha y Hora Carga</th>
+                                    <th class="text-center bg-light">Precintado</th>
+                                    <th class="pe-3 text-end bg-light">Litros Cargados</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($vehiculosPrecargados ?? [] as $vp)
+                                    @php
+                                        $combustible = $vp->nombre_combustible ?? 'N/A';
+                                        $isDiesel = \Illuminate\Support\Str::contains(strtolower($combustible), ['diesel', 'diésel', 'gasoil']);
+                                    @endphp
+                                    <tr>
+                                        <td class="ps-3 fw-bold text-dark text-uppercase">
+                                            {{ $vp->nombre_sede ?? 'Sin Sede' }}
+                                        </td>
+                                        <td class="fw-black text-uppercase">
+                                            <i class="fas fa-truck text-muted me-1"></i>
+                                            {{ $vp->placa ?? ('Vehículo #' . $vp->id_vehiculo) }} 
+                                            @if(!empty($vp->modelo))
+                                                <span class="text-muted small">({{ $vp->modelo }})</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <span class="badge {{ $isDiesel ? 'bg-primary' : 'bg-warning text-dark' }} text-uppercase">
+                                                {{ $combustible }}
+                                            </span>
+                                        </td>
+                                        <td class="fw-bold text-dark text-uppercase">
+                                            {{ $vp->tanque_origen ?? 'Externo' }}
+                                        </td>
+                                        <td class="font-monospace text-muted">
+                                            {{ $vp->fecha_hora_carga ? \Carbon\Carbon::parse($vp->fecha_hora_carga)->format('d/m/Y h:i A') : 'N/A' }}
+                                        </td>
+                                        <td class="text-center">
+                                            @if($vp->esta_precintado)
+                                                <span class="badge bg-success text-white text-uppercase" style="font-size: 10px;">
+                                                    <i class="fas fa-lock me-1"></i> SÍ
+                                                </span>
+                                            @else
+                                                <span class="badge bg-secondary text-white text-uppercase" style="font-size: 10px;">
+                                                    <i class="fas fa-unlock me-1"></i> NO
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td class="pe-3 text-end fw-black text-orange" style="font-size: 13px;">
+                                            {{ number_format($vp->cantidad_litros, 2, ',', '.') }} Lts
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4 text-muted fw-bold">
+                                            <i class="fas fa-info-circle text-orange fa-lg mb-2 d-block"></i>
+                                            No hay vehículos precargados activos en esta sede actualmente.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
 
     {{-- 3. MENÚ DE ÁREAS OPERATIVAS --}}
     <div class="card mb-4 border border-gray-300 shadow-sm">
@@ -292,7 +363,7 @@
                             </div>
                             <h5 class="fw-black text-uppercase text-dark mb-2 style-title">Chequeo / Varillaje</h5>
                             <p class="text-muted text-xs mb-4 flex-grow-1">
-                                Varillajes físicos periódicos para auditoría e inventario en tanques.
+                                Varillajes físicos para auditoría e inventario en tanques.
                             </p>
                             <a href="{{ route('combustibles.chequeos_depositos.create') }}" class="btn btn-warning w-100 fw-black text-uppercase py-2 text-dark text-xs bg-orange border-0">
                                 <i class="fas fa-clipboard-check me-1"></i> Varillaje
@@ -308,9 +379,9 @@
                             <div class="icon-shape bg-light rounded-circle p-3 mb-3 text-orange shadow-inner d-flex align-items-center justify-content-center">
                                 <i class="fas fa-file-invoice-dollar fa-2x"></i>
                             </div>
-                            <h5 class="fw-black text-uppercase text-dark mb-2 style-title">Cupos Prepagados</h5>
+                            <h5 class="fw-black text-uppercase text-dark mb-2 style-title">Llenados por Cupos Prepagados</h5>
                             <p class="text-muted text-xs mb-4 flex-grow-1">
-                                Registro de llenados asociados a partidas y contratos prepagados.
+                                Llenados de vehículos de clientes en sedes de Impordiesel, asociados a cupos prepagados.
                             </p>
                             <a href="{{ route('combustibles.llenados_prepagados.index') }}" class="btn btn-warning w-100 fw-black text-uppercase py-2 text-dark text-xs bg-orange border-0">
                                 <i class="fas fa-gas-pump me-1"></i> Abrir Llenados
@@ -328,7 +399,7 @@
                             </div>
                             <h5 class="fw-black text-uppercase text-dark mb-2 style-title">Transacciones</h5>
                             <p class="text-muted text-xs mb-4 flex-grow-1">
-                                Libro contable y registro detallado de todas las operaciones.
+                                Registro detallado de todas las operaciones.
                             </p>
                             <a href="{{ route('combustibles.transacciones.index') }}" class="btn btn-warning w-100 fw-black text-uppercase py-2 text-dark text-xs bg-orange border-0">
                                 <i class="fas fa-list me-1"></i> Ver Libro
@@ -364,7 +435,7 @@
                             </div>
                             <h5 class="fw-black text-uppercase text-dark mb-2 style-title">Trasegados</h5>
                             <p class="text-muted text-xs mb-4 flex-grow-1">
-                                Movimientos internos de transferencia de combustible entre tanques.
+                                Movimientos de transferencia de combustibles.
                             </p>
                             <a href="{{ route('combustibles.trasegados.index') }}" class="btn btn-warning w-100 fw-black text-uppercase py-2 text-dark text-xs bg-orange border-0">
                                 <i class="fas fa-dolly me-1"></i> Ver Trasegados
@@ -380,9 +451,9 @@
                             <div class="icon-shape bg-light rounded-circle p-3 mb-3 text-orange shadow-inner d-flex align-items-center justify-content-center">
                                 <i class="fas fa-undo-alt fa-2x"></i>
                             </div>
-                            <h5 class="fw-black text-uppercase text-dark mb-2 style-title">Reversos</h5>
+                            <h5 class="fw-black text-uppercase text-dark mb-2 style-title">Reversos de Combustibles</h5>
                             <p class="text-muted text-xs mb-4 flex-grow-1">
-                                Devoluciones o reintegraciones de combustible en despachos operativos.
+                                Reintegraciones de combustible en despachos operativos (le crea un Saldo Pendiente al cliente).
                             </p>
                             <a href="{{ route('combustibles.reversos_combustibles.index') }}" class="btn btn-warning w-100 fw-black text-uppercase py-2 text-dark text-xs bg-orange border-0">
                                 <i class="fas fa-history me-1"></i> Ver Reversos
@@ -400,7 +471,7 @@
                             </div>
                             <h5 class="fw-black text-uppercase text-dark mb-2 style-title">Mermas</h5>
                             <p class="text-muted text-xs mb-4 flex-grow-1">
-                                Auditoría y ajuste de diferencias por evaporación o merma técnica.
+                                Auditoría y ajuste de diferencias de mermas.
                             </p>
                             <a href="{{ route('combustibles.mermas.index') }}" class="btn btn-warning w-100 fw-black text-uppercase py-2 text-dark text-xs bg-orange border-0">
                                 <i class="fas fa-search-minus me-1"></i> Ver Mermas

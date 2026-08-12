@@ -40,10 +40,6 @@ class CombustibleService
         $this->gascoCupoRepo = $gascoCupoRepo;
     }
 
-    /**
-     * Regla de Negocio: Permite ver disponibilidades globales si es Caracas (ID 1),
-     * de lo contrario, restringe estrictamente a la sede correspondiente.
-     */
     public function obtenerDisponibilidadPorSede(int $sedeId, int $tipoCombustibleId): array
     {
         return [
@@ -52,27 +48,18 @@ class CombustibleService
         ];
     }
 
-    /**
-     * CASO DE USO: Interceptar el varillaje, calcular la merma matemática 
-     * contra el Ledger y ajustar el saldo del sistema.
-     */
     public function calcularMermasParaChequeo(array &$detallesTanques, int $sedeId): void
     {
         foreach ($detallesTanques as &$detalle) {
             $idDeposito = $detalle['id_deposito'];
             
-            // 1. Obtener los litros teóricos del Ledger
             $saldoTeoricoSistema = $this->ledgerRepo->getSaldoTeoricoPorDeposito($idDeposito) ?? 0.0;
-
-            // 2. Calcular Merma: Real de la Vara - Teórico del Sistema
             $litrosMedidosVara = (float) $detalle['litros_calculados'];
             $merma = $litrosMedidosVara - $saldoTeoricoSistema;
 
-            // 3. Inyectar al arreglo por referencia
             $detalle['litros_teoricos'] = $saldoTeoricoSistema;
             $detalle['merma_calculada'] = $merma;
 
-            // 4. Registrar ajuste en el Ledger si hay discrepancia
             if ($merma != 0) {
                 $this->ledgerRepo->registrar([
                     'sede_id'             => $sedeId,
@@ -88,9 +75,6 @@ class CombustibleService
         }
     }
 
-    /**
-     * Registra el Despacho Prepagado en el Ledger
-     */
     public function registrarDespachoPrepagado(array $data): void
     {
         $this->ledgerRepo->registrar([
@@ -195,12 +179,6 @@ class CombustibleService
         });
     }
 
-    /**
-     * REGLA DE NEGOCIO: Procesa el descuento del cliente evaluando la prioridad:
-     * 1. Saldo Pendiente (Reversos acumulados a favor).
-     * 2. Cupo GASCO (Si es Diésel tipo 2).
-     * Si no tiene cupo base, se asume 0 y el disponible pasa a saldo negativo.
-     */
     public function procesarDescuentoSaldosCliente(
         int $clienteId,
         int $tipoCombustibleId,
@@ -210,13 +188,11 @@ class CombustibleService
     ): array {
         $userId = $userId ?? (auth()->id() ?? 1);
         
-        // 1. Verificar si el cliente tiene saldo a favor acumulado
         $saldoPendienteDisponible = (float) $this->saldoClienteRepo->getBalancePendiente($clienteId, $tipoCombustibleId);
 
         $consumidoSaldoPendiente = 0.0;
         $litrosRemanentes = $litrosRequeridos;
 
-        // --- PASO 1: Consumir de Saldo Pendiente (a favor) ---
         if ($saldoPendienteDisponible > 0) {
             $consumidoSaldoPendiente = min($saldoPendienteDisponible, $litrosRequeridos);
             $litrosRemanentes -= $consumidoSaldoPendiente;
@@ -231,7 +207,6 @@ class CombustibleService
             ]);
         }
 
-        // --- PASO 2: Descontar de Cupo GASCO si es Diésel (ID 2) ---
         $esDiesel = ($tipoCombustibleId == 2);
         $consumidoCupoGasco = 0.0;
 
@@ -248,7 +223,6 @@ class CombustibleService
             $mes = (int) now()->month;
             $anio = (int) now()->year;
 
-            // 2.1. Intentar obtener el cupo mensual o crearlo con base 0 si no existe
             $cupoMensual = null;
             try {
                 $cupoMensual = $this->gascoCupoRepo->getOrCreateMonthlyQuota($clienteId);
@@ -282,7 +256,6 @@ class CombustibleService
                 }
             }
 
-            // 2.2. Actualizar disponible en clientes (evita fallos de NULL en MySQL)
             $disponibleActual = (float) ($cliente->disponible ?? 0.00);
             DB::table('clientes')
                 ->where('id', $clienteId)
@@ -316,14 +289,40 @@ class CombustibleService
 
     public function obtenerMetricasDashboard(?int $sedeId = null): array
     {
+        // 1. Obtención de IDs de tipos de combustible
         $idDiesel = DB::table('tipos_combustible')->where('nombre', 'LIKE', '%diesel%')->value('id') ?? 1;
         $idMgo    = DB::table('tipos_combustible')->where('nombre', 'LIKE', '%mgo%')->value('id') ?? 2;
 
-        $generalFisico         = $this->ledgerRepo->getSaldoFisicoGeneral($sedeId);
-        $prepagado             = $this->ledgerRepo->getDisponibilidadPrepagada($sedeId);
-        $totalDisponibleDiesel = $this->ledgerRepo->getDisponibilidadFisicaTotal($sedeId, $idDiesel);
-        $totalDisponibleMgo    = $this->ledgerRepo->getDisponibilidadFisicaTotal($sedeId, $idMgo);
+        // 2. DISPONIBILIDAD EN TANQUES (depositos.nivel_actual_litros)
+        $tanquesDiesel = DB::table('depositos')
+            ->where('tipo_combustible_id', $idDiesel)
+            ->when($sedeId, fn($q) => $q->where('id_sede', $sedeId))
+            ->sum('nivel_actual_litros') ?? 0;
 
+        $tanquesMgo = DB::table('depositos')
+            ->where('tipo_combustible_id', $idMgo)
+            ->when($sedeId, fn($q) => $q->where('id_sede', $sedeId))
+            ->sum('nivel_actual_litros') ?? 0;
+
+        // 3. DISPONIBILIDAD EN VEHÍCULOS PRECARGADOS (vehiculos_precargados.cantidad_litros con estatus = 0)
+        $precargasDiesel = DB::table('vehiculos_precargados')
+            ->where('id_tipo_combustible', $idDiesel)
+            ->where('estatus', 0)
+            ->when($sedeId, fn($q) => $q->where('id_sede', $sedeId))
+            ->sum('cantidad_litros') ?? 0;
+
+        $precargasMgo = DB::table('vehiculos_precargados')
+            ->where('id_tipo_combustible', $idMgo)
+            ->where('estatus', 0)
+            ->when($sedeId, fn($q) => $q->where('id_sede', $sedeId))
+            ->sum('cantidad_litros') ?? 0;
+
+        // 4. SUMATORIA TOTAL DE DISPONIBILIDAD (Tanques + Precargas Activas)
+        $totalDisponibleDiesel = $tanquesDiesel + $precargasDiesel;
+        $totalDisponibleMgo    = $tanquesMgo + $precargasMgo;
+        $totalDisponibleGeneral = $totalDisponibleDiesel + $totalDisponibleMgo;
+
+        // 5. COMPROMETIDOS (Se mantiene desde la tabla de viajes / transacciones)
         $queryViajes = DB::table('viajes')
             ->where('status', 'PROGRAMADO')
             ->when($sedeId, fn($q) => $q->where('sede_id', $sedeId));
@@ -332,12 +331,13 @@ class CombustibleService
         $comprometidoMgo    = (clone $queryViajes)->where('tipo_planificacion', 2)->sum('litros') ?? 0;
         $totalComprometido  = $comprometidoDiesel + $comprometidoMgo;
 
-        $queryDepositos = Deposito::when($sedeId, fn($q) => $q->where('id_sede', $sedeId));
-
+        // 6. INFRAESTRUCTURA Y CAPACIDADES INSTALADAS
+        $queryDepositos  = Deposito::when($sedeId, fn($q) => $q->where('id_sede', $sedeId));
         $tanquesActivos  = (clone $queryDepositos)->count();
         $capacidadDiesel = (clone $queryDepositos)->where('tipo_combustible_id', $idDiesel)->sum('capacidad_litros');
         $capacidadMgo    = (clone $queryDepositos)->where('tipo_combustible_id', $idMgo)->sum('capacidad_litros');
 
+        // 7. DESGLOSE INDIVIDUAL DE TANQUES PARA LA TABLA
         $disponibilidades = Deposito::when($sedeId, fn($q) => $q->where('id_sede', $sedeId))
             ->with(['sedes', 'tipoCombustible', 'ultimaMedicion'])
             ->paginate(15);
@@ -345,23 +345,49 @@ class CombustibleService
         $ultimaMedicion = Deposito::when($sedeId, fn($q) => $q->where('id_sede', $sedeId))
             ->with('ultimaMedicion')->get()->pluck('ultimaMedicion.created_at')->filter()->max();
 
+        // 8. LISTA DE VEHÍCULOS PRECARGADOS ACTIVOS (estatus = 0)
+        $vehiculosPrecargados = DB::table('vehiculos_precargados as vp')
+            ->leftJoin('vehiculos as v', 'vp.id_vehiculo', '=', 'v.id')
+            ->leftJoin('sedes as s', 'vp.id_sede', '=', 's.id')
+            ->leftJoin('tipos_combustible as tc', 'vp.id_tipo_combustible', '=', 'tc.id')
+            ->leftJoin('depositos as d', 'vp.id_deposito', '=', 'd.id')
+            ->select(
+                'vp.*',
+                'v.placa',
+                'v.modelo',
+                's.nombre as nombre_sede',
+                'tc.nombre as nombre_combustible',
+                'd.serial as tanque_origen'
+            )
+            ->where('vp.estatus', 0)
+            ->when($sedeId, fn($q) => $q->where('vp.id_sede', $sedeId))
+            ->orderBy('vp.fecha_hora_carga', 'desc')
+            ->get();
+
         return [
-            'general_fisico'          => $generalFisico,
-            'cupo_prepagado'          => $prepagado,
+            'general_fisico'          => $totalDisponibleGeneral,
             'general_comprometido'    => $totalComprometido,
-            'general_venta'           => $generalFisico - $totalComprometido,
+            'general_venta'           => $totalDisponibleGeneral - $totalComprometido,
             
+            // Diésel
             'totalDisponibleDiesel'   => $totalDisponibleDiesel,
-            'porcentajeDiesel'        => $capacidadDiesel > 0 ? ($totalDisponibleDiesel / $capacidadDiesel) * 100 : 0,
+            'tanquesDiesel'           => $tanquesDiesel,
+            'precargasDiesel'         => $precargasDiesel,
+            'porcentajeDiesel'        => $capacidadDiesel > 0 ? ($tanquesDiesel / $capacidadDiesel) * 100 : 0,
             'totalComprometidoDiesel' => $comprometidoDiesel,
 
+            // MGO
             'totalDisponibleMgo'      => $totalDisponibleMgo,
-            'porcentajeMgo'           => $capacidadMgo > 0 ? ($totalDisponibleMgo / $capacidadMgo) * 100 : 0,
+            'tanquesMgo'              => $tanquesMgo,
+            'precargasMgo'            => $precargasMgo,
+            'porcentajeMgo'           => $capacidadMgo > 0 ? ($tanquesMgo / $capacidadMgo) * 100 : 0,
             'totalComprometidoMgo'     => $comprometidoMgo,
 
+            // Infraestructura y Tablas
             'tanquesActivos'          => $tanquesActivos,
             'ultimaMedicion'          => $ultimaMedicion,
             'disponibilidades'        => $disponibilidades,
+            'vehiculosPrecargados'    => $vehiculosPrecargados,
         ];
     }
 }

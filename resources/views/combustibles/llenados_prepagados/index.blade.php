@@ -88,10 +88,11 @@
             </h6>
         </div>
         <div class="card-body p-0">
-            <div class="table-responsive">
-                {{-- 🆕 Agregamos min-width para garantizar que la barra de scroll aparezca sin aplastar el texto --}}
+            {{-- 🆕 Añadido max-height y overflow para activar el scroll vertical junto al horizontal --}}
+            <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
                 <table class="table table-hover align-middle mb-0" style="min-width: 1200px;">
-                    <thead class="bg-light">
+                    {{-- 🆕 thead sticky para fijar el encabezado mientras se desplaza verticalmente --}}
+                    <thead class="bg-light position-sticky top-0 style-sticky" style="position: sticky; top: 0; z-index: 2; background-color: #f8f9fa;">
                         <tr class="text-uppercase text-muted" style="font-size: 12px; letter-spacing: 0.5px;">
                             <th class="ps-4">Fecha y Hora</th>
                             <th>Cliente</th>
@@ -114,14 +115,12 @@
                                     <small class="text-muted font-monospace">{{ $llenado->cliente->rif }}</small>
                                 </td>
                                 
-                                {{-- 🆕 Renderizado del Chofer --}}
                                 <td>
                                     <span class="text-dark fw-bold" style="font-size: 13px;">
                                         <i class="fas fa-user text-muted me-1"></i> {{ $llenado->chofer->nombre_completo ?? 'N/A' }}
                                     </span>
                                 </td>
 
-                                {{-- 🆕 Renderizado de la Placa --}}
                                 <td>
                                     <span class="badge bg-dark text-white font-monospace text-uppercase p-2" style="font-size: 11px; letter-spacing: 0.5px;">
                                         <i class="fas fa-truck me-1 text-warning"></i> {{ $llenado->placa->placa ?? 'S/P' }}
@@ -151,7 +150,6 @@
                             </tr>
                         @empty
                             <tr>
-                                {{-- 🆕 Actualizado colspan a 8 por las dos nuevas columnas --}}
                                 <td colspan="8" class="text-center py-5 text-muted small fw-bold">
                                     <i class="fas fa-info-circle me-1 text-warning"></i> No se han registrado movimientos de llenado prepagado para los filtros seleccionados.
                                 </td>

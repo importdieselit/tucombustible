@@ -97,9 +97,10 @@
             </h6>
         </div>
         <div class="card-body p-0">
-            <div class="table-responsive">
+            {{-- SCROLL HORIZONTAL Y VERTICAL --}}
+            <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
                 <table class="table table-hover align-middle mb-0" style="min-width: 1000px;">
-                    <thead class="bg-light">
+                    <thead class="bg-light sticky-top" style="top: 0; z-index: 1;">
                         <tr class="text-uppercase text-muted" style="font-size: 12px; letter-spacing: 0.5px;">
                             <th class="ps-4"># ID / Fecha</th>
                             <th>Registrado Por</th>
