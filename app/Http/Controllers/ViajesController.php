@@ -1653,7 +1653,7 @@ public function updateGuiaData(Request $request, $viajeId)
                 $litrosFiltrados = $v->despachos->sum('litros');
             }
 
-            $v->clientes_despachados = $nombres->unique()->filter()->implode(', ') ?: 'Sin Cliente';
+            $v->clientes_despachados = $nombres->unique()->filter()->implode(' | ') ?: 'Sin Cliente';
             $v->litros_filtrados = $litrosFiltrados;
 
             return $v;
