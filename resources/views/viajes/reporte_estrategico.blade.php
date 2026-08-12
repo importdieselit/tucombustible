@@ -66,7 +66,11 @@
                         <option value="">Todos</option>
                         @foreach($clientes as $cli)
                             <option value="{{ $cli->id }}" {{ $clienteId == $cli->id ? 'selected' : '' }}>
-                                {{ $cli->nombre }}
+                                @if($cli->parent == 0)
+                                    [Principal] {{ $cli->nombre }}
+                                @else
+                                    &nbsp;&nbsp;&nbsp;&nbsp;↳ {{ $cli->nombre }}
+                                @endif
                             </option>
                         @endforeach
                     </select>
@@ -108,29 +112,65 @@
         </div>
     </div>
 
-    <!-- KPIs -->
-    <div class="row mb-4">
-        <div class="col-md-6 mb-2">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Viajes Procesados</div>
-                    <div class="h4 mb-0 font-weight-bold text-gray-800">{{ number_format($totalViajes) }}</div>
+    <!-- TARJETA DE RESUMEN DE CLIENTE PRINCIPAL (EN CASO DE FILTRAR POR CLIENTE) -->
+    @if($clienteSeleccionado)
+        <div class="card border-left-info shadow mb-4">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Resumen de Despachos | Cliente {{ $esClientePrincipal ? 'Principal (Incluye Sucursales)' : 'Sucursal' }}
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {{ $clienteSeleccionado->nombre }}
+                        </div>
+                        @if(!$esClientePrincipal && $clienteSeleccionado->padre)
+                            <div class="small text-muted">Pertenece a: <strong>{{ $clienteSeleccionado->padre->nombre }}</strong></div>
+                        @endif
+                    </div>
+                    <div class="col-auto text-center border-start px-4">
+                        <div class="text-xs font-weight-bold text-uppercase text-muted">Total Despachos</div>
+                        <div class="h4 mb-0 font-weight-bold text-primary">{{ number_format($totalDespachos) }}</div>
+                    </div>
+                    <div class="col-auto text-center border-start px-4">
+                        <div class="text-xs font-weight-bold text-uppercase text-muted">Volumen Total Despachado</div>
+                        <div class="h4 mb-0 font-weight-bold text-success">{{ number_format($totalLitros, 2) }} Lts</div>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6 mb-2">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Volumen Total Cargado/Movilizado</div>
-                    <div class="h4 mb-0 font-weight-bold text-gray-800">{{ number_format($totalLitros, 2) }} Lts</div>
+    @else
+        <!-- KPIs GENERALES -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-2">
+                <div class="card border-left-primary shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Viajes Procesados</div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800">{{ number_format($totalViajes) }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-2">
+                <div class="card border-left-info shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Despachos Realizados</div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800">{{ number_format($totalDespachos) }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-2">
+                <div class="card border-left-success shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Volumen Total Cargado/Movilizado</div>
+                        <div class="h4 mb-0 font-weight-bold text-gray-800">{{ number_format($totalLitros, 2) }} Lts</div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    @endif
 
     <!-- GRILLA DE GRÁFICOS -->
     <div class="row">
-        <!-- 1. Choferes -->
         <div class="col-md-6 mb-4 chart-container" id="cardChartChoferes">
             <div class="card shadow">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
@@ -144,7 +184,6 @@
             </div>
         </div>
 
-        <!-- 2. Ayudantes -->
         <div class="col-md-6 mb-4 chart-container" id="cardChartAyudantes">
             <div class="card shadow">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
@@ -158,7 +197,6 @@
             </div>
         </div>
 
-        <!-- 3. Top Destinos -->
         <div class="col-md-6 mb-4 chart-container" id="cardChartDestinos">
             <div class="card shadow">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
@@ -172,7 +210,6 @@
             </div>
         </div>
 
-        <!-- 4. Estatus -->
         <div class="col-md-6 mb-4 chart-container" id="cardChartStatus">
             <div class="card shadow">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
@@ -226,7 +263,6 @@
             </div>
         </div>
 
-        <!-- TABLAS DETALLADAS POR CADA TIPO DE OPERACIÓN -->
         @if($tablasPorTipo)
             @foreach($tablasPorTipo as $nombreTipo => $viajesTipo)
                 <div class="card shadow mb-4">
@@ -241,7 +277,7 @@
                             <table class="table table-bordered table-striped" width="100%">
                                 <thead>
                                     <tr>
-                                        <th>ID</th>
+                                        <th>ID Viaje</th>
                                         <th>Fecha</th>
                                         <th>Destino</th>
                                         <th>Chofer</th>
@@ -258,7 +294,7 @@
                                             <td>{{ $viaje->destino_ciudad ?? 'N/A' }}</td>
                                             <td>{{ $viaje->chofer->persona->nombre ?? 'N/A' }} {{ $viaje->chofer->persona->apellido ?? '' }}</td>
                                             <td>{{ $viaje->ayudante_chofer->persona->nombre ?? 'N/A' }} {{ $viaje->ayudante_chofer->persona->apellido ?? '' }}</td>
-                                            <td class="text-end">{{ number_format($viaje->despachos->sum('litros') + ($viaje->litros ?? 0), 2) }}</td>
+                                            <td class="text-end">{{ number_format($viaje->litros_filtrados, 2) }}</td>
                                             <td>{{ $viaje->clientes_despachados }}</td>
                                         </tr>
                                     @endforeach
@@ -271,10 +307,10 @@
         @endif
 
     @elseif($agruparPor === 'cliente')
-        <!-- TABLA CLIENTES -->
+        <!-- TABLA RESUMEN POR CLIENTE PRINCIPAL -->
         <div class="card shadow mb-4">
             <div class="card-header py-3 bg-dark text-white">
-                <h6 class="m-0 font-weight-bold"><i class="fas fa-user-tag"></i> Resumen Agrupado por Cliente</h6>
+                <h6 class="m-0 font-weight-bold"><i class="fas fa-user-tag"></i> Resumen Agrupado por Cliente Principal</h6>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -282,10 +318,11 @@
                         <thead class="table-dark">
                             <tr>
                                 <th>#</th>
-                                <th>Cliente</th>
+                                <th>Cliente Principal</th>
                                 <th class="text-center">Total Viajes</th>
+                                <th class="text-center">Total Despachos</th>
                                 <th class="text-end">Volumen Total (Lts)</th>
-                                <th class="text-center">% Part. Viajes</th>
+                                <th class="text-center">% Part. Volumen</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -294,13 +331,61 @@
                                     <td>{{ $loop->iteration }}</td>
                                     <td class="fw-bold">{{ $item['criterio'] }}</td>
                                     <td class="text-center">{{ $item['total_viajes'] }}</td>
+                                    <td class="text-center">{{ $item['total_despachos'] }}</td>
                                     <td class="text-end">{{ number_format($item['total_litros'], 2) }}</td>
                                     <td class="text-center">
-                                        {{ $totalViajes > 0 ? number_format(($item['total_viajes'] / $totalViajes) * 100, 1) : 0 }}%
+                                        {{ $totalLitros > 0 ? number_format(($item['total_litros'] / $totalLitros) * 100, 1) : 0 }}%
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="5" class="text-center">Sin información de clientes.</td></tr>
+                                <tr><td colspan="6" class="text-center">Sin información de clientes.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABLA CON EL DETALLE DE TODOS LOS DESPACHOS A PRINCIPALES Y SUCURSALES -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 border-left-info">
+                <h6 class="m-0 font-weight-bold text-info"><i class="fas fa-list"></i> Detalle General de Despachos a Clientes y Sucursales</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped" width="100%">
+                        <thead>
+                            <tr>
+                                <th>ID Viaje</th>
+                                <th>Fecha</th>
+                                <th>Cliente Destinatario</th>
+                                <th>Relación Jerárquica</th>
+                                <th>Chofer</th>
+                                <th>Destino</th>
+                                <th class="text-end">Volumen Despachado (Lts)</th>
+                                <th>Tipo Operación</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($despachosDetalle as $d)
+                                <tr>
+                                    <td>#{{ $d['viaje_id'] }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($d['fecha'])->format('d/m/Y H:i') }}</td>
+                                    <td class="fw-bold">{{ $d['cliente_nombre'] }}</td>
+                                    <td>
+                                        @if($d['es_sucursal'])
+                                            <span class="badge bg-warning text-dark">Sucursal de: {{ $d['padre_nombre'] }}</span>
+                                        @else
+                                            <span class="badge bg-success">Cliente Principal</span>
+                                        @endif
+                                    </td>
+                                    <td>{{ $d['chofer'] }}</td>
+                                    <td>{{ $d['destino'] ?? 'N/A' }}</td>
+                                    <td class="text-end font-weight-bold">{{ number_format($d['litros'], 2) }}</td>
+                                    <td><span class="badge bg-info text-dark">{{ $d['tipo_operacion'] }}</span></td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="8" class="text-center">No hay despachos registrados.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -432,13 +517,13 @@
                     <table class="table table-bordered table-striped" width="100%">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>ID Viaje</th>
                                 <th>Fecha</th>
                                 <th>Tipo Operación</th>
                                 <th>Destino</th>
                                 <th>Chofer</th>
                                 <th>Ayudante</th>
-                                <th class="text-end">Volumen (Lts)</th>
+                                <th class="text-end">Volumen Despachado (Lts)</th>
                                 <th>Cliente(s) Despachado(s)</th>
                             </tr>
                         </thead>
@@ -455,7 +540,7 @@
                                     <td>{{ $viaje->destino_ciudad }}</td>
                                     <td>{{ $viaje->chofer->persona->nombre ?? 'N/A' }}</td>
                                     <td>{{ $viaje->ayudante_chofer->persona->nombre ?? 'N/A' }}</td>
-                                    <td class="text-end">{{ number_format($viaje->despachos->sum('litros') + ($viaje->litros ?? 0), 2) }}</td>
+                                    <td class="text-end fw-bold">{{ number_format($viaje->litros_filtrados, 2) }}</td>
                                     <td>{{ $viaje->clientes_despachados }}</td>
                                 </tr>
                             @empty
