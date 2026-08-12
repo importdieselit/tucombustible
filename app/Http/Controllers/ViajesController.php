@@ -1655,7 +1655,7 @@ public function updateGuiaData(Request $request, $viajeId)
             return $v;
         });
 
-        // 4. DESGLOSE INDIVIDUAL DE DESPACHOS (DISCRIMINA CLIENTES DE OTROS TERCEROS)
+       // 4. DESGLOSE INDIVIDUAL DE DESPACHOS (DISCRIMINA CLIENTES DE OTROS TERCEROS)
         $despachosDetalle = collect();
         foreach ($viajes as $viaje) {
             if ($viaje->despachos->count() > 0) {
@@ -1666,47 +1666,56 @@ public function updateGuiaData(Request $request, $viajeId)
                     }
                     $cliObj = $despacho->cliente;
                     $despachosDetalle->push([
-                        'viaje_id'        => $viaje->id,
-                        'fecha'           => $viaje->fecha_salida,
-                        'destino'         => $viaje->destino_ciudad,
-                        'chofer'          => $viaje->chofer ? ($viaje->chofer->persona->nombre . ' ' . $viaje->chofer->persona->apellido) : 'N/A',
-                        'ayudante'        => $viaje->ayudante_chofer ? ($viaje->ayudante_chofer->persona->nombre . ' ' . $viaje->ayudante_chofer->persona->apellido) : 'N/A',
-                        'cliente_nombre'  => $cliObj->nombre ?? ($despacho->otro_cliente ?? 'N/A'),
-                        'cliente_id'      => $despacho->cliente_id,
-                        'es_sucursal'     => $cliObj ? ($cliObj->parent > 0) : false,
-                        'padre_nombre'    => $cliObj && $cliObj->padre ? $cliObj->padre->nombre : null,
-                        'litros'          => $despacho->litros,
-                        'tipo_operacion'  => $mapaTipos[$viaje->tipo_planificacion] ?? 'N/A',
+                        'viaje_id'              => $viaje->id,
+                        'fecha'                 => $viaje->fecha_salida,
+                        'destino'               => $viaje->destino_ciudad,
+                        'chofer'                => $viaje->chofer ? ($viaje->chofer->persona->nombre . ' ' . $viaje->chofer->persona->apellido) : 'N/A',
+                        'ayudante'              => $viaje->ayudante_chofer ? ($viaje->ayudante_chofer->persona->nombre . ' ' . $viaje->ayudante_chofer->persona->apellido) : 'N/A',
+                        'cliente_nombre'        => $cliObj->nombre ?? ($despacho->otro_cliente ?? 'N/A'),
+                        'cliente_id'            => $despacho->cliente_id,
+                        'es_sucursal'           => $cliObj ? ($cliObj->parent > 0) : false,
+                        'padre_nombre'          => $cliObj && $cliObj->padre ? $cliObj->padre->nombre : null,
+                        'litros'                => $despacho->litros,
+                        'tipo_planificacion_id' => $viaje->tipo_planificacion,
+                        'tipo_operacion'        => $mapaTipos[$viaje->tipo_planificacion] ?? 'N/A',
                     ]);
                 }
             } else {
                 if (empty($clientIds) || in_array($viaje->cliente_id, $clientIds)) {
                     $cliObj = $viaje->cliente;
                     $despachosDetalle->push([
-                        'viaje_id'        => $viaje->id,
-                        'fecha'           => $viaje->fecha_salida,
-                        'destino'         => $viaje->destino_ciudad,
-                        'chofer'          => $viaje->chofer ? ($viaje->chofer->persona->nombre . ' ' . $viaje->chofer->persona->apellido) : 'N/A',
-                        'ayudante'        => $viaje->ayudante_chofer ? ($viaje->ayudante_chofer->persona->nombre . ' ' . $viaje->ayudante_chofer->persona->apellido) : 'N/A',
-                        'cliente_nombre'  => $cliObj->nombre ?? ($viaje->otro_cliente ?? 'N/A'),
-                        'cliente_id'      => $viaje->cliente_id,
-                        'es_sucursal'     => $cliObj ? ($cliObj->parent > 0) : false,
-                        'padre_nombre'    => $cliObj && $cliObj->padre ? $cliObj->padre->nombre : null,
-                        'litros'          => $viaje->litros ?? 0,
-                        'tipo_operacion'  => $mapaTipos[$viaje->tipo_planificacion] ?? 'N/A',
+                        'viaje_id'              => $viaje->id,
+                        'fecha'                 => $viaje->fecha_salida,
+                        'destino'               => $viaje->destino_ciudad,
+                        'chofer'                => $viaje->chofer ? ($viaje->chofer->persona->nombre . ' ' . $viaje->chofer->persona->apellido) : 'N/A',
+                        'ayudante'              => $viaje->ayudante_chofer ? ($viaje->ayudante_chofer->persona->nombre . ' ' . $viaje->ayudante_chofer->persona->apellido) : 'N/A',
+                        'cliente_nombre'        => $cliObj->nombre ?? ($viaje->otro_cliente ?? 'N/A'),
+                        'cliente_id'            => $viaje->cliente_id,
+                        'es_sucursal'           => $cliObj ? ($cliObj->parent > 0) : false,
+                        'padre_nombre'          => $cliObj && $cliObj->padre ? $cliObj->padre->nombre : null,
+                        'litros'                => $viaje->litros ?? 0,
+                        'tipo_planificacion_id' => $viaje->tipo_planificacion,
+                        'tipo_operacion'        => $mapaTipos[$viaje->tipo_planificacion] ?? 'N/A',
                     ]);
                 }
             }
         }
 
-        // KPIs Generales
-        $totalViajes    = $viajes->count();
-        $totalDespachos = $despachosDetalle->count();
-        $totalDespachos = $viajes->whereIn('tipo_planificacion', [1, 2])->count();
-        $totalCompras   = $viajes->where('tipo_planificacion', 4)->count();
-        $totalLitros    = $despachosDetalle->sum('litros');
-        $totalLitros = $viajes->whereIn('tipo_planificacion', [1, 2])->sum('litros');
-        $totalLitrosCompras = $viajes->where('tipo_planificacion', 4)->sum('litros');
+        // 5. KPIs GENERALES DISCRIMINADOS
+
+        $totalViajes = $viajes->count();
+
+        // VENTAS REALES DE INVENTARIO (Únicamente Tipos 1: Venta MGO y 2: Venta Industrial)
+        // Se descartan explícitamente los Fletes (3) y Compras (4)
+        $despachosVentas = $despachosDetalle->whereIn('tipo_planificacion_id', [1, 2]);
+        $totalDespachos  = $despachosVentas->count();
+        $totalLitros     = $despachosVentas->sum('litros');
+
+        // COMPRAS DE INVENTARIO (Únicamente Tipo 4: Compras)
+        $viajesCompras      = $viajes->where('tipo_planificacion', 4);
+        $totalCompras       = $viajesCompras->count();
+        $totalLitrosCompras = $viajesCompras->sum('litros_filtrados');
+
 
         // Agrupaciones de gráficos
         $viajesPorDestino = $viajes->groupBy(fn($v) => $v->destino_ciudad ?: 'Sin Destino')->map->count()->sortDesc()->take(5);
