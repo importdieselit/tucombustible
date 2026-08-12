@@ -61,15 +61,15 @@
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <label>Cliente</label>
-                    <select name="cliente_id" class="form-control">
-                        <option value="">Todos</option>
+                    <label for="cliente_id">Cliente</label>
+                    <select name="cliente_id" id="cliente_id" class="form-control">
+                        <option value="">Todos los clientes</option>
                         @foreach($clientes as $cli)
                             <option value="{{ $cli->id }}" {{ $clienteId == $cli->id ? 'selected' : '' }}>
-                                @if($cli->parent == 0)
+                                @if($cli->parent == 0 || is_null($cli->parent))
                                     [Principal] {{ $cli->nombre }}
                                 @else
-                                    &nbsp;&nbsp;&nbsp;&nbsp;↳ {{ $cli->nombre }}
+                                    &#160;&#160;&#160;&#160;↳ {{ $cli->nombre }}
                                 @endif
                             </option>
                         @endforeach
@@ -556,7 +556,21 @@
 @push('scripts')
 <!-- HIGHCHARTS Y SCRIPT -->
 <script src="https://code.highcharts.com/highcharts.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        new TomSelect('#cliente_id', {
+            create: false,
+            sortField: {
+                field: "text",
+                direction: "asc"
+            },
+            placeholder: "Buscar cliente..."
+        });
+    });
+</script>
 <script>
     (function() {
         document.addEventListener('change', function(e) {
