@@ -98,12 +98,14 @@ class DepositoService
 
     public function procesarChequeo(array $data)
     {
-        // 1. Regla de Validación: Evitar duplicar auditorías en la misma fecha y turno
-        if ($this->chequeoRepo->existeChequeo($data['id_sede'], $data['fecha'], $data['turno'])) {
-            throw new Exception("Ya se encuentra registrado un varillaje para esta sede en la fecha y turno especificados.");
+        // 1. Regla de Validación: Si existe un varillaje registrado y el usuario NO ha confirmado el duplicado, se detiene
+        $existeDuplicado = $this->chequeoRepo->existeChequeo($data['id_sede'], $data['fecha'], $data['turno']);
+        $confirmado = !empty($data['confirmar_duplicado']);
+
+        if ($existeDuplicado && !$confirmado) {
+            throw new Exception("DUPLICADO_DETECTADO");
         }
 
-        // Envolvemos todo el proceso en una transacción global para blindar la operación
         return DB::transaction(function () use ($data) {
             
             $detallesProcesados = [];
@@ -160,6 +162,12 @@ class DepositoService
                 $nombreSede = DB::table('sedes')->where('id', $data['id_sede'])->value('nombre') ?? "Sede #{$data['id_sede']}";
                 $this->notificarTanquesCriticos($tanquesCriticos, $data['turno'], $nombreSede);
             }
+
+            $this->notificarResumenDisponibilidadSede(
+                (int) $data['id_sede'], 
+                $data['turno'], 
+                auth()->user()->name ?? 'Sistema'
+            );
 
             return $chequeoGuardado;
         });
@@ -243,5 +251,123 @@ class DepositoService
 
             return $llenado->id;
         });
+    }
+
+    public function notificarResumenDisponibilidadSede(int $sedeId, string $turno = 'N/A', ?string $usuarioNombre = null): void
+    {
+        $sede = DB::table('sedes')->where('id', $sedeId)->first();
+        $nombreSede = $sede ? $sede->nombre : "Sede #{$sedeId}";
+
+        $idMgo    = 1;
+        $idDiesel = 2;
+
+        // 3. CONSULTA TANQUE POR TANQUE EN LA SEDE
+        $tanques = DB::table('depositos as d')
+            ->leftJoin('tipos_combustible as tc', 'd.tipo_combustible_id', '=', 'tc.id')
+            ->select('d.id', 'd.serial', 'd.nivel_actual_litros', 'd.tipo_combustible_id', 'tc.nombre as nombre_combustible')
+            ->where('d.id_sede', $sedeId)
+            ->get();
+
+        $tanquesDieselLitros = $tanques->where('tipo_combustible_id', $idDiesel)->sum('nivel_actual_litros');
+        $tanquesMgoLitros    = $tanques->where('tipo_combustible_id', $idMgo)->sum('nivel_actual_litros');
+
+        // 4. CONSULTA VEHÍCULO POR VEHÍCULO PRECARGADO (estatus = 0) EN LA SEDE
+        $precargas = DB::table('vehiculos_precargados as vp')
+            ->leftJoin('vehiculos as v', 'vp.id_vehiculo', '=', 'v.id')
+            ->leftJoin('tipos_combustible as tc', 'vp.id_tipo_combustible', '=', 'tc.id')
+            ->select('v.placa', 'v.modelo', 'vp.cantidad_litros', 'vp.id_tipo_combustible', 'tc.nombre as nombre_combustible')
+            ->where('vp.id_sede', $sedeId)
+            ->where('vp.estatus', 0)
+            ->orderBy('vp.fecha_hora_carga', 'desc')
+            ->get();
+
+        $precargasDieselLitros = $precargas->where('id_tipo_combustible', $idDiesel)->sum('cantidad_litros');
+        $precargasMgoLitros    = $precargas->where('id_tipo_combustible', $idMgo)->sum('cantidad_litros');
+
+        // 5. COMPROMETIDOS (Viajes programados para la sede)
+        $queryViajes = DB::table('viajes')
+            ->where('status', 'PROGRAMADO')
+            ->where('sede_id', $sedeId);
+
+        $comprometidoMgo    = (clone $queryViajes)->where('tipo_planificacion', 2)->sum('litros') ?? 0;
+        $comprometidoDiesel = (clone $queryViajes)->where('tipo_planificacion', 1)->sum('litros') ?? 0;
+
+        // 6. CÁLCULOS TOTALES
+        $totalFisicoDiesel = $tanquesDieselLitros + $precargasDieselLitros;
+        $totalFisicoMgo    = $tanquesMgoLitros + $precargasMgoLitros;
+
+        $disponibleNetoDiesel = $totalFisicoDiesel - $comprometidoDiesel;
+        $disponibleNetoMgo    = $totalFisicoMgo - $comprometidoMgo;
+
+        // 7. CONSTRUCCIÓN DEL MENSAJE DE WHATSAPP
+        $fechaHora = now()->format('d/m/Y h:i A');
+
+        $msj = "📋 *REPORTE DE DISPONIBILIDAD DE COMBUSTIBLE*\n";
+        $msj .= "🏢 *Sede:* {$nombreSede}\n";
+        $msj .= "📅 *Fecha/Hora:* {$fechaHora}\n";
+        $msj .= "🌅 *Turno:* {$turno}\n";
+        if ($usuarioNombre) {
+            $msj .= "👤 *Registrado por:* {$usuarioNombre}\n";
+        }
+        $msj .= "────────────────────────────\n\n";
+
+        // --- SECCIÓN 1: TANQUES ---
+        $msj .= "🛢️ *DETALLE DE TANQUES EN SEDE*\n";
+        if ($tanques->isEmpty()) {
+            $msj .= "_Sin tanques registrados en esta sede._\n";
+        } else {
+            foreach ($tanques as $t) {
+                $serial = $t->serial ?? "Tanque #{$t->id}";
+                $comb = $t->nombre_combustible ?? ($t->tipo_combustible_id == $idDiesel ? 'Diesel' : 'MGO');
+                $litros = number_format($t->nivel_actual_litros, 2, ',', '.');
+                $msj .= "• *{$serial}* ({$comb}): {$litros} Lts\n";
+            }
+        }
+        $msj .= "▫️ *Subtotal Tanques Diesel:* " . number_format($tanquesDieselLitros, 2, ',', '.') . " Lts\n";
+        $msj .= "▫️ *Subtotal Tanques MGO:* " . number_format($tanquesMgoLitros, 2, ',', '.') . " Lts\n\n";
+
+        // --- SECCIÓN 2: PRECARGAS ACTIVAS ---
+        $msj .= "🚛 *UNIDADES PRECARGADAS ACTIVAS*\n";
+        if ($precargas->isEmpty()) {
+            $msj .= "_Sin vehículos precargados actualmente._\n";
+        } else {
+            foreach ($precargas as $p) {
+                $placa = $p->placa ?? 'S/P';
+                $modelo = $p->modelo ? " ({$p->modelo})" : '';
+                $comb = $p->nombre_combustible ?? ($p->id_tipo_combustible == $idDiesel ? 'Diesel' : 'MGO');
+                $litros = number_format($p->cantidad_litros, 2, ',', '.');
+                $msj .= "• *{$placa}* - {$comb}: {$litros} Lts\n";
+            }
+        }
+        $msj .= "▫️ *Subtotal Precargas Diesel:* " . number_format($precargasDieselLitros, 2, ',', '.') . " Lts\n";
+        $msj .= "▫️ *Subtotal Precargas MGO:* " . number_format($precargasMgoLitros, 2, ',', '.') . " Lts\n\n";
+
+        // --- SECCIÓN 3: BALANCE FINAL ---
+        $msj .= "📊 *RESUMEN DE BALANCE FINAL*\n";
+        
+        // Diésel
+        $msj .= "⛽ *DIÉSEL*\n";
+        $msj .= "  ├ Tanques: " . number_format($tanquesDieselLitros, 2, ',', '.') . " Lts\n";
+        $msj .= "  ├ Precargas: " . number_format($precargasDieselLitros, 2, ',', '.') . " Lts\n";
+        $msj .= "  ├ *Total Físico:* " . number_format($totalFisicoDiesel, 2, ',', '.') . " Lts\n";
+        $msj .= "  ├ *Comprometido:* " . number_format($comprometidoDiesel, 2, ',', '.') . " Lts\n";
+        $msj .= "  └ 🟢 *Disponible Neto:* " . number_format($disponibleNetoDiesel, 2, ',', '.') . " Lts\n\n";
+
+        // MGO
+        $msj .= "⛽ *MGO*\n";
+        $msj .= "  ├ Tanques: " . number_format($tanquesMgoLitros, 2, ',', '.') . " Lts\n";
+        $msj .= "  ├ Precargas: " . number_format($precargasMgoLitros, 2, ',', '.') . " Lts\n";
+        $msj .= "  ├ *Total Físico:* " . number_format($totalFisicoMgo, 2, ',', '.') . " Lts\n";
+        $msj .= "  ├ *Comprometido:* " . number_format($comprometidoMgo, 2, ',', '.') . " Lts\n";
+        $msj .= "  └ 🟢 *Disponible Neto:* " . number_format($disponibleNetoMgo, 2, ',', '.') . " Lts\n";
+
+        // 8. ENVÍO VÍA WHATSAPP (Alineado con notificarTanquesCriticos)
+        $idDestino = config('services.whatsapp.dev_group_id', 'WHATSAPP_DEV_GROUP_ID');
+
+        try {
+            $this->whatsappService->enviarMensaje($msj, $idDestino);
+        } catch (Exception $e) {
+            logger()->error("No se pudo enviar el reporte de disponibilidad por WhatsApp: " . $e->getMessage());
+        }
     }
 }

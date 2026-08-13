@@ -28,7 +28,7 @@ use App\Http\Controllers\{
     AlmacenLayoutController,ConteoController, GerentialReportController, PagoController, GuardiaController,
     ChequeoDepositoController, CombustibleController, LlenadoCupoPrepagadoController, 
     TransaccionCombustibleController, ConsumoOperativoController, TrasegadoController, ReversoCombustibleController,
-    MermasController
+    MermasController, VehiculoPrecargadoController, AbastecimientoTanqueController
 };
 use App\Http\Controllers\SalaControlController;
 
@@ -475,6 +475,20 @@ Route::middleware(['auth'])->group(function () {
                     Route::get('/', [MermasController::class, 'index'])->name('index');
                 });
 
+                Route::prefix('precargas_vehiculos')->name('precargas_vehiculos.')->group(function () {
+                    Route::get('/', [VehiculoPrecargadoController::class, 'index'])->name('index');
+                    Route::get('/crear', [VehiculoPrecargadoController::class, 'create'])->name('create');
+                    Route::post('/guardar', [VehiculoPrecargadoController::class, 'store'])->name('store');
+                    Route::get('/historico', [VehiculoPrecargadoController::class, 'historico'])->name('historico');
+                    Route::patch('/{id}/finalizar', [VehiculoPrecargadoController::class, 'finalizar'])->name('finalizar');
+                });
+
+                Route::prefix('abastecimientos_tanques')->name('abastecimientos_tanques.')->group(function () {
+                    Route::get('/', [AbastecimientoTanqueController::class, 'index'])->name('index');
+                    Route::get('/crear', [AbastecimientoTanqueController::class, 'create'])->name('create');
+                    Route::post('/guardar', [AbastecimientoTanqueController::class, 'store'])->name('store');
+                });
+
                 // Registro Histórico de Transacciones de Combustible
                 Route::prefix('transacciones')->name('transacciones.')->group(function () {
                     Route::get('/', [TransaccionCombustibleController::class, 'index'])->name('index');
@@ -487,6 +501,7 @@ Route::middleware(['auth'])->group(function () {
             
             Route::get('/dashboard', [LogisticaController::class, 'dashboardLogistica'])->name('dashboard');
             Route::get('/planificacion', [LogisticaController::class, 'index'])->name('index');
+            Route::get('/sobreconsumo', [LogisticaController::class, 'sobreconsumo'])->name('sobreconsumo');
             Route::get('/crear/{tipo?}', [LogisticaController::class, 'create'])->name('create');
             Route::post('/guardar', [LogisticaController::class, 'store'])->name('store');
             // Rutas para Edición

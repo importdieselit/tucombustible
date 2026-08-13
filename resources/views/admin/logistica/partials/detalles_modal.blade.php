@@ -270,7 +270,7 @@
                 <div class="bg-light p-2 rounded">
                     <p class="mb-1 text-dark">
                         <strong>Planta:</strong> 
-                        {{ $compra->planta->nombre ?? $viaje->planta->nombre ?? $viaje->nombre_cliente_externo ?? 'No asignado' }}
+                        {{ $compra->plantaDestino->nombre ?? $viaje->plantaDestino->nombre ?? $viaje->nombre_cliente_externo ?? 'No asignado' }}
                     </p>
                     <p class="mb-0"><strong>Código SAP:</strong> <span class="badge bg-info text-dark fw-bold">{{ $viaje->codigo_sap ?? 'N/A' }}</span></p>
                 </div>

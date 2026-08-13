@@ -15,6 +15,20 @@ class LogisticaInventarioService
         $this->ledgerRepo = $ledgerRepo;
     }
 
+    /**
+     * Resuelve el ID real de la tabla `tipos_combustible`
+     * BD: ID 1 = MGO, ID 2 = DIESEL
+     * Logística: Tipo 1 = Diésel, Tipo 2 = MGO
+     */
+    private function obtenerTipoCombustibleId(Viaje $viaje): int
+    {
+        return match ((int) $viaje->tipo_planificacion) {
+            1       => 2, // Planificación Diésel -> ID 2 en tipos_combustible
+            2       => 1, // Planificación MGO    -> ID 1 en tipos_combustible
+            default => (int) ($viaje->tipo ?? 2),
+        };
+    }
+
     public function registrarCompromisoPlanificacion(Viaje $viaje): void
     {
         switch ((int) $viaje->tipo_planificacion) {
@@ -29,7 +43,7 @@ class LogisticaInventarioService
                 return;
         }
 
-        $tipoCombustibleId = $viaje->tipo_combustible_id ?? $viaje->tipo;
+        $tipoCombustibleId = $this->obtenerTipoCombustibleId($viaje);
 
         $this->ledgerRepo->registrar([
             'sede_id'             => $viaje->sede_id ?? 1,
@@ -56,9 +70,9 @@ class LogisticaInventarioService
 
             default:
                 return;
-        }
+            }
 
-        $tipoCombustibleId = $viaje->tipo_combustible_id ?? $viaje->tipo;
+        $tipoCombustibleId = $this->obtenerTipoCombustibleId($viaje);
 
         $this->ledgerRepo->registrar([
             'sede_id'             => $viaje->sede_id ?? 1,
@@ -79,8 +93,8 @@ class LogisticaInventarioService
             return;
         }
 
-        $tipoCombustibleId = $viaje->tipo_combustible_id ?? $viaje->tipo;
-        $sedeId = $viaje->sede_id ?? 1;
+        $tipoCombustibleId = $this->obtenerTipoCombustibleId($viaje);
+        $sedeId = $viaje->sede_id ?? $viaje->sede_origen_id;
 
         DB::transaction(function () use ($viaje, $tipoCombustibleId, $sedeId) {
 
@@ -147,8 +161,8 @@ class LogisticaInventarioService
 
         $litros = abs($litrosRecibidos ?? (float) $viaje->litros);
         $depositoId = $depositoDestinoId ?? $viaje->deposito_destino_id ?? null;
-        $sedeId = $viaje->sede_id ?? 1;
-        $tipoCombustibleId = $viaje->tipo_combustible_id ?? $viaje->tipo;
+        $sedeId = $viaje->sede_destino_id ?? $viaje->sede_origen_id ?? $viaje->sede_id;
+        $tipoCombustibleId = $this->obtenerTipoCombustibleId($viaje);
 
         DB::transaction(function () use ($viaje, $sedeId, $depositoId, $tipoCombustibleId, $litros) {
             $this->ledgerRepo->registrar([
