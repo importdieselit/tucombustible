@@ -285,6 +285,7 @@ class UserController extends BaseController
         $perfiles = Perfil::all();
         $clientes = Cliente::all();
         $cargos   = Cargo::all();
+        $sedes = Sedes::all();
         // 1. Obtenemos todos los módulos
         $todos = Modulo::orderBy('modulo', 'asc')->get();
 
@@ -294,7 +295,7 @@ class UserController extends BaseController
             return collect([$padre])->concat($hijos);
         });
         
-        return view('usuario.create_edit', compact('item', 'perfiles', 'clientes', 'cargos', 'modulos'));
+        return view('usuario.create_edit', compact('item', 'perfiles', 'clientes', 'cargos', 'sedes', 'modulos'));
     }
 
     /**
