@@ -1550,16 +1550,17 @@ public function updateGuiaData(Request $request, $viajeId)
         return view('viajes.imprimir', compact('viaje'));
     }
 
-    public function reporteEstrategico(Request $request)
+   public function reporteEstrategico(Request $request)
     {
-        $fechaInicio   = $request->input('fecha_inicio', now()->startOfMonth()->toDateString());
-        $fechaFin      = $request->input('fecha_fin', now()->endOfMonth()->toDateString());
-        $choferId      = $request->input('chofer_id');
-        $clienteId     = $request->input('cliente_id');
-        $destino       = $request->input('destino_ciudad');
-        $status        = $request->input('status');
-        $tipoOperacion = $request->input('tipo_operacion');
-        $agruparPor    = $request->input('agrupar_por', 'ninguno');
+        $fechaInicio        = $request->input('fecha_inicio', now()->startOfMonth()->toDateString());
+        $fechaFin           = $request->input('fecha_fin', now()->endOfMonth()->toDateString());
+        $choferId           = $request->input('chofer_id');
+        $clienteId          = $request->input('cliente_id');
+        $destino            = $request->input('destino_ciudad');
+        $status             = $request->input('status');
+        $tipoOperacion      = $request->input('tipo_operacion');
+        $tipoCombustibleId  = $request->input('tipo_combustible_id');
+        $agruparPor         = $request->input('agrupar_por', 'ninguno');
 
         $mapaTipos = [
             1 => 'Venta MGO',
@@ -1568,7 +1569,7 @@ public function updateGuiaData(Request $request, $viajeId)
             4 => 'Compras'
         ];
 
-        // 1. RESOLVER JERARQUÍA DE CLIENTES (PRINCIPAL Y SUCURSALES)
+        // 1. RESOLVER JERARQUÍA DE CLIENTES
         $clienteSeleccionado = null;
         $clientIds = [];
         $esClientePrincipal = false;
@@ -1578,24 +1579,38 @@ public function updateGuiaData(Request $request, $viajeId)
             if ($clienteSeleccionado) {
                 if ($clienteSeleccionado->parent == 0 || is_null($clienteSeleccionado->parent)) {
                     $esClientePrincipal = true;
-                    // Incluye el ID principal + IDs de sus sucursales
                     $clientIds = array_merge([$clienteSeleccionado->id], $clienteSeleccionado->sucursales->pluck('id')->toArray());
                 } else {
-                    // Es una sucursal específica
                     $clientIds = [$clienteSeleccionado->id];
                 }
             }
         }
 
-        // 2. QUERY BASE CON EAGER LOADING
-        $query = Viaje::with(['chofer.persona', 'ayudante_chofer.persona', 'despachos.cliente.padre', 'cliente.padre', 'vehiculo'])
-            ->whereBetween('fecha_salida', [$fechaInicio . ' 00:00:00', $fechaFin . ' 23:59:59']);
+        // 2. QUERY BASE CON EAGER LOADING DE COMPRA COMBUSTIBLE
+        $query = Viaje::with([
+            'chofer.persona', 
+            'ayudante_chofer.persona', 
+            'despachos.cliente.padre', 
+            'cliente.padre', 
+            'vehiculo', 
+            'tipoCombustible', 
+            'compraCombustible' // Relación con compras_combustible
+        ])->whereBetween('fecha_salida', [$fechaInicio . ' 00:00:00', $fechaFin . ' 23:59:59']);
 
         if ($choferId) $query->where('chofer_id', $choferId);
         if ($destino)  $query->where('destino_ciudad', $destino);
         if ($status)   $query->where('status', $status);
 
-        // Filtro a nivel de BD para traer solo viajes donde participó el cliente o sus sucursales
+        // FILTRO COMBINADO DE COMBUSTIBLE (Tanto en viajes.tipo_combustible_id como en compras_combustible.tipo)
+        if ($tipoCombustibleId) {
+            $query->where(function($q) use ($tipoCombustibleId) {
+                $q->where('tipo_combustible_id', $tipoCombustibleId)
+                  ->orWhereHas('compraCombustible', function($qCompra) use ($tipoCombustibleId) {
+                      $qCompra->where('tipo', $tipoCombustibleId);
+                  });
+            });
+        }
+
         if (!empty($clientIds)) {
             $query->where(function($q) use ($clientIds) {
                 $q->whereIn('cliente_id', $clientIds)
@@ -1615,15 +1630,27 @@ public function updateGuiaData(Request $request, $viajeId)
 
         $viajes = $query->get();
 
-        // 3. TRANSFORMACIÓN: SUMAR LITROS Y ARMAN NOMBRES EXCLUSIVAMENTE DEL CLIENTE FILTRADO
-        $viajes->transform(function($v) use ($clientIds) {
+        // HELPER EN MEMORIA PARA RESOLVER EL NOMBRE DEL COMBUSTIBLE
+        $resolverCombustible = function($viaje) {
+            if ($viaje->tipoCombustible) {
+                return $viaje->tipoCombustible->nombre;
+            }
+            // Si es compra o no tiene tipoCombustible directo, busca en la primera compra asociada
+            $compra = $viaje->compraCombustible->first();
+            if ($compra && !empty($compra->tipo)) {
+                return $compra->tipo;
+            }
+            return 'Sin Especificar';
+        };
+
+        // 3. TRANSFORMACIÓN DE VIAJES
+        $viajes->transform(function($v) use ($clientIds, $resolverCombustible) {
             $nombres = collect();
             $litrosFiltrados = 0;
             $tieneDespachos = $v->despachos->count() > 0;
 
             if ($tieneDespachos) {
                 foreach ($v->despachos as $despacho) {
-                    // Verificar si el despacho pertenece al cliente/sucursales filtrados (o si no hay filtro activo)
                     $perteneceAlFiltro = empty($clientIds) || in_array($despacho->cliente_id, $clientIds);
 
                     if ($perteneceAlFiltro) {
@@ -1637,7 +1664,6 @@ public function updateGuiaData(Request $request, $viajeId)
                     }
                 }
             } else {
-                // Si el viaje no tiene desglosada la tabla despachos_viajes
                 $perteneceAlFiltro = empty($clientIds) || in_array($v->cliente_id, $clientIds);
 
                 if ($perteneceAlFiltro) {
@@ -1650,17 +1676,17 @@ public function updateGuiaData(Request $request, $viajeId)
             }
 
             $v->clientes_despachados = $nombres->unique()->filter()->implode(', ') ?: 'Sin Cliente';
-            $v->litros_filtrados = $litrosFiltrados;
+            $v->litros_filtrados     = $litrosFiltrados;
+            $v->nombre_combustible   = $resolverCombustible($v); // Asigna dinámicamente
 
             return $v;
         });
 
-       // 4. DESGLOSE INDIVIDUAL DE DESPACHOS (DISCRIMINA CLIENTES DE OTROS TERCEROS)
+        // 4. DESGLOSE INDIVIDUAL DE DESPACHOS
         $despachosDetalle = collect();
         foreach ($viajes as $viaje) {
             if ($viaje->despachos->count() > 0) {
                 foreach ($viaje->despachos as $despacho) {
-                    // Omitir despachos que pertenezcan a otros clientes no filtrados
                     if (!empty($clientIds) && !in_array($despacho->cliente_id, $clientIds)) {
                         continue;
                     }
@@ -1678,6 +1704,7 @@ public function updateGuiaData(Request $request, $viajeId)
                         'litros'                => $despacho->litros,
                         'tipo_planificacion_id' => $viaje->tipo_planificacion,
                         'tipo_operacion'        => $mapaTipos[$viaje->tipo_planificacion] ?? 'N/A',
+                        'tipo_combustible'      => $viaje->nombre_combustible,
                     ]);
                 }
             } else {
@@ -1696,38 +1723,32 @@ public function updateGuiaData(Request $request, $viajeId)
                         'litros'                => $viaje->litros ?? 0,
                         'tipo_planificacion_id' => $viaje->tipo_planificacion,
                         'tipo_operacion'        => $mapaTipos[$viaje->tipo_planificacion] ?? 'N/A',
+                        'tipo_combustible'      => $viaje->nombre_combustible,
                     ]);
                 }
             }
         }
 
-        // 5. KPIs GENERALES DISCRIMINADOS
-
+        // 5. KPIs GENERALES
         $totalViajes = $viajes->count();
 
-        // VENTAS REALES DE INVENTARIO (Únicamente Tipos 1: Venta MGO y 2: Venta Industrial)
-        // Se descartan explícitamente los Fletes (3) y Compras (4)
         $despachosVentas = $despachosDetalle->whereIn('tipo_planificacion_id', [1, 2]);
         $totalDespachos  = $despachosVentas->count();
         $totalLitros     = $despachosVentas->sum('litros');
 
-        // COMPRAS DE INVENTARIO (Únicamente Tipo 4: Compras)
         $viajesCompras      = $viajes->where('tipo_planificacion', 4);
         $totalCompras       = $viajesCompras->count();
         $totalLitrosCompras = $viajesCompras->sum('litros_filtrados');
 
-
         // Agrupaciones de gráficos
-        $viajesPorDestino = $viajes->groupBy(fn($v) => $v->destino_ciudad ?: 'Sin Destino')->map->count()->sortDesc()->take(5);
-        $viajesPorStatus  = $viajes->groupBy(fn($v) => $v->status ?: 'Sin Estatus')->map->count();
-        $viajesPorChofer  = $viajes->groupBy(function($v) {
-            return $v->chofer ? ($v->chofer->persona->nombre . ' ' . $v->chofer->persona->apellido) : 'Sin Chofer';
-        })->map->count()->sortDesc();
+        $viajesPorDestino  = $viajes->groupBy(fn($v) => $v->destino_ciudad ?: 'Sin Destino')->map->count()->sortDesc()->take(5);
+        $viajesPorStatus   = $viajes->groupBy(fn($v) => $v->status ?: 'Sin Estatus')->map->count();
+        $viajesPorChofer   = $viajes->groupBy(fn($v) => $v->chofer ? ($v->chofer->persona->nombre . ' ' . $v->chofer->persona->apellido) : 'Sin Chofer')->map->count()->sortDesc();
         $viajesPorAyudante = $viajes->filter(fn($v) => $v->ayudante_chofer != null)
             ->groupBy(fn($v) => $v->ayudante_chofer->persona->nombre . ' ' . $v->ayudante_chofer->persona->apellido)
             ->map->count()->sortDesc();
 
-        // 5. LÓGICA DE AGRUPACIÓN EN TABLAS
+        // 6. LÓGICA DE AGRUPACIÓN
         $tablaAgrupada = null;
         $tablaAgrupadaAyudantes = null;
         $tablasPorTipo = null;
@@ -1798,10 +1819,40 @@ public function updateGuiaData(Request $request, $viajeId)
             $tablasPorTipo = $viajes->groupBy(function($v) use ($mapaTipos) {
                 return $mapaTipos[$v->tipo_planificacion] ?? 'Otros / No Definido';
             });
+
+        } elseif ($agruparPor === 'tipo_combustible') {
+            $tablaAgrupada = $viajes->groupBy('nombre_combustible')->map(function($items, $key) {
+                return [
+                    'criterio'     => $key,
+                    'total_viajes' => $items->count(),
+                    'total_litros' => $items->sum('litros_filtrados')
+                ];
+            })->sortByDesc('total_litros');
+
+            $tablasPorTipo = $viajes->groupBy('nombre_combustible');
+
+        } elseif ($agruparPor === 'operacion_combustible') {
+            // Permite separar Compras en Compras (MGO), Compras (Industrial), Ventas (MGO), etc.
+            $tablaAgrupada = $viajes->groupBy(function($v) use ($mapaTipos) {
+                $operacion = $mapaTipos[$v->tipo_planificacion] ?? 'Otros';
+                return $operacion . ' (' . $v->nombre_combustible . ')';
+            })->map(function($items, $key) {
+                return [
+                    'criterio'     => $key,
+                    'total_viajes' => $items->count(),
+                    'total_litros' => $items->sum('litros_filtrados')
+                ];
+            })->sortByDesc('total_litros');
+
+            $tablasPorTipo = $viajes->groupBy(function($v) use ($mapaTipos) {
+                $operacion = $mapaTipos[$v->tipo_planificacion] ?? 'Otros';
+                return $operacion . ' (' . $v->nombre_combustible . ')';
+            });
         }
 
         $clientes           = Cliente::with('padre')->orderBy('parent')->orderBy('nombre')->get();
         $choferes           = \App\Models\Chofer::with('persona')->get();
+        $tiposCombustible   = \App\Models\TipoCombustible::orderBy('nombre')->get();
         $destinos           = Viaje::distinct()->pluck('destino_ciudad')->filter();
         $estadosDisponibles = Viaje::distinct()->pluck('status')->filter();
 
@@ -1810,8 +1861,8 @@ public function updateGuiaData(Request $request, $viajeId)
             'agruparPor', 'totalViajes', 'totalDespachos', 'totalLitros', 'totalCompras', 'totalLitrosCompras',
             'clienteSeleccionado', 'esClientePrincipal',
             'viajesPorDestino', 'viajesPorChofer', 'viajesPorAyudante', 'viajesPorStatus',
-            'choferes', 'clientes', 'destinos', 'estadosDisponibles', 'mapaTipos',
-            'fechaInicio', 'fechaFin', 'choferId', 'clienteId', 'destino', 'status', 'tipoOperacion'
+            'choferes', 'clientes', 'tiposCombustible', 'destinos', 'estadosDisponibles', 'mapaTipos',
+            'fechaInicio', 'fechaFin', 'choferId', 'clienteId', 'tipoCombustibleId', 'destino', 'status', 'tipoOperacion'
         ));
     }
 }

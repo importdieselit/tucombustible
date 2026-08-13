@@ -95,24 +95,41 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-2">
+
+                <!-- Nuevos Campos: Tipo de Combustible y Agrupaciones extendidas -->
+                <div class="col-md-2 mt-3">
+                    <label>Tipo Combustible</label>
+                    <select name="tipo_combustible_id" class="form-control border-info">
+                        <option value="">Todos</option>
+                        @foreach($tiposCombustible as $tc)
+                            <option value="{{ $tc->id }}" {{ (isset($tipoCombustibleId) && $tipoCombustibleId == $tc->id) ? 'selected' : '' }}>
+                                {{ $tc->nombre }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="col-md-3 mt-3">
                     <label>Agrupar Tabla</label>
                     <select name="agrupar_por" class="form-control border-primary fw-bold">
                         <option value="ninguno" {{ $agruparPor == 'ninguno' ? 'selected' : '' }}>Sin Agrupar (Detalle)</option>
                         <option value="tipo_operacion" {{ $agruparPor == 'tipo_operacion' ? 'selected' : '' }}>Por Tipo de Operación</option>
+                        <option value="tipo_combustible" {{ $agruparPor == 'tipo_combustible' ? 'selected' : '' }}>Por Tipo de Combustible</option>
+                        <option value="operacion_combustible" {{ $agruparPor == 'operacion_combustible' ? 'selected' : '' }}>Por Operación y Combustible</option>
                         <option value="cliente" {{ $agruparPor == 'cliente' ? 'selected' : '' }}>Por Cliente</option>
                         <option value="chofer" {{ $agruparPor == 'chofer' ? 'selected' : '' }}>Por Chofer</option>
                         <option value="destino" {{ $agruparPor == 'destino' ? 'selected' : '' }}>Por Destino</option>
                     </select>
                 </div>
-                <div class="col-md-10 d-flex justify-content-end align-items-end">
+
+                <div class="col-md-7 mt-3 d-flex justify-content-end align-items-end">
                     <button type="submit" class="btn btn-success px-4"><i class="fas fa-search"></i> Aplicar Filtros</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- TARJETA DE RESUMEN DE CLIENTE PRINCIPAL (EN CASO DE FILTRAR POR CLIENTE) -->
+    <!-- TARJETA DE RESUMEN DE CLIENTE PRINCIPAL -->
     @if($clienteSeleccionado)
         <div class="card border-left-info shadow mb-4">
             <div class="card-body">
@@ -241,11 +258,14 @@
     </div>
 
     <!-- SECCIÓN DE TABLAS -->
-    @if($agruparPor === 'tipo_operacion')
-        <!-- TABLA RESUMEN POR TIPO DE OPERACIÓN -->
+    @if(in_array($agruparPor, ['tipo_operacion', 'tipo_combustible', 'operacion_combustible']))
+        
+        <!-- TABLA RESUMEN AGRUPADO (Operaciones / Combustibles) -->
         <div class="card shadow mb-4">
             <div class="card-header py-3 bg-dark text-white">
-                <h6 class="m-0 font-weight-bold"><i class="fas fa-list-alt"></i> Resumen General por Tipo de Operación</h6>
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-list-alt"></i> Resumen General: {{ ucwords(str_replace('_', ' ', $agruparPor)) }}
+                </h6>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -253,7 +273,7 @@
                         <thead class="table-dark">
                             <tr>
                                 <th>#</th>
-                                <th>Tipo de Operación</th>
+                                <th>Clasificación</th>
                                 <th class="text-center">Total Viajes</th>
                                 <th class="text-end">Volumen Total (Lts)</th>
                                 <th class="text-center">% Part. Viajes</th>
@@ -265,13 +285,13 @@
                                     <td>{{ $loop->iteration }}</td>
                                     <td class="fw-bold">{{ $item['criterio'] }}</td>
                                     <td class="text-center">{{ $item['total_viajes'] }}</td>
-                                    <td class="text-end">{{ number_format($item['total_litros'], 2) }}</td>
+                                    <td class="text-end text-success fw-bold">{{ number_format($item['total_litros'], 2) }}</td>
                                     <td class="text-center">
                                         {{ $totalViajes > 0 ? number_format(($item['total_viajes'] / $totalViajes) * 100, 1) : 0 }}%
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="5" class="text-center">Sin datos de operaciones.</td></tr>
+                                <tr><td colspan="5" class="text-center">Sin datos registrados para los filtros.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -284,17 +304,18 @@
                 <div class="card shadow mb-4">
                     <div class="card-header py-3 bg-light border-left-primary">
                         <h6 class="m-0 font-weight-bold text-primary">
-                            <i class="fas fa-truck-loading"></i> Detalle de Operación: {{ $nombreTipo }}
+                            <i class="fas fa-truck-loading"></i> Detalle: {{ $nombreTipo }}
                             <span class="badge bg-primary ms-2">{{ $viajesTipo->count() }} Viajes</span>
                         </h6>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
-                            <table class="table table-bordered table-striped" width="100%">
-                                <thead>
+                            <table class="table table-bordered table-striped table-sm" width="100%">
+                                <thead class="table-secondary">
                                     <tr>
                                         <th>ID Viaje</th>
                                         <th>Fecha</th>
+                                        <th>Combustible</th>
                                         <th>Destino</th>
                                         <th>Chofer</th>
                                         <th>Ayudante</th>
@@ -305,13 +326,16 @@
                                 <tbody>
                                     @foreach($viajesTipo as $viaje)
                                         <tr>
-                                            <td>#{{ $viaje->id }}</td>
+                                            <td><a href="{{ route('viajes.show', $viaje->id) }}" target="_blank">#{{ $viaje->id }}</a></td>
                                             <td>{{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y H:i') }}</td>
+                                            <td class="text-center">
+                                                <span class="badge bg-info text-dark">{{ $viaje->nombre_combustible }}</span>
+                                            </td>
                                             <td>{{ $viaje->destino_ciudad ?? 'N/A' }}</td>
                                             <td>{{ $viaje->chofer->persona->nombre ?? 'N/A' }} {{ $viaje->chofer->persona->apellido ?? '' }}</td>
                                             <td>{{ $viaje->ayudante_chofer->persona->nombre ?? 'N/A' }} {{ $viaje->ayudante_chofer->persona->apellido ?? '' }}</td>
-                                            <td class="text-end">{{ number_format($viaje->litros_filtrados, 2) }}</td>
-                                            <td>{{ $viaje->clientes_despachados }}</td>
+                                            <td class="text-end fw-bold">{{ number_format($viaje->litros_filtrados, 2) }}</td>
+                                            <td><small>{{ $viaje->clientes_despachados }}</small></td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -369,8 +393,8 @@
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-bordered table-striped" width="100%">
-                        <thead>
+                    <table class="table table-bordered table-striped table-sm" width="100%">
+                        <thead class="table-light">
                             <tr>
                                 <th>ID Viaje</th>
                                 <th>Fecha</th>
@@ -378,14 +402,15 @@
                                 <th>Relación Jerárquica</th>
                                 <th>Chofer</th>
                                 <th>Destino</th>
-                                <th class="text-end">Volumen Despachado (Lts)</th>
-                                <th>Tipo Operación</th>
+                                <th>Combustible</th>
+                                <th class="text-end">Volumen (Lts)</th>
+                                <th>Operación</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($despachosDetalle as $d)
                                 <tr>
-                                    <td>#{{ $d['viaje_id'] }}</td>
+                                    <td><a href="{{ route('viajes.show', $d['viaje_id']) }}" target="_blank">#{{ $d['viaje_id'] }}</a></td>
                                     <td>{{ \Carbon\Carbon::parse($d['fecha'])->format('d/m/Y H:i') }}</td>
                                     <td class="fw-bold">{{ $d['cliente_nombre'] }}</td>
                                     <td>
@@ -397,11 +422,14 @@
                                     </td>
                                     <td>{{ $d['chofer'] }}</td>
                                     <td>{{ $d['destino'] ?? 'N/A' }}</td>
-                                    <td class="text-end font-weight-bold">{{ number_format($d['litros'], 2) }}</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary">{{ $d['tipo_combustible'] ?? 'N/A' }}</span>
+                                    </td>
+                                    <td class="text-end font-weight-bold text-success">{{ number_format($d['litros'], 2) }}</td>
                                     <td><span class="badge bg-info text-dark">{{ $d['tipo_operacion'] }}</span></td>
                                 </tr>
                             @empty
-                                <tr><td colspan="8" class="text-center">No hay despachos registrados.</td></tr>
+                                <tr><td colspan="9" class="text-center">No hay despachos registrados.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -530,37 +558,41 @@
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-bordered table-striped" width="100%">
-                        <thead>
+                    <table class="table table-bordered table-striped table-hover" width="100%">
+                        <thead class="table-dark">
                             <tr>
                                 <th>ID Viaje</th>
                                 <th>Fecha</th>
                                 <th>Tipo Operación</th>
+                                <th>Combustible</th>
                                 <th>Destino</th>
                                 <th>Chofer</th>
                                 <th>Ayudante</th>
-                                <th class="text-end">Volumen Despachado (Lts)</th>
+                                <th class="text-end">Volumen (Lts)</th>
                                 <th>Cliente(s) Despachado(s)</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($viajes as $viaje)
                                 <tr>
-                                    <td>#{{ $viaje->id }}</td>
+                                    <td><a href="{{ route('viajes.show', $viaje->id) }}" target="_blank">#{{ $viaje->id }}</a></td>
                                     <td>{{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y H:i') }}</td>
                                     <td>
-                                        <span class="badge bg-info text-dark">
+                                        <span class="badge bg-light text-dark border">
                                             {{ $mapaTipos[$viaje->tipo_planificacion] ?? 'N/A' }}
                                         </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-info text-dark">{{ $viaje->nombre_combustible }}</span>
                                     </td>
                                     <td>{{ $viaje->destino_ciudad }}</td>
                                     <td>{{ $viaje->chofer->persona->nombre ?? 'N/A' }}</td>
                                     <td>{{ $viaje->ayudante_chofer->persona->nombre ?? 'N/A' }}</td>
                                     <td class="text-end fw-bold">{{ number_format($viaje->litros_filtrados, 2) }}</td>
-                                    <td>{{ $viaje->clientes_despachados }}</td>
+                                    <td><small>{{ $viaje->clientes_despachados }}</small></td>
                                 </tr>
                             @empty
-                                <tr><td colspan="8" class="text-center">No se encontraron registros.</td></tr>
+                                <tr><td colspan="9" class="text-center">No se encontraron registros.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
