@@ -118,7 +118,7 @@ class Viaje extends Model
         return $this->hasMany(CompraCombustible::class, 'viaje_id');
     }
     public function tipoCombustible() { 
-        return $this->belongsTo(TipoCombustible::class, 'tipo_combustible_id'); 
+        return $this->belongsTo(TipoCombustible::class, 'tipo'); 
     }
     
     public function detalles() { 
