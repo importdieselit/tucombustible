@@ -48,9 +48,9 @@
             <a href="{{ route('ordenes.list') }}" class="btn btn-sm btn-outline-secondary">
                 <i class="fas fa-arrow-left"></i> Volver
             </a>
-            <button onclick="window.print();" class="btn btn-sm btn-dark ms-2">
+            <a href="{{ route('ordenes.imprimir', $orden->id) }}" target="_blank" class="btn btn-sm btn-dark ms-2">
                 <i class="fas fa-print"></i> Imprimir
-            </button>
+            </a>
         </div>
         <div class="d-flex gap-2">
             @if($orden->estatus == 'ABIERTA' || $orden->estatus == 2 || $orden->estatus == 3)
@@ -231,6 +231,7 @@
                                     <th class="x-small border-0">PROVEEDOR</th>
                                     <th class="x-small border-0">DESCRIPCIÓN DEL TRABAJO</th>
                                     <th class="x-small border-0 text-end">COSTO FACTURADO</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -242,10 +243,15 @@
                                         <td class="small fw-bold text-dark">{{ $trabajo->proveedor->nombre ?? 'N/A' }}</td>
                                         <td class="small text-secondary">{{ $trabajo->descripcion }}</td>
                                         <td class="small fw-bold text-end text-primary font-monospace">${{ number_format($trabajo->costo, 2) }}</td>
+                                        <td class="small text-center">
+                                             <button class="btn btn-sm btn-link text-danger p-0 delete-item" data-type="trabajo_externo" data-id="{{ $trabajo->id }}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="text-center py-4 text-muted small italic">
+                                        <td colspan="5" class="text-center py-4 text-muted small italic">
                                             <i class="bi bi-info-circle me-1"></i> No se han registrado servicios externos para esta orden.
                                         </td>
                                     </tr>
@@ -277,7 +283,6 @@
                     <button type="button" class="btn btn-sm d-inline float-end btn-corporate ms-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#manualSupplyModal">
                         <i class="fa-solid fa-cart-plus me-1"></i> Solicitar a Compras
                     </button>
-                    
                 </div>
                 
                 <div class="table-responsive">
@@ -298,12 +303,13 @@
                             {{-- --- BLOQUE 1: SUMINISTROS DE INVENTARIO --- --}}
                             @foreach($suministros as $item)
                                 @php($hasItems = true)
-                                @php($subtotal = $item->cantidad * $item->precio_unitario)
+                                {{-- Adaptado a las propiedades de tu modelo InventarioDespacho --}}
+                                @php($subtotal = $item->cantidad_solicitada * $item->inventario->precio_unitario)
                                 @php($totalGeneral += $subtotal)
                                 @php($isRecibido = $item->estatus == 1)
 
                                 <tr class="small {{ $isRecibido ? 'table-success-light' : '' }}">
-                                    <td class="text-center fw-bold">{{ $item->cantidad }}</td>
+                                    <td class="text-center fw-bold">{{ $item->cantidad_solicitada }}</td>
                                     <td>
                                         <div class="fw-bold text-orange">Inventario</div>
                                         {{ $item->inventario->descripcion }}
@@ -311,15 +317,23 @@
                                             <span class="badge bg-success x-small ms-2"><i class="fas fa-check"></i> RECIBIDO</span>
                                         @endif
                                     </td>
-                                    <td class="text-end text-muted">${{ number_format($item->precio_unitario, 2) }}</td>
+                                    <td class="text-end text-muted">${{ number_format($item->inventario->precio_unitario, 2) }}</td>
                                     <td class="text-end fw-bold">${{ number_format($subtotal, 2) }}</td>
                                     <td class="text-center no-print">
                                         @if(!$isRecibido && ($orden->estatus == 2 || $orden->estatus == 'ABIERTA'))
-                                            <button type="button" class="btn btn-sm btn-outline-success mark-recibido" 
-                                                    data-id="{{ $item->id_inventario_suministro }}" data-type="supplies">
+                                            {{-- Botón Editar Cantidad Inline --}}
+                                            <button type="button" class="btn btn-sm btn-link text-warning p-0 edit-insumo-qty me-2" 
+                                                    data-id="{{ $item->id }}" data-qty="{{ $item->cantidad_solicitada }}">
+                                                <i class="fas fa-pencil-alt"></i>
+                                            </button>
+                                            
+                                            <button type="button" class="btn btn-sm btn-outline-success mark-recibido me-2" 
+                                                    data-id="{{ $item->id }}" data-type="supplies">
                                                 <i class="fas fa-check"></i>
                                             </button>
-                                            <button class="btn btn-sm btn-link text-danger p-0 delete-item" data-type="insumo" data-id="{{ $trabajo->id_trabajo }}">
+                                            
+                                            {{-- Corrección de ID apuntando al Insumo --}}
+                                            <button class="btn btn-sm btn-link text-danger p-0 delete-item" data-type="insumo" data-id="{{ $item->id }}">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         @else
@@ -335,7 +349,6 @@
                                     @php($hasItems = true)
                                     @php($subtotalDetalle = $detalle->cantidad_solicitada * ($detalle->costo_unitario_aprobado ?? 0))
                                     @php($totalGeneral += $subtotalDetalle)
-                                    {{-- Asumiendo que el detalle tiene un estatus de recepción, si no, usa el del requerimiento --}}
                                     @php($isRecibidoReq = $detalle->estatus == 1 || $req->estatus == 'RECIBIDO')
                                     @php($isSolicitadoReq = $detalle->estatus == 2 || $req->estatus == 'SOLICITADO')
                                     @php($isAprobadoReq = $detalle->estatus == 3 || $req->estatus == 'APROBADO')
@@ -345,19 +358,13 @@
                                         <td>
                                             <div class="fw-bold text-info">Req: #{{ $req->nro_requerimiento }}</div>
                                             {{ $detalle->descripcion }}
-                                            
-                                           
                                         </td>
                                         <td class="text-end text-muted">${{ number_format($detalle->costo_unitario_aprobado ?? 0, 2) }}</td>
                                         <td class="text-end fw-bold">${{ number_format($subtotalDetalle, 2) }}</td>
-                                        
                                         <td class="text-center no-print">
                                             @if($isRecibidoReq)
-                                                {{-- ESTADO 1: Ya recibido --}}
                                                 <i class="fas fa-check-circle text-success fs-5" title="Recibido"></i>
-                                            
                                             @elseif($isAprobadoReq)
-                                                {{-- ESTADO 3: Aprobado (Listo para marcar como recibido) --}}
                                                 <button type="button" class="btn btn-sm btn-outline-success mark-recibido" 
                                                         data-id="{{ $detalle->id }}" data-type="compras" title="Marcar como Recibido">
                                                     <i class="fas fa-check"></i>
@@ -365,35 +372,22 @@
                                                 <button class="btn btn-sm btn-link text-danger p-0 delete-item" data-type="compra" data-id="{{ $detalle->id }}">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
-                                                
                                             @elseif($isSolicitadoReq)
-                                                {{-- ESTADO 2: Solo solicitado (En espera de aprobación) --}}
-                                                <i class="fas fa-clock text-warning fs-5" title="Pendiente de aprobación/compra"></i>
+                                                <i class="fas fa-clock text-warning fs-5 title="Pendiente de aprobación/compra""></i>
                                                 <button class="btn btn-sm btn-link text-danger p-0 delete-item" data-type="compra" data-id="{{ $detalle->id }}">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             @else
-                                                {{-- Cualquier otro estado --}}
-
                                                 <span class="text-muted small">Pte.</span>
                                                 <button class="btn btn-sm btn-link text-danger p-0 delete-item" data-type="compra" data-id="{{ $detalle->id }}">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             @endif
-                                             {{-- Badge dinámico de estado --}}
-                                            {{-- @if($isRecibidoReq)
-                                                <span class="badge bg-success x-small ms-2"><i class="fas fa-check"></i> RECIBIDO</span>
-                                            @elseif($isSolicitadoReq)
-                                                <span class="badge bg-warning text-dark x-small ms-2"><i class="fas fa-clock"></i> SOLICITADO</span>
-                                            @elseif($isAprobadoReq)
-                                                <span class="badge bg-info x-small ms-2"><i class="fas fa-thumbs-up"></i> APROBADO</span>
-                                            @endif --}}
                                         </td> 
                                     </tr>
                                 @endforeach
                             @endforeach
 
-                            {{-- --- MENSAJE DE TABLA VACÍA --- --}}
                             @if(!$hasItems)
                                 <tr>
                                     <td colspan="5" class="text-center py-4 text-muted">
@@ -413,9 +407,10 @@
                     </table>
                 </div>
             </div>
+        </div>
                       
 
-            <div class="card bg-corporate text-dark shadow-sm">
+            <div class="card text-dark shadow-sm">
                 <div class="card-body">
                     <div class="d-flex justify-content-between mb-2 small">
                         <span>SUBTOTAL SERVICIOS:</span>
@@ -509,6 +504,9 @@
             </div>
         </div>
     </div>
+     <a href="{{ route('ordenes.imprimir', $orden->id) }}" target="_blank" class="btn btn-sm btn-dark ms-2">
+                    <i class="fas fa-print"></i> Imprimir
+                </a>
 </div>
 
 {{-- MODALES --}}
@@ -572,6 +570,7 @@
                 <button type="button" class="btn btn-success btn-sm fw-bold px-4" id="btn-guardar-todo">
                     <i class="fas fa-save me-1"></i> GUARDAR TRABAJO
                 </button>
+               
             </div>
         </div>
     </div>
@@ -605,10 +604,9 @@
         </div>
     </div>
 </div>
-
 <div class="modal fade" id="modalInsumo" data-bs-backdrop="false" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg">
-        <form action="{{ route('ordenes.addInsumo', $orden->id) }}" method="POST">
+        <form id="formAddInsumo" data-url="{{ route('ordenes.addInsumo', $orden->id) }}">
             @csrf
             <div class="modal-content">
                 <div class="modal-header bg-corporate text-white">
@@ -619,10 +617,12 @@
                     <div class="row g-3">
                         <div class="col-md-8">
                             <label class="form-label fw-bold">Seleccionar Artículo</label>
-                            <select name="id_inventario" class="form-select select2-insumos" required style="width: 100%">
+                            <select name="id_inventario" id="select-inventario" class="form-select select2-insumos" required style="width: 100%">
                                 <option value="">Escriba para buscar...</option>
                                 @foreach($inventario as $item)
-                                    <option value="{{ $item->id }}" @if($item->existencia <= $item->existencia_minima) class="text-danger" @endif @if($item->existencia == 0) class="text-muted" disabled @endif>
+                                    <option value="{{ $item->id }}" 
+                                            @if($item->existencia <= $item->existencia_minima) class="text-danger" @endif 
+                                            @if($item->existencia == 0) class="text-muted" disabled @endif>
                                         {{$item->codigo}} - {{ $item->descripcion }} (Stock: {{ $item->existencia }})
                                     </option>
                                 @endforeach
@@ -630,12 +630,12 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-bold">Cantidad</label>
-                            <input type="number" name="cantidad" class="form-control form-control-lg" min="1" value="1" required>
+                            <input type="number" id="input-cantidad" name="cantidad" class="form-control form-control-lg" min="1" value="1" required>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" class="btn btn-orange text-white fw-bold">AGREGAR INSUMO</button>
+                    <button type="submit" class="btn btn-orange text-dark fw-bold">AGREGAR INSUMO</button>
                 </div>
             </div>
         </form>
@@ -690,7 +690,9 @@
                             <select class="form-select select2-proveedor" name="id_proveedor" id="select-proveedor" required>
                                 <option value="">Seleccione un proveedor...</option>
                                 @foreach($proveedores as $prov)
-                                    <option value="{{ $prov->id }}">{{ $prov->nombre }}</option>
+                                    @if($prov->id_tipo_proveedor == 2)
+                                        <option value="{{ $prov->id_tipo_proveedor }}">{{ $prov->nombre }}</option>
+                                    @endif
                                 @endforeach
                             </select>
                             <button class="btn btn-outline-primary" type="button" id="btn-nuevo-proveedor" title="Agregar nuevo proveedor">
@@ -762,7 +764,7 @@
     /**
      * Estandarización de procesos: Función maestra para peticiones AJAX/Fetch
      */
-    async function apiCall(url, method = 'POST', body = null) {
+    async function apiCall(url, method = 'POST', body = null, redirectUrl = null) {
         try {
             const options = {
                 method: method,
@@ -788,9 +790,9 @@
                     timer: 1500,
                     showConfirmButton: false
                 }).then(() => {
-                    // Evaluamos el método para decidir el destino
-                    if (method === 'DELETE') {
-                        window.location.href = '/ordenes/';
+                    // Si se definió una ruta de redirección específica, la usa. De lo contrario, recarga.
+                    if (redirectUrl) {
+                        window.location.href = redirectUrl;
                     } else {
                         window.location.reload();
                     }
@@ -889,6 +891,22 @@
             apiCall(`/ordenes/${orderId}/add-manual-supply`, 'POST', data);
         });
 
+        $('#formAddInsumo').on('submit', function(e) {
+            e.preventDefault();
+            
+            const url = $(this).data('url');
+            const body = {
+                id_inventario: $('#select-inventario').val(),
+                cantidad: $('#input-cantidad').val()
+            };
+
+            // Cerramos el modal antes de disparar la alerta global
+            $('#modalInsumo').modal('hide');
+
+            // Ejecuta apiCall (recargará al finalizar con éxito)
+            apiCall(url, 'POST', body);
+        });
+
         // Marcar como Recibido (Insumos o Compras)
         $(document).on('click', '.mark-recibido', function() {
             const id = $(this).data('id');
@@ -900,13 +918,43 @@
             apiCall(url, 'POST');
         });
 
+        $(document).on('click', '.edit-insumo-qty', function() {
+            const id = $(this).data('id');
+            const currentQty = $(this).data('qty');
+            const url = `/ordenes/${id}/insumos/edit`;
+
+            Swal.fire({
+                title: 'Modificar Cantidad',
+                text: 'Ingrese el nuevo valor para el insumo:',
+                input: 'number',
+                inputValue: currentQty,
+                inputAttributes: {
+                    min: 1,
+                    step: 1
+                },
+                showCancelButton: true,
+                confirmButtonText: 'Guardar',
+                confirmButtonColor: '#f05a24',
+                inputValidator: (value) => {
+                    if (!value || value < 1) {
+                        return 'Debe ingresar una cantidad válida mayor a 0';
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    apiCall(url, 'PUT', { cantidad: result.value });
+                }
+            });
+        });
+
         // --- 4. ACCIONES DE ELIMINACIÓN ---
-        $(document).on('click', '.delete-item', function() {
+       $(document).on('click', '.delete-item', function() {
             const id = $(this).data('id');
             const type = $(this).data('type');
             let url = '';
 
             if(type === 'trabajo') url = `/ordenes/trabajos/${id}/delete`;
+            if(type === 'trabajo_externo') url = `/ordenes/trabajos-externos/${id}/delete`;
             if(type === 'insumo')  url = `/ordenes/supplies/${id}/delete`;
             if(type === 'compra')  url = `/ordenes/purchase/${id}/delete`;
             if(type === 'foto')    url = `/ordenes/fotos/${id}/delete`;
@@ -920,7 +968,13 @@
                 confirmButtonColor: '#d33',
                 confirmButtonText: 'SÍ, ELIMINAR'
             }).then((result) => {
-                if (result.isConfirmed) apiCall(url, 'DELETE');
+                if (result.isConfirmed) {
+                    // Determinamos el destino post-delete dinámicamente
+                    const redirectUrl = (type === 'orden') ? '/ordenes/' : null;
+                    
+                    // Ejecutamos la llamada pasando el parámetro de redirección
+                    apiCall(url, 'DELETE', null, redirectUrl);
+                }
             });
         });
 

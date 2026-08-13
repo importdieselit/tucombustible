@@ -12,29 +12,38 @@ use Illuminate\Support\Facades\Redirect;
 use App\Models\User;
 use App\Models\Perfil;
 use App\Models\Cliente;
+use App\Models\Personal;
+use App\Models\Chofer;
+use App\Models\Cargo;
 use App\Models\Persona;
+use App\Models\Modulo;
+use App\Models\Sedes;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Hash;
 
-
-
-class UserController extends Controller
+class UserController extends BaseController
 {
     protected UserService $userService;
+    protected int $moduloIdUsuarios = 51; // ID del módulo de usuarios
 
     public function __construct(UserService $userService)
     {
         $this->userService = $userService;
         $this->middleware('auth');
+        $this->model = new User(); // Asignación para BaseController
     }
 
-    public function index(Request $request)
+    /**
+     * Vista principal / Dashboard filtrado por cliente.
+     */
+    public function index(?Request $request = null)
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-        if (!$user->canAccess('read', 51)) {
+        if (!$user->canAccess('read', $this->moduloIdUsuarios)) {
             abort(403, 'No tiene permisos para acceder a este módulo.');
         }
 
@@ -42,267 +51,73 @@ class UserController extends Controller
         $stats     = $this->userService->obtenerDashboardData($clienteId);
         $usuarios  = $this->userService->obtenerListaFiltrada($request->all(), $clienteId);
 
-        return view('usuarios.index', array_merge($stats, ['usuarios' => $usuarios]));
+        return view('usuario.index', array_merge($stats, ['usuarios' => $usuarios]));
     }
 
     /**
-     * Display a listing of the resource.
+     * Muestra las métricas (KPIs) generales de usuarios por perfil.
      */
     public function index_adm()
     {
-        // 1. Verificación de Permiso
         if (!auth()->user()->canAccess('read', $this->moduloIdUsuarios)) {
             abort(403, 'No tiene permiso para ver el dashboard de usuarios.');
         }
         
-        // 2. Lógica de Conteo (Tus variables)
         $clienteId = auth()->user()->cliente_id;
         
-        // Consulta para obtener el conteo de usuarios por perfil
         $perfilesConteo = DB::table('users')
-            ->select('id_perfil as id','perfiles.nombre as perfil', DB::raw('COUNT(*) as total'))
+            ->select('id_perfil as id', 'perfiles.nombre as perfil', DB::raw('COUNT(*) as total'))
             ->when($clienteId !== 0, function ($query) use ($clienteId) {
-                // Aplicar el filtro de seguridad de cliente si no es Super Admin
                 $query->where('cliente_id', $clienteId); 
             })
             ->join('perfiles', 'users.id_perfil', '=', 'perfiles.id')
-            ->groupBy('id_perfil','perfiles.nombre')
+            ->groupBy('id_perfil', 'perfiles.nombre')
             ->orderBy('total', 'desc')
             ->get();
 
-        // Obtener el total general
+            // Directorio de usuarios con relaciones precargadas
+    $usuarios = User::with(['perfil', 'persona'])
+        ->when($clienteId !== 0, function ($query) use ($clienteId) {
+            $query->where('cliente_id', $clienteId);
+        })
+        ->latest()
+        ->get();
+
         $totalGeneral = $perfilesConteo->sum('total');
 
-        // 3. Devolver la vista del Dashboard/Index con las variables
-        // Esto asume que tienes la vista en resources/views/usuarios/index.blade.php
-        // y que mostrará las cards (KPIs) en lugar del listado.
-        return view('usuario.index', compact('perfilesConteo', 'totalGeneral'));
-    }
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create_old()
-    {
-        $perfiles = Perfil::all(); 
-        //return view('users.create', compact('perfiles')); // CAMBIADO: Pasar 'perfiles'
+        return view('usuario.index', compact('perfilesConteo', 'totalGeneral', 'usuarios'));
     }
 
-     protected function applyBusinessFilters(Builder $query): Builder
+    /**
+     * Aplica filtros de negocio a las consultas del BaseController.
+     */
+    protected function applyBusinessFilters(Builder $query): Builder
     {
-        $filterKey = request()->get('filter'); // Usamos el helper global 'request()'
+        $filterKey = request()->get('filter');
         
-        if ($filterKey) {
-            $value = request()->get('value'); // Valor del filtro
-            switch ($filterKey) {
-                
-                case 'id_perfil':
-                     $query->where('id_perfil', $value);
-                    break;                
-            }
+        if ($filterKey && $filterKey === 'id_perfil') {
+            $value = request()->get('value');
+            $query->where('id_perfil', $value);
         }
         
-        return $query; // Devolvemos el Query Builder modificado
+        return $query;
     }
 
-
+    /**
+     * Retorna el listado paginado/filtrado reutilizando la base.
+     */
     public function list($query = null)
     {
         if (!auth()->user()->canAccess('read', $this->moduloIdUsuarios)) {
             abort(403, 'No tiene permiso para ver la lista de usuarios.');
         }
-        // 2. Llama al método list() del padre. 
+
         return parent::list($query);    
     }
 
-
-    public function store(Request $request)
-    {
-        if (!auth()->user()->canAccess('create', $this->moduloIdUsuarios)) {
-             abort(403, 'No tiene permiso para crear usuarios.');
-        }
-        $data = $this->prepareData($request);
-        
-        return parent::store(new Request($data));
-    }
-    
-    public function update(Request $request, $id)
-    {
-        if (!auth()->user()->canAccess('update', $this->moduloIdUsuarios)) {
-             abort(403, 'No tiene permiso para editar usuarios.');
-        }
-        
-        $item = $this->model->findOrFail($id);
-        $data = $this->prepareData($request, $item);
-
-        try {
-            $item->update($data);
-            Session::flash('success', 'Usuario actualizado exitosamente.');
-        } catch (\Exception $e) {
-            Session::flash('error', 'Error al actualizar el usuario: ' . $e->getMessage());
-        }
-        
-        return Redirect::route($this->getPluralModelNameLowerCase() . '.show', $id);
-    }
-
     /**
-     * Display the specified resource.
+     * Formulario de creación de usuario.
      */
-      public function show($id) 
-        {
-            if (!auth()->user()->canAccess('read', $this->moduloIdUsuarios)) {
-                abort(403, 'No tiene permiso para ver detalles de usuarios.');
-            }    
-            $query = $this->model->with(['perfil', 'cliente', 'persona']);
-            
-            view()->share('modulos', \App\Models\Modulo::all());
-        
-            return parent::show($id);
-        }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit_old(User $user)
-    {
-        $perfiles = Perfil::all();
-        // return view('users.edit', compact('user', 'perfiles')); // CAMBIADO: Pasar 'perfiles'
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-     public function destroy($id) 
-    {
-        if (!auth()->user()->canAccess('delete', $this->moduloIdUsuarios)) {
-             abort(403, 'No tiene permiso para eliminar usuarios.');
-        }
-        
-        // Usamos la lógica del padre para eliminar y manejar redirección/mensajes.
-        return parent::destroy($id);
-    }
-
-     public function import()
-    {
-        return view('usuario.import');
-    }
-
-    /**
-     * Procesa el archivo subido e importa los usuarios.
-     *
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function handleImport(Request $request)
-    {
-       // Validación crucial: comprueba si el archivo realmente fue subido.
-        if (!$request->hasFile('file')) {
-            Session::flash('error', 'No se ha seleccionado ningún archivo para subir.');
-            return Redirect::back();
-        }
-
-        // Validación para asegurar que el archivo es del tipo correcto.
-        $validator = Validator::make($request->all(), [
-            'file' => 'required|mimes:csv,txt|max:32768', // Máximo 32MB. Asegúrate de que este valor coincida con la configuración de PHP.
-        ]);
-
-        if ($validator->fails()) {
-            Session::flash('error', 'El archivo no tiene el formato correcto o excede el tamaño máximo permitido.');
-            return Redirect::back();
-        }
-
-        $file = $request->file('file');
-        try {
-            DB::beginTransaction();
-
-            // 2. Obtener la primera hoja del archivo como una colección.
-            $coleccion = Excel::toCollection(null, $request->file('file'))->first();
-
-            // 3. Validar que la colección no esté vacía.
-            if ($coleccion->isEmpty() || count($coleccion) < 2) {
-                throw new \Exception("El archivo está vacío o la hoja de datos no contiene registros.");
-            }
-
-            // 4. Omitir la primera fila (encabezados) para empezar con los datos.
-            $filas = $coleccion->skip(1);
-            
-            // 5. Recorrer cada fila para procesar los datos.
-            foreach ($filas as $fila) {
-                // Si la fila está vacía, la saltamos.
-                if ($fila->filter()->isEmpty()) {
-                    continue;
-                }
-
-                // Mapeamos los datos de la fila a las variables.
-                // Asegúrate de que los índices coincidan con tu archivo CSV.
-                $nombre_persona = (string) ($fila[5] ?? '');
-                $dni_persona = (string) ($fila[4] ?? '');
-                $nombre_empresa = (string) ($fila[2] ?? '');
-                $rif_empresa = (string) ($fila[1] ?? '');
-
-                // Lógica de validación básica.
-                if (empty($dni_persona) || empty($nombre_persona) || empty($rif_empresa)) {
-                    Log::warning("Fila omitida por datos de Cédula, Nombre o RIF faltantes.", ['fila' => $fila]);
-                    continue;
-                }
-                
-                // 6. Encontrar o crear la empresa (Cliente).
-                $cliente = Cliente::firstOrCreate(
-                    ['rif' => $rif_empresa],
-                    [
-                        'nombre' => $nombre_empresa,
-                        // Añadir más campos del cliente si están disponibles en el archivo de importación.
-                    ]
-                );
-
-                // 7. Encontrar o crear la persona.
-                $persona = Persona::firstOrCreate(
-                    ['dni' => $fila[3].$dni_persona],
-                    [
-                        'nombre' => $nombre_persona,
-                        // Añadir más campos de la persona.
-                    ]
-                );
-                $validateUser = User::where('cliente_id', $cliente->id)->where('id_master',0)->first();
-                if($validateUser){
-                    $masterUser = $validateUser->id;
-                }else{
-                    $masterUser = 0; // ID del usuario master por defecto
-                }
-                // 8. Encontrar o crear el usuario y vincularlo.
-                // Usamos la cédula como nombre de usuario (email) y contraseña por defecto.
-                $user = User::firstOrCreate(
-                    ['id_persona' => $persona->id],
-                    [
-                        'name' => $nombre_persona,
-                        'email' => str_replace('.','',$dni_persona) . '@tucombustible.com', // Correo por defecto, debe ser único
-                        'password' => bcrypt(123456789), // Contraseña por defecto
-                        'id_perfil' => 3, // Asignamos el perfil de cliente (ajustar si es necesario)
-                        'cliente_id' => $cliente->id,
-                        'id_master' => $masterUser // Asignar un master por defecto o según la lógica de tu aplicación
-                    ]
-                );
-
-                // Si el usuario ya existe, actualizamos sus datos para asegurar la consistencia.
-                $user->update([
-                    'name' => $nombre_persona,
-                    'cliente_id' => $cliente->id,
-                ]);
-
-            }
-
-            DB::commit();
-
-            Session::flash('success', '¡Usuarios importados exitosamente!');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error("Error al importar los usuarios: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            Session::flash('error', 'Hubo un error al importar los usuarios: ' . $e->getMessage());
-        }
-
-        return Redirect::back();
-
-    }
-
     public function create()
     {
         if (!auth()->user()->canAccess('create', $this->moduloIdUsuarios)) {
@@ -311,14 +126,154 @@ class UserController extends Controller
         
         $perfiles = Perfil::all();
         $clientes = Cliente::all();
+        $cargos   = Cargo::all();
+        $sedes = Sedes::all();
         
-        return view('usuario.create_edit', compact('perfiles', 'clientes'));
+        return view('usuario.create_edit', compact('perfiles', 'clientes', 'cargos', 'sedes'));
     }
 
     /**
-     * Sobrescribe el método edit para pasar datos adicionales a la vista.
-     * @param int $id
-     * @return \Illuminate\View\View
+     * Almacena un nuevo usuario.
+     */
+    public function store(Request $request)
+    {
+        if (!auth()->user()->canAccess('create', $this->moduloIdUsuarios)) {
+            abort(403, 'No tiene permiso para crear usuarios.');
+        }
+
+        // Validaciones base y condicionales para choferes
+        $validated = $request->validate([
+            // Datos de Persona / Usuario
+            'nombre'                         => 'required|string|max:255',
+            'dni'                            => 'required|string|max:50|unique:personas,dni',
+            'email'                          => 'required|email|unique:users,email',
+            'password'                       => 'required|min:6',
+            'id_perfil'                      => 'required|exists:perfiles,id',
+            'id_sede'                        => 'nullable|integer',
+            'cargo_id'                       => 'nullable|exists:cargo,id',
+            'telefono'                       => 'nullable|string|max:20',
+            
+            // Checkbox de Chofer o validación condicional
+            'es_chofer'                      => 'nullable|boolean',
+            'licencia_numero'                => 'required_if:es_chofer,1|nullable|string|max:100',
+            'licencia_vencimiento'           => 'required_if:es_chofer,1|nullable|date',
+            'tipo_licencia'                  => 'nullable|string|max:50',
+            'documento_vialidad_numero'      => 'nullable|string|max:100',
+            'documento_vialidad_vencimiento' => 'nullable|date',
+            'certificado_medico'             => 'nullable|string|max:100',
+            'certificado_medico_vencimiento' => 'nullable|date',
+            
+            // Archivos adjuntos para choferes
+            'foto'                           => 'nullable|image|max:2048',
+            'soporte_licencia'               => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'soporte_certificado'            => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'soporte_documento'              => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            // 1. Crear Registro en 'personas'
+            $persona = Persona::create([
+                'nombre'        => $request->input('nombre'),
+                'dni'           => $request->input('dni'),
+                'dni_exp'       => $request->input('dni_exp'),
+                'telefono'      => $request->input('telefono'),
+                'address'       => $request->input('address'),
+                'city'          => $request->input('city'),
+                'state'         => $request->input('state'),
+                'country'       => $request->input('country'),
+                'date_of_birth' => $request->input('date_of_birth'),
+                'gender'        => $request->input('gender'),
+                'notes'         => $request->input('notes'),
+                'cargo_id'      => $request->input('cargo_id'),
+            ]);
+
+            // 2. Crear Registro en 'users' (asociado al id_persona)
+            $user = User::create([
+                'name'       => $request->input('name', $request->input('nombre')),
+                'email'      => $request->input('email'),
+                'password'   => Hash::make($request->input('password')),
+                'id_perfil'  => $request->input('id_perfil'),
+                'id_persona' => $persona->id,
+                'id_sede'    => $request->input('id_sede'),
+                'cliente_id' => $request->input('id_cliente'),
+                'status'     => 1,
+            ]);
+
+            // 3. Crear Registro en 'personal' (Si aplica cargo o sede)
+            if ($request->filled('cargo_id') || $request->filled('id_sede')) {
+                Personal::create([
+                    'id_persona' => $persona->id,
+                    'id_usuario' => $user->id,
+                    'id_sede'    => $request->input('id_sede'),
+                    'cargo_id'   => $request->input('cargo_id'),
+                    'telefono'   => $request->input('telefono'),
+                    'email'      => $request->input('email'),
+                    'estatus'    => 1,
+                    'fecha_in'   => now(),
+                ]);
+            }
+
+            // 4. Crear Registro en 'choferes' (Si está marcado como chofer o llenó licencia)
+            if ($request->boolean('es_chofer') || $request->filled('licencia_numero')) {
+                $choferData = [
+                    'persona_id'                     => $persona->id,
+                    'licencia_numero'                => $request->input('licencia_numero'),
+                    'licencia_vencimiento'           => $request->input('licencia_vencimiento'),
+                    'tipo_licencia'                  => $request->input('tipo_licencia'),
+                    'documento_vialidad_numero'      => $request->input('documento_vialidad_numero'),
+                    'documento_vialidad_vencimiento' => $request->input('documento_vialidad_vencimiento'),
+                    'certificado_medico'             => $request->input('certificado_medico'),
+                    'certificado_medico_vencimiento' => $request->input('certificado_medico_vencimiento'),
+                    'vehiculo_id'                    => $request->input('vehiculo_id'),
+                ];
+
+                // Subida de archivos / soportes digitales
+                if ($request->hasFile('foto')) {
+                    $choferData['foto'] = $request->file('foto')->store('choferes/fotos', 'public');
+                }
+                if ($request->hasFile('soporte_licencia')) {
+                    $choferData['soporte_licencia'] = $request->file('soporte_licencia')->store('choferes/licencias', 'public');
+                }
+                if ($request->hasFile('soporte_certificado')) {
+                    $choferData['soporte_certificado'] = $request->file('soporte_certificado')->store('choferes/certificados', 'public');
+                }
+                if ($request->hasFile('soporte_documento')) {
+                    $choferData['soporte_documento'] = $request->file('soporte_documento')->store('choferes/documentos', 'public');
+                }
+
+                Chofer::create($choferData);
+            }
+
+            DB::commit();
+
+            Session::flash('success', 'Usuario y registros asociados creados exitosamente.');
+            return Redirect::route('usuarios.index');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Session::flash('error', 'Error al registrar el usuario: ' . $e->getMessage());
+            return Redirect::back()->withInput();
+        }
+    }
+
+    /**
+     * Detalle del usuario y carga de matriz de permisos/módulos.
+     */
+    public function show($id) 
+    {
+        if (!auth()->user()->canAccess('read', $this->moduloIdUsuarios)) {
+            abort(403, 'No tiene permiso para ver detalles de usuarios.');
+        }    
+
+        view()->share('modulos', Modulo::all());
+        
+        return parent::show($id);
+    }
+
+    /**
+     * Formulario de edición de usuario.
      */
     public function edit($id)
     {
@@ -326,79 +281,207 @@ class UserController extends Controller
              abort(403, 'No tiene permiso para editar usuarios.');
         }
         
-        $item = $this->model->findOrFail($id);
+        $item = User::findOrFail($id);
         $perfiles = Perfil::all();
         $clientes = Cliente::all();
-        $modulos = \App\Models\Modulo::all(); // Para mostrar permisos en la vista
+        // 1. Obtenemos todos los módulos
+        $todos = Modulo::orderBy('modulo', 'asc')->get();
+
+        // 2. Filtramos los padres y los combinamos linealmente con sus hijos
+        $modulos = $todos->where('id_padre', 0)->flatMap(function ($padre) use ($todos) {
+            $hijos = $todos->where('id_padre', $padre->id);
+            return collect([$padre])->concat($hijos);
+        });
         
         return view('usuario.create_edit', compact('item', 'perfiles', 'clientes', 'modulos'));
     }
 
-    public function editPermissions($id)
+    /**
+     * Actualiza un usuario existente.
+     */
+    public function update(Request $request, $id)
     {
-        // 1. Validar acceso (Siguiendo tu estándar de seguridad)
         if (!auth()->user()->canAccess('update', $this->moduloIdUsuarios)) {
-            abort(403, 'No tiene autorización para editar permisos.');
+             abort(403, 'No tiene permiso para editar usuarios.');
         }
+        
+        $item = User::findOrFail($id);
+        $data = $this->prepareData($request, $item);
 
-        // 2. Buscar el usuario
-        $usuario = $this->model->with('perfil')->findOrFail($id);
-
-        // 3. Obtener los módulos para la matriz de permisos
-        $modulos = \App\Models\Modulo::all(); 
-
-        // 4. Retornar la vista (puedes crear una específica o usar un modal)
-        return view('usuario.edit_permissions', compact('usuario', 'modulos'));
+        try {
+            $item->update($data);
+            Session::flash('success', 'Usuario actualizado exitosamente.');
+        } catch (\Exception $e) {
+            Session::flash('error', 'Error al actualizar el usuario: ' . $e->getMessage());
+            return Redirect::back()->withInput();
+        }
+        
+        return Redirect::route('usuarios.show', $id);
     }
 
+    /**
+     * Elimina un usuario del sistema.
+     */
+    public function destroy($id) 
+    {
+        if (!auth()->user()->canAccess('delete', $this->moduloIdUsuarios)) {
+             abort(403, 'No tiene permiso para eliminar usuarios.');
+        }
+        
+        return parent::destroy($id);
+    }
+
+    /**
+     * Obtiene los permisos individuales (AJAX para Modal).
+     */
+    public function getPermissions($id)
+    {
+        if (!auth()->user()->canAccess('read', $this->moduloIdUsuarios)) {
+            return response()->json(['error' => 'No autorizado'], 403);
+        }
+
+        $user = User::findOrFail($id);
+        $modules = Modulo::select('id', 'modulo', 'icono')->get();
+        $permissions = DB::table('accesos')
+            ->where('id_usuario', $id)
+            ->get()
+            ->keyBy('id_modulo');
+
+        return response()->json([
+            'user' => $user,
+            'modules' => $modules,
+            'permissions' => $permissions
+        ]);
+    }
+
+    /**
+     * Actualiza un permiso individual en la tabla 'accesos' vía AJAX.
+     */
     public function updateSinglePermission(Request $request, $id)
     {
-        // Validar acceso rápido
         if (!auth()->user()->canAccess('update', $this->moduloIdUsuarios)) {
             return response()->json(['error' => 'No autorizado'], 403);
         }
 
-        $usuario = User::findOrFail($id);
-        
-        // Lógica para actualizar la tabla pivot
-        // Suponiendo que usas una relación 'modulos' con columnas r, w, d
-        $columna = $request->accion; // 'r', 'w' o 'd'
-        
-        $usuario->modulos()->updateExistingPivot($request->modulo_id, [
-            $columna => $request->estado
+        $request->validate([
+            'modulo_id' => 'required|integer|exists:modulos,id',
+            'accion'    => 'required|string|in:read,create,update,delete',
+            'estado'    => 'required|boolean'
         ]);
 
-        return response()->json(['status' => 'ok']);
+        DB::table('accesos')->updateOrInsert(
+            [
+                'id_usuario' => $id,
+                'id_modulo'  => $request->modulo_id,
+            ],
+            [
+                $request->accion => $request->estado ? 1 : 0,
+                'updated_at'     => now(),
+                'created_at'     => DB::raw('COALESCE(created_at, NOW())')
+            ]
+        );
+
+        return response()->json(['status' => 'success', 'message' => 'Permiso actualizado correctamente.']);
     }
-    
-    
 
     /**
-    * Procesa el cambio de contraseña.
-    */
-    public function updatePassword(Request $request)
+     * Muestra la vista de importación masiva.
+     */
+    public function import()
     {
-        $request->validate([
-            'password' => 'required|min:8|confirmed',
-        ], [
-            'password.confirmed' => 'Las contraseñas no coinciden.',
-            'password.min' => 'La contraseña debe tener al menos 8 caracteres.'
-        ]);
-
-        $user = Auth::user();
-
-        // 1. Actualizamos la contraseña y removemos el flag de cambio obligatorio
-        $this->userService->actualizarPasswordObligatorio($user->id, $request->password);
-
-        // 2. AUTOMATIZACIÓN PASO 1 -> 2
-        // Si el usuario es un cliente y está en el paso inicial de registro, lo movemos a carga de documentos
-        if ($user->id_perfil == 3 && $user->cliente && $user->cliente->registro_paso == 1) {
-            $user->cliente->update(['registro_paso' => 2]);
-        }
-
-        return redirect()->route('dashboard')->with('success', 'Contraseña actualizada correctamente. Acceso concedido.');
+        return view('usuario.import');
     }
 
+    /**
+     * Procesa la importación de usuarios desde CSV.
+     */
+    public function handleImport(Request $request)
+    {
+        if (!$request->hasFile('file')) {
+            Session::flash('error', 'No se ha seleccionado ningún archivo para subir.');
+            return Redirect::back();
+        }
+
+        $validator = Validator::make($request->all(), [
+            'file' => 'required|mimes:csv,txt|max:32768',
+        ]);
+
+        if ($validator->fails()) {
+            Session::flash('error', 'El archivo no tiene el formato correcto o excede el tamaño máximo permitido.');
+            return Redirect::back();
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $coleccion = Excel::toCollection(null, $request->file('file'))->first();
+
+            if ($coleccion->isEmpty() || count($coleccion) < 2) {
+                throw new \Exception("El archivo está vacío o no contiene registros válidos.");
+            }
+
+            $filas = $coleccion->skip(1);
+            
+            foreach ($filas as $fila) {
+                if ($fila->filter()->isEmpty()) {
+                    continue;
+                }
+
+                $nombre_persona = (string) ($fila[5] ?? '');
+                $dni_persona    = (string) ($fila[4] ?? '');
+                $nombre_empresa = (string) ($fila[2] ?? '');
+                $rif_empresa    = (string) ($fila[1] ?? '');
+
+                if (empty($dni_persona) || empty($nombre_persona) || empty($rif_empresa)) {
+                    Log::warning("Fila omitida por datos faltantes.", ['fila' => $fila]);
+                    continue;
+                }
+                
+                $cliente = Cliente::firstOrCreate(
+                    ['rif' => $rif_empresa],
+                    ['nombre' => $nombre_empresa]
+                );
+
+                $persona = Persona::firstOrCreate(
+                    ['dni' => ($fila[3] ?? '') . $dni_persona],
+                    ['nombre' => $nombre_persona]
+                );
+
+                $validateUser = User::where('cliente_id', $cliente->id)->where('id_master', 0)->first();
+                $masterUser   = $validateUser ? $validateUser->id : 0;
+
+                $user = User::firstOrCreate(
+                    ['id_persona' => $persona->id],
+                    [
+                        'name'       => $nombre_persona,
+                        'email'      => str_replace('.', '', $dni_persona) . '@tucombustible.com',
+                        'password'   => bcrypt('123456789'),
+                        'id_perfil'  => 3, // Perfil predeterminado: Cliente
+                        'cliente_id' => $cliente->id,
+                        'id_master'  => $masterUser
+                    ]
+                );
+
+                $user->update([
+                    'name'       => $nombre_persona,
+                    'cliente_id' => $cliente->id,
+                ]);
+            }
+
+            DB::commit();
+            Session::flash('success', '¡Usuarios importados exitosamente!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("Error en importación de usuarios: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Session::flash('error', 'Error al importar usuarios: ' . $e->getMessage());
+        }
+
+        return Redirect::back();
+    }
+
+    /**
+     * Muestra la vista obligatoria de cambio de contraseña.
+     */
     public function showChangePassword()
     {
         if (Auth::user()->must_change_password != 1) {
@@ -407,4 +490,85 @@ class UserController extends Controller
 
         return view('auth.passwords.change');
     }
+
+    /**
+     * Procesa la actualización obligatoria de contraseña.
+     */
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|min:8|confirmed',
+        ], [
+            'password.confirmed' => 'Las contraseñas no coinciden.',
+            'password.min'       => 'La contraseña debe tener al menos 8 caracteres.'
+        ]);
+
+        $user = Auth::user();
+
+        $this->userService->actualizarPasswordObligatorio($user->id, $request->password);
+
+        if ($user->id_perfil == 3 && $user->cliente && $user->cliente->registro_paso == 1) {
+            $user->cliente->update(['registro_paso' => 2]);
+        }
+
+        return redirect()->route('dashboard')->with('success', 'Contraseña actualizada correctamente.');
+    }
+
+    /**
+     * Prepara y valida los datos para crear o actualizar un usuario.
+     */
+    protected function prepareData(Request $request, $item = null): array
+    {
+        $rules = [
+            'name'       => 'required|string|max:255',
+            'email'      => 'required|email|unique:users,email,' . ($item->id ?? 'NULL'),
+            'id_perfil'  => 'required|exists:perfiles,id',
+            'cliente_id' => 'nullable|exists:clientes,id',
+        ];
+
+        if (!$item) {
+            $rules['password'] = 'required|string|min:8';
+        } else if ($request->filled('password')) {
+            $rules['password'] = 'string|min:8';
+        }
+
+        $validated = $request->validate($rules);
+
+        if (!empty($validated['password'])) {
+            $validated['password'] = bcrypt($validated['password']);
+        } else {
+            unset($validated['password']);
+        }
+
+        return $validated;
+    }
+
+    public function toggleEstatus($id)
+    {
+        try {
+            $usuario = User::findOrFail($id);
+
+            // Soporta formatos numéricos (1/0) o en texto ('activo'/'bloqueado')
+            if (is_numeric($usuario->status)) {
+                $usuario->status = ($usuario->status == 1) ? 0 : 1;
+            } else {
+                $usuario->status = (strtolower($usuario->status) === 'activo') ? 'bloqueado' : 'activo';
+            }
+
+            $usuario->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'El estatus del usuario ha sido actualizado correctamente.',
+                'nuevo_estatus' => $usuario->status
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al procesar el cambio de estatus: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    
 }

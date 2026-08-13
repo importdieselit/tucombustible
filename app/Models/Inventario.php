@@ -3,6 +3,7 @@
 namespace App\Models; // O App\Models
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Inventario extends Model
 {
@@ -67,8 +68,63 @@ class Inventario extends Model
         return $this->belongsTo(Marca::class, 'marca', 'id');
     }
 
-    // public function modeloObj()
-    // {
-    //     return $this->belongsTo(Modelo::class, 'modelo', 'id');
-    // }
+    public function equivalentes()
+    {
+        return $this->belongsToMany(Inventario::class, 'inventario_equivalentes', 'inventario_id', 'equivalente_id');
+    }
+
+    /**
+     * RELACIÓN: Modelos de Vehículos Asociados
+     */
+    public function modelosAsociados()
+    {
+        return $this->hasMany(InventarioAsociado::class, 'inventario_id');
+    }
+
+    /**
+     * RELACIÓN: Stock Físico (Las ubicaciones donde está guardado)
+     */
+    public function stocks()
+    {
+        return $this->hasMany(InventarioStock::class, 'inventario_id'); // InventarioStock creado en la respuesta anterior
+    }
+
+    public function ubicaciones()
+    {
+        return $this->hasManyThrough(Ubicacion::class, InventarioStock::class, 'inventario_id', 'id', 'id', 'ubicacion_id');
+    }
+
+    public function getUbicacionesTextoAttribute()
+    {
+        if ($this->ubicaciones->isEmpty()) {
+            return 'No Asignada';
+        }
+
+        return $this->ubicaciones->pluck('codigo_ubicacion')->implode('], [');
+    }
+
+    /**
+     * Accessor Universal para HTML (separado por saltos de línea)
+     * Se invoca en Blade como: {!! $item->ubicaciones_html !!}
+     */
+    public function getUbicacionesHtmlAttribute()
+    {
+        if ($this->ubicaciones->isEmpty()) {
+            return '<span class="text-muted">No Asignada</span>';
+        }
+
+        return $this->ubicaciones->pluck('codigo_ubicacion')->implode('<br>');
+    }
+
+    /**
+     * ATRIBUTO VIRTUAL: Existencia Total Consolidada
+     * Esto reemplaza la antigua columna "existencia". Suma el stock de todas sus ubicaciones en caliente.
+     */
+    public function getExistenciaTotalAttribute()
+    {
+        return $this->stocks()->sum('cantidad_actual');
+    }
+    
+
+
 }

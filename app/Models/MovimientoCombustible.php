@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+
 class MovimientoCombustible extends Model
 {
     use HasFactory;
@@ -110,4 +111,5 @@ class MovimientoCombustible extends Model
     {
         return $query->whereBetween('created_at', [$fechaInicio, $fechaFin]);
     }
+
 }

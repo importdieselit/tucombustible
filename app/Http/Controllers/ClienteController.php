@@ -179,7 +179,7 @@ class ClienteController extends Controller
             return view("cliente." . str_replace('cliente_', '', $data['perfil']), $data);
         }
 
-        return view('cliente.index', $data);
+        return view('portal.cliente.index', $data);
     }
 
     public function perfil()

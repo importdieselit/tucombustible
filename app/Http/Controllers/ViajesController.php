@@ -15,6 +15,7 @@ use App\Models\Chofer;
 use App\Models\Cliente;
 use App\Models\Persona;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Support\Facades\Log;
 use App\Models\DespachoViaje;
 use Illuminate\Support\Facades\DB;
@@ -27,6 +28,8 @@ use App\Models\Muelles;
 use App\Models\CaptacionCliente;
 use App\Models\Deposito;
 use App\Models\CompraCombustible;
+use App\Models\TipoCombustible;
+use Illuminate\Support\Facades\Http;
 
 class ViajesController extends Controller
 {
@@ -67,7 +70,7 @@ class ViajesController extends Controller
         $vehiculos = Vehiculo::where('es_flota',true)->get(['id', 'placa', 'flota']);
         $cisternas = Vehiculo::where('es_flota',true)->where('tipo',2)->get(['id', 'placa', 'flota']);
         $destino = TabuladorViatico::orderBy('destino', 'asc')->pluck('destino')->unique();
-        $clientes = Cliente::where('status',1)->orderBy('nombre', 'asc')->get(['id','nombre','alias']);
+        $clientes = Cliente::where('status',2)->orderBy('nombre', 'asc')->get(['id','nombre','alias']);
         
         return view('viajes.create', compact('choferes', 'vehiculos', 'destino', 'clientes', 'cisternas'));
     }
@@ -244,6 +247,7 @@ class ViajesController extends Controller
                 'vehiculo_id' => $request->vehiculo_id ?? 0,
                 'cisterna' =>   $request->cisterna ?? null,
                 'ayudante' => $request->ayudante ?? 0,
+                'ayudante_id' => $request->ayudante ?? 0,
                 'otro_chofer' => $request->otro_chofer ?? null,
                 'otro_vehiculo' => $request->otro_vehiculo ?? null,
                 'otro_ayudante' => $request->otro_ayudante?? null,
@@ -311,26 +315,6 @@ class ViajesController extends Controller
                 $producto->stock-=$totalLitros;
                 $producto->save();
 
-                if ($request->has('chofer_id') && $request->chofer_id !== null) {
-                try {
-                    FcmNotificationService::sendPedidoAsignadoConductorNotification(
-                        $pedido->fresh(['cliente']),
-                        $request->chofer_id
-                    );
-                } catch (\Exception $e) {
-                    Log::error("Error enviando notificación FCM al conductor: " . $e->getMessage());
-                    // No fallar la operación principal por error en notificación
-                }
-            }
-
-                            // Crear el pedido (sin depósito específico)
-            
-
-                 FcmNotificationService::enviarNotification(
-                        "Nuevo viaje creado a {$viaje->destino_ciudad} con {$cantidadDespachos} despachos. Total Litros: {$totalLitros}",  
-                        "Nuevo viaje creado a {$viaje->destino_ciudad} con {$cantidadDespachos} despachos. Total Litros: {$totalLitros}",
-                        $data
-                    );
             // 5. Generar el Cuadro de Viáticos automáticamente (con correcciones y desglose)
             $this->generarCuadroViaticos($viaje, $tabulador, $cantidadDespachos);
             
@@ -1148,6 +1132,7 @@ public function updateGuiaData(Request $request, $viajeId)
                 'vehiculo_id' => $request->vehiculo_id ?? 0,
                 'cisterna' => $request->cisterna ?? 0,
                 'ayudante' => $request->ayudante ?? 0,
+                'ayudante_id' => $request->ayudante ?? 0,
                 'otro_chofer' => $request->otro_chofer_id ?? null,
                 'otro_vehiculo' => $request->otro_vehiculo_id ?? null,
                 'otro_ayudante' => $request->otro_ayudante_id ?? null,
@@ -1303,162 +1288,582 @@ public function updateGuiaData(Request $request, $viajeId)
     }
 
   public function reporteDiario(Request $request)
-{
-    $tokenValido = config('services.reporte.internal_token');
-    // Si no está logueado Y el token no coincide, entonces al login
-    if (!auth()->check() && $request->get('token') !== $tokenValido) {
-        abort(403, 'Acceso no autorizado');
-    }
+    {
+        $tokenValido = config('services.reporte.internal_token');
+        // Si no está logueado Y el token no coincide, entonces al login
+        if (!auth()->check() && $request->get('token') !== $tokenValido) {
+            abort(403, 'Acceso no autorizado');
+        }
 
-    $fechaInicio = $request->filled('fecha_inicio') 
-        ? Carbon::parse($request->fecha_inicio)->startOfDay() 
-        : Carbon::now()->startOfDay();
+        $fechaInicio = $request->filled('fecha_inicio') 
+            ? Carbon::parse($request->fecha_inicio)->startOfDay() 
+            : Carbon::now()->startOfDay();
 
-    $fechaFin = $request->filled('fecha_fin') 
-        ? Carbon::parse($request->fecha_fin)->endOfDay() 
-        : Carbon::now()->addDays(2)->endOfDay();
+        $fechaFin = $request->filled('fecha_fin') 
+            ? Carbon::parse($request->fecha_fin)->endOfDay() 
+            : Carbon::now()->addDays(2)->endOfDay();
 
-    // 2. Generar el arreglo de días dinámico para las columnas de la tabla
-    // Esto reemplaza tu generación estática de "$rangoDias"
-    $rangoDias = [];
-    $periodo = \Carbon\CarbonPeriod::create($fechaInicio, $fechaFin);
-    foreach ($periodo as $fecha) {
-        $rangoDias[] = $fecha->format('Y-m-d');
-    }
+        // 2. Generar el arreglo de días dinámico para las columnas de la tabla
+        // Esto reemplaza tu generación estática de "$rangoDias"
+        $rangoDias = [];
+        $periodo = CarbonPeriod::create($fechaInicio, $fechaFin);
+        foreach ($periodo as $fecha) {
+            $rangoDias[] = $fecha->format('Y-m-d');
+        }
 
 
-    $fecha = $request->input('fecha', now()->format('Y-m-d'));
+        $fecha = $request->input('fecha', now()->format('Y-m-d'));
 
-    // 1. Eager Loading: Traemos relaciones necesarias para evitar N+1
-    $viajesRaw = Viaje::with([
-            'vehiculo', 'chofer', 'producto', 'despachos.cliente', 
-            'cliente', 'cisternaAcoplada'
-        ])
-        ->whereBetween('fecha_salida', [$fechaInicio, $fechaFin])->orderBy('fecha_salida', 'asc')
-        ->get();
+        // 1. Eager Loading: Traemos relaciones necesarias para evitar N+1
+        $viajesRaw = Viaje::with([
+                'vehiculo', 'chofer', 'producto', 'despachos.cliente', 
+                'cliente', 'cisternaAcoplada'
+            ])
+            ->whereBetween('fecha_salida', [$fechaInicio, $fechaFin])->orderBy('fecha_salida', 'asc')
+            ->get();
 
-    // 2. Procesamiento y Enriquecimiento de la data
-    $viajesDelDia = $viajesRaw->map(function($v) {
-        $destinoRaw = strtoupper($v->destino_ciudad);
-        $v->es_flete = str_contains($destinoRaw, 'FLETE');
-        $v->es_despacho = is_null($v->litros);
-        $v->es_carga = !$v->es_despacho && !$v->es_flete;
+        // 2. Procesamiento y Enriquecimiento de la data
+        $viajesDelDia = $viajesRaw->map(function($v) {
+            $destinoRaw = strtoupper($v->destino_ciudad);
+            $v->es_flete = str_contains($destinoRaw, 'FLETE');
+            $v->es_despacho = is_null($v->litros);
+            $v->es_carga = !$v->es_despacho && !$v->es_flete;
 
-        // Limpieza de destino
-        $v->destino_limpio = trim(str_ireplace(['FLETE', ' ->'], ['', ''], $v->destino_ciudad));
+            // Limpieza de destino
+            $v->destino_limpio = trim(str_ireplace(['FLETE', ' ->'], ['', ''], $v->destino_ciudad));
 
-        // Cálculo de Litros Totales (Centralizado)
-        $v->litros_totales = $v->es_despacho 
-            ? $v->despachos->sum('litros') 
-            : ($v->litros ?? 0);
+            // Cálculo de Litros Totales (Centralizado)
+            $v->litros_totales = $v->es_despacho 
+                ? $v->despachos->sum('litros') 
+                : ($v->litros ?? 0);
 
-        // Lógica de Jerarquía de Cliente
-        $clienteFinal = null;
-        if (!$v->es_carga) {
-            // A. Cliente directo del viaje
-            $clienteFinal = $v->cliente ? ($v->cliente->alias ?? $v->cliente->nombre) : null;
+            // Lógica de Jerarquía de Cliente
+            $clienteFinal = null;
+            if (!$v->es_carga) {
+                // A. Cliente directo del viaje
+                $clienteFinal = $v->cliente ? ($v->cliente->alias ?? $v->cliente->nombre) : null;
 
-            // B. Si no hay, buscar en el primer despacho que tenga cliente
-            if (!$clienteFinal && $v->despachos->isNotEmpty()) {
-                $conCliente = $v->despachos->whereNotNull('cliente_id')->first();
-                if ($conCliente && $conCliente->cliente) {
-                    $clienteFinal = $conCliente->cliente->alias ?? $conCliente->cliente->nombre;
-                }else{
-                    // Si no hay cliente_id, pero hay otro_cliente en el despacho
-                    $conOtroCliente = $v->despachos->whereNotNull('otro_cliente')->first();
-                    if ($conOtroCliente) {
-                        $clienteFinal = $conOtroCliente->otro_cliente;
+                // B. Si no hay, buscar en el primer despacho que tenga cliente
+                if (!$clienteFinal && $v->despachos->isNotEmpty()) {
+                    $conCliente = $v->despachos->whereNotNull('cliente_id')->first();
+                    if ($conCliente && $conCliente->cliente) {
+                        $clienteFinal = $conCliente->cliente->alias ?? $conCliente->cliente->nombre;
+                    }else{
+                        // Si no hay cliente_id, pero hay otro_cliente en el despacho
+                        $conOtroCliente = $v->despachos->whereNotNull('otro_cliente')->first();
+                        if ($conOtroCliente) {
+                            $clienteFinal = $conOtroCliente->otro_cliente;
+                        }
                     }
+                }
+
+                // C. Si aún no hay, usar el campo manual
+                if (!$clienteFinal) {
+                    $clienteFinal = $v->otro_cliente;
+                }
+            }
+            $v->cliente_reporte = $clienteFinal;
+
+            
+
+            return $v;
+        });
+
+        $fechaReferencia = Carbon::parse($fecha)->startOfDay();
+        $fechaLimite = $fechaReferencia->copy()->addDays(3)->endOfDay();
+
+        // 2. Extraemos solo las fechas que tienen viajes, dentro del rango permitido
+        $rangoDias = $viajesDelDia->map(function($v) {
+                return Carbon::parse($v->fecha_salida)->format('Y-m-d');
+            })
+            ->filter(function($fecha) use ($fechaReferencia, $fechaLimite) {
+                $f = Carbon::parse($fecha);
+                // Solo días entre hoy y hoy + 3
+                return $f->between($fechaReferencia, $fechaLimite);
+            })
+            ->unique() // Eliminamos duplicados para tener una columna por día
+            ->sort()   // Ordenamos cronológicamente
+            ->values();
+
+        // 3. Agrupamos por unidad para el cuerpo de la tabla
+        $viajesPorUnidad = $viajesDelDia->groupBy('vehiculo_id');    
+
+        // 3. Función de ayuda para clasificación (Usa los nuevos atributos)
+        $contarGranular = function($coleccion, $status, $productoNombre) {
+            return $coleccion->where('status', $status)
+                ->filter(fn($v) => $v->producto && str_contains(strtoupper($v->producto->nombre), strtoupper($productoNombre)))
+                ->count();
+        };
+
+        // 4. Clasificación para las tablas
+        $fletes = $viajesDelDia->filter(fn($v) => $v->es_flete);
+        $operacionesBase = $viajesDelDia->reject(fn($v) => $v->es_flete);
+        $cargas = $operacionesBase->where('es_carga', true);
+        $despachos = $operacionesBase->where('es_despacho', true);
+
+        $reporte = [
+            'fecha' => $fecha,
+            'despachos' => $this->generarEstructuraEstatus($despachos, $contarGranular),
+            'cargas'    => $this->generarEstructuraEstatus($cargas, $contarGranular),
+            'fletes'    => $this->generarEstructuraEstatus($fletes, $contarGranular),
+        ];
+
+        // 5. Estadísticas para las Cards (Usando los litros ya procesados)
+        $totalDisponibles = Deposito::sum('nivel_actual_litros');
+        $tanque00=Deposito::where('serial', '00')->first()?->nivel_actual_litros ?? 0;
+
+        $totalDespachados = $despachos->whereIn('status', ['EN RUTA', 'COMPLETADO'])
+            ->sum('litros_totales');
+
+        $totalCarga = $cargas->whereIn('status', ['EN RUTA', 'COMPLETADO'])
+            ->sum('litros_totales');
+
+        $totalProgDespacho = $despachos->where('status', 'Programado')
+            ->sum('litros_totales');
+
+        $totalProgCarga = $cargas->where('status', 'Programado')
+            ->sum('litros_totales');
+
+        return view('viajes.reporte_diario', [
+            'fecha' => $fecha,
+            'viajesDelDia' => $viajesDelDia,
+            'reporte' => $reporte,
+            'viajesPorUnidad' => $viajesPorUnidad,
+            'rangoDias' => $rangoDias,
+            'stats' => [
+                'disponibles' => $totalDisponibles,
+                'despachados' => $totalDespachados,
+                'cargas'      => $totalCarga,
+                'prog_desp'   => $totalProgDespacho,
+                'prog_carg'   => $totalProgCarga,
+                'tanque00'    => $tanque00
+            ]
+        ]);
+    }
+
+    private function generarEstructuraEstatus($coleccion, $callback) {
+        return [
+            'programados' => ['ind' => $callback($coleccion, 'Programado', 'DIESEL'), 'mgo' => $callback($coleccion, 'Programado', 'M.G.O.')],
+            'en_ruta'     => ['ind' => $callback($coleccion, 'EN RUTA', 'DIESEL'),     'mgo' => $callback($coleccion, 'EN RUTA', 'M.G.O.')],
+            'completados' => ['ind' => $callback($coleccion, 'COMPLETADO', 'DIESEL'),  'mgo' => $callback($coleccion, 'COMPLETADO', 'M.G.O.')],
+        ];
+    }
+
+    public function enviarWhatsappAjax($id)
+    {
+        try {
+            $viaje = Viaje::findOrFail($id);
+            $tokenInterno = config('services.reporte.internal_token');
+
+            // 1. URL que ScreenshotOne visitará
+            $urlInterna = route('viajes.imprimir', $id) . "?token=" . $tokenInterno;
+            
+            // 2. Construir URL de ScreenshotOne
+            $accessKey = 'm7uxLbNHYl45Tg'; // O config('services.screenshotone.key')
+            $apiUrl = "https://api.screenshotone.com/take?" . http_build_query([
+                'access_key' => $accessKey,
+                'url' => $urlInterna,
+                'format' => 'png',
+                'block_ads' => 'true',
+                'block_cookie_banners' => 'true',
+                'delay' => 2, 
+                'timeout' => 60,
+                'selector' => '#areaCapturaViaje', 
+                'image_quality' => 80
+            ]);
+
+            // 3. OBTENER CAPTURA EN MEMORIA (Sin tocar el disco)
+            // Hacemos una petición GET directa a ScreenshotOne esperando la imagen
+            $screenshotResponse = Http::timeout(65)->get($apiUrl);
+
+            if (!$screenshotResponse->successful()) {
+                Log::error("Error de ScreenshotOne para viaje {$id}: " . $screenshotResponse->body());
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'La API de captura falló al generar la imagen.'
+                ], 500);
+            }
+
+            // Convertimos el cuerpo binario de la respuesta directamente a Base64
+            $base64 = base64_encode($screenshotResponse->body());
+            $img_ready = "data:image/png;base64," . $base64;
+
+            // 4. Preparar envío a WhatsApp
+            $baseUrl = rtrim(config('services.whatsapp.url'), '/');
+            $tokenWA = config('services.whatsapp.key');
+            $endpoint = "{$baseUrl}/messages/image?token={$tokenWA}";
+            
+            $tituloCaption = "Planificación V-" . str_pad($viaje->id, 5, '0', STR_PAD_LEFT) . " - ".$viaje->destino_ciudad. " - " . date('d/m/Y');
+
+
+            // Grupo 2: Operaciones
+            $response = Http::asForm()->post($endpoint, [
+                'token' => $tokenWA,
+                'to' => config('services.whatsapp.group_operaciones'),
+                'image' => $img_ready,
+                'caption' => $tituloCaption,
+            ]);
+
+            if ($response->successful()) {
+                return response()->json([
+                    'success' => true, 
+                    'message' => 'Captura enviada a ambos grupos exitosamente.'
+                ]);
+            }
+
+            return response()->json([
+                'success' => false, 
+                'message' => 'Error en la API de WhatsApp al despachar los mensajes.'
+            ], 500);
+
+        } catch (\Exception $e) {
+            Log::error("Error captura asíncrona en memoria viaje {$id}: " . $e->getMessage());
+            return response()->json([
+                'success' => false, 
+                'message' => 'Error de proceso: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function imprimir($id, Request $request)
+    {
+        $tokenValido = config('services.reporte.internal_token');
+
+        // Validación de seguridad para accesos anónimos/bots
+        if (!auth()->check() && $request->get('token') !== $tokenValido) {
+            abort(403, 'Acceso no autorizado');
+        }
+
+        // Carga optimizada de relaciones para evitar queries N+1 en el Blade
+        $viaje = Viaje::with([
+            'vehiculo', 
+            'chofer.persona', 
+            'ayudante.persona', 
+            'sede', 
+            'detalles.cliente',
+            'detalles.buques',
+            'chofer.persona',
+            'ayudante.persona',
+            'compraCombustible',
+            'compraCombustible.planta'
+            ])->findOrFail($id);
+
+        return view('viajes.imprimir', compact('viaje'));
+    }
+
+   public function reporteEstrategico(Request $request)
+    {
+        $fechaInicio        = $request->input('fecha_inicio', now()->startOfMonth()->toDateString());
+        $fechaFin           = $request->input('fecha_fin', now()->endOfMonth()->toDateString());
+        $choferId           = $request->input('chofer_id');
+        $clienteId          = $request->input('cliente_id');
+        $destino            = $request->input('destino_ciudad');
+        $status             = $request->input('status');
+        $tipoOperacion      = $request->input('tipo_operacion');
+        $tipoCombustibleId  = $request->input('tipo_combustible_id');
+        $agruparPor         = $request->input('agrupar_por', 'ninguno');
+
+        $mapaTipos = [
+            1 => 'Venta MGO',
+            2 => 'Venta Industrial',
+            3 => 'Fletes',
+            4 => 'Compras'
+        ];
+
+        // 1. RESOLVER JERARQUÍA DE CLIENTES
+        $clienteSeleccionado = null;
+        $clientIds = [];
+        $esClientePrincipal = false;
+
+        if ($clienteId) {
+            $clienteSeleccionado = Cliente::with('sucursales')->find($clienteId);
+            if ($clienteSeleccionado) {
+                if ($clienteSeleccionado->parent == 0 || is_null($clienteSeleccionado->parent)) {
+                    $esClientePrincipal = true;
+                    $clientIds = array_merge([$clienteSeleccionado->id], $clienteSeleccionado->sucursales->pluck('id')->toArray());
+                } else {
+                    $clientIds = [$clienteSeleccionado->id];
+                }
+            }
+        }
+
+        // 2. QUERY BASE CON EAGER LOADING DE COMPRA COMBUSTIBLE
+        $query = Viaje::with([
+            'chofer.persona', 
+            'ayudante_chofer.persona', 
+            'despachos.cliente.padre', 
+            'cliente.padre', 
+            'vehiculo', 
+            'tipoCombustible', 
+            'compraCombustible' // Relación con compras_combustible
+        ])->whereBetween('fecha_salida', [$fechaInicio . ' 00:00:00', $fechaFin . ' 23:59:59']);
+
+        if ($choferId) $query->where('chofer_id', $choferId);
+        if ($destino)  $query->where('destino_ciudad', $destino);
+        if ($status)   $query->where('status', $status);
+
+        // FILTRO COMBINADO DE COMBUSTIBLE (Tanto en viajes.tipo_combustible_id como en compras_combustible.tipo)
+        if ($tipoCombustibleId) {
+            $query->where(function($q) use ($tipoCombustibleId) {
+                $q->where('tipo', $tipoCombustibleId)
+                  ->orWhereHas('compraCombustible', function($qCompra) use ($tipoCombustibleId) {
+                      $qCompra->where('tipo', $tipoCombustibleId);
+                  });
+            });
+        }
+
+        if (!empty($clientIds)) {
+            $query->where(function($q) use ($clientIds) {
+                $q->whereIn('cliente_id', $clientIds)
+                ->orWhereHas('despachos', function($qd) use ($clientIds) {
+                    $qd->whereIn('cliente_id', $clientIds);
+                });
+            });
+        }
+
+        if ($tipoOperacion) {
+            if ($tipoOperacion === 'ventas') {
+                $query->whereIn('tipo_planificacion', [1, 2]);
+            } elseif (in_array((int)$tipoOperacion, [1, 2, 3, 4])) {
+                $query->where('tipo_planificacion', (int)$tipoOperacion);
+            }
+        }
+
+        $viajes = $query->get();
+
+        // HELPER EN MEMORIA PARA RESOLVER EL NOMBRE DEL COMBUSTIBLE
+        $resolverCombustible = function($viaje) {
+            if ($viaje->tipoCombustible) {
+                return $viaje->tipoCombustible->nombre;
+            }
+            // Si es compra o no tiene tipoCombustible directo, busca en la primera compra asociada
+            $compra = $viaje->compraCombustible->first();
+            if ($compra && !empty($compra->tipo)) {
+                return $compra->tipo == 1 ? 'M.G.O.' : ($compra->tipo == 2 ? 'INDUSTRIAL' : 'Sin Especificar');
+            }
+            return 'Sin Especificar';
+        };
+
+        // 3. TRANSFORMACIÓN DE VIAJES
+        $viajes->transform(function($v) use ($clientIds, $resolverCombustible) {
+            $nombres = collect();
+            $litrosFiltrados = 0;
+            $tieneDespachos = $v->despachos->count() > 0;
+
+            if ($tieneDespachos) {
+                foreach ($v->despachos as $despacho) {
+                    $perteneceAlFiltro = empty($clientIds) || in_array($despacho->cliente_id, $clientIds);
+
+                    if ($perteneceAlFiltro) {
+                        $litrosFiltrados += $despacho->litros;
+
+                        if ($despacho->cliente) {
+                            $nombres->push($despacho->cliente->nombre);
+                        } elseif ($despacho->otro_cliente) {
+                            $nombres->push($despacho->otro_cliente);
+                        }
+                    }
+                }
+            } else {
+                $perteneceAlFiltro = empty($clientIds) || in_array($v->cliente_id, $clientIds);
+
+                if ($perteneceAlFiltro) {
+                    $litrosFiltrados = $v->litros ?? 0;
+
+                    if ($v->cliente) $nombres->push($v->cliente->nombre);
+                    if ($v->otro_cliente) $nombres->push($v->otro_cliente);
+                    if ($v->nombre_cliente_externo) $nombres->push($v->nombre_cliente_externo);
                 }
             }
 
-            // C. Si aún no hay, usar el campo manual
-            if (!$clienteFinal) {
-                $clienteFinal = $v->otro_cliente;
+            $v->clientes_despachados = $nombres->unique()->filter()->implode(', ') ?: 'Sin Cliente';
+            $v->litros_filtrados     = $litrosFiltrados;
+            $v->nombre_combustible   = $resolverCombustible($v); // Asigna dinámicamente
+
+            return $v;
+        });
+
+        // 4. DESGLOSE INDIVIDUAL DE DESPACHOS
+        $despachosDetalle = collect();
+        foreach ($viajes as $viaje) {
+            if ($viaje->despachos->count() > 0) {
+                foreach ($viaje->despachos as $despacho) {
+                    if (!empty($clientIds) && !in_array($despacho->cliente_id, $clientIds)) {
+                        continue;
+                    }
+                    $cliObj = $despacho->cliente;
+                    $despachosDetalle->push([
+                        'viaje_id'              => $viaje->id,
+                        'fecha'                 => $viaje->fecha_salida,
+                        'destino'               => $viaje->destino_ciudad,
+                        'chofer'                => $viaje->chofer ? ($viaje->chofer->persona->nombre . ' ' . $viaje->chofer->persona->apellido) : 'N/A',
+                        'ayudante'              => $viaje->ayudante_chofer ? ($viaje->ayudante_chofer->persona->nombre . ' ' . $viaje->ayudante_chofer->persona->apellido) : 'N/A',
+                        'cliente_nombre'        => $cliObj->nombre ?? ($despacho->otro_cliente ?? 'N/A'),
+                        'cliente_id'            => $despacho->cliente_id,
+                        'es_sucursal'           => $cliObj ? ($cliObj->parent > 0) : false,
+                        'padre_nombre'          => $cliObj && $cliObj->padre ? $cliObj->padre->nombre : null,
+                        'litros'                => $despacho->litros,
+                        'tipo_planificacion_id' => $viaje->tipo_planificacion,
+                        'tipo_operacion'        => $mapaTipos[$viaje->tipo_planificacion] ?? 'N/A',
+                        'tipo_combustible'      => $viaje->nombre_combustible,
+                    ]);
+                }
+            } else {
+                if (empty($clientIds) || in_array($viaje->cliente_id, $clientIds)) {
+                    $cliObj = $viaje->cliente;
+                    $despachosDetalle->push([
+                        'viaje_id'              => $viaje->id,
+                        'fecha'                 => $viaje->fecha_salida,
+                        'destino'               => $viaje->destino_ciudad,
+                        'chofer'                => $viaje->chofer ? ($viaje->chofer->persona->nombre . ' ' . $viaje->chofer->persona->apellido) : 'N/A',
+                        'ayudante'              => $viaje->ayudante_chofer ? ($viaje->ayudante_chofer->persona->nombre . ' ' . $viaje->ayudante_chofer->persona->apellido) : 'N/A',
+                        'cliente_nombre'        => $cliObj->nombre ?? ($viaje->otro_cliente ?? 'N/A'),
+                        'cliente_id'            => $viaje->cliente_id,
+                        'es_sucursal'           => $cliObj ? ($cliObj->parent > 0) : false,
+                        'padre_nombre'          => $cliObj && $cliObj->padre ? $cliObj->padre->nombre : null,
+                        'litros'                => $viaje->litros ?? 0,
+                        'tipo_planificacion_id' => $viaje->tipo_planificacion,
+                        'tipo_operacion'        => $mapaTipos[$viaje->tipo_planificacion] ?? 'N/A',
+                        'tipo_combustible'      => $viaje->nombre_combustible,
+                    ]);
+                }
             }
         }
-        $v->cliente_reporte = $clienteFinal;
 
-        
+        // 5. KPIs GENERALES
+        $totalViajes = $viajes->count();
 
-        return $v;
-    });
+        $despachosVentas = $despachosDetalle->whereIn('tipo_planificacion_id', [1, 2]);
+        $totalDespachos  = $despachosVentas->count();
+        $totalLitros     = $despachosVentas->sum('litros');
 
-    $fechaReferencia = \Carbon\Carbon::parse($fecha)->startOfDay();
-    $fechaLimite = $fechaReferencia->copy()->addDays(3)->endOfDay();
+        $viajesCompras      = $viajes->where('tipo_planificacion', 4);
+        $totalCompras       = $viajesCompras->count();
+        $totalLitrosCompras = $viajesCompras->sum('litros_filtrados');
 
-    // 2. Extraemos solo las fechas que tienen viajes, dentro del rango permitido
-    $rangoDias = $viajesDelDia->map(function($v) {
-            return \Carbon\Carbon::parse($v->fecha_salida)->format('Y-m-d');
-        })
-        ->filter(function($fecha) use ($fechaReferencia, $fechaLimite) {
-            $f = \Carbon\Carbon::parse($fecha);
-            // Solo días entre hoy y hoy + 3
-            return $f->between($fechaReferencia, $fechaLimite);
-        })
-        ->unique() // Eliminamos duplicados para tener una columna por día
-        ->sort()   // Ordenamos cronológicamente
-        ->values();
+        // Agrupaciones de gráficos
+        $viajesPorDestino  = $viajes->groupBy(fn($v) => $v->destino_ciudad ?: 'Sin Destino')->map->count()->sortDesc()->take(5);
+        $viajesPorStatus   = $viajes->groupBy(fn($v) => $v->status ?: 'Sin Estatus')->map->count();
+        $viajesPorChofer   = $viajes->groupBy(fn($v) => $v->chofer ? ($v->chofer->persona->nombre . ' ' . $v->chofer->persona->apellido) : 'Sin Chofer')->map->count()->sortDesc();
+        $viajesPorAyudante = $viajes->filter(fn($v) => $v->ayudante_chofer != null)
+            ->groupBy(fn($v) => $v->ayudante_chofer->persona->nombre . ' ' . $v->ayudante_chofer->persona->apellido)
+            ->map->count()->sortDesc();
 
-    // 3. Agrupamos por unidad para el cuerpo de la tabla
-    $viajesPorUnidad = $viajesDelDia->groupBy('vehiculo_id');    
+        // 6. LÓGICA DE AGRUPACIÓN
+        $tablaAgrupada = null;
+        $tablaAgrupadaAyudantes = null;
+        $tablasPorTipo = null;
 
-    // 3. Función de ayuda para clasificación (Usa los nuevos atributos)
-    $contarGranular = function($coleccion, $status, $productoNombre) {
-        return $coleccion->where('status', $status)
-            ->filter(fn($v) => $v->producto && str_contains(strtoupper($v->producto->nombre), strtoupper($productoNombre)))
-            ->count();
-    };
+        if ($agruparPor === 'chofer') {
+            $tablaAgrupada = $viajes->groupBy(function($v) {
+                return $v->chofer ? ($v->chofer->persona->nombre . ' ' . $v->chofer->persona->apellido) : 'Sin Chofer';
+            })->map(function($items, $key) {
+                return [
+                    'criterio'     => $key,
+                    'total_viajes' => $items->count(),
+                    'total_litros' => $items->sum('litros_filtrados')
+                ];
+            })->sortByDesc('total_viajes');
 
-    // 4. Clasificación para las tablas
-    $fletes = $viajesDelDia->filter(fn($v) => $v->es_flete);
-    $operacionesBase = $viajesDelDia->reject(fn($v) => $v->es_flete);
-    $cargas = $operacionesBase->where('es_carga', true);
-    $despachos = $operacionesBase->where('es_despacho', true);
+            $tablaAgrupadaAyudantes = $viajes->filter(fn($v) => $v->ayudante_chofer != null)
+                ->groupBy(function($v) {
+                    return $v->ayudante_chofer->persona->nombre . ' ' . $v->ayudante_chofer->persona->apellido;
+                })->map(function($items, $key) {
+                    return [
+                        'criterio'     => $key,
+                        'total_viajes' => $items->count(),
+                        'total_litros' => $items->sum('litros_filtrados')
+                    ];
+                })->sortByDesc('total_viajes');
 
-    $reporte = [
-        'fecha' => $fecha,
-        'despachos' => $this->generarEstructuraEstatus($despachos, $contarGranular),
-        'cargas'    => $this->generarEstructuraEstatus($cargas, $contarGranular),
-        'fletes'    => $this->generarEstructuraEstatus($fletes, $contarGranular),
-    ];
+        } elseif ($agruparPor === 'destino') {
+            $tablaAgrupada = $viajes->groupBy('destino_ciudad')->map(function($items, $key) {
+                return [
+                    'criterio'     => $key ?: 'Sin Destino',
+                    'total_viajes' => $items->count(),
+                    'total_litros' => $items->sum('litros_filtrados')
+                ];
+            })->sortByDesc('total_viajes');
 
-    // 5. Estadísticas para las Cards (Usando los litros ya procesados)
-    $totalDisponibles = Deposito::sum('nivel_actual_litros');
+        } elseif ($agruparPor === 'cliente') {
+            $todosClientes = Cliente::all()->keyBy('id');
 
-    $totalDespachados = $despachos->whereIn('status', ['EN RUTA', 'COMPLETADO'])
-        ->sum('litros_totales');
+            $tablaAgrupada = $despachosDetalle->groupBy(function($item) use ($todosClientes) {
+                $cli = $todosClientes->get($item['cliente_id']);
+                if ($cli) {
+                    if ($cli->parent > 0 && $parentCli = $todosClientes->get($cli->parent)) {
+                        return $parentCli->nombre . ' (Principal)';
+                    }
+                    return $cli->nombre;
+                }
+                return $item['cliente_nombre'] ?: 'Sin Cliente';
+            })->map(function($items, $key) {
+                return [
+                    'criterio'        => $key,
+                    'total_viajes'    => $items->pluck('viaje_id')->unique()->count(),
+                    'total_despachos' => $items->count(),
+                    'total_litros'    => $items->sum('litros')
+                ];
+            })->sortByDesc('total_litros');
 
-    $totalCarga = $cargas->whereIn('status', ['EN RUTA', 'COMPLETADO'])
-        ->sum('litros_totales');
+        } elseif ($agruparPor === 'tipo_operacion') {
+            $tablaAgrupada = $viajes->groupBy(function($v) use ($mapaTipos) {
+                return $mapaTipos[$v->tipo_planificacion] ?? 'Otros / No Definido';
+            })->map(function($items, $key) {
+                return [
+                    'criterio'     => $key,
+                    'total_viajes' => $items->count(),
+                    'total_litros' => $items->sum('litros_filtrados')
+                ];
+            })->sortByDesc('total_viajes');
 
-    $totalProgDespacho = $despachos->where('status', 'Programado')
-        ->sum('litros_totales');
+            $tablasPorTipo = $viajes->groupBy(function($v) use ($mapaTipos) {
+                return $mapaTipos[$v->tipo_planificacion] ?? 'Otros / No Definido';
+            });
 
-    $totalProgCarga = $cargas->where('status', 'Programado')
-        ->sum('litros_totales');
+        } elseif ($agruparPor === 'tipo_combustible') {
+            $tablaAgrupada = $viajes->groupBy('nombre_combustible')->map(function($items, $key) {
+                return [
+                    'criterio'     => $key,
+                    'total_viajes' => $items->count(),
+                    'total_litros' => $items->sum('litros_filtrados')
+                ];
+            })->sortByDesc('total_litros');
 
-    return view('viajes.reporte_diario', [
-        'fecha' => $fecha,
-        'viajesDelDia' => $viajesDelDia,
-        'reporte' => $reporte,
-        'viajesPorUnidad' => $viajesPorUnidad,
-        'rangoDias' => $rangoDias,
-        'stats' => [
-            'disponibles' => $totalDisponibles,
-            'despachados' => $totalDespachados,
-            'cargas'      => $totalCarga,
-            'prog_desp'   => $totalProgDespacho,
-            'prog_carg'   => $totalProgCarga
-        ]
-    ]);
-}
+            $tablasPorTipo = $viajes->groupBy('nombre_combustible');
 
-private function generarEstructuraEstatus($coleccion, $callback) {
-    return [
-        'programados' => ['ind' => $callback($coleccion, 'Programado', 'DIESEL'), 'mgo' => $callback($coleccion, 'Programado', 'M.G.O.')],
-        'en_ruta'     => ['ind' => $callback($coleccion, 'EN RUTA', 'DIESEL'),     'mgo' => $callback($coleccion, 'EN RUTA', 'M.G.O.')],
-        'completados' => ['ind' => $callback($coleccion, 'COMPLETADO', 'DIESEL'),  'mgo' => $callback($coleccion, 'COMPLETADO', 'M.G.O.')],
-    ];
-}
+        } elseif ($agruparPor === 'operacion_combustible') {
+            // Permite separar Compras en Compras (MGO), Compras (Industrial), Ventas (MGO), etc.
+            $tablaAgrupada = $viajes->groupBy(function($v) use ($mapaTipos) {
+                $operacion = $mapaTipos[$v->tipo_planificacion] ?? 'Otros';
+                return $operacion . ' (' . $v->nombre_combustible . ')';
+            })->map(function($items, $key) {
+                return [
+                    'criterio'     => $key,
+                    'total_viajes' => $items->count(),
+                    'total_litros' => $items->sum('litros_filtrados')
+                ];
+            })->sortByDesc('total_litros');
+
+            $tablasPorTipo = $viajes->groupBy(function($v) use ($mapaTipos) {
+                $operacion = $mapaTipos[$v->tipo_planificacion] ?? 'Otros';
+                return $operacion . ' (' . $v->nombre_combustible . ')';
+            });
+        }
+
+        $clientes           = Cliente::with('padre')->orderBy('parent')->orderBy('nombre')->get();
+        $choferes           = Chofer::with('persona')->get();
+        $tiposCombustible   = TipoCombustible::orderBy('nombre')->get();
+        $destinos           = Viaje::distinct()->pluck('destino_ciudad')->filter();
+        $estadosDisponibles = Viaje::distinct()->pluck('status')->filter();
+
+        return view('viajes.reporte_estrategico', compact(
+            'viajes', 'tablaAgrupada', 'tablaAgrupadaAyudantes', 'tablasPorTipo', 'despachosDetalle',
+            'agruparPor', 'totalViajes', 'totalDespachos', 'totalLitros', 'totalCompras', 'totalLitrosCompras',
+            'clienteSeleccionado', 'esClientePrincipal',
+            'viajesPorDestino', 'viajesPorChofer', 'viajesPorAyudante', 'viajesPorStatus',
+            'choferes', 'clientes', 'tiposCombustible', 'destinos', 'estadosDisponibles', 'mapaTipos',
+            'fechaInicio', 'fechaFin', 'choferId', 'clienteId', 'tipoCombustibleId', 'destino', 'status', 'tipoOperacion'
+        ));
+    }
 }

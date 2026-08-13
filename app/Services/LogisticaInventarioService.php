@@ -46,7 +46,7 @@ class LogisticaInventarioService
         $tipoCombustibleId = $this->obtenerTipoCombustibleId($viaje);
 
         $this->ledgerRepo->registrar([
-            'sede_id'             => $viaje->sede_id ?? $viaje->sede_origen_id,
+            'sede_id'             => $viaje->sede_id ?? 1,
             'tipo_combustible_id' => $tipoCombustibleId,
             'bolsa_tipo'          => 'general',
             'tipo_movimiento'     => $tipoMovimiento,
@@ -75,7 +75,7 @@ class LogisticaInventarioService
         $tipoCombustibleId = $this->obtenerTipoCombustibleId($viaje);
 
         $this->ledgerRepo->registrar([
-            'sede_id'             => $viaje->sede_id ?? $viaje->sede_origen_id,
+            'sede_id'             => $viaje->sede_id ?? 1,
             'tipo_combustible_id' => $tipoCombustibleId,
             'bolsa_tipo'          => 'general',
             'tipo_movimiento'     => 'reverso',
@@ -118,7 +118,7 @@ class LogisticaInventarioService
 
                     $this->ledgerRepo->registrar([
                         'sede_id'             => $sedeId,
-                        'deposito_id'         => $detalle->deposito_origen_id,
+                       // 'deposito_id'         => $detalle->deposito_origen_id,
                         'tipo_combustible_id' => $tipoCombustibleId,
                         'bolsa_tipo'          => 'general',
                         'tipo_movimiento'     => 'despacho',

@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class ReportesController extends Controller
 {
@@ -101,7 +102,7 @@ class ReportesController extends Controller
         $datosReporte = $this->formatearDatosReporte($clientes, $movimientos, $pedidos);
 
         // Obtener productos disponibles dinámicamente
-        $productosDisponibles = \DB::table('depositos')
+        $productosDisponibles = DB::table('depositos')
             ->select('producto')
             ->whereNotNull('producto')
             ->distinct()
@@ -136,7 +137,7 @@ class ReportesController extends Controller
         $totalMovimientos = $movimientos->count();
         
         // Obtener productos disponibles dinámicamente
-        $productosDisponibles = \DB::table('depositos')
+        $productosDisponibles = DB::table('depositos')
             ->select('producto')
             ->whereNotNull('producto')
             ->distinct()
@@ -205,7 +206,7 @@ class ReportesController extends Controller
             $clientePedidos = $pedidos->where('cliente_id', $cliente->id);
 
             // Obtener productos disponibles dinámicamente
-            $productosDisponibles = \DB::table('depositos')
+            $productosDisponibles = DB::table('depositos')
                 ->select('producto')
                 ->whereNotNull('producto')
                 ->distinct()
@@ -263,7 +264,7 @@ class ReportesController extends Controller
     /**
      * Generar resumen del reporte
      */
-    private function generarResumen($estadisticas, $datosReporte)
+    private function generarResumen(array $estadisticas, array $datosReporte)
     {
         $totalVolumenes = $estadisticas['combustibles']['total'];
         $promedioPorCliente = $estadisticas['total_clientes'] > 0 
@@ -281,7 +282,7 @@ class ReportesController extends Controller
     /**
      * Obtener cliente con mayor consumo
      */
-    private function obtenerClienteMayorConsumo($datosReporte)
+    private function obtenerClienteMayorConsumo(array $datosReporte)
     {
         $clienteMayor = null;
         $mayorConsumo = 0;
@@ -339,7 +340,7 @@ class ReportesController extends Controller
     public function obtenerProductosDisponibles(): JsonResponse
     {
         try {
-            $productos = \DB::table('depositos')
+            $productos = DB::table('depositos')
                 ->select('producto')
                 ->whereNotNull('producto')
                 ->distinct()

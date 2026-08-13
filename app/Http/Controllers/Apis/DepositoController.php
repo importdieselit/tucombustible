@@ -348,7 +348,7 @@ class DepositoController extends Controller
              // Debug: Verificar información del usuario
              $debugInfo = [
                  'user_id' => $user->id,
-                 'perfil_id' => $user->perfil_id ?? 'N/A',
+                 'perfil_id' => $user->id_perfil ?? 'N/A',
                  'user_name' => $user->name
              ];
              

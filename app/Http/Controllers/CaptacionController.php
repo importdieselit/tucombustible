@@ -35,7 +35,7 @@ class CaptacionController extends Controller
             //'documentos.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120'
         ]);
         
-        Log::info('Guardando nueva captación para: '.$validated['razon_social']);
+       // Log::info('Guardando nueva captación para: '.$validated['razon_social']);
         
         try {
             $captacion = CaptacionCliente::create([
@@ -193,7 +193,7 @@ class CaptacionController extends Controller
         //$captacion->planillas_generadas = json_encode($saved);
         $captacion->estatus_captacion = 'planillas_enviadas';
         $captacion->save();
-        Log::debug("Saved files:", $saved);
+       // Log::debug("Saved files:", $saved);
 
         // Enviar correo con adjuntos si correo existe
         if ($captacion->correo) {

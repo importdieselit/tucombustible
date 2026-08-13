@@ -58,12 +58,19 @@ class SendReporteDiarioOperacionesCommand extends Command
                 'titulo' => '🚛 *Reporte de Flota*',
                 'selector' => '#reporte-container'
             ],
-            [
-                'ruta_web' => 'reporte.mantenimiento.interno',
-                'nombre_archivo' => 'reporte_mantenimiento',
-                'titulo' => '🔧 *Reporte de Mantenimiento*',
-                'selector' => '#reporte-container'
-            ],
+           
+            // [
+            //     'ruta_web' => 'reporte.mantenimiento.interno',
+            //     'nombre_archivo' => 'reporte_mantenimiento',
+            //     'titulo' => '🔧 *Reporte de Mantenimiento*',
+            //     'selector' => '#reporte-container'
+            // ],
+            // [
+            //     'ruta_web' => 'reportes.gerencial',
+            //     'nombre_archivo' => 'RESUMEN_GERENCIAL',
+            //     'titulo' => '📊 *Resumen Gerencial*',
+            //     'selector' => '#reporteOperaciones'
+            // ]
         ];
 
         $this->info('Iniciando secuencia de reportes...');
@@ -115,6 +122,19 @@ class SendReporteDiarioOperacionesCommand extends Command
                     $this->info("✅ {$reporte['nombre_archivo']} enviado.");
                 } else {
                     $this->error("❌ Error enviando {$reporte['nombre_archivo']}: " . $response->body());
+                } 
+
+                $responseop = Http::asForm()->post($endpoint, [
+                    'token' => $tokenWA,
+                    'to' => config('services.whatsapp.group_operaciones'),
+                    'image' => $img_ready,
+                    'caption' => $reporte['titulo'] . " - " . date('d/m/Y'),
+                ]);
+
+                if ($responseop->successful() && ($responseop->json()['sent'] ?? '') == 'true') {
+                    $this->info("✅ {$reporte['nombre_archivo']} enviado.");
+                } else {
+                    $this->error("❌ Error enviando {$reporte['nombre_archivo']}: " . $responseop->body());
                 }
 
                 // Opcional: una pequeña pausa para no saturar la API de WhatsApp

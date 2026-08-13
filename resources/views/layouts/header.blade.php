@@ -1,11 +1,25 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom shadow-sm sticky-top">
     <div class="container-fluid">
         
-        <button type="button" id="sidebarCollapse" class="btn btn-outline-primary me-2 d-md-none border-0">
+        <button type="button" id="sidebarCollapse" name="sidebarCollapse" class="btn btn-outline-primary me-2  border-0">
             <i class="fa fa-list fs-3"></i>
         </button>
 
-        <a class="navbar-brand d-flex align-items-center d-md-none" href="{{ route('dashboard.admin') }}">
+        <button type="button" id="backOneStepButton" class="btn btn-outline-primary me-2 border-0" title="Volver a la página anterior" onclick="window.history.back();">
+            <i class="fa fa-arrow-left fs-3"></i>
+        </button>
+        <button type="button" id="goHomeButton" class="btn btn-outline-primary me-2 border-0" title="Ir a la página de inicio" onclick="window.location.href = '{{ route('dashboard') }}';">
+            <i class="fa fa-home fs-3"></i>
+        </button>
+        <button type="button" id="reloadButton" class="btn btn-outline-primary me-2 border-0" title="Recargar página" onclick="window.location.reload();">
+            <i class="fa fa-sync fs-3"></i>
+        </button>
+        <button type="button" id="forwardOneStepButton" class="btn btn-outline-primary me-2 border-0" title="Avanzar a la página siguiente" onclick="window.history.forward();">
+            <i class="fa fa-arrow-right fs-3"></i>
+        </button>
+
+        <a class="navbar-brand d-flex align-items-center d-md-none" href="{{ route('dashboard') }}">
+
             <img src="{{ asset('img/logomini.png') }}" alt="Logo" class="img-fluid rounded-circle border border-2 border-secondary me-2" style="max-width: 35px; background: white; padding: 2px;">
             <span class="d-none d-sm-inline fw-bold text-primary">TuCombustible</span>
         </a>

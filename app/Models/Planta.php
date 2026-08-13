@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\TabuladorViatico;
-use App\Models\Proveedor;
 
 class Planta extends Model
 {
@@ -18,11 +17,6 @@ class Planta extends Model
     public function tabuladorViatico()
     {
         return $this->belongsTo(TabuladorViatico::class, 'id_tabulador_viatico', 'id');
-    }
-
-    public function proveedor()
-    {
-        return $this->belongsTo(Proveedor::class, 'proveedor', 'id');
     }
 
 }

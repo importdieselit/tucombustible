@@ -147,12 +147,12 @@
         console.log("Unidades iniciales:", unidades);
 
         // COORDENADAS DE LA SEDE
-        const sedeCoords = L.latLng(10.48834308128781, -66.82329619185627);
-        const RADIO_SEDE_METROS = 100;
+        const sedeCoords = L.latLng(10.488249123497356, -66.8234169941792);
+        const RADIO_SEDE_METROS = 180;
 
         function initMap() {
             map = L.map('map', { attributionControl: false, fullscreenControl: true })
-                   .setView([10.4806, -66.9036], 6); 
+                   .setView([10.488249123497356, -66.8234169941792], 6); 
 
             L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
             

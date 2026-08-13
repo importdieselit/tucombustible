@@ -47,7 +47,8 @@ class Personal extends Model
         'observaciones',
         'fecha_in',
         'jefe_taller',
-        'id_persona'
+        'id_persona',
+        'cargo_id'
     ];
 
     /**
@@ -80,7 +81,7 @@ class Personal extends Model
      */
     public function sede()
     {
-        return $this->belongsTo(Sede::class, 'id_sede');
+        return $this->belongsTo(Sedes::class, 'id_sede');
     }
 
     /**
@@ -91,7 +92,27 @@ class Personal extends Model
     {
         return $this->belongsTo(User::class, 'id_usuario');
     }
-     public function persona(){
-        return $this->belongsTo(Persona::class, 'id_persona', 'id');
-     }
+        public function persona(){
+            return $this->belongsTo(Persona::class, 'id_persona', 'id');
+        }
+
+        public function personaData(){
+            return $this->hasOne(Persona::class, 'id', 'id_persona');
+        }
+
+    public function cargo(){
+        return $this->belongsTo(Cargo::class, 'cargo_id');
+    }
+
+    public function evaluaciones()
+    {
+        return $this->hasOne(RrhhEvaluacionForm::class, 'cargo_id', 'cargo_id');
+    }
+
+    public function getEvaluacionForm()
+    {
+        return $this->evaluaciones()->first()->google_form_url ?? null;
+    }
+ 
+
 }

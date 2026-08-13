@@ -1,0 +1,1216 @@
+@extends('layouts.app')
+
+@section('content')
+<style>
+    .grid-almacen {
+        display: grid;
+        grid-template-columns: repeat({{ $almacen->total_columnas_grid }}, 1fr);
+        gap: 6px;
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+    }
+
+
+    /* 1. Contenedor Viewport (Genera el scroll) */
+.almacen-viewport {
+    width: 100%;
+    max-height: 70vh; /* Altura máxima antes de hacer scroll */
+    overflow: auto; /* Activa el scroll horizontal y vertical */
+    background-color: #e2e8f0; /* Fondo gris para el área fuera de la grilla */
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+}
+
+/* 2. Scrollbar Personalizado y Siempre Visible */
+.almacen-viewport::-webkit-scrollbar {
+    width: 14px;
+    height: 14px;
+}
+.almacen-viewport::-webkit-scrollbar-track {
+    background: #f8fafc;
+    border-left: 1px solid #e2e8f0;
+    border-top: 1px solid #e2e8f0;
+}
+.almacen-viewport::-webkit-scrollbar-thumb {
+    background-color: #94a3b8;
+    border-radius: 10px;
+    border: 3px solid #f8fafc; /* Simula padding interno */
+}
+.almacen-viewport::-webkit-scrollbar-thumb:hover {
+    background-color: #64748b;
+}
+
+/* 3. Ajustes de la Grilla para soportar la Variable CSS */
+.grid-almacen {
+    display: grid;
+    /* Usa la variable --zoom-size. Si falla, usa 60px por defecto */
+    grid-template-columns: repeat({{ $almacen->total_columnas_grid }}, var(--zoom-size, 60px));
+    gap: 6px;
+    background-color: #ffffff;
+    padding: 20px;
+    width: max-content; /* CRÍTICO: Obliga a la grilla a expandirse si sus hijos son muy grandes */
+}
+
+.celda-mapa {
+    aspect-ratio: 1 / 1;
+    width: var(--zoom-size, 60px); /* El ancho se rige por el Zoom */
+    min-width: unset; /* Borramos el min-width anterior */
+    border: 1px dashed #cbd5e1;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    transition: width 0.1s ease-out; /* Transición suave al hacer zoom */
+}
+
+    /* Estados de arrastre */
+    .celda-preview-valida {
+        background-color: #e0f2fe !important;
+        border: 2px solid #0284c7 !important;
+        color: #0369a1;
+    }
+    .celda-preview-invalida {
+        background-color: #fee2e2 !important;
+        border: 2px dashed #ef4444 !important;
+    }
+    /* Ficha Drag del panel lateral */
+    .token-draggable {
+        cursor: grab;
+        padding: 15px;
+        border-radius: 6px;
+        border: 2px dashed #0d6efd;
+        background-color: #ecf3fe;
+        text-align: center;
+        font-weight: bold;
+        transition: transform 0.2s;
+    }
+    .token-draggable:active {
+        cursor: grabbing;
+        transform: scale(0.95);
+    }
+
+    /* Estilos para las celdas internas de la matriz del Rack */
+.slot-rack {
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 18px 10px !important;
+    transition: all 0.2s ease;
+    border: 2px solid #343a40 !important;
+}
+.slot-rack:hover {
+    transform: scale(0.96);
+    filter: brightness(1.2);
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+}
+.slot-libre {
+    background-color: #198754 !important; /* Verde Corporativo */
+    color: #ffffff !important;
+}
+.slot-ocupado {
+    background-color: #FFFFFF !important; /* Rojo Alerta */
+    color: #000000 !important;
+}
+.slot-seleccionado {
+    border: 2px solid #ffffff !important;
+    outline: 3px solid #0d6efd;
+}
+
+.progress {
+    background-color: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+/* Contenedor del track (fondo) */
+.modern-progress-track {
+    background-color: #e2e8f0; /* Gris muy claro */
+    height: 8px;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 6px;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* Barra de progreso (progreso real) */
+.modern-progress-bar {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1); /* Animación suave */
+    background: linear-gradient(90deg, #3b82f6, #60a5fa); /* Gradiente azul profesional */
+}
+
+.bg-tambores {
+    background-image: linear-gradient(rgba(108, 117, 125, 0.75), rgba(108, 117, 125, 0.75)), url('empty-recycle-blue-steel-chemical-tanks-oil-fuel-barrels-stacked-row-factory-storage-background-texture-190526464_2.webp');
+    background-size: cover;
+    background-position: center;
+    border: 2px solid #6c757d !important;
+}
+
+.bg-pallets {
+    background-image: linear-gradient(rgba(13, 202, 240, 0.75), rgba(13, 202, 240, 0.75)), url('pallets-boxes-cardboard-parcels-ready-260nw-2303925603_2.webp');
+    background-size: cover;
+    background-position: center;
+    border: 2px solid #0dcaf0 !important;
+}
+
+/* Variaciones de color según nivel */
+.bg-danger-gradient { background: linear-gradient(90deg, #ef4444, #f87171); }
+.bg-warning-gradient { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.bg-success-gradient { background: linear-gradient(90deg, #10b981, #34d399); }
+
+/* Estado cuando el Modo Reubicación está encendido */
+.modo-edicion-activo .celda-mapa[data-codigo] {
+    cursor: grab !important;
+    animation: pulseBorder 2s infinite ease-in-out;
+}
+.modo-edicion-activo .celda-mapa[data-codigo]:active {
+    cursor: grabbing !important;
+}
+.modo-edicion-activo .celda-mapa[data-codigo]:hover {
+    filter: brightness(1.15);
+    outline: 2px dashed #ffc107 !important;
+}
+
+#gridContenedorPrincipal {
+    user-select: none; /* Evita selección de texto al hacer doble clic */
+}
+.modo-edicion-activo .celda-mapa[data-codigo] {
+    cursor: grab !important;
+    box-shadow: inset 0 0 0 2px rgba(255, 193, 7, 0.5); /* Resalta qué puedes mover */
+}
+.modo-edicion-activo .celda-mapa[data-codigo]:active {
+    cursor: grabbing !important;
+}
+
+@keyframes pulseBorder {
+    0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.4); }
+    70% { box-shadow: 0 0 0 6px rgba(255, 193, 7, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+}
+</style>
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card shadow-sm sticky-top" style="top: 20px;">
+                <div class="card-header bg-dark text-white text-uppercase py-3">
+                    <h6 class="mb-0"><i class="fas fa-tools me-2"></i> Constructor WMS</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label font-weight-bold small">1. Tipo de Bloque</label>
+                        <select class="form-select form-select-sm" id="cfgTipo">
+                            <option value="ESTANTE">Estante / Rack Estructural</option>
+                            <option value="GRANEL_LUBRICANTE">Zona Lubricantes (Granel)</option>
+                            <option value="PISO_PALLET">Área de Suelo / Pallet (1x1)</option>
+                            <option value="TAMBORES_PIRAMIDE">Área de Tambores / Pirámides</option>
+                            <option value="PASILLO">⚠️ Borrador / Pasillo Vacío</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label font-weight-bold small">2. Identificador Base</label>
+                        <input type="text" class="form-control form-control-sm text-uppercase" id="cfgCodigo" value="EST-A" placeholder="Ej: RAC-1, TANQ-B">
+                    </div>
+
+                    <div id="propiedadesEstante">
+                        <div class="mb-3">
+                            <label class="form-label font-weight-bold small">3. Niveles de Altura (Stack 3D)</label>
+                            <input type="number" class="form-control form-control-sm" id="cfgNiveles" min="1" value="3">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label font-weight-bold small">4. Cantidad de Módulos (Largo en Suelo)</label>
+                            <input type="number" class="form-control form-control-sm" id="cfgLargo" min="1" value="3">
+                            <span class="text-muted d-block mt-1" style="font-size:10px;">Ocupará esta cantidad de cuadros en la grilla.</span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label font-weight-bold small">5. Orientación Física</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="cfgOrientacion" id="oriH" value="H" checked>
+                                <label class="btn btn-outline-secondary btn-sm" for="oriH"><i class="fas fa-arrows-alt-h me-1"></i> Horizontal</label>
+                                
+                                <input type="radio" class="btn-check" name="cfgOrientacion" id="oriV" value="V">
+                                <label class="btn btn-outline-secondary btn-sm" for="oriV"><i class="fas fa-arrows-alt-v me-1"></i> Vertical</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border-top pt-4 mt-3">
+                        <label class="form-label d-block text-center font-weight-bold small text-primary mb-2">¡Arrastra este objeto al mapa!</label>
+                        <div id="dragToken" class="token-draggable text-primary" draggable="true">
+                            <i class="fas fa-hand-rock me-2"></i> <span id="lblTokenText">EST-A (Largo: 3)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <a class="btn btn-sm btn-outline-primary w-100" href="{{ route('almacen.layout.3d', $almacen->id) }}"> Ver 3d</a>
+   
+        </div>
+
+        <div class="col-md-9" style="max-height: 80vh; overflow-y: auto;">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3">
+                    <h5 class="mb-0 text-dark font-weight-bold"><i class="fas fa-warehouse me-2"></i> Distribución de Planta: {{ $almacen->nombre }}</h5>
+                    <button class="btn btn-sm btn-outline-secondary font-weight-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#modalRedimensionar">
+                        <i class="fas fa-expand-arrows-alt me-1"></i> Redimensionar
+                    </button>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="form-check form-switch d-inline-block ms-4 bg-light border px-3 py-1 rounded shadow-sm">
+                            <input class="form-check-input" type="checkbox" id="switchModoOperacion" style="cursor: pointer;">
+                            <label class="form-check-label small font-weight-bold text-dark ms-1" for="switchModoOperacion" style="cursor: pointer;">
+                                <i class="fas fa-pencil-ruler text-warning me-1"></i> Modo Edición / Mover
+                            </label>
+                        </div>
+                        <span class="badge bg-secondary py-2 px-3">Cuadrícula: {{ $almacen->total_filas_grid }} x {{ $almacen->total_columnas_grid }}</span>
+                    </div>
+                </div>
+                <div class="card-body" >
+                    <div class="d-flex justify-content-end mb-2 gap-2">
+                        <span class="text-muted small align-self-center me-2"><i class="fas fa-mouse"></i> Ctrl + Rueda para Zoom</span>
+                        <button class="btn btn-sm btn-outline-secondary" id="btnZoomOut" title="Alejar"><i class="fas fa-search-minus"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary" id="btnZoomIn" title="Acercar"><i class="fas fa-search-plus"></i></button>
+                        <button class="btn btn-sm btn-outline-primary" id="btnZoomReset" title="Restaurar">100%</button>
+                    </div>
+
+                    <div class="almacen-viewport shadow-inner" id="viewportAlmacen">
+                        
+                        <div class="grid-almacen" id="gridContenedorPrincipal" style="--zoom-size: 60px;">
+                            @for ($y = 1; $y <= $almacen->total_filas_grid; $y++)
+                                @for ($x = 1; $x <= $almacen->total_columnas_grid; $x++)
+                                    @php 
+                                        $key = "$y-$x";
+                                        $existe = $estructuras->has($key);
+                                        $bloque = $existe ? $estructuras->get($key) : null;
+                                        
+                                        $claseColor = '';
+                                        if($bloque) {
+                                            $claseColor = match($bloque->tipo_estructura) {
+                                                'ESTANTE' => 'bg-primary text-white border-solid',
+                                                'GRANEL_LUBRICANTE' => 'bg-warning text-dark border-solid',
+                                                'PISO_PALLET' => 'bg-pallets text-white border-solid',
+                                                'TAMBORES_PIRAMIDE' => 'bg-tambores text-white',
+                                                default => ''
+                                            };
+                                        }
+                                    @endphp
+
+                                    <div class="celda-mapa {{ $claseColor }}" 
+                                        id="cell-{{ $y }}-{{ $x }}"
+                                        data-x="{{ $x }}" 
+                                        data-y="{{ $y }}"
+                                        @if($bloque)
+                                            data-codigo="{{ $bloque->codigo_bloque }}"
+                                            data-tipo="{{ $bloque->tipo_estructura }}"
+                                            data-niveles="{{ $bloque->cantidad_niveles }}"
+                                        @endif>
+                                        <span class="txt-codigo" style="font-size:11px;">{{ $bloque ? $bloque->codigo_bloque : '' }}</span>
+                                        <small class="text-muted" style="font-size: 8px; opacity:0.5;">[{{$y}},{{$x}}]</small>
+                                    </div>
+                                @endfor
+                            @endfor
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalInspector" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content border-top border-primary border-4 shadow-lg">
+            <div class="modal-header bg-light py-3">
+                <h5 class="modal-title text-dark font-weight-bold">
+                    <i class="fas fa-th text-primary Corporate-icon me-2"></i> Vista Frontal Estructural: Estante <span id="insTituloEstante" class="text-primary"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body bg-light">
+                <div class="row h-100">
+                    <div class="col-md-3 border-end bg-white p-3 d-flex flex-column" style="max-height: 70vh;">
+                        <h6 class="text-uppercase font-weight-bold text-dark small mb-3"><i class="fas fa-search me-1"></i> Asignar Ítems</h6>
+                        
+                        <input type="text" id="inpBuscarItemModal" class="form-control form-control-sm mb-3" placeholder="Buscar código o descripción...">
+                        
+                        <div id="listaResultadosItems" class="flex-grow-1 overflow-auto mb-3 px-1">
+                            <div class="text-center text-muted small mt-4" id="msgAyudaBuscar">
+                                Escribe para buscar stock global disponible.
+                            </div>
+                            </div>
+
+                        <div class="mt-auto">
+                            <div id="zonaPapeleraLogistica" class="card border-danger text-danger text-center p-3" style="border: 2px dashed #dc3545 !important; background: #fff5f5;">
+                                <i class="fas fa-trash-box fa-2x mb-2"></i>
+                                <div class="small font-weight-bold text-uppercase">Papelera de Retorno</div>
+                                <span style="font-size: 9px;" class="text-muted">Arrastra un slot aquí para vaciarlo. El stock volverá al sistema.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-9 p-3 overflow-auto" style="max-height: 70vh;">
+                        <h6 class="text-uppercase font-weight-bold text-secondary mb-3 small" style="letter-spacing: 0.5px;">Mapa de Ocupación (Elevación Frontal)</h6>
+                        
+                        <div class="table-responsive bg-dark p-3 rounded shadow-inner mb-4">
+                            <table class="table table-bordered text-center align-middle mb-0 text-white border-secondary" id="tablaMatrizEstante">
+                                </table>
+                        </div>
+
+                        <div class="d-flex gap-3 justify-content-end mb-4" style="font-size: 11px;">
+                            <span><i class="fas fa-square text-success me-1"></i> Disponible (Arrastra ítems aquí)</span>
+                            <span><i class="fas fa-square text-danger me-1"></i> Ocupado (Arrastra a otro slot o papelera)</span>
+                        </div>
+
+                        <div class="card bg-white border-0 shadow-sm mt-auto">
+                        <div class="card-body p-3">
+                            <h6 class="text-uppercase font-weight-bold text-dark mb-2 small">
+                                <i class="fas fa-barcode me-1"></i> Detalle y Gestión de Celda
+                            </h6>
+                            
+                            <div id="panelDetalleSlot" class="mb-3">
+                                <p class="text-muted mb-0 py-2 font-weight-light" style="font-size: 12px;">
+                                    <i class="fas fa-hand-pointer me-1"></i> Seleccione una celda arriba.
+                                </p>
+                            </div>
+
+                            <div id="controlesEstructuraCelda" class="d-none border-top pt-2 mt-2">
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-outline-primary btn-sm flex-fill" onclick="subdividirSlotActivo()" style="font-size: 10px;" title="Crear subdivisiones en esta celda">
+                                        <i class="fas fa-cut me-1"></i> Subdividir
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" onclick="combinarSlotActivo()" style="font-size: 10px;" title="Unir con la celda de la derecha">
+                                        <i class="fas fa-link me-1"></i> Combinar a la derecha
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light py-2">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar Inspector</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalRedimensionar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content border-top border-secondary border-4 shadow">
+            <div class="modal-header bg-light py-2">
+                <h6 class="modal-title font-weight-bold text-dark"><i class="fas fa-vector-square me-2 text-secondary"></i> Medidas del Plano</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="formRedimensionar">
+                <div class="modal-body bg-light-50">
+                    <div class="alert alert-warning py-2 mb-3" style="font-size: 11px; line-height: 1.2;">
+                        <i class="fas fa-exclamation-triangle"></i> Para <strong>reducir</strong> el tamaño, las celdas que van a ser recortadas deben estar completamente vacías (Pasillos).
+                    </div>
+                    
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label small font-weight-bold mb-1">Alto (Filas)</label>
+                            <input type="number" class="form-control form-control-sm text-center font-weight-bold text-primary" id="inpRedimFilas" value="{{ $almacen->total_filas_grid }}" min="1">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small font-weight-bold mb-1">Ancho (Columnas)</label>
+                            <input type="number" class="form-control form-control-sm text-center font-weight-bold text-primary" id="inpRedimColumnas" value="{{ $almacen->total_columnas_grid }}" min="1">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light py-2">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm" id="btnProcesarRedim">Aplicar Ajuste</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+
+    let cacheUbicacionesEstante = {};
+ window.addEventListener('load', function() {
+
+    const grid = document.getElementById('gridContenedorPrincipal');
+    const viewport = document.getElementById('viewportAlmacen');
+
+    let zoomActual = 60; // Tamaño inicial en px
+    const stepZoom = 5;  // Píxeles que aumenta/reduce por cada toque de rueda
+    const minZoom = 30;  // Límite para alejar
+    const maxZoom = 120; // Límite para acercar
+
+    // Función central para aplicar el zoom
+    function aplicarZoom(nuevoTamano) {
+        // Validar límites
+        if (nuevoTamano < minZoom) zoomActual = minZoom;
+        else if (nuevoTamano > maxZoom) zoomActual = maxZoom;
+        else zoomActual = nuevoTamano;
+
+        // Inyectar variable CSS
+        grid.style.setProperty('--zoom-size', `${zoomActual}px`);
+    }
+
+    // Evento: Rueda del Ratón (Requiere presionar Ctrl para no interferir con el scroll normal de la página)
+    viewport.addEventListener('wheel', function(e) {
+        if (e.ctrlKey) {
+            e.preventDefault(); // Evita el zoom nativo del navegador
+            
+            if (e.deltaY < 0) {
+                aplicarZoom(zoomActual + stepZoom); // Scroll arriba = Acercar
+            } else {
+                aplicarZoom(zoomActual - stepZoom); // Scroll abajo = Alejar
+            }
+        }
+    }, { passive: false });
+
+    // Eventos: Botones UI
+    $('#btnZoomIn').on('click', () => aplicarZoom(zoomActual + (stepZoom * 2)));
+    $('#btnZoomOut').on('click', () => aplicarZoom(zoomActual - (stepZoom * 2)));
+    $('#btnZoomReset').on('click', () => aplicarZoom(60));
+    
+    // --- ESTADOS GLOBALES ---
+    let modoReubicacion = false;
+    let configArrastreActual = null; // Ayuda a previsualizar la sombra del tamaño exacto
+
+    // --- 1. CONTROL DEL MODO DE OPERACIÓN (Switch) ---
+    $('#switchModoOperacion').on('change', function() {
+        modoReubicacion = $(this).is(':checked');
+        
+        if (modoReubicacion) {
+            $('#gridContenedorPrincipal').addClass('modo-edicion-activo');
+            $('.celda-mapa[data-codigo]').attr('draggable', 'true');
+        } else {
+            $('#gridContenedorPrincipal').removeClass('modo-edicion-activo');
+            $('.celda-mapa[data-codigo]').attr('draggable', 'false');
+            limpiarPreviews();
+        }
+    });
+
+    // --- 2. LÓGICA DEL PANEL LATERAL (Configuración) ---
+    $('#cfgTipo').on('change', function() {
+        const val = $(this).val();
+        
+        if (val === 'PASILLO') {
+            $('#propiedadesEstante').addClass('d-none');
+            $('#lblTokenText').text('BORRAR ESPACIO');
+            $('#dragToken').removeClass('text-primary text-info').addClass('text-danger');
+        } else if (val === 'PISO_PALLET' || val === 'TAMBORES_PIRAMIDE') {
+            // Bloqueamos a 1x1 ambos tipos de suelo
+            $('#propiedadesEstante').addClass('d-none');
+            $('#cfgNiveles').val(1);
+            $('#cfgLargo').val(1);
+            actualizarTokenTexto();
+            
+            if(val === 'PISO_PALLET') {
+                $('#dragToken').removeClass('text-danger text-primary text-secondary').addClass('text-info');
+            } else {
+                $('#dragToken').removeClass('text-danger text-primary text-info').addClass('text-secondary');
+            }
+        } else {
+            $('#propiedadesEstante').removeClass('d-none');
+            actualizarTokenTexto();
+            $('#dragToken').removeClass('text-danger text-info').addClass('text-primary');
+        }
+    });
+
+    $('#cfgCodigo, #cfgLargo').on('input change', actualizarTokenTexto);
+    $('input[name="cfgOrientacion"]').on('change', actualizarTokenTexto);
+
+    function actualizarTokenTexto() {
+        const cod = $('#cfgCodigo').val().toUpperCase() || 'S/C';
+        const largo = $('#cfgLargo').val() || 1;
+        const ori = $('input[name="cfgOrientacion"]:checked').val();
+        $('#lblTokenText').text(`${cod} (${ori === 'H' ? 'Horiz' : 'Vert'} x${largo})`);
+    }
+
+    // --- 3. EVENTOS DRAG & DROP (Origen Lateral y Origen Mapa) ---
+    const dragToken = document.getElementById('dragToken');
+    
+    // 3A. Arrastrar desde el panel lateral (NUEVO BLOQUE)
+    dragToken.addEventListener('dragstart', function(e) {
+        const config = {
+            tipo: $('#cfgTipo').val(),
+            codigo: $('#cfgCodigo').val(),
+            niveles: $('#cfgNiveles').val(),
+            largo: $('#cfgTipo').val() === 'PASILLO' ? 1 : $('#cfgLargo').val(),
+            orientacion: $('input[name="cfgOrientacion"]:checked').val()
+        };
+        configArrastreActual = config;
+        e.dataTransfer.setData('text/plain', JSON.stringify(config));
+    });
+
+    // 3B. Arrastrar un bloque YA EXISTENTE en el mapa (REUBICAR)
+    $(document).on('dragstart', '.celda-mapa', function(e) {
+        if (!modoReubicacion) { e.preventDefault(); return; }
+        
+        const codigo = $(this).attr('data-codigo');
+        if (!codigo) { e.preventDefault(); return; }
+
+        // Calcular la geometría del estante analizando sus celdas
+        let celdas = $(`.celda-mapa[data-codigo="${codigo}"]`);
+        let minX = 999, minY = 999, maxX = 0, maxY = 0;
+        let tipo = $(this).attr('data-tipo');
+        let niveles = $(this).attr('data-niveles');
+
+        celdas.each(function() {
+            let cx = parseInt($(this).data('x'));
+            let cy = parseInt($(this).data('y'));
+            if (cx < minX) minX = cx;
+            if (cy < minY) minY = cy;
+            if (cx > maxX) maxX = cx;
+            if (cy > maxY) maxY = cy;
+        });
+
+        let orientacion = (minY === maxY) ? 'H' : 'V';
+        let largo = (orientacion === 'H') ? (maxX - minX + 1) : (maxY - minY + 1);
+
+        const config = {
+            tipo: tipo,
+            codigo: codigo,
+            niveles: niveles,
+            largo: largo,
+            orientacion: orientacion
+        };
+        
+        configArrastreActual = config; // Guarda para el preview exacto
+        e.originalEvent.dataTransfer.setData('text/plain', JSON.stringify(config));
+    });
+
+    const totalFilas = {{ $almacen->total_filas_grid }};
+    const totalColumnas = {{ $almacen->total_columnas_grid }};
+
+    $('.celda-mapa').on('dragover', function(e) { e.preventDefault(); });
+
+    // 3C. Dibujar la sombra previa antes de soltar (Usa configArrastreActual)
+    $('.celda-mapa').on('dragenter', function(e) {
+        e.preventDefault();
+        limpiarPreviews();
+
+        const startX = parseInt($(this).data('x'));
+        const startY = parseInt($(this).data('y'));
+        
+        // Detectar si estamos moviendo uno existente o uno nuevo del panel
+        const largo = configArrastreActual ? parseInt(configArrastreActual.largo) : 1;
+        const ori = configArrastreActual ? configArrastreActual.orientacion : 'H';
+
+        let esValido = true;
+        let celdasDestino = [];
+
+        for (let i = 0; i < largo; i++) {
+            let x = (ori === 'H') ? (startX + i) : startX;
+            let y = (ori === 'V') ? (startY + i) : startY;
+
+            if (x > totalColumnas || y > totalFilas) {
+                esValido = false;
+            } else {
+                celdasDestino.push(`#cell-${y}-${x}`);
+            }
+        }
+
+        celdasDestino.forEach(selector => {
+            $(selector).addClass(esValido ? 'celda-preview-valida' : 'celda-preview-invalida');
+        });
+    });
+
+    // 3D. Soltar y Guardar
+    $('.celda-mapa').on('drop', function(e) {
+        e.preventDefault();
+        limpiarPreviews();
+
+        const startX = $(this).data('x');
+        const startY = $(this).data('y');
+        
+        try {
+            const data = JSON.parse(e.originalEvent.dataTransfer.getData('text/plain'));
+            ejecutarTransaccionLayout(startX, startY, data);
+            configArrastreActual = null; // Reset
+        } catch (err) {
+            console.error("Error procesando drop", err);
+        }
+    });
+
+    // --- 4. EVENTO DOBLE CLIC (Rotar 90 Grados) ---
+    $(document).on('dblclick', '.celda-mapa', function() {
+        if (!modoReubicacion) return; // Solo rota si estamos en modo edición
+
+        const codigo = $(this).attr('data-codigo');
+        if (!codigo) return;
+
+        let celdas = $(`.celda-mapa[data-codigo="${codigo}"]`);
+        let minX = 999, minY = 999, maxX = 0, maxY = 0;
+        let tipo = $(this).attr('data-tipo');
+        let niveles = $(this).attr('data-niveles');
+
+        celdas.each(function() {
+            let cx = parseInt($(this).data('x'));
+            let cy = parseInt($(this).data('y'));
+            if (cx < minX) minX = cx;
+            if (cy < minY) minY = cy;
+            if (cx > maxX) maxX = cx;
+            if (cy > maxY) maxY = cy;
+        });
+
+        let orientacionActual = (minY === maxY) ? 'H' : 'V';
+        let nuevaOrientacion = (orientacionActual === 'H') ? 'V' : 'H';
+        let largo = (orientacionActual === 'H') ? (maxX - minX + 1) : (maxY - minY + 1);
+
+        const dataRotacion = {
+            tipo: tipo,
+            codigo: codigo,
+            niveles: niveles,
+            largo: largo,
+            orientacion: nuevaOrientacion
+        };
+
+        // Gira usando la esquina superior izquierda del bloque actual
+        ejecutarTransaccionLayout(minX, minY, dataRotacion);
+    });
+
+    // --- 5. FUNCIÓN CORE: GUARDADO AJAX UNIFICADO ---
+    function ejecutarTransaccionLayout(x, y, data) {
+        $.ajax({
+            url: "{{ route('almacen.layout.guardar_drag') }}",
+            method: "POST",
+            data: {
+                almacen_id: "{{ $almacen->id }}",
+                start_x: x,
+                start_y: y,
+                tipo_estructura: data.tipo,
+                codigo_bloque: data.codigo,
+                cantidad_niveles: data.niveles,
+                largo_secciones: data.largo,
+                orientacion: data.orientacion
+            },
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            success: function(response) {
+                if (response.success) {
+                    
+                    // A. LIMPIEZA ABSOLUTA Y ESTÁNDAR DE RASTROS VIEJOS
+                    // 1. Si el controlador envió celdas explícitas para borrar, las limpiamos primero
+                    if (response.celdas_borradas && response.celdas_borradas.length > 0) {
+                        response.celdas_borradas.forEach(celda => {
+                            const selectorBorrar = `#cell-${celda.y}-${celda.x}`;
+                            $(selectorBorrar).removeClass('bg-primary bg-warning bg-info text-white text-dark bg-pallets bg-tambores');
+                            $(selectorBorrar).find('.txt-codigo').text('');
+                            $(selectorBorrar).removeAttr('data-codigo data-tipo data-niveles').attr('draggable', 'false');
+                        });
+                    }
+
+                    // 2. Limpieza por código de bloque: buscamos todas las celdas que tenían este código antes del movimiento
+                    $(`.celda-mapa[data-codigo="${response.codigo}"]`).each(function() {
+                        $(this).removeClass('bg-primary bg-warning bg-info text-white text-dark bg-pallets bg-tambores');
+                        $(this).find('.txt-codigo').text('');
+                        $(this).removeAttr('data-codigo data-tipo data-niveles').attr('draggable', 'false');
+                    });
+
+
+                    // B. PINTAR E INDEXAR EN LA NUEVA UBICACIÓN (Garantizando consistencia)
+                    response.celdas.forEach(celda => {
+                        const selector = `#cell-${celda.y}-${celda.x}`;
+                        
+                        // Limpieza preventiva sobre la celda destino antes de pintar
+                        $(selector).removeClass('bg-primary bg-warning bg-info text-white text-dark bg-pallets bg-tambores');
+                        
+                        if (response.tipo === 'ESTANTE') {
+                            $(selector).addClass('bg-primary text-white');
+                            $(selector).find('.txt-codigo').text(response.codigo);
+                            $(selector).attr('data-codigo', response.codigo).attr('data-tipo', response.tipo).attr('data-niveles', data.niveles);
+                            if (modoReubicacion) $(selector).attr('draggable', 'true');
+                        } 
+                        else if (response.tipo === 'GRANEL_LUBRICANTE') {
+                            $(selector).addClass('bg-warning text-dark');
+                            $(selector).find('.txt-codigo').text(response.codigo);
+                            $(selector).attr('data-codigo', response.codigo).attr('data-tipo', response.tipo).attr('data-niveles', data.niveles);
+                            if (modoReubicacion) $(selector).attr('draggable', 'true');
+                        } 
+                        else if (response.tipo === 'PISO_PALLET') {
+                            $(selector).addClass('bg-info text-dark');
+                            $(selector).find('.txt-codigo').text(response.codigo);
+                            // Los pallets en base de datos e interfaz gráfica se configuran con nivel 1
+                            $(selector).attr('data-codigo', response.codigo).attr('data-tipo', response.tipo).attr('data-niveles', 1);
+                            if (modoReubicacion) $(selector).attr('draggable', 'true');
+                        }
+                        else if (response.tipo === 'TAMBORES_PIRAMIDE') {
+                            $(selector).addClass('bg-tambores text-white'); // Usa la nueva clase CSS
+                            $(selector).find('.txt-codigo').text(response.codigo);
+                            $(selector).attr('data-codigo', response.codigo).attr('data-tipo', response.tipo).attr('data-niveles', 1);
+                            if (modoReubicacion) $(selector).attr('draggable', 'true');
+                        }
+                        else {
+                            // En caso de pasar a PASILLO o limpieza
+                            $(selector).find('.txt-codigo').text('');
+                            $(selector).removeAttr('data-codigo data-tipo data-niveles').attr('draggable', 'false');
+                        }
+                    });
+                }
+            },
+            error: function(xhr) {
+                alert('Movimiento inválido: ' + (xhr.responseJSON?.error || 'Límites excedidos del plano o colisión.'));
+            }
+        });
+    }
+
+    function limpiarPreviews() {
+        $('.celda-mapa').removeClass('celda-preview-valida celda-preview-invalida');
+    }
+
+    // --- 6. MODO AUDITORÍA: CLIC SIMPLE PARA VER EL ESTANTE ---
+    
+
+    $(document).on('click', '.celda-mapa', function(e) {
+        // BLINDAJE: Si el modo edición está activo, no abre el modal
+        if (modoReubicacion) {
+            e.preventDefault();
+            return;
+        }
+
+        const cell = $(this);
+        const x = cell.data('x');
+        const y = cell.data('y');
+
+        if (!cell.find('.txt-codigo').text().trim()) return;
+
+        const modalIns = new bootstrap.Modal(document.getElementById('modalInspector'));
+
+        $.ajax({
+    url: "{{ route('almacen.layout.inspeccionar') }}",
+    method: "POST",
+    data: { almacen_id: "{{ $almacen->id }}", coord_x: x, coord_y: y },
+    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+    beforeSend: function() {
+        $('#panelDetalleSlot').html('<div class="text-muted py-2"><i class="fas fa-spinner fa-spin me-1"></i> Consultando estante...</div>');
+        $('#controlesEstructuraCelda').addClass('d-none');
+        $('#tablaMatrizEstante').html('');
+    },
+    success: function(response) {
+        if (!response.success) return;
+
+        $('#insTituloEstante').text(response.estante);
+        cacheUbicacionesEstante = response.matriz; 
+
+        let tablaHtml = '<thead><tr><th class="bg-secondary text-light small" style="width:100px;">Nivel \\ Posición</th>';
+        response.posiciones.forEach(p => {
+            tablaHtml += `<th class="bg-secondary text-light small">Posición ${p}</th>`;
+        });
+        tablaHtml += '</tr></thead><tbody>';
+
+        response.niveles.forEach(n => {
+            tablaHtml += `<tr><td class="bg-dark text-light font-weight-bold small align-middle">Nivel ${n}</td>`;
+            
+            let saltarColumnas = 0; // Controlador de colspan
+
+            response.posiciones.forEach(p => {
+                // Si la celda anterior ocupó este espacio (combinada), la saltamos visualmente
+                if (saltarColumnas > 0) {
+                    saltarColumnas--;
+                    return; 
+                }
+
+                const key = `${n}-${p}`;
+                const contenedorUbicacion = cacheUbicacionesEstante[key];
+                
+                if (contenedorUbicacion) {
+                    const colspan = contenedorUbicacion.colspan || 1;
+                    if (colspan > 1) saltarColumnas = colspan - 1;
+
+                    // El <td> actúa como contenedor estructural
+                    tablaHtml += `<td colspan="${colspan}" class="p-1 align-middle" style="min-width: 90px; border: 1px solid #475569;">`;
+                    
+                    // El d-flex interno maneja las subdivisiones (1 o múltiples)
+                    tablaHtml += `<div class="d-flex w-100 h-100 gap-1 justify-content-center">`;
+
+                    contenedorUbicacion.slots.forEach(slot => {
+                        const ocupado = slot.ocupado;
+                        const claseEstado = ocupado ? 'slot-ocupado border-danger' : 'slot-receptor-drop slot-libre border-success';
+                        
+                        let barraHtml = '';
+                        let infoAdicional = '';
+                        
+                        if (ocupado && slot.inventario) {
+                            const capacidad = slot.inventario.capacidad_asignada || slot.total_articulos; 
+                            const porcentaje = (slot.total_articulos / capacidad) * 100;
+                            const colorClass = porcentaje > 90 ? 'bg-danger' : (porcentaje > 70 ? 'bg-warning' : 'bg-success');
+
+                            barraHtml = `
+                                <div class="progress mt-1" style="height: 4px;">
+                                    <div class="progress-bar ${colorClass}" role="progressbar" style="width: ${Math.min(porcentaje, 100)}%"></div>
+                                </div>
+                                <div class="d-flex justify-content-between mt-1">
+                                    <span style="font-size: 8px; color: #94a3b8;">OCUPACIÓN</span>
+                                    <span style="font-size: 8px; font-weight: bold; color: #fff;">${Math.round(porcentaje)}%</span>
+                                </div>`;
+                            
+                            infoAdicional = `
+                                <div class="small text-truncate" style="font-size:9px;" title="${slot.inventario.producto}">
+                                    ${slot.inventario.sku}
+                                </div>
+                                <div class="font-weight-bold text-light" style="font-size:10px;">${slot.total_articulos} / ${capacidad}</div>`;
+                        } else {
+                            infoAdicional = '<small style="font-size:9px;" class="text-muted">Libre</small>';
+                        }
+
+                        // Etiqueta de subdivisión (Ej: A, B, C)
+                        const labelSubposicion = slot.subposicion ? `<span class="badge bg-secondary mb-1" style="font-size: 7px;">SUB: ${slot.subposicion}</span>` : '';
+
+                        // Tarjeta interactiva de cada slot
+                        tablaHtml += `
+                            <div class="slot-rack flex-fill p-1 rounded ${claseEstado} text-center" 
+                                style="background: #1e293b; border: 1px solid; cursor: pointer; transition: 0.2s;"
+                                data-key="${key}" 
+                                data-ubicacion-id="${slot.id}"
+                                onclick="cargarDetalleSlot(${slot.id}, '${key}', '${slot.subposicion}')"
+                                ${ocupado ? 'draggable="true"' : ''}>
+                                ${labelSubposicion}
+                                <div style="font-size: 10px; color: #cbd5e1; font-weight: bold;">N${n}-P${p}</div>
+                                ${infoAdicional}
+                                ${barraHtml}
+                            </div>
+                        `;
+                    });
+
+                    tablaHtml += `</div></td>`;
+                } else {
+                    tablaHtml += '<td class="bg-dark text-muted text-center align-middle" style="opacity:0.3; border: 1px dashed #334155;">-</td>';
+                }
+            });
+            tablaHtml += '</tr>';
+        });
+        tablaHtml += '</tbody>';
+
+        $('#tablaMatrizEstante').html(tablaHtml);
+        
+        // Resetear detalle
+        $('#panelDetalleSlot').html('<p class="text-muted mb-0 py-2 font-weight-light" style="font-size: 12px;"><i class="fas fa-hand-pointer me-1"></i> Seleccione una celda para ver detalles.</p>');
+        $('#controlesEstructuraCelda').addClass('d-none');
+        
+        modalIns.show();
+    },
+    error: function() {
+        alert('Error crítico al procesar la radiografía del estante.');
+    }
+});
+    });
+
+    $(document).on('click', '.slot-rack', function() {
+        $('.slot-rack').removeClass('slot-seleccionado');
+        $(this).addClass('slot-seleccionado');
+
+        const key = $(this).data('key');
+        const slot = cacheUbicacionesEstante[key];
+
+        if (!slot) return;
+
+        let htmlDetalle = `
+            <div class="p-3 bg-white border rounded shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                    <span class="font-weight-bold text-dark" style="font-size:13px;">Código Único: <span class="text-primary">${slot.codigo_completo}</span></span>
+                    <span class="badge ${slot.ocupado ? 'bg-danger' : 'bg-success'} py-1 px-3">${slot.ocupado ? 'Ocupado' : 'Disponible'}</span>
+                </div>
+        `;
+
+        if (slot.ocupado && slot.total_articulos > 0) {
+            htmlDetalle += '<div class="table-responsive"><table class="table table-sm table-striped mb-0 align-middle" style="font-size:12px;">';
+            htmlDetalle += '<thead class="table-light"><tr><th>SKU / Referencia</th><th>Descripción del Artículo</th><th>Lote</th><th class="text-end">Cant.</th></tr></thead><tbody>';
+            
+            //slot.inventario.forEach(item => {
+              
+            htmlDetalle += `
+                    <tr>
+                        <td><strong class="text-dark">${slot.inventario.sku}</strong></td>
+                        <td>${slot.inventario.producto}</td>
+                        <td><span class="badge bg-light text-dark border">${slot.inventario.lote}</span></td>
+                        <td class="text-end font-weight-bold text-primary">${slot.inventario.cantidad}</td>
+                    </tr>
+                `;
+            //});
+            htmlDetalle += '</tbody></table></div>';
+        } else {
+            htmlDetalle += `
+                <div class="text-center py-3 text-success">
+                    <i class="fas fa-check-circle fa-2x mb-2"></i>
+                    <p class="mb-0 font-weight-bold" style="font-size:13px;">Espacio 100% Disponible</p>
+                    <small class="text-muted">Apto para recepciones, transferencias o almacenamiento en lote.</small>
+                </div>
+            `;
+        }
+        htmlDetalle += '</div>';
+        $('#panelDetalleSlot').html(htmlDetalle);
+    });
+
+    $('#formRedimensionar').on('submit', function(e) {
+        e.preventDefault();
+        
+        const btnSubmit = $('#btnProcesarRedim');
+        const filas = $('#inpRedimFilas').val();
+        const columnas = $('#inpRedimColumnas').val();
+
+        $.ajax({
+            url: "{{ route('almacen.layout.redimensionar') }}",
+            method: "POST",
+            data: {
+                almacen_id: "{{ $almacen->id }}",
+                filas: filas,
+                columnas: columnas
+            },
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            beforeSend: function() {
+                btnSubmit.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Procesando...');
+            },
+            success: function(response) {
+                if (response.success) {
+                    window.location.reload();
+                }
+            },
+            error: function(xhr) {
+                btnSubmit.prop('disabled', false).html('Aplicar Ajuste');
+                alert('Aviso del Sistema:\n\n' + (xhr.responseJSON?.error || 'Error de conexión.'));
+            }
+        });
+    });
+
+    // ==========================================
+    // MÓDULO: TRÁFICO LOGÍSTICO E INVENTARIO
+    // ==========================================
+    let slotActivoContexto = null; // Guarda temporalmente la celda clickeada en el croquis
+
+    // 1. Buscador en Vivo
+    let typingTimer;
+    $('#inpBuscarItemModal').on('keyup', function () {
+        clearTimeout(typingTimer);
+        const termino = $(this).val();
+        if (termino.length >= 2) {
+            typingTimer = setTimeout(() => {
+                $.post("{{ route('almacen.layout.buscar_items') }}", { termino: termino, _token: '{{ csrf_token() }}' }, function(res) {
+                    $('#msgAyudaBuscar').hide();
+                    $('#listaResultadosItems').empty();
+                    res.items.forEach(item => {
+                        $('#listaResultadosItems').append(`
+                            <div class="item-resultado-drag p-2 mb-2 border border-primary rounded bg-light" 
+                                 draggable="true" 
+                                 data-id="${item.id}" 
+                                 data-codigo="${item.codigo}" 
+                                 data-stock="${item.existencia}"
+                                 style="cursor: grab;">
+                                <div class="fw-bold small text-primary">${item.codigo}</div>
+                                <div style="font-size: 10px;" class="text-truncate" title="${item.descripcion}">${item.descripcion}</div>
+                                <div style="font-size: 11px;" class="text-dark mt-1">Stock Disp: <b>${item.existencia}</b></div>
+                            </div>
+                        `);
+                    });
+                });
+            }, 500);
+        }
+    });
+
+    // 2. Eventos Drag & Drop: Desde Panel Lateral a Slot
+    $(document).on('dragstart', '.item-resultado-drag', function(e) {
+        const payload = { tipo: 'NUEVO_ITEM', id: $(this).data('id'), stock: $(this).data('stock') };
+        e.originalEvent.dataTransfer.setData('text/plain', JSON.stringify(payload));
+    });
+
+    // 3. Eventos Drag & Drop: Desde Slot a Slot o Papelera
+    $(document).on('dragstart', '.slot-ocupado', function(e) {
+        const payload = { tipo: 'REUBICAR_SLOT', ubicacion_id: $(this).data('ubicacion-id') };
+        e.originalEvent.dataTransfer.setData('text/plain', JSON.stringify(payload));
+    });
+
+    // 4. Recepción en los Slots (Estantes)
+    $(document).on('dragover', '.slot-receptor-drop', function(e) {
+        e.preventDefault();
+        $(this).css('border', '2px dashed #ffc107');
+    });
+
+    $(document).on('dragleave', '.slot-receptor-drop', function(e) {
+        $(this).css('border', '');
+    });
+
+    $(document).on('drop', '.slot-receptor-drop', function(e) {
+        e.preventDefault();
+        $(this).css('border', '');
+        
+        const ubicacionDestinoId = $(this).data('ubicacion-id');
+        const data = JSON.parse(e.originalEvent.dataTransfer.getData('text/plain'));
+
+        if (data.tipo === 'NUEVO_ITEM') {
+            // Pedimos cantidad a asignar
+            let cant = prompt(`¿Cuántas unidades desea asignar a esta ubicación? (Máximo disponible: ${data.stock})`);
+            if (cant && parseFloat(cant) > 0) {
+                $.post("{{ route('almacen.layout.asignar_item') }}", {
+                    _token: '{{ csrf_token() }}',
+                    ubicacion_id: ubicacionDestinoId,
+                    inventario_id: data.id,
+                    cantidad: cant
+                }, function(res) {
+                    if(res.success) {
+                        recargarMatrizActual();
+                        if(res.alerta) alert(`Alerta de Capacidad: ${res.alerta}. Ocupación al ${res.porcentaje}%`);
+                    }
+                }).fail(err => alert(err.responseJSON.error));
+            }
+        } else if (data.tipo === 'REUBICAR_SLOT') {
+            if (data.ubicacion_id === ubicacionDestinoId) return; // Mismo slot
+            $.post("{{ route('almacen.layout.reubicar_item') }}", {
+                _token: '{{ csrf_token() }}',
+                origen_id: data.ubicacion_id,
+                destino_id: ubicacionDestinoId
+            }, function(res) {
+                if(res.success) recargarMatrizActual();
+            }).fail(err => alert("Error al reubicar."));
+        }
+    });
+
+    // 5. Recepción en la Papelera
+    const zonaPapelera = document.getElementById('zonaPapeleraLogistica');
+    
+    zonaPapelera.addEventListener('dragover', e => { e.preventDefault(); $(zonaPapelera).addClass('bg-danger text-white'); });
+    zonaPapelera.addEventListener('dragleave', e => { $(zonaPapelera).removeClass('bg-danger text-white'); });
+    
+    zonaPapelera.addEventListener('drop', function(e) {
+        e.preventDefault();
+        $(zonaPapelera).removeClass('bg-danger text-white');
+        
+        try {
+            const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+            if (data.tipo === 'REUBICAR_SLOT') {
+                if(confirm("¿Confirmas que deseas vaciar esta ubicación? Todo el stock retornará al inventario global.")) {
+                    $.post("{{ route('almacen.layout.vaciar_slot') }}", {
+                        _token: '{{ csrf_token() }}',
+                        ubicacion_id: data.ubicacion_id
+                    }, function(res) {
+                        alert('vaciado con éxito.');
+                        if(res.success) recargarMatrizActual();
+                    });
+                }
+            } else {
+                alert("Para vaciar un slot, debes arrastrar la celda ocupada desde la matriz de la derecha hacia esta papelera.");
+            }
+        } catch(err) { console.error(err); }
+    });
+
+    
+
+});
+
+// Función auxiliar para refrescar el visual del modal en caliente
+    function recargarMatrizActual() {
+        // Obtenemos las coordenadas X y Y del título o variable temporal
+        const titulo = $('#insTituloEstante').text(); // Ej: EST-A
+        // Disparamos un click simulado en la grilla original para que el AJAX principal refresque todo
+        $(`.celda-mapa[data-codigo="${titulo}"]`).first().trigger('click');
+        $('#inpBuscarItemModal').trigger('keyup'); // Refresca stocks del buscador
+    }
+
+// Función estándar para leer la celda seleccionada y mostrarla en el inspector
+function cargarDetalleSlot(ubicacionId, matrizKey, subposicion) {
+    
+    // 1. Buscar el contenedor de la coordenada en la memoria caché actual
+    const contenedor = cacheUbicacionesEstante[matrizKey];
+    if (!contenedor) return;
+
+    // 2. Buscar el slot específico (por si esta celda está subdividida en A, B, etc.)
+    const slot = contenedor.slots.find(s => s.id === ubicacionId);
+    if (!slot) return;
+
+    // 3. Construir el diseño visual para el panel lateral derecho
+    let htmlDetalle = '';
+
+    if (slot.ocupado && slot.inventario) {
+        // Diseño si la celda tiene productos
+        htmlDetalle = `
+            <div class="alert alert-primary p-2 mb-2 border-primary" style="background-color: #f0f9ff;">
+                <h6 class="font-weight-bold mb-1 text-primary" style="font-size: 13px;">${slot.inventario.sku}</h6>
+                <p class="small mb-2 text-dark" style="font-size: 11px; line-height: 1.2;">${slot.inventario.producto}</p>
+                <hr class="my-1 border-primary" style="opacity: 0.2;">
+                <div class="d-flex justify-content-between small text-dark" style="font-size: 10px;">
+                    <span>Lote: <b>${slot.inventario.lote}</b></span>
+                    <span>Stock: <b>${slot.inventario.cantidad} / ${slot.inventario.capacidad_asignada}</b></span>
+                </div>
+            </div>
+        `;
+    } else {
+        // Diseño si la celda está vacía
+        htmlDetalle = `
+            <div class="alert alert-secondary p-3 mb-2 text-center border-secondary bg-white">
+                <i class="fas fa-box-open fa-2x text-muted mb-2"></i>
+                <h6 class="text-muted mb-0 small font-weight-bold">CELDA LIBRE</h6>
+                <p class="text-muted mb-0" style="font-size: 10px;">Lista para recibir mercancía.</p>
+            </div>
+        `;
+    }
+
+    // Agregar la huella técnica (ID Físico) debajo de la tarjeta
+    htmlDetalle += `
+        <div class="text-secondary mt-2" style="font-size: 10px;">
+            <i class="fas fa-qrcode me-1"></i> Código Físico: <b>${slot.codigo_completo}</b>
+        </div>
+    `;
+
+    // 4. Inyectar todo el diseño en tu div del HTML
+    $('#panelDetalleSlot').html(htmlDetalle);
+
+    // 5. Activar la botonera de Subdividir / Combinar
+    $('#controlesEstructuraCelda').removeClass('d-none');
+    $('#controlesEstructuraCelda').attr('data-activo-id', ubicacionId);
+    $('#controlesEstructuraCelda').attr('data-activo-key', matrizKey);
+    
+    // 6. Efecto Visual: Resaltar la celda que el usuario clickeó en la tabla
+    $('.slot-rack').css('box-shadow', 'none').css('border', '1px solid #475569'); // Limpiar las demás
+    $(`.slot-rack[data-ubicacion-id="${ubicacionId}"]`).css('box-shadow', '0 0 0 2px #0dcaf0').css('border', '1px solid #0dcaf0');
+}   
+
+ function subdividirSlotActivo() {
+    const contenedor = $('#controlesEstructuraCelda');
+    const ubicacionId = contenedor.attr('data-activo-id');
+    
+    // Pedir al usuario en cuántas partes dividir
+    const partes = prompt("¿En cuántas celdas desea dividir este espacio? (Ingrese un número del 2 al 5):", "2");
+    
+    if (partes === null) return; // Canceló
+    const n = parseInt(partes);
+    
+    if (isNaN(n) || n < 2 || n > 5) {
+        alert("Por favor, ingrese un número válido entre 2 y 5.");
+        return;
+    }
+
+    $.post("{{ route('almacen.layout.subdividir_slot') }}", {
+        _token: '{{ csrf_token() }}',
+        ubicacion_id: ubicacionId,
+        cantidad_divisiones: n // Enviamos la cantidad
+    }, function(res) {
+        if (res.success) {
+            alert('Espacio subdividido en ' + n + ' partes.');
+            recargarMatrizActual();
+        }
+    }).fail(err => alert("Error: " + (err.responseJSON?.message || "No se pudo realizar la acción.")));
+}
+
+    function combinarSlotActivo() {
+        const contenedor = $('#controlesEstructuraCelda');
+        const ubicacionId = contenedor.attr('data-activo-id');
+        
+        if (!ubicacionId) return;
+
+        // Aquí llamarías a tu ruta de Laravel para combinar
+        $.post("{{ route('almacen.layout.combinar_slots') }}", {
+            _token: '{{ csrf_token() }}',
+            ubicacion_id: ubicacionId
+        }, function(res) {
+            if (res.success) {
+                alert('Celdas combinadas con éxito.');
+                recargarMatrizActual();
+            }
+        }).fail(err => alert("Error al combinar: " + err.responseJSON.message));
+    }
+</script>
+@endpush
+@endsection

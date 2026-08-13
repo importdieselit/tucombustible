@@ -5,6 +5,7 @@ namespace App\Console;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
+
 class Kernel extends ConsoleKernel
 {
     /**
@@ -22,10 +23,24 @@ class Kernel extends ConsoleKernel
         $schedule->command('send:reporte-diario-operaciones')->dailyAt('08:00')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));
         $schedule->command('gps:actualizar')->everyTwoMinutes()->withoutOverlapping()->appendOutputTo(storage_path('logs/reportes_automaticos.log'));
         $schedule->command('viajes:check-alertas')->everyThirtyMinutes()->withoutOverlapping()->appendOutputTo(storage_path('logs/reportes_automaticos.log'));
+        $schedule->call(function () {
+            app(\App\Services\ReporteEficienciaService::class)->refrescarAgregados();
+        })->hourly(); // Se actualiza cada hora automáticamente
+        $schedule->command('queue:work --stop-when-empty')->everyMinute()->withoutOverlapping();
+
+        $schedule->command('summary:daily-report')->dailyAt('00:00');
         $schedule->command('cupos:reset')->monthlyOn(1, '00:00');
-        $schedule->command('check:varillaje-horario')->dailyAt('08:00')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));
-        $schedule->command('check:varillaje-horario')->dailyAt('16:00')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));
         $schedule->command('cupos:capturar-sobreconsumo')->monthlyOn(1, '00:05');
+       $schedule->command('check:varillaje-horario')->dailyAt('08:30')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));
+       $schedule->command('check:varillaje-horario')->dailyAt('16:00')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));
+        $schedule->command('reports:watch')
+        ->everyMinute()
+        ->timezone('America/Caracas')
+        ->when(function () {
+            $now = \Carbon\Carbon::now('America/Caracas');
+            // El comando SOLO se activará en estas dos ventanas de tiempo seguras
+            return $now->between('08:00', '08:45') || $now->between('17:00', '17:45');
+        });
     }
 
  
