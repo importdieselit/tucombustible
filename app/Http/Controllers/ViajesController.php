@@ -28,6 +28,7 @@ use App\Models\Muelles;
 use App\Models\CaptacionCliente;
 use App\Models\Deposito;
 use App\Models\CompraCombustible;
+use App\Models\TipoCombustible;
 use Illuminate\Support\Facades\Http;
 
 class ViajesController extends Controller
@@ -1638,7 +1639,7 @@ public function updateGuiaData(Request $request, $viajeId)
             // Si es compra o no tiene tipoCombustible directo, busca en la primera compra asociada
             $compra = $viaje->compraCombustible->first();
             if ($compra && !empty($compra->tipo)) {
-                return $compra->tipo;
+                return $compra->tipo == 1 ? 'M.G.O.' : ($compra->tipo == 2 ? 'INDUSTRIAL' : 'Sin Especificar');
             }
             return 'Sin Especificar';
         };
@@ -1851,8 +1852,8 @@ public function updateGuiaData(Request $request, $viajeId)
         }
 
         $clientes           = Cliente::with('padre')->orderBy('parent')->orderBy('nombre')->get();
-        $choferes           = \App\Models\Chofer::with('persona')->get();
-        $tiposCombustible   = \App\Models\TipoCombustible::orderBy('nombre')->get();
+        $choferes           = Chofer::with('persona')->get();
+        $tiposCombustible   = TipoCombustible::orderBy('nombre')->get();
         $destinos           = Viaje::distinct()->pluck('destino_ciudad')->filter();
         $estadosDisponibles = Viaje::distinct()->pluck('status')->filter();
 
