@@ -362,7 +362,7 @@ class DepositoService
         $msj .= "  └ 🟢 *Disponible Neto:* " . number_format($disponibleNetoMgo, 2, ',', '.') . " Lts\n";
 
         // 8. ENVÍO VÍA WHATSAPP (Alineado con notificarTanquesCriticos)
-        $idDestino = config('services.whatsapp.dev_group_id', 'WHATSAPP_DEV_GROUP_ID');
+        $idDestino = config('services.whatsapp.group_operaciones', 'WHATSAPP_DEV_GROUP_ID');
 
         try {
             $this->whatsappService->enviarMensaje($msj, $idDestino);
