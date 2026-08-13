@@ -251,7 +251,7 @@ class ViajesController extends Controller
                 'otro_chofer' => $request->otro_chofer ?? null,
                 'otro_vehiculo' => $request->otro_vehiculo ?? null,
                 'otro_ayudante' => $request->otro_ayudante?? null,
-                'tipo' => $request->tipo, // Tipo 1 para viajes con múltiples despachos
+                'tipo' => $request->tipo ?? 2, // Tipo 1 para viajes con múltiples despachos
             ]);
           
 
@@ -1639,7 +1639,8 @@ public function updateGuiaData(Request $request, $viajeId)
             // Si es compra o no tiene tipoCombustible directo, busca en la primera compra asociada
             $compra = $viaje->compraCombustible->first();
             if ($compra && !empty($compra->tipo)) {
-                return $compra->tipo == 1 ? 'M.G.O.' : ($compra->tipo == 2 ? 'DIESEL' : 'Sin Especificar');
+                return $compra->tipo == 1 ? 'M.G.O.' : ($compra->tipo == 2 ? 'DIESEL
+                ' : 'Sin Especificar');
             }
             return 'Sin Especificar';
         };
