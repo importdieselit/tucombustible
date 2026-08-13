@@ -1604,7 +1604,7 @@ public function updateGuiaData(Request $request, $viajeId)
         // FILTRO COMBINADO DE COMBUSTIBLE (Tanto en viajes.tipo_combustible_id como en compras_combustible.tipo)
         if ($tipoCombustibleId) {
             $query->where(function($q) use ($tipoCombustibleId) {
-                $q->where('tipo_combustible_id', $tipoCombustibleId)
+                $q->where('tipo', $tipoCombustibleId)
                   ->orWhereHas('compraCombustible', function($qCompra) use ($tipoCombustibleId) {
                       $qCompra->where('tipo', $tipoCombustibleId);
                   });

@@ -1432,10 +1432,10 @@ public function storeDespachoIndustrial(Request $request)
             
            // dd($viaje);
            switch ($request->tipo) {
-                case 'INDUSTRIAL':
+                case '2':
                     $tipoProducto = 2;
                     break;
-                case 'M.G.O.':
+                case '1':
                     $tipoProducto = 1;
                     break;
                 default:

@@ -57,8 +57,8 @@
                     <div class="col-md-6">
                         <label for="tipo">Tipo Compra</label>
                         <select name="tipo" id="tipo" class="form-select" required>
-                            <option value="INDUSTRIAL" @if(old('tipo') == 'INDUSTRIAL') selected @endif>DIESEL INDUSTRIAL</option>
-                            <option value="M.G.O." @if(old('tipo') == 'M.G.O.') selected @endif>DIESEL MARINO (M.G.O.)</option>
+                            <option value="2" @if(old('tipo') == '2') selected @endif>DIESEL INDUSTRIAL</option>
+                            <option value="1" @if(old('tipo') == '1') selected @endif>DIESEL MARINO (M.G.O.)</option>
                         </select>
                     </div>
 
