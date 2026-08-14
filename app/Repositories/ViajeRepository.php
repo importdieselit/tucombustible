@@ -27,7 +27,8 @@ class ViajeRepository
             'chofer.persona',
             'ayudante.persona',
             'sede',
-            'planta',
+            'proveedor',
+            'planta'
             ])->findOrFail($id);
     }
 
