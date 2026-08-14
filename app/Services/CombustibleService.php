@@ -290,8 +290,8 @@ class CombustibleService
     public function obtenerMetricasDashboard(?int $sedeId = null): array
     {
         // 1. Obtención de IDs de tipos de combustible
-        $idDiesel = DB::table('tipos_combustible')->where('nombre', 'LIKE', '%diesel%')->value('id') ?? 1;
-        $idMgo    = DB::table('tipos_combustible')->where('nombre', 'LIKE', '%mgo%')->value('id') ?? 2;
+        $idDiesel = DB::table('tipos_combustible')->where('nombre', 'LIKE', '%DIESEL%')->value('id') ?? 2;
+        $idMgo    = DB::table('tipos_combustible')->where('nombre', 'LIKE', '%M.G.O.%')->value('id') ?? 1;
 
         // 2. DISPONIBILIDAD EN TANQUES (depositos.nivel_actual_litros)
         $tanquesDiesel = DB::table('depositos')
