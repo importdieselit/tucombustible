@@ -134,6 +134,11 @@ class Viaje extends Model
     {
         return $this->hasOne(Inspeccion::class, 'viaje_id');
     }
+
+    public function planta(): BelongsTo
+    {
+        return $this->belongsTo(Planta::class, 'planta_id');
+    }
    
 
     // Relación para el nuevo ayudante_id (Integridad referencial)
