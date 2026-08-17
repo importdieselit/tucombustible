@@ -492,6 +492,9 @@ class LogisticaController extends Controller
         $mesSeleccionado = (int) ($request->get('mes', $mesActual));
         $anioSeleccionado = (int) ($request->get('anio', $anioActual));
 
+        // 1. Evaluar si es el mes y año en curso
+        $esMesActual = ($mesSeleccionado === $mesActual && $anioSeleccionado === $anioActual);
+
         // Consulta agrupada por cliente sumando todos los despachos del mes evaluado
         $query = DB::table('gasco_cupos_mensuales as gcm')
             ->join('clientes as c', 'c.id', '=', 'gcm.cliente_id')
@@ -548,12 +551,14 @@ class LogisticaController extends Controller
                 ->sortDesc();
         }
 
+        // 2. Incluir 'esMesActual' en el compact
         return view('admin.logistica.sobreconsumo', compact(
             'sobreconsumos',
             'mesSeleccionado',
             'anioSeleccionado',
             'totales',
-            'aniosDisponibles'
+            'aniosDisponibles',
+            'esMesActual'
         ));
     }
 }
