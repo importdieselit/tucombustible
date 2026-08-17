@@ -55,7 +55,7 @@ class SalaControlController extends Controller
         // 2. DATA PARA EL REPORTE Y GRÁFICOS
         // =========================================================
         $today = now();
-        $data = Vehiculo::miFlota()->with(['tipoVehiculo', 'cisternaAcoplada', 'ordenActiva'])->get();
+        $data = Vehiculo::miFlota()->with(['tipoVehiculo', 'cisternaAcoplada', 'ordenActiva'])->where('id_cliente', 348)->get();
 
         $total = $data->count();
         $dataAcsa = $data->where('id_cliente', 348)->whereIn('tipo', [1,2,3,5]);
