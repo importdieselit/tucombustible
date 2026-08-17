@@ -57,10 +57,10 @@ class SalaControlController extends Controller
         $today = now();
         $data = Vehiculo::miFlota()->with(['tipoVehiculo', 'cisternaAcoplada', 'ordenActiva'])->get();
 
-        $total = $data->count();
-        $enRuta = $data->where('estatus', 2)->count();
-        $operativosCount = $data->where('estatus', 1)->count();
-        $fallaCount = $data->whereIn('estatus', [3, 4, 5])->count();
+        $total = $data->where('id_cliente', 348)->count();
+        $enRuta = $data->where('estatus', 2)->where('id_cliente', 348)->count();
+        $operativosCount = $data->where('estatus', 1)->where('id_cliente', 348)->count();
+        $fallaCount = $data->whereIn('estatus', [3, 4, 5])->where('id_cliente', 348)->count();
         $porcentajeDisponibilidad = $total > 0 ? round(($operativosCount + $enRuta) / $total * 100) : 0;
         
         
