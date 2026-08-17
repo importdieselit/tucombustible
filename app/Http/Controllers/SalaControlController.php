@@ -67,9 +67,9 @@ class SalaControlController extends Controller
         $disponiblidadCombustible =  Deposito::where('id','!=', 3)->selectRaw('SUM(nivel_actual_litros) as total_combustible, sum(capacidad_litros) as capacidad_total')->first();
         
         // Segmentación de Flota
-        $cisternas = $data->where('tipo', 2);
-        $camiones = $data->whereIn('tipoVehiculo.tipo', ['CAMION', 'CAMION CISTERNA']);
-        $chutos = $data->whereIn('tipoVehiculo.tipo', ['CHUTO']);
+        $cisternas = $data->whereIn('tipo', [2,4,5]);
+        $camiones = $data->where('tipo', 1);
+        $chutos = $data->whereIn('tipo', [3]);
          $fallaCount = $data->whereIn('estatus', [3,4,5])->count();
         
         $ligero = Vehiculo::misVehiculos()->with(['tipoVehiculo', 'ordenActiva'])->where('tipo', 6)->get();
