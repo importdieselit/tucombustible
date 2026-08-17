@@ -153,13 +153,21 @@
                             <tbody>
                                 @forelse($depositos as $deposito)
                                     @php
+                                        $depositoIndex = $loop->index;
                                         $altoMaximoTanque = ($deposito->forma == 'R' || $deposito->forma == 'OV' || $deposito->forma == 'C') ? $deposito->alto : $deposito->diametro;
+                                        
+                                        $selectedCombustible = old("detalles.{$depositoIndex}.id_tipos_combustible", 
+                                            $deposito->ultima_medicion->id_tipos_combustible 
+                                            ?? $deposito->ultima_medicion->id_tipo_combustible 
+                                            ?? $deposito->tipo_combustible_id 
+                                            ?? ''
+                                        );
                                     @endphp
 
                                     <tr data-tanque-id="{{ $deposito->id }}" class="fila-tanque">
                                         <td class="ps-4">
                                             <span class="fw-black text-dark d-block" style="font-size: 15px;">{{ $deposito->serial }}</span>
-                                            <input type="hidden" name="detalles[{{ $loop->index }}][id_deposito]" value="{{ $deposito->id }}">
+                                            <input type="hidden" name="detalles[{{ $depositoIndex }}][id_deposito]" value="{{ $deposito->id }}">
                                         </td>
                                         <td>
                                             <span class="badge bg-light text-secondary border text-uppercase fw-bold" style="font-size: 11px;">
@@ -173,17 +181,11 @@
                                             <span id="visor_litros_{{ $deposito->id }}" style="display: none;"></span>
                                         </td>
                                         <td>
-                                            <select name="detalles[{{ $loop->index }}][id_tipos_combustible]" class="form-select form-select-sm select-combustible" data-tanque-id="{{ $deposito->id }}">
+                                            <select name="detalles[{{ $depositoIndex }}][id_tipos_combustible]" class="form-select form-select-sm select-combustible" data-tanque-id="{{ $deposito->id }}">
                                                 @foreach($tiposCombustible as $tipo)
-                                                    @php
-                                                        $selectedId = old("detalles.{$loop->index}.id_tipos_combustible")  
-                                                            ?? $deposito->ultima_medicion->id_tipos_combustible 
-                                                            ?? $deposito->ultima_medicion->id_tipo_combustible 
-                                                            ?? '';
-                                                    @endphp
                                                     <option value="{{ $tipo->id }}" 
                                                         data-nombre="{{ strtoupper($tipo->nombre) }}"
-                                                        {{ $selectedId == $tipo->id ? 'selected' : '' }}>
+                                                        {{ (string)$selectedCombustible === (string)$tipo->id ? 'selected' : '' }}>
                                                         {{ $tipo->nombre }}
                                                     </option>
                                                 @endforeach
@@ -192,12 +194,12 @@
                                         <td>
                                             <div class="input-group input-group-sm">
                                                 <input type="number" 
-                                                       name="detalles[{{ $loop->index }}][centimetros_medidos]" 
+                                                       name="detalles[{{ $depositoIndex }}][centimetros_medidos]" 
                                                        class="form-select form-select-sm fw-black text-center input-centimetros" 
                                                        step="0.01" 
                                                        min="0" 
                                                        max="{{ $altoMaximoTanque ?? 500 }}"
-                                                       value="{{ $deposito->ultima_medicion->centimetros_medidos ?? '' }}"
+                                                       value="{{ old("detalles.{$depositoIndex}.centimetros_medidos", $deposito->ultima_medicion->centimetros_medidos ?? '') }}"
                                                        placeholder="0.00"
                                                        data-tanque-id="{{ $deposito->id }}"
                                                        data-alto-max="{{ $altoMaximoTanque ?? 250 }}"
@@ -228,7 +230,7 @@
                             <label class="small fw-black text-uppercase text-muted mb-2 d-block" style="font-size: 12px;">
                                 <i class="fas fa-comment-alt me-1 text-orange"></i> Observaciones e Incidencias
                             </label>
-                            <textarea name="observaciones" rows="3" class="form-control" placeholder="Escriba aquí novedades (Ej. Estado físico de la vara, condiciones de seguridad del patio)..." style="font-size: 13px; border-radius: 6px Pert;"></textarea>
+                            <textarea name="observaciones" rows="3" class="form-control" placeholder="Escriba aquí novedades (Ej. Estado físico de la vara, condiciones de seguridad del patio)..." style="font-size: 13px; border-radius: 6px Pert;">{{ old('observaciones') }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -508,7 +510,7 @@
                 }
             });
 
-            // SINCRONIZACIÓN INICIAL DE NIVELES (Si hay un varillaje previo en BD)
+            // SINCRONIZACIÓN INICIAL DE NIVELES (Si hay un varillaje previo en BD o en old())
             setTimeout(() => {
                 document.querySelectorAll('.input-centimetros').forEach(input => {
                     const id = input.getAttribute('data-tanque-id');
