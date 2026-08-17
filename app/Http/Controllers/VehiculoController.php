@@ -196,9 +196,9 @@ class VehiculoController extends BaseController
 
         $unidades_con_orden_abierta = Vehiculo::VehiculosConOrdenAbierta()->count();
         $unidades_en_mantenimiento = Vehiculo::countVehiculosEnMantenimiento();
-        $unidades_disponibles = Vehiculo::Disponibles()->count();
-        $unidades_no_disponibles = Vehiculo::NoDisponibles()->count();
-        $unidades_en_servicio = Vehiculo::EnServicio()->count();
+        $unidades_disponibles = Vehiculo::Disponibles()->where('id_cliente',$cliente_id)->count();
+        $unidades_no_disponibles = Vehiculo::NoDisponibles()->where('id_cliente',$cliente_id)->count();
+        $unidades_en_servicio = Vehiculo::EnServicio()->where('id_cliente',$cliente_id)->count();
         $historicoEficiencia = ResumenDiario::orderBy('fecha', 'desc')->limit(15)->get()->sortBy('fecha')->toArray();
         $mantenimientos = MantenimientoProgramado::with('vehiculo')
                 ->whereIn('estatus', [1, 2]) // Solo pendientes o en proceso
