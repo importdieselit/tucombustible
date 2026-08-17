@@ -342,6 +342,7 @@ class VehiculoController extends BaseController
             'm_dis' => Vehiculo::where('es_flota', true)->where('id_cliente',$cliente_id)->where('estatus', 1)->whereIn('tipo', [1])->count(),
             'ch_dis' => Vehiculo::where('es_flota', true)->where('id_cliente',$cliente_id)->where('estatus', 1)->whereIn('tipo', [3])->count(),
             'c_dis' => Vehiculo::where('es_flota', true)->where('id_cliente',$cliente_id)->where('estatus', 1)->whereIn('tipo', [2,4,5])->count(),
+            'l_dis' => Vehiculo::where('es_flota', true)->where('id_cliente',$cliente_id)->where('estatus', 1)->where('tipo', 6)->count(),
             'v_dis' => $unidades_disponibles,
             'v_fue' => $unidades_con_orden_abierta,
             'chartCategorias' => $categorias,

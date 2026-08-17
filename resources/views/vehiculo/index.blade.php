@@ -80,7 +80,8 @@
                 'details' => [
                     'Camiones' => ['count' => $m_dis ?? 0, 'filter' => 'camiones_disponibles'],
                     'Chutos' => ['count' => $ch_dis ?? 0, 'filter' => 'chutos_disponibles'],
-                    'Cisternas' => ['count' => $c_dis ?? 0, 'filter' => 'cisternas_disponibles']
+                    'Cisternas' => ['count' => $c_dis ?? 0, 'filter' => 'cisternas_disponibles'],
+                    'Livianos' => ['count' => $l_dis ?? 0, 'filter' => 'livianos_disponibles']
                 ],
                 'link' => route('vehiculos.list', ['filter' => 'disponibles'])
             ],
