@@ -58,22 +58,18 @@ class SalaControlController extends Controller
         $data = Vehiculo::miFlota()->with(['tipoVehiculo', 'cisternaAcoplada', 'ordenActiva'])->get();
 
         $total = $data->count();
-        $dataAcsa = $data->where('id_cliente', 348)->whereIn('tipo', [1,2,3,5]);
-
-        // 2. Realizamos los conteos sobre la data ya filtrada
-       // $total           = $dataAcsa->count();
-        $enRuta          = $dataAcsa->where('estatus', 2)->count();
-        $operativosCount = $dataAcsa->where('estatus', 1)->count();
-        $fallaCount      = $dataAcsa->whereIn('estatus', [3, 4, 5])->count();
+        $enRuta = $data->where('estatus', 2)->count();
+        $operativosCount = $data->where('estatus', 1)->count();
+        $fallaCount = $data->whereIn('estatus', [3, 4, 5])->count();
         $porcentajeDisponibilidad = $total > 0 ? round(($operativosCount + $enRuta) / $total * 100) : 0;
         
         
         $disponiblidadCombustible =  Deposito::where('id','!=', 3)->selectRaw('SUM(nivel_actual_litros) as total_combustible, sum(capacidad_litros) as capacidad_total')->first();
         
         // Segmentación de Flota
-        $cisternas = $data->whereIn('tipo', [2,4,5]);
-        $camiones = $data->where('tipo', 1);
-        $chutos = $data->whereIn('tipo', [3]);
+        $cisternas = $data->where('tipo', 2);
+        $camiones = $data->whereIn('tipoVehiculo.tipo', ['CAMION', 'CAMION CISTERNA']);
+        $chutos = $data->whereIn('tipoVehiculo.tipo', ['CHUTO']);
          $fallaCount = $data->whereIn('estatus', [3,4,5])->count();
         
         $ligero = Vehiculo::misVehiculos()->with(['tipoVehiculo', 'ordenActiva'])->where('tipo', 6)->get();
