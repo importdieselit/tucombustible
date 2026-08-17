@@ -58,7 +58,7 @@ class SalaControlController extends Controller
         $data = Vehiculo::miFlota()->with(['tipoVehiculo', 'cisternaAcoplada', 'ordenActiva'])->get();
 
         $total = $data->count();
-        $dataAcsa = $data->where('id_cliente', 348)->where('tipo', '!=', 6);
+        $dataAcsa = $data->where('id_cliente', 348)->whereIn('tipo', [1,2,3,5]);
 
         // 2. Realizamos los conteos sobre la data ya filtrada
        // $total           = $dataAcsa->count();
