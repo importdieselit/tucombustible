@@ -58,6 +58,8 @@
                        },
             default => 'Sin especificar'
         };
+
+        $totalLitros=0;
     @endphp
 
     {{-- 🏢 MEMBRETE CORPORATIVO OPTIMIZADO PARA CAPTURAS --}}
@@ -182,6 +184,9 @@
                         </thead>
                         <tbody class="small">
                             @foreach($viaje->detalles as $detalle)
+                            @php 
+                                $totalLitros+=$detalle->litros_despachados ?? $detalle->litros ?? 0;
+                            @endphp
                             <tr class="align-middle">
                                 <td class="ps-3">
                                     <strong>{{ $detalle->cliente->nombre ?? $viaje->nombre_cliente_externo ?? $detalle->otro_cliente ?? 'N/A'}}</strong><br>
@@ -217,7 +222,7 @@
                                         $existeQr = $qrPath && \Illuminate\Support\Facades\Storage::disk('public')->exists($qrPath);
                                     @endphp
 
-                                    @if($existeQr)
+                                    @if($existeQr) 
                                         <img src="{{ asset('storage/' . $qrPath) }}" alt="QR Cliente" style=" width: 5cm;">
                                     @else
                                         <span class="text-muted small fw-normal">No posee QR registrado</span>
@@ -225,6 +230,10 @@
                                 </td>
                             </tr>
                             @endforeach
+                             <tr>
+                                <th style="text-align: center; vertical-align: middle">TOTAL</th>
+                                <th colspan="{{ $viaje->tipo_planificacion ==1 ? '6' : '5' }}" style="text-align: end; padding: 10px;"> {{ number_format($totalLitros, 0) }} L </th>
+                            </tr>
                         </tbody>
                     </table>
                 </div>

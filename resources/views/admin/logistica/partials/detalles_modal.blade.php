@@ -205,7 +205,7 @@
                             @endforeach
                             <tr>
                                 <th style="text-align: center; vertical-align: middle">Total</th>
-                                <th colspan="5" style="text-align: end; padding: 10px;"> {{ number_format($totalLitros, 0) }} L </th>
+                                <th colspan="{{ $viaje->tipo_planificacion ==1 ? '6' : '5' }}" style="text-align: end; padding: 10px;"> {{ number_format($totalLitros, 0) }} L </th>
                             </tr>
                         </tbody>
                     </table>
