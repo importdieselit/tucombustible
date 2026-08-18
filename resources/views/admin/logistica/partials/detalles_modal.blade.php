@@ -30,6 +30,8 @@
                        },
             default => 'Sin especificar'
         };
+
+        $totalLitros=0;
     @endphp
 
     {{-- 🏢 MEMBRETE CORPORATIVO OPTIMIZADO PARA CAPTURAS --}}
@@ -167,6 +169,7 @@
                                     {{ $detalle->cliente->telefono_alt ?? 'N/A' }}
                                 </td>
                                 <td>
+                                    @php($totalLitros+= $detalle->litros_despachados ?? $detalle->litros ?? 0 )
                                     {{ number_format($detalle->litros_despachados ?? $detalle->litros ?? 0, 0) }} L
                                 </td>
                                 
@@ -284,6 +287,7 @@
                     </p>
                 </div>
             </div>
+            @php($totalLitros+= $compra ? number_format($compra->cantidad_litros, 0) : number_format($viaje->litros, 0))
         @endif
 
         {{-- 💬 OBSERVACIONES (CONSERVADO COMPLETO) --}}
