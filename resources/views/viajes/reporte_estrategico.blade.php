@@ -386,6 +386,46 @@
             </div>
         </div>
 
+        <!-- NUEVA TABLA: DESGLOSE POR SUCURSALES (Solo visible si es Cliente Principal) -->
+        @if($esClientePrincipal && isset($tablaAgrupadaSucursales) && $tablaAgrupadaSucursales->count() > 0)
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 bg-secondary text-white">
+                <h6 class="m-0 font-weight-bold">
+                    <i class="fas fa-sitemap"></i> Desglose por Sucursales: {{ $clienteSeleccionado->nombre }}
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped" width="100%">
+                        <thead class="table-secondary">
+                            <tr>
+                                <th>#</th>
+                                <th>Sucursal / Razón Social</th>
+                                <th class="text-center">Total Viajes</th>
+                                <th class="text-center">Total Despachos</th>
+                                <th class="text-end">Volumen Total (Lts)</th>
+                                <th class="text-center">% Part. Volumen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($tablaAgrupadaSucursales as $item)
+                                <tr>
+                                    <td>{{ $loop->iteration }}</td>
+                                    <td class="fw-bold">{{ $item['sucursal'] }}</td>
+                                    <td class="text-center">{{ $item['total_viajes'] }}</td>
+                                    <td class="text-center">{{ $item['total_despachos'] }}</td>
+                                    <td class="text-end text-success fw-bold">{{ number_format($item['total_litros'], 2) }}</td>
+                                    <td class="text-center">
+                                        {{ $totalLitros > 0 ? number_format(($item['total_litros'] / $totalLitros) * 100, 1) : 0 }}%
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <!-- TABLA CON EL DETALLE DE TODOS LOS DESPACHOS A PRINCIPALES Y SUCURSALES -->
         <div class="card shadow mb-4">
             <div class="card-header py-3 border-left-info">
