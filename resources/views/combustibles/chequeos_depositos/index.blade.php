@@ -8,13 +8,13 @@
     <div class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
         <div>
             <h2 class="h4 fw-black text-dark text-uppercase mb-1">
-                <i class="fas fa-history text-orange me-2"></i> Histórico de Chequeos de Tanques (Varillaje)
+                <i class="fas fa-history text-orange me-2"></i> Histórico de Aforos (Chequeos de Tanques)
             </h2>
             <p class="text-muted small mb-0">Cronología, control de turnos y trazabilidad de cubicación en sedes de ImporDiesel.</p>
         </div>
         <div>
             <a href="{{ route('combustibles.chequeos_depositos.create') }}" class="btn btn-sm btn-dark fw-bold text-uppercase shadow-sm py-2 px-3" style="font-size: 12px;">
-                <i class="fas fa-plus-circle me-1"></i> Registrar Varillaje
+                <i class="fas fa-plus-circle me-1"></i> Registrar Aforo
             </a>
         </div>
     </div>

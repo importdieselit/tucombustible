@@ -20,7 +20,7 @@
     <div class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
         <div>
             <h2 class="h4 fw-black text-dark text-uppercase mb-1">
-                <i class="fas fa-eye-dropper text-orange me-2"></i> Chequeo de Tanques (Varillaje)
+                <i class="fas fa-eye-dropper text-orange me-2"></i> Aforo (Chequeo de Tanques)
             </h2>
         </div>
         <div class="d-flex flex-wrap align-items-center justify-content-md-end gap-2">
@@ -241,7 +241,7 @@
                             <h5 class="fw-black text-uppercase mb-1" style="font-size: 14px; letter-spacing: 0.5px;">Cierre de Lote Seguro</h5>
                             <p class="text-muted small mb-3">Al procesar, se guardará la estructura completa de manera obligatoria.</p>
                             <button type="submit" class="btn btn-warning w-100 fw-black text-uppercase py-2 shadow" style="color: #000; font-size: 13px; background-color: #ff6600; border-color: #ff6600;">
-                                <i class="fas fa-check-circle me-1"></i> Registrar y Firmar Varillaje
+                                <i class="fas fa-check-circle me-1"></i> Registrar y Firmar Aforo
                             </button>
                         </div>
                     </div>

@@ -35,7 +35,7 @@ class VerificarChequeoHorario extends Command
         } elseif ($horaActual >= '16:00' && $horaActual < '20:00') {
             $turnoAVerificar = 'Nocturno';
         } else {
-            $this->warn(" Fuera de horario de auditoría de varillaje ({$horaActual}). Proceso finalizado.");
+            $this->warn(" Fuera de horario de auditoría de aforo ({$horaActual}). Proceso finalizado.");
             return Command::SUCCESS;
         }
 
@@ -47,12 +47,12 @@ class VerificarChequeoHorario extends Command
         }
 
         //$idDestino = config('services.whatsapp.dev_group_id', 'WHATSAPP_DEV_GROUP_ID');
-        $idDestino = config('services.whatsapp.group_operaciones');
+        $idDestino = config('services.whatsapp.dev_group_id');
         $resumenAuditoria = [];
 
         // Encabezado visual
         $this->info("==================================================");
-        $this->info(" 🔍 AUDITORÍA DE VARILLAJE - TURNO " . strtoupper($turnoAVerificar));
+        $this->info(" 🔍 AUDITORÍA DE AFORO - TURNO " . strtoupper($turnoAVerificar));
         $this->info(" Fecha: " . $ahora->format('d/m/Y H:i:s'));
         $this->info("==================================================\n");
 
@@ -66,10 +66,10 @@ class VerificarChequeoHorario extends Command
                 $status = '<fg=green>COMPLETADO</>';
                 $alerta = 'No requerida';
             } else {
-                $mensaje = "🚨 *RECORDATORIO DE VARILLAJE* 🚨\n";
+                $mensaje = "🚨 *RECORDATORIO DE AFORO* 🚨\n";
                 $mensaje .= "Atención equipo de la sede *{$sede->nombre}*.\n\n";
                 $mensaje .= "Aún no se ha realizado el Chequeo de Tanques de Combustible para el turno *{$turnoAVerificar}* de hoy ({$ahora->format('d/m/Y')}).\n\n";
-                $mensaje .= "⚠️ Por favor, proceder con el varillaje y la carga de datos en el sistema a la brevedad.";
+                $mensaje .= "⚠️ Por favor, proceder con el aforo y la carga de datos en el sistema a la brevedad.";
 
                 try {
                     //, $idDestino
@@ -107,7 +107,7 @@ class VerificarChequeoHorario extends Command
             $resumenAuditoria
         );
 
-        $this->info(" Auditoría de varillaje completada exitosamente.");
+        $this->info(" Auditoría de aforo completada exitosamente.");
 
         return Command::SUCCESS;
     }
