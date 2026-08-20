@@ -361,12 +361,12 @@
                             <div class="icon-shape bg-light rounded-circle p-3 mb-3 text-orange shadow-inner d-flex align-items-center justify-content-center">
                                 <i class="fas fa-ruler-vertical fa-2x"></i>
                             </div>
-                            <h5 class="fw-black text-uppercase text-dark mb-2 style-title">Chequeo / Varillaje</h5>
+                            <h5 class="fw-black text-uppercase text-dark mb-2 style-title">Aforo / Varillaje</h5>
                             <p class="text-muted text-xs mb-4 flex-grow-1">
-                                Varillajes físicos para auditoría e inventario en tanques.
+                                Registro de aforo de los depositos de combustibles.
                             </p>
                             <a href="{{ route('combustibles.chequeos_depositos.create') }}" class="btn btn-warning w-100 fw-black text-uppercase py-2 text-dark text-xs bg-orange border-0">
-                                <i class="fas fa-clipboard-check me-1"></i> Varillaje
+                                <i class="fas fa-clipboard-check me-1"></i> Aforo
                             </a>
                         </div>
                     </div>
