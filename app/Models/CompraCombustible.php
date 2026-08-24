@@ -52,7 +52,7 @@ class CompraCombustible extends Model
      */
     public function plantaDestino(): BelongsTo
     {
-        return $this->belongsTo(Planta::class, 'planta_destino_id');
+        return $this->belongsTo(Sedes::class, 'planta_destino_id');
     }
 
     /**
@@ -70,5 +70,9 @@ class CompraCombustible extends Model
     public function cisterna(){
         return $this->belongsTo(Vehiculo::class, 'cisterna');
     }
+
+    public function proveedor(){
+        return $this->belongsTo(Proveedor::class, 'proveedor');
+    }    
 
 }

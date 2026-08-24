@@ -177,7 +177,7 @@
                                         </td>
                                         <td>
                                             @if($viaje->tipo_planificacion == 4)
-                                                <small class="d-block fw-black text-primary text-uppercase"><i class="fas fa-handshake me-1"></i> Proveedor: {{ $viaje->compraCombustible->first()->proveedor->nombre ?? 'Sin especificar' }}</small>
+                                                <small class="d-block fw-black text-primary text-uppercase"><i class="fas fa-handshake me-1"></i> Proveedor: {{ $viaje->compraCombustible->first()->proveedor->nombre ?? 'PDVSA' }}</small>
                                                 <small class="d-block fw-bold text-muted">A: {{ $viaje->sede->nombre ?? 'Planta' }}</small>
                                                 <small class="d-block text-dark fw-bold" style="font-size: 10px;">SAP: {{ $viaje->codigo_sap ?? 'N/A' }}</small>
                                             @elseif($viaje->tipo_planificacion == 3)

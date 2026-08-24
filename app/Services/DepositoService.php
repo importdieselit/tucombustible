@@ -176,7 +176,7 @@ class DepositoService
     protected function notificarTanquesCriticos(array $tanques, string $turno, string $nombreSede)
     {
         //$idDestino = config('services.whatsapp.dev_group_id', 'WHATSAPP_DEV_GROUP_ID');
-        $idDestino = config('services.whatsapp.group_operaciones');
+        $idDestino = config('services.whatsapp.dev_group_id');
         //Log::info("Enviando alerta de WhatsApp para tanques críticos en la sede: {$nombreSede}, turno: {$turno}");
         //Log::info("idDestino: {$idDestino}, Tanques críticos: " . json_encode($tanques));
 
@@ -362,7 +362,7 @@ class DepositoService
         $msj .= "  └ 🟢 *Disponible Neto:* " . number_format($disponibleNetoMgo, 2, ',', '.') . " Lts\n";
 
         // 8. ENVÍO VÍA WHATSAPP (Alineado con notificarTanquesCriticos)
-        $idDestino = config('services.whatsapp.group_operaciones', 'WHATSAPP_DEV_GROUP_ID');
+        $idDestino = config('services.whatsapp.dev_group_id', 'WHATSAPP_DEV_GROUP_ID');
 
         try {
             $this->whatsappService->enviarMensaje($msj, $idDestino);

@@ -278,7 +278,7 @@
             <div class="col-md-6 text-end">
                 <label class="small text-muted fw-bold text-uppercase d-block mb-1">Destino e Inventario</label>
                 <div class="bg-light p-2 rounded">
-                    <p class="mb-1 text-dark"><strong>Sede Destino:</strong> {{ $viaje->sede->nombre ?? 'N/A' }}</p>
+                    <p class="mb-1 text-dark"><strong>Sede Destino:</strong> {{ $compra->plantaDestino->nombre ?? 'N/A' }}</p>
                     <p class="mb-0 text-dark"><strong>Cantidad Compra:</strong> 
                         <strong class="text-primary">{{ $compra ? number_format($compra->cantidad_litros, 0) : number_format($viaje->litros, 0) }} L</strong>
                     </p>

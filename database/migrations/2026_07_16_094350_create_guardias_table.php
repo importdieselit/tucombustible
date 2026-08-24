@@ -13,15 +13,19 @@ class CreateGuardiasTable extends Migration
      */
     public function up(): void
     {
-        Schema::create('guardias', function (Blueprint $table) {
+            // Limpieza preventiva si la tabla quedó creada tras un intento fallido
+            Schema::dropIfExists('guardias');
+
+            Schema::create('guardias', function (Blueprint $table) {
+            Schema::dropIfExists('guardias');
+
             $table->id();
-            $table->unsignedBigInteger('personal_id');
-            $table->foreign('personal_id')->references('id_personal')->on('personal')->onDelete('cascade');
+            $table->integer('personal_id'); // INT con signo para emparejar con personal.id_personal
             $table->date('fecha');
-            $table->enum('rol_guardia', ['Chofer', 'Ayudante de Chofer', 'Mecanico']); // El rol en el que ejerce la guardia
+            $table->enum('rol_guardia', ['Chofer', 'Ayudante de Chofer', 'Mecanico']);
             $table->timestamps();
-            
-            // Evitar que una persona tenga doble guardia asignada el mismo día
+
+            $table->foreign('personal_id')->references('id_personal')->on('personal')->onDelete('cascade');
             $table->unique(['personal_id', 'fecha']);
         });
     }

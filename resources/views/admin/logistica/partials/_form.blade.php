@@ -325,10 +325,10 @@
                         </div>
                         <div class="col-md-6">
                             <label class="small fw-bold text-muted text-uppercase">Sede de Recepción</label>
-                            <select name="sede_id" class="form-select border-orange fw-bold" required>
+                            <select name="planta_destino_id" class="form-select border-orange fw-bold" required>
                                 <option value="">-- Seleccione --</option>
                                 @foreach($sedes as $s)
-                                    <option value="{{ $s->id }}" {{ old('sede_id', $compra->planta_destino_id ?? ($viaje->sede_id ?? '')) == $s->id ? 'selected' : '' }}>{{ $s->nombre }}</option>
+                                    <option value="{{ $s->id }}" {{ old('planta_destino_id', $compra->planta_destino_id ?? ($viaje->sede_id ?? '')) == $s->id ? 'selected' : '' }}>{{ $s->nombre }}</option>
                                 @endforeach
                             </select>
                         </div>

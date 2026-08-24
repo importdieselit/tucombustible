@@ -19,7 +19,8 @@ class AbastecimientoTanqueRepository
                 'sede',
                 'tipoCombustible',
                 'usuario',
-                'precargaOrigen'
+                'precargaOrigen',
+                'compraCombustible'
             ])
             ->when($idSede, function ($query, $idSede) {
                 return $query->where('id_sede', $idSede);
@@ -28,9 +29,6 @@ class AbastecimientoTanqueRepository
             ->paginate($perPage);
     }
 
-    /**
-     * Busca un abastecimiento específico por su ID.
-     */
     public function buscarPorId(int $id): ?AbastecimientoTanque
     {
         return AbastecimientoTanque::with([
@@ -39,7 +37,8 @@ class AbastecimientoTanqueRepository
             'sede',
             'tipoCombustible',
             'usuario',
-            'precargaOrigen'
+            'precargaOrigen',
+            'compraCombustible'
         ])->find($id);
     }
 }

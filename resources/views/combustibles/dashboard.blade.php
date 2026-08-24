@@ -487,7 +487,7 @@
                             <div class="icon-shape bg-light rounded-circle p-3 mb-3 text-orange shadow-inner d-flex align-items-center justify-content-center">
                                 <i class="fas fa-truck-loading fa-2x"></i>
                             </div>
-                            <h5 class="fw-black text-uppercase text-dark mb-2 style-title">Precargas Vehículos</h5>
+                            <h5 class="fw-black text-uppercase text-dark mb-2 style-title">Precargas de Vehículos</h5>
                             <p class="text-muted text-xs mb-4 flex-grow-1">
                                 Precargas de combustible en vehículos de la flota.
                             </p>
@@ -505,7 +505,7 @@
                             <div class="icon-shape bg-light rounded-circle p-3 mb-3 text-orange shadow-inner d-flex align-items-center justify-content-center">
                                 <i class="fas fa-dolly-flatbed fa-2x"></i>
                             </div>
-                            <h5 class="fw-black text-uppercase text-dark mb-2 style-title">Abastecimiento Tanques</h5>
+                            <h5 class="fw-black text-uppercase text-dark mb-2 style-title">Abastecimiento de Tanques</h5>
                             <p class="text-muted text-xs mb-4 flex-grow-1">
                                 Trasegados de combustible desde vehículos hacia depósitos.
                             </p>

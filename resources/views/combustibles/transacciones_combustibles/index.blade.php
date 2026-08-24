@@ -29,6 +29,7 @@
                     <option value="despacho" {{ request('tipo_movimiento') == 'despacho' ? 'selected' : '' }}>DESPACHOS (SALIDAS)</option>
                     <option value="despacho_prepagado" {{ request('tipo_movimiento') == 'despacho_prepagado' ? 'selected' : '' }}>PREPAGADOS (SALIDAS)</option>
                     <option value="consumo_operativo" {{ request('tipo_movimiento') == 'consumo_operativo' ? 'selected' : '' }}>CONSUMOS OPERATIVOS</option>
+                    <option value="abastecimiento" {{ request('tipo_movimiento') == 'abastecimiento' ? 'selected' : '' }}>ABASTECIMIENTOS</option>
                     
                     {{-- Trasegados --}}
                     <option value="trasegado_interno" {{ request('tipo_movimiento') == 'trasegado_interno' ? 'selected' : '' }}>TRASEGADO INTERNO</option>
