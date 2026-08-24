@@ -519,7 +519,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/',                   [AdminClienteController::class, 'store'])->name('store');
             Route::get('/{id}/expediente',     [AdminClienteController::class, 'show'])->name('show');
             Route::get('/{id}/editar',         [AdminClienteController::class, 'edit'])->name('edit');
-            Route::put('/{id}',                [AdminClienteController::class, 'update'])->name('update');
+            Route::put('/{id}/update',                [AdminClienteController::class, 'update'])->name('update');
             Route::post('/clientes/{id}/generar-token', [AdminClienteController::class, 'generarToken'])->name('generar-token');
             Route::post('/clientes/documentos/store', [AdminClienteController::class, 'storeDocumento'])->name('documentos.store');
             Route::delete('/clientes/documentos/{id}/destroy', [AdminClienteController::class, 'destroyDocumento'])->name('documentos.destroy');
