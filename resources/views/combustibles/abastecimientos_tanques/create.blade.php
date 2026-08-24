@@ -42,9 +42,9 @@
                 @csrf
 
                 <div class="row g-3">
-                    {{-- SEDE --}}
+                    {{-- SEDE DESTINO --}}
                     <div class="col-md-6">
-                        <label class="small fw-bold text-uppercase text-muted mb-1" style="font-size: 11px;">Sede Operativa *</label>
+                        <label class="small fw-bold text-uppercase text-muted mb-1" style="font-size: 11px;">Sede Destino (Tanque) *</label>
                         <select name="id_sede" id="id_sede" class="form-select form-select-sm fw-bold text-dark @error('id_sede') is-invalid @enderror" style="font-size: 13px;" required>
                             <option value="">-- SELECCIONE SEDE --</option>
                             @foreach($sedes as $sede)
@@ -70,7 +70,7 @@
                         </div>
                     </div>
 
-                    {{-- SELECT: VEHÍCULO PRECARGADO --}}
+                    {{-- SELECT: VEHÍCULO PRECARGADO (GLOBAL / CUALQUIER SEDE) --}}
                     <div class="col-md-6" id="box_select_precarga">
                         <label class="small fw-bold text-uppercase text-muted mb-1" style="font-size: 11px;">Vehículo Precargado Origen *</label>
                         <select name="id_precarga_origen" id="id_precarga_origen" class="form-select form-select-sm fw-bold text-dark @error('id_precarga_origen') is-invalid @enderror" style="font-size: 13px;">
@@ -79,6 +79,7 @@
                                 @php
                                     $placaVehiculo = $precarga->vehiculo->placa ?? 'S/P';
                                     $nombreTipo = $precarga->tipoCombustible->nombre ?? 'N/A';
+                                    $nombreSedeOrigen = $precarga->sede->nombre ?? 'N/A';
                                 @endphp
                                 <option value="{{ $precarga->id }}" 
                                         data-litros="{{ $precarga->cantidad_litros }}"
@@ -94,7 +95,7 @@
                         </div>
                     </div>
 
-                    {{-- SELECT: COMPRA DE COMBUSTIBLE --}}
+                    {{-- SELECT: COMPRA DE COMBUSTIBLE (FILTRADO POR SEDE) --}}
                     <div class="col-md-6 d-none" id="box_select_compra">
                         <label class="small fw-bold text-uppercase text-muted mb-1" style="font-size: 11px;">Compra de Combustible Origen *</label>
                         <select name="id_compra_combustible" id="id_compra_combustible" class="form-select form-select-sm fw-bold text-dark @error('id_compra_combustible') is-invalid @enderror" style="font-size: 13px;">
@@ -199,7 +200,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function filtrarOrigenesPorSede() {
         const sedeId = sedeSelect.value;
 
-        // Filtrar Compras según planta_destino_id
+        // Únicamente se filtran las Compras según la sede destino seleccionada
         Array.from(selectCompra.options).forEach(option => {
             if (option.value === '') return;
             const compraSede = option.getAttribute('data-sede');
@@ -213,22 +214,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (selectCompra.options[selectCompra.selectedIndex] && 
             selectCompra.options[selectCompra.selectedIndex].style.display === 'none') {
             selectCompra.value = '';
-        }
-
-        // Filtrar Precargas según id_sede
-        Array.from(selectPrecarga.options).forEach(option => {
-            if (option.value === '') return;
-            const precargaSede = option.getAttribute('data-sede');
-            if (!sedeId || precargaSede === sedeId) {
-                option.style.display = '';
-            } else {
-                option.style.display = 'none';
-            }
-        });
-
-        if (selectPrecarga.options[selectPrecarga.selectedIndex] && 
-            selectPrecarga.options[selectPrecarga.selectedIndex].style.display === 'none') {
-            selectPrecarga.value = '';
         }
 
         actualizarEstadoCompleto();
