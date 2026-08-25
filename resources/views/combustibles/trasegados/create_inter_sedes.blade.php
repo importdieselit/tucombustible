@@ -137,6 +137,12 @@
                                 </div>
                             </div>
 
+                            {{-- OBSERVACIONES / JUSTIFICACIÓN --}}
+                            <div class="col-12 mt-3">
+                                <label class="small fw-bold text-uppercase text-muted mb-1" style="font-size: 12px;">Observaciones</label>
+                                <textarea name="observaciones" class="form-control fw-bold" rows="2" style="font-size: 13px;" placeholder="Opcional...">{{ old('observaciones') }}</textarea>
+                            </div>
+
                         </div>
                     </div>
                 </div>

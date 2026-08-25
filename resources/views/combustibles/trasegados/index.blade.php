@@ -104,112 +104,125 @@
     @endif
 
     {{-- TABLA HISTÓRICA --}}
-<div class="card shadow-sm border-0 mb-4" style="border-left: 4px solid #ff6600;">
-    <div class="card-header bg-white border-bottom py-3">
-        <h6 class="mb-0 fw-black text-uppercase small text-dark">
-            <i class="fas fa-list text-orange me-2"></i> Auditoría de Movimientos de Combustible
-        </h6> {{-- Corregido: antes cerraba con </h2> --}}
-    </div>
-    <div class="card-body p-0">
-        {{-- Se agrega max-height y overflow para asegurar AMBOS scrolls dentro de la tabla --}}
-        <div class="table-responsive" style="max-height: 600px; overflow-y: auto; overflow-x: auto;">
-            <table class="table table-hover align-middle mb-0" style="min-width: 1300px;">
-                <thead class="bg-light sticky-top" style="z-index: 1;"> {{-- sticky-top para congelar los encabezados al hacer scroll vertical --}}
-                    <tr class="text-uppercase text-muted" style="font-size: 12px; letter-spacing: 0.5px;">
-                        <th class="ps-4">Fecha y Hora</th>
-                        <th>Registrado Por</th>
-                        <th>Sede Origen</th>
-                        <th>Tanque Emisor</th>
-                        <th>Sede Destino / Aliado</th>
-                        <th>Tanque Receptor</th>
-                        <th>Combustible</th>
-                        <th class="pe-4 text-end">Litros Trasegados</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($trasegados as $trasegado)
-                        <tr>
-                            {{-- Fecha y Hora --}}
-                            <td class="ps-4 font-monospace small fw-bold text-dark">
-                                {{ $trasegado->created_at ? \Carbon\Carbon::parse($trasegado->created_at)->format('d/m/Y h:i A') : 'EXTERNO' }}
-                            </td>
+    <div class="card shadow-sm border-0 mb-4" style="border-left: 4px solid #ff6600;">
+        <div class="card-header bg-white border-bottom py-3">
+            <h6 class="mb-0 fw-black text-uppercase small text-dark">
+                <i class="fas fa-list text-orange me-2"></i> Auditoría de Movimientos de Combustible
+            </h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive" style="max-height: 600px; overflow-y: auto; overflow-x: auto;">
+                <table class="table table-hover align-middle mb-0" style="min-width: 1450px;">
+                    <thead class="bg-light sticky-top" style="z-index: 1;">
+                        <tr class="text-uppercase text-muted" style="font-size: 12px; letter-spacing: 0.5px;">
+                            <th class="ps-4">Fecha y Hora</th>
+                            <th>Registrado Por</th>
+                            <th>Sede Origen</th>
+                            <th>Tanque Emisor</th>
+                            <th>Sede Destino / Aliado</th>
+                            <th>Tanque Receptor</th>
+                            <th>Combustible</th>
+                            <th style="min-width: 220px; max-width: 320px;">Observaciones</th>
+                            <th class="pe-4 text-end">Litros Trasegados</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($trasegados as $trasegado)
+                            <tr>
+                                {{-- Fecha y Hora --}}
+                                <td class="ps-4 font-monospace small fw-bold text-dark">
+                                    {{ $trasegado->created_at ? \Carbon\Carbon::parse($trasegado->created_at)->format('d/m/Y h:i A') : 'EXTERNO' }}
+                                </td>
 
-                            {{-- Usuario que registró --}}
-                            <td>
-                                <span class="fw-bold text-dark" style="font-size: 13px;">
-                                    <i class="fas fa-user-circle text-muted me-1"></i> 
-                                    {{ $trasegado->usuario->name ?? $trasegado->user->name ?? 'Sistema' }}
-                                </span>
-                            </td>
-
-                            {{-- Sede Origen --}}
-                            <td>
-                                <span class="badge bg-light text-secondary border text-uppercase fw-bold" style="font-size: 11px;">
-                                    {{ $trasegado->sedeOrigen->nombre ?? 'EXTERNO' }}
-                                </span>
-                            </td>
-
-                            {{-- Tanque Emisor --}}
-                            <td>
-                                <span class="fw-bold text-dark" style="font-size: 13px;">
-                                    <i class="fas fa-database text-muted me-1"></i> {{ $trasegado->depositoOrigen->serial ?? 'Externo' }}
-                                </span>
-                            </td>
-
-                            {{-- Destino o Aliado Comercial --}}
-                            <td>
-                                @if($trasegado->aliado)
-                                    <span class="badge text-uppercase fw-black px-2 py-1" style="font-size: 11px; background-color: #e3f2fd; color: #0d47a1; border: 1px solid #bbdefb;">
-                                        <i class="fas fa-handshake me-1"></i> {{ $trasegado->aliado->nombre ?? $trasegado->aliado->razon_social ?? 'Aliado' }}
-                                    </span>
-                                @else
-                                    <span class="badge bg-light text-secondary border text-uppercase fw-bold" style="font-size: 11px;">
-                                        {{ $trasegado->sedeDestino->nombre ?? 'EXTERNO' }}
-                                    </span>
-                                @endif
-                            </td>
-
-                            {{-- Tanque Receptor --}}
-                            <td>
-                                @if($trasegado->depositoDestino)
+                                {{-- Usuario que registró --}}
+                                <td>
                                     <span class="fw-bold text-dark" style="font-size: 13px;">
-                                        <i class="fas fa-database text-muted me-1"></i> {{ $trasegado->depositoDestino->serial }}
+                                        <i class="fas fa-user-circle text-muted me-1"></i> 
+                                        {{ $trasegado->usuario->name ?? $trasegado->user->name ?? 'Sistema' }}
                                     </span>
-                                @else
-                                    <span class="text-muted small">Externo</span>
-                                @endif
-                            </td>
+                                </td>
 
-                            {{-- Tipo de Combustible --}}
-                            <td>
-                                @if(($trasegado->tipo_combustible_id ?? $trasegado->depositoOrigen->tipo_combustible_id ?? null) == 2)
-                                    <span class="badge bg-warning text-dark fw-bold text-uppercase" style="font-size: 10px; background-color: #ffa500 !important;">DIESEL</span>
-                                @else
-                                    <span class="badge bg-info text-white fw-bold text-uppercase" style="font-size: 10px; background-color: #00a8ff !important;">MGO</span>
-                                @endif
-                            </td>
+                                {{-- Sede Origen --}}
+                                <td>
+                                    <span class="badge bg-light text-secondary border text-uppercase fw-bold" style="font-size: 11px;">
+                                        {{ $trasegado->sedeOrigen->nombre ?? 'EXTERNO' }}
+                                    </span>
+                                </td>
 
-                            {{-- Volumen Neto --}}
-                            <td class="pe-4 text-end fw-black text-orange" style="font-size: 15px;">
-                                {{ number_format($trasegado->litros, 2, ',', '.') }} Lts
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="8" class="text-center py-5 text-muted small fw-bold">
-                                <i class="fas fa-info-circle me-1 text-warning"></i> No se han registrado movimientos de trasegado para los filtros seleccionados.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                                {{-- Tanque Emisor --}}
+                                <td>
+                                    <span class="fw-bold text-dark" style="font-size: 13px;">
+                                        <i class="fas fa-database text-muted me-1"></i> {{ $trasegado->depositoOrigen->serial ?? 'Externo' }}
+                                    </span>
+                                </td>
+
+                                {{-- Destino o Aliado Comercial --}}
+                                <td>
+                                    @if($trasegado->aliado)
+                                        <span class="badge text-uppercase fw-black px-2 py-1" style="font-size: 11px; background-color: #e3f2fd; color: #0d47a1; border: 1px solid #bbdefb;">
+                                            <i class="fas fa-handshake me-1"></i> {{ $trasegado->aliado->nombre ?? $trasegado->aliado->razon_social ?? 'Aliado' }}
+                                        </span>
+                                    @else
+                                        <span class="badge bg-light text-secondary border text-uppercase fw-bold" style="font-size: 11px;">
+                                            {{ $trasegado->sedeDestino->nombre ?? 'EXTERNO' }}
+                                        </span>
+                                    @endif
+                                </td>
+
+                                {{-- Tanque Receptor --}}
+                                <td>
+                                    @if($trasegado->depositoDestino)
+                                        <span class="fw-bold text-dark" style="font-size: 13px;">
+                                            <i class="fas fa-database text-muted me-1"></i> {{ $trasegado->depositoDestino->serial }}
+                                        </span>
+                                    @else
+                                        <span class="text-muted small">Externo</span>
+                                    @endif
+                                </td>
+
+                                {{-- Tipo de Combustible --}}
+                                <td>
+                                    @if(($trasegado->tipo_combustible_id ?? $trasegado->depositoOrigen->tipo_combustible_id ?? null) == 2)
+                                        <span class="badge bg-warning text-dark fw-bold text-uppercase" style="font-size: 10px; background-color: #ffa500 !important;">DIESEL</span>
+                                    @else
+                                        <span class="badge bg-info text-white fw-bold text-uppercase" style="font-size: 10px; background-color: #00a8ff !important;">MGO</span>
+                                    @endif
+                                </td>
+
+                                {{-- Observaciones (Multilínea adaptable) --}}
+                                <td style="min-width: 220px; max-width: 320px; white-space: normal;">
+                                    @if(!empty($trasegado->observaciones))
+                                        <div class="small text-secondary lh-sm">
+                                            <i class="fas fa-comment-alt text-muted me-1"></i>{{ $trasegado->observaciones }}
+                                        </div>
+                                    @else
+                                        <span class="text-muted small opacity-50">Sin observaciones</span>
+                                    @endif
+                                </td>
+
+                                {{-- Volumen Neto --}}
+                                <td class="pe-4 text-end fw-black text-orange" style="font-size: 15px;">
+                                    {{ number_format($trasegado->litros, 2, ',', '.') }} Lts
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="9" class="text-center py-5 text-muted small fw-bold">
+                                    <i class="fas fa-info-circle me-1 text-warning"></i> No se han registrado movimientos de trasegado para los filtros seleccionados.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
         </div>
+        @if($trasegados->hasPages())
+            <div class="card-footer bg-white border-top py-3 px-4">
+                {{ $trasegados->appends(request()->query())->links() }}
+            </div>
+        @endif
     </div>
-    @if($trasegados->hasPages())
-        <div class="card-footer bg-white border-top py-3 px-4">
-            {{ $trasegados->appends(request()->query())->links() }}
-        </div>
-    @endif
+
 </div>
 
 <style>
