@@ -56,9 +56,9 @@
         </div>
         <div class="card-body bg-light">
             {{-- KPI CARDS RÁPIDOS --}}
-            <div class="row g-3 mb-4">
+            <div class="row row-cols-1 row-cols-md-5 g-3 mb-4">
                 {{-- DIESEL --}}
-                <div class="col-md-3">
+                <div class="col">
                     <div class="bg-white p-3 rounded border border-gray-300 shadow-sm h-100 border-start border-4 border-primary">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
@@ -84,7 +84,7 @@
                 </div>
 
                 {{-- MGO (MARINO) --}}
-                <div class="col-md-3">
+                <div class="col">
                     <div class="bg-white p-3 rounded border border-gray-300 shadow-sm h-100 border-start border-4 border-warning" style="border-left-color: #ff6600 !important;">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
@@ -110,7 +110,7 @@
                 </div>
 
                 {{-- TOTAL COMPROMETIDO --}}
-                <div class="col-md-3">
+                <div class="col">
                     <div class="bg-white p-3 rounded border border-gray-300 shadow-sm h-100 border-start border-4 border-danger">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
@@ -131,7 +131,7 @@
                 </div>
 
                 {{-- INFRAESTRUCTURA DE TANQUES --}}
-                <div class="col-md-3">
+                <div class="col">
                     <div class="bg-white p-3 rounded border border-gray-300 shadow-sm h-100 border-start border-4 border-dark">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
@@ -147,6 +147,31 @@
                         <div class="mt-3 pt-2 text-xs font-bold text-muted">
                             <i class="fas fa-clock text-orange me-1"></i> Última medición: 
                             <span class="text-dark">{{ !empty($ultimaMedicion) ? \Carbon\Carbon::parse($ultimaMedicion)->format('d/m/Y h:i A') : 'Sin registros hoy' }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- DISPONIBILIDAD TEÓRICA MGO --}}
+                <div class="col">
+                    <div class="bg-white p-3 rounded border border-gray-300 shadow-sm h-100 border-start border-4 border-info">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-xs font-black text-gray-500 text-uppercase d-block">Disponibilidad Teórica MGO</span>
+                                <div class="text-2xl font-black text-dark mt-1">
+                                    {{ number_format($disponibilidadTeoricaMgo ?? 0, 0, ',', '.') }} <small class="fs-6 text-muted">Lts</small>
+                                </div>
+                            </div>
+                            <div class="rounded-circle bg-info bg-opacity-10 p-3 text-info">
+                                <i class="fas fa-calculator fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 pt-1 text-xs font-bold text-muted d-flex justify-content-between align-items-center flex-wrap gap-1">
+                            <span class="text-success me-1">
+                                <i class="fas fa-plus-circle me-1"></i>Compras: {{ number_format($totalComprasMgoTeorico ?? 0, 0, ',', '.') }} L
+                            </span>
+                            <span class="text-danger">
+                                <i class="fas fa-minus-circle me-1"></i>Ventas: {{ number_format($totalDespachosMgoTeorico ?? 0, 0, ',', '.') }} L
+                            </span>
                         </div>
                     </div>
                 </div>

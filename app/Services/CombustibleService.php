@@ -364,6 +364,21 @@ class CombustibleService
             ->orderBy('vp.fecha_hora_carga', 'desc')
             ->get();
 
+        // KPI: Disponibilidad Teórica de MGO (Compras - Despachos)
+        // Compras de MGO (ID 1 en tipos_combustible)
+        $totalComprasMgoTeorico = DB::table('compras_combustible')
+            ->where('tipo', 1)
+            ->when($sedeId, fn($q) => $q->where('planta_destino_id', $sedeId)) // Ajustar a 'id_sede' si tu columna se llama así
+            ->sum('cantidad_litros') ?? 0;
+
+        // Despachos de MGO (tipo_planificacion = 1 según lo indicado)
+        $totalDespachosMgoTeorico = DB::table('viajes')
+            ->where('tipo_planificacion', 1)
+            ->when($sedeId, fn($q) => $q->where('sede_id', $sedeId))
+            ->sum('litros') ?? 0;
+
+        $disponibilidadTeoricaMgo = $totalComprasMgoTeorico - $totalDespachosMgoTeorico;
+
         return [
             'general_fisico'          => $totalDisponibleGeneral,
             'general_comprometido'    => $totalComprometido,
@@ -382,6 +397,9 @@ class CombustibleService
             'precargasMgo'            => $precargasMgo,
             'porcentajeMgo'           => $capacidadMgo > 0 ? ($tanquesMgo / $capacidadMgo) * 100 : 0,
             'totalComprometidoMgo'     => $comprometidoMgo,
+            'disponibilidadTeoricaMgo' => $disponibilidadTeoricaMgo,
+            'totalComprasMgoTeorico'   => $totalComprasMgoTeorico,
+            'totalDespachosMgoTeorico' => $totalDespachosMgoTeorico,
 
             // Infraestructura y Tablas
             'tanquesActivos'          => $tanquesActivos,
