@@ -138,42 +138,92 @@ class CombustibleService
         return DB::transaction(function () use ($data) {
             $cantidadLitros = (float) ($data['cantidad_litros'] ?? 0);
             $userId = $data['user_id'] ?? (auth()->id() ?? 1);
+            $idSede = $data['sede_id'];
+            $tipoCombustibleId = $data['tipo_combustible_id'];
 
             if ($cantidadLitros <= 0) {
                 throw new Exception("La cantidad de litros a reversar debe ser mayor a cero.");
             }
 
+            // 1. Obtener tanques generales de la sede coincidentes con el tipo de combustible (excluyendo cupo prepagado)
+            $tanques = Deposito::where('id_sede', $idSede)
+                ->where('tipo_combustible_id', $tipoCombustibleId)
+                ->where(function ($q) {
+                    $q->where('llena_cupo_prepagado', false)
+                    ->orWhere('llena_cupo_prepagado', 0)
+                    ->orWhereNull('llena_cupo_prepagado');
+                })
+                ->lockForUpdate()
+                ->get();
+
+            if ($tanques->isEmpty()) {
+                throw new Exception("No hay tanques habilitados de este tipo de combustible para recibir el reverso en esta sede.");
+            }
+
+            // 2. Validar capacidad total disponible en los tanques aptos
+            $espacioTotal = $tanques->sum(function ($tanque) {
+                return max(0, (float)$tanque->capacidad_litros - (float)$tanque->nivel_actual_litros);
+            });
+
+            if ($cantidadLitros > $espacioTotal) {
+                throw new Exception("No hay capacidad suficiente en los tanques para recibir este reverso de combustible.");
+            }
+
+            // 3. Registrar la cabecera del reverso
             $reverso = $this->reversoRepo->create([
-                'sede_id'             => $data['sede_id'] ?? null,
-                'cliente_id'          => $data['cliente_id'],
-                'tipo_combustible_id' => $data['tipo_combustible_id'],
+                'sede_id'             => $idSede,
+                'cliente_id'          => null,
+                'tipo_combustible_id' => $tipoCombustibleId,
                 'cantidad_litros'     => $cantidadLitros,
-                'motivo_reverso'      => $data['motivo_reverso'] ?? 'Capacidad excedida en tanque del cliente',
+                'motivo_reverso'      => $data['motivo_reverso'] ?? 'Retorno de producto a depósitos generales',
                 'user_id'             => $userId,
             ]);
 
             $reversoId = is_object($reverso) ? $reverso->id : $reverso;
 
-            $this->saldoClienteRepo->registrar([
-                'cliente_id'           => $data['cliente_id'],
-                'tipo_combustible_id'  => $data['tipo_combustible_id'],
-                'tipo_accion'          => 'acumulado',
-                'cantidad_litros'      => $cantidadLitros,
-                'user_id'              => $userId,
-                'observaciones'        => "Saldo a favor generado por Reverso #{$reversoId}.",
-            ]);
+            // 4. Algoritmo de distribución equitativa (idéntico a AbastecimientoTanqueService)
+            $litrosRestantes = $cantidadLitros;
 
-            $this->ledgerRepo->registrar([
-                'sede_id'             => $data['sede_id'],
-                'tipo_combustible_id' => $data['tipo_combustible_id'],
-                'bolsa_tipo'          => 'general', 
-                'tipo_movimiento'     => 'reverso',
-                'cantidad_litros'     => abs($cantidadLitros),
-                'deposito_id'         => null,
-                'cliente_id'          => $data['cliente_id'],
-                'user_id'             => $userId,
-                'observaciones'       => "Ingreso por retorno de producto (Reverso #{$reversoId})."
-            ]);
+            while ($litrosRestantes > 0) {
+                $tanquesConEspacio = $tanques->filter(function ($tanque) {
+                    return ((float)$tanque->capacidad_litros - (float)$tanque->nivel_actual_litros) > 0.0001;
+                });
+
+                if ($tanquesConEspacio->isEmpty()) {
+                    break;
+                }
+
+                $numTanques = $tanquesConEspacio->count();
+                $cuotaPorTanque = $litrosRestantes / $numTanques;
+
+                foreach ($tanquesConEspacio as $tanque) {
+                    $espacioLibre = (float)$tanque->capacidad_litros - (float)$tanque->nivel_actual_litros;
+                    $aAsignar = min($cuotaPorTanque, $espacioLibre);
+
+                    if ($aAsignar > 0) {
+                        // Suma litros al depósito manteniendo su tipo_combustible_id intacto
+                        $tanque->increment('nivel_actual_litros', $aAsignar);
+                        $litrosRestantes -= $aAsignar;
+
+                        // Registro individual en el Ledger por tanque afectado
+                        $this->ledgerRepo->registrar([
+                            'sede_id'             => $idSede,
+                            'deposito_id'         => $tanque->id,
+                            'tipo_combustible_id' => $tanque->tipo_combustible_id,
+                            'bolsa_tipo'          => 'general',
+                            'tipo_movimiento'     => 'reverso',
+                            'cantidad_litros'     => $aAsignar,
+                            'user_id'             => $userId,
+                            'observaciones'       => "Ingreso por reverso #{$reversoId} hacia Depósito {$tanque->serial}",
+                        ]);
+                    }
+                }
+
+                if (round($litrosRestantes, 2) <= 0) {
+                    $litrosRestantes = 0;
+                    break;
+                }
+            }
 
             return $reversoId;
         });

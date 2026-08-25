@@ -478,7 +478,7 @@
                             </div>
                             <h5 class="fw-black text-uppercase text-dark mb-2 style-title">Reversos de Combustibles</h5>
                             <p class="text-muted text-xs mb-4 flex-grow-1">
-                                Reintegraciones de combustible en despachos operativos (le crea un Saldo Pendiente al cliente).
+                                Reintegraciones de combustible de despachos operativos a los tanques de la sede.
                             </p>
                             <a href="{{ route('combustibles.reversos_combustibles.index') }}" class="btn btn-warning w-100 fw-black text-uppercase py-2 text-dark text-xs bg-orange border-0">
                                 <i class="fas fa-history me-1"></i> Ver Reversos
