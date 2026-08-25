@@ -98,6 +98,7 @@ class VehiculoPrecargadoService
                 'id_usuario'          => $userId,
                 'cantidad_litros'     => $cantidadLitros,
                 'esta_precintado'     => $estaPrecintado,
+                'observaciones'       => $data['observaciones'] ?? null,
                 'fecha_hora_carga'    => now(),
                 'estatus'             => 0, // 0 = Cargada/Activa
             ];

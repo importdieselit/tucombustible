@@ -20,6 +20,7 @@ class VehiculoPrecargado extends Model
         'id_usuario',
         'cantidad_litros',
         'esta_precintado',
+        'observaciones',
         'fecha_hora_carga',
         'estatus',
     ];
