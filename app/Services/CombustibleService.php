@@ -175,7 +175,7 @@ class CombustibleService
                 'cliente_id'          => null,
                 'tipo_combustible_id' => $tipoCombustibleId,
                 'cantidad_litros'     => $cantidadLitros,
-                'motivo_reverso'      => $data['motivo_reverso'] ?? 'Retorno de producto a depósitos generales',
+                'motivo_reverso'      => $data['motivo_reverso'],
                 'user_id'             => $userId,
             ]);
 

@@ -122,7 +122,7 @@
 
                                 <td>
                                     <span class="text-muted small">
-                                        {{ $reverso->motivo_reverso ?? 'Sin motivo especificado' }}
+                                        {{ $reverso->motivo_reverso ?? 'Sin observaciones' }}
                                     </span>
                                 </td>
 
