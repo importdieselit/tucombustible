@@ -203,9 +203,9 @@ class DepositoService
         }
     }
 
-    public function registrarLlenado(int $clienteId, int $idDeposito, float $litros, int $choferClienteId, int $placaVehiculoId): int
+    public function registrarLlenado(int $clienteId, int $idDeposito, float $litros, int $choferClienteId, int $placaVehiculoId, ?string $observaciones = null): int
     {
-        return DB::transaction(function () use ($clienteId, $idDeposito, $litros, $choferClienteId, $placaVehiculoId) {
+        return DB::transaction(function () use ($clienteId, $idDeposito, $litros, $choferClienteId, $placaVehiculoId, $observaciones) {
             
             // 1. Validar el tanque seleccionado
             $deposito = Deposito::findOrFail($idDeposito);
@@ -237,6 +237,7 @@ class DepositoService
                 'placa_vehiculo_id'   => $placaVehiculoId,
                 'tipo_combustible_id' => $deposito->tipo_combustible_id,
                 'litros'              => $litros,
+                'observaciones'       => $observaciones,
             ]);
 
             // 5. Asentar Salida en el Ledger (Bolsa prepagada)
@@ -247,6 +248,7 @@ class DepositoService
                 'deposito_id'         => $deposito->id,
                 'referencia_id'       => $llenado->id,
                 'cliente_id'          => $clienteId,
+                'observaciones'       => $observaciones,
             ]);
 
             return $llenado->id;

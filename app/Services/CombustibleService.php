@@ -87,6 +87,7 @@ class CombustibleService
             'user_id'             => auth()->id() ?? 1,
             'referencia_id'       => $data['referencia_id'] ?? null,
             'cliente_id'          => $data['cliente_id'] ?? null,
+            'observaciones'       => $data['observaciones'] ?? null,
         ]);
     }
 

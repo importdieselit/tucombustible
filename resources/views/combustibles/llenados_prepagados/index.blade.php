@@ -102,6 +102,7 @@
                             <th>Depósito</th>
                             <th>Combustible</th>
                             <th class="pe-4 text-end">Litros Despachados</th>
+                            <th>Observaciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -146,6 +147,9 @@
                                 </td>
                                 <td class="pe-4 text-end fw-black text-dark" style="font-size: 15px;">
                                     {{ number_format($llenado->litros, 2, ',', '.') }} Lts
+                                </td>
+                                <td class="small text-muted">
+                                    {{ $llenado->observaciones ?? 'Sin Observaciones' }}
                                 </td>
                             </tr>
                         @empty
