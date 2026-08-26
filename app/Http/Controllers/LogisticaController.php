@@ -116,7 +116,13 @@ class LogisticaController extends Controller
         $plantasProveedor = collect();
         $muelles = DB::table('muelles')->orderBy('nombre')->get();
         $tabuladores = DB::table('tabulador_viaticos')
-        ->select('id', 'destino', 'tipo_viaje')
+        ->when($tipoPlanificacionId == 4, function ($q) {
+            return $q->where('es_planta', true);
+        })
+        ->when(in_array($tipoPlanificacionId, [1, 2]), function ($q) {
+            return $q->where('es_planta', false);
+        })
+        ->select('id', 'destino', 'tipo_viaje', 'es_planta')
         ->orderBy('destino', 'asc')
         ->get();
 
@@ -330,7 +336,13 @@ class LogisticaController extends Controller
         $plantasProveedor = ($tipoPlanificacionId == 4) ? DB::table('plantas')->get() : collect();
         $pedidosPendientes = ($tipoPlanificacionId == 1) ? Pedido::where('estado', 'pendiente')->with('cliente')->get() : collect();
         $tabuladores = DB::table('tabulador_viaticos')
-        ->select('id', 'destino', 'tipo_viaje')
+        ->when($tipoPlanificacionId == 4, function ($q) {
+            return $q->where('es_planta', true);
+        })
+        ->when(in_array($tipoPlanificacionId, [1, 2]), function ($q) {
+            return $q->where('es_planta', false);
+        })
+        ->select('id', 'destino', 'tipo_viaje', 'es_planta')
         ->orderBy('destino', 'asc')
         ->get();
 
