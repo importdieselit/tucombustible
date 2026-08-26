@@ -17,6 +17,7 @@ class HistorialLlenadoCupoPrepagado extends Model
         'placa_vehiculo_id',
         'tipo_combustible_id',
         'litros',
+        'observaciones',
     ];
 
     // Relaciones para cuando muestres el historial en las tablas de Livewire

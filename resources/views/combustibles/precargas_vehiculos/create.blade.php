@@ -125,6 +125,12 @@
                             <i class="fas fa-exclamation-triangle me-1"></i> La cantidad supera la capacidad máxima del vehículo (<span id="lbl_exceso_max">0</span> Lts).
                         </div>
                     </div>
+
+                    {{-- OBSERVACIONES --}}
+                    <div class="col-12">
+                        <label class="small fw-bold text-uppercase text-muted mb-1" style="font-size: 11px;">Observaciones (Opcional)</label>
+                        <textarea name="observaciones" id="observaciones" rows="2" class="form-control form-control-sm fw-bold text-dark @error('observaciones') is-invalid @enderror" style="font-size: 13px;" placeholder="Notas adicionales o detalles de la precarga...">{{ old('observaciones') }}</textarea>
+                    </div>
                 </div>
 
                 <hr class="my-4">

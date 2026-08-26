@@ -50,6 +50,7 @@ class VehiculoPrecargadoController extends Controller
             'id_deposito'         => 'required_if:esta_precintado,0|nullable|exists:depositos,id',
             'id_tipo_combustible' => 'required|exists:tipos_combustible,id',
             'cantidad_litros'     => 'required|numeric|gt:0',
+            'observaciones'       => 'nullable|string|max:500',
         ], [
             'id_vehiculo.required'         => 'Debe seleccionar un vehículo.',
             'id_sede.required'             => 'Debe seleccionar la sede correspondiente.',

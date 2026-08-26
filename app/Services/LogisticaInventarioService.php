@@ -23,8 +23,8 @@ class LogisticaInventarioService
     private function obtenerTipoCombustibleId(Viaje $viaje): int
     {
         return match ((int) $viaje->tipo_planificacion) {
-            1       => 2, // Planificación Diésel -> ID 2 en tipos_combustible
-            2       => 1, // Planificación MGO    -> ID 1 en tipos_combustible
+            1       => 1,
+            2       => 2, 
             default => (int) ($viaje->tipo ?? 2),
         };
     }

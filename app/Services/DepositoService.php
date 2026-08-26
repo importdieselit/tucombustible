@@ -176,7 +176,7 @@ class DepositoService
     protected function notificarTanquesCriticos(array $tanques, string $turno, string $nombreSede)
     {
         //$idDestino = config('services.whatsapp.dev_group_id', 'WHATSAPP_DEV_GROUP_ID');
-        $idDestino = config('services.whatsapp.group_operaciones');
+        $idDestino = config('services.whatsapp.dev_group_id');
         //Log::info("Enviando alerta de WhatsApp para tanques críticos en la sede: {$nombreSede}, turno: {$turno}");
         //Log::info("idDestino: {$idDestino}, Tanques críticos: " . json_encode($tanques));
 
@@ -203,9 +203,9 @@ class DepositoService
         }
     }
 
-    public function registrarLlenado(int $clienteId, int $idDeposito, float $litros, int $choferClienteId, int $placaVehiculoId): int
+    public function registrarLlenado(int $clienteId, int $idDeposito, float $litros, int $choferClienteId, int $placaVehiculoId, ?string $observaciones = null): int
     {
-        return DB::transaction(function () use ($clienteId, $idDeposito, $litros, $choferClienteId, $placaVehiculoId) {
+        return DB::transaction(function () use ($clienteId, $idDeposito, $litros, $choferClienteId, $placaVehiculoId, $observaciones) {
             
             // 1. Validar el tanque seleccionado
             $deposito = Deposito::findOrFail($idDeposito);
@@ -237,6 +237,7 @@ class DepositoService
                 'placa_vehiculo_id'   => $placaVehiculoId,
                 'tipo_combustible_id' => $deposito->tipo_combustible_id,
                 'litros'              => $litros,
+                'observaciones'       => $observaciones,
             ]);
 
             // 5. Asentar Salida en el Ledger (Bolsa prepagada)
@@ -247,6 +248,7 @@ class DepositoService
                 'deposito_id'         => $deposito->id,
                 'referencia_id'       => $llenado->id,
                 'cliente_id'          => $clienteId,
+                'observaciones'       => $observaciones,
             ]);
 
             return $llenado->id;
@@ -362,7 +364,7 @@ class DepositoService
         $msj .= "  └ 🟢 *Disponible Neto:* " . number_format($disponibleNetoMgo, 2, ',', '.') . " Lts\n";
 
         // 8. ENVÍO VÍA WHATSAPP (Alineado con notificarTanquesCriticos)
-        $idDestino = config('services.whatsapp.group_operaciones', 'WHATSAPP_DEV_GROUP_ID');
+        $idDestino = config('services.whatsapp.dev_group_id', 'WHATSAPP_DEV_GROUP_ID');
 
         try {
             $this->whatsappService->enviarMensaje($msj, $idDestino);

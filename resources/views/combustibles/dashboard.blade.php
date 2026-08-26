@@ -56,9 +56,9 @@
         </div>
         <div class="card-body bg-light">
             {{-- KPI CARDS RÁPIDOS --}}
-            <div class="row g-3 mb-4">
+            <div class="row row-cols-1 row-cols-md-5 g-3 mb-4">
                 {{-- DIESEL --}}
-                <div class="col-md-3">
+                <div class="col">
                     <div class="bg-white p-3 rounded border border-gray-300 shadow-sm h-100 border-start border-4 border-primary">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
@@ -84,7 +84,7 @@
                 </div>
 
                 {{-- MGO (MARINO) --}}
-                <div class="col-md-3">
+                <div class="col">
                     <div class="bg-white p-3 rounded border border-gray-300 shadow-sm h-100 border-start border-4 border-warning" style="border-left-color: #ff6600 !important;">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
@@ -110,7 +110,7 @@
                 </div>
 
                 {{-- TOTAL COMPROMETIDO --}}
-                <div class="col-md-3">
+                <div class="col">
                     <div class="bg-white p-3 rounded border border-gray-300 shadow-sm h-100 border-start border-4 border-danger">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
@@ -131,7 +131,7 @@
                 </div>
 
                 {{-- INFRAESTRUCTURA DE TANQUES --}}
-                <div class="col-md-3">
+                <div class="col">
                     <div class="bg-white p-3 rounded border border-gray-300 shadow-sm h-100 border-start border-4 border-dark">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
@@ -147,6 +147,31 @@
                         <div class="mt-3 pt-2 text-xs font-bold text-muted">
                             <i class="fas fa-clock text-orange me-1"></i> Última medición: 
                             <span class="text-dark">{{ !empty($ultimaMedicion) ? \Carbon\Carbon::parse($ultimaMedicion)->format('d/m/Y h:i A') : 'Sin registros hoy' }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- DISPONIBILIDAD TEÓRICA MGO --}}
+                <div class="col">
+                    <div class="bg-white p-3 rounded border border-gray-300 shadow-sm h-100 border-start border-4 border-info">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-xs font-black text-gray-500 text-uppercase d-block">Disponibilidad Teórica MGO</span>
+                                <div class="text-2xl font-black text-dark mt-1">
+                                    {{ number_format($disponibilidadTeoricaMgo ?? 0, 0, ',', '.') }} <small class="fs-6 text-muted">Lts</small>
+                                </div>
+                            </div>
+                            <div class="rounded-circle bg-info bg-opacity-10 p-3 text-info">
+                                <i class="fas fa-calculator fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 pt-1 text-xs font-bold text-muted d-flex justify-content-between align-items-center flex-wrap gap-1">
+                            <span class="text-success me-1">
+                                <i class="fas fa-plus-circle me-1"></i>Compras: {{ number_format($totalComprasMgoTeorico ?? 0, 0, ',', '.') }} L
+                            </span>
+                            <span class="text-danger">
+                                <i class="fas fa-minus-circle me-1"></i>Ventas: {{ number_format($totalDespachosMgoTeorico ?? 0, 0, ',', '.') }} L
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -379,7 +404,7 @@
                             <div class="icon-shape bg-light rounded-circle p-3 mb-3 text-orange shadow-inner d-flex align-items-center justify-content-center">
                                 <i class="fas fa-file-invoice-dollar fa-2x"></i>
                             </div>
-                            <h5 class="fw-black text-uppercase text-dark mb-2 style-title">Llenados por Cupos Prepagados</h5>
+                            <h5 class="fw-black text-uppercase text-dark mb-2 style-title">Llenados de Vehiculos de Clientes</h5>
                             <p class="text-muted text-xs mb-4 flex-grow-1">
                                 Llenados de vehículos de clientes en sedes de Impordiesel, asociados a cupos prepagados.
                             </p>
@@ -453,7 +478,7 @@
                             </div>
                             <h5 class="fw-black text-uppercase text-dark mb-2 style-title">Reversos de Combustibles</h5>
                             <p class="text-muted text-xs mb-4 flex-grow-1">
-                                Reintegraciones de combustible en despachos operativos (le crea un Saldo Pendiente al cliente).
+                                Reintegraciones de combustible de despachos operativos a los tanques de la sede.
                             </p>
                             <a href="{{ route('combustibles.reversos_combustibles.index') }}" class="btn btn-warning w-100 fw-black text-uppercase py-2 text-dark text-xs bg-orange border-0">
                                 <i class="fas fa-history me-1"></i> Ver Reversos
@@ -487,7 +512,7 @@
                             <div class="icon-shape bg-light rounded-circle p-3 mb-3 text-orange shadow-inner d-flex align-items-center justify-content-center">
                                 <i class="fas fa-truck-loading fa-2x"></i>
                             </div>
-                            <h5 class="fw-black text-uppercase text-dark mb-2 style-title">Precargas Vehículos</h5>
+                            <h5 class="fw-black text-uppercase text-dark mb-2 style-title">Precargas de Vehículos</h5>
                             <p class="text-muted text-xs mb-4 flex-grow-1">
                                 Precargas de combustible en vehículos de la flota.
                             </p>
@@ -505,7 +530,7 @@
                             <div class="icon-shape bg-light rounded-circle p-3 mb-3 text-orange shadow-inner d-flex align-items-center justify-content-center">
                                 <i class="fas fa-dolly-flatbed fa-2x"></i>
                             </div>
-                            <h5 class="fw-black text-uppercase text-dark mb-2 style-title">Abastecimiento Tanques</h5>
+                            <h5 class="fw-black text-uppercase text-dark mb-2 style-title">Abastecimiento de Tanques</h5>
                             <p class="text-muted text-xs mb-4 flex-grow-1">
                                 Trasegados de combustible desde vehículos hacia depósitos.
                             </p>

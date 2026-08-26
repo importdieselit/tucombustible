@@ -137,14 +137,8 @@ class TrasegadoService
             // =========================================================
             // 2. CONSTRUCCIÓN DE OBSERVACIONES Y REGISTRO EN BASE DE DATOS
             // =========================================================
-            $obsPartes = [];
-            if (!empty($entidadExterna)) {
-                $obsPartes[] = "Entidad/Aliado: {$entidadExterna}";
-            }
-            if (!empty($data['observaciones'])) {
-                $obsPartes[] = $data['observaciones'];
-            }
-            $observacionesFinales = !empty($obsPartes) ? implode(' | ', $obsPartes) : null;
+            
+            $observacionesFinales = !empty($data['observaciones']) ? $data['observaciones'] : null;
 
             // Inserción en la tabla trasegados
             $trasegadoId = DB::table('trasegados')->insertGetId([

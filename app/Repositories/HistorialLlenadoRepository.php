@@ -18,6 +18,7 @@ class HistorialLlenadoRepository
             'placa_vehiculo_id'   => $data['placa_vehiculo_id'],
             'tipo_combustible_id' => $data['tipo_combustible_id'],
             'litros'              => $data['litros'],
+            'observaciones'       => $data['observaciones'] ?? null,
         ]);
     }
 

@@ -235,7 +235,7 @@ class LogisticaService
         return [
             'tipo_planificacion'     => $data['tipo_planificacion'],
             'producto_flete'        => $data['tipo_planificacion'] == 3 ? ($data['producto_flete'] ?? null) : null,
-            'sede_id'               => $data['sede_id'] ?? null,
+            'sede_id'               => $data['sede_id'] ?? $data['planta_destino_id'] ?? null,
             'tipo'                  => $data['tipo_combustible_id'] ?? null, 
             'fecha_salida'          => $data['fecha_programada'],
             'destino_ciudad'        => $destinoFinal,
@@ -352,7 +352,7 @@ class LogisticaService
             'viaje_id'          => $viaje->id,
             'planta_proveedor_id' => $data['planta_proveedor_id'],
             'cantidad_litros'   => $totalLitros,
-            'planta_destino_id' => $data['sede_id'],
+            'planta_destino_id' => $data['planta_destino_id'],
             'fecha'             => $data['fecha_programada'],
             'tipo'              => $data['tipo_combustible_id'],
             'estatus'           => 'EN_TRANSITO',

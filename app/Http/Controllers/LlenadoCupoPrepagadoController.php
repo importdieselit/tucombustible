@@ -92,6 +92,7 @@ class LlenadoCupoPrepagadoController extends Controller
             'cliente_id'        => 'required|exists:clientes,id', // Tu input original
             'id_deposito'       => 'required|exists:depositos,id',
             'litros'            => 'required|numeric|min:0.01',
+            'observaciones' => 'nullable|string|max:500',
         ];
 
         $messages = [
@@ -176,7 +177,8 @@ class LlenadoCupoPrepagadoController extends Controller
                 (int) $request->input('id_deposito'),
                 (float) $request->input('litros'),
                 (int) $choferId,
-                (int) $placaId
+                (int) $placaId,
+                $request->input('observaciones')
             );
 
             DB::commit();

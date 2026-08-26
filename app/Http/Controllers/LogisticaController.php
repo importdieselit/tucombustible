@@ -31,7 +31,7 @@ class LogisticaController extends Controller
     public function index(Request $request)
     {
         // 1. Iniciamos la consulta con las relaciones necesarias
-        $query = Viaje::with(['tipoCombustible', 'detalles.cliente', 'sede', 'cisternaAcoplada', 'vehiculo', 'compraCombustible.planta']);
+        $query = Viaje::with(['tipoCombustible', 'detalles.cliente', 'sede', 'cisternaAcoplada', 'vehiculo', 'compraCombustible.planta', 'compraCombustible.proveedor']);
 
         // --- NUEVO: Filtro de Búsqueda por Cliente o RIF ---
         if ($request->filled('search_viaje')) {
@@ -173,6 +173,7 @@ class LogisticaController extends Controller
             'producto_flete'       => 'required_if:tipo_planificacion,3|string|max:255',
             'tipo_combustible_id' => 'required_unless:tipo_planificacion,3|nullable|exists:tipos_combustible,id',
             'planta_proveedor_id' => 'required_if:tipo_planificacion,4|nullable|exists:plantas,id',
+            'planta_destino_id'   => 'required_if:tipo_planificacion,4|nullable|exists:sedes,id',
             'fecha_programada'    => 'required|date',
             'destino_ciudad'      => 'required|array',
             'destino_ciudad.*'    => 'required|string',
@@ -343,7 +344,12 @@ class LogisticaController extends Controller
     {
         $request->validate([
             'tipo_planificacion'  => 'required|in:1,2,3,4',
+            'producto_flete'       => 'required_if:tipo_planificacion,3|string|max:255',
+            'tipo_combustible_id' => 'required_unless:tipo_planificacion,3|nullable|exists:tipos_combustible,id',
+            'planta_proveedor_id' => 'required_if:tipo_planificacion,4|nullable|exists:plantas,id',
+            'planta_destino_id'   => 'required_if:tipo_planificacion,4|nullable|exists:sedes,id',
             'fecha_programada'    => 'required|date',
+            'es_transporte_propio' => 'required|in:0,1',
         ]);
         
         try {

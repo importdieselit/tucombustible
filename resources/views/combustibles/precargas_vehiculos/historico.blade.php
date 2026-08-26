@@ -68,6 +68,7 @@
                             <th>Origen</th>
                             <th>Combustible</th>
                             <th>Estado</th>
+                            <th style="min-width: 200px; max-width: 300px;">Observaciones</th>
                             <th class="text-center">Usuario</th>
                             <th class="pe-4 text-end">Cantidad Litros</th>
                         </tr>
@@ -119,6 +120,16 @@
                                         <span class="badge bg-success text-white fw-bold text-uppercase" style="font-size: 10px;">EN PATIO (ACTIVA)</span>
                                     @else
                                         <span class="badge bg-secondary text-white fw-bold text-uppercase" style="font-size: 10px;">FINALIZADA</span>
+                                    @endif
+                                </td>
+
+                                <td style="min-width: 200px; max-width: 300px; white-space: normal;">
+                                    @if(!empty($precarga->observaciones))
+                                        <div class="small text-secondary lh-sm">
+                                            <i class="fas fa-comment-alt text-muted me-1"></i>{{ $precarga->observaciones }}
+                                        </div>
+                                    @else
+                                        <span class="text-muted small opacity-50">Sin observaciones</span>
                                     @endif
                                 </td>
 

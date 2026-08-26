@@ -62,88 +62,87 @@
         </div>
     @endif
 
-    {{-- TABLA HISTÓRICA --}}
-    <div class="card shadow-sm border-0 mb-4" style="border-left: 4px solid #ff6600;">
-        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
-            <h6 class="mb-0 fw-black text-uppercase small text-dark">
-                <i class="fas fa-history text-orange me-2"></i> Histórico de Trasegados
-            </h6>
-        </div>
-        <div class="card-body p-0">
-            {{-- SCROLL HORIZONTAL Y VERTICAL --}}
-            <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
-                <table class="table table-hover align-middle mb-0" style="min-width: 950px;">
-                    <thead class="bg-light sticky-top" style="top: 0; z-index: 1;">
-                        <tr class="text-uppercase text-muted" style="font-size: 12px; letter-spacing: 0.5px;">
-                            <th class="ps-4"># ID / Fecha</th>
-                            <th>Sede</th>
-                            <th>Vehículo Origen</th>
-                            <th>Depósito Destino</th>
-                            <th>Combustible</th>
-                            <th class="text-end">Cantidad</th>
-                            <th class="pe-4 text-center">Usuario</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($abastecimientos as $item)
-                            <tr>
-                                <td class="ps-4 font-monospace small fw-bold text-dark">
-                                    #{{ $item->id }}
-                                    <span class="d-block text-muted" style="font-size: 11px;">
-                                        {{ $item->fecha_hora ? $item->fecha_hora->format('d/m/Y h:i A') : '-' }}
-                                    </span>
-                                </td>
+    {{-- TARJETA CONTENEDORA DE TABLA --}}
+    <div class="card shadow-sm border border-secondary-subtle overflow-hidden">
+        <div class="table-responsive" style="max-height: 550px; overflow-y: auto;">
+            <table class="table table-hover table-bordered table-striped align-middle mb-0 w-100 border-secondary-subtle">
+                <thead class="bg-light sticky-top border-bottom" style="top: 0; z-index: 2;">
+                    <tr class="text-uppercase text-muted" style="font-size: 11px; letter-spacing: 0.5px;">
+                        <th class="ps-3 py-3 text-nowrap text-center" style="width: 140px;"># ID / Fecha</th>
+                        <th class="py-3 text-nowrap" style="width: 140px;">Sede</th>
+                        <th class="py-3 text-nowrap" style="width: 220px;">Origen (Vehículo / Compra)</th>
+                        <th class="py-3 text-nowrap text-center" style="width: 130px;">Combustible</th>
+                        <th class="py-3 text-end text-nowrap pe-3" style="width: 140px;">Cantidad</th>
+                        <th class="py-3">Observaciones</th>
+                        <th class="py-3 text-center text-nowrap" style="width: 140px;">Usuario</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($abastecimientos as $item)
+                        <tr>
+                            <td class="ps-3 text-center font-monospace small fw-bold text-dark text-nowrap">
+                                #{{ $item->id }}
+                                <span class="d-block text-muted fw-normal" style="font-size: 11px;">
+                                    {{ $item->fecha_hora ? $item->fecha_hora->format('d/m/Y h:i A') : '-' }}
+                                </span>
+                            </td>
 
-                                <td>
-                                    <span class="badge bg-light text-secondary border text-uppercase fw-bold" style="font-size: 11px;">
-                                        {{ $item->sede->nombre ?? 'N/A' }}
-                                    </span>
-                                </td>
+                            <td class="text-nowrap">
+                                <span class="badge bg-light text-secondary border text-uppercase fw-bold" style="font-size: 11px;">
+                                    {{ $item->sede->nombre ?? 'N/A' }}
+                                </span>
+                            </td>
 
-                                <td>
+                            <td class="text-nowrap">
+                                @if($item->id_vehiculo || $item->precargaOrigen)
                                     <span class="fw-black text-dark text-uppercase" style="font-size: 13px;">
-                                        <i class="fas fa-truck text-orange me-1"></i> {{ $item->vehiculo->placa ?? 'SIN PLACA' }}
+                                        <i class="fas fa-truck text-orange me-1"></i> {{ $item->vehiculo->placa ?? ($item->precargaOrigen->vehiculo->placa ?? 'SIN PLACA') }}
                                     </span>
-                                </td>
-
-                                <td>
-                                    <span class="fw-bold text-dark" style="font-size: 13px;">
-                                        <i class="fas fa-database text-secondary me-1"></i> {{ $item->deposito->serial ?? 'Depósito N/A' }}
+                                @elseif($item->id_compra_combustible)
+                                    <span class="fw-black text-dark text-uppercase" style="font-size: 13px;">
+                                        <i class="fas fa-shopping-cart text-success me-1"></i> Compra #{{ $item->id_compra_combustible }}
                                     </span>
-                                </td>
-
-                                <td>
-                                    @if(($item->id_tipo_combustible) == 2)
-                                        <span class="badge bg-warning text-dark fw-bold text-uppercase" style="font-size: 10px; background-color: #ffa500 !important;">DIESEL</span>
-                                    @else
-                                        <span class="badge bg-info text-white fw-bold text-uppercase" style="font-size: 10px; background-color: #00a8ff !important;">{{ $item->tipoCombustible->nombre ?? 'COMBUSTIBLE' }}</span>
+                                    @if($item->compraCombustible && ($item->compraCombustible->proveedor || $item->compraCombustible->otro_proveedor))
+                                        <small class="text-muted d-block fw-normal" style="font-size: 10px;">
+                                            Prov: {{ $item->compraCombustible->proveedor->nombre ?? $item->compraCombustible->otro_proveedor }}
+                                        </small>
                                     @endif
-                                </td>
+                                @else
+                                    <span class="text-muted small">N/A</span>
+                                @endif
+                            </td>
 
-                                <td class="text-end fw-black text-orange" style="font-size: 15px;">
-                                    {{ number_format($item->cantidad_litros, 2, ',', '.') }} Lts
-                                </td>
+                            <td class="text-center text-nowrap">
+                                @if(($item->id_tipo_combustible) == 2)
+                                    <span class="badge bg-warning text-dark fw-bold text-uppercase" style="font-size: 10px; background-color: #ffa500 !important;">DIESEL</span>
+                                @else
+                                    <span class="badge bg-info text-white fw-bold text-uppercase" style="font-size: 10px; background-color: #00a8ff !important;">{{ $item->tipoCombustible->nombre ?? 'COMBUSTIBLE' }}</span>
+                                @endif
+                            </td>
 
-                                <td class="pe-4 text-center small fw-bold text-muted" style="font-size: 11px;">
-                                    <i class="fas fa-user-circle me-1"></i> {{ $item->usuario->name ?? 'Sistema' }}
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="text-center py-5 text-muted small fw-bold">
-                                    <i class="fas fa-info-circle me-1 text-warning"></i> No se han registrado abastecimientos de tanques.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            
-            @if(method_exists($abastecimientos, 'hasPages') && $abastecimientos->hasPages())
-                <div class="p-3 bg-light border-top">
-                    {{ $abastecimientos->links() }}
-                </div>
-            @endif
+                            <td class="text-end fw-black text-orange text-nowrap pe-3" style="font-size: 14px;">
+                                {{ number_format($item->cantidad_litros, 2, ',', '.') }} Lts
+                            </td>
+
+                            <td>
+                                <span class="text-muted small" style="font-size: 12px; line-height: 1.2; display: block;">
+                                    {{ $item->observaciones ?: 'Sin observaciones' }}
+                                </span>
+                            </td>
+
+                            <td class="text-center small fw-bold text-muted text-nowrap" style="font-size: 11px;">
+                                <i class="fas fa-user-circle me-1"></i> {{ $item->usuario->name ?? 'Sistema' }}
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted small fw-bold">
+                                <i class="fas fa-info-circle me-1 text-warning"></i> No se han registrado abastecimientos de tanques.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -151,5 +150,10 @@
 <style>
     .text-orange { color: #ff6600 !important; }
     .fw-black { font-weight: 900; }
+    /* Ajustes visuales para bordes de celdas */
+    .table-bordered th, 
+    .table-bordered td {
+        border-color: #dee2e6 !important;
+    }
 </style>
 @endsection

@@ -13,13 +13,17 @@ class CreateInventarioStockTable extends Migration
      */
     public function up()
     {
-        Schema::create('inventario_stock', function (Blueprint $table) {
+            Schema::create('inventario_stock', function (Blueprint $table) {
             $table->id();
+            
+            // BIGINT UNSIGNED para coincidir con inventario.id
             $table->foreignId('inventario_id')->constrained('inventario');
+            
+            // Si la tabla ubicaciones usa el id standard de Laravel (BIGINT UNSIGNED)
             $table->foreignId('ubicacion_id')->constrained('ubicaciones');
             
-            $table->decimal('cantidad_actual', 12, 4); // Soporta litros, kilos o unidades (Sin redondeo)
-            $table->decimal('cantidad_reservada', 12, 4)->default(0); // Material apartado para una Orden de Trabajo
+            $table->decimal('cantidad_actual', 12, 4);
+            $table->decimal('cantidad_reservada', 12, 4)->default(0);
             
             $table->string('lote')->nullable();
             $table->date('fecha_vencimiento')->nullable();

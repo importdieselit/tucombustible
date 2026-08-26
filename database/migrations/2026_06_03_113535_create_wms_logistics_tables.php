@@ -9,20 +9,28 @@ return new class extends Migration
     public function up()
     {
         // ==========================================================
-        // FASE 1: CREACIÓN DE TABLAS Y CAMPOS MAESTROS (Sin restricciones)
+        // LIMPIEZA PREVENTIVA
+        // Evita el error SQL 1050 si la migración se reintenta tras un fallo
+        // ==========================================================
+        Schema::dropIfExists('historial_movimientos_inventario');
+        Schema::dropIfExists('inventario_despachos');
+        Schema::dropIfExists('inventario_asociados');
+        Schema::dropIfExists('inventario_equivalentes');
+
+        // ==========================================================
+        // FASE 1: CREACIÓN DE TABLAS Y CAMPOS MAESTROS
         // ==========================================================
 
         Schema::create('inventario_equivalentes', function (Blueprint $table) {
             $table->id();
-            // Si inventario.id es INT, usamos unsignedInteger en lugar de foreignId
             $table->unsignedBigInteger('inventario_id');
             $table->unsignedBigInteger('equivalente_id');
         });
 
         Schema::create('inventario_asociados', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('inventario_id'); // Tipo INT para emparejar con tu catálogo
-            $table->unsignedBigInteger('modelo_vehiculo_id'); // Ajustar si 'modelos' usa BIGINT o INT
+            $table->unsignedBigInteger('inventario_id');
+            $table->unsignedBigInteger('modelo_vehiculo_id');
             $table->string('nivel_prioridad', 20)->default('ALTA'); 
             $table->timestamps();
         });
@@ -41,15 +49,15 @@ return new class extends Migration
             $table->timestamps();
         });
 
-         Schema::create('historial_movimientos_inventario', function (Blueprint $table) {
+        Schema::create('historial_movimientos_inventario', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('inventario_id')->nullable(); // No es obligatorio porque algunos movimientos pueden ser de inventario no registrado
-            $table->unsignedBigInteger('ubicacion_id')->nullable(); // No es obligatorio porque algunos movimientos pueden ser de inventario en tránsito o sin ubicación definida
-            $table->unsignedBigInteger('usuario_id')->nullable(); // No es obligatorio porque algunos movimientos pueden ser automáticos o por sistema
+            $table->unsignedBigInteger('inventario_id')->nullable();
+            $table->unsignedBigInteger('ubicacion_id')->nullable();
+            $table->unsignedBigInteger('usuario_id')->nullable();
             
             $table->enum('tipo_movimiento', ['ENTRADA', 'SALIDA', 'TRASLADO']);
             $table->enum('tipo_operacion', ['COMPRA', 'DESPACHO', 'DEVOLUCION', 'AJUSTE_CONTEO', 'DESECHO', 'INICIAL']);
-            $table->string('documento_referencia')->nullable(); // Ej: OC-001, OT-4500
+            $table->string('documento_referencia')->nullable();
             
             $table->decimal('cantidad_previa', 12, 4);
             $table->decimal('cantidad_movilizada', 12, 4);
@@ -61,16 +69,14 @@ return new class extends Migration
             $table->index(['inventario_id', 'created_at']);
         });
 
-
         // ==========================================================
         // FASE 2: ASIGNACIÓN DE LLAVES FORÁNEAS (Foreign Keys)
         // ==========================================================
-        // Esta fase se ejecuta únicamente cuando TODAS las tablas de la fase 1 ya existen en el motor de BD.
 
         Schema::table('inventario_equivalentes', function (Blueprint $table) {
             $table->foreign('inventario_id')->references('id')->on('inventario')->onDelete('cascade');
             $table->foreign('equivalente_id')->references('id')->on('inventario')->onDelete('cascade');
-            $table->unique(['inventario_id', 'equivalente_id'], 'uq_inventario_equiv'); // Índice único con nombre explícito
+            $table->unique(['inventario_id', 'equivalente_id'], 'uq_inventario_equiv');
         });
 
         Schema::table('inventario_asociados', function (Blueprint $table) {
@@ -94,11 +100,6 @@ return new class extends Migration
 
     public function down()
     {
-        // ==========================================================
-        // REVERSA: ELIMINAR LLAVES FORÁNEAS PRIMERO
-        // ==========================================================
-        // Si no eliminas las restricciones primero, MySQL impedirá borrar las tablas.
-
         Schema::table('inventario_despachos', function (Blueprint $table) {
             $table->dropForeign(['inventario_id']);
             $table->dropForeign(['ubicacion_origen_id']);
@@ -115,13 +116,13 @@ return new class extends Migration
             $table->dropForeign(['inventario_id']);
             $table->dropForeign(['equivalente_id']);
         });
+
         Schema::table('historial_movimientos_inventario', function (Blueprint $table) {
             $table->dropForeign(['inventario_id']);
             $table->dropForeign(['ubicacion_id']);
             $table->dropForeign(['usuario_id']);
         });
 
-        // Ahora que las restricciones no existen, podemos borrar las tablas con seguridad
         Schema::dropIfExists('inventario_despachos');
         Schema::dropIfExists('inventario_asociados');
         Schema::dropIfExists('inventario_equivalentes');

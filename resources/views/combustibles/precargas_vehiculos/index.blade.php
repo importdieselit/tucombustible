@@ -86,6 +86,7 @@
                             <th>Origen del Producto</th>
                             <th>Combustible</th>
                             <th>Tipo Precarga</th>
+                            <th style="min-width: 200px; max-width: 300px;">Observaciones</th>
                             <th class="text-end">Cantidad Cargada</th>
                             <th class="text-center">Usuario</th>
                             <th class="pe-4 text-center">Acciones</th>
@@ -142,6 +143,17 @@
                                         <span class="badge bg-secondary text-white text-uppercase fw-bold" style="font-size: 10px;">
                                             <i class="fas fa-warehouse me-1"></i> Depósito Interno
                                         </span>
+                                    @endif
+                                </td>
+
+                                {{-- Observaciones (Multilínea adaptable) --}}
+                                <td style="min-width: 200px; max-width: 300px; white-space: normal;">
+                                    @if(!empty($precarga->observaciones))
+                                        <div class="small text-secondary lh-sm">
+                                            <i class="fas fa-comment-alt text-muted me-1"></i>{{ $precarga->observaciones }}
+                                        </div>
+                                    @else
+                                        <span class="text-muted small opacity-50">Sin observaciones</span>
                                     @endif
                                 </td>
 

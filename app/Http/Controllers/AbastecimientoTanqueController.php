@@ -5,9 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Services\AbastecimientoTanqueService;
 use App\Models\Sedes;
-use App\Models\Vehiculo;
-use App\Models\Deposito;
-use App\Models\TipoCombustible;
+use App\Models\VehiculoPrecargado;
+use App\Models\CompraCombustible;
+use App\Models\AbastecimientoTanque;
 use Illuminate\Support\Facades\Session;
 use Exception;
 
@@ -32,36 +32,41 @@ class AbastecimientoTanqueController extends Controller
     {
         $sedes = Sedes::orderBy('nombre')->get();
 
-        // Solo vehículos de tipo 1, 2 y 5
-        $vehiculos = Vehiculo::whereIn('tipo', [1, 2, 5])
-            ->orderBy('placa')
+        // Precargas activas (estatus = 0)
+        $precargas = VehiculoPrecargado::with(['vehiculo', 'tipoCombustible', 'sede'])
+            ->where('estatus', 0)
             ->get();
 
-        $tiposCombustible = TipoCombustible::all();
+        // IDs de compras que ya fueron utilizadas en un abastecimiento previo
+        $comprasUtilizadas = AbastecimientoTanque::whereNotNull('id_compra_combustible')
+            ->pluck('id_compra_combustible');
 
-        $depositos = Deposito::when($request->id_sede, function ($query, $idSede) {
-            return $query->where('id_sede', $idSede);
-        })->get();
+        // Solo compras disponibles (no utilizadas en abastecimientos)
+        $compras = CompraCombustible::with(['proveedor'])
+            ->whereNotIn('id', $comprasUtilizadas)
+            ->where('fecha', '>=', now()->subDays(7))
+            ->orderByDesc('fecha')
+            ->get();
 
-        return view('combustibles.abastecimientos_tanques.create', compact('sedes', 'vehiculos', 'depositos', 'tiposCombustible'));
+        return view('combustibles.abastecimientos_tanques.create', compact('sedes', 'precargas', 'compras'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'id_sede'             => 'required|exists:sedes,id',
-            'id_vehiculo'         => 'required|exists:vehiculos,id',
-            'id_deposito'         => 'required|exists:depositos,id',
-            'id_tipo_combustible' => 'required|exists:tipos_combustible,id',
-            'cantidad_litros'     => 'required|numeric|gt:0',
-            'observaciones'       => 'nullable|string|max:500',
+            'id_sede'               => 'required|exists:sedes,id',
+            'tipo_origen'           => 'required|in:precarga,compra',
+            'id_precarga_origen'    => 'required_if:tipo_origen,precarga|nullable|exists:vehiculos_precargados,id',
+            'id_compra_combustible' => 'required_if:tipo_origen,compra|nullable|exists:compras_combustible,id',
+            'cantidad_litros'       => 'required|numeric|gt:0',
+            'observaciones'         => 'nullable|string|max:500',
         ], [
-            'id_sede.required'             => 'Debe seleccionar una sede operativa.',
-            'id_vehiculo.required'         => 'Debe seleccionar el vehículo origen.',
-            'id_deposito.required'         => 'Debe seleccionar el depósito destino.',
-            'id_tipo_combustible.required' => 'Debe seleccionar el tipo de combustible.',
-            'cantidad_litros.required'     => 'La cantidad en litros es obligatoria.',
-            'cantidad_litros.gt'           => 'La cantidad a trasegar debe ser mayor a cero.',
+            'id_sede.required'              => 'Debe seleccionar una sede operativa.',
+            'tipo_origen.required'          => 'Debe seleccionar el tipo de origen del abastecimiento.',
+            'id_precarga_origen.required_if' => 'Debe seleccionar un vehículo precargado origen.',
+            'id_compra_combustible.required_if' => 'Debe seleccionar una compra de combustible origen.',
+            'cantidad_litros.required'      => 'La cantidad en litros es obligatoria.',
+            'cantidad_litros.gt'            => 'La cantidad a trasegar debe ser mayor a cero.',
         ]);
 
         $data['id_usuario'] = auth()->id();
@@ -69,7 +74,7 @@ class AbastecimientoTanqueController extends Controller
         try {
             $this->abastecimientoService->registrarAbastecimiento($data);
 
-            Session::flash('success', '¡Abastecimiento de tanque registrado exitosamente!');
+            Session::flash('success', '¡Abastecimiento de tanque registrado y distribuido exitosamente!');
             return redirect()->route('combustibles.abastecimientos_tanques.index');
 
         } catch (Exception $e) {

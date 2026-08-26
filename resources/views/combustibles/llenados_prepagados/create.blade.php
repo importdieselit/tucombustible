@@ -171,6 +171,16 @@
                                 </div>
                             </div>
 
+                            {{-- OBSERVACIONES --}}
+                            <div class="col-12">
+                                <label class="small fw-bold text-uppercase text-muted mb-1" style="font-size: 12px;">Observaciones</label>
+                                <textarea name="observaciones" 
+                                        class="form-control fw-bold text-dark" 
+                                        rows="2" 
+                                        style="font-size: 13px;" 
+                                        placeholder="Notas u observaciones adicionales">{{ old('observaciones') }}</textarea>
+                            </div>
+
                         </div>
                     </div>
                 </div>
