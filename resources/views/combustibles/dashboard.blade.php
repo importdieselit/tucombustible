@@ -404,7 +404,7 @@
                             <div class="icon-shape bg-light rounded-circle p-3 mb-3 text-orange shadow-inner d-flex align-items-center justify-content-center">
                                 <i class="fas fa-file-invoice-dollar fa-2x"></i>
                             </div>
-                            <h5 class="fw-black text-uppercase text-dark mb-2 style-title">Llenados por Cupos Prepagados</h5>
+                            <h5 class="fw-black text-uppercase text-dark mb-2 style-title">Llenados de Vehiculos de Clientes</h5>
                             <p class="text-muted text-xs mb-4 flex-grow-1">
                                 Llenados de vehículos de clientes en sedes de Impordiesel, asociados a cupos prepagados.
                             </p>
