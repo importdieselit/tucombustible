@@ -295,7 +295,7 @@
                                     @endphp
                                     {{-- Muestra el Proveedor usando Nullsafe Operator (?->) --}}
                                     <small class="d-block fw-black text-primary text-uppercase">
-                                        <i class="fas fa-handshake me-1"></i> Proveedor: {{ $compra?->proveedor?->nombre ?? 'PDVSA' }}
+                                        <i class="fas fa-handshake me-1"></i> Proveedor: PDVSA
                                     </small>
                                     <small class="d-block fw-bold text-muted">A: {{ $viaje->sede->nombre ?? 'Planta' }}</small>
                                     <small class="d-block text-dark fw-bold" style="font-size: 10px;">SAP: {{ $viaje->codigo_sap ?? 'N/A' }}</small>
@@ -331,6 +331,7 @@
                                         @if($viaje->status === 'PROGRAMADO')
                                             <a href="{{ route('logistica.edit', $viaje->id) }}" class="btn btn-sm btn-light border shadow-sm" title="Editar">
                                                 <i class="fas fa-edit text-warning"></i>
+                                      
                                             </a>
                                         @endif
 
