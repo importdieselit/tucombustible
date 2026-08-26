@@ -1325,9 +1325,10 @@ public function updateGuiaData(Request $request, $viajeId)
         // 2. Procesamiento y Enriquecimiento de la data
         $viajesDelDia = $viajesRaw->map(function($v) {
             $destinoRaw = strtoupper($v->destino_ciudad);
-            $v->es_flete = str_contains($destinoRaw, 'FLETE');
-            $v->es_despacho = is_null($v->litros);
-            $v->es_carga = !$v->es_despacho && !$v->es_flete;
+            // Clasificación por Tipo de Planificación
+            $v->es_flete    = $v->tipo_planificacion == 3;
+            $v->es_carga    = $v->tipo_planificacion == 4;
+            $v->es_despacho = in_array($v->tipo_planificacion, [1, 2]);
 
             // Limpieza de destino
             $v->destino_limpio = trim(str_ireplace(['FLETE', ' ->'], ['', ''], $v->destino_ciudad));
