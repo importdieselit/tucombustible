@@ -15,11 +15,9 @@ class VehiculoPrecargado extends Model
     protected $fillable = [
         'id_vehiculo',
         'id_sede',
-        'id_deposito',
         'id_tipo_combustible',
         'id_usuario',
         'cantidad_litros',
-        'esta_precintado',
         'observaciones',
         'fecha_hora_carga',
         'estatus',
@@ -29,7 +27,6 @@ class VehiculoPrecargado extends Model
         'fecha_hora_carga' => 'datetime',
         'estatus'          => 'integer',
         'cantidad_litros'  => 'float',
-        'esta_precintado'  => 'boolean',
     ];
 
     public function vehiculo(): BelongsTo
@@ -40,11 +37,6 @@ class VehiculoPrecargado extends Model
     public function sede(): BelongsTo
     {
         return $this->belongsTo(Sedes::class, 'id_sede');
-    }
-
-    public function deposito(): BelongsTo
-    {
-        return $this->belongsTo(Deposito::class, 'id_deposito');
     }
 
     public function tipoCombustible(): BelongsTo

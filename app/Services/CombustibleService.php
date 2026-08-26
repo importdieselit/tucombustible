@@ -398,22 +398,20 @@ class CombustibleService
 
         // 8. LISTA DE VEHÍCULOS PRECARGADOS ACTIVOS (estatus = 0)
         $vehiculosPrecargados = DB::table('vehiculos_precargados as vp')
-            ->leftJoin('vehiculos as v', 'vp.id_vehiculo', '=', 'v.id')
-            ->leftJoin('sedes as s', 'vp.id_sede', '=', 's.id')
-            ->leftJoin('tipos_combustible as tc', 'vp.id_tipo_combustible', '=', 'tc.id')
-            ->leftJoin('depositos as d', 'vp.id_deposito', '=', 'd.id')
-            ->select(
-                'vp.*',
-                'v.placa',
-                'v.modelo',
-                's.nombre as nombre_sede',
-                'tc.nombre as nombre_combustible',
-                'd.serial as tanque_origen'
-            )
-            ->where('vp.estatus', 0)
-            ->when($sedeId, fn($q) => $q->where('vp.id_sede', $sedeId))
-            ->orderBy('vp.fecha_hora_carga', 'desc')
-            ->get();
+        ->leftJoin('vehiculos as v', 'vp.id_vehiculo', '=', 'v.id')
+        ->leftJoin('sedes as s', 'vp.id_sede', '=', 's.id')
+        ->leftJoin('tipos_combustible as tc', 'vp.id_tipo_combustible', '=', 'tc.id')
+        ->select(
+            'vp.*',
+            'v.placa',
+            'v.modelo',
+            's.nombre as nombre_sede',
+            'tc.nombre as nombre_combustible'
+        )
+        ->where('vp.estatus', 0)
+        ->when($sedeId, fn($q) => $q->where('vp.id_sede', $sedeId))
+        ->orderBy('vp.fecha_hora_carga', 'desc')
+        ->get();
 
         // KPI: Disponibilidad Teórica de MGO (Compras - Despachos)
         // Compras de MGO (ID 1 en tipos_combustible)

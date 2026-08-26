@@ -8,7 +8,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class VehiculoPrecargadoRepository
 {
-
     public function crear(array $data): VehiculoPrecargado
     {
         return VehiculoPrecargado::create($data);
@@ -19,7 +18,6 @@ class VehiculoPrecargadoRepository
         return VehiculoPrecargado::with([
                 'vehiculo', 
                 'sede', 
-                'deposito', 
                 'tipoCombustible',
                 'usuario'
             ])
@@ -36,7 +34,6 @@ class VehiculoPrecargadoRepository
         return VehiculoPrecargado::with([
                 'vehiculo', 
                 'sede', 
-                'deposito', 
                 'tipoCombustible',
                 'usuario'
             ])
@@ -52,9 +49,6 @@ class VehiculoPrecargadoRepository
         return VehiculoPrecargado::findOrFail($id);
     }
 
-    /**
-     * Cambia el estatus de una precarga (ej. 0 = Activa, 1 = Finalizada/Procesada).
-     */
     public function cambiarEstatus(int $id, int $estatus): bool
     {
         $precarga = $this->buscarPorId($id);

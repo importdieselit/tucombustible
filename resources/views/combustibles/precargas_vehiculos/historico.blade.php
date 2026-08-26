@@ -59,13 +59,12 @@
         </div>
         <div class="card-body p-0">
             <div class="table-responsive" style="max-height: 560px; overflow-y: auto;">
-                <table class="table table-hover align-middle mb-0" style="min-width: 1050px;">
+                <table class="table table-hover align-middle mb-0" style="min-width: 950px;">
                     <thead class="bg-light sticky-top" style="z-index: 2;">
                         <tr class="text-uppercase text-muted" style="font-size: 12px; letter-spacing: 0.5px;">
                             <th class="ps-4"># ID / Fecha Carga</th>
                             <th>Vehículo</th>
                             <th>Sede</th>
-                            <th>Origen</th>
                             <th>Combustible</th>
                             <th>Estado</th>
                             <th style="min-width: 200px; max-width: 300px;">Observaciones</th>
@@ -93,18 +92,6 @@
                                     <span class="badge bg-light text-secondary border text-uppercase fw-bold" style="font-size: 11px;">
                                         {{ $precarga->sede->nombre ?? 'N/A' }}
                                     </span>
-                                </td>
-
-                                <td>
-                                    @if($precarga->esta_precintado)
-                                        <span class="badge bg-primary text-white text-uppercase fw-bold" style="font-size: 10px;">
-                                            <i class="fas fa-lock me-1"></i> Compra Precintada
-                                        </span>
-                                    @else
-                                        <span class="fw-bold text-dark" style="font-size: 12px;">
-                                            <i class="fas fa-database text-secondary me-1"></i> {{ $precarga->deposito->serial ?? 'Depósito' }}
-                                        </span>
-                                    @endif
                                 </td>
 
                                 <td>
@@ -164,7 +151,6 @@
     .text-orange { color: #ff6600 !important; }
     .fw-black { font-weight: 900; }
 
-    /* Scrollbar personalizada */
     .table-responsive::-webkit-scrollbar {
         width: 6px;
         height: 6px;
