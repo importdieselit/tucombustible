@@ -72,7 +72,7 @@ class CompraCombustible extends Model
     }
 
     public function proveedor(){
-        return $this->belongsTo(Proveedor::class, 'proveedor');
+        return $this->belongsTo(Proveedor::class, 'planta_proveedor_id');
     }    
 
 }
