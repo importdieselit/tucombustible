@@ -420,17 +420,28 @@
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-md-12 mb-2">
-                            <label class="small fw-bold text-muted uppercase">Cliente (Opcional)</label>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="small fw-bold text-muted uppercase mb-0">Cliente (Opcional)</label>
+                                <button type="button" class="btn btn-link btn-sm p-0 text-orange fw-bold text-decoration-none" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#modalAdd"
+                                        onclick="setTimeout(() => { new bootstrap.Tab(document.querySelector('[data-bs-target=\'#tab-rapido\']')).show() }, 150)">
+                                    <i class="fas fa-plus-circle me-1"></i> ¿No existe? Créalo aquí
+                                </button>
+                            </div>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-orange"><i class="fas fa-user-tie text-orange"></i></span>
-                                <select name="cliente_id" class="form-select border-orange fw-black text-uppercase" style="font-size: 12px;">
+                                <select name="cliente_id" id="selectClienteFlete" class="form-select border-orange fw-black text-uppercase" style="font-size: 12px;">
                                     <option value="">-- MOVIMIENTO INTERNO (SIN CLIENTE) --</option>
                                     @foreach($clientes as $cliente)
-                                        <option value="{{ $cliente->id }}" {{ old('cliente_id', $viaje->cliente_id ?? '') == $cliente->id ? 'selected' : '' }}>{{ $cliente->nombre }} - {{ $cliente->rif }}</option>
+                                        <option value="{{ $cliente->id }}" {{ old('cliente_id', $viaje->cliente_id ?? '') == $cliente->id ? 'selected' : '' }}>
+                                            {{ $cliente->nombre }} - {{ $cliente->rif }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
                         </div>
+                        
                         <div class="col-md-6">
                             <label class="small fw-bold text-muted uppercase">Punto Salida</label>
                             <input type="text" name="punto_salida" class="form-control border-orange uppercase fw-bold" placeholder="EJ: Planta El Palito" value="{{ old('punto_salida', $viaje->punto_salida ?? '') }}">
