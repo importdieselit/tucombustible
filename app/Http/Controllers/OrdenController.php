@@ -1662,6 +1662,289 @@ class OrdenController extends BaseController
 
     // Incluimos tipoPeriodo en el compact para que la vista sepa qué selector marcar
     return view('orden.reporte_gerencial', compact('reporte', 'unidades', 'tiposVehiculo', 'tiposOrden', 'tipoPeriodo'));
+}public function reporteGerencial(Request $request)
+{
+    $tokenValido = config('services.reporte.internal_token');
+    
+    if (!auth()->check() && $request->get('token') !== $tokenValido) {
+        abort(403, 'Acceso no autorizado');
+    }
+
+    $unidades = Vehiculo::select('id', 'placa', 'marca', 'modelo')
+        ->orderBy('placa', 'asc')
+        ->get();
+
+    $tiposVehiculo = TipoVehiculo::select('id', 'tipo')
+        ->orderBy('tipo', 'asc')
+        ->get();
+
+    $tiposOrden = Orden::whereNotNull('tipo')
+        ->select('tipo')
+        ->distinct()
+        ->orderBy('tipo', 'asc')
+        ->pluck('tipo');
+
+    // 1. Manejo dinámico de periodos 
+    $fechaInicio = null;
+    $fechaFin = null;
+    $tipoPeriodo = $request->input('tipo_periodo', 'este_mes'); 
+
+    switch ($tipoPeriodo) {
+        case 'este_mes':
+            $fechaInicio = Carbon::now()->startOfMonth();
+            $fechaFin = Carbon::now()->endOfMonth();
+            break;
+        case 'mes_pasado':
+            $fechaInicio = Carbon::now()->subMonth()->startOfMonth();
+            $fechaFin = Carbon::now()->subMonth()->endOfMonth();
+            break;
+        case 'esta_quincena':
+            $diaActual = Carbon::now()->day;
+            if ($diaActual <= 15) {
+                $fechaInicio = Carbon::now()->startOfMonth();
+                $fechaFin = Carbon::now()->setDay(15)->endOfDay();
+            } else {
+                $fechaInicio = Carbon::now()->setDay(16)->startOfDay();
+                $fechaFin = Carbon::now()->endOfMonth();
+            }
+            break;
+        case 'esta_semana':
+            $fechaInicio = Carbon::now()->startOfWeek();
+            $fechaFin = Carbon::now()->endOfWeek();
+            break;
+        case 'personalizado':
+            $fechaInicio = $request->filled('fecha_inicio') ? Carbon::parse($request->fecha_inicio)->startOfDay() : null;
+            $fechaFin = $request->filled('fecha_fin') ? Carbon::parse($request->fecha_fin)->endOfDay() : null;
+            break;
+    }
+
+    $vehiculosIds = $request->filled('tipo_vehiculo_id') 
+        ? Vehiculo::where('tipo', $request->tipo_vehiculo_id)->pluck('id') 
+        : null;
+
+    // 2. Consulta Operativa (Órdenes creadas estrictamente dentro del periodo)
+    $ordenesBase = Orden::with([
+            'vehiculoBelong.tipoVehiculo', 
+            'trabajos.categoria', 
+            'trabajosExternos', 
+            'suministros', 
+            'suministrosCompras.detalles'
+        ])
+        ->when($fechaInicio, fn($q) => $q->whereDate('created_at', '>=', $fechaInicio))
+        ->when($fechaFin, fn($q) => $q->whereDate('created_at', '<=', $fechaFin))
+        ->when($request->filled('tipo_orden'), fn($q) => $q->where('tipo', $request->tipo_orden))
+        ->when($vehiculosIds, fn($q) => $q->whereIn('id_vehiculo', $vehiculosIds))
+        ->when($request->filled('unidad_id'), fn($q) => $q->where('id_vehiculo', $request->unidad_id))
+        ->get();
+
+    // 3. Consulta Financiera (Órdenes con gastos/compras/trabajos filtrados por SU PROPIA FECHA)
+    $ordenesFinancieras = Orden::with([
+            'vehiculoBelong.tipoVehiculo',
+            'trabajos',
+            'trabajosExternos' => function ($q) use ($fechaInicio, $fechaFin) {
+                if ($fechaInicio) $q->whereDate('created_at', '>=', $fechaInicio);
+                if ($fechaFin) $q->whereDate('created_at', '<=', $fechaFin);
+            },
+            'suministros' => function ($q) use ($fechaInicio, $fechaFin) {
+                if ($fechaInicio) $q->whereDate('created_at', '>=', $fechaInicio);
+                if ($fechaFin) $q->whereDate('created_at', '<=', $fechaFin);
+            },
+            'suministrosCompras.detalles' => function ($q) use ($fechaInicio, $fechaFin) {
+                if ($fechaInicio) $q->whereDate('created_at', '>=', $fechaInicio);
+                if ($fechaFin) $q->whereDate('created_at', '<=', $fechaFin);
+            }
+        ])
+        ->when($request->filled('tipo_orden'), fn($q) => $q->where('tipo', $request->tipo_orden))
+        ->when($vehiculosIds, fn($q) => $q->whereIn('id_vehiculo', $vehiculosIds))
+        ->when($request->filled('unidad_id'), fn($q) => $q->where('id_vehiculo', $request->unidad_id))
+        ->where(function ($q) use ($fechaInicio, $fechaFin) {
+            // Trae la orden si se creó en el rango O si tiene transacciones en el rango
+            $q->where(function ($sub) use ($fechaInicio, $fechaFin) {
+                if ($fechaInicio) $sub->whereDate('created_at', '>=', $fechaInicio);
+                if ($fechaFin) $sub->whereDate('created_at', '<=', $fechaFin);
+            })
+            ->orWhereHas('suministros', function ($sub) use ($fechaInicio, $fechaFin) {
+                if ($fechaInicio) $sub->whereDate('created_at', '>=', $fechaInicio);
+                if ($fechaFin) $sub->whereDate('created_at', '<=', $fechaFin);
+            })
+            ->orWhereHas('trabajosExternos', function ($sub) use ($fechaInicio, $fechaFin) {
+                if ($fechaInicio) $sub->whereDate('created_at', '>=', $fechaInicio);
+                if ($fechaFin) $sub->whereDate('created_at', '<=', $fechaFin);
+            })
+            ->orWhereHas('suministrosCompras.detalles', function ($sub) use ($fechaInicio, $fechaFin) {
+                if ($fechaInicio) $sub->whereDate('created_at', '>=', $fechaInicio);
+                if ($fechaFin) $sub->whereDate('created_at', '<=', $fechaFin);
+            });
+        })
+        ->get();
+
+    $ordenesActivas = Orden::whereIn('estatus', [2, 3])->get();
+
+    // 4. Agrupación Dinámica Financiera
+    $agruparPor = $request->input('agrupar_por', 'unidad');
+    $datosAgrupados = collect();
+
+    if ($agruparPor) {
+        $grupos = $ordenesFinancieras->groupBy(function ($orden) use ($agruparPor) {
+            if ($agruparPor === 'unidad') {
+                return $orden->vehiculoBelong ? $orden->vehiculoBelong->placa : 'Sin Unidad';
+            } elseif ($agruparPor === 'tipo_orden') {
+                return ucfirst($orden->tipo) ?: 'Sin Tipo de Orden';
+            } elseif ($agruparPor === 'tipo_vehiculo') {
+                return $orden->vehiculoBelong && $orden->vehiculoBelong->tipoVehiculo 
+                    ? $orden->vehiculoBelong->tipoVehiculo->tipo 
+                    : 'Sin Tipo Vehículo';
+            }
+            return 'General';
+        });
+
+        $datosAgrupados = $grupos->map(function ($grupo, $nombreLlave) {
+            // Se suman únicamente los items cargados por eager loading (ya filtrados por fecha)
+            $costoSuministros = $grupo->flatMap->suministros->sum('costo_total');
+            $costoExternos   = $grupo->flatMap->trabajosExternos->sum('costo');
+            $costoCompras    = $grupo->flatMap->suministrosCompras->flatMap->detalles
+                ->whereNotNull('costo_unitario_aprobado')
+                ->sum(function ($detalle) {
+                    return $detalle->costo_unitario_aprobado * $detalle->cantidad_aprobada;
+                });
+            
+            $costoTotal = $costoSuministros + $costoExternos + $costoCompras;
+
+            return [
+                'nombre'            => $nombreLlave,
+                'cantidad_ordenes'  => $grupo->count(),
+                'trabajos_internos' => $grupo->flatMap->trabajos->count(),
+                'costo_suministros' => $costoSuministros,
+                'costo_compras'     => $costoCompras,
+                'costo_externos'    => $costoExternos,
+                'costo_total'       => $costoTotal,
+            ];
+        })->sortByDesc('costo_total');
+    }
+
+    // 5. KPIs Principales
+    $abiertasHoy = $ordenesBase->count();
+    $cerradasMes = Orden::when($fechaInicio, fn($q) => $q->whereDate('fecha_out', '>=', $fechaInicio))
+                        ->when($fechaFin, fn($q) => $q->whereDate('fecha_out', '<=', $fechaFin))
+                        ->where('estatus', 1)
+                        ->count();
+    $totalActivas = $ordenesActivas->count();
+
+    // 6. Costos Desglosados Financieros (Basados en $ordenesFinancieras)
+    $coleccionSuministros = $ordenesFinancieras->flatMap->suministros;
+    $coleccionExternos   = $ordenesFinancieras->flatMap->trabajosExternos;
+    $coleccionCompras    = $ordenesFinancieras->flatMap->suministrosCompras->flatMap->detalles->whereNotNull('costo_unitario_aprobado');
+
+    $costoSuministrosAlmacen = $coleccionSuministros->sum('costo_total');
+    $costoExternos           = $coleccionExternos->sum('costo');
+    $costoCompras            = $coleccionCompras->sum(function ($detalle) {
+        return $detalle->costo_unitario_aprobado * $detalle->cantidad_aprobada;
+    });
+
+    $costoInternos       = 0; 
+    $costoTotalGeneral   = $costoSuministrosAlmacen + $costoExternos + $costoInternos + $costoCompras;
+
+    // 7. KPIs Operativos
+    $porTipo = $ordenesBase->groupBy(function ($orden) {
+        $tipo = strtolower(trim($orden->tipo));
+        return in_array($tipo, ['preventivo', 'mantenimiento']) ? 'Preventivos' : 'Correctivos';
+    })->map->count();
+                
+    $porCategoria = $ordenesBase->flatMap->trabajos->groupBy(function ($trabajo) {
+        return $trabajo->categoria ? $trabajo->categoria->categoria : 'Sin Categoría';
+    })->map->count()->sortDesc();
+
+    $porMecanico = $ordenesBase->flatMap->trabajos->groupBy(function ($trabajo) {
+        return $trabajo->persona?->nombre 
+            ?? $trabajo->personal?->persona?->nombre 
+            ?? $trabajo->personal?->nombre 
+            ?? 'Sin Asignar';
+    })->map->count()->sortDesc();
+
+    $trabajosInternos = $ordenesBase->flatMap->trabajos->count();
+    $trabajosExternos = $ordenesBase->flatMap->trabajosExternos->count();
+
+    // 8. Ofensores Críticos
+    $fallaMasRecurrente = $porCategoria->keys()->first() ?? 'N/A';
+    
+    $unidadMasProblematica = $ordenesBase
+        ->filter(fn($orden) => !empty($orden->id_vehiculo) && $orden->vehiculoBelong)
+        ->groupBy('id_vehiculo')
+        ->map(fn($ordenes) => [
+            'vehiculo' => $ordenes->first()->vehiculoBelong->flota ?? 'S/N',
+            'placa'    => $ordenes->first()->vehiculoBelong->placa ?? 'S/N',
+            'cantidad' => $ordenes->count()
+        ])
+        ->sortByDesc('cantidad')
+        ->first();
+
+    // 9. Movimientos y Logística de Almacén
+    $repuestosSolicitados = $coleccionSuministros->sum('cantidad');
+    $entradasAlmacen = 0; 
+    $salidasAlmacen  = 0;  
+
+    // 10. Timeline Dinámico
+    $inicioTimeline = $fechaInicio ?? Carbon::now()->subDays(30)->startOfDay();
+    $finTimeline    = $fechaFin ?? Carbon::now()->endOfDay();
+    
+    $periodo = CarbonPeriod::create($inicioTimeline, $finTimeline);
+    $labels = []; $dataAbiertas = []; $dataCerradas = [];
+
+    $ordenesPorDia  = $ordenesBase->groupBy(fn($item) => Carbon::parse($item->fecha_in)->format('Y-m-d'));
+    $cerradasPorDia = $ordenesBase->where('estatus', 1)->groupBy(fn($item) => Carbon::parse($item->fecha_out)->format('Y-m-d'));
+
+    foreach ($periodo as $date) {
+        $fecha = $date->format('Y-m-d');
+        $labels[] = $date->format('d/m');
+        $dataAbiertas[] = isset($ordenesPorDia[$fecha]) ? $ordenesPorDia[$fecha]->count() : 0;
+        $dataCerradas[] = isset($cerradasPorDia[$fecha]) ? $cerradasPorDia[$fecha]->count() : 0;
+    }
+
+    // 11. Consolidación de la Data
+    $reporte = [
+        'periodo'     => ['inicio' => $fechaInicio, 'fin' => $fechaFin],
+        'agrupacion'  => $datosAgrupados,
+        'agrupar_por' => $agruparPor,
+        
+        'kpis' => [
+            'abiertas_hoy'    => $abiertasHoy,
+            'cerradas_mes'    => $cerradasMes,
+            'activas_totales' => $totalActivas,
+        ],
+        'financiero' => [
+            'suministros' => $costoSuministrosAlmacen, 
+            'compras'     => $costoCompras,             
+            'externos'    => $costoExternos,
+            'internos'    => $costoInternos,
+            'total'       => $costoTotalGeneral,
+        ],
+        'operativo' => [
+            'por_tipo'      => $porTipo,
+            'por_categoria' => $porCategoria->take(5),
+            'por_mecanico'  => $porMecanico->take(5),   
+            'internos_qty'  => $trabajosInternos,
+            'externos_qty'  => $trabajosExternos,
+            'falla_top'     => $fallaMasRecurrente,
+            'unidad_top'    => $unidadMasProblematica
+        ],
+        'almacen' => [
+            'solicitados' => $repuestosSolicitados,     
+            'entradas'    => $entradasAlmacen,
+            'salidas'     => $salidasAlmacen,
+        ],
+        'timeline' => [
+            'labels'   => $labels,
+            'abiertas' => $dataAbiertas,
+            'cerradas' => $dataCerradas,
+        ],
+        'desglose' => [
+            'almacen'  => $coleccionSuministros,
+            'compras'  => $coleccionCompras,
+            'externos' => $coleccionExternos,
+        ]
+    ];
+
+    return view('orden.reporte_gerencial', compact('reporte', 'unidades', 'tiposVehiculo', 'tiposOrden', 'tipoPeriodo'));
 }
 
     public function imprimir($id)
