@@ -378,8 +378,8 @@ class CombustibleService
             ->where('status', 'PROGRAMADO')
             ->when($sedeId, fn($q) => $q->where('sede_id', $sedeId));
 
-        $comprometidoDiesel = (clone $queryViajes)->where('tipo_planificacion', 1)->sum('litros') ?? 0;
-        $comprometidoMgo    = (clone $queryViajes)->where('tipo_planificacion', 2)->sum('litros') ?? 0;
+        $comprometidoDiesel = (clone $queryViajes)->where('tipo_planificacion', 2)->sum('litros') ?? 0;
+        $comprometidoMgo    = (clone $queryViajes)->where('tipo_planificacion', 1)->sum('litros') ?? 0;
         $totalComprometido  = $comprometidoDiesel + $comprometidoMgo;
 
         // 6. INFRAESTRUCTURA Y CAPACIDADES INSTALADAS
