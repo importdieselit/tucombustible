@@ -12,6 +12,8 @@ use App\Models\TipoCombustible;
 use App\Models\Pedido;
 use App\Models\Estado;
 use App\Models\ClienteDocumento;
+use App\Models\Viaje;
+use App\Models\DespachoViaje;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Redirect, Session, Log, Auth, Storage};
 
@@ -107,6 +109,19 @@ class ClienteController extends Controller
             ->orderBy('fecha_solicitud', 'desc')
             ->paginate(20, ['*'], 'pedidos_page');
 
+        $despachos = DespachoViaje::where(function ($q) use ($id) {
+                $q->where('cliente_id', $id)
+                ->orWhereHas('viaje', function ($v) use ($id) {
+                    $v->where('cliente_id', $id);
+                });
+            })
+            ->whereHas('viaje', function ($q) {
+                $q->whereIn('tipo_planificacion', [1, 2]);
+            })
+            ->with(['viaje.tipoCombustible', 'viaje.sede', 'pedido'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(15, ['*'], 'despachos_page');
+
         // NUEVO: Sucursales paginadas (solo si es padre)
         $sucursales = $cliente->es_padre 
             ? $cliente->sucursales()->paginate(15, ['*'], 'sucursales_page') 
@@ -120,6 +135,7 @@ class ClienteController extends Controller
             'cliente', 
             'tiposCombustible', 
             'pedidos', 
+            'despachos',
             'infoGasco', 
             'sucursales',
             'documentos',

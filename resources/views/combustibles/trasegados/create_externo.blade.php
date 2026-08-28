@@ -10,7 +10,7 @@
             <h2 class="h4 fw-black text-dark text-uppercase mb-1">
                 <i class="fas fa-external-link-alt text-orange me-2"></i> Nuevo Trasegado Externo
             </h2>
-            <p class="text-muted small mb-0">Prestamos con Aliados Comerciales</p>
+            <p class="text-muted small mb-0">Prestamos con Aliados Comerciales o Donaciones</p>
         </div>
         <div class="d-flex flex-wrap align-items-center justify-content-md-end gap-2">
             <a href="{{ route('combustibles.trasegados.index') }}" class="btn btn-sm btn-dark fw-bold text-uppercase shadow-sm px-3 d-inline-flex align-items-center" style="font-size: 12px; height: 32px;">
@@ -64,7 +64,7 @@
                     {{-- CABECERA CARD CON BADGE DINÁMICO --}}
                     <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
                         <h6 class="mb-0 fw-black text-uppercase small text-dark">
-                            <i class="fas fa-sliders-h text-orange me-2"></i> Parámetros del Trasegado Externo
+                            <i class="fas fa-sliders-h text-orange me-2"></i> Parámetros del Trasegado Externo (Prestamo o Donación)
                         </h6>
                         <div id="badge-combustible-container" style="display: none;">
                             <span class="badge bg-dark text-warning text-uppercase px-3 py-2 fw-black" id="badge-combustible-nombre" style="font-size: 11px; letter-spacing: 0.5px;">
