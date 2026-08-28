@@ -285,9 +285,7 @@
                                     <th class="ps-3 py-2 bg-light">Sede</th>
                                     <th class="bg-light">Vehículo / Placa</th>
                                     <th class="bg-light">Combustible</th>
-                                    <th class="bg-light">Tanque Origen</th>
                                     <th class="bg-light">Fecha y Hora Carga</th>
-                                    <th class="text-center bg-light">Precintado</th>
                                     <th class="pe-3 text-end bg-light">Litros Cargados</th>
                                 </tr>
                             </thead>
@@ -313,23 +311,11 @@
                                                 {{ $combustible }}
                                             </span>
                                         </td>
-                                        <td class="fw-bold text-dark text-uppercase">
-                                            {{ $vp->tanque_origen ?? 'Externo' }}
-                                        </td>
+                                     
                                         <td class="font-monospace text-muted">
                                             {{ $vp->fecha_hora_carga ? \Carbon\Carbon::parse($vp->fecha_hora_carga)->format('d/m/Y h:i A') : 'N/A' }}
                                         </td>
-                                        <td class="text-center">
-                                            @if($vp->esta_precintado)
-                                                <span class="badge bg-success text-white text-uppercase" style="font-size: 10px;">
-                                                    <i class="fas fa-lock me-1"></i> SÍ
-                                                </span>
-                                            @else
-                                                <span class="badge bg-secondary text-white text-uppercase" style="font-size: 10px;">
-                                                    <i class="fas fa-unlock me-1"></i> NO
-                                                </span>
-                                            @endif
-                                        </td>
+                                        
                                         <td class="pe-3 text-end fw-black text-orange" style="font-size: 13px;">
                                             {{ number_format($vp->cantidad_litros, 2, ',', '.') }} Lts
                                         </td>
