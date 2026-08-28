@@ -7,7 +7,6 @@ use App\Services\VehiculoPrecargadoService;
 use App\Models\Sedes;
 use App\Models\Vehiculo;
 use App\Models\TipoCombustible;
-use App\Models\Deposito;
 use Illuminate\Support\Facades\Session;
 use Exception;
 
@@ -34,27 +33,20 @@ class VehiculoPrecargadoController extends Controller
         $vehiculos = Vehiculo::whereIn('tipo', [1, 2, 5])->orderBy('placa')->get();
         $tiposCombustible = TipoCombustible::all();
 
-        $depositos = Deposito::when($request->id_sede, function ($query, $idSede) {
-            return $query->where('id_sede', $idSede);
-        })->get();
-
-        return view('combustibles.precargas_vehiculos.create', compact('sedes', 'vehiculos', 'tiposCombustible', 'depositos'));
+        return view('combustibles.precargas_vehiculos.create', compact('sedes', 'vehiculos', 'tiposCombustible'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'id_vehiculo'         => 'required|exists:vehiculos,id',
             'id_sede'             => 'required|exists:sedes,id',
-            'esta_precintado'     => 'required|boolean',
-            'id_deposito'         => 'required_if:esta_precintado,0|nullable|exists:depositos,id',
+            'id_vehiculo'         => 'required|exists:vehiculos,id',
             'id_tipo_combustible' => 'required|exists:tipos_combustible,id',
             'cantidad_litros'     => 'required|numeric|gt:0',
             'observaciones'       => 'nullable|string|max:500',
         ], [
-            'id_vehiculo.required'         => 'Debe seleccionar un vehículo.',
             'id_sede.required'             => 'Debe seleccionar la sede correspondiente.',
-            'id_deposito.required_if'      => 'Debe seleccionar el depósito de origen cuando la precarga no es precintada.',
+            'id_vehiculo.required'         => 'Debe seleccionar un vehículo.',
             'id_tipo_combustible.required' => 'Debe seleccionar el tipo de combustible.',
             'cantidad_litros.required'     => 'La cantidad de litros es obligatoria.',
             'cantidad_litros.gt'           => 'La cantidad de litros debe ser mayor a cero.',
@@ -75,9 +67,6 @@ class VehiculoPrecargadoController extends Controller
         }
     }
 
-    /**
-     * Marca manualmente una precarga activa como despachada/finalizada (estatus = 1).
-     */
     public function finalizar(int $id)
     {
         try {

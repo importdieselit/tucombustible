@@ -20,6 +20,12 @@
                             SELECCIÓN MANUAL
                         </button>
                     </li>
+
+                    <li class="nav-item">
+                        <button class="nav-link fw-bold small py-3 text-orange" data-bs-toggle="tab" data-bs-target="#tab-rapido">
+                            <i class="fas fa-user-plus me-1"></i> CREAR CLIENTE
+                        </button>
+                    </li>
                 </ul>
 
                 <div class="tab-content p-4">
@@ -62,7 +68,13 @@
                     <div class="tab-pane fade" :class="modo !== 'diesel' ? 'show active' : ''" id="tab-manual">
                         <div class="row g-3" x-data="{ manual: { cliente_id: '', litros: 0, buque: '' } }">
                             <div class="col-md-12">
-                                <label class="small fw-bold text-muted uppercase">Cliente</label>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label class="small fw-bold text-muted uppercase mb-0">Cliente</label>
+                                    <button type="button" class="btn btn-link btn-sm p-0 text-orange fw-bold text-decoration-none" 
+                                            onclick="bootstrap.Tab.getInstance(document.querySelector('[data-bs-target=\'#tab-rapido\']')).show()">
+                                        <i class="fas fa-plus-circle me-1"></i> ¿No existe? Créalo aquí
+                                    </button>
+                                </div>
                                 <select class="form-select border-orange select2-basic fw-bold" x-model="manual.cliente_id" id="selectManual">
                                     <option value="">-- Buscar Empresa --</option>
                                     @foreach($clientes as $cli)
@@ -109,6 +121,83 @@
                                             manual.litros = 0; manual.buque = '';
                                         ">
                                     AGREGAR DESTINO
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- TAB 3: REGISTRO RÁPIDO DE CLIENTE --}}
+                    <div class="tab-pane fade" id="tab-rapido">
+                        <div class="row g-3">
+                            <div class="col-md-8 position-relative">
+                                <label class="small fw-bold text-muted uppercase">Razón Social <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control border-orange fw-bold text-uppercase" 
+                                       x-model="formRapido.nombre" 
+                                       @input="formRapido.nombre = $event.target.value.toUpperCase(); buscarSimilares()"
+                                       placeholder="EJ: DISTRIBUIDORA GASOLÍN C.A.">
+                                
+                                {{-- Alerta de coincidencias en tiempo real --}}
+                                <template x-if="coincidenciasCliente.length > 0">
+                                    <div class="p-2 mt-2 bg-warning bg-opacity-10 border border-warning rounded">
+                                        <small class="fw-bold text-dark d-block mb-1">
+                                            <i class="fas fa-exclamation-circle text-warning me-1"></i> ¿Existe alguno de estos clientes registrados?
+                                        </small>
+                                        <ul class="mb-0 ps-3 small text-muted">
+                                            <template x-for="c in coincidenciasCliente" :key="c.id">
+                                                <li><strong x-text="c.nombre"></strong> <span x-text="c.rif ? ' - RIF: ' + c.rif : ''"></span></li>
+                                            </template>
+                                        </ul>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="small fw-bold text-muted uppercase">RIF <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <select class="form-select border-orange bg-light fw-bold" style="max-width:70px;" x-model="formRapido.rif_tipo">
+                                        <template x-for="letra in ['J','V','E','P','G','C']" :key="letra">
+                                            <option :value="letra" x-text="letra"></option>
+                                        </template>
+                                    </select>
+                                    <input type="text" class="form-control border-orange fw-bold" 
+                                           x-model="formRapido.rif_numero" 
+                                           maxlength="10"
+                                           @input="formRapido.rif_numero = $event.target.value.replace(/[^0-9]/g, '')"
+                                           placeholder="123456789">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="small fw-bold text-muted uppercase">Contacto Principal <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control border-orange fw-bold text-uppercase" 
+                                       x-model="formRapido.contacto" 
+                                       @input="formRapido.contacto = $event.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '').toUpperCase()"
+                                       placeholder="Nombre del responsable">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="small fw-bold text-muted uppercase">Teléfono Principal</label>
+                                <input type="text" class="form-control border-orange fw-bold" 
+                                       x-model="formRapido.telefono" 
+                                       maxlength="11"
+                                       @input="formRapido.telefono = $event.target.value.replace(/[^0-9]/g, '')"
+                                       placeholder="04XXXXXXXXX">
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="small fw-bold text-muted uppercase">Dirección Fiscal</label>
+                                <input type="text" class="form-control border-orange fw-bold text-uppercase" 
+                                       x-model="formRapido.direccion" 
+                                       @input="formRapido.direccion = $event.target.value.toUpperCase()"
+                                       placeholder="Dirección según RIF...">
+                            </div>
+
+                            <div class="col-12 mt-4">
+                                <button type="button" class="btn btn-dark text-white fw-black btn-lg w-100 shadow-sm"
+                                        :disabled="cargandoRapido"
+                                        @click="guardarClienteRapido()">
+                                    <span x-show="!cargandoRapido"><i class="fas fa-check-circle me-1"></i> CREAR Y SELECCIONAR CLIENTE</span>
+                                    <span x-show="cargandoRapido"><i class="fas fa-spinner fa-spin me-1"></i> REGISTRANDO...</span>
                                 </button>
                             </div>
                         </div>

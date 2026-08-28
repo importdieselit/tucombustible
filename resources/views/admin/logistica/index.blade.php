@@ -82,6 +82,22 @@
                 </div>
             </a>
         </div>
+
+        <div class="col-md-3">
+            <a href="{{ route('combustibles.trasegados.create_externo') }}" class="text-decoration-none">
+                <div class="card shadow-sm border-0 h-100 hover-lift text-center py-4 border-bottom-orange">
+                    <div class="card-body p-0 d-flex flex-column justify-content-center">
+                        <div class="icon-circle bg-orange-light text-orange mx-auto mb-3">
+                            <i class="fas fa-exchange-alt fa-2x"></i>
+                        </div>
+                        <h6 class="fw-black text-dark text-uppercase mb-1">Préstamos o Donaciones</h6>
+                        <small class="text-muted fw-bold px-2" style="font-size: 10px; line-height: 1.2;">
+                            No crea automáticamente un flete, debe planificarlo
+                        </small>
+                    </div>
+                </div>
+            </a>
+        </div>
     </div>
 
     {{-- LISTA DE PEDIDOS PENDIENTES DE DIESEL --}}

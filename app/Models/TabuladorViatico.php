@@ -15,6 +15,7 @@ class TabuladorViatico extends Model
     protected $fillable = [
         'destino',
         'tipo_viaje',
+        'es_planta',
         'pago_chofer_ejecutivo',
         'pago_chofer',
         'pago_ayudante',
@@ -24,6 +25,10 @@ class TabuladorViatico extends Model
         'viatico_cena',
         'costo_pernocta',
         
+    ];
+
+    protected $casts = [
+        'es_planta' => 'boolean',
     ];
 
     public function muelles()

@@ -38,11 +38,13 @@ class Cliente extends Model
         'es_aliado_comercial',
         'fecha_aprobacion',
         'telegram_id',
+        'cliente_rapido',
     ];
 
     protected $casts = [
         'fecha_aprobacion' => 'datetime',
         'es_aliado_comercial' => 'boolean',
+        'cliente_rapido' => 'boolean',
     ];
 
     // -------------------------------------------------------
@@ -227,9 +229,14 @@ class Cliente extends Model
         return $query->where('parent', '>', 0);
     }
 
+    public function scopeRapidos($query)
+    {
+        return $query->where('cliente_rapido', true);
+    }
+
     public function movimientosCombustible()
     {
-        return $this->hasMany(MovimientoCombustible::class, 'cliente_id','id');
+        return $this->hasMany(MovimientoCombustible::class, 'cliente_id', 'id');
     }
 
     public function getCupoAttribute()
@@ -241,6 +248,7 @@ class Cliente extends Model
     {
         return $this->hasMany(DespachoViaje::class, 'cliente_id');
     }
+
     public function pagos()
     {
         return $this->hasMany(Pago::class, 'id_cliente');

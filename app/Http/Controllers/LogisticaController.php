@@ -116,7 +116,13 @@ class LogisticaController extends Controller
         $plantasProveedor = collect();
         $muelles = DB::table('muelles')->orderBy('nombre')->get();
         $tabuladores = DB::table('tabulador_viaticos')
-        ->select('id', 'destino', 'tipo_viaje')
+        ->when($tipoPlanificacionId == 4, function ($q) {
+            return $q->where('es_planta', true);
+        })
+        ->when(in_array($tipoPlanificacionId, [1, 2]), function ($q) {
+            return $q->where('es_planta', false);
+        })
+        ->select('id', 'destino', 'tipo_viaje', 'es_planta')
         ->orderBy('destino', 'asc')
         ->get();
 
@@ -330,7 +336,13 @@ class LogisticaController extends Controller
         $plantasProveedor = ($tipoPlanificacionId == 4) ? DB::table('plantas')->get() : collect();
         $pedidosPendientes = ($tipoPlanificacionId == 1) ? Pedido::where('estado', 'pendiente')->with('cliente')->get() : collect();
         $tabuladores = DB::table('tabulador_viaticos')
-        ->select('id', 'destino', 'tipo_viaje')
+        ->when($tipoPlanificacionId == 4, function ($q) {
+            return $q->where('es_planta', true);
+        })
+        ->when(in_array($tipoPlanificacionId, [1, 2]), function ($q) {
+            return $q->where('es_planta', false);
+        })
+        ->select('id', 'destino', 'tipo_viaje', 'es_planta')
         ->orderBy('destino', 'asc')
         ->get();
 
@@ -566,5 +578,54 @@ class LogisticaController extends Controller
             'aniosDisponibles',
             'esMesActual'
         ));
+    }
+
+    /**
+     * Búsqueda AJAX de clientes con nombres parecidos para evitar duplicados.
+     */
+    public function buscarClientesSimilares(Request $request)
+    {
+        $term = trim($request->get('q', ''));
+
+        if (strlen($term) < 2) {
+            return response()->json([]);
+        }
+
+        $coincidencias = Cliente::where('nombre', 'LIKE', "%{$term}%")
+            ->select('id', 'nombre', 'rif')
+            ->limit(5)
+            ->get();
+
+        return response()->json($coincidencias);
+    }
+
+    /**
+     * Registro rápido de cliente desde la planificación de Logística.
+     * Solo 'nombre' (Razón Social) es obligatorio.
+     */
+    public function storeClienteRapido(Request $request)
+    {
+        $validated = $request->validate([
+            'nombre'    => 'required|string|max:255',
+            'rif'       => 'nullable|string|max:40',
+            'direccion' => 'nullable|string|max:500',
+            'contacto'  => 'nullable|string|max:255',
+            'telefono'  => 'nullable|string|max:50',
+        ]);
+
+        $cliente = Cliente::create([
+            'nombre'         => $validated['nombre'],
+            'rif'            => $validated['rif'] ?? null,
+            'direccion_operativa' => $validated['direccion'] ?? null,
+            'contacto'       => $validated['contacto'] ?? null,
+            'telefono'       => $validated['telefono'] ?? null,
+            'cliente_rapido' => true,
+            'status'         => 2,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'cliente' => $cliente
+        ]);
     }
 }

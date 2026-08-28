@@ -51,6 +51,115 @@
             tipoVehiculoSeleccionado: '',
             esPropio: '1', vehiculo_externo: '', cisterna_externo: '', chofer_externo: '', ayudante_externo: '', vehiculoId: '', cisternaId: '', capacidadMaxima: 0, totalLitros: 0, items: [],
             
+            // --- NUEVO ESTADO PARA REGISTRO RÁPIDO ---
+            coincidenciasCliente: [],
+            formRapido: { 
+                nombre: '', 
+                rif_tipo: 'J', 
+                rif_numero: '', 
+                direccion: '', 
+                contacto: '', 
+                telefono: '' 
+            },
+            cargandoRapido: false,
+
+            // Búsqueda en tiempo real mientras escribe el nombre
+            buscarSimilares() {
+                if (this.formRapido.nombre.trim().length < 2) {
+                    this.coincidenciasCliente = [];
+                    return;
+                }
+                // Usa la ruta nombrada clientes.similares
+                fetch(`{{ route('logistica.clientes.similares') }}?q=${encodeURIComponent(this.formRapido.nombre)}`)
+                    .then(res => res.json())
+                    .then(data => { this.coincidenciasCliente = data; })
+                    .catch(() => { this.coincidenciasCliente = []; });
+            },
+
+            // Guarda el cliente (status=2) y lo inyecta a la tabla de destinos
+            guardarClienteRapido() {
+                if (!this.formRapido.nombre) return alert('El nombre o Razón Social es obligatorio.');
+
+                this.cargandoRapido = true;
+
+                // Forzamos tipo a 'J' si viene undefined o vacío
+                const tipo = this.formRapido.rif_tipo || 'J';
+                const numero = (this.formRapido.rif_numero || '').trim();
+
+                const payload = {
+                    ...this.formRapido,
+                    rif: numero ? `${tipo}-${numero}` : null
+                };
+
+                fetch('{{ route("logistica.clientes.store_rapido") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(res => res.json())
+                .then(data => {
+                    this.cargandoRapido = false;
+
+                    if (data.success) {
+                        const cliente = data.cliente;
+
+                        // 1. Si la planificación actual es MODO FLETE, lo inyectamos en el <select> de fletes y lo seleccionamos
+                        if (this.modo === 'flete') {
+                            const selectFlete = document.getElementById('selectClienteFlete');
+                            if (selectFlete) {
+                                const opt = document.createElement('option');
+                                opt.value = cliente.id;
+                                opt.textContent = `${cliente.nombre} - ${cliente.rif || 'SIN RIF'}`;
+                                opt.selected = true;
+                                selectFlete.appendChild(opt);
+                            }
+                        } else {
+                            // 2. Si estamos en DIESEL o MGO, lo agregamos a la tabla de ítems/destinos
+                            this.items.push({
+                                pedido_id: null,
+                                cliente_id: cliente.id,
+                                cliente_nombre: cliente.nombre,
+                                cliente_rif: cliente.rif || 'N/A',
+                                cliente_cupo: 0,
+                                litros: 0,
+                                muelle_id: '',
+                                buque_nombre: '', 
+                                buque_imo: '', 
+                                buque_bandera: '', 
+                                observaciones: ''
+                            });
+                        }
+
+                        // 3. Lo registramos en el <select> de selección manual por si se necesita reutilizar
+                        const selectManual = document.getElementById('selectManual');
+                        if (selectManual) {
+                            const optManual = document.createElement('option');
+                            optManual.value = cliente.id;
+                            optManual.textContent = cliente.nombre;
+                            optManual.dataset.nombre = cliente.nombre;
+                            optManual.dataset.rif = cliente.rif || '';
+                            optManual.dataset.cupo = 0;
+                            selectManual.appendChild(optManual);
+                        }
+
+                        // Limpieza del formulario y reseteo del estado
+                        this.formRapido = { nombre: '', rif_tipo: 'J', rif_numero: '', direccion: '', contacto: '', telefono: '' };
+                        this.coincidenciasCliente = [];
+                        
+                        const modalEl = document.getElementById('modalAdd');
+                        const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+                        modalInstance.hide();
+                    }
+                })
+                .catch(err => {
+                    this.cargandoRapido = false;
+                    alert('Error al registrar el cliente.');
+                });
+            },
+
             getTitulo() { const titulos = { 'diesel': 'Diesel', 'mgo': 'MGO', 'flete': 'Flete', 'compra': 'Compra' }; return titulos[this.modo] || 'Planificación'; },
             get porcentajeCarga() { if (this.capacidadMaxima <= 0) return 0; let p = Math.round((this.totalLitros / this.capacidadMaxima) * 100); return p > 100 ? 100 : p; },
             get excesoCarga() { return (this.esPropio == '1' && this.capacidadMaxima > 0 && this.totalLitros > this.capacidadMaxima); },

@@ -77,15 +77,13 @@
         </div>
         <div class="card-body p-0">
             <div class="table-responsive" style="max-height: 560px; overflow-y: auto;">
-                <table class="table table-hover align-middle mb-0" style="min-width: 1050px;">
+                <table class="table table-hover align-middle mb-0" style="min-width: 950px;">
                     <thead class="bg-light sticky-top" style="z-index: 2;">
                         <tr class="text-uppercase text-muted" style="font-size: 12px; letter-spacing: 0.5px;">
                             <th class="ps-4"># ID / Fecha Carga</th>
                             <th>Vehículo / Placa</th>
                             <th>Sede</th>
-                            <th>Origen del Producto</th>
                             <th>Combustible</th>
-                            <th>Tipo Precarga</th>
                             <th style="min-width: 200px; max-width: 300px;">Observaciones</th>
                             <th class="text-end">Cantidad Cargada</th>
                             <th class="text-center">Usuario</th>
@@ -115,18 +113,6 @@
                                 </td>
 
                                 <td>
-                                    @if($precarga->esta_precintado)
-                                        <span class="text-muted small fw-bold">
-                                            <i class="fas fa-file-invoice text-primary me-1"></i> Compra Externa
-                                        </span>
-                                    @else
-                                        <span class="fw-bold text-dark" style="font-size: 13px;">
-                                            <i class="fas fa-database text-secondary me-1"></i> {{ $precarga->deposito->serial ?? 'Depósito N/A' }}
-                                        </span>
-                                    @endif
-                                </td>
-
-                                <td>
                                     @if(($precarga->id_tipo_combustible) == 2)
                                         <span class="badge bg-warning text-dark fw-bold text-uppercase" style="font-size: 10px; background-color: #ffa500 !important;">DIESEL</span>
                                     @else
@@ -134,19 +120,6 @@
                                     @endif
                                 </td>
 
-                                <td>
-                                    @if($precarga->esta_precintado)
-                                        <span class="badge bg-primary text-white text-uppercase fw-bold" style="font-size: 10px;">
-                                            <i class="fas fa-lock me-1"></i> Precintado
-                                        </span>
-                                    @else
-                                        <span class="badge bg-secondary text-white text-uppercase fw-bold" style="font-size: 10px;">
-                                            <i class="fas fa-warehouse me-1"></i> Depósito Interno
-                                        </span>
-                                    @endif
-                                </td>
-
-                                {{-- Observaciones (Multilínea adaptable) --}}
                                 <td style="min-width: 200px; max-width: 300px; white-space: normal;">
                                     @if(!empty($precarga->observaciones))
                                         <div class="small text-secondary lh-sm">
@@ -177,7 +150,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="text-center py-5 text-muted small fw-bold">
+                                <td colspan="8" class="text-center py-5 text-muted small fw-bold">
                                     <i class="fas fa-info-circle me-1 text-warning"></i> No hay vehículos precargados actualmente en patio.
                                 </td>
                             </tr>
@@ -193,7 +166,6 @@
     .text-orange { color: #ff6600 !important; }
     .fw-black { font-weight: 900; }
     
-    /* Scrollbar personalizada para que coincida con el estilo del sistema */
     .table-responsive::-webkit-scrollbar {
         width: 6px;
         height: 6px;

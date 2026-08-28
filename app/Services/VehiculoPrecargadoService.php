@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Repositories\VehiculoPrecargadoRepository;
 use App\Repositories\TransaccionCombustibleRepository;
-use App\Models\Deposito;
 use App\Models\Vehiculo;
 use App\Models\VehiculoPrecargado;
 use Illuminate\Support\Facades\DB;
@@ -27,7 +26,6 @@ class VehiculoPrecargadoService
     {
         return DB::transaction(function () use ($data) {
             $userId = $data['id_usuario'] ?? auth()->id() ?? 1;
-            $estaPrecintado = !empty($data['esta_precintado']);
             $cantidadLitros = (float) $data['cantidad_litros'];
 
             $vehiculo = Vehiculo::findOrFail($data['id_vehiculo']);
@@ -42,62 +40,30 @@ class VehiculoPrecargadoService
                 throw new Exception("La cantidad ingresada ({$cantidadLitros} Lts) excede la capacidad máxima del vehículo {$vehiculo->placa} ({$capacidadFormateada} Lts).");
             }
 
-            if (!$estaPrecintado) {
-                if (empty($data['id_deposito'])) {
-                    throw new Exception("Debe seleccionar un depósito origen para precargas no precintadas.");
-                }
+            // 1. Asentar la transacción en el Ledger
+            $this->ledgerRepo->registrar([
+                'sede_id'             => $data['id_sede'],
+                'deposito_id'         => null,
+                'tipo_combustible_id' => $data['id_tipo_combustible'],
+                'bolsa_tipo'          => 'general',
+                'tipo_movimiento'     => 'precarga',
+                'cantidad_litros'     => $cantidadLitros,
+                'user_id'             => $userId,
+                'observaciones'       => "Precarga de Vehículo (Placa: {$vehiculo->placa}, ID Vehículo: {$data['id_vehiculo']})",
+            ]);
 
-                $deposito = Deposito::findOrFail($data['id_deposito']);
-
-                if ((float) $deposito->nivel_actual_litros < $cantidadLitros) {
-                    throw new Exception("El depósito seleccionado no cuenta con suficiente saldo de combustible ({$deposito->nivel_actual_litros} Lts disponibles).");
-                }
-
-                // 1. Descuento del inventario físico en el depósito
-                $deposito->decrement('nivel_actual_litros', $cantidadLitros);
-
-                // 2. Asentar salida física en el Ledger como 'precarga'
-                $this->ledgerRepo->registrar([
-                    'sede_id'             => $data['id_sede'],
-                    'deposito_id'         => $data['id_deposito'],
-                    'tipo_combustible_id' => $data['id_tipo_combustible'],
-                    'bolsa_tipo'          => 'general',
-                    'tipo_movimiento'     => 'precarga',
-                    'cantidad_litros'     => -$cantidadLitros, // Negativo (-) porque sale del tanque físico
-                    'user_id'             => $userId,
-                    'observaciones'       => "Salida física por Precarga de Vehículo (Placa: {$vehiculo->placa}, ID Vehículo: {$data['id_vehiculo']})",
-                ]);
-
-            } else {
-                $data['id_deposito'] = null;
-
-                // Asentar ingreso por precarga externa precintada
-                $this->ledgerRepo->registrar([
-                    'sede_id'             => $data['id_sede'],
-                    'deposito_id'         => null,
-                    'tipo_combustible_id' => $data['id_tipo_combustible'],
-                    'bolsa_tipo'          => 'general',
-                    'tipo_movimiento'     => 'precarga',
-                    'cantidad_litros'     => $cantidadLitros,
-                    'user_id'             => $userId,
-                    'observaciones'       => "Ingreso por Precarga Externa Precintada (Placa: {$vehiculo->placa}, ID Vehículo: {$data['id_vehiculo']})",
-                ]);
-            }
-
-            // 3. Finalizar automáticamente cualquier precarga previa activa para este vehículo
+            // 2. Finalizar automáticamente cualquier precarga previa activa para este vehículo
             VehiculoPrecargado::where('id_vehiculo', $data['id_vehiculo'])
                 ->where('estatus', 0)
                 ->update(['estatus' => 1]);
 
-            // 4. Crear el nuevo registro en vehiculos_precargados
+            // 3. Crear el nuevo registro de precarga
             $datosRegistro = [
                 'id_vehiculo'         => $data['id_vehiculo'],
                 'id_sede'             => $data['id_sede'],
-                'id_deposito'         => $data['id_deposito'],
                 'id_tipo_combustible' => $data['id_tipo_combustible'],
                 'id_usuario'          => $userId,
                 'cantidad_litros'     => $cantidadLitros,
-                'esta_precintado'     => $estaPrecintado,
                 'observaciones'       => $data['observaciones'] ?? null,
                 'fecha_hora_carga'    => now(),
                 'estatus'             => 0, // 0 = Cargada/Activa

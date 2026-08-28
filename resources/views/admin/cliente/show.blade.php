@@ -125,11 +125,11 @@
                         <div class="mb-2">
                             @if($cliente->es_aliado_comercial)
                                 <span class="badge bg-primary text-white px-3 py-2 rounded-pill fw-bold">
-                                    <i class="fas fa-handshake me-1"></i> Aliado Comercial (Aplica para prestamos de combustibles)
+                                    <i class="fas fa-handshake me-1"></i> Aliado Comercial / Recibe Donaciones (Aplica para trasegados externos)
                                 </span>
                             @else
                                 <span class="badge bg-secondary text-white px-3 py-2 rounded-pill fw-bold">
-                                    <i class="fas fa-building me-1"></i> No es Aliado Comercial (No aplica para prestamos de combustibles)
+                                    <i class="fas fa-building me-1"></i> No es Aliado Comercial ni recibe donaciones (No aplica para trasegados externos)
                                 </span>
                             @endif
                         </div>
@@ -190,6 +190,79 @@
                     {{-- PAGINACIÓN --}}
                     <div class="p-3 bg-gray-50 border-t border-gray-200">
                         {{ $pedidos->appends(request()->query())->links() }}
+                    </div>
+                </div>
+            </div>
+
+            {{-- HISTORIAL DE DESPACHOS --}}
+            <div class="mb-8">
+                <h2 class="text-sm font-black uppercase text-gray-700 tracking-widest mb-4">
+                    <span class="text-orange-impordiesel">|</span> Historial de Despachos Realizados
+                </h2>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    {{-- CAMBIO AQUÍ: overflow-auto para permitir X e Y simultáneamente --}}
+                    <div class="overflow-auto max-h-[400px]">
+                        {{-- CAMBIO AQUÍ: min-w-[750px] para forzar el scroll horizontal si la pantalla es estrecha --}}
+                        <table class="w-full min-w-[750px] text-left text-xs border-collapse">
+                            <thead class="sticky top-0 z-10">
+                                <tr class="bg-gray-industrial text-white text-[10px] font-black uppercase tracking-widest">
+                                    <th class="px-6 py-3">N° Viaje</th>
+                                    <th class="px-6 py-3">Sede</th>
+                                    <th class="px-6 py-3 text-center">Litros</th>
+                                    <th class="px-6 py-3">Tipo Combustible</th>
+                                    <th class="px-6 py-3">Notas</th>
+                                    <th class="px-6 py-3 text-center">Estatus Viaje</th>
+                                    <th class="px-6 py-3 text-center">Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @forelse($despachos as $despacho)
+                                <tr class="hover:bg-gray-50 transition">
+                                    <td class="px-6 py-3 font-black text-gray-700">
+                                        Viaje #{{ $despacho->viaje_id }}
+                                    </td>
+                                    <td class="px-6 py-3 font-bold text-gray-600 uppercase text-[11px]">
+                                        {{ $despacho->viaje?->sede?->nombre ?? 'N/A' }}
+                                    </td>
+                                    <td class="px-6 py-3 text-center font-black text-gray-800">
+                                        {{ number_format($despacho->litros, 2, ',', '.') }} Lts
+                                    </td>
+                                    <td class="px-6 py-3 font-bold text-gray-600 uppercase text-[11px]">
+                                        {{ $despacho->viaje?->tipoCombustible?->nombre ?? 'N/A' }}
+                                    </td>
+                                    <td class="px-6 py-3 text-gray-500 text-[11px] max-w-[200px] truncate" title="{{ $despacho->observacion }}">
+                                        {{ $despacho->observacion ?? '-' }}
+                                    </td>
+                                    <td class="px-6 py-3 text-center">
+                                        @php
+                                            $status = $despacho->viaje?->status ?? 'DESPACHADO';
+                                            $badgeClass = match($status) {
+                                                'FINALIZADO', 'COMPLETADO' => 'border-green-300 bg-green-50 text-green-700',
+                                                'EN_TRANSITO', 'EN_PROCESO' => 'border-blue-300 bg-blue-50 text-blue-700',
+                                                'PENDIENTE_VIATICOS' => 'border-amber-300 bg-amber-50 text-amber-700',
+                                                default => 'border-gray-300 bg-gray-50 text-gray-600'
+                                            };
+                                        @endphp
+                                        <span class="px-2 py-1 rounded text-[9px] font-black uppercase border {{ $badgeClass }}">
+                                            {{ str_replace('_', ' ', $status) }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-3 text-center text-gray-500 font-bold">
+                                        {{ $despacho->created_at ? $despacho->created_at->format('d/m/Y h:i A') : 'N/A' }}
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="7" class="px-6 py-12 text-center text-gray-400 font-black uppercase text-[10px] tracking-widest">
+                                        No se encontraron despachos registrados para este cliente.
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="p-3 bg-gray-50 border-t border-gray-200">
+                        {{ $despachos->appends(request()->query())->links() }}
                     </div>
                 </div>
             </div>

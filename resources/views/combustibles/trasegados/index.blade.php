@@ -8,7 +8,7 @@
     <div class="mb-4 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
         <div>
             <h2 class="h4 fw-black text-dark text-uppercase mb-1">
-                <i class="fas fa-history text-orange me-2"></i> Historial de Trasegados Internos
+                <i class="fas fa-history text-orange me-2"></i> Historial de Trasegados
             </h2>
             <p class="text-muted small mb-0">Registro y trazabilidad cronológica de movimientos de combustible entre tanques</p>
         </div>
@@ -30,7 +30,7 @@
                     </li>
                     <li>
                         <a class="dropdown-item py-2 fw-bold text-dark" href="{{ route('combustibles.trasegados.create_externo') }}">
-                            <i class="fas fa-external-link-alt text-muted me-2"></i> Trasegado Externo (Prestamos con Aliados)
+                            <i class="fas fa-external-link-alt text-muted me-2"></i> Trasegado Externo (Prestamos o Donaciones)
                         </a>
                     </li>
                 </ul>
