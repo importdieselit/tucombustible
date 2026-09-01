@@ -196,13 +196,44 @@
 
             {{-- HISTORIAL DE DESPACHOS --}}
             <div class="mb-8">
-                <h2 class="text-sm font-black uppercase text-gray-700 tracking-widest mb-4">
-                    <span class="text-orange-impordiesel">|</span> Historial de Despachos Realizados
-                </h2>
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+                    <h2 class="text-sm font-black uppercase text-gray-700 tracking-widest mb-0">
+                        <span class="text-orange-impordiesel">|</span> Historial de Despachos Realizados
+                    </h2>
+
+                    {{-- FILTRO POR FECHAS --}}
+                    <form method="GET" action="{{ route('clientes.show', $cliente->id) }}" class="flex flex-wrap items-center gap-2 no-print">
+                        {{-- Preservar la página de pedidos en caso de estar paginado --}}
+                        @if(request('pedidos_page'))
+                            <input type="hidden" name="pedidos_page" value="{{ request('pedidos_page') }}">
+                        @endif
+
+                        <div class="flex items-center gap-1">
+                            <label class="text-[10px] font-black text-gray-500 uppercase">Desde:</label>
+                            <input type="date" name="despacho_desde" value="{{ $despachoDesde }}" 
+                                class="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-bold focus:ring-1 focus:ring-orange-impordiesel focus:outline-none">
+                        </div>
+
+                        <div class="flex items-center gap-1">
+                            <label class="text-[10px] font-black text-gray-500 uppercase">Hasta:</label>
+                            <input type="date" name="despacho_hasta" value="{{ $despachoHasta }}" 
+                                class="px-2 py-1 bg-white border border-gray-300 rounded text-xs font-bold focus:ring-1 focus:ring-orange-impordiesel focus:outline-none">
+                        </div>
+
+                        <button type="submit" class="bg-gray-industrial hover:bg-black text-white px-3 py-1.5 rounded text-[11px] font-black uppercase transition flex items-center gap-1">
+                            <i class="fas fa-filter text-[10px]"></i> Filtrar
+                        </button>
+
+                        @if(!empty($despachoDesde) || !empty($despachoHasta))
+                            <a href="{{ route('clientes.show', $cliente->id) }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1.5 rounded text-[11px] font-black uppercase transition" title="Limpiar Filtro">
+                                <i class="fas fa-times"></i>
+                            </a>
+                        @endif
+                    </form>
+                </div>
+
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    {{-- CAMBIO AQUÍ: overflow-auto para permitir X e Y simultáneamente --}}
                     <div class="overflow-auto max-h-[400px]">
-                        {{-- CAMBIO AQUÍ: min-w-[750px] para forzar el scroll horizontal si la pantalla es estrecha --}}
                         <table class="w-full min-w-[750px] text-left text-xs border-collapse">
                             <thead class="sticky top-0 z-10">
                                 <tr class="bg-gray-industrial text-white text-[10px] font-black uppercase tracking-widest">
