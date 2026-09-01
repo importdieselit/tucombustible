@@ -94,8 +94,8 @@ class GerentialReportController extends Controller
         $inventarioTotal = $inventarioDesglose->sum('monto');
 
         // KPIs de Inventario precisos (Para inyectar en la vista)
-        $invDiesel = $inventarioDesglose->filter(fn($q) => str_contains(strtoupper($q->cuenta), 'DIESEL'))->sum('monto');
-        $invMGO = $inventarioDesglose->filter(fn($q) => str_contains(strtoupper($q->cuenta), 'MARINE GAS OIL'))->sum('monto');
+        $invDiesel = $inventarioDesglose->filter(fn($q) => stripos(strtoupper($q->cuenta), 'DIESEL') !== false )->sum('monto');
+        $invMGO = $inventarioDesglose->filter(fn($q) => stripos(strtoupper($q->cuenta), 'MARINE GAS OIL') !== false )->sum('monto');
 
         $comprasUsd = $precioCompra * $litrosComprados; 
         $margenBruto = $ventasUsd > 0 ? (($ventasUsd - $comprasUsd) / $ventasUsd) * 100 : 0;
