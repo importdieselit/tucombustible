@@ -495,7 +495,7 @@
                 labels: rawPlanif.map(i => i.status),
                 datasets: [{
                     data: rawPlanif.map(i => i.total),
-                    backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#17a2b8', '#6c757d']
+                    backgroundColor: ['#ffc107', '#28a745', '#17a2b8', '#dc3545', '#6c757d']
                 }]
             },
             options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
@@ -509,7 +509,7 @@
                 labels: rawPedidos.map(i => i.estado.toUpperCase()),
                 datasets: [{
                     data: rawPedidos.map(i => i.total),
-                    backgroundColor: ['#ffc107', '#28a745', '#dc3545', '#6c757d', '#007bff']
+                    backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#6c757d', '#007bff']
                 }]
             },
             options: { responsive: true, plugins: { legend: { position: 'bottom' } } }

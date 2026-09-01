@@ -96,15 +96,17 @@ class ClienteController extends Controller
     // -------------------------------------------------------
     // EXPEDIENTE — VER DETALLE DE UN CLIENTE
     // -------------------------------------------------------
-
-    public function show($id)
+    public function show(Request $request, $id)
     {
         // Mantenemos tus servicios originales
         $cliente          = $this->clienteService->obtenerExpediente($id);
         $tiposCombustible = TipoCombustible::all();
         $infoGasco        = $this->gascoCupoService->obtenerSaldoActual($id);
 
-        // NUEVO: Pedidos paginados (reemplaza tu llamada al repository para que sea paginada)
+        // Captura de fechas
+        $despachoDesde = $request->query('despacho_desde');
+        $despachoHasta = $request->query('despacho_hasta');
+
         $pedidos = Pedido::where('cliente_id', $id)
             ->orderBy('fecha_solicitud', 'desc')
             ->paginate(20, ['*'], 'pedidos_page');
@@ -118,11 +120,13 @@ class ClienteController extends Controller
             ->whereHas('viaje', function ($q) {
                 $q->whereIn('tipo_planificacion', [1, 2]);
             })
+            ->when($despachoDesde, fn($q) => $q->whereDate('created_at', '>=', $despachoDesde))
+            ->when($despachoHasta, fn($q) => $q->whereDate('created_at', '<=', $despachoHasta))
             ->with(['viaje.tipoCombustible', 'viaje.sede', 'pedido'])
             ->orderBy('created_at', 'desc')
             ->paginate(15, ['*'], 'despachos_page');
 
-        // NUEVO: Sucursales paginadas (solo si es padre)
+        // Sucursales paginadas (solo si es padre)
         $sucursales = $cliente->es_padre 
             ? $cliente->sucursales()->paginate(15, ['*'], 'sucursales_page') 
             : collect();
@@ -139,7 +143,9 @@ class ClienteController extends Controller
             'infoGasco', 
             'sucursales',
             'documentos',
-            'espacioUsadoMb'
+            'espacioUsadoMb',
+            'despachoDesde',
+            'despachoHasta'
         ));
     }
 

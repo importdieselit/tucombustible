@@ -15,11 +15,6 @@ class LogisticaInventarioService
         $this->ledgerRepo = $ledgerRepo;
     }
 
-    /**
-     * Resuelve el ID real de la tabla `tipos_combustible`
-     * BD: ID 1 = MGO, ID 2 = DIESEL
-     * Logística: Tipo 1 = Diésel, Tipo 2 = MGO
-     */
     private function obtenerTipoCombustibleId(Viaje $viaje): int
     {
         return match ((int) $viaje->tipo_planificacion) {
@@ -27,6 +22,12 @@ class LogisticaInventarioService
             2       => 2, 
             default => (int) ($viaje->tipo ?? 2),
         };
+    }
+
+    // Para que guarde el ID de quien creó la Planificación y no cambie al del Ayudante o Chofer
+    private function resolverUsuarioId(Viaje $viaje): int
+    {
+        return $viaje->usuario_id ?? auth()->id() ?? 1;
     }
 
     public function registrarCompromisoPlanificacion(Viaje $viaje): void
@@ -52,7 +53,7 @@ class LogisticaInventarioService
             'tipo_movimiento'     => $tipoMovimiento,
             'cantidad_litros'     => $litros,
             'cliente_id'          => $viaje->cliente_id,
-            'user_id'             => auth()->id() ?? 1,
+            'user_id'             => $this->resolverUsuarioId($viaje),
             'viaje_id'            => $viaje->id,
             'observaciones'       => $obs
         ]);
@@ -81,7 +82,7 @@ class LogisticaInventarioService
             'tipo_movimiento'     => 'reverso',
             'cantidad_litros'     => $litros,
             'cliente_id'          => $viaje->cliente_id,
-            'user_id'             => auth()->id() ?? 1,
+            'user_id'             => $this->resolverUsuarioId($viaje),
             'viaje_id'            => $viaje->id,
             'observaciones'       => $obs
         ]);
@@ -94,9 +95,10 @@ class LogisticaInventarioService
         }
 
         $tipoCombustibleId = $this->obtenerTipoCombustibleId($viaje);
-        $sedeId = $viaje->sede_id ?? $viaje->sede_origen_id;
+        $sedeId            = $viaje->sede_id ?? $viaje->sede_origen_id;
+        $usuarioId         = $this->resolverUsuarioId($viaje);
 
-        DB::transaction(function () use ($viaje, $tipoCombustibleId, $sedeId) {
+        DB::transaction(function () use ($viaje, $tipoCombustibleId, $sedeId, $usuarioId) {
 
             // 1. Liberar el compromiso
             $this->ledgerRepo->registrar([
@@ -106,7 +108,7 @@ class LogisticaInventarioService
                 'tipo_movimiento'     => 'compromiso_despacho',
                 'cantidad_litros'     => abs($viaje->litros),
                 'cliente_id'          => $viaje->cliente_id,
-                'user_id'             => auth()->id() ?? 1,
+                'user_id'             => $usuarioId,
                 'viaje_id'            => $viaje->id,
                 'observaciones'       => "Liberación de compromiso por despacho EN RUTA #{$viaje->id}"
             ]);
@@ -118,13 +120,12 @@ class LogisticaInventarioService
 
                     $this->ledgerRepo->registrar([
                         'sede_id'             => $sedeId,
-                       // 'deposito_id'         => $detalle->deposito_origen_id,
                         'tipo_combustible_id' => $tipoCombustibleId,
                         'bolsa_tipo'          => 'general',
                         'tipo_movimiento'     => 'despacho',
                         'cantidad_litros'     => -abs($totalLitros),
                         'cliente_id'          => $detalle->cliente_id ?? $viaje->cliente_id,
-                        'user_id'             => auth()->id() ?? 1,
+                        'user_id'             => $usuarioId,
                         'viaje_id'            => $viaje->id,
                         'observaciones'       => "Salida física por Despacho #{$viaje->id}"
                     ]);
@@ -145,7 +146,7 @@ class LogisticaInventarioService
                     'tipo_movimiento'     => 'despacho',
                     'cantidad_litros'     => -abs($totalLitros),
                     'cliente_id'          => $viaje->cliente_id,
-                    'user_id'             => auth()->id() ?? 1,
+                    'user_id'             => $usuarioId,
                     'viaje_id'            => $viaje->id,
                     'observaciones'       => "Salida física por Despacho #{$viaje->id}"
                 ]);
@@ -159,12 +160,13 @@ class LogisticaInventarioService
             return;
         }
 
-        $litros = abs($litrosRecibidos ?? (float) $viaje->litros);
-        $depositoId = $depositoDestinoId ?? $viaje->deposito_destino_id ?? null;
-        $sedeId = $viaje->sede_destino_id ?? $viaje->sede_origen_id ?? $viaje->sede_id;
+        $litros            = abs($litrosRecibidos ?? (float) $viaje->litros);
+        $depositoId        = $depositoDestinoId ?? $viaje->deposito_destino_id ?? null;
+        $sedeId            = $viaje->sede_destino_id ?? $viaje->sede_origen_id ?? $viaje->sede_id;
         $tipoCombustibleId = $this->obtenerTipoCombustibleId($viaje);
+        $usuarioId         = $this->resolverUsuarioId($viaje);
 
-        DB::transaction(function () use ($viaje, $sedeId, $depositoId, $tipoCombustibleId, $litros) {
+        DB::transaction(function () use ($viaje, $sedeId, $depositoId, $tipoCombustibleId, $litros, $usuarioId) {
             $this->ledgerRepo->registrar([
                 'sede_id'             => $sedeId,
                 'deposito_id'         => $depositoId,
@@ -173,7 +175,7 @@ class LogisticaInventarioService
                 'tipo_movimiento'     => 'compra',
                 'cantidad_litros'     => $litros,
                 'cliente_id'          => $viaje->cliente_id,
-                'user_id'             => auth()->id() ?? 1,
+                'user_id'             => $usuarioId,
                 'viaje_id'            => $viaje->id,
                 'observaciones'       => "Ingreso de inventario por Compra #{$viaje->id} (Completada)",
             ]);
