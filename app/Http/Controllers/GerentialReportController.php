@@ -79,8 +79,13 @@ class GerentialReportController extends Controller
             return $item->tipo === 'CUENTAS POR PAGAR' || str_contains($item->cuenta, 'CXP NACIONALES');
         });
         
-        $cxpCMGO = $records->where('cuenta', 'CXP (USD)')->where('descuenta', 'MARINE GAS OIL ( TM )')->first()->monto ?? 0;
-        $cxpCDiesel = $records->where('cuenta', 'CXP (USD)')->where('descuenta', 'DIESEL')->first()->monto ?? 0;
+        $cxpCMGO = $records->where('cuenta', 'CXP (USD)')
+            ->filter(fn($r) => str_contains(strtoupper($r->descuenta ?? ''), 'MARINE GAS OIL'))
+            ->first()->monto ?? 0;
+    
+        $cxpCDiesel = $records->where('cuenta', 'CXP (USD)')
+            ->filter(fn($r) => str_contains(strtoupper($r->descuenta ?? ''), 'DIESEL'))
+            ->first()->monto ?? 0;
         $cxpComb = $cxpCMGO + $cxpCDiesel;
 
         // Sumatorias base
