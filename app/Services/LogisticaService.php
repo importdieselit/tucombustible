@@ -138,7 +138,7 @@ class LogisticaService
         foreach ($viaje->detalles as $detalle) {
             
             if (is_null($detalle->pedido_id) && $detalle->cliente_id) {
-                $tipoCombustibleId = ((int) $viaje->tipo_planificacion === 1) ? 2 : 1;
+                $tipoCombustibleId = ((int) $viaje->tipo_planificacion === 2) ? 2 : 1;
                 
                 // Usamos los litros que guardamos al crear el detalle
                 $litrosDevolverSaldo = $detalle->litros_descontados_saldo ?? 0;
@@ -153,7 +153,7 @@ class LogisticaService
                 }
 
                 // 2. Revertir impacto en Cupo GASCO (Solo Diésel)
-                if ($litrosDevolverCupo > 0 && (int) $viaje->tipo_planificacion === 1) {
+                if ($litrosDevolverCupo > 0 && (int) $viaje->tipo_planificacion === 2) {
                     Cliente::where('id', $detalle->cliente_id)
                         ->increment('disponible', $litrosDevolverCupo);
                     
@@ -275,8 +275,8 @@ class LogisticaService
 
             // Gestión de Saldo y Cupo vía CombustibleService (Cascada idéntica a Llenado Prepagado)
             if (!empty($item['cliente_id']) && is_null($pedidoId)) { 
-                // 1 para Diésel = tipo_combustible 2 | 2 para MGO = tipo_combustible 1
-                $tipoCombustibleId = ((int) $viaje->tipo_planificacion === 1) ? 2 : 1; 
+                
+                $tipoCombustibleId = ((int) $viaje->tipo_planificacion === 2) ? 2 : 1; 
                 
                 $litrosRequeridos = (float) $item['litros'];
 
@@ -292,13 +292,13 @@ class LogisticaService
                 $consumidoCupo  = is_array($resumenCobro) ? ($resumenCobro['consumido_cupo'] ?? 0) : ($resumenCobro->consumido_cupo ?? 0);
             }
 
-            // Lógica de Buques (MGO / Tipo 2)
+            // Lógica de Buques (MGO / Tipo 1)
             $buqueId = (isset($item['buque_id']) && is_numeric($item['buque_id'])) ? $item['buque_id'] : null;
             $buqueNombreManual = $item['buque_nombre'] ?? null;
             $imo = $item['buque_imo'] ?? null;
             $bandera = $item['buque_bandera'] ?? null;
 
-            if ((int) $viaje->tipo_planificacion === 2 && !empty($item['buque_nombre'])) {
+            if ((int) $viaje->tipo_planificacion === 1 && !empty($item['buque_nombre'])) {
                 $nombreFormateado = trim(strtoupper($item['buque_nombre']));
                 $buqueExistente = Buques::where('nombre', $nombreFormateado)->first();
 
