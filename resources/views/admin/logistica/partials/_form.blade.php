@@ -40,11 +40,11 @@
                     <input type="hidden" name="tipo_combustible_id" value="{{ $tipoPlanificacionId }}">
                 </template>
 
-                {{-- ⏰ CAMBIO AQUÍ: CALENDARIO CON HORA INTEGRADA --}}
+                {{-- ⏰ CALENDARIO CON HORA INTEGRADA --}}
                 <div class="mb-3">
                     <label class="small fw-bold text-muted text-uppercase">Fecha y Hora Programada</label>
                     <input type="text" id="fecha_programada_picker" name="fecha_programada" class="form-control fw-bold border-orange" 
-                        value="{{ old('fecha_programada', isset($viaje) ? \Carbon\Carbon::parse($viaje->fecha_salida)->format('Y-m-d H:i s') : date('Y-m-d H:i s')) }}" required>
+                        value="{{ old('fecha_programada', isset($viaje) ? \Carbon\Carbon::parse($viaje->fecha_salida)->format('Y-m-d H:i:s') : date('Y-m-d H:i:s')) }}" required>
                     <small class="text-muted d-block mt-1" style="font-size: 11px;">Indica el día y la hora exacta en la que la unidad debe iniciar la ruta.</small>
                 </div>
 
@@ -56,10 +56,11 @@
                     document.addEventListener("DOMContentLoaded", function() {
                         flatpickr("#fecha_programada_picker", {
                             enableTime: true,
-                            time_24hr: false,          // Muestra los botones de AM/PM en el reloj del selector
-                            altInput: true,            // Esconde el input real y crea uno nuevo estético para el usuario
-                            altFormat: "d-m-Y h:i K",  // Formato que VE el usuario (12 horas con AM/PM)
-                            dateFormat: "Y-m-d H:i:s", // Formato REAL que se envía a Laravel/MySQL (24 horas obligatorio con 'H' mayúscula)
+                            time_24hr: false,          // Muestra los botones de AM/PM
+                            altInput: true,            // Esconde el input real y crea uno estético
+                            altFormat: "d-m-Y h:i K",  // Formato que ve el usuario (12h)
+                            dateFormat: "Y-m-d H:i:s", // Formato enviado a MySQL/Laravel
+                            disableMobile: true,       // Fuerza Flatpickr en móviles
                             @if(!isset($viaje)) minDate: "today" @endif
                         });
                     });
@@ -73,7 +74,6 @@
                             .then(response => response.json())
                             .then(data => {
                                 if (data.tiene_alertas) {
-                                    // Diseño alineado con los estilos corporativos (border-left-orange y listas limpias)
                                     const listaHtml = `
                                         <div style="text-align: left; background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 5px solid #ff6600;">
                                             <ul class="mb-0 text-danger" style="list-style-type: none; padding-left: 0;">
@@ -87,18 +87,16 @@
                                         icon: 'warning',
                                         html: `El <b>${typeName.toLowerCase()}</b> seleccionado presenta irregularidades:<br><br>${listaHtml}<br><b class="text-dark">¿Deseas continuar con esta asignación de todos modos?</b>`,
                                         showCancelButton: true,
-                                        confirmButtonColor: '#ff6600', // Naranja branding
-                                        cancelButtonColor: '#212529',  // Oscuro corporativo
+                                        confirmButtonColor: '#ff6600',
+                                        cancelButtonColor: '#212529',
                                         confirmButtonText: '<i class="fas fa-check me-1"></i> Sí, continuar',
                                         cancelButtonText: '<i class="fas fa-times me-1"></i> Cancelar asignación',
                                         customClass: {
-                                            title: 'fw-black text-dark text-uppercase', // Misma tipografía de tu vista
+                                            title: 'fw-black text-dark text-uppercase',
                                         }
                                     }).then((result) => {
                                         if (!result.isConfirmed) {
-                                            // Vaciamos el DOM
                                             selectElement.value = '';
-                                            // Emitimos evento para que Alpine.js actualice su estado interno (x-model)
                                             selectElement.dispatchEvent(new Event('change'));
                                         }
                                     });
@@ -111,7 +109,6 @@
                     document.addEventListener('DOMContentLoaded', function () {
                         const form = document.getElementById('formPlanificacion'); 
                         
-                        // Validación de Tabulador de Viáticos
                         if (form) {
                             form.addEventListener('submit', function (event) {
                                 const destinosSeleccionados = document.querySelectorAll('input[name="destino_ciudad[]"]:checked');
@@ -128,7 +125,6 @@
                             });
                         }
 
-                        // Eventos para consultas de alertas documentales (usando los IDs correctos de la vista)
                         const vehiculoSelect = document.getElementById('vehiculo_select');
                         const cisternaSelect = document.getElementById('cisterna_select');
 
