@@ -80,11 +80,11 @@ class GerentialReportController extends Controller
         });
         
         $cxpCMGO = $records->where('cuenta', 'CXP (USD)')
-            ->filter(fn($r) => str_contains(strtoupper($r->descuenta ?? ''), 'MARINE GAS OIL'))
+            ->filter(fn($r) => stripos($r->descuenta ?? '', 'MARINE GAS OIL') !== false)
             ->first()->monto ?? 0;
     
-        $cxpCDiesel = $records->where('cuenta', 'CXP (USD)')
-            ->filter(fn($r) => str_contains(strtoupper($r->descuenta ?? ''), 'DIESEL'))
+       $cxpCDiesel = $records->where('cuenta', 'CXP (USD)')
+            ->filter(fn($item) => stripos($item->descuenta ?? '', 'DIESEL') !== false)
             ->first()->monto ?? 0;
         $cxpComb = $cxpCMGO + $cxpCDiesel;
 
