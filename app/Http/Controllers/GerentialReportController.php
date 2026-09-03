@@ -57,11 +57,11 @@ class GerentialReportController extends Controller
         $cobrosDesglose = $records->filter(function ($item) {
             return $item->cuenta === 'COBROS A CLIENTES' &&
                    $item->descuenta === 'CXC CLIENTES' &&
-                   in_array($item->tipo, ['INGRESOS EN CAJA (COBROS)', 'INGRESOS EN BANCOS (COBROS)']);
+                   in_array($item->tipo, ['INGRESOS EN CAJA (COBROS)', 'INGRESOS EN BANCO (COBROS)']);
         });
         $totalCobros = $cobrosDesglose->sum('monto');
 
-        dd($cobrosDesglose, $totalCobros);
+      //  dd($cobrosDesglose, $totalCobros);
 
         // Clasificación de variables principales basados en el archivo CSV
         // Ya no buscamos 'LITROS VENDIDOS' porque el CSV lo desglosa en facturas, notas y devoluciones
