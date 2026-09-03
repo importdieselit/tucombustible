@@ -122,16 +122,10 @@
             </div>
         </div>
         <div class="row g-3 mb-4">
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <div class="kpi-card p-3">
-                    <span class="text-muted text-uppercase d-block small fw-bold">Cuentas por Cobrar (CxC)</span> 
-                    <span class="fs-4 fw-bold text-dark">$ {{ number_format($totalCxC, 2, ',', '.') }}</span>
-                </div>
-            </div>
-            <div class="col-md-2">
-                <div class="kpi-card p-3" style="border-left-color: #10b981;">
-                    <span class="text-muted text-uppercase d-block small fw-bold">Cobros Realizados</span> 
-                    <span class="fs-4 fw-bold text-success">$ {{ number_format($totalCobros, 2, ',', '.') }}</span> 
+                     <span class="text-muted text-uppercase d-block small fw-bold">Cobros Realizados</span> 
+                    <span class="fs-4 fw-bold text-dark">$ {{ number_format($totalCobros, 2, ',', '.') }}</span> 
                 </div>
             </div>
             <div class="col-md-2">
@@ -143,7 +137,7 @@
             <div class="col-md-2">
                 <div class="kpi-card p-3" style="border-left-color: #2563eb;">
                     <span class="text-muted text-uppercase d-block small fw-bold">Total Bancos</span> 
-                    <span class="fs-4 fw-bold text-primary">$ {{ number_format($totalBancos, 2, ',', '.') }}</span>
+                    <span class="fs-4 fw-bold text-primary" >$ {{ number_format($totalBancos, 2, ',', '.') }}</span> 
                 </div>
             </div>
             <div class="col-md-2">
@@ -152,12 +146,13 @@
                     <span class="fs-4 fw-bold text-success">$ {{ number_format($totalCajas, 2, ',', '.') }}</span>
                 </div>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <div class="kpi-card p-3" style="border-left-color: #dc3545;">
                     <span class="text-muted text-uppercase d-block small fw-bold">Total Gastos (OPEX)</span> 
                     <span class="fs-4 fw-bold text-danger">$ {{ number_format($totalOpex, 2, ',', '.') }}</span>
                 </div>
             </div>
+            
             
         </div>
 
@@ -402,22 +397,28 @@
                     <span class="fs-4 fw-bold" style="color: #6366f1;">{{ number_format($margenBruto, 1, ',', '.') }}%</span>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                  <div class="kpi-card p-3" style="border-left-color: #0ea5e9;">
                     <span class="text-muted text-uppercase d-block small fw-bold">Inventario MGO</span> 
                     <span class="fs-4 fw-bold" style="color: #0ea5e9;">{{ number_format($invMGO, 0, ',', '.') }} L</span>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <div class="kpi-card p-3" style="border-left-color: #b45309;">
                     <span class="text-muted text-uppercase d-block small fw-bold">Inventario Diésel</span> 
                     <span class="fs-4 fw-bold" style="color: #b45309;">{{ number_format($invDiesel, 0, ',', '.') }} L</span>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <div class="kpi-card p-3" style="border-left-color: #f43f5e;">
                     <span class="text-muted text-uppercase d-block small fw-bold">CXP Combustible</span> 
                     <span class="fs-4 fw-bold text-danger">$ {{ number_format($cxpComb, 2, ',', '.') }}</span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="kpi-card p-3">
+                    <span class="text-muted text-uppercase d-block small fw-bold">Cuentas por Cobrar (CxC)</span> 
+                    <span class="fs-4 fw-bold text-dark">$ {{ number_format($totalCxC, 2, ',', '.') }}</span>
                 </div>
             </div>
         </div>
