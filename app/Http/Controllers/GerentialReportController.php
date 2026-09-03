@@ -61,6 +61,8 @@ class GerentialReportController extends Controller
         });
         $totalCobros = $cobrosDesglose->sum('monto');
 
+        dd($cobrosDesglose, $totalCobros);
+
         // Clasificación de variables principales basados en el archivo CSV
         // Ya no buscamos 'LITROS VENDIDOS' porque el CSV lo desglosa en facturas, notas y devoluciones
         $ventasLitros = $records->where('tipo', 'VENTAS')->sum('monto');
