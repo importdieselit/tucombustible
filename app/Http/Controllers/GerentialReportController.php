@@ -53,6 +53,14 @@ class GerentialReportController extends Controller
         $cxcRecords = $records->filter(fn($item) => $item->tipo === 'CUENTAS POR COBRAR');
         $inventarioDesglose = $records->filter(fn($item) => $item->tipo === 'INVENTARIO');
 
+        // Filtrado y Consolidado de Cobros a Clientes
+        $cobrosDesglose = $records->filter(function ($item) {
+            return $item->cuenta === 'COBROS A CLIENTES' &&
+                   $item->descuenta === 'CXC CLIENTES' &&
+                   in_array($item->tipo, ['INGRESOS EN CAJA (COBROS)', 'INGRESOS EN BANCOS (COBROS)']);
+        });
+        $totalCobros = $cobrosDesglose->sum('monto');
+
         // Clasificación de variables principales basados en el archivo CSV
         // Ya no buscamos 'LITROS VENDIDOS' porque el CSV lo desglosa en facturas, notas y devoluciones
         $ventasLitros = $records->where('tipo', 'VENTAS')->sum('monto');
@@ -79,13 +87,8 @@ class GerentialReportController extends Controller
             return $item->tipo === 'CUENTAS POR PAGAR' || str_contains($item->cuenta, 'CXP NACIONALES');
         });
         
-        $cxpCMGO = $records->where('cuenta', 'CXP (USD)')
-            ->filter(fn($r) => stripos($r->descuenta ?? '', 'MARINE GAS OIL') !== false)
-            ->first()->monto ?? 0;
-    
-       $cxpCDiesel = $records->where('cuenta', 'CXP (USD)')
-            ->filter(fn($item) => stripos($item->descuenta ?? '', 'DIESEL') !== false)
-            ->first()->monto ?? 0;
+        $cxpCMGO = $records->where('cuenta', 'CXP (USD)')->where('descuenta', 'MARINE GAS OIL ( TM )')->first()->monto ?? 0;
+        $cxpCDiesel = $records->where('cuenta', 'CXP (USD)')->where('descuenta', 'DIESEL')->first()->monto ?? 0;
         $cxpComb = $cxpCMGO + $cxpCDiesel;
 
         // Sumatorias base
@@ -94,8 +97,8 @@ class GerentialReportController extends Controller
         $inventarioTotal = $inventarioDesglose->sum('monto');
 
         // KPIs de Inventario precisos (Para inyectar en la vista)
-        $invDiesel = $inventarioDesglose->filter(fn($q) => stripos(strtoupper($q->cuenta), 'DIESEL') !== false )->sum('monto');
-        $invMGO = $inventarioDesglose->filter(fn($q) => stripos(strtoupper($q->cuenta), 'MARINE GAS OIL') !== false )->sum('monto');
+        $invDiesel = $inventarioDesglose->filter(fn($q) => str_contains(strtoupper($q->cuenta), 'DIESEL'))->sum('monto');
+        $invMGO = $inventarioDesglose->filter(fn($q) => str_contains(strtoupper($q->cuenta), 'MARINE GAS OIL'))->sum('monto');
 
         $comprasUsd = $precioCompra * $litrosComprados; 
         $margenBruto = $ventasUsd > 0 ? (($ventasUsd - $comprasUsd) / $ventasUsd) * 100 : 0;
@@ -148,7 +151,8 @@ class GerentialReportController extends Controller
             'opexRecords', 'bancosRecords', 'cajasRecords', 'totalOpex',
             'totalBancos', 'totalCajas', 'totalLiquidez', 'pctBancos', 'pctCajas',
             'cxcRecords', 'cxpRecords', 'totalCxC', 'totalCxP', 'pctCxC_Ventas', 'pctCxP_Ventas',
-            'margenBruto', 'comprasUsd', 'inventarioTotal', 'alertas', 'balanceLitros', 'litrosComprados','cxpComb'
+            'margenBruto', 'comprasUsd', 'inventarioTotal', 'alertas', 'balanceLitros', 'litrosComprados','cxpComb',
+            'cobrosDesglose', 'totalCobros'
         ));
     }
 
