@@ -181,7 +181,7 @@ class DepositoService
         //Log::info("idDestino: {$idDestino}, Tanques críticos: " . json_encode($tanques));
 
         $mensaje = "⚠️ *ALERTA DE NIVELES CRÍTICOS* ⚠️\n";
-        $mensaje .= "Se ha registrado el varillaje del turno: *{$turno}* en la sede *{$nombreSede}*.\n\n";
+        $mensaje .= "Se ha registrado el aforo del turno: *{$turno}* en la sede *{$nombreSede}*.\n\n";
         $mensaje .= "Los siguientes tanques están por debajo del *20%* de su capacidad:\n\n";
 
         foreach ($tanques as $tanque) {
