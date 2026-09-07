@@ -69,7 +69,7 @@ class CombustibleService
                     'cantidad_litros'     => $merma,
                     'deposito_id'         => $idDeposito,
                     'user_id'             => auth()->id() ?? 1,
-                    'observaciones'       => 'Ajuste automático generado por conciliación de varillaje.'
+                    'observaciones'       => 'Ajuste automático generado por conciliación de aforo.'
                 ]);
             }
         }

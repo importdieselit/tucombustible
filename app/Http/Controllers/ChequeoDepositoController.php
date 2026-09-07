@@ -94,7 +94,7 @@ class ChequeoDepositoController extends Controller
             $this->depositoService->procesarChequeo($data);
 
             return redirect()->route('combustibles.chequeos_depositos.index')
-                ->with('success', '¡Auditoría de varillaje registrada y cubicada correctamente!');
+                ->with('success', '¡Aforo registrado correctamente!');
 
         } catch (Exception $e) {
             if ($e->getMessage() === 'DUPLICADO_DETECTADO') {

@@ -124,7 +124,7 @@
                         @empty
                             <tr>
                                 <td colspan="7" class="text-center py-4 fw-bold text-muted" style="font-size: 14px;">
-                                    No hay registros de varillaje que coincidan con los filtros aplicados.
+                                    No hay registros de aforo que coincidan con los filtros aplicados.
                                 </td>
                             </tr>
                         @endforelse
