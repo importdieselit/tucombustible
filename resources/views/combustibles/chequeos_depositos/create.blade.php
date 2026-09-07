@@ -241,7 +241,7 @@
                             <h5 class="fw-black text-uppercase mb-1" style="font-size: 14px; letter-spacing: 0.5px;">Cierre de Lote Seguro</h5>
                             <p class="text-muted small mb-3">Al procesar, se guardará la estructura completa de manera obligatoria.</p>
                             <button type="submit" class="btn btn-warning w-100 fw-black text-uppercase py-2 shadow" style="color: #000; font-size: 13px; background-color: #ff6600; border-color: #ff6600;">
-                                <i class="fas fa-check-circle me-1"></i> Registrar y Firmar Aforo
+                                <i class="fas fa-check-circle me-1"></i> Guardar / Enviar a Whatsapp
                             </button>
                         </div>
                     </div>
