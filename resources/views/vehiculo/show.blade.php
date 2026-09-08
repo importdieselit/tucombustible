@@ -592,9 +592,10 @@
             });
 
             const tileUrl = apiKey 
-            ? `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?api_key=${apiKey}`
+            ? `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${apiKey}`
             : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
 
+            
             L.tileLayer(tileUrl).addTo(map);
 
             const truckIcon = L.divIcon({
