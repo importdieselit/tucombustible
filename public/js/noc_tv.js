@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function () {
         
         // Construir la URL del TileLayer con o sin la API Key
         const tileUrl = apiKey 
-        ? `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${apiKey}`
+        ? `https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=${apiKey}`
         : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
 
         L.tileLayer(tileUrl).addTo(map);
