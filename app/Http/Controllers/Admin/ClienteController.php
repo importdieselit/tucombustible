@@ -103,6 +103,19 @@ class ClienteController extends Controller
         $tiposCombustible = TipoCombustible::all();
         $infoGasco        = $this->gascoCupoService->obtenerSaldoActual($id);
 
+        $qrExiste = false;
+        $qrPath   = null;
+        $extensiones = ['png', 'jpg', 'jpeg'];
+
+        foreach ($extensiones as $ext) {
+            $pathRelativo = "clientes/qr/{$cliente->id}.{$ext}";
+            if (Storage::disk('public')->exists($pathRelativo)) {
+                $qrExiste = true;
+                $qrPath   = asset("storage/clientes/qr/{$cliente->id}.{$ext}");
+                break;
+            }
+        }
+
         // Captura de fechas
         $despachoDesde = $request->query('despacho_desde');
         $despachoHasta = $request->query('despacho_hasta');
@@ -145,7 +158,9 @@ class ClienteController extends Controller
             'documentos',
             'espacioUsadoMb',
             'despachoDesde',
-            'despachoHasta'
+            'despachoHasta',
+            'qrExiste',
+            'qrPath'
         ));
     }
 
@@ -583,5 +598,48 @@ class ClienteController extends Controller
 
         // Descarga segura
         return Storage::download($documento->ruta_archivo, $documento->nombre_archivo . '.pdf');
+    }
+
+    public function uploadQr(Request $request, $id)
+    {
+        $request->validate([
+            'qr' => 'required|image|mimes:png,jpg,jpeg|max:2048',
+        ], [
+            'qr.required' => 'Debe seleccionar un archivo de imagen.',
+            'qr.image'    => 'El archivo seleccionado debe ser una imagen válida.',
+            'qr.mimes'    => 'Formato no permitido. Solo se aceptan archivos .PNG o .JPG.',
+            'qr.max'      => 'El archivo no debe pesar más de 2 MB.'
+        ]);
+
+        $cliente = Cliente::findOrFail($id);
+        $archivo = $request->file('qr');
+        $extension = strtolower($archivo->getClientOriginalExtension());
+
+        // Limpiar cualquier QR viejo previo (por si cambió de extensión .png a .jpg o viceversa)
+        foreach (['png', 'jpg', 'jpeg'] as $ext) {
+            $viejoPath = "clientes/qr/{$cliente->id}.{$ext}";
+            if (Storage::disk('public')->exists($viejoPath)) {
+                Storage::disk('public')->delete($viejoPath);
+            }
+        }
+
+        // Guardar la nueva imagen con el ID del cliente
+        $archivo->storeAs('clientes/qr', "{$cliente->id}.{$extension}", 'public');
+
+        return redirect()->back()->with('success', 'Código QR actualizado correctamente.');
+    }
+
+    public function destroyQr($id)
+    {
+        $cliente = Cliente::findOrFail($id);
+
+        foreach (['png', 'jpg', 'jpeg'] as $ext) {
+            $path = "clientes/qr/{$cliente->id}.{$ext}";
+            if (Storage::disk('public')->exists($path)) {
+                Storage::disk('public')->delete($path);
+            }
+        }
+
+        return redirect()->back()->with('success', 'Código QR eliminado correctamente.');
     }
 }

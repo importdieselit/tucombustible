@@ -550,6 +550,68 @@
                 </div>
             @endif
 
+            {{-- ========================================== --}}
+            {{-- CARD DE CÓDIGO QR DEL CLIENTE              --}}
+            {{-- ========================================== --}}
+            <div class="card shadow-sm border-0 mb-4 no-print">
+                <div class="card-body">
+                    <h6 class="fw-bold text-uppercase small text-dark mb-3 border-bottom pb-1">
+                        <i class="fas fa-qrcode me-2 text-orange"></i>Código QR del Cliente
+                    </h6>
+
+                    @if($qrExiste)
+                        {{-- VISTA CUANDO SÍ TIENE QR CREADO --}}
+                        <div class="text-center mb-3">
+                            <div class="p-2 border rounded bg-white d-inline-block shadow-sm">
+                                <img src="{{ $qrPath }}" alt="QR {{ $cliente->nombre }}" class="img-fluid" style="max-width: 170px; height: auto;">
+                            </div>
+                            <div class="mt-2">
+                                <span class="badge bg-success text-uppercase px-2 py-1">
+                                    <i class="fas fa-check-circle me-1"></i>QR Registrado
+                                </span>
+                            </div>
+                        </div>
+
+                        {{-- Formulario para reemplazar el QR --}}
+                        <form action="{{ route('clientes.qr.upload', $cliente->id) }}" method="POST" enctype="multipart/form-data" class="mb-2">
+                            @csrf
+                            <label class="form-label text-muted text-uppercase fw-bold mb-1" style="font-size: 10px;">Reemplazar imagen (.png, .jpg)</label>
+                            <div class="input-group input-group-sm mb-2">
+                                <input type="file" name="qr" accept=".png,.jpg,.jpeg" class="form-control" required>
+                                <button type="submit" class="btn btn-dark fw-bold" title="Actualizar QR">
+                                    <i class="fas fa-sync-alt text-orange"></i>
+                                </button>
+                            </div>
+                        </form>
+
+                        {{-- Botón para eliminar el QR --}}
+                        <form action="{{ route('clientes.qr.destroy', $cliente->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de eliminar el código QR de este cliente?');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-sm btn-outline-danger w-100 fw-bold uppercase" style="font-size: 11px;">
+                                <i class="fas fa-trash-alt me-1"></i> Eliminar QR
+                            </button>
+                        </form>
+                    @else
+                        {{-- VISTA CUANDO NO TIENE QR CREADO --}}
+                        <div class="alert alert-warning border-orange text-center mb-3 p-2" style="font-size: 11px;">
+                            <i class="fas fa-exclamation-triangle text-orange me-1"></i> Sin código QR asignado.
+                        </div>
+
+                        <form action="{{ route('clientes.qr.upload', $cliente->id) }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            <div class="mb-2">
+                                <label class="form-label text-muted text-uppercase fw-bold mb-1" style="font-size: 10px;">Seleccionar QR (.png, .jpg)</label>
+                                <input type="file" name="qr" accept=".png,.jpg,.jpeg" class="form-control form-control-sm" required>
+                            </div>
+                            <button type="submit" class="btn btn-dark btn-sm w-100 fw-bold text-uppercase">
+                                <i class="fas fa-upload me-1 text-orange"></i> Cargar Código QR
+                            </button>
+                        </form>
+                    @endif
+                </div>
+            </div>
+
             {{-- PANEL DE ACCIONES DINÁMICAS --}}
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-body">
