@@ -562,7 +562,7 @@
         const lat = {{ $item->latitud ?? 0 }};
         const lng = {{ $item->longitud ?? 0 }};
         const placa = "{{ $item->placa }}";
-        const apiKey= "{{ config('services.cartomap.api_key') ?? '' }}"; // Asegúrate de tener la clave en tu archivo .env
+        const apiKey = "{{ config('services.cartomap.api_key') ?? '' }}"; // Asegúrate de tener la clave en tu archivo .env
 
         // Verificar si hay coordenadas válidas (si no, poner una por defecto o no mostrar)
         if (lat !== 0 && lng !== 0) {
@@ -590,9 +590,11 @@
                 map.invalidateSize(); // Crucial para recalcular dimensiones
             });
 
+            const tileUrl = apiKey 
+            ? `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?api_key=${apiKey}`
+            : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
 
-            
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=${apiKey}').addTo(map);
+            L.tileLayer(tileUrl).addTo(map);
 
             const truckIcon = L.divIcon({
                 html: `<div class="map-marker-container"><div class="marker-pulse"></div><i class="fa-solid fa-truck-moving text-corporate"></i></div>`,
