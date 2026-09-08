@@ -158,8 +158,14 @@
         
             // Construir la URL del TileLayer con o sin la API Key
             const tileUrl = apiKey 
-            ? `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?key=${apiKey}`
+            ? `https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=${apiKey}`
             : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+            
+            L.tileLayer(tileUrl, {
+                subdomains: 'abcd',
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
+            }).addTo(map);
                 
             L.circle(sedeCoords, {
                 color: '#002d72',
