@@ -864,12 +864,13 @@ class VehiculoController extends BaseController
     public function ubicacionGeneral()
     {
         // Filtramos unidades que tengan GPS (evitamos lat/lng en 0 o null)
+        $api_key_map = config('services.cartomap.api_key');
         $unidades = Vehiculo::with(['isMarca','isModelo'])->whereNotNull('latitud')
             ->whereNotNull('longitud')
             ->where('latitud', '!=', 0)
             ->get(['id', 'placa', 'marca', 'modelo', 'tipo', 'estatus', 'latitud', 'longitud', 'updated_at']);
 
-        return view('vehiculo.ubicacion_general', compact('unidades'));
+        return view('vehiculo.ubicacion_general', compact('unidades', 'api_key_map'));
     }
 
     public function apiUbicaciones()
