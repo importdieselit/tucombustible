@@ -728,8 +728,8 @@ class VehiculoController extends BaseController
     
     $cisternas= $data->where('tipo', 2);
     $totalCisternas= $cisternas->count();
-    $camiones = $data->whereIn('tipoVehiculo.tipo', ['CAMION','CAMION CISTERNA']);
-    $chutos = $data->whereIn('tipoVehiculo.tipo', ['CHUTO']);
+    $camiones = $data->whereIn('tipo', [1,4,5]);
+    $chutos = $data->whereIn('tipo', [3]);
     $totalCamiones= $camiones->count();
     $totalChutos= $chutos->count();
 
