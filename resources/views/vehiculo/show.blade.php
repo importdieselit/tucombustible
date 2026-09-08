@@ -93,8 +93,9 @@
     }
 </style>
 @endpush
-
-
+@php
+    $api_key_map = config('services.cartomap.api_key');
+@endphp
 @section('content')
 <div class="container-fluid">
 <div class="col-12 col-md-auto ms-auto pt-2">
@@ -562,8 +563,8 @@
         const lat = {{ $item->latitud ?? 0 }};
         const lng = {{ $item->longitud ?? 0 }};
         const placa = "{{ $item->placa }}";
-        const apiKey = "{{ config('services.cartomap.api_key') ?? '' }}"; // Asegúrate de tener la clave en tu archivo .env
-
+        const apiKey = "{{ $api_key_map ?? '' }}"; // Asegúrate de tener la clave en tu archivo .env
+        console.log("API Key para mapas:", apiKey);
         // Verificar si hay coordenadas válidas (si no, poner una por defecto o no mostrar)
         if (lat !== 0 && lng !== 0) {
             const map = L.map('map', { 
