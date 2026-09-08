@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }).setView([10.488249123497356, -66.8234169941792], 8);
 
         // Obtener la API Key desde el objeto global NOC_CONFIG
-        const apiKey = window.NOC_CONFIG.cartoApiKey || '';
+        const apiKey = window.NOC_CONFIG.apiKeyMap || '';
         
         // Construir la URL del TileLayer con o sin la API Key
         const tileUrl = apiKey 
