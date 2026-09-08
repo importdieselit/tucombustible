@@ -273,12 +273,12 @@ class Vehiculo extends Model
     public function scopeDisponibles(Builder $query): void
     {
         // Ajustar el estatus según tu lógica de "Disponible"
-        $query->where('estatus', 1)->where('es_flota', true);
+        $query->whereIn('estatus', [1,2])->where('es_flota', true);
     }
 
     public function scopeNoDisponibles(Builder $query): void
     {
-        $query->where('estatus', '<>', 1)->where('es_flota', true);
+        $query->whereNotIn('estatus', [1,2])->where('es_flota', true);
     }
 
     public function scopeEnServicio(Builder $query): void

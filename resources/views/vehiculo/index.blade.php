@@ -82,6 +82,7 @@
                     'Chutos' => ['count' => $ch_dis ?? 0, 'filter' => 'chutos_disponibles'],
                     'Cisternas' => ['count' => $c_dis ?? 0, 'filter' => 'cisternas_disponibles'],
                     'Livianos' => ['count' => $l_dis ?? 0, 'filter' => 'livianos_disponibles']
+                    'En Ruta' => ['count' => $unidades_en_servicio ?? 0, 'filter' => 'en_servicio'],
                 ],
                 'link' => route('vehiculos.list', ['filter' => 'disponibles'])
             ],
@@ -92,7 +93,7 @@
                 'icon' => 'fa-ban',
                 'color' => 'corporate-emphasis', // Aplicamos el gris oscuro corporativo
                 'details' => [
-                    'En Ruta' => ['count' => $unidades_en_servicio ?? 0, 'filter' => 'en_servicio'],
+                    
                     'Con Falla' => ['count' => $unidades_con_orden_abierta ?? 0, 'filter' => 'con_orden_abierta'],
                     'En Taller' => ['count' => $unidades_en_mantenimiento ?? 0, 'filter' => 'en_mantenimiento']
                 ],
