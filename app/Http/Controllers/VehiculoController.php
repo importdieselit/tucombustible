@@ -903,5 +903,22 @@ class VehiculoController extends BaseController
 
         return view('vehiculo.historial', compact('vehiculo', 'id', 'desde', 'hasta'));
     }
+
+    public function marcarInoperativo(Request $request, $id)
+    {
+        $request->validate([
+            'motivo' => 'required|string|max:500',
+        ]);
+
+        try {
+            $this->service->marcarComoInoperativo($id, $request->motivo);
+            Session::flash('success', 'El vehículo ha sido marcado como inoperativo.');
+        } catch (\Exception $e) {
+            Log::error("Error al colocar vehículo {$id} fuera de servicio: " . $e->getMessage());
+            Session::flash('error', 'Ocurrió un error al cambiar el estatus del vehículo.');
+        }
+
+        return Redirect::back();
+    }
     
 }

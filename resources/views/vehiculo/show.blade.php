@@ -114,6 +114,10 @@
             </button>
         @endif
 
+        <button class="btn btn-outline-danger shadow-sm w-md-auto" data-bs-toggle="modal" data-bs-target="#modalInoperativo">
+            <i class="fa-solid fa-ban me-1"></i> Inoperativo
+        </button>
+
         <a class="btn btn-danger shadow-sm g-col-2 w-md-auto d-flex align-items-center justify-content-center" 
            href="{{ route('ot.create', $item->id) }}" >
             <i class="fa-solid fa-triangle-exclamation me-1"></i> 
@@ -518,6 +522,34 @@
             </
             <button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
         </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalInoperativo" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form action="{{ route('vehiculos.inoperativo', $item->id) }}" method="POST" class="modal-content border-danger">
+            @csrf
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fa-solid fa-ban me-2"></i> Declarar Unidad Inoperativa</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning py-2 small">
+                    <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                    Esta acción cambiará el estatus de la unidad <strong>{{ $item->placa }}</strong> a Fuera de Servicio.
+                </div>
+                <div class="mb-3">
+                    <label for="motivo" class="form-label fw-bold">Motivo / Observación <span class="text-danger">*</span></label>
+                    <textarea name="motivo" id="motivo" class="form-control" rows="4" placeholder="Indique la razón detallada por la cual el vehículo entra en inoperatividad..." required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-danger fw-bold">
+                    <i class="fa-solid fa-save me-1"></i> Guardar Registro
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

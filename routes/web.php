@@ -20,7 +20,7 @@ use App\Http\Controllers\{
     DashboardController, VehiculoController, MarcaController, ModeloController,
     OrdenController, TanqueController, MovimientoCombustibleController,
     InventarioController, ProveedorController, PerfilController, UserController,
-    DepositoController, AlmacenController, ChoferController,
+    DepositoController, AlmacenController, ChoferController,RrhhController,
     AlertaController, AccesoController, InspeccionController, PedidoController,
     ReporteController, AforoController, SearchController, DataDeletionController,
     ViajesController, TelegramController, PlanificacionMantenimientoController,
@@ -28,7 +28,7 @@ use App\Http\Controllers\{
     AlmacenLayoutController,ConteoController, GerentialReportController, PagoController, GuardiaController,
     ChequeoDepositoController, CombustibleController, LlenadoCupoPrepagadoController, 
     TransaccionCombustibleController, ConsumoOperativoController, TrasegadoController, ReversoCombustibleController,
-    MermasController, VehiculoPrecargadoController, AbastecimientoTanqueController
+    MermasController, VehiculoPrecargadoController, AbastecimientoTanqueController, DocumentoAdjuntoController
 };
 use App\Http\Controllers\SalaControlController;
 
@@ -111,6 +111,7 @@ Route::middleware(['auth'])->group(function () {
      // Inspecciones y Vehículos
     Route::get('/marcas/get-modelos', [MarcaController::class, 'getModelos'])->name('marcas.getModelos');
     Route::get('/vehiculos/inspeccion/{vehiculo_id}/{tipo}', [InspeccionController::class, 'create'])->name('inspeccion.create');
+    Route::post('/vehiculos/{id}/inoperativo', [VehiculoController::class, 'marcarInoperativo'])->name('vehiculos.inoperativo');
     Route::put('vehiculos/updatev/{id}', [VehiculoController::class, 'updateV'])->name('vehiculos.updatev');
     Route::get('/inspecciones/{inspeccion_id}/pdf', [InspeccionController::class, 'exportPdf'])->name('inspecciones.pdf');
     Route::get('/inspecciones/reporte/{fecha_inicio?}/{fecha_fin?}', [InspeccionController::class, 'reporte'])->name('inspecciones.reporte');
@@ -249,6 +250,46 @@ Route::middleware(['auth'])->group(function () {
         Route::get('perfiles/list', [PerfilController::class, 'list'])->name('perfiles.list');
         Route::post('perfiles/{id}/permisos', [PerfilController::class, 'updatePermissions'])->name('perfiles.permisos.update');
         Route::post('perfiles/{id}/toggle-estatus', [PerfilController::class, 'toggleEstatus'])->name('perfiles.toggle-estatus');
+       
+       Route::prefix('rrhh')->name('rrhh.')->middleware(['auth'])->group(function () {
+            // Configuracion de Cargos
+            Route::get('/cargos', [RrhhController::class, 'cargos'])->name('cargos');
+            Route::post('/cargos', [RrhhController::class, 'storeCargo'])->name('cargos.store');
+            Route::put('/cargos/{id}', [RrhhController::class, 'updateCargo'])->name('cargos.update');
+            Route::delete('/cargos/{id}', [RrhhController::class, 'destroyCargo'])->name('cargos.destroy');
+
+            // Estructura Organizacional: Departamentos
+            Route::get('/departamentos', [RrhhController::class, 'departamentos'])->name('departamentos');
+            Route::post('/departamentos', [RrhhController::class, 'storeDepartamento'])->name('departamentos.store');
+            Route::put('/departamentos/{id}', [RrhhController::class, 'updateDepartamento'])->name('departamentos.update');
+            Route::delete('/departamentos/{id}', [RrhhController::class, 'destroyDepartamento'])->name('departamentos.destroy');
+
+            // Gestión de Empleados        
+            Route::get('/empleados', [RrhhController::class, 'index'])->name('empleados.index');
+            Route::get('/empleados/crear', [RrhhController::class, 'create'])->name('empleados.create');
+            Route::post('/empleados', [RrhhController::class, 'store'])->name('empleados.store');
+            Route::get('/empleados/{id}', [RrhhController::class, 'show'])->name('empleados.show');
+            Route::get('/empleado/{id}/editar', [RrhhController::class, 'edit'])->name('empleados.edit');
+            Route::put('/empleados/{id}', [RrhhController::class, 'update'])->name('empleados.update');
+            Route::delete('/empleados/{id}', [RrhhController::class, 'destroy'])->name('empleados.destroy');
+            Route::post('/empleados/{id}/documento', [RrhhController::class, 'uploadDoc'])->name('documentos.upload');
+        
+            // Control de Permisos y Vacaciones
+            Route::get('/permisos', [RrhhController::class, 'permisos'])->name('permisos');
+            Route::post('/permisos', [RrhhController::class, 'storePermiso'])->name('permisos.store');
+            Route::patch('/permisos/{id}/estatus', [RrhhController::class, 'updateEstatusPermiso'])->name('permisos.estatus');    
+            
+                // Catálogo General de Activos
+            Route::get('/activos', [RrhhController::class, 'indexActivos'])->name('activos.index');
+            Route::post('/activos', [RrhhController::class, 'storeActivo'])->name('activos.create');
+            Route::put('/activos/{id}', [RrhhController::class, 'updateActivo'])->name('activos.update');
+            Route::delete('/activos/{id}', [RrhhController::class, 'destroyActivo'])->name('activos.destroy');
+
+            // Asignación de Equipos y Activos
+            Route::get('/empleados/{id}/activos', [RrhhController::class, 'activosEmpleado'])->name('empleados.activos');
+            Route::post('/activos/asignar', [RrhhController::class, 'storeAsignacionActivo'])->name('activos.store');
+            Route::post('/activos/devolucion/{id}', [RrhhController::class, 'registrarDevolucionActivo'])->name('activos.devolucion');
+        });
         Route::get('/rrhh/evaluacion-form/{id}/edit', [EvaluacionesController::class, 'edit'])->name('evaluacion_form.edit');
         Route::put('/rrhh/evaluacion-form/{id}/update', [EvaluacionesController::class, 'update'])->name('evaluacion_form.update');
         Route::get('/rrhh/evaluacion-form/{id}', [EvaluacionesController::class, 'create'])->name('evaluacion_form.create');
@@ -261,6 +302,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/guardias/store-ajax', [GuardiaController::class, 'storeAjax'])->name('guardias.storeAjax');
         Route::delete('/guardias/delete-ajax/{id}', [GuardiaController::class, 'destroyAjax'])->name('guardias.destroyAjax');
         Route::get('/guardias/reporte', [GuardiaController::class, 'report'])->name('guardias.reporte');
+
+        Route::prefix('documentos-adjuntos')->group(function () {
+            Route::post('/', [DocumentoAdjuntoController::class, 'store']);
+            Route::get('/{entidad}/{id}', [DocumentoAdjuntoController::class, 'listarPorEntidad']);
+            Route::delete('/{id}', [DocumentoAdjuntoController::class, 'destroy']);
+        });
     
         // Combustible (Pedidos y Despachos)
         Route::prefix('combustible')->name('combustible.')->group(function () {
@@ -504,11 +551,6 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/sobreconsumo', [LogisticaController::class, 'sobreconsumo'])->name('sobreconsumo');
             Route::get('/crear/{tipo?}', [LogisticaController::class, 'create'])->name('create');
             Route::post('/guardar', [LogisticaController::class, 'store'])->name('store');
-
-            // Búsqueda AJAX de coincidencia de nombres y creación rápida desde Planificación
-            Route::get('/buscar-similares', [LogisticaController::class, 'buscarClientesSimilares'])->name('clientes.similares');
-            Route::post('/clientes/store-rapido', [LogisticaController::class, 'storeClienteRapido'])->name('clientes.store_rapido');
-
             // Rutas para Edición
             Route::get('/{id}', [LogisticaController::class, 'show'])->name('show');
             Route::get('/{id}/editar', [LogisticaController::class, 'edit'])->name('edit');
@@ -517,7 +559,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/pedidos/{id}/rechazar', [PedidoAdminController::class, 'rechazar'])->name('rechazar');
         });
 
-        // --- MÓDULO CLIENTES ---
+        // --- MÓDULO COMBUSTIBLE ---
         Route::prefix('admin-clientes')->name('clientes.')->group(function () {
             Route::get('/',                    [AdminClienteController::class, 'index'])->name('index');
             Route::get('/crear',               [AdminClienteController::class, 'create'])->name('create');

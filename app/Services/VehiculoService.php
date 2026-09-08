@@ -176,4 +176,21 @@ class VehiculoService
             ]);
         }
     }
+
+    public function marcarComoInoperativo(int $id, string $motivo, int $estatus = 3)
+    {
+        return DB::transaction(function () use ($id, $motivo, $estatus) {
+            $vehiculo = $this->repo->findById($id);
+
+            $vehiculo->update([
+                'estatus'           => $estatus, // 3: Fuera de Servicio / Inoperativo
+                'salida_motivo'     => $motivo,
+                'observacion'       => $motivo,
+                'salida_fecha'      => now(),
+                'salida_id_usuario' => Auth::id(),
+            ]);
+
+            return $vehiculo;
+        });
+    }
 }
