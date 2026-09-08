@@ -58,9 +58,17 @@ document.addEventListener('DOMContentLoaded', function () {
         map = L.map('map', { 
             attributionControl: false, fullscreenControl: false,
             zoomControl: false, scrollWheelZoom: false, dragging: false
-        }).setView([10.488249123497356, -66.8234169941792], 8); 
+        }).setView([10.488249123497356, -66.8234169941792], 8);
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+        // Obtener la API Key desde el objeto global NOC_CONFIG
+        const apiKey = window.NOC_CONFIG.cartoApiKey || '';
+        
+        // Construir la URL del TileLayer con o sin la API Key
+        const tileUrl = apiKey 
+        ? `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?api_key=${apiKey}`
+        : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+
+        L.tileLayer(tileUrl).addTo(map);
         L.circle(sedeCoords, { color: '#002d72', fillOpacity: 0.1, radius: RADIO_SEDE_METROS }).addTo(map);
 
         fetchSalaData(); 

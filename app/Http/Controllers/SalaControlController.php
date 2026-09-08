@@ -16,6 +16,7 @@ class SalaControlController extends Controller
     public function index(Request $request)
     {
         $token = null;
+        $apy_key_map = config('services.cartomap.api_key');
         if ($request->has('tv_init_token')) {
             $token = $request->query('tv_init_token');
             // Lo guardamos en la sesión para persistencia interna
@@ -25,7 +26,7 @@ class SalaControlController extends Controller
             $token = $request->header('X-TV-Token');
         }
         session(['tv_token' => $token]);
-        return view('vehiculo.sala_control', compact('token'));
+        return view('vehiculo.sala_control', compact('token','apy_key_map'));
     }
 
 

@@ -58,7 +58,8 @@
             tvToken: "{{ $token ?? '' }}",
             streamUrl: "{{ route('api.sala.control.stream') }}",
             cssVersion: "{{ $cssVersion }}",
-            jsVersion: "{{ $jsVersion }}"
+            jsVersion: "{{ $jsVersion }}",
+            apiKeyMap: "{{ $apy_key_map ?? '' }}",
         };
     </script>
 
