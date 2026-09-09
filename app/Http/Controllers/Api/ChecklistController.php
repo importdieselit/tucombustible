@@ -116,7 +116,7 @@ class ChecklistController extends Controller
                         ->where(function ($query) {
                             $query->whereDate('fecha_salida', '>=', now())
                                 ->orWhere('status', 'Programado');
-                        })
+                        })->orderBy('fecha_salida', 'asc')
                         ->get();
 
                     // --- BLOQUE 1: Inyectar Rutas/Viajes en "Información General" ---
