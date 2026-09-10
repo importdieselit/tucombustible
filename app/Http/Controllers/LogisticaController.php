@@ -181,7 +181,7 @@ class LogisticaController extends Controller
             'planta_proveedor_id' => 'required_if:tipo_planificacion,4|nullable|exists:plantas,id',
             'planta_destino_id'   => 'required_if:tipo_planificacion,4|nullable|exists:sedes,id',
             'fecha_programada'    => 'required|date',
-            'destino_ciudad'      => 'required|array',
+            'destino_ciudad'      => 'required',
             'destino_ciudad.*'    => 'required|string',
             'items'               => 'required_if:tipo_planificacion,1,2|array', 
 

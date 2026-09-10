@@ -27,7 +27,7 @@ class LogisticaInventarioService
     // Para que guarde el ID de quien creó la Planificación y no cambie al del Ayudante o Chofer
     private function resolverUsuarioId(Viaje $viaje): int
     {
-        return $viaje->usuario_id ?? auth()->id() ?? 1;
+        return $viaje->usuario_id ?? 1;
     }
 
     public function registrarCompromisoPlanificacion(Viaje $viaje): void

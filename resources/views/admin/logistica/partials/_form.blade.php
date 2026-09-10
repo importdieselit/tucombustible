@@ -111,13 +111,15 @@
                         
                         if (form) {
                             form.addEventListener('submit', function (event) {
-                                const destinosSeleccionados = document.querySelectorAll('input[name="destino_ciudad[]"]:checked');
-                                if (destinosSeleccionados.length === 0) {
+                                // Se quitó los corchetes [] del selector name
+                                const destinoSeleccionado = document.querySelector('input[name="destino_ciudad"]:checked');
+                                
+                                if (!destinoSeleccionado) {
                                     event.preventDefault(); 
                                     Swal.fire({
                                         icon: 'error',
                                         title: 'DATO REQUERIDO',
-                                        text: 'Debe seleccionar al menos un destino en el tabulador de viáticos antes de guardar.',
+                                        text: 'Debe seleccionar un destino en el tabulador de viáticos antes de guardar.',
                                         confirmButtonColor: '#212529',
                                         confirmButtonText: 'ENTENDIDO'
                                     });
@@ -142,22 +144,23 @@
                     });
                 </script>
 
-                {{-- DESTINO PARA TABULADOR (MULTIPLE - ESTILO CHECKBOX PREMIUM) --}}
+                {{-- DESTINO PARA TABULADOR (SELECCIÓN ÚNICA - RADIO BUTTON) --}}
                 <div class="mb-3">
-                    <label class="small fw-bold text-muted text-uppercase text-orange">Destinos para Tabulador de Viaticos</label>
+                    <label class="small fw-bold text-muted text-uppercase text-orange">Destino para Tabulador de Viaticos</label>
                     
                     <!-- Contenedor con la misma estética de tus inputs, pero con scroll interno fijo -->
                     <div class="form-control border-orange bg-white p-2 overflow-auto" style="max-height: 155px; scrollbar-width: thin;">
+                        @php
+                            $seleccionado = old('destino_ciudad', $viaje->destino_ciudad ?? '');
+                        @endphp
+
                         @foreach($tabuladores as $tabulador)
-                            @php
-                                $seleccionados = (array) old('destino_ciudad', isset($viaje) ? explode(', ', $viaje->destino_ciudad) : []);
-                            @endphp
                             <div class="form-check my-1">
-                                <!-- Cambiamos a tipo checkbox conservando el name array para el controlador -->
-                                <input class="form-check-input custom-check-orange" type="checkbox" name="destino_ciudad[]" 
+                                <!-- Tipo radio con name escalar para permitir solo 1 selección -->
+                                <input class="form-check-input custom-check-orange" type="radio" name="destino_ciudad" 
                                     value="{{ $tabulador->destino }}" 
                                     id="dest_{{ $loop->index }}"
-                                    {{ in_array($tabulador->destino, $seleccionados) ? 'checked' : '' }}>
+                                    {{ $seleccionado == $tabulador->destino ? 'checked' : '' }}>
                                 
                                 <label class="form-check-label small fw-bold text-dark user-select-none" for="dest_{{ $loop->index }}" style="cursor: pointer;">
                                     {{ $tabulador->destino }} <span class="text-muted font-normal">{{ $tabulador->tipo_viaje ? "({$tabulador->tipo_viaje})" : '' }}</span>
@@ -165,10 +168,10 @@
                             </div>
                         @endforeach
                     </div>
-                    <small class="text-muted d-block mt-1" style="font-size: 11px;">Selecciona todas las ciudades que componen la ruta del viaje.</small>
+                    <small class="text-muted d-block mt-1" style="font-size: 11px;">Selecciona el destino correspondiente para este viaje.</small>
                 </div>
 
-                {{-- Una sola regla limpia para que el Checkbox encendido sea naranja como tu branding --}}
+                {{-- Estilo para personalizar el Radio activo con el color naranja --}}
                 <style>
                     .custom-check-orange:checked {
                         background-color: #fd7e14 !important;
