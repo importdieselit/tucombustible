@@ -6,12 +6,14 @@ use App\Models\Viaje;
 use App\Models\Vehiculo;
 use App\Services\LogisticaInventarioService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Notifications\ViajeCreadoNotification;
 use Illuminate\Support\Facades\Notification;
+use Throwable;
 
 class ViajeObserver
 {
-    protected $inventarioService;
+    protected LogisticaInventarioService $inventarioService;
 
     public function __construct(LogisticaInventarioService $inventarioService)
     {
@@ -19,97 +21,130 @@ class ViajeObserver
     }
 
     /**
-     * Handle the Viaje "created" event.
+     * Disparado al crear un nuevo viaje.
      */
-    public function created(Viaje $viaje)
+    public function created(Viaje $viaje): void
     {
-        $vehiculo = Vehiculo::find($viaje->vehiculo_id);
-        
-        if ($vehiculo) {
-            $vehiculo->chofer_id = $viaje->chofer_id;
+        try {
+            DB::transaction(function () use ($viaje) {
+                $vehiculo = Vehiculo::lockForUpdate()->find($viaje->vehiculo_id);
+                
+                if ($vehiculo) {
+                    $vehiculo->chofer_id = $viaje->chofer_id;
 
-            if (!is_null($viaje->cisterna)) {
-                // Desacoplar esta cisterna de cualquier otro vehículo
-                Vehiculo::where('acoplado_id', $viaje->cisterna)->update(['acoplado_id' => null]);
-                // Acoplarla al vehículo actual
-                $vehiculo->acoplado_id = $viaje->cisterna;
-            }
-            
-            $vehiculo->save();
+                    // Desacople preventivo y nuevo acople de cisterna
+                    if (!is_null($viaje->cisterna)) {
+                        Vehiculo::where('acoplado_id', $viaje->cisterna)
+                            ->where('id', '!=', $vehiculo->id)
+                            ->update(['acoplado_id' => null]);
 
-            $viaje->load(['chofer', 'ayudante_chofer','vehiculo', 'cisternaAcoplada']);
+                        $vehiculo->acoplado_id = $viaje->cisterna;
+                    }
+                    
+                    $vehiculo->save();
+                }
+            });
 
-            $destinatarios = collect();
+            // Envío de notificaciones fuera de la transacción DB
+            $this->notificarAsignacionViaje($viaje);
 
-            if ($viaje->chofer_id) {
-                $destinatarios->push($viaje->chofer);
-            }
-            
-            if (!is_null($viaje->ayudante)) {
-                $destinatarios->push($viaje->ayudante_chofer);
-            }
-
-            // Si hay personal asignado, enviamos la notificación multicanal (Push + WhatsApp)
-            if ($destinatarios->isNotEmpty()) {
-                Notification::send($destinatarios, new ViajeCreadoNotification($viaje));
-            }
-            
+        } catch (Throwable $e) {
+            Log::error("Error en ViajeObserver@created para Viaje #{$viaje->id}: " . $e->getMessage(), [
+                'exception' => $e
+            ]);
         }
     }
 
     /**
-     * Handle the Viaje "updated" event.
+     * Disparado al actualizar un viaje existente.
      */
-    public function updated(Viaje $viaje)
+    public function updated(Viaje $viaje): void
     {
-        // Verificamos si el campo status cambió en esta actualización
-        if ($viaje->isDirty('status')) {
-            $nuevoStatus = $viaje->status;
-            $viejoStatus = $viaje->getOriginal('status');
+        // Evaluación correcta post-persistencia
+        if (!$viaje->wasChanged('status')) {
+            return;
+        }
 
-            // 1. TRANSICIÓN A "EN RUTA" (Salida de Planta)
-            if (strtoupper($viejoStatus) === 'PROGRAMADO' && $nuevoStatus === 'EN RUTA') {
+        $viejoStatus = strtoupper((string) $viaje->getOriginal('status'));
+        $nuevoStatus = strtoupper((string) $viaje->status);
+
+        try {
+            // 1. TRANSICIÓN A "EN RUTA" (Salida Confirmada)
+            if ($viejoStatus === 'PROGRAMADO' && $nuevoStatus === 'EN RUTA') {
                 
-                $this->actualizarEstatusFlota($viaje, 2);
+                DB::transaction(function () use ($viaje) {
+                    // Sincronizar estatus físico de la unidad y acoplado
+                    $this->actualizarEstatusFlota($viaje, 2);
 
-                // ⚡ LEDGER AUTOMÁTICO: Libera compromiso comercial y descuenta Stock Físico de la Sede
-                $this->inventarioService->registrarSalidaFisicaDespacho($viaje);
+                    // LEDGER AUTOMÁTICO: Única fuente de verdad para el descuento de stock
+                    $this->inventarioService->registrarSalidaFisicaDespacho($viaje);
+                });
 
-            // 2. TRANSICIÓN A "COMPLETADO" (Llegada / Descarga)
+            // 2. TRANSICIÓN A "COMPLETADO" (Llegada / Recepción)
             } elseif ($nuevoStatus === 'COMPLETADO') {
                 
-                Vehiculo::where('id', $viaje->vehiculo_id)->update(['acoplado_id' => null]);
-                $this->actualizarEstatusFlota($viaje, 1);
+                DB::transaction(function () use ($viaje) {
+                    // Liberar acople y cambiar estatus a Disponible (1)
+                    Vehiculo::where('id', $viaje->vehiculo_id)->update(['acoplado_id' => null]);
+                    $this->actualizarEstatusFlota($viaje, 1);
 
-                // ⚡ LEDGER AUTOMÁTICO: Si es una Compra (Tipo 4), suma los litros físicos reales
-                if ((int) $viaje->tipo_planificacion === 4) {
-                    $this->inventarioService->registrarEntradaCompra($viaje);
-                    
-                    // Actualizamos el estatus en la tabla auxiliar de compras
-                    DB::table('compras_combustible')
-                        ->where('viaje_id', $viaje->id)
-                        ->update(['estatus' => 'COMPLETADO']);
-                }
+                    // Si es una Compra de Combustible (Tipo 4), ingresar stock al Ledger
+                    if ((int) $viaje->tipo_planificacion === 4) {
+                        $this->inventarioService->registrarEntradaCompra($viaje);
+                        
+                        DB::table('compras_combustible')
+                            ->where('viaje_id', $viaje->id)
+                            ->update([
+                                'estatus' => 'COMPLETADO',
+                                'updated_at' => now()
+                            ]);
+                    }
+                });
             }
+        } catch (Throwable $e) {
+            Log::critical("Error procesando transición de estado para Viaje #{$viaje->id} ({$viejoStatus} -> {$nuevoStatus}): " . $e->getMessage(), [
+                'exception' => $e
+            ]);
         }
     }
 
-    private function actualizarEstatusFlota(Viaje $viaje, int $estatusDestino)
+    /**
+     * Actualiza el estatus operativo del Chuto y su Cisterna de forma atómica.
+     */
+    private function actualizarEstatusFlota(Viaje $viaje, int $estatusDestino): void
     {
-        // 1. Actualizar el Chuto/Vehículo principal
-        $vehiculo = Vehiculo::find($viaje->vehiculo_id);
-        if ($vehiculo && $vehiculo->estatus != $estatusDestino) {
-            $vehiculo->estatus = $estatusDestino;
-            $vehiculo->saveQuietly();
-        }
+        // Actualizar vehículo principal
+        Vehiculo::where('id', $viaje->vehiculo_id)->update(['estatus' => $estatusDestino]);
 
-        // 2. Actualizar la Cisterna
+        // Actualizar cisterna si aplica
         if (!is_null($viaje->cisterna)) {
-            $cisterna = Vehiculo::find($viaje->cisterna);
-            if ($cisterna && $cisterna->estatus != $estatusDestino) {
-                $cisterna->estatus = $estatusDestino;
-                $cisterna->saveQuietly();
+            Vehiculo::where('id', $viaje->cisterna)->update(['estatus' => $estatusDestino]);
+        }
+    }
+
+    /**
+     * Notificación multicanal aislada de fallos de red.
+     */
+    private function notificarAsignacionViaje(Viaje $viaje): void
+    {
+        try {
+            $viaje->loadMissing(['chofer', 'ayudante_chofer', 'vehiculo', 'cisternaAcoplada']);
+
+            $destinatarios = collect();
+
+            if ($viaje->chofer) {
+                $destinatarios->push($viaje->chofer);
             }
+            
+            if ($viaje->ayudante_chofer) {
+                $destinatarios->push($viaje->ayudante_chofer);
+            }
+
+            if ($destinatarios->isNotEmpty()) {
+                Notification::send($destinatarios, new ViajeCreadoNotification($viaje));
+            }
+        } catch (Throwable $e) {
+            Log::error("Fallo al enviar notificación de Viaje Creado #{$viaje->id}: " . $e->getMessage());
         }
     }
 }
