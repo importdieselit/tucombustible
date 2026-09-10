@@ -320,7 +320,7 @@
                                         <small class="d-block text-muted">A: {{ Str::limit($viaje->punto_llegada, 15) }}</small>
                                     @else {{-- Diesel o MGO (Despachos) --}}
                                         <small class="d-block fw-bold">De: {{ $viaje->sede->nombre ?? 'Planta' }}</small>
-                                        <small class="d-block text-muted">Destinos: {{ $viaje->detalles->count() }}</small>
+                                        <small class="d-block text-muted">Destinos: {{ $viaje->destino_ciudad ?? 'Sin especificar' }}</small>
                                     @endif
                                 </td>
                                 <td class="fw-black">{{ number_format($viaje->litros_totales ?? $viaje->litros, 0) }} L</td>

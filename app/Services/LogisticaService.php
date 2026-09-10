@@ -234,6 +234,7 @@ class LogisticaService
 
         return [
             'tipo_planificacion'     => $data['tipo_planificacion'],
+            'usuario_id'            => auth()->id(),
             'producto_flete'        => $data['tipo_planificacion'] == 3 ? ($data['producto_flete'] ?? null) : null,
             'sede_id'               => $data['sede_id'] ?? $data['planta_destino_id'] ?? null,
             'tipo'                  => $data['tipo_combustible_id'] ?? null, 
