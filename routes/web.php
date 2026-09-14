@@ -544,7 +544,7 @@ Route::middleware(['auth'])->group(function () {
         });
 
         // --- MÓDULO DE LOGÍSTICA ---
-        Route::middleware(['auth', 'role:1,2,6,11,12,18'])->prefix('logistica')->name('logistica.')->group(function () {
+        Route::middleware(['auth', 'role:1,2,6,11,12,17,18'])->prefix('logistica')->name('logistica.')->group(function () {
             
             Route::get('/dashboard', [LogisticaController::class, 'dashboardLogistica'])->name('dashboard');
             Route::get('/planificacion', [LogisticaController::class, 'index'])->name('index');

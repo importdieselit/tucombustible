@@ -88,6 +88,20 @@ class User extends Authenticatable
 
     public function canAccess(string $action, int $moduleId): bool
     {
+
+         $profileId = $this->id_perfil ?? null; 
+
+        if ($profileId) {
+            $hasProfileAccess = DB::table('permiso_perfil')
+                                  ->where('id_perfil', $profileId)
+                                  ->where('id_modulo', $moduleId)
+                                  ->where($action, 1)
+                                  ->exists();
+            
+            if ($hasProfileAccess) {
+                return true; // Si el permiso está en el perfil base, es TRUE.
+            }
+        }
         // 1. Verificar Permiso Asignado DIRECTAMENTE (tabla 'accesos')
         // La tabla 'accesos' es tu tabla de Permisos Específicos por Usuario.
         
@@ -105,19 +119,7 @@ class User extends Authenticatable
         // Ejemplo: `permisos_perfiles` tiene 'id_perfil', 'id_modulo', 'read', 'update', etc.
         
         // Obtener el ID del perfil base del usuario (asumiendo que $this->id_perfil existe)
-        $profileId = $this->id_perfil ?? null; 
-
-        if ($profileId) {
-            $hasProfileAccess = DB::table('permiso_perfil')
-                                  ->where('id_perfil', $profileId)
-                                  ->where('id_modulo', $moduleId)
-                                  ->where($action, 1)
-                                  ->exists();
-            
-            if ($hasProfileAccess) {
-                return true; // Si el permiso está en el perfil base, es TRUE.
-            }
-        }
+       
 
         // 3. Ningún permiso encontrado
         return false;
