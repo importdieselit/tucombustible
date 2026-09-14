@@ -130,7 +130,7 @@
                     </div>
                 </div>
 
-                {{-- NUEVO KPI: DISPONIBILIDAD PARA PLANIFICAR --}}
+                {{-- DISPONIBILIDAD PARA PLANIFICAR --}}
                 @php
                     $dispPlanificarDiesel = ($totalDisponibleDiesel ?? 0) - ($totalComprometidoDiesel ?? 0);
                     $dispPlanificarMgo = ($totalDisponibleMgo ?? 0) - ($totalComprometidoMgo ?? 0);
@@ -201,6 +201,31 @@
                             </span>
                             <span class="text-danger">
                                 <i class="fas fa-minus-circle me-1"></i>Ventas: {{ number_format($totalDespachosMgoTeorico ?? 0, 0, ',', '.') }} L
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- DISPONIBILIDAD TEÓRICA DIESEL --}}
+                <div class="col">
+                    <div class="bg-white p-3 rounded border border-gray-300 shadow-sm h-100 border-start border-4 border-primary" style="border-left-color: #6f42c1 !important;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="text-xs font-black text-gray-500 text-uppercase d-block">Disponibilidad Teórica Diésel</span>
+                                <div class="text-2xl font-black text-dark mt-1">
+                                    {{ number_format($disponibilidadTeoricaDiesel ?? 0, 0, ',', '.') }} <small class="fs-6 text-muted">Lts</small>
+                                </div>
+                            </div>
+                            <div class="rounded-circle bg-opacity-10 p-3" style="background-color: rgba(111, 66, 193, 0.1); color: #6f42c1;">
+                                <i class="fas fa-calculator fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 pt-1 text-xs font-bold text-muted d-flex justify-content-between align-items-center flex-wrap gap-1">
+                            <span class="text-success me-1">
+                                <i class="fas fa-plus-circle me-1"></i>Compras: {{ number_format($totalComprasDieselTeorico ?? 0, 0, ',', '.') }} L
+                            </span>
+                            <span class="text-danger">
+                                <i class="fas fa-minus-circle me-1"></i>Ventas: {{ number_format($totalDespachosDieselTeorico ?? 0, 0, ',', '.') }} L
                             </span>
                         </div>
                     </div>

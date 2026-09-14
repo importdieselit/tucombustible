@@ -417,7 +417,7 @@ class CombustibleService
         // Compras de MGO (ID 1 en tipos_combustible)
         $totalComprasMgoTeorico = DB::table('compras_combustible')
             ->where('tipo', 1)
-            ->when($sedeId, fn($q) => $q->where('planta_destino_id', $sedeId)) // Ajustar a 'id_sede' si tu columna se llama así
+            ->when($sedeId, fn($q) => $q->where('planta_destino_id', $sedeId))
             ->sum('cantidad_litros') ?? 0;
 
         // Despachos de MGO (tipo_planificacion = 1 según lo indicado)
@@ -427,6 +427,21 @@ class CombustibleService
             ->sum('litros') ?? 0;
 
         $disponibilidadTeoricaMgo = $totalComprasMgoTeorico - $totalDespachosMgoTeorico;
+
+        // KPI: Disponibilidad Teórica de Diésel (Compras - Despachos)
+        // Compras de Diésel (ID 2 en tipos_combustible)
+        $totalComprasDieselTeorico = DB::table('compras_combustible')
+            ->where('tipo', 2)
+            ->when($sedeId, fn($q) => $q->where('planta_destino_id', $sedeId))
+            ->sum('cantidad_litros') ?? 0;
+
+        // Despachos de Diésel (tipo_planificacion = 2 según lo indicado)
+        $totalDespachosDieselTeorico = DB::table('viajes')
+            ->where('tipo_planificacion', 2)
+            ->when($sedeId, fn($q) => $q->where('sede_id', $sedeId))
+            ->sum('litros') ?? 0;
+
+        $disponibilidadTeoricaDiesel = $totalComprasDieselTeorico - $totalDespachosDieselTeorico;
 
         return [
             'general_fisico'          => $totalDisponibleGeneral,
@@ -449,6 +464,9 @@ class CombustibleService
             'disponibilidadTeoricaMgo' => $disponibilidadTeoricaMgo,
             'totalComprasMgoTeorico'   => $totalComprasMgoTeorico,
             'totalDespachosMgoTeorico' => $totalDespachosMgoTeorico,
+            'disponibilidadTeoricaDiesel' => $disponibilidadTeoricaDiesel,
+            'totalComprasDieselTeorico'   => $totalComprasDieselTeorico,
+            'totalDespachosDieselTeorico' => $totalDespachosDieselTeorico,
 
             // Infraestructura y Tablas
             'tanquesActivos'          => $tanquesActivos,
