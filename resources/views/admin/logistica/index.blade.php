@@ -179,6 +179,19 @@
                 class="form-control form-control-sm fw-bold uppercase" placeholder="Buscar...">
         </div>
 
+        {{-- Selector de Vehículo --}}
+        <div class="col-md-2">
+            <label class="small fw-bold text-uppercase text-muted mb-1">Vehículo</label>
+            <select name="vehiculo_id" class="form-select form-select-sm fw-bold">
+                <option value="">TODOS</option>
+                @foreach($vehiculos as $vehiculo)
+                    <option value="{{ $vehiculo->id }}" {{ request('vehiculo_id') == $vehiculo->id ? 'selected' : '' }}>
+                        {{ $vehiculo->placa }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
         {{-- Selector de Tipo --}}
         <div class="col-md-2">
             <label class="small fw-bold text-uppercase text-muted mb-1">Tipo</label>
