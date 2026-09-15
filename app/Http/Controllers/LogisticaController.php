@@ -31,9 +31,17 @@ class LogisticaController extends Controller
     public function index(Request $request)
     {
         // 1. Iniciamos la consulta con las relaciones necesarias
-        $query = Viaje::with(['tipoCombustible', 'detalles.cliente', 'sede', 'cisternaAcoplada', 'vehiculo', 'compraCombustible.planta', 'compraCombustible.proveedor']);
+        $query = Viaje::with([
+            'tipoCombustible', 
+            'detalles.cliente', 
+            'sede', 
+            'cisternaAcoplada', 
+            'vehiculo', 
+            'compraCombustible.planta', 
+            'compraCombustible.proveedor'
+        ]);
 
-        // --- NUEVO: Filtro de Búsqueda por Cliente o RIF ---
+        // --- Buscador por Cliente o RIF ---
         if ($request->filled('search_viaje')) {
             $search = $request->search_viaje;
             $query->whereHas('detalles.cliente', function($q) use ($search) {
@@ -42,30 +50,32 @@ class LogisticaController extends Controller
             });
         }
 
-        // --- FILTROS EXISTENTES ---
+        // --- NUEVO: Filtro por Vehículo ---
+        if ($request->filled('vehiculo_id')) {
+            $query->where('vehiculo_id', $request->vehiculo_id);
+        }
+
+        // --- Filtro por Tipo / Movimiento ---
         if ($request->filled('tipo')) {
             $tipoFiltro = $request->tipo;
 
-            // Si viene una compra específica (ej: 4_diesel o 4_mgo)
             if (str_contains($tipoFiltro, '_')) {
                 [$tipoPlanificacion, $combustible] = explode('_', $tipoFiltro);
                 
                 $query->where('tipo_planificacion', $tipoPlanificacion);
-                
-                // Mapeamos el string al entero correspondiente de tu tabla viajes (1 = Diesel, 2 = MGO)
                 $idCombustible = ($combustible === 'diesel') ? 2 : 1;
                 $query->where('tipo', $idCombustible);
             } else {
-                // Filtro tradicional plano (Despachos y Fletes)
                 $query->where('tipo_planificacion', $tipoFiltro);
             }
         }
         
+        // --- Filtro por Estatus ---
         if ($request->filled('estado')) {
             $query->where('status', $request->estado);
         }
 
-        // --- MEJORA: Filtro por Rango de Fechas ---
+        // --- Filtro por Rango de Fechas ---
         if ($request->filled('fecha_desde')) {
             $query->whereDate('fecha_salida', '>=', $request->fecha_desde);
         }
@@ -74,16 +84,21 @@ class LogisticaController extends Controller
             $query->whereDate('fecha_salida', '<=', $request->fecha_hasta);
         }
 
-        // 2. Paginación Real (Paginamos de 20 en 20 para que sea cómodo)
+        // 2. Paginación Real
         $viajes = $query->orderBy('created_at', 'desc')->paginate(20);
 
-        // 3. Consulta de Pedidos Pendientes (Esta se mantiene igual para el bloque superior)
+        // 3. Obtener lista de vehículos activos para el selector
+        $vehiculos = Vehiculo::whereNotNull('placa')
+            ->orderBy('placa', 'asc')
+            ->get(['id', 'placa', 'flota']);
+
+        // 4. Consulta de Pedidos Pendientes
         $pedidosPendientes = Pedido::with('cliente')
             ->where('estado', 'pendiente') 
             ->orderBy('fecha_solicitud', 'asc')
             ->get();
 
-        return view('admin.logistica.index', compact('viajes', 'pedidosPendientes'));
+        return view('admin.logistica.index', compact('viajes', 'pedidosPendientes', 'vehiculos'));
     }
 
     /**
@@ -448,6 +463,7 @@ class LogisticaController extends Controller
         $paretoQuery = DB::table('despachos_viajes')
             ->join('viajes', 'despachos_viajes.viaje_id', '=', 'viajes.id')
             ->join('clientes', 'despachos_viajes.cliente_id', '=', 'clientes.id')
+            ->whereIn('viajes.tipo_planificacion', [1, 2])
             ->select(
                 'clientes.nombre as cliente_nombre',
                 'clientes.rif as cliente_rif',

@@ -413,33 +413,38 @@ class CombustibleService
         ->orderBy('vp.fecha_hora_carga', 'desc')
         ->get();
 
-        // KPI: Disponibilidad Teórica de MGO (Compras - Despachos)
-        // Compras de MGO (ID 1 en tipos_combustible)
+        // ==========================================
+        // DESPACHOS REALES FILTRADOS POR SEDE
+        // ==========================================
+        $despachosSede = DB::table('despachos_viajes')
+            ->join('viajes', 'despachos_viajes.viaje_id', '=', 'viajes.id')
+            ->whereIn('viajes.tipo_planificacion', [1, 2])
+            ->when($sedeId, fn($q) => $q->where('viajes.sede_id', $sedeId))
+            ->select(
+                DB::raw("SUM(CASE WHEN viajes.tipo = 2 THEN despachos_viajes.litros ELSE 0 END) as total_diesel"),
+                DB::raw("SUM(CASE WHEN viajes.tipo = 1 THEN despachos_viajes.litros ELSE 0 END) as total_mgo")
+            )
+            ->first();
+
+        $totalDespachosDieselTeorico = $despachosSede->total_diesel ?? 0;
+        $totalDespachosMgoTeorico    = $despachosSede->total_mgo ?? 0;
+
+        // ==========================================
+        // DISPONIBILIDAD TEÓRICA POR SEDE
+        // ==========================================
+        // Compras MGO
         $totalComprasMgoTeorico = DB::table('compras_combustible')
             ->where('tipo', 1)
             ->when($sedeId, fn($q) => $q->where('planta_destino_id', $sedeId))
             ->sum('cantidad_litros') ?? 0;
 
-        // Despachos de MGO (tipo_planificacion = 1 según lo indicado)
-        $totalDespachosMgoTeorico = DB::table('viajes')
-            ->where('tipo_planificacion', 1)
-            ->when($sedeId, fn($q) => $q->where('sede_id', $sedeId))
-            ->sum('litros') ?? 0;
-
         $disponibilidadTeoricaMgo = $totalComprasMgoTeorico - $totalDespachosMgoTeorico;
 
-        // KPI: Disponibilidad Teórica de Diésel (Compras - Despachos)
-        // Compras de Diésel (ID 2 en tipos_combustible)
+        // Compras Diésel
         $totalComprasDieselTeorico = DB::table('compras_combustible')
             ->where('tipo', 2)
             ->when($sedeId, fn($q) => $q->where('planta_destino_id', $sedeId))
             ->sum('cantidad_litros') ?? 0;
-
-        // Despachos de Diésel (tipo_planificacion = 2 según lo indicado)
-        $totalDespachosDieselTeorico = DB::table('viajes')
-            ->where('tipo_planificacion', 2)
-            ->when($sedeId, fn($q) => $q->where('sede_id', $sedeId))
-            ->sum('litros') ?? 0;
 
         $disponibilidadTeoricaDiesel = $totalComprasDieselTeorico - $totalDespachosDieselTeorico;
 
