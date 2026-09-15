@@ -67,5 +67,6 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'role' => \App\Http\Middleware\CheckUserRole::class,
         'tv.auth' => \App\Http\Middleware\CheckTvAccess::class,
+        'can.access' => \App\Http\Middleware\CheckDynamicAccess::class,
     ];
 }

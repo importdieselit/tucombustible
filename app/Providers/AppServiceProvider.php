@@ -11,6 +11,18 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Notification;
 use App\Channels\WhatsAppChannel;
 use App\Services\GoogleSheetsService;
+use Illuminate\Support\Facades\Blade;
+// Contratos
+use App\Repositories\Contracts\PersonalRepositoryInterface;
+use App\Repositories\Contracts\PermisoRepositoryInterface;
+use App\Repositories\Contracts\CargoRepositoryInterface;
+use App\Repositories\Contracts\DepartamentoRepositoryInterface;
+
+// Implementaciones
+use App\Repositories\Eloquent\PersonalRepository;
+use App\Repositories\Eloquent\PermisoRepository;
+use App\Repositories\Eloquent\CargoRepository;
+use App\Repositories\Eloquent\DepartamentoRepository;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,6 +41,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(GoogleSheetsService::class, function ($app) {
             return new GoogleSheetsService();
         });
+        $this->app->bind(PersonalRepositoryInterface::class, PersonalRepository::class);
+        $this->app->bind(PermisoRepositoryInterface::class, PermisoRepository::class);
+        $this->app->bind(CargoRepositoryInterface::class, CargoRepository::class);
+        $this->app->bind(DepartamentoRepositoryInterface::class, DepartamentoRepository::class);
     }
 
     /**
@@ -75,6 +91,17 @@ class AppServiceProvider extends ServiceProvider
                 'data_despues'  => json_encode($model->getAttributes()),
                 'ip'            => request()->ip(),
             ]);
+        });
+
+        Blade::if('canAccess', function (string $action, int $moduleId) {
+            $user = Auth::user();
+            if (!$user) return false;
+            
+            if (method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin()) {
+                return true;
+            }
+
+            return method_exists($user, 'canAccess') ? $user->canAccess($action, $moduleId) : true;
         });
     }
 
