@@ -482,6 +482,7 @@ class LogisticaController extends Controller
 
         $volumenTotalProducto = DB::table('despachos_viajes')
             ->join('viajes', 'despachos_viajes.viaje_id', '=', 'viajes.id')
+            ->whereIn('viajes.tipo_planificacion', [1, 2])
             ->select(
                 DB::raw("SUM(CASE WHEN viajes.tipo = 2 THEN despachos_viajes.litros ELSE 0 END) as total_diesel"),
                 DB::raw("SUM(CASE WHEN viajes.tipo = 1 THEN despachos_viajes.litros ELSE 0 END) as total_mgo")
