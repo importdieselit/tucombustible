@@ -40,16 +40,63 @@
                             <div class="alert alert-danger border-0 shadow-sm mb-4">
                                 <div class="fw-bold"><i class="fas fa-exclamation-triangle me-2"></i>Por favor corrige los siguientes errores:</div>
                                 <ul class="mb-0 mt-2 small">
-                                    @foreach ($errors->all() as $error)
+                                    @foreach ($errors->all() as$error)
                                         <li>{{ $error }}</li>
                                     @endforeach
                                 </ul>
                             </div>
                         @endif
 
-                        {{-- SECCIÓN: DATOS DE LA EMPRESA --}}
-                        <div class="d-flex align-items-center mb-3 mt-2">
+                        @php
+                            $esSucursalCalculada =$cliente->parent != 0;
+                            $tipoClienteActual  = old('tipo_cliente',$esSucursalCalculada ? 'sucursal' : 'padre');
+                            $tokenPadreActual   = old('token_padre',$cliente->padre?->token_registro ?? '');
+                        @endphp
+
+                        {{-- SECCIÓN: TIPO DE CLIENTE --}}
+                        <div class="d-flex align-items-center mb-3">
                             <span class="bg-orange text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width:24px; height:24px; font-size: 12px;">1</span>
+                            <h5 class="text-orange mb-0 fw-bold text-uppercase small" style="letter-spacing: 1px;">Tipo de Cliente</h5>
+                        </div>
+
+                        <div class="row g-3 mb-4 bg-light p-3 rounded-3 border">
+                            <div class="col-md-12">
+                                <div class="d-flex gap-4">
+                                    <div class="form-check custom-radio">
+                                        <input class="form-check-input" type="radio" name="tipo_cliente"
+                                               id="tipoPadre" value="padre"
+                                               {{ $tipoClienteActual == 'padre' ? 'checked' : '' }}
+                                               onchange="toggleTokenPadre(this.value)">
+                                        <label class="form-check-label fw-bold" for="tipoPadre">
+                                            Cliente Padre (Sede Principal)
+                                        </label>
+                                    </div>
+                                    <div class="form-check custom-radio">
+                                        <input class="form-check-input" type="radio" name="tipo_cliente"
+                                               id="tipoSucursal" value="sucursal"
+                                               {{ $tipoClienteActual == 'sucursal' ? 'checked' : '' }}
+                                               onchange="toggleTokenPadre(this.value)">
+                                        <label class="form-check-label fw-bold" for="tipoSucursal">
+                                            Sucursal
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6" id="campoTokenPadre"
+                                 style="display: {{ $tipoClienteActual == 'sucursal' ? 'block' : 'none' }}">
+                                <label class="form-label fw-bold small text-muted">Token de Empresa Principal <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0"><i class="fas fa-key text-orange"></i></span>
+                                    <input type="text" name="token_padre" value="{{ $tokenPadreActual }}"
+                                           class="form-control text-uppercase border-start-0" placeholder="TOKEN DEL CLIENTE PADRE">
+                                </div>
+                                @error('token_padre') <div class="text-danger mt-1 small">{{ $message }}</div> @enderror
+                            </div>
+                        </div>
+
+                        {{-- SECCIÓN: DATOS DE LA EMPRESA --}}
+                        <div class="d-flex align-items-center mb-3 mt-4">
+                            <span class="bg-orange text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width:24px; height:24px; font-size: 12px;">2</span>
                             <h5 class="text-orange mb-0 fw-bold text-uppercase small" style="letter-spacing: 1px;">Datos de la Empresa</h5>
                         </div>
 
@@ -62,9 +109,9 @@
                             </div>
 
                             @php
-                                $rifPartes  = explode('-', $cliente->rif);
-                                $letraBase  = $rifPartes[0] ?? 'J';
-                                $numeroBase = $rifPartes[1] ?? '';
+                                $rifPartes  = explode('-',$cliente->rif);
+                                $letraBase  =$rifPartes[0] ?? 'J';
+                                $numeroBase =$rifPartes[1] ?? '';
                             @endphp
                             <div class="col-md-4">
                                 <label class="form-label fw-bold small text-muted">RIF <span class="text-danger">*</span></label>
@@ -106,7 +153,7 @@
 
                         {{-- SECCIÓN: PERSONAS DE CONTACTO --}}
                         <div class="d-flex align-items-center mb-3 mt-4">
-                            <span class="bg-orange text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width:24px; height:24px; font-size: 12px;">2</span>
+                            <span class="bg-orange text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width:24px; height:24px; font-size: 12px;">3</span>
                             <h5 class="text-orange mb-0 fw-bold text-uppercase small" style="letter-spacing: 1px;">Personas de Contacto</h5>
                         </div>
 
@@ -148,7 +195,7 @@
 
                         {{-- SECCIÓN: UBICACIÓN --}}
                         <div class="d-flex align-items-center mb-3 mt-4">
-                            <span class="bg-orange text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width:24px; height:24px; font-size: 12px;">3</span>
+                            <span class="bg-orange text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width:24px; height:24px; font-size: 12px;">4</span>
                             <h5 class="text-orange mb-0 fw-bold text-uppercase small" style="letter-spacing: 1px;">Ubicación</h5>
                         </div>
 
@@ -158,9 +205,9 @@
                                 <select name="estado_id" id="estado_id" class="form-select select2-basic"
                                         onchange="cargarCiudades(this.value)">
                                     <option value="">Seleccione...</option>
-                                    @foreach($estados as $estado)
+                                    @foreach($estados as$estado)
                                         <option value="{{ $estado->id }}"
-                                            {{ old('estado_id', $cliente->estado_id) == $estado->id ? 'selected' : '' }}>
+                                            {{ old('estado_id', $cliente->estado_id) ==$estado->id ? 'selected' : '' }}>
                                             {{ $estado->nombre }}
                                         </option>
                                     @endforeach
@@ -195,7 +242,7 @@
                             <a href="{{ route('clientes.show', $cliente->id) }}" class="btn btn-light border me-2">
                                 <i class="fas fa-times me-1"></i> Cancelar
                             </a>
-                            <button type="submit" class=" btn-orange px-4 text-white fw-bold">
+                            <button type="submit" class="btn-orange px-4 text-white fw-bold">
                                 <i class="fas fa-sync-alt me-2"></i> Actualizar Información
                             </button>
                         </div>
@@ -208,6 +255,10 @@
 </div>
 
 <script>
+    function toggleTokenPadre(valor) {
+        document.getElementById('campoTokenPadre').style.display = valor === 'sucursal' ? 'block' : 'none';
+    }
+
     function cargarCiudades(estadoId) {
         const select = document.getElementById('ciudad_id');
         select.innerHTML = '<option value="">Cargando...</option>';

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Repositories\PedidoRepository;
+use App\Repositories\ClienteRepository;
 use App\Services\ClienteService;
 use App\Services\ClienteLubricanteService;
 use App\Services\GascoCupoService;
@@ -242,7 +243,7 @@ class ClienteController extends Controller
 
         $request->validate([
             'nombre'              => 'required|string|max:255',
-            'rif'                 => 'required|string|max:15|unique:clientes,rif,' . $id,
+            'rif'                 => 'required|string|max:15',
             'email'               => 'required|email:rfc|max:255',
             'es_aliado_comercial' => 'required|boolean',
             'contacto'            => 'required|string|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u|max:255',
@@ -253,6 +254,8 @@ class ClienteController extends Controller
             'ciudad_id'           => 'nullable|exists:ciudades,id',
             'direccion'           => 'nullable|string',
             'direccion_operativa' => 'nullable|string',
+            'tipo_cliente'        => 'nullable|in:padre,sucursal',
+            'token_padre'         => 'required_if:tipo_cliente,sucursal|nullable|string|exists:clientes,token_registro',
         ], [
             'es_aliado_comercial.required' => 'Debe indicar si el cliente es un aliado comercial.',
             'contacto.regex'              => 'El campo Persona de Contacto solo debe contener letras.',
@@ -260,16 +263,36 @@ class ClienteController extends Controller
             'email.email'                 => 'El correo electrónico debe ser una dirección válida con @.',
             'telefono.digits_between'     => 'El teléfono debe tener entre 10 y 11 dígitos.',
             'telefono_alt.digits_between' => 'El teléfono alternativo debe tener entre 10 y 11 dígitos.',
+            'token_padre.required_if'     => 'Debe ingresar el Token de la empresa principal si selecciona opción Sucursal.',
+            'token_padre.exists'          => 'El Token de la empresa principal no es válido.',
         ]);
 
         try {
             $this->clienteService->obtenerExpediente($id);
 
-            app(\App\Repositories\ClienteRepository::class)->update($id, $request->only([
+            $dataToUpdate = $request->only([
                 'nombre', 'rif', 'email', 'es_aliado_comercial', 'contacto', 'telefono',
                 'contacto_alt', 'telefono_alt',
                 'estado_id', 'ciudad_id', 'direccion', 'direccion_operativa',
-            ]));
+            ]);
+
+            // Lógica para actualizar Tipo de Cliente (Padre / Sucursal)
+            if ($request->filled('tipo_cliente')) {
+                if ($request->tipo_cliente === 'padre') {
+                    $dataToUpdate['parent'] = 0;
+                } elseif ($request->tipo_cliente === 'sucursal') {
+                    $padre = Cliente::where('token_registro', $request->token_padre)->first();
+
+                    if ($padre) {
+                        if ($padre->id == $id) {
+                            return Redirect::back()->withInput()->with('error', 'Un cliente no puede vincularse como sucursal de sí mismo.');
+                        }
+                        $dataToUpdate['parent'] = $padre->id;
+                    }
+                }
+            }
+
+            app(ClienteRepository::class)->update($id, $dataToUpdate);
 
             Session::flash('success', 'Datos del cliente actualizados correctamente.');
             return Redirect::route('clientes.show', $id);

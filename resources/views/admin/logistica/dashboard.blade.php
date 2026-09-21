@@ -63,7 +63,7 @@
     <div class="row mb-4">
         <div class="col-md-6">
             <div class="card border border-gray-300 shadow-sm h-100">
-                <div class="card-header bg-gray-800 py-2"><h6 class="text-white mb-0 text-xs font-black uppercase"><i class="fas fa-check-circle text-orange mr-2"></i> Tasa de Cumplimiento Logístico (Service Level)</h6></div>
+                <div class="card-header bg-gray-800 py-2"><h6 class="text-white mb-0 text-xs font-black uppercase"><i class="fas fa-check-circle text-orange mr-2"></i> Tasa de Cumplimiento Logístico</h6></div>
                 <div class="card-body d-flex flex-column justify-content-center align-items-center py-4">
                     <div class="display-4 font-black text-dark">{{ $tasaCumplimiento }}%</div>
                     <p class="text-gray-500 font-bold uppercase text-xs mt-2">Viajes Completados: {{ $viajesCompletados }} de {{ $viajesTotales }} planificaciones totales</p>
@@ -75,7 +75,7 @@
         </div>
         <div class="col-md-6">
             <div class="card border border-gray-300 shadow-sm h-100">
-                <div class="card-header bg-gray-800 py-2"><h6 class="text-white mb-0 text-xs font-black uppercase"><i class="fas fa-gas-pump text-orange mr-2"></i> Comparativa de Volumen de Producto (Litros Cargados)</h6></div>
+                <div class="card-header bg-gray-800 py-2"><h6 class="text-white mb-0 text-xs font-black uppercase"><i class="fas fa-gas-pump text-orange mr-2"></i> Comparativa de Volumen de Producto (Litros Despachados)</h6></div>
                 <div class="card-body d-flex justify-content-around align-items-center">
                     <div class="text-center">
                         <span class="text-sm font-black text-gray-500 uppercase block">DIESEL</span>

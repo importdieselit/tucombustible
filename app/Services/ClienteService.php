@@ -56,8 +56,8 @@ class ClienteService
                 'direccion_operativa' => strtoupper($data['direccion_operativa'] ?? ''),
                 'ciiu'                => $data['ciiu'] ?? null,
                 'sector'              => $data['sector'] ?? null,
-                'registro_paso'       => 1,
-                'status'              => Cliente::STATUS_EN_REGISTRO,
+                'registro_paso'       => 2,
+                'status'              => Cliente::STATUS_APROBADO,
                 'es_aliado_comercial' => $data['es_aliado_comercial'] ?? 0,
                 'parent'              => $parentId,
                 'token_registro'      => strtoupper(Str::random(10)),
@@ -69,7 +69,7 @@ class ClienteService
                 'password'       => Hash::make($rifLimpio),
                 'id_perfil'      => 3,
                 'cliente_id'     => $cliente->id,
-                'status_usuario' => 'en_registro',
+                'status_usuario' => 'aprobado',
             ]);
 
             return $cliente;
