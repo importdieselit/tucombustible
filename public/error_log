@@ -40,3 +40,15 @@ Stack trace:
 [23-Sep-2026 15:20:17 America/Caracas] PHP Fatal error:  Cannot redeclare App\Observers\ViajeObserver::$inventarioService in /home/impormot/public_html/tucombustible/app/Observers/ViajeObserver.php on line 19
 [23-Sep-2026 15:20:18 America/Caracas] PHP Fatal error:  Cannot redeclare App\Observers\ViajeObserver::$inventarioService in /home/impormot/public_html/tucombustible/app/Observers/ViajeObserver.php on line 19
 [23-Sep-2026 15:20:19 America/Caracas] PHP Fatal error:  Cannot redeclare App\Observers\ViajeObserver::$inventarioService in /home/impormot/public_html/tucombustible/app/Observers/ViajeObserver.php on line 19
+[23-Sep-2026 15:20:35 America/Caracas] PHP Fatal error:  Cannot redeclare App\Observers\ViajeObserver::$inventarioService in /home/impormot/public_html/tucombustible/app/Observers/ViajeObserver.php on line 19
+[23-Sep-2026 15:20:36 America/Caracas] PHP Fatal error:  Cannot redeclare App\Observers\ViajeObserver::$inventarioService in /home/impormot/public_html/tucombustible/app/Observers/ViajeObserver.php on line 19
+[23-Sep-2026 15:20:37 America/Caracas] PHP Fatal error:  Cannot redeclare App\Observers\ViajeObserver::$inventarioService in /home/impormot/public_html/tucombustible/app/Observers/ViajeObserver.php on line 19
+[23-Sep-2026 15:20:38 America/Caracas] PHP Fatal error:  Cannot redeclare App\Observers\ViajeObserver::$inventarioService in /home/impormot/public_html/tucombustible/app/Observers/ViajeObserver.php on line 19
+[23-Sep-2026 15:20:39 America/Caracas] PHP Fatal error:  Cannot redeclare App\Observers\ViajeObserver::$inventarioService in /home/impormot/public_html/tucombustible/app/Observers/ViajeObserver.php on line 19
+[23-Sep-2026 15:20:40 America/Caracas] PHP Fatal error:  Cannot redeclare App\Observers\ViajeObserver::$inventarioService in /home/impormot/public_html/tucombustible/app/Observers/ViajeObserver.php on line 19
+[23-Sep-2026 15:20:41 America/Caracas] PHP Fatal error:  Cannot redeclare App\Observers\ViajeObserver::$inventarioService in /home/impormot/public_html/tucombustible/app/Observers/ViajeObserver.php on line 19
+[23-Sep-2026 15:20:42 America/Caracas] PHP Fatal error:  Cannot redeclare App\Observers\ViajeObserver::$inventarioService in /home/impormot/public_html/tucombustible/app/Observers/ViajeObserver.php on line 19
+[23-Sep-2026 15:20:43 America/Caracas] PHP Fatal error:  Cannot redeclare App\Observers\ViajeObserver::$inventarioService in /home/impormot/public_html/tucombustible/app/Observers/ViajeObserver.php on line 19
+[23-Sep-2026 15:20:44 America/Caracas] PHP Fatal error:  Cannot redeclare App\Observers\ViajeObserver::$inventarioService in /home/impormot/public_html/tucombustible/app/Observers/ViajeObserver.php on line 19
+[23-Sep-2026 15:20:45 America/Caracas] PHP Fatal error:  Cannot redeclare App\Observers\ViajeObserver::$inventarioService in /home/impormot/public_html/tucombustible/app/Observers/ViajeObserver.php on line 19
+[23-Sep-2026 15:20:46 America/Caracas] PHP Fatal error:  Cannot redeclare App\Observers\ViajeObserver::$inventarioService in /home/impormot/public_html/tucombustible/app/Observers/ViajeObserver.php on line 19
