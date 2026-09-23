@@ -5,6 +5,7 @@ namespace App\Observers;
 use App\Models\Viaje;
 use App\Models\Vehiculo;
 use App\Services\LogisticaInventarioService;
+use App\Services\CombustibleService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Notifications\ViajeCreadoNotification;
@@ -13,11 +14,14 @@ use Throwable;
 
 class ViajeObserver
 {
+    protected $inventarioService;
+    protected $combustibleService;
     protected LogisticaInventarioService $inventarioService;
 
-    public function __construct(LogisticaInventarioService $inventarioService)
+    public function __construct(LogisticaInventarioService $inventarioService, CombustibleService $combustibleService)
     {
         $this->inventarioService = $inventarioService;
+        $this->combustibleService = $combustibleService;
     }
 
     /**
@@ -80,7 +84,13 @@ class ViajeObserver
                     $this->inventarioService->registrarSalidaFisicaDespacho($viaje);
                 });
 
-            // 2. TRANSICIÓN A "COMPLETADO" (Llegada / Recepción)
+                $this->combustibleService->descontarCombustiblePlanificado(
+                    sedeId: $viaje->sede_id,
+                    litrosADescontar: $viaje->litros,
+                    viajeId: $viaje->id
+                );
+
+            // 2. TRANSICIÓN A "COMPLETADO" (Llegada / Descarga)
             } elseif ($nuevoStatus === 'COMPLETADO') {
                 
                 DB::transaction(function () use ($viaje) {

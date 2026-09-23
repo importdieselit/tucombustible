@@ -338,6 +338,60 @@ class CombustibleService
         return $this->ledgerRepo->getTotalLitrosMermas($filtros);
     }
 
+    /**
+     * Descuenta de forma equitativa el combustible de los tanques de una sede
+     * al momento en que un viaje pasa a 'EN RUTA'.
+     */
+    public function descontarCombustiblePlanificado(int $sedeId, float $litrosADescontar, int $viajeId): void
+    {
+        DB::transaction(function () use ($sedeId, $litrosADescontar, $viajeId) {
+            if ($litrosADescontar <= 0) {
+                return;
+            }
+
+            // 1. Obtener todos los tanques con combustible disponible en la sede,
+            // sin filtrar por tipo_combustible_id (aplica equitativo para Diesel y MGO)
+            $tanques = Deposito::where('id_sede', $sedeId)
+                ->where('nivel_actual_litros', '>', 0)
+                ->lockForUpdate()
+                ->get();
+
+            if ($tanques->isEmpty()) {
+                throw new Exception("No hay depósitos con inventario disponible en la sede para descontar el despacho.");
+            }
+
+            $litrosRestantes = $litrosADescontar;
+
+            // 2. Algoritmo de distribución equitativa de salida
+            while ($litrosRestantes > 0.0001) {
+                // Filtrar tanques que aún tienen stock
+                $tanquesConStock = $tanques->filter(function ($tanque) {
+                    return (float)$tanque->nivel_actual_litros > 0.0001;
+                });
+
+                if ($tanquesConStock->isEmpty()) {
+                    // Si el consumo supera el stock físico acumulado en los tanques
+                    break;
+                }
+
+                $numTanques = $tanquesConStock->count();
+                $cuotaPorTanque = $litrosRestantes / $numTanques;
+
+                foreach ($tanquesConStock as $tanque) {
+                    $stockDisponible = (float)$tanque->nivel_actual_litros;
+                    $aDescontar = min($cuotaPorTanque, $stockDisponible);
+
+                    if ($aDescontar > 0) {
+                        // Descuenta litros en la base de datos y en memoria para el bucle
+                        $tanque->decrement('nivel_actual_litros', $aDescontar);
+                        $tanque->nivel_actual_litros -= $aDescontar;
+                        $litrosRestantes -= $aDescontar;
+                    }
+                }
+            }
+        });
+    }
+
     public function obtenerMetricasDashboard(?int $sedeId = null): array
     {
         // 1. Obtención de IDs de tipos de combustible
