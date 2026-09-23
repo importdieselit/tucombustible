@@ -33,3 +33,10 @@ Stack trace:
 [05-Dec-2025 16:14:20 America/Caracas] PHP Fatal error:  Namespace declaration statement has to be the very first statement or after any declare call in the script in /home/impormot/public_html/tucombustible/app/Http/Controllers/CaptacionController.php on line 3
 [07-Aug-2026 11:09:10 America/Caracas] PHP Fatal error:  Cannot use Carbon\Carbon as Carbon because the name is already in use in /home/impormot/public_html/tucombustible/app/Services/LogisticaService.php on line 18
 [07-Aug-2026 11:09:13 America/Caracas] PHP Fatal error:  Cannot use Carbon\Carbon as Carbon because the name is already in use in /home/impormot/public_html/tucombustible/app/Services/LogisticaService.php on line 18
+[23-Sep-2026 15:20:13 America/Caracas] PHP Fatal error:  Cannot redeclare App\Observers\ViajeObserver::$inventarioService in /home/impormot/public_html/tucombustible/app/Observers/ViajeObserver.php on line 19
+[23-Sep-2026 15:20:14 America/Caracas] PHP Fatal error:  Cannot redeclare App\Observers\ViajeObserver::$inventarioService in /home/impormot/public_html/tucombustible/app/Observers/ViajeObserver.php on line 19
+[23-Sep-2026 15:20:15 America/Caracas] PHP Fatal error:  Cannot redeclare App\Observers\ViajeObserver::$inventarioService in /home/impormot/public_html/tucombustible/app/Observers/ViajeObserver.php on line 19
+[23-Sep-2026 15:20:16 America/Caracas] PHP Fatal error:  Cannot redeclare App\Observers\ViajeObserver::$inventarioService in /home/impormot/public_html/tucombustible/app/Observers/ViajeObserver.php on line 19
+[23-Sep-2026 15:20:17 America/Caracas] PHP Fatal error:  Cannot redeclare App\Observers\ViajeObserver::$inventarioService in /home/impormot/public_html/tucombustible/app/Observers/ViajeObserver.php on line 19
+[23-Sep-2026 15:20:18 America/Caracas] PHP Fatal error:  Cannot redeclare App\Observers\ViajeObserver::$inventarioService in /home/impormot/public_html/tucombustible/app/Observers/ViajeObserver.php on line 19
+[23-Sep-2026 15:20:19 America/Caracas] PHP Fatal error:  Cannot redeclare App\Observers\ViajeObserver::$inventarioService in /home/impormot/public_html/tucombustible/app/Observers/ViajeObserver.php on line 19
