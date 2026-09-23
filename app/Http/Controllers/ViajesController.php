@@ -1325,9 +1325,10 @@ public function updateGuiaData(Request $request, $viajeId)
         // 2. Procesamiento y Enriquecimiento de la data
         $viajesDelDia = $viajesRaw->map(function($v) {
             $destinoRaw = strtoupper($v->destino_ciudad);
-            $v->es_flete = str_contains($destinoRaw, 'FLETE');
-            $v->es_despacho = is_null($v->litros);
-            $v->es_carga = !$v->es_despacho && !$v->es_flete;
+            // Clasificación por Tipo de Planificación
+            $v->es_flete    = $v->tipo_planificacion == 3;
+            $v->es_carga    = $v->tipo_planificacion == 4;
+            $v->es_despacho = in_array($v->tipo_planificacion, [1, 2]);
 
             // Limpieza de destino
             $v->destino_limpio = trim(str_ireplace(['FLETE', ' ->'], ['', ''], $v->destino_ciudad));
@@ -1754,6 +1755,7 @@ public function updateGuiaData(Request $request, $viajeId)
         $tablaAgrupada = null;
         $tablaAgrupadaAyudantes = null;
         $tablasPorTipo = null;
+        $tablaAgrupadaSucursales = null;
 
         if ($agruparPor === 'chofer') {
             $tablaAgrupada = $viajes->groupBy(function($v) {
@@ -1789,6 +1791,7 @@ public function updateGuiaData(Request $request, $viajeId)
         } elseif ($agruparPor === 'cliente') {
             $todosClientes = Cliente::all()->keyBy('id');
 
+            // 1. Agrupación Padre/Consolidada (Ya existía)
             $tablaAgrupada = $despachosDetalle->groupBy(function($item) use ($todosClientes) {
                 $cli = $todosClientes->get($item['cliente_id']);
                 if ($cli) {
@@ -1806,6 +1809,22 @@ public function updateGuiaData(Request $request, $viajeId)
                     'total_litros'    => $items->sum('litros')
                 ];
             })->sortByDesc('total_litros');
+
+            // 2. Agrupación por Sucursales (Solo si hay un cliente principal filtrado)
+            if ($esClientePrincipal) {
+                $tablaAgrupadaSucursales = $despachosDetalle->groupBy(function($item) use ($todosClientes) {
+                    $cli = $todosClientes->get($item['cliente_id']);
+                    // Aquí agrupamos por el nombre real de cada sucursal/cliente
+                    return $cli ? $cli->nombre : ($item['cliente_nombre'] ?: 'Sin Cliente');
+                })->map(function($items, $key) {
+                    return [
+                        'sucursal'        => $key,
+                        'total_viajes'    => $items->pluck('viaje_id')->unique()->count(),
+                        'total_despachos' => $items->count(),
+                        'total_litros'    => $items->sum('litros')
+                    ];
+                })->sortByDesc('total_litros');
+            }
 
         } elseif ($agruparPor === 'tipo_operacion') {
             $tablaAgrupada = $viajes->groupBy(function($v) use ($mapaTipos) {
@@ -1859,12 +1878,12 @@ public function updateGuiaData(Request $request, $viajeId)
         $estadosDisponibles = Viaje::distinct()->pluck('status')->filter();
 
         return view('viajes.reporte_estrategico', compact(
-            'viajes', 'tablaAgrupada', 'tablaAgrupadaAyudantes', 'tablasPorTipo', 'despachosDetalle',
-            'agruparPor', 'totalViajes', 'totalDespachos', 'totalLitros', 'totalCompras', 'totalLitrosCompras',
-            'clienteSeleccionado', 'esClientePrincipal',
-            'viajesPorDestino', 'viajesPorChofer', 'viajesPorAyudante', 'viajesPorStatus',
-            'choferes', 'clientes', 'tiposCombustible', 'destinos', 'estadosDisponibles', 'mapaTipos',
-            'fechaInicio', 'fechaFin', 'choferId', 'clienteId', 'tipoCombustibleId', 'destino', 'status', 'tipoOperacion'
+            'viajes', 'tablaAgrupada', 'tablaAgrupadaAyudantes', 'tablasPorTipo', 'despachosDetalle', 
+            'tablaAgrupadaSucursales', 'agruparPor', 'totalViajes', 'totalDespachos', 'totalLitros', 
+            'totalCompras', 'totalLitrosCompras','clienteSeleccionado', 'esClientePrincipal', 'viajesPorDestino', 
+            'viajesPorChofer', 'viajesPorAyudante', 'viajesPorStatus','choferes', 'clientes', 'tiposCombustible', 
+            'destinos', 'estadosDisponibles', 'mapaTipos','fechaInicio', 'fechaFin', 'choferId', 'clienteId', 
+            'tipoCombustibleId', 'destino', 'status', 'tipoOperacion'
         ));
     }
 }

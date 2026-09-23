@@ -53,6 +53,16 @@ class GerentialReportController extends Controller
         $cxcRecords = $records->filter(fn($item) => $item->tipo === 'CUENTAS POR COBRAR');
         $inventarioDesglose = $records->filter(fn($item) => $item->tipo === 'INVENTARIO');
 
+        // Filtrado y Consolidado de Cobros a Clientes
+        $cobrosDesglose = $records->filter(function ($item) {
+            return $item->cuenta === 'COBROS A CLIENTES' &&
+                   $item->descuenta === 'CXC CLIENTES' &&
+                   in_array($item->tipo, ['INGRESOS EN CAJA (COBROS)', 'INGRESOS EN BANCO (COBROS)']);
+        });
+        $totalCobros = $cobrosDesglose->sum('monto');
+
+      //  dd($cobrosDesglose, $totalCobros);
+
         // Clasificación de variables principales basados en el archivo CSV
         // Ya no buscamos 'LITROS VENDIDOS' porque el CSV lo desglosa en facturas, notas y devoluciones
         $ventasLitros = $records->where('tipo', 'VENTAS')->sum('monto');
@@ -143,7 +153,8 @@ class GerentialReportController extends Controller
             'opexRecords', 'bancosRecords', 'cajasRecords', 'totalOpex',
             'totalBancos', 'totalCajas', 'totalLiquidez', 'pctBancos', 'pctCajas',
             'cxcRecords', 'cxpRecords', 'totalCxC', 'totalCxP', 'pctCxC_Ventas', 'pctCxP_Ventas',
-            'margenBruto', 'comprasUsd', 'inventarioTotal', 'alertas', 'balanceLitros', 'litrosComprados','cxpComb'
+            'margenBruto', 'comprasUsd', 'inventarioTotal', 'alertas', 'balanceLitros', 'litrosComprados','cxpComb',
+            'cobrosDesglose', 'totalCobros'
         ));
     }
 

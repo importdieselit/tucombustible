@@ -154,8 +154,19 @@
             map = L.map('map', { attributionControl: false, fullscreenControl: true })
                    .setView([10.488249123497356, -66.8234169941792], 6); 
 
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+            const apiKey = '{{ $api_key_map ?? '' }}';
+        
+            // Construir la URL del TileLayer con o sin la API Key
+            const tileUrl = apiKey 
+            ? `https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=${apiKey}`
+            : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
             
+            L.tileLayer(tileUrl, {
+                subdomains: 'abcd',
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
+            }).addTo(map);
+                
             L.circle(sedeCoords, {
                 color: '#002d72',
                 fillColor: '#002d72',

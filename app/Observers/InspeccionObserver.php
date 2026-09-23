@@ -5,206 +5,186 @@ namespace App\Observers;
 use App\Models\Inspeccion;
 use App\Models\Vehiculo;
 use App\Models\Viaje;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Config;
-use App\Services\TelegramNotificationService;
 use App\Services\WhatsappApiService;
-use App\Services\FcmNotificationService;
-
-
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class InspeccionObserver
 {
-    /**
-     * Handle the Inspeccion "created" event.
-     *
-     * @param  \App\Models\Inspeccion  $inspeccion
-     * @return void
-     */
-    public function created(Inspeccion $inspeccion)
+    protected WhatsappApiService $whatsappService;
+
+    public function __construct(WhatsappApiService $whatsappService)
     {
-        $user = auth()->user();
-        $nombre = $user->persona->nombre ?? 'Usuario'.$user->id;
-        $vehiculo = Vehiculo::find($inspeccion->vehiculo_id);
-        $baseUrl = rtrim(config('services.whatsapp.url'), '/');
-        $tokenWA = config('services.whatsapp.key');
-        $endpoint = "{$baseUrl}/messages/chat?token={$tokenWA}";
-        $data = json_decode($inspeccion->respuesta_json, true);
-        $observacion=false;
-        $check=0;
-        // Recorremos las secciones e items buscando la etiqueta específica
-       foreach ($data['sections'] as $section) {
+        $this->whatsappService = $whatsappService;
+    }
+
+    /**
+     * CHECK-OUT (Salida): Se ejecuta al crear la inspección de salida.
+     */
+    public function created(Inspeccion $inspeccion): void
+    {
+        try {
+            $nombreUsuario = $this->obtenerNombreUsuario();
+            $vehiculo = Vehiculo::find($inspeccion->vehiculo_id);
+            
+            if (!$vehiculo) return;
+
+            // 1. Extraer datos del JSON (Viaje y Observaciones)
+            $datosForm = $this->extraerDatosFormulario($inspeccion->respuesta_json);
+            $observacion = $datosForm['observacion'];
+            $viajeIdExtraido = $datosForm['viaje_id'] ?? $inspeccion->viaje_id;
+
+            // 2. Resolver el Viaje correspondiente
+            $viaje = $this->resolverViajeSalida($vehiculo->id, $viajeIdExtraido);
+
+            if ($viaje) {
+                // Asegurar trazabilidad vinculando la inspección al viaje
+                if ($inspeccion->viaje_id !== $viaje->id) {
+                    $inspeccion->viaje_id = $viaje->id;
+                    $inspeccion->saveQuietly(); 
+                }
+
+                // 3. Modificar estatus del Viaje. 
+                // NOTA: NO cambiamos el estatus del vehículo aquí. Al guardar el viaje a 'EN RUTA', 
+                // el ViajeObserver se dispara automáticamente, cambia el vehículo y descuenta el Ledger.
+                if (strtoupper((string) $viaje->status) !== 'EN RUTA') {
+                    $viaje->status = 'EN RUTA';
+                    $viaje->fecha_salida_real = now();
+                    $viaje->save(); 
+                }
+
+                // 4. Enviar notificación asíncrona (Aislada de fallos DB)
+                $this->enviarNotificacionWhatsApp(
+                    "🚀 *CHECKOUT (SALIDA)*\n\nEl usuario *{$nombreUsuario}* ha registrado el checklist de salida para la unidad *{$vehiculo->flota}* ({$vehiculo->placa}).\n\n• *Salida:* #{$viaje->id}\n• *Destino:* {$viaje->destino_ciudad}",
+                    $observacion
+                );
+            }
+        } catch (Throwable $e) {
+            Log::error("Error en InspeccionObserver@created para Inspeccion #{$inspeccion->id}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * CHECK-IN (Llegada): Se ejecuta al actualizar y completar el checklist de retorno.
+     */
+    public function updated(Inspeccion $inspeccion): void
+    {
+        try {
+            $eraNull = is_null($inspeccion->getOriginal('respuesta_in'));
+            $ahoraTieneDatos = !is_null($inspeccion->respuesta_in);
+
+            // Solo procesar si acaba de llenarse la respuesta de llegada
+            if (!($inspeccion->wasChanged('respuesta_in') && $eraNull && $ahoraTieneDatos)) {
+                return;
+            }
+
+            $nombreUsuario = $this->obtenerNombreUsuario();
+            $vehiculo = Vehiculo::find($inspeccion->vehiculo_id);
+
+            if (!$vehiculo) return;
+
+            // 1. Extraer observaciones del JSON de retorno
+            $datosForm = $this->extraerDatosFormulario($inspeccion->respuesta_in);
+            $observacion = $datosForm['observacion'];
+
+            // 2. Buscar el viaje activo asociado
+            $viaje = Viaje::find($inspeccion->viaje_id) 
+                  ?? Viaje::where('vehiculo_id', $vehiculo->id)->where('status', 'EN RUTA')->first();
+
+            if ($viaje && strtoupper((string) $viaje->status) !== 'COMPLETADO') {
+                // Al marcar como completado, ViajeObserver asume el control: 
+                // Libera cisternas, devuelve estatus a 1 e ingresa compras.
+                $viaje->status = 'COMPLETADO';
+                $viaje->fecha_llegada = now();
+                $viaje->save();
+            }
+
+            // 3. Notificar Llegada
+            $viajeId = $viaje ? $viaje->id : $inspeccion->viaje_id;
+            $this->enviarNotificacionWhatsApp(
+                "✅ *CHECKIN (LLEGADA)*\n\nEl usuario *{$nombreUsuario}* ha registrado el checklist de llegada para la unidad *{$vehiculo->flota}* ({$vehiculo->placa}).\n\n• *Viaje Cerrado:* #{$viajeId}",
+                $observacion
+            );
+
+        } catch (Throwable $e) {
+            Log::error("Error en InspeccionObserver@updated para Inspeccion #{$inspeccion->id}: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Extrae de forma segura el ID del viaje y las observaciones del JSON de Formio/Formulario.
+     */
+    private function extraerDatosFormulario(?string $json): array
+    {
+        $resultado = ['viaje_id' => null, 'observacion' => false];
+        if (!$json) return $resultado;
+
+        $data = json_decode($json, true);
+        if (!isset($data['sections']) || !is_array($data['sections'])) return $resultado;
+
+        foreach ($data['sections'] as $section) {
+            if (!isset($section['items']) || !is_array($section['items'])) continue;
+
             foreach ($section['items'] as $item) {
                 $label = $item['label'] ?? '';
 
-                if ($label === 'Observaciones Generales') {
-                    $observacion = isset($item['value']) ? trim($item['value']) : false;
-                    $check++;
+                if ($label === 'Observaciones Generales' && !empty($item['value'])) {
+                    $resultado['observacion'] = trim($item['value']);
                 }
 
                 if ($label === 'Seleccione Ruta a Cubrir' && !empty($item['value'])) {
                     if (preg_match('/ID-(\d+)/', $item['value'], $matches)) {
-                        $inspeccion->viaje_id = $matches[1];
+                        $resultado['viaje_id'] = $matches[1];
                     }
-                    $check++;
                 }
-
-                if ($check === 2) break 2;
             }
         }
-        
-        if ($vehiculo) {
-            // Pasar vehículo a estatus 2
-            if ($vehiculo->estatus != 2) {
-                $vehiculo->estatus = 2;
-                $vehiculo->save();
-            }
-            
-            $viaje = $inspeccion->viaje_id ? Viaje::find($inspeccion->viaje_id) : null;
+        return $resultado;
+    }
 
-            // Prioridad B (Failsafe): Si no vino ID en el form, o era un ID viejo/borrado, rescatamos el primero en fila
-            if (!$viaje) {
-                $viaje = Viaje::where('vehiculo_id', $vehiculo->id)
-                            ->where('status', 'Programado')
-                            ->orderBy('fecha_salida', 'asc')
-                            ->first(); // Eficiencia SQL: LIMIT 1
+    /**
+     * Resuelve el viaje verificando prioridades (ID explícito vs Histórico pendiente).
+     */
+    private function resolverViajeSalida(int $vehiculoId, ?int $viajeIdForm): ?Viaje
+    {
+        if ($viajeIdForm) {
+            $viaje = Viaje::find($viajeIdForm);
+            if ($viaje) return $viaje;
+        }
 
-                // Si el failsafe tuvo éxito, aseguramos la trazabilidad guardando el ID en la inspección
-                if ($viaje) {
-                    $inspeccion->viaje_id = $viaje->id;
-                    $inspeccion->save(); 
-                }
-            }
-            if ($viaje) {
-                // BUG CORREGIDO: Ahora el mensaje usa los datos reales del objeto $viaje resuelto
-                $mensaje = " CHECKOUT: {$nombre} ha registrado el checklist de salida para la unidad {$vehiculo->flota} - {$vehiculo->placa}. Salida #{$viaje->id} a {$viaje->destino_ciudad}.";
-                if ($observacion) {
-                    $mensaje .= " Observación: {$observacion}";
-                }
-                $response = Http::asForm()
-                            ->withoutVerifying() // Equivalente a CURLOPT_SSL_VERIFYPEER => 0
-                            ->post($endpoint, [
-                                'token'      => $tokenWA,
-                                'to'         => config('services.whatsapp.group_operaciones'),
-                                'body'       => $mensaje,
-                                'priority'   => 1, // Importante si lo tenías en el script original
-                                'referenceId' => '',
-                            ]);
-                
-                if ($viaje && $viaje->status != 'EN RUTA') {
-                        $viaje->status = 'EN RUTA';
-                        $viaje->save(); // ¡Esto disparará el ViajeObserver automáticamente!
-                }
-            }
+        // Failsafe: Si no vino ID válido, tomamos el programado más antiguo de la unidad
+        return Viaje::where('vehiculo_id', $vehiculoId)
+            ->where('status', 'Programado')
+            ->orderBy('fecha_salida', 'asc')
+            ->first();
+    }
+
+    /**
+     * Estandariza el envío utilizando el servicio centralizado.
+     */
+    private function enviarNotificacionWhatsApp(string $mensajeBase, string|bool $observacion): void
+    {
+        if ($observacion) {
+            $mensajeBase .= "\n\n⚠️ *Observación:* {$observacion}";
+        }
+
+        try {
+            $this->whatsappService->enviarMensaje(
+                $mensajeBase, 
+                config('services.whatsapp.group_operaciones')
+            );
+        } catch (Throwable $e) {
+            Log::warning("Fallo al enviar notificación de Inspección vía WhatsApp: " . $e->getMessage());
         }
     }
 
     /**
-     * Handle the Inspeccion "updated" event.
-     *
-     * @param  \App\Models\Inspeccion  $inspeccion
-     * @return void
+     * Maneja de forma segura la autenticación por si el evento se dispara vía Job o API.
      */
-    public function updated(Inspeccion $inspeccion)
+    private function obtenerNombreUsuario(): string
     {
         $user = auth()->user();
-        $nombre = $user->persona->nombre ?? 'Usuario'.$user->id;
-
-        $baseUrl = rtrim(config('services.whatsapp.url'), '/');
-        $tokenWA = config('services.whatsapp.key');
-        $endpoint = "{$baseUrl}/messages/chat?token={$tokenWA}";
-        // Verificamos si respuesta_in cambió de Null a algo con contenido
-        $respuestaInCambio = $inspeccion->isDirty('respuesta_in')   ;
-        $eraNull = is_null($inspeccion->getOriginal('respuesta_in'));
-        $ahoraTieneDatos = !is_null($inspeccion->respuesta_in);
-       
-        
-
-        if ($respuestaInCambio && $eraNull && $ahoraTieneDatos) {
-            
-            $vehiculo = Vehiculo::find($inspeccion->vehiculo_id);
-            if ($vehiculo) {
-                // Pasar vehículo a estatus 1
-                if ($vehiculo->estatus != 1) {
-                    $vehiculo->estatus = 1;
-                    $vehiculo->save();
-                }
-
-                // Buscar viaje en ruta
-            $viaje = Viaje::find($inspeccion->viaje_id) ?? 
-                     Viaje::where('vehiculo_id', $vehiculo->id)->where('status', 'EN RUTA')->first();
-
-            if ($viaje) {
-                $viaje->update(['status' => 'COMPLETADO']); // Dispara tu Observer perfectamente
-            }
-                $data = json_decode($inspeccion->respuesta_in, true);
-                $observacion=false;
-                // Recorremos las secciones e items buscando la etiqueta específica
-                foreach ($data['sections'] as $section) {
-                    foreach ($section['items'] as $item) {
-                        if (isset($item['label']) && $item['label'] === 'Observaciones Generales') {
-                            // Retornamos el valor limpio de espacios
-                        $observacion = isset($item['value']) ? trim($item['value']) : false;
-                        break 2; // Salimos de ambos bucles una vez encontrada la etiqueta
-                        }
-                    }
-                }
-
-
-                $mensaje = "CHECKIN: {$nombre} ha registrado el checklist de llegada para la unidad {$vehiculo->flota} - {$vehiculo->placa}. El viaje #{$inspeccion->viaje_id} ha sido marcado como COMPLETADO.";
-                if ($observacion) {
-                    $mensaje .= " Observación: {$observacion}";
-                }
-                $response = Http::asForm()
-                            ->withoutVerifying() // Equivalente a CURLOPT_SSL_VERIFYPEER => 0
-                            ->post($endpoint, [
-                                'token'      => $tokenWA,
-                                'to'         => config('services.whatsapp.group_operaciones'),
-                                'body'       => $mensaje,
-                                'priority'   => 1, // Importante si lo tenías en el script original
-                                'referenceId' => '',
-                            ]);
-                // Si hay exactamente 1, pasarlo a COMPLETADO
-                // if ($viajesEnRuta->count() === 1) {
-                //     $viaje = $viajesEnRuta->first();
-                //     $viaje->status = 'COMPLETADO';
-                //     $viaje->save(); // ¡Esto disparará el ViajeObserver automáticamente!
-                // }
-            }
-        }
-    }
-
-    /**
-     * Handle the Inspeccion "deleted" event.
-     *
-     * @param  \App\Models\Inspeccion  $inspeccion
-     * @return void
-     */
-    public function deleted(Inspeccion $inspeccion)
-    {
-        //
-    }
-
-    /**
-     * Handle the Inspeccion "restored" event.
-     *
-     * @param  \App\Models\Inspeccion  $inspeccion
-     * @return void
-     */
-    public function restored(Inspeccion $inspeccion)
-    {
-        //
-    }
-
-    /**
-     * Handle the Inspeccion "force deleted" event.
-     *
-     * @param  \App\Models\Inspeccion  $inspeccion
-     * @return void
-     */
-    public function forceDeleted(Inspeccion $inspeccion)
-    {
-        //
+        return $user->persona->nombre ?? 'Sistema / Chofer (App)';
     }
 }

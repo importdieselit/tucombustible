@@ -30,6 +30,8 @@
                        },
             default => 'Sin especificar'
         };
+
+        $totalLitros=0;
     @endphp
 
     {{-- 🏢 MEMBRETE CORPORATIVO OPTIMIZADO PARA CAPTURAS --}}
@@ -167,6 +169,9 @@
                                     {{ $detalle->cliente->telefono_alt ?? 'N/A' }}
                                 </td>
                                 <td>
+                                    @php
+                                        $totalLitros+= $detalle->litros_despachados ?? $detalle->litros ?? 0 ;
+                                    @endphp
                                     {{ number_format($detalle->litros_despachados ?? $detalle->litros ?? 0, 0) }} L
                                 </td>
                                 
@@ -198,6 +203,10 @@
                                 </td>
                             </tr>
                             @endforeach
+                            <tr>
+                                <th style="text-align: center; vertical-align: middle">Total</th>
+                                <th colspan="{{ $viaje->tipo_planificacion ==1 ? '6' : '5' }}" style="text-align: end; padding: 10px;"> {{ number_format($totalLitros, 0) }} L </th>
+                            </tr>
                         </tbody>
                     </table>
                 </div>

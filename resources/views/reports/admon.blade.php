@@ -124,8 +124,8 @@
         <div class="row g-3 mb-4">
             <div class="col-md-3">
                 <div class="kpi-card p-3">
-                    <span class="text-muted text-uppercase d-block small fw-bold">Cuentas por Cobrar (CxC)</span> 
-                    <span class="fs-4 fw-bold text-dark">$ {{ number_format($totalCxC, 2, ',', '.') }}</span>
+                     <span class="text-muted text-uppercase d-block small fw-bold">Cobros Realizados</span> 
+                    <span class="fs-4 fw-bold text-dark">$ {{ number_format($totalCobros, 2, ',', '.') }}</span> 
                 </div>
             </div>
             <div class="col-md-2">
@@ -137,7 +137,7 @@
             <div class="col-md-2">
                 <div class="kpi-card p-3" style="border-left-color: #2563eb;">
                     <span class="text-muted text-uppercase d-block small fw-bold">Total Bancos</span> 
-                    <span class="fs-4 fw-bold text-primary">$ {{ number_format($totalBancos, 2, ',', '.') }}</span>
+                    <span class="fs-4 fw-bold text-primary" >$ {{ number_format($totalBancos, 2, ',', '.') }}</span> 
                 </div>
             </div>
             <div class="col-md-2">
@@ -152,6 +152,7 @@
                     <span class="fs-4 fw-bold text-danger">$ {{ number_format($totalOpex, 2, ',', '.') }}</span>
                 </div>
             </div>
+            
             
         </div>
 
@@ -350,6 +351,37 @@
                                 </tbody>
                             </table>
 
+                            <!-- Desglose de Cobros Realizados a Clientes -->
+                        <h5 class="text-bold-custom border-bottom pb-2 mb-3 mt-4">Desglose de Cobros a Clientes</h5>
+                        <table class="table table-sm table-hover align-middle">
+                            <thead class="table-header-custom">
+                                <tr>
+                                    <th>Origen / Tipo</th>
+                                    <th>Cuenta</th>
+                                    <th class="text-end">Monto (USD)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($cobrosDesglose as $cobro)
+                                    @if($cobro->monto != 0)
+                                    <tr>
+                                        <td class="small text-muted">{{ $cobro->tipo }}</td>
+                                        <td class="small fw-bold">{{ $cobro->cuenta }}</td>
+                                        <td class="text-end small text-success fw-bold">$ {{ number_format($cobro->monto, 2, ',', '.') }}</td>
+                                    </tr>
+                                    @endif
+                                @empty
+                                    <tr>
+                                        <td colspan="3" class="text-center small text-muted">No se registraron cobros en este turno.</td>
+                                    </tr>
+                                @endforelse
+                                <tr class="table-light text-bold-custom border-top border-dark">
+                                    <td colspan="2" class="small">TOTAL COBROS CLIENTES:</td>
+                                    <td class="text-end small text-success">$ {{ number_format($totalCobros, 2, ',', '.') }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
                     </div>
                 </div>
             </div>
@@ -365,22 +397,28 @@
                     <span class="fs-4 fw-bold" style="color: #6366f1;">{{ number_format($margenBruto, 1, ',', '.') }}%</span>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                  <div class="kpi-card p-3" style="border-left-color: #0ea5e9;">
                     <span class="text-muted text-uppercase d-block small fw-bold">Inventario MGO</span> 
                     <span class="fs-4 fw-bold" style="color: #0ea5e9;">{{ number_format($invMGO, 0, ',', '.') }} L</span>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <div class="kpi-card p-3" style="border-left-color: #b45309;">
                     <span class="text-muted text-uppercase d-block small fw-bold">Inventario Diésel</span> 
                     <span class="fs-4 fw-bold" style="color: #b45309;">{{ number_format($invDiesel, 0, ',', '.') }} L</span>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <div class="kpi-card p-3" style="border-left-color: #f43f5e;">
                     <span class="text-muted text-uppercase d-block small fw-bold">CXP Combustible</span> 
                     <span class="fs-4 fw-bold text-danger">$ {{ number_format($cxpComb, 2, ',', '.') }}</span>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="kpi-card p-3">
+                    <span class="text-muted text-uppercase d-block small fw-bold">Cuentas por Cobrar (CxC)</span> 
+                    <span class="fs-4 fw-bold text-dark">$ {{ number_format($totalCxC, 2, ',', '.') }}</span>
                 </div>
             </div>
         </div>

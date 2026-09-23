@@ -28,51 +28,56 @@ class CheckAlertasViajes extends Command
         $reporte = ['salidas' => 0, 'notificadas_salida' => 0, 'retornos' => 0, 'notificadas_retorno' => 0];
 
         // --- CASO 1: SALIDAS RETRASADAS (Optimizado sin N+1) ---
-        $this->comment("Verificando salidas programadas (30 min de tolerancia)...");
-        
-        $viajesRetrasados = Viaje::with(['vehiculo', 'chofer.persona'])
+        $this->comment("Verificando salidas programadas (umbrales exactos 15, 30 y 60 min)..."); 
+        $viajesProgramados = Viaje::with(['vehiculo', 'chofer.persona'])
             ->where('status', 'Programado')
-            ->where('fecha_salida', '<=', now()->subMinutes(30))
-            // Reemplaza la consulta interna: solo trae viajes que NO tengan inspecciones iniciadas (respuesta_in nulo)
+            // Filtro de rango de tiempo para optimizar memoria (entre 15 y 65 minutos atrás)
+            ->where('fecha_salida', '<=', now()->subMinutes(15))
+            ->where('fecha_salida', '>=', now()->subMinutes(65))
             ->whereDoesntHave('inspecciones', function($query) {
                 $query->whereNull('respuesta_in');
             })
             ->get();
-            
-            // nota: buscar inspeccxones con mismo vehiqplo id rin viaje id respuesta in null y dentro deeun rango de fecha aceptaple
-            
 
-        $this->info("Viajes en mora encontrados: " . $viajesRetrasados->count());
+        // Filtrar únicamente los viajes cuyo tiempo transcurrido coincida exactamente con 15, 30 o 60 min
+        $viajesRetrasados = $viajesProgramados->filter(function ($viaje) {
+            $minutosTranscurridos = (int) $viaje->fecha_salida->diffInMinutes(now());
+            return in_array($minutosTranscurridos, [15, 30, 60]);
+        });
+        
+        
+
+        $this->info("Viajes en mora coincidentes con los umbrales: " . $viajesRetrasados->count());
 
         foreach ($viajesRetrasados as $viaje) {
             $reporte['salidas']++;
             
             try {
-                $this->warn(" > Procesando alerta: Viaje #{$viaje->id}");
-                $tiempoRetraso = now()->diffInMinutes($viaje->fecha_salida);
+                $tiempoRetraso = (int) $viaje->fecha_salida->diffInMinutes(now());
+                $this->warn(" > Procesando alerta ({$tiempoRetraso} min): Viaje #{$viaje->id}");
                 
-                $mensajeSalida = "*🚨 ALERTA SALIDA RETRASADA 🚨*\n\n" .
-                    "El viaje *#{$viaje->id}* con destino a *{$viaje->destino_ciudad}* no registra checklist ni ha salido de las instalaciones tras *{$tiempoRetraso} min* de retraso.\n\n" .
+                $mensajeSalida = "*🚨 ALERTA SALIDA RETRASADA ({$tiempoRetraso} MIN) 🚨*\n\n" .
+                    "El viaje *#{$viaje->id}* con destino a *{$viaje->destino_ciudad}* no registra checklist ni ha salido tras *{$tiempoRetraso} min* de retraso.\n\n" .
                     "• *Vehículo:* {$viaje->vehiculo->flota} ({$viaje->vehiculo->placa})\n" .
                     "• *Destino:* {$viaje->destino_ciudad}\n" .
                     "• *Fecha Salida Programada:* {$viaje->fecha_salida->format('d/m/Y H:i A')}\n" .
                     "• *Conductor:* {$viaje->chofer->persona->nombre}\n\n" .
-                    "• *ACCIÓN RECOMENDADA:* Verificar motivo del retraso y exigir la ejecución inmediata del checklist de salida.";
+                    "• *ACCIÓN RECOMENDADA:* Notificar el motivo del retraso o gestionar los ajustes correspondientes para reprogramar la planificación.";
 
                 // Envío de alertas Push (Protegido individualmente)
                 $this->enviarAlertaPush($mensajeSalida, $usuariosNotificar, $viaje);
                 $reporte['notificadas_salida']++;
 
                 // Notificación al grupo de WhatsApp con Timeout de protección
-               /* Http::asForm()
-                    ->timeout(10) // Evita que el comando se quede colgado eternamente si el gateway cae
+                Http::asForm()
+                    ->timeout(10)
                     ->withoutVerifying()
                     ->post($endpoint, [
                         'token'    => $tokenWA,
                         'to'      => config('services.whatsapp.group_operaciones'),
                         'body'     => $mensajeSalida,
                         'priority' => 1,
-                    ]); */
+                    ]);
 
             } catch (Exception $e) {
                 $this->error("Falló el procesamiento del viaje de salida #{$viaje->id}: " . $e->getMessage());

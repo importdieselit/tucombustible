@@ -196,9 +196,9 @@ class VehiculoController extends BaseController
 
         $unidades_con_orden_abierta = Vehiculo::VehiculosConOrdenAbierta()->count();
         $unidades_en_mantenimiento = Vehiculo::countVehiculosEnMantenimiento();
-        $unidades_disponibles = Vehiculo::Disponibles()->count();
-        $unidades_no_disponibles = Vehiculo::NoDisponibles()->count();
-        $unidades_en_servicio = Vehiculo::EnServicio()->count();
+        $unidades_disponibles = Vehiculo::Disponibles()->where('id_cliente',$cliente_id)->count();
+        $unidades_no_disponibles = Vehiculo::NoDisponibles()->where('id_cliente',$cliente_id)->count();
+        $unidades_en_servicio = Vehiculo::EnServicio()->where('id_cliente',$cliente_id)->count();
         $historicoEficiencia = ResumenDiario::orderBy('fecha', 'desc')->limit(15)->get()->sortBy('fecha')->toArray();
         $mantenimientos = MantenimientoProgramado::with('vehiculo')
                 ->whereIn('estatus', [1, 2]) // Solo pendientes o en proceso
@@ -342,6 +342,7 @@ class VehiculoController extends BaseController
             'm_dis' => Vehiculo::where('es_flota', true)->where('id_cliente',$cliente_id)->where('estatus', 1)->whereIn('tipo', [1])->count(),
             'ch_dis' => Vehiculo::where('es_flota', true)->where('id_cliente',$cliente_id)->where('estatus', 1)->whereIn('tipo', [3])->count(),
             'c_dis' => Vehiculo::where('es_flota', true)->where('id_cliente',$cliente_id)->where('estatus', 1)->whereIn('tipo', [2,4,5])->count(),
+            'l_dis' => Vehiculo::where('es_flota', true)->where('id_cliente',$cliente_id)->where('estatus', 1)->where('tipo', 6)->count(),
             'v_dis' => $unidades_disponibles,
             'v_fue' => $unidades_con_orden_abierta,
             'chartCategorias' => $categorias,
@@ -727,8 +728,8 @@ class VehiculoController extends BaseController
     
     $cisternas= $data->where('tipo', 2);
     $totalCisternas= $cisternas->count();
-    $camiones = $data->whereIn('tipoVehiculo.tipo', ['CAMION','CAMION CISTERNA']);
-    $chutos = $data->whereIn('tipoVehiculo.tipo', ['CHUTO']);
+    $camiones = $data->whereIn('tipo', [1,4,5]);
+    $chutos = $data->whereIn('tipo', [3]);
     $totalCamiones= $camiones->count();
     $totalChutos= $chutos->count();
 
@@ -863,12 +864,13 @@ class VehiculoController extends BaseController
     public function ubicacionGeneral()
     {
         // Filtramos unidades que tengan GPS (evitamos lat/lng en 0 o null)
+        $api_key_map = config('services.cartomap.api_key');
         $unidades = Vehiculo::with(['isMarca','isModelo'])->whereNotNull('latitud')
             ->whereNotNull('longitud')
             ->where('latitud', '!=', 0)
             ->get(['id', 'placa', 'marca', 'modelo', 'tipo', 'estatus', 'latitud', 'longitud', 'updated_at']);
 
-        return view('vehiculo.ubicacion_general', compact('unidades'));
+        return view('vehiculo.ubicacion_general', compact('unidades', 'api_key_map'));
     }
 
     public function apiUbicaciones()
@@ -901,6 +903,23 @@ class VehiculoController extends BaseController
         $hasta = $request->get('hasta', now()->format('Y-m-d\TH:i'));
 
         return view('vehiculo.historial', compact('vehiculo', 'id', 'desde', 'hasta'));
+    }
+
+    public function marcarInoperativo(Request $request, $id)
+    {
+        $request->validate([
+            'motivo' => 'required|string|max:500',
+        ]);
+
+        try {
+            $this->service->marcarComoInoperativo($id, $request->motivo);
+            Session::flash('success', 'El vehículo ha sido marcado como inoperativo.');
+        } catch (\Exception $e) {
+            Log::error("Error al colocar vehículo {$id} fuera de servicio: " . $e->getMessage());
+            Session::flash('error', 'Ocurrió un error al cambiar el estatus del vehículo.');
+        }
+
+        return Redirect::back();
     }
     
 }

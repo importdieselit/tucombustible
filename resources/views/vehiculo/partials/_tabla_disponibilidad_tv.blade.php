@@ -94,7 +94,7 @@
 
                         <div class="row g-3 mb-4">
 
-                                <h3 class="w-100 text-center "><strong>  UNIDADES OPERATIVAS</strong></h3>
+                                <h3 class="w-100 text-center "><strong>  UNIDADES DISPONIBLES EN PATIO</strong></h3>
                             <div class="col-12 col-md-6 col-lg-3">
                                 <div class="card h-100 shadow-sm  border-chutos border-0 border-top border-4">
                                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
@@ -179,7 +179,7 @@
                             </div>
                         
                           
-                            <h3 class="w-100 text-center"><strong>  UNIDADES EN RUTA</strong></h3>
+                            <h3 class="w-100 text-center"><strong>  UNIDADES DISPONIBLES EN RUTA</strong></h3>
                             <div class="col-12 col-md-6 col-lg-3">
                                 <div class="card h-100 shadow-sm border-0 border-top border-4 border-chutos">
                                     <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
@@ -193,7 +193,7 @@
                                                     {{ $v->flota }} <span class="text-muted">|</span> {{ $v->placa }}
                                                 </span>
                                             @empty
-                                                <span class="text-muted x-small ps-1">Sin unidades operativas</span>
+                                                <span class="text-muted x-small ps-1">Sin unidades en ruta</span>
                                             @endforelse
                                         </div>
                                     </div>
@@ -213,7 +213,7 @@
                                                  {{ $v->flota }} <span class="font-weight-bold text-muted">|</span> {{ $v->placa }}
                                                 </span>
                                             @empty
-                                                <span class="text-muted x-small ps-1">Sin unidades operativas</span>
+                                                <span class="text-muted x-small ps-1">Sin unidades en ruta</span>
                                             @endforelse
                                         </div>
                                     </div>
@@ -233,7 +233,7 @@
                                                     {{ $v->flota }} <span class="text-muted">|</span> {{ $v->placa }}
                                                 </span>
                                             @empty
-                                                <span class="text-muted x-small ps-1">Sin unidades operativas</span>
+                                                <span class="text-muted x-small ps-1">Sin unidades en ruta</span>
                                             @endforelse
                                         </div>
                                     </div>
@@ -253,7 +253,7 @@
                                                     {{ $v->flota }} <span class="text-dark">|</span> {{ $v->placa }}
                                                 </span>
                                             @empty
-                                                <span class="text-muted x-small ps-1">Sin unidades operativas</span>
+                                                <span class="text-muted x-small ps-1">Sin unidades en ruta</span>
                                             @endforelse
                                         </div>
                                     </div>
@@ -275,7 +275,7 @@
                                                     {{ $v->flota }} <span class="text-muted">|</span> {{ $v->placa }}
                                                 </span>
                                             @empty
-                                                <span class="text-muted x-small ps-1">Sin unidades operativas</span>
+                                                <span class="text-muted x-small ps-1">Sin unidades con falla</span>
                                             @endforelse
                                         </div>
                                     </div>
@@ -295,7 +295,7 @@
                                                     {{ $v->flota }} <span class="font-weight-bold text-muted">|</span> {{ $v->placa }}
                                                 </span>
                                             @empty
-                                                <span class="text-muted x-small ps-1">Sin unidades operativas</span>
+                                                <span class="text-muted x-small ps-1">Sin unidades con falla</span>
                                             @endforelse
                                         </div>
                                     </div>
@@ -315,7 +315,7 @@
                                                     {{ $v->flota }} <span class="text-muted">|</span> {{ $v->placa }}
                                                 </span>
                                             @empty
-                                                <span class="text-muted x-small ps-1">Sin unidades operativas</span>
+                                                <span class="text-muted x-small ps-1">Sin unidades con falla</span>
                                             @endforelse
                                         </div>
                                     </div>
@@ -335,7 +335,7 @@
                                                     {{ $v->flota }} <span class="text-muted">|</span> {{ $v->placa }}
                                                 </span>
                                             @empty
-                                                <span class="text-muted x-small ps-1">Sin unidades operativas</span>
+                                                <span class="text-muted x-small ps-1">Sin unidades con falla</span>
                                             @endforelse
                                         </div>
                                     </div>
