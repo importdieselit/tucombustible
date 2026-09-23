@@ -5,6 +5,7 @@ namespace App\Observers;
 use App\Models\Viaje;
 use App\Models\Vehiculo;
 use App\Services\LogisticaInventarioService;
+use App\Services\CombustibleService;
 use Illuminate\Support\Facades\DB;
 use App\Notifications\ViajeCreadoNotification;
 use Illuminate\Support\Facades\Notification;
@@ -12,10 +13,12 @@ use Illuminate\Support\Facades\Notification;
 class ViajeObserver
 {
     protected $inventarioService;
+    protected $combustibleService;
 
-    public function __construct(LogisticaInventarioService $inventarioService)
+    public function __construct(LogisticaInventarioService $inventarioService, CombustibleService $combustibleService)
     {
         $this->inventarioService = $inventarioService;
+        $this->combustibleService = $combustibleService;
     }
 
     /**
@@ -74,6 +77,12 @@ class ViajeObserver
 
                 // ⚡ LEDGER AUTOMÁTICO: Libera compromiso comercial y descuenta Stock Físico de la Sede
                 $this->inventarioService->registrarSalidaFisicaDespacho($viaje);
+
+                $this->combustibleService->descontarCombustiblePlanificado(
+                    sedeId: $viaje->sede_id,
+                    litrosADescontar: $viaje->litros,
+                    viajeId: $viaje->id
+                );
 
             // 2. TRANSICIÓN A "COMPLETADO" (Llegada / Descarga)
             } elseif ($nuevoStatus === 'COMPLETADO') {
