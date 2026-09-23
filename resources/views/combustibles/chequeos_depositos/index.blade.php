@@ -90,7 +90,7 @@
                                         <span class="badge bg-warning text-dark text-uppercase fw-bold shadow-sm" style="font-size: 11px; letter-spacing: 0.5px; border: 1px solid #e0a800;">
                                             <i class="fas fa-sun me-1"></i> {{ $chequeo->turno }}
                                         </span>
-                                    @elseif(Str::contains(Str::lower($chequeo->turno), 'nocturno') || Str::contains(Str::lower($chequeo->turno), 'noche'))
+                                    @elseif(Str::contains(Str::lower($chequeo->turno), 'vespertino') || Str::contains(Str::lower($chequeo->turno), 'noche'))
                                         <span class="badge bg-indigo text-white text-uppercase fw-bold shadow-sm" style="font-size: 11px; letter-spacing: 0.5px; background-color: #3b3f5c !important;">
                                             <i class="fas fa-moon me-1"></i> {{ $chequeo->turno }}
                                         </span>

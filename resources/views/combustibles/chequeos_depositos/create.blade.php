@@ -124,7 +124,7 @@
                             <select name="turno" class="form-select form-select-sm fw-bold" required>
                                 <option value="">Seleccione...</option>
                                 <option value="Matutino" {{ old('turno') == 'Matutino' ? 'selected' : '' }}>Matutino</option>
-                                <option value="Nocturno" {{ old('turno') == 'Nocturno' ? 'selected' : '' }}>Nocturno</option>
+                                <option value="Vespertino" {{ old('turno') == 'Vespertino' ? 'selected' : '' }}>Vespertino</option>
                             </select>
                         </div>
                     </div>

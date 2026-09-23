@@ -78,7 +78,7 @@ class ChequeoDepositoController extends Controller
         // 1. Validación estricta del lote de varillaje
         $data = $request->validate([
             'id_sede' => 'required|exists:sedes,id',
-            'turno' => 'required|string|in:Matutino,Nocturno',
+            'turno' => 'required|string|in:Matutino,Vespertino',
             'observaciones' => 'nullable|string|max:500',
             'confirmar_duplicado' => 'nullable|boolean',
             'detalles' => 'required|array|min:1',

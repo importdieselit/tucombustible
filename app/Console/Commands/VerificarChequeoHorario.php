@@ -33,7 +33,7 @@ class VerificarChequeoHorario extends Command
         if ($horaActual >= '08:00' && $horaActual < '12:00') {
             $turnoAVerificar = 'Matutino';
         } elseif ($horaActual >= '16:00' && $horaActual < '20:00') {
-            $turnoAVerificar = 'Nocturno';
+            $turnoAVerificar = 'Vespertino';
         } else {
             $this->warn(" Fuera de horario de auditoría de aforo ({$horaActual}). Proceso finalizado.");
             return Command::SUCCESS;
