@@ -30,7 +30,7 @@ class Persona extends Model
         'date_of_birth' => 'date',
     ];
 
-    public $timestamps = false;
+    
 
     /**
      * Una persona puede tener una cuenta de usuario.

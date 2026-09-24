@@ -29,6 +29,7 @@ class Personal extends Model
      * @var bool
      */
     public $incrementing = true;
+    public $timestamps = false;
 
     /**
      * Los atributos que son asignables de forma masiva.
