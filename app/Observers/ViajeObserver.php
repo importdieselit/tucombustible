@@ -84,11 +84,13 @@ class ViajeObserver
                     $this->inventarioService->registrarSalidaFisicaDespacho($viaje);
                 });
 
+                if (in_array((int) $viaje->tipo_planificacion, [1, 2], true)) {
                 $this->combustibleService->descontarCombustiblePlanificado(
                     sedeId: $viaje->sede_id,
                     litrosADescontar: $viaje->litros,
                     viajeId: $viaje->id
                 );
+    }
 
             // 2. TRANSICIÓN A "COMPLETADO" (Llegada / Descarga)
             } elseif ($nuevoStatus === 'COMPLETADO') {
