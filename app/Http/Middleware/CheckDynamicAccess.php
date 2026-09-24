@@ -62,7 +62,7 @@ class CheckDynamicAccess
         }
 
         // A. Búsqueda exacta por coincidencia de ruta registrada en la BD
-        $modulo = DB::table('modulos')->where('route_name', $routeName)->first(['id']);
+        $modulo = DB::table('modulos')->where('ruta', $routeName)->first(['id']);
         if ($modulo) {
             return (int) $modulo->id;
         }
@@ -70,8 +70,8 @@ class CheckDynamicAccess
         // B. Búsqueda por prefijo (ej: si la ruta es 'vehiculos.updatev', busca 'vehiculos.%')
         $prefix = explode('.', $routeName)[0];
         $moduloPadre = DB::table('modulos')
-            ->where('route_name', 'LIKE', $prefix . '.%')
-            ->orWhere('route_name', $prefix)
+            ->where('ruta', 'LIKE', $prefix . '.%')
+            ->orWhere('ruta', $prefix)
             ->first(['id']);
 
         return $moduloPadre ? (int) $moduloPadre->id : null;

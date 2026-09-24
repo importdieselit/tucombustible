@@ -309,7 +309,7 @@ class UserController extends BaseController
         
         $item = User::findOrFail($id);
         $data = $this->prepareData($request, $item);
-
+        dd($data); // Debugging line to inspect the prepared data
         try {
             $item->update($data);
             if($request->filled('password')) {

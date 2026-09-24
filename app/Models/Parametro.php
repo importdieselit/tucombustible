@@ -5,43 +5,48 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-/**
- * Modelo para la tabla 'parametros'.
- * Utilizado para almacenar pares clave-valor de configuración de la aplicación.
- */
 class Parametro extends Model
 {
     use HasFactory;
 
-    // Nombre de la tabla
     protected $table = 'parametros';
 
-    /**
-     * Los atributos que son asignables masivamente.
-     * En este caso, solo 'nombre' y 'valor'.
-     * 'id' y 'timestamps' se manejan automáticamente.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
-        'nombre',
+        'grupo',
+        'clave',
+        'descripcion',
         'valor',
+        'activo',
+    ];
+
+    protected $casts = [
+        'valor'  => 'array',
+        'activo' => 'boolean',
     ];
 
     /**
-     * Los atributos que deberían ser convertidos a tipos nativos.
-     * No se necesita ninguna conversión especial para 'nombre' y 'valor' (ambos string).
-     *
-     * @var array<string, string>
+     * Accessor para leer directamente $param->esquema desde el array JSON 'valor'
      */
-    protected $casts = [
-        // 'created_at' => 'datetime',
-        // 'updated_at' => 'datetime',
-    ];
-
-    // Opcional: Define un scope para buscar fácilmente por nombre
-    public function scopeNombre($query, $nombre)
+    public function getEsquemaAttribute()
     {
-        return $query->where('nombre', $nombre);
+        return $this->valor['schema'] ?? [];
+    }
+
+    /**
+     * Accessor para leer directamente $param->contenido desde el array JSON 'valor'
+     */
+    public function getContenidoAttribute()
+    {
+        return $this->valor['content'] ?? null;
+    }
+
+    public function scopeGrupo($query, $grupo)
+    {
+        return $query->where('grupo', $grupo);
+    }
+
+    public function scopeClave($query, $clave)
+    {
+        return $query->where('clave', $clave);
     }
 }
