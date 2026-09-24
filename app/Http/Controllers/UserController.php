@@ -333,7 +333,7 @@ class UserController extends BaseController
                 'email'      => $request->input('email'),
                 'id_perfil'  => $request->input('perfil'),
                 'id_sede'    => $request->input('id_sede'),
-                'cliente_id' => $request->input('id_cliente'),
+                //'cliente_id' => $request->input('id_cliente'),
             ];
 
             if ($request->filled('password')) {
