@@ -19,6 +19,7 @@ class TransaccionCombustibleController extends Controller
             'deposito', 
             'cliente', // <-- Esta relación trae tanto clientes como aliados comerciales
             'user',
+            'user.persona', // <-- Relación para obtener el nombre del usuario que realizó la transacción
         ]);
 
         // Filtro por Rango de Fechas

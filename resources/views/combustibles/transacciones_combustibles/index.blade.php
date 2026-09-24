@@ -210,7 +210,7 @@
                                 {{-- Operador / Usuario --}}
                                 <td>
                                     <span class="text-dark fw-bold" style="font-size: 12px;">
-                                        <i class="fas fa-user-cog text-muted me-1"></i> {{ $transaccion->user->name ?? 'Sistema' }}
+                                        <i class="fas fa-user-cog text-muted me-1"></i> {{ $transaccion->user->persona->nombre ?? 'Sistema' }}
                                     </span>
                                 </td>
 
