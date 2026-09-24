@@ -16,7 +16,6 @@ class ViajeObserver
 {
     protected $inventarioService;
     protected $combustibleService;
-    protected LogisticaInventarioService $inventarioService;
 
     public function __construct(LogisticaInventarioService $inventarioService, CombustibleService $combustibleService)
     {
