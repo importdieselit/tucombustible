@@ -347,7 +347,6 @@ class UserController extends BaseController
                 'nombre'   => $request->input('nombre'),
                 'dni'      => $request->input('dni'),
                 'telefono' => $request->input('telefono'),
-                'cargo_id' => $request->input('cargo_id'),
             ];
 
             if ($user->persona) {

@@ -23,7 +23,6 @@ class Persona extends Model
         'date_of_birth',
         'gender',
         'notes',
-        'cargo_id',
     ];
 
     protected $casts = [
