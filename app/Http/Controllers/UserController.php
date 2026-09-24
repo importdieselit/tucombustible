@@ -304,19 +304,26 @@ class UserController extends BaseController
     public function update(Request $request, $id)
     {
         if (!auth()->user()->canAccess('update', $this->moduloIdUsuarios)) {
-             abort(403, 'No tiene permiso para editar usuarios.');
+            abort(403, 'No tiene permiso para editar usuarios.');
         }
-        
+
         $item = User::findOrFail($id);
         $data = $this->prepareData($request, $item);
-        dd($data); // Debugging line to inspect the prepared data
+
         try {
+            // 1. Actualiza los datos preparados
             $item->update($data);
-            if($request->filled('password')) {
-                $this->userService->actualizarPasswordObligatorio($item->id, $request->password);
+
+            // 2. Si mandaron contraseña nueva, actualízala también en el modelo
+            if ($request->filled('password')) {
+                $item->update([
+                    'password' => Hash::make($request->input('password')),
+                ]);
             }
-            
+
             Session::flash('success', 'Usuario actualizado exitosamente.');
+            return redirect()->route('usuarios.index'); // Ajusta la ruta a donde quieras redirigir
+
         } catch (\Exception $e) {
             Session::flash('error', 'Error al actualizar el usuario: ' . $e->getMessage());
             return Redirect::back()->withInput();
