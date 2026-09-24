@@ -309,9 +309,12 @@ class UserController extends BaseController
         
         $item = User::findOrFail($id);
         $data = $this->prepareData($request, $item);
-        dd($data); // Debugging line to inspect the prepared data
+
         try {
             $item->update($data);
+            if($request->filled('password')) {
+                $this->updatePassword($request);
+            }
             Session::flash('success', 'Usuario actualizado exitosamente.');
         } catch (\Exception $e) {
             Session::flash('error', 'Error al actualizar el usuario: ' . $e->getMessage());
