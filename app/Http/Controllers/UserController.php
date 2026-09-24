@@ -395,7 +395,7 @@ class UserController extends BaseController
             DB::commit();
 
             Session::flash('success', 'Usuario, persona y ficha de personal actualizados exitosamente.');
-            return redirect()->route('usuarios.index');
+            return redirect()->route('usuarios.index-adm');
 
         } catch (\Exception $e) {
             DB::rollBack();
