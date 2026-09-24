@@ -303,35 +303,104 @@ class UserController extends BaseController
      */
     public function update(Request $request, $id)
     {
+        // 1. Verificación de permisos
         if (!auth()->user()->canAccess('update', $this->moduloIdUsuarios)) {
             abort(403, 'No tiene permiso para editar usuarios.');
         }
 
-        $item = User::findOrFail($id);
-        $data = $this->prepareData($request, $item);
+        // 2. Validación de entradas (evita rebotes automáticos erróneos)
+        $request->validate([
+            'name'        => 'required|string|max:255',
+            'email'       => 'required|email|unique:users,email,' . $id,
+            'perfil'      => 'required|exists:perfiles,id',
+            'nombre'      => 'required|string|max:255',
+            'dni'         => 'required|string|max:50',
+            'id_cliente'  => 'nullable|required_if:perfil,3',
+            'password'    => 'nullable|string|min:6',
+            'soporte_licencia'    => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:4096',
+            'soporte_certificado' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:4096',
+            'foto'                => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        $user = User::with(['persona.chofer'])->findOrFail($id);
+
+        // 3. Inicio de Transacción SQL
+        DB::beginTransaction();
 
         try {
-            // 1. Actualiza los datos preparados
-            $item->update($data);
+            // --- A. ACTUALIZAR MODELO USER ---
+            $userData = [
+                'name'       => $request->input('name'),
+                'email'      => $request->input('email'),
+                'id_perfil'  => $request->input('perfil'),     // Mapeo perfil -> id_perfil
+                'id_sede'    => $request->input('id_sede'),
+                'cliente_id' => $request->input('id_cliente'), // Mapeo id_cliente -> cliente_id
+            ];
 
-            // 2. Si mandaron contraseña nueva, actualízala también en el modelo
             if ($request->filled('password')) {
-                $item->update([
-                    'password' => Hash::make($request->input('password')),
-                ]);
+                $userData['password'] = Hash::make($request->input('password'));
             }
 
-            Session::flash('success', 'Usuario actualizado exitosamente.');
-            return redirect()->route('usuarios.index'); // Ajusta la ruta a donde quieras redirigir
+            $user->update($userData);
+
+            // --- B. ACTUALIZAR O CREAR MODELO PERSONA ---
+            $personaData = [
+                'nombre'   => $request->input('nombre'),
+                'dni'      => $request->input('dni'),
+                'telefono' => $request->input('telefono'),
+                'cargo_id' => $request->input('cargo_id'),
+            ];
+
+            if ($user->persona) {
+                $user->persona->update($personaData);
+                $persona = $user->persona;
+            } else {
+                $persona = Persona::create($personaData);
+                $user->update(['id_persona' => $persona->id]);
+            }
+
+            // --- C. ACTUALIZAR O CREAR MÓDULO CHOFER ---
+            if ($request->has('es_chofer') && $request->input('es_chofer') == '1') {
+                $choferData = [
+                    'licencia_numero'                => $request->input('licencia_numero'),
+                    'tipo_licencia'                  => $request->input('tipo_licencia'),
+                    'licencia_vencimiento'           => $request->input('licencia_vencimiento'),
+                    'certificado_medico_vencimiento' => $request->input('certificado_medico_vencimiento'),
+                ];
+
+                // Procesar carga de archivos físicos
+                if ($request->hasFile('soporte_licencia')) {
+                    $choferData['soporte_licencia'] = $request->file('soporte_licencia')->store('choferes/licencias', 'public');
+                }
+
+                if ($request->hasFile('soporte_certificado')) {
+                    $choferData['soporte_certificado'] = $request->file('soporte_certificado')->store('choferes/certificados', 'public');
+                }
+
+                if ($request->hasFile('foto')) {
+                    $choferData['foto'] = $request->file('foto')->store('choferes/fotos', 'public');
+                }
+
+                // Guarda/Actualiza la relación en la tabla choferes asociada a la Persona
+                $persona->chofer()->updateOrCreate(
+                    ['persona_id' => $persona->id],
+                    $choferData
+                );
+            }
+
+            DB::commit();
+
+            Session::flash('success', 'Usuario y datos asociados actualizados exitosamente.');
+            return redirect()->route('usuarios.index');
 
         } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al actualizar usuario ID ' . $id . ': ' . $e->getMessage());
+
             Session::flash('error', 'Error al actualizar el usuario: ' . $e->getMessage());
             return Redirect::back()->withInput();
         }
-        
-        return Redirect::route('usuarios.show', $id);
     }
-
     /**
      * Elimina un usuario del sistema.
      */
