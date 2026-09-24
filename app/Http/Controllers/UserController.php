@@ -313,7 +313,7 @@ class UserController extends BaseController
         try {
             $item->update($data);
             if($request->filled('password')) {
-                $this->updatePassword($request);
+                $this->userService->actualizarPasswordObligatorio($item->id, $request->password);
             }
             Session::flash('success', 'Usuario actualizado exitosamente.');
         } catch (\Exception $e) {
