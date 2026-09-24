@@ -361,7 +361,6 @@ class UserController extends BaseController
             Personal::updateOrCreate(
                 ['id_persona' => $persona->id],
                 [
-                    'id_usuario' => $user->id,
                     'id_sede'    => $request->input('id_sede'),
                     'cargo_id'   => $request->input('cargo_id'),
                     'telefono'   => $request->input('telefono'),
