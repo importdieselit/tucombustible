@@ -147,7 +147,7 @@ class UserController extends BaseController
             'nombre'                         => 'required|string|max:255',
             'dni'                            => 'required|string|max:50|unique:personas,dni',
             'email'                          => 'required|email|unique:users,email',
-            'password'                       => 'required|min:6',
+            'password'                       => 'required|min:8',
             'id_perfil'                      => 'required|exists:perfiles,id',
             'id_sede'                        => 'nullable|integer',
             'cargo_id'                       => 'nullable|exists:cargo,id',
@@ -309,7 +309,7 @@ class UserController extends BaseController
         
         $item = User::findOrFail($id);
         $data = $this->prepareData($request, $item);
-
+        dd($data); // Debugging line to inspect the prepared data
         try {
             $item->update($data);
             Session::flash('success', 'Usuario actualizado exitosamente.');
