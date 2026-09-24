@@ -308,7 +308,7 @@ class UserController extends BaseController
             abort(403, 'No tiene permiso para editar usuarios.');
         }
 
-        // 2. Validación de entradas (evita rebotes automáticos erróneos)
+        // 2. Validación de entradas
         $request->validate([
             'name'        => 'required|string|max:255',
             'email'       => 'required|email|unique:users,email,' . $id,
@@ -322,19 +322,18 @@ class UserController extends BaseController
             'foto'                => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        $user = User::with(['persona.chofer'])->findOrFail($id);
+        $user = User::with(['persona.chofer', 'persona.personal'])->findOrFail($id); // Carga relaciones de Persona y Personal[cite: 1, 2]
 
-        // 3. Inicio de Transacción SQL
         DB::beginTransaction();
 
         try {
-            // --- A. ACTUALIZAR MODELO USER ---
+            // --- A. ACTUALIZAR MODELO USER ---[cite: 2]
             $userData = [
                 'name'       => $request->input('name'),
                 'email'      => $request->input('email'),
-                'id_perfil'  => $request->input('perfil'),     // Mapeo perfil -> id_perfil
+                'id_perfil'  => $request->input('perfil'),
                 'id_sede'    => $request->input('id_sede'),
-                'cliente_id' => $request->input('id_cliente'), // Mapeo id_cliente -> cliente_id
+                'cliente_id' => $request->input('id_cliente'),
             ];
 
             if ($request->filled('password')) {
@@ -343,7 +342,7 @@ class UserController extends BaseController
 
             $user->update($userData);
 
-            // --- B. ACTUALIZAR O CREAR MODELO PERSONA ---
+            // --- B. ACTUALIZAR O CREAR MODELO PERSONA ---[cite: 1]
             $personaData = [
                 'nombre'   => $request->input('nombre'),
                 'dni'      => $request->input('dni'),
@@ -359,7 +358,19 @@ class UserController extends BaseController
                 $user->update(['id_persona' => $persona->id]);
             }
 
-            // --- C. ACTUALIZAR O CREAR MÓDULO CHOFER ---
+            // --- C. ACTUALIZAR O CREAR FICHA EN TABLA PERSONAL ---[cite: 5]
+            Personal::updateOrCreate(
+                ['id_persona' => $persona->id],
+                [
+                    'id_usuario' => $user->id,
+                    'id_sede'    => $request->input('id_sede'),
+                    'cargo_id'   => $request->input('cargo_id'),
+                    'telefono'   => $request->input('telefono'),
+                    'email'      => $request->input('email'),
+                ]
+            );
+
+            // --- D. ACTUALIZAR O CREAR CHOFER ---
             if ($request->has('es_chofer') && $request->input('es_chofer') == '1') {
                 $choferData = [
                     'licencia_numero'                => $request->input('licencia_numero'),
@@ -368,7 +379,6 @@ class UserController extends BaseController
                     'certificado_medico_vencimiento' => $request->input('certificado_medico_vencimiento'),
                 ];
 
-                // Procesar carga de archivos físicos
                 if ($request->hasFile('soporte_licencia')) {
                     $choferData['soporte_licencia'] = $request->file('soporte_licencia')->store('choferes/licencias', 'public');
                 }
@@ -381,7 +391,6 @@ class UserController extends BaseController
                     $choferData['foto'] = $request->file('foto')->store('choferes/fotos', 'public');
                 }
 
-                // Guarda/Actualiza la relación en la tabla choferes asociada a la Persona
                 $persona->chofer()->updateOrCreate(
                     ['persona_id' => $persona->id],
                     $choferData
@@ -390,7 +399,7 @@ class UserController extends BaseController
 
             DB::commit();
 
-            Session::flash('success', 'Usuario y datos asociados actualizados exitosamente.');
+            Session::flash('success', 'Usuario, persona y ficha de personal actualizados exitosamente.');
             return redirect()->route('usuarios.index');
 
         } catch (\Exception $e) {
