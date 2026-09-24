@@ -67,7 +67,6 @@ class Personal extends Model
     protected $casts = [
         // 'fecha_in' => 'date', // Laravel puede manejar la conversión si el formato es estándar
         'id_sede' => 'integer',
-        'id_usuario' => 'integer',
         'estatus' => 'integer',
         'dependencia' => 'integer',
         'jefe_taller' => 'integer',

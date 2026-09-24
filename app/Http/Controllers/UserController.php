@@ -358,15 +358,13 @@ class UserController extends BaseController
             }
 
             // --- C. ACTUALIZAR O CREAR FICHA EN TABLA PERSONAL ---[cite: 5]
-            Personal::updateOrCreate(
-                ['id_persona' => $persona->id],
-                [
-                    'id_sede'    => $request->input('id_sede'),
-                    'cargo_id'   => $request->input('cargo_id'),
-                    'telefono'   => $request->input('telefono'),
-                    'email'      => $request->input('email'),
-                ]
-            );
+            Personal::where('id_persona', $persona->id)->update([
+                'id_usuario' => $user->id,
+                'id_sede'    => $request->input('id_sede'),
+                'cargo_id'   => $request->input('cargo_id'),
+                'telefono'   => $request->input('telefono'),
+                'email'      => $request->input('email'),
+            ]);
 
             // --- D. ACTUALIZAR O CREAR CHOFER ---
             if ($request->has('es_chofer') && $request->input('es_chofer') == '1') {
