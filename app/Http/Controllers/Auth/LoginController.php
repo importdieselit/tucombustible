@@ -103,6 +103,8 @@ class LoginController extends Controller
 
             4
                 => redirect()->route('inspecciones.index'),
+            21
+                => redirect()->route('combustibles.dashboard'),
 
             default
                 => abort(403)
