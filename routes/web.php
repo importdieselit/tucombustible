@@ -493,6 +493,9 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/clientes/documentos/store', [AdminClienteController::class, 'storeDocumento'])->name('documentos.store');
             Route::delete('/clientes/documentos/{id}/destroy', [AdminClienteController::class, 'destroyDocumento'])->name('documentos.destroy');
             Route::get('/clientes/documentos/{id}/descargar', [AdminClienteController::class, 'downloadDocumento'])->name('documentos.download');
+            Route::post('/clientes/{id}/qr', [AdminClienteController::class, 'uploadQr'])->name('qr.upload');
+            Route::delete('/clientes/{id}/qr', [AdminClienteController::class, 'destroyQr'])->name('qr.destroy');
+
             Route::post('/{id}/avanzar-paso', [AdminClienteController::class, 'avanzarPaso'])->name('avanzarPaso');
             Route::post('/{id}/aprobar', [AdminClienteController::class, 'aprobar'])->name('aprobar');
             Route::post('/{id}/rechazar', [AdminClienteController::class, 'rechazar'])->name('rechazar');
