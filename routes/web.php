@@ -453,17 +453,27 @@ Route::middleware(['auth'])->group(function () {
             });
         });
 
-        // Módulo de Logística
-        Route::prefix('logistica')->name('logistica.')->group(function () {
+        // --- MÓDULO DE LOGÍSTICA ---
+        Route::middleware(['auth', 'role:1,2,6,11,12,17,18'])->prefix('logistica')->name('logistica.')->group(function () {
+            
             Route::get('/dashboard', [LogisticaController::class, 'dashboardLogistica'])->name('dashboard');
             Route::get('/planificacion', [LogisticaController::class, 'index'])->name('index');
             Route::get('/sobreconsumo', [LogisticaController::class, 'sobreconsumo'])->name('sobreconsumo');
             Route::get('/crear/{tipo?}', [LogisticaController::class, 'create'])->name('create');
             Route::post('/guardar', [LogisticaController::class, 'store'])->name('store');
-             // Búsqueda AJAX de coincidencia de nombres y creación rápida desde Planificación
+
+            // --- Apartado "Compras" en Logística ---
+            Route::prefix('compras')->name('compras.')->group(function () {
+                Route::get('/', [LogisticaController::class, 'comprasIndex'])->name('index');
+                Route::post('/{id}/factura', [LogisticaController::class, 'guardarFacturaCompra'])->name('guardar_factura');
+                Route::get('/{id}/historial', [LogisticaController::class, 'historialFacturaCompra'])->name('historial');
+            });
+
+            // Búsqueda AJAX de coincidencia de nombres y creación rápida desde Planificación
             Route::get('/buscar-similares', [LogisticaController::class, 'buscarClientesSimilares'])->name('clientes.similares');
             Route::post('/clientes/store-rapido', [LogisticaController::class, 'storeClienteRapido'])->name('clientes.store_rapido');
-            
+
+            // Rutas para Edición
             Route::get('/{id}', [LogisticaController::class, 'show'])->name('show');
             Route::get('/{id}/editar', [LogisticaController::class, 'edit'])->name('edit');
             Route::put('/{id}/actualizar', [LogisticaController::class, 'update'])->name('update');

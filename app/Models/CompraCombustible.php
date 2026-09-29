@@ -23,11 +23,14 @@ class CompraCombustible extends Model
         'fecha',
         'tipo',
         'sap',
+        'numero_factura',
+        'factura_path',
+        'usuario_id',
         'vehiculo_id',
         'cisterna',
         'observaciones',
-        'estatus', // Ej: PROGRAMADA, ASIGNADA, COMPRADA, COMPLETADA, CANCELADA
-        'viaje_id', // Enlace a la planificación de viaje de entrega/carga
+        'estatus',
+        'viaje_id',
         'flete',
         'otro_vehiculo',
         'otro_chofer',
@@ -74,5 +77,15 @@ class CompraCombustible extends Model
     public function proveedor(){
         return $this->belongsTo(Proveedor::class, 'planta_proveedor_id');
     }    
+
+    public function usuario()
+    {
+        return $this->belongsTo(User::class, 'usuario_id');
+    }
+
+    public function historialFacturas()
+    {
+        return $this->hasMany(HistorialFacturaCompra::class, 'compra_id')->orderBy('created_at', 'desc');
+    }
 
 }

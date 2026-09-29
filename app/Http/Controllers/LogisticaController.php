@@ -645,4 +645,48 @@ class LogisticaController extends Controller
             'cliente' => $cliente
         ]);
     }
+
+    /**
+     * Muestra el listado de compras de combustible en el apartados "Compras" de Logística.
+     */
+    public function comprasIndex(Request $request)
+    {
+        $filters = $request->only(['search', 'estatus', 'fecha_desde', 'fecha_hasta']);
+        $compras = $this->logisticaService->obtenerComprasPaginadas($filters);
+
+        return view('admin.logistica.compras.index', compact('compras', 'filters'));
+    }
+
+    /**
+     * Carga o edita la factura de una compra.
+     */
+    public function guardarFacturaCompra(Request $request, $id)
+    {
+        $request->validate([
+            'numero_factura' => 'required|string|max:100',
+            'factura'        => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+        ]);
+
+        try {
+            $this->logisticaService->guardarFacturaCompra(
+                $id,
+                $request->only('numero_factura'),
+                $request->file('factura')
+            );
+
+            return redirect()->route('logistica.compras.index')->with('success', 'Factura de compra guardada y procesada exitosamente.');
+        } catch (Exception $e) {
+            return back()->with('warning', $e->getMessage());
+        }
+    }
+
+    /**
+     * Consulta el historial de cambios de factura de una compra.
+     */
+    public function historialFacturaCompra($id)
+    {
+        $compra = $this->logisticaService->obtenerCompraConHistorial($id);
+
+        return view('admin.logistica.compras.historial', compact('compra'));
+    }
 }

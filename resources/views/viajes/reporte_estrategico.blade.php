@@ -315,6 +315,9 @@
                                     <tr>
                                         <th>ID Viaje</th>
                                         <th>Fecha</th>
+                                        @if($tipoOperacion == '4' || \Illuminate\Support\Str::contains(strtolower($nombreTipo), 'compra'))
+                                            <th>N° Factura</th>
+                                        @endif
                                         <th>Combustible</th>
                                         <th>Destino</th>
                                         <th>Chofer</th>
@@ -328,6 +331,11 @@
                                         <tr>
                                             <td><a href="{{ route('viajes.show', $viaje->id) }}" target="_blank">#{{ $viaje->id }}</a></td>
                                             <td>{{ \Carbon\Carbon::parse($viaje->fecha_salida)->format('d/m/Y H:i') }}</td>
+                                            @if($tipoOperacion == '4' || \Illuminate\Support\Str::contains(strtolower($nombreTipo), 'compra'))
+                                                <td class="text-center fw-bold">
+                                                    <span class="badge bg-secondary">{{ $viaje->numero_factura }}</span>
+                                                </td>
+                                            @endif
                                             <td class="text-center">
                                                 <span class="badge bg-info text-dark">{{ $viaje->nombre_combustible }}</span>
                                             </td>
@@ -605,6 +613,9 @@
                                 <th>ID Viaje</th>
                                 <th>Fecha</th>
                                 <th>Tipo Operación</th>
+                                @if($tipoOperacion == '4')
+                                    <th>N° Factura</th>
+                                @endif
                                 <th>Combustible</th>
                                 <th>Destino</th>
                                 <th>Chofer</th>
@@ -623,6 +634,11 @@
                                             {{ $mapaTipos[$viaje->tipo_planificacion] ?? 'N/A' }}
                                         </span>
                                     </td>
+                                    @if($tipoOperacion == '4')
+                                        <td class="text-center fw-bold">
+                                            <span class="badge bg-secondary">{{ $viaje->numero_factura }}</span>
+                                        </td>
+                                    @endif
                                     <td class="text-center">
                                         <span class="badge bg-info text-dark">{{ $viaje->nombre_combustible }}</span>
                                     </td>
@@ -633,7 +649,7 @@
                                     <td><small>{{ $viaje->clientes_despachados }}</small></td>
                                 </tr>
                             @empty
-                                <tr><td colspan="9" class="text-center">No se encontraron registros.</td></tr>
+                                <tr><td colspan="{{ $tipoOperacion == '4' ? 10 : 9 }}" class="text-center">No se encontraron registros.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
