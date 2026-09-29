@@ -1433,7 +1433,16 @@ public function updateGuiaData(Request $request, $viajeId)
         $totalDespachados = $despachos->whereIn('status', ['EN RUTA', 'COMPLETADO'])
             ->sum('litros_totales');
 
+        $ultimaMedicion = Deposito::when($sedeId, fn($q) => $q->where('id_sede', $sedeId))
+            ->with('ultimaMedicion')->get()->pluck('ultimaMedicion.created_at')->filter()->max();
+
+        $totalDespachadosDisp = $despachos->whereIn('status', ['EN RUTA', 'COMPLETADO'])->where('updated_at', '>=', $ultimaMedicion)
+            ->sum('litros_totales');
+
         $totalCarga = $cargas->whereIn('status', ['EN RUTA', 'COMPLETADO'])
+            ->sum('litros_totales');
+        
+        $totalCargaDisp = $cargas->whereIn('status', ['EN RUTA', 'COMPLETADO'])->where('updated_at', '>=', $ultimaMedicion)
             ->sum('litros_totales');
 
         $totalProgDespacho = $despachos->where('status', 'Programado')
@@ -1444,7 +1453,7 @@ public function updateGuiaData(Request $request, $viajeId)
         
         $totalComprometidos= $totalProgDespacho;
 
-        $totalDisponibles += $precargasDiesel + $precargasMgo + $totalCarga - $totalDespachados;
+        $totalDisponibles += $precargasDiesel + $precargasMgo + $totalCarga - $totalDespachadosDisp;
         
 
         return view('viajes.reporte_diario', [
