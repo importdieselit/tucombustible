@@ -1453,7 +1453,7 @@ public function updateGuiaData(Request $request, $viajeId)
         
         $totalComprometidos= $totalProgDespacho;
 
-        $totalDisponibles += $precargasDiesel + $precargasMgo + $totalCarga - $totalDespachadosDisp;
+        $totalDisponibles += $precargasDiesel + $precargasMgo - $totalDespachadosDisp;
         
 
         return view('viajes.reporte_diario', [
