@@ -7,6 +7,7 @@ use App\Models\Vehiculo;
 use App\Models\Deposito;
 use App\Models\Viaje;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class SalaControlController extends Controller
 {
@@ -160,9 +161,22 @@ class SalaControlController extends Controller
         $cargas = $operacionesBase->where('es_carga', true);
         $despachos = $operacionesBase->where('es_despacho', true);
 
+         $precargasDiesel = DB::table('vehiculos_precargados')
+            ->where('id_tipo_combustible',2)
+            ->where('estatus', 0)
+            ->when(2, fn($q) => $q->where('id_sede', 2))
+            ->sum('cantidad_litros') ?? 0;
+
+        $precargasMgo = DB::table('vehiculos_precargados')
+            ->where('id_tipo_combustible',1)
+            ->where('estatus', 0)
+            ->when(1, fn($q) => $q->where('id_sede', 1))
+            ->sum('cantidad_litros') ?? 0;
+
 
         // 5. Estadísticas para las Cards (Usando los litros ya procesados)
-        $totalDisponibles = Deposito::sum('nivel_actual_litros');
+        $totalDisponibles = Deposito::sum('nivel_actual_litros') 
+            + $precargasDiesel + $precargasMgo;
         $tanque00=Deposito::where('serial', '00')->first()?->nivel_actual_litros ?? 0;
 
         $totalDespachados = $despachos->whereIn('status', ['EN RUTA', 'COMPLETADO'])
