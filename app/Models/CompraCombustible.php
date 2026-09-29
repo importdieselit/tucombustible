@@ -16,6 +16,7 @@ class CompraCombustible extends Model
     protected $table = 'compras_combustible';
 
     protected $fillable = [
+        'proveedor_id',
         'planta_proveedor_id',
         'cantidad_litros',
         'cantidad_recibida',
@@ -28,6 +29,8 @@ class CompraCombustible extends Model
         'usuario_id',
         'vehiculo_id',
         'cisterna',
+        'monto_usd',
+        'monto_bs',
         'observaciones',
         'estatus',
         'viaje_id',
@@ -35,23 +38,34 @@ class CompraCombustible extends Model
         'otro_vehiculo',
         'otro_chofer',
         'otro_proveedor',
-        'otro_ayudante'
+        'otro_ayudante',
     ];
 
     protected $casts = [
-        'fecha_requerida' => 'date',
+        'fecha' => 'date',
+        'flete' => 'boolean',
+        'monto_usd' => 'decimal:2',
+        'monto_bs' => 'decimal:2',
     ];
 
     /**
-     * Relación con el Proveedor.
+     * Relación con la Planta Proveedora.
      */
-    public function planta()
+    public function planta(): BelongsTo
     {
         return $this->belongsTo(Planta::class, 'planta_proveedor_id');
     }
 
     /**
-     * Relación con la Planta de Destino (donde se cargará o entregará el combustible).
+     * Relación directa con Proveedor / Planta por foreign key proveedor_id.
+     */
+    public function proveedor(): BelongsTo
+    {
+        return $this->belongsTo(Proveedor::class, 'planta_proveedor_id');
+    }
+
+    /**
+     * Relación con la Planta de Destino.
      */
     public function plantaDestino(): BelongsTo
     {
@@ -59,26 +73,24 @@ class CompraCombustible extends Model
     }
 
     /**
-     * Relación con el Viaje (la planificación logística para esta solicitud).
+     * Relación con el Viaje.
      */
     public function viaje(): BelongsTo
     {
-        return $this->belongsTo(Viaje::class);
+        return $this->belongsTo(Viaje::class, 'viaje_id');
     }
 
-    public function vehiculo(){
+    public function vehiculo(): BelongsTo
+    {
         return $this->belongsTo(Vehiculo::class, 'vehiculo_id');
     }
 
-    public function cisterna(){
+    public function cisterna(): BelongsTo
+    {
         return $this->belongsTo(Vehiculo::class, 'cisterna');
     }
 
-    public function proveedor(){
-        return $this->belongsTo(Proveedor::class, 'planta_proveedor_id');
-    }    
-
-    public function usuario()
+    public function usuario(): BelongsTo
     {
         return $this->belongsTo(User::class, 'usuario_id');
     }
@@ -87,5 +99,4 @@ class CompraCombustible extends Model
     {
         return $this->hasMany(HistorialFacturaCompra::class, 'compra_id')->orderBy('created_at', 'desc');
     }
-
 }

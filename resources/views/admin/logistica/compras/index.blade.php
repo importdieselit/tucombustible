@@ -86,6 +86,7 @@
                             <th>Código SAP</th>
                             <th>Estatus</th>
                             <th>N° Factura</th>
+                            <th>Monto Total</th>
                             <th>Documento</th>
                             <th class="text-center">Acciones</th>
                         </tr>
@@ -123,6 +124,18 @@
                                         <span class="fw-black text-dark" style="font-size: 12px;">{{ $compra->numero_factura }}</span>
                                     @else
                                         <span class="text-muted small fw-bold"><i class="fas fa-clock me-1"></i> Pendiente</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($compra->monto_usd || $compra->monto_bs)
+                                        <span class="fw-black text-dark d-block" style="font-size: 12px;">
+                                            ${{ number_format($compra->monto_usd, 2, ',', '.') }}
+                                        </span>
+                                        <small class="text-muted fw-bold d-block" style="font-size: 11px;">
+                                            Bs. {{ number_format($compra->monto_bs, 2, ',', '.') }}
+                                        </small>
+                                    @else
+                                        <span class="text-muted small fw-bold">N/A</span>
                                     @endif
                                 </td>
                                 <td>
@@ -178,9 +191,28 @@
                                                     <label class="form-label small fw-bold text-uppercase text-muted">Número de Factura <span class="text-danger">*</span></label>
                                                     <input type="text" name="numero_factura" class="form-control fw-bold uppercase" value="{{ old('numero_factura', $compra->numero_factura) }}" placeholder="EJ: F-00012345" required>
                                                 </div>
+
+                                                {{-- INPUTS DE MONTOS TOTALES --}}
+                                                <div class="row g-2 mb-3">
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold text-uppercase text-muted">Monto Total ($ USD) <span class="text-danger">*</span></label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text fw-bold">$</span>
+                                                            <input type="number" step="0.01" min="0" name="monto_usd" class="form-control fw-bold" value="{{ old('monto_usd', $compra->monto_usd) }}" placeholder="0.00" required>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label class="form-label small fw-bold text-uppercase text-muted">Monto Total (Bs) <span class="text-danger">*</span></label>
+                                                        <div class="input-group">
+                                                            <span class="input-group-text fw-bold">Bs</span>
+                                                            <input type="number" step="0.01" min="0" name="monto_bs" class="form-control fw-bold" value="{{ old('monto_bs', $compra->monto_bs) }}" placeholder="0.00" required>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                                 <div class="mb-3">
                                                     <label class="form-label small fw-bold text-uppercase text-muted">Archivo de la Factura (PDF, PNG, JPG) <span class="text-danger">*</span></label>
-                                                    <input type="file" name="factura" class="form-control fw-bold" accept=".pdf,.png,.jpg,.jpeg" required>
+                                                    <input type="file" name="factura" class="form-control fw-bold" accept=".pdf,.png,.jpg,.jpeg" {{ $compra->factura_path ? '' : 'required' }}>
                                                     <small class="text-muted d-block mt-1" style="font-size: 10px;">Límite de tamaño soportado: 5 MB.</small>
                                                 </div>
                                             </div>
@@ -197,7 +229,7 @@
                             @endif
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center py-5">
+                                <td colspan="8" class="text-center py-5">
                                     <i class="fas fa-folder-open text-muted fa-2x mb-2 opacity-50"></i>
                                     <p class="text-muted fw-bold mb-0 text-uppercase small">No hay registro de compras asociadas con estos criterios.</p>
                                 </td>

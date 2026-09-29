@@ -32,14 +32,21 @@ class ChequeoDepositoController extends Controller
         $query = DB::table('chequeos_depositos')
             ->join('sedes', 'chequeos_depositos.id_sede', '=', 'sedes.id')
             ->leftJoin('users', 'chequeos_depositos.id_usuario', '=', 'users.id')
-            ->select('chequeos_depositos.*', 'sedes.nombre as sede_nombre', 'users.name as usuario_nombre');
+            ->select(
+                'chequeos_depositos.*', 
+                'sedes.nombre as sede_nombre', 
+                'users.name as usuario_nombre',
+                DB::raw('(SELECT COALESCE(SUM(litros_calculados), 0) 
+                        FROM chequeos_depositos_detalles 
+                        WHERE chequeos_depositos_detalles.id_chequeo = chequeos_depositos.id) as total_litros')
+            );
 
         // Filtro por sede
         if ($request->filled('id_sede')) {
             $query->where('chequeos_depositos.id_sede', $request->id_sede);
         }
 
-        // 🆕 FILTROS POR RANGO DE FECHAS
+        // Filtros por rango de fechas
         if ($request->filled('fecha_inicio')) {
             $query->where('chequeos_depositos.fecha', '>=', $request->fecha_inicio);
         }

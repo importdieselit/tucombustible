@@ -62,14 +62,14 @@
         <div class="card-body p-0">
             {{-- SEGURO DE SCROLL VERTICAL Y HORIZONTAL --}}
             <div class="table-responsive" style="max-height: 500px; overflow-y: auto; overflow-x: auto;">
-                {{-- min-width previene el colapso de columnas en pantallas pequeñas --}}
                 <table class="table table-hover align-middle mb-0" style="min-width: 1050px;">
                     <thead class="bg-light sticky-top" style="z-index: 10;">
                         <tr class="text-uppercase text-muted" style="font-size: 13px;">
                             <th class="ps-4" style="width: 130px;">Fecha</th>
-                            <th style="width: 120px;">Hora Reg.</th>
+                            <th style="width: 120px;">Hora</th>
                             <th style="width: 180px;">Sede</th>
                             <th class="text-center" style="width: 140px;">Turno</th>
+                            <th class="text-end" style="width: 150px;">Total Combustible</th>
                             <th style="width: 180px;">Auditor</th>
                             <th>Observaciones</th>
                             <th class="text-center" style="width: 100px;">Acciones</th>
@@ -100,10 +100,15 @@
                                         </span>
                                     @endif
                                 </td>
+                                
+                                {{-- TOTAL CALCULADO DE COMBUSTIBLE --}}
+                                <td class="text-end fw-bold text-dark" style="font-size: 13px;">
+                                    {{ number_format($chequeo->total_litros ?? 0, 2, ',', '.') }} Lts
+                                </td>
+
                                 <td class="text-muted small fw-bold">
                                     <i class="fas fa-user-circle me-1"></i> {{ $chequeo->usuario_nombre }}
                                 </td>
-                                {{-- Control de desborde de texto en observaciones --}}
                                 <td class="text-muted small" style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $chequeo->observaciones }}">
                                     {{ $chequeo->observaciones ?? 'Sin observaciones.' }}
                                 </td>
@@ -123,7 +128,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center py-4 fw-bold text-muted" style="font-size: 14px;">
+                                <td colspan="8" class="text-center py-4 fw-bold text-muted" style="font-size: 14px;">
                                     No hay registros de aforo que coincidan con los filtros aplicados.
                                 </td>
                             </tr>
