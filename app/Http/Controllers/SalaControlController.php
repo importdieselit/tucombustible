@@ -177,7 +177,7 @@ class SalaControlController extends Controller
 
 
         // 5. Estadísticas para las Cards (Usando los litros ya procesados)
-        $totalDisponibles = Deposito::sum('nivel_actual_litros');
+        $totalDisponibles = Deposito::sum('nivel_actual_litros') + $precargasDiesel + $precargasMgo;
         $tanque00=Deposito::where('serial', '00')->first()?->nivel_actual_litros ?? 0;
 
         $totalDespachados = $despachos->whereIn('status', ['EN RUTA', 'COMPLETADO'])
