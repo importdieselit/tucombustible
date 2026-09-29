@@ -1287,8 +1287,9 @@ public function updateGuiaData(Request $request, $viajeId)
         
     }
 
-  public function reporteDiario(Request $request)
+  public function reporteDiario(Request $request, $fecha = null,$sedeId = 1)
     {
+
         $tokenValido = config('services.reporte.internal_token');
         // Si no está logueado Y el token no coincide, entonces al login
         if (!auth()->check() && $request->get('token') !== $tokenValido) {
@@ -1410,7 +1411,23 @@ public function updateGuiaData(Request $request, $viajeId)
         ];
 
         // 5. Estadísticas para las Cards (Usando los litros ya procesados)
-        $totalDisponibles = Deposito::sum('nivel_actual_litros');
+       $totalDisponibles = Deposito::when($sedeId, fn($q) => $q->where('id_sede', $sedeId))
+            ->sum('nivel_actual_litros') ?? 0;
+
+        $precargasDiesel = DB::table('vehiculos_precargados')
+            ->where('id_tipo_combustible',2)
+            ->where('estatus', 0)
+            ->when($sedeId, fn($q) => $q->where('id_sede', $sedeId))
+            ->sum('cantidad_litros') ?? 0;
+
+        $precargasMgo = DB::table('vehiculos_precargados')
+            ->where('id_tipo_combustible',1)
+            ->where('estatus', 0)
+            ->when($sedeId, fn($q) => $q->where('id_sede', $sedeId))
+            ->sum('cantidad_litros') ?? 0;
+
+        
+
         $tanque00=Deposito::where('serial', '00')->first()?->nivel_actual_litros ?? 0;
 
         $totalDespachados = $despachos->whereIn('status', ['EN RUTA', 'COMPLETADO'])
@@ -1424,6 +1441,11 @@ public function updateGuiaData(Request $request, $viajeId)
 
         $totalProgCarga = $cargas->where('status', 'Programado')
             ->sum('litros_totales');
+        
+        $totalComprometidos= $totalProgDespacho;
+
+        $totalDisponibles += $precargasDiesel + $precargasMgo + $totalCarga - $totalDespachados;
+        
 
         return view('viajes.reporte_diario', [
             'fecha' => $fecha,
@@ -1437,6 +1459,7 @@ public function updateGuiaData(Request $request, $viajeId)
                 'cargas'      => $totalCarga,
                 'prog_desp'   => $totalProgDespacho,
                 'prog_carg'   => $totalProgCarga,
+                'comprometidos' => $totalComprometidos,
                 'tanque00'    => $tanque00
             ]
         ]);
