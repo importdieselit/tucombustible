@@ -1680,7 +1680,10 @@ public function updateGuiaData(Request $request, $viajeId)
 
             $v->clientes_despachados = $nombres->unique()->filter()->implode(', ') ?: 'Sin Cliente';
             $v->litros_filtrados     = $litrosFiltrados;
-            $v->nombre_combustible   = $resolverCombustible($v); // Asigna dinámicamente
+            $v->nombre_combustible   = $resolverCombustible($v);
+
+            // Mapeo del número de factura desde la relación compraCombustible
+            $v->numero_factura = $v->compraCombustible->pluck('numero_factura')->filter()->implode(', ') ?: 'N/A';
 
             return $v;
         });

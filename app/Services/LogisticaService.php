@@ -5,13 +5,15 @@ namespace App\Services;
 use App\Repositories\ViajeRepository;
 use App\Repositories\PedidoRepository;
 use App\Services\LogisticaInventarioService;
-use App\Services\CombustibleService; // <--- Importamos el servicio
+use App\Services\CombustibleService;
 use App\Models\Vehiculo;
 use App\Models\GascoCupoMensual;
 use App\Models\Cliente;
 use App\Models\Viaje;
 use App\Models\Buques;
 use App\Models\Pedido;
+use App\Models\CompraCombustible;
+use App\Models\HistorialFacturaCompra;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Exception;
@@ -21,13 +23,13 @@ class LogisticaService
     protected $viajeRepo;
     protected $pedidoRepo;
     protected $inventarioService;
-    protected $combustibleService; // <--- Declaramos la propiedad
+    protected $combustibleService;
 
     public function __construct(
         ViajeRepository $viajeRepo,
         PedidoRepository $pedidoRepo,
         LogisticaInventarioService $inventarioService,
-        CombustibleService $combustibleService // <--- Lo inyectamos aquí
+        CombustibleService $combustibleService
     ) {
         $this->viajeRepo = $viajeRepo;
         $this->pedidoRepo = $pedidoRepo;
@@ -359,5 +361,83 @@ class LogisticaService
             'estatus'           => 'EN_TRANSITO',
             'sap'               => $data['codigo_sap'] ?? null,
         ]);
+    }
+
+    public function obtenerComprasPaginadas(array $filters = [], int $perPage = 20)
+    {
+        $query = CompraCombustible::with(['viaje.vehiculo', 'planta', 'plantaDestino', 'usuario'])
+            ->withCount('historialFacturas');
+
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('numero_factura', 'LIKE', "%{$search}%")
+                ->orWhere('sap', 'LIKE', "%{$search}%");
+            });
+        }
+
+        if (!empty($filters['estatus'])) {
+            $query->where('estatus', $filters['estatus']);
+        }
+
+        if (!empty($filters['fecha_desde'])) {
+            $query->whereDate('fecha', '>=', $filters['fecha_desde']);
+        }
+
+        if (!empty($filters['fecha_hasta'])) {
+            $query->whereDate('fecha', '<=', $filters['fecha_hasta']);
+        }
+
+        return $query->orderBy('fecha', 'desc')->paginate($perPage);
+    }
+
+    /**
+     * Obtener detalle de una compra con su historial.
+     */
+    public function obtenerCompraConHistorial(int $id)
+    {
+        return CompraCombustible::with(['viaje', 'planta', 'plantaDestino', 'usuario', 'historialFacturas.usuario'])
+            ->findOrFail($id);
+    }
+
+    /**
+     * Registrar o actualizar factura de compra de combustible guardando historial.
+     */
+    public function guardarFacturaCompra(int $id, array $data, $archivoFactura)
+    {
+        return DB::transaction(function () use ($id, $data, $archivoFactura) {
+            $compra = CompraCombustible::findOrFail($id);
+
+            if ($compra->estatus !== 'COMPLETADO') {
+                throw new Exception("Solo se pueden asociar facturas a compras con estatus COMPLETADO.");
+            }
+
+            $numeroFacturaAnterior = $compra->numero_factura;
+            $pathAnterior = $compra->factura_path;
+
+            // Guardar archivo en storage/app/public/facturas_compras
+            $nuevoPath = $archivoFactura->store('facturas_compras', 'public');
+
+            // Si ya tenía factura previamente cargada, registramos el cambio en el historial
+            if (!empty($compra->numero_factura) || !empty($compra->factura_path)) {
+                HistorialFacturaCompra::create([
+                    'compra_id'               => $compra->id,
+                    'usuario_id'              => auth()->id(),
+                    'numero_factura_anterior' => $numeroFacturaAnterior,
+                    'numero_factura_nuevo'    => $data['numero_factura'],
+                    'factura_path_anterior'   => $pathAnterior,
+                    'factura_path_nuevo'      => $nuevoPath,
+                ]);
+            }
+
+            // Actualizar registro principal
+            $compra->update([
+                'numero_factura' => $data['numero_factura'],
+                'factura_path'   => $nuevoPath,
+                'usuario_id'     => auth()->id(),
+            ]);
+
+            return $compra;
+        });
     }
 }
