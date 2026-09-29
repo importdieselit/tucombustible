@@ -18,6 +18,10 @@ class HistorialFacturaCompra extends Model
         'numero_factura_nuevo',
         'factura_path_anterior',
         'factura_path_nuevo',
+        'monto_usd_anterior',
+        'monto_usd_nuevo',
+        'monto_bs_anterior',
+        'monto_bs_nuevo',
     ];
 
     public function compra()

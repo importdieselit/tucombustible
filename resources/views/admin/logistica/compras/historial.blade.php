@@ -24,20 +24,25 @@
         </div>
         <div class="card-body">
             <div class="row g-3">
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <span class="text-muted small fw-bold text-uppercase d-block">Fecha:</span>
                     <strong class="text-dark">{{ \Carbon\Carbon::parse($compra->fecha)->format('d/m/Y') }}</strong>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <span class="text-muted small fw-bold text-uppercase d-block">Volumen:</span>
                     <strong class="text-orange fw-black">{{ number_format($compra->cantidad_litros, 0, ',', '.') }} L</strong>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <span class="text-muted small fw-bold text-uppercase d-block">N° Factura Actual:</span>
                     <strong class="text-dark">{{ $compra->numero_factura ?? 'N/A' }}</strong>
                 </div>
                 <div class="col-md-3">
-                    <span class="text-muted small fw-bold text-uppercase d-block">Sporte Actual:</span>
+                    <span class="text-muted small fw-bold text-uppercase d-block">Montos Actuales:</span>
+                    <strong class="text-dark d-block">${{ number_format($compra->monto_usd ?? 0, 2, ',', '.') }} USD</strong>
+                    <small class="text-muted fw-bold">Bs. {{ number_format($compra->monto_bs ?? 0, 2, ',', '.') }}</small>
+                </div>
+                <div class="col-md-3">
+                    <span class="text-muted small fw-bold text-uppercase d-block">Soporte Actual:</span>
                     @if($compra->factura_path)
                         <a href="{{ Storage::url($compra->factura_path) }}" target="_blank" class="fw-bold text-primary small text-decoration-none">
                             <i class="fas fa-external-link-alt me-1"></i> Ver Documento
@@ -62,8 +67,9 @@
                         <tr class="text-uppercase text-muted" style="font-size: 11px;">
                             <th class="ps-4">Fecha y Hora</th>
                             <th>Usuario Responsable</th>
-                            <th>N° Factura Anterior</th>
-                            <th>N° Factura Nuevo</th>
+                            <th>N° Factura (Ant / Nvo)</th>
+                            <th>Monto USD (Ant / Nvo)</th>
+                            <th>Monto Bs (Ant / Nvo)</th>
                             <th>Soporte Anterior</th>
                             <th class="text-center">Soporte Nuevo</th>
                         </tr>
@@ -81,14 +87,16 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="text-muted fw-bold" style="font-size: 12px;">
-                                        {{ $historial->numero_factura_anterior ?? 'N/A' }}
-                                    </span>
+                                    <span class="text-muted small d-block">{{ $historial->numero_factura_anterior ?? 'N/A' }}</span>
+                                    <strong class="text-success" style="font-size: 12px;">{{ $historial->numero_factura_nuevo }}</strong>
                                 </td>
                                 <td>
-                                    <strong class="text-success" style="font-size: 12px;">
-                                        {{ $historial->numero_factura_nuevo }}
-                                    </strong>
+                                    <span class="text-muted small d-block">${{ number_format($historial->monto_usd_anterior ?? 0, 2, ',', '.') }}</span>
+                                    <strong class="text-success" style="font-size: 12px;">${{ number_format($historial->monto_usd_nuevo, 2, ',', '.') }}</strong>
+                                </td>
+                                <td>
+                                    <span class="text-muted small d-block">Bs. {{ number_format($historial->monto_bs_anterior ?? 0, 2, ',', '.') }}</span>
+                                    <strong class="text-success" style="font-size: 12px;">Bs. {{ number_format($historial->monto_bs_nuevo, 2, ',', '.') }}</strong>
                                 </td>
                                 <td>
                                     @if($historial->factura_path_anterior)
@@ -107,7 +115,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-5">
+                                <td colspan="7" class="text-center py-5">
                                     <i class="fas fa-check-circle text-success fa-2x mb-2 opacity-50"></i>
                                     <p class="text-muted fw-bold mb-0 text-uppercase small">Esta compra conserva su registro inicial sin ediciones posteriores.</p>
                                 </td>

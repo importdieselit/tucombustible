@@ -16,6 +16,7 @@ use App\Models\TipoCombustible;
 use App\Models\Pedido;
 use App\Models\Viaje;
 use App\Models\Sedes;
+use App\Models\CompraCombustible;
 use Carbon\Carbon;
 use Exception;
 
@@ -662,15 +663,21 @@ class LogisticaController extends Controller
      */
     public function guardarFacturaCompra(Request $request, $id)
     {
+        $compra = CompraCombustible::findOrFail($id);
+
         $request->validate([
             'numero_factura' => 'required|string|max:100',
-            'factura'        => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'monto_usd'      => 'required|numeric|min:0',
+            'monto_bs'       => 'required|numeric|min:0',
+            'factura'        => $compra->factura_path 
+                                ? 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120' 
+                                : 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
 
         try {
             $this->logisticaService->guardarFacturaCompra(
                 $id,
-                $request->only('numero_factura'),
+                $request->only(['numero_factura', 'monto_usd', 'monto_bs']),
                 $request->file('factura')
             );
 

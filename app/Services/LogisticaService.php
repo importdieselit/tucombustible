@@ -403,7 +403,7 @@ class LogisticaService
     /**
      * Registrar o actualizar factura de compra de combustible guardando historial.
      */
-    public function guardarFacturaCompra(int $id, array $data, $archivoFactura)
+    public function guardarFacturaCompra(int $id, array $data, $archivoFactura = null)
     {
         return DB::transaction(function () use ($id, $data, $archivoFactura) {
             $compra = CompraCombustible::findOrFail($id);
@@ -412,19 +412,30 @@ class LogisticaService
                 throw new Exception("Solo se pueden asociar facturas a compras con estatus COMPLETADO.");
             }
 
+            // Resguardo de valores anteriores para el historial
             $numeroFacturaAnterior = $compra->numero_factura;
-            $pathAnterior = $compra->factura_path;
+            $montoUsdAnterior      = $compra->monto_usd;
+            $montoBsAnterior       = $compra->monto_bs;
+            $pathAnterior          = $compra->factura_path;
 
-            // Guardar archivo en storage/app/public/facturas_compras
-            $nuevoPath = $archivoFactura->store('facturas_compras', 'public');
+            // Si se subió un nuevo archivo se almacena, de lo contrario conserva el actual
+            if ($archivoFactura) {
+                $nuevoPath = $archivoFactura->store('facturas_compras', 'public');
+            } else {
+                $nuevoPath = $pathAnterior;
+            }
 
-            // Si ya tenía factura previamente cargada, registramos el cambio en el historial
+            // Si ya tenía factura previamente cargada, registramos la trazabilidad en el historial
             if (!empty($compra->numero_factura) || !empty($compra->factura_path)) {
                 HistorialFacturaCompra::create([
                     'compra_id'               => $compra->id,
                     'usuario_id'              => auth()->id(),
                     'numero_factura_anterior' => $numeroFacturaAnterior,
                     'numero_factura_nuevo'    => $data['numero_factura'],
+                    'monto_usd_anterior'      => $montoUsdAnterior,
+                    'monto_usd_nuevo'         => $data['monto_usd'],
+                    'monto_bs_anterior'       => $montoBsAnterior,
+                    'monto_bs_nuevo'          => $data['monto_bs'],
                     'factura_path_anterior'   => $pathAnterior,
                     'factura_path_nuevo'      => $nuevoPath,
                 ]);
@@ -433,6 +444,8 @@ class LogisticaService
             // Actualizar registro principal
             $compra->update([
                 'numero_factura' => $data['numero_factura'],
+                'monto_usd'      => $data['monto_usd'],
+                'monto_bs'       => $data['monto_bs'],
                 'factura_path'   => $nuevoPath,
                 'usuario_id'     => auth()->id(),
             ]);
