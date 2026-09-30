@@ -81,7 +81,9 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="bg-light sticky-top" style="z-index: 10;">
                         <tr class="text-uppercase text-muted" style="font-size: 11px;">
-                            <th class="ps-3">ID / Fecha</th>
+                            <th class="ps-3">Fecha</th>
+                            <th>Tipo Combustible</th>
+                            <th>ID Viaje</th>
                             <th>Volumen (L)</th>
                             <th>Código SAP</th>
                             <th>Estatus</th>
@@ -95,10 +97,26 @@
                         @forelse($compras as $compra)
                             <tr>
                                 <td class="ps-3">
-                                    <span class="fw-black text-dark d-block">C-{{ str_pad($compra->id, 5, '0', STR_PAD_LEFT) }}</span>
                                     <small class="text-muted fw-bold d-block" style="font-size: 11px;">
                                         <i class="far fa-calendar-alt text-secondary me-1"></i>{{ \Carbon\Carbon::parse($compra->fecha)->format('d/m/Y') }}
                                     </small>
+                                </td>
+                                <td>
+                                    @php
+                                        $tipoNombre = match((string)$compra->tipo) {
+                                            '1' => 'MGO',
+                                            '2' => 'DIESEL',
+                                            default => $compra->tipo ?? 'N/A',
+                                        };
+                                    @endphp
+                                    <span class="badge bg-dark text-uppercase" style="font-size: 10px;">{{ $tipoNombre }}</span>
+                                </td>
+                                <td>
+                                    @if($compra->viaje_id)
+                                        <span class="fw-bold text-dark d-block" style="font-size: 12px;">{{ $compra->viaje_id }}</span>
+                                    @else
+                                        <span class="text-muted small fw-bold">N/A</span>
+                                    @endif
                                 </td>
                                 <td>
                                     <span class="fw-black text-orange" style="font-size: 13px;">
@@ -229,7 +247,7 @@
                             @endif
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center py-5">
+                                <td colspan="10" class="text-center py-5">
                                     <i class="fas fa-folder-open text-muted fa-2x mb-2 opacity-50"></i>
                                     <p class="text-muted fw-bold mb-0 text-uppercase small">No hay registro de compras asociadas con estos criterios.</p>
                                 </td>
