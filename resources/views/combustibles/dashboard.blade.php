@@ -357,9 +357,6 @@
                                         <td class="fw-black text-uppercase">
                                             <i class="fas fa-truck text-muted me-1"></i>
                                             {{ $vp->placa ?? ('Vehículo #' . $vp->id_vehiculo) }} 
-                                            @if(!empty($vp->modelo))
-                                                <span class="text-muted small">({{ $vp->modelo }})</span>
-                                            @endif
                                         </td>
                                         <td>
                                             <span class="badge {{ $isDiesel ? 'bg-primary' : 'bg-warning text-dark' }} text-uppercase">
