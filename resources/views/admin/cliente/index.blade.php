@@ -103,7 +103,7 @@
                                             {{ $c->nombre }}
                                             @if($c->tiene_qr)
                                                 {{-- <a href="{{ $c->qr_url }}" target="_blank" title="Ver QR GASCO"> --}}
-                                                    <i class="fas fa-qrcode text-emerald-600 text-xs hover:scale-110 transition-transform"></i>
+                                                    <i class="fas fa-qrcode text-black-600 text-xs hover:scale-110 transition-transform"></i>
                                                 {{-- </a> --}}
                                             @endif
                                         </div>
