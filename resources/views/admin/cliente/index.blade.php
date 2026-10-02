@@ -101,11 +101,6 @@
                                     <div>
                                         <div class="font-black text-gray-800 uppercase text-sm leading-tight">
                                             {{ $c->nombre }}
-                                            @if($c->tiene_qr)
-                                                {{-- <a href="{{ $c->qr_url }}" target="_blank" title="Ver QR GASCO"> --}}
-                                                    <i class="fas fa-qrcode text-black-600 text-xs hover:scale-110 transition-transform"></i>
-                                                {{-- </a> --}}
-                                            @endif
                                         </div>
                                         <div class="text-[10px] font-bold text-gray-500 mt-1">RIF: {{ $c->rif }}</div>
                                         
@@ -119,6 +114,11 @@
                             @else
                                 <div class="font-black text-gray-800 uppercase text-sm leading-tight">{{ $c->nombre }}</div>
                                 <div class="text-[10px] font-bold text-gray-500 mt-1">RIF: {{ $c->rif }}</div>
+                            @endif
+                             @if($c->tiene_qr)
+                                {{-- <a href="{{ $c->qr_url }}" target="_blank" title="Ver QR GASCO"> --}}
+                                    <i class="fas fa-qrcode text-black-600 text-xs hover:scale-110 transition-transform"></i>
+                                {{-- </a> --}}
                             @endif
                         </td>
                         <td class="px-4 py-4 text-center">
