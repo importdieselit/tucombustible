@@ -99,8 +99,16 @@
                                 <div class="flex items-start">
                                     <span class="text-gray-400 mr-2 font-bold" style="font-size: 16px;">└</span>
                                     <div>
-                                        <div class="font-black text-gray-800 uppercase text-sm leading-tight">{{ $c->nombre }}</div>
+                                        <div class="font-black text-gray-800 uppercase text-sm leading-tight">
+                                            {{ $c->nombre }}
+                                            @if($c->tiene_qr)
+                                                {{-- <a href="{{ $c->qr_url }}" target="_blank" title="Ver QR GASCO"> --}}
+                                                    <i class="fas fa-qrcode text-emerald-600 text-xs hover:scale-110 transition-transform"></i>
+                                                {{-- </a> --}}
+                                            @endif
+                                        </div>
                                         <div class="text-[10px] font-bold text-gray-500 mt-1">RIF: {{ $c->rif }}</div>
+                                        
                                         @if($c->padre)
                                             <div class="text-[9px] font-black text-orange-impordiesel uppercase mt-1">
                                                 <i class="fas fa-sitemap mr-1"></i> {{ $c->padre->nombre }}

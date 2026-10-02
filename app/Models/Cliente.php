@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Cliente extends Model
 {
@@ -252,5 +253,28 @@ class Cliente extends Model
     public function pagos()
     {
         return $this->hasMany(Pago::class, 'id_cliente');
+    }
+
+    public function getQrUrlAttribute(): ?string
+    {
+        $extensiones = ['png', 'jpg', 'jpeg', 'svg', 'webp'];
+
+        foreach ($extensiones as $ext) {
+            $pathRelativo = "clientes/qr/{$this->id}.{$ext}";
+            if (Storage::disk('public')->exists($pathRelativo)) {
+                return asset("storage/{$pathRelativo}");
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Retorna boolean si tiene o no QR.
+     * Uso en PHP/Blade: $cliente->tiene_qr
+     */
+    public function getTieneQrAttribute(): bool
+    {
+        return !is_null($this->qr_url);
     }
 }
