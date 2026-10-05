@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @push('styles')
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
 <style>
     :root {
         --corp-navy: #1B365D;
@@ -95,7 +98,30 @@
                         <option value="esta_quincena" {{ $tipoPeriodo == 'esta_quincena' ? 'selected' : '' }}>Esta Quincena</option>
                         <option value="esta_semana" {{ $tipoPeriodo == 'esta_semana' ? 'selected' : '' }}>Esta Semana</option>
                         <option value="personalizado" {{ $tipoPeriodo == 'personalizado' ? 'selected' : '' }}>Personalizado...</option>
+                        <option value="historico" {{ $tipoPeriodo == 'historico' ? 'selected' : '' }}>Reporte Histórico</option>
                     </select>
+                </div>
+
+                <!-- Campos dinámicos para Reporte Histórico -->
+                <div id="seccion-historico" class="col-md-6 {{ $tipoPeriodo == 'historico' ? '' : 'd-none' }}">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-light border-end-0"><i class="fas fa-calendar-alt text-muted"></i></span>
+                                <input type="text" id="fecha-historica" name="fecha" class="form-control bg-white border-start-0" placeholder="Seleccionar Fecha" value="{{ request('fecha', $fecha ?? '') }}" readonly>
+                            </div>
+                        </div>
+
+                        <div class="col-6">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-light border-end-0"><i class="fas fa-clock text-muted"></i></span>
+                                <select name="turno" id="turno" class="form-select border-start-0">
+                                    <option value="vespertino" {{ request('turno', 'vespertino') == 'vespertino' ? 'selected' : '' }}>Turno Vespertino</option>
+                                    <option value="matutino" {{ request('turno') == 'matutino' ? 'selected' : '' }}>Turno Matutino</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Fechas Personalizadas (Ocultas por defecto si no es personalizado) -->
@@ -554,6 +580,9 @@
 <script src="https://code.highcharts.com/highcharts.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+
 <script>
     function toggleFechasPersonales(valor) {
         const bloqueFechas = document.getElementById('bloque_fechas_personales');
@@ -567,6 +596,18 @@
         }
     }
 document.addEventListener('DOMContentLoaded', function() {
+
+    const fechasHabilitadas = @json($fechasDisponibles ?? []);
+
+    flatpickr("#fecha-historica", {
+        locale: "es",
+        dateFormat: "Y-m-d",
+        enable: fechasHabilitadas,
+        defaultDate: "{{ request('fecha', '') }}",
+        placeholder: "Seleccionar fecha"
+    });
+
+    toggleFechasPersonales(document.getElementById('tipo_periodo').value);
     
     // --- GRÁFICO 1: TENDENCIA (TIMELINE) ---
     const timelineData = @json($reporte['timeline']);
@@ -820,6 +861,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+function toggleFechasPersonales(valor) {
+    const seccionHistorico = document.getElementById('seccion-historico');
+    const seccionPersonalizado = document.getElementById('bloque_fechas_personales'); // Contenedor de rango de fechas (si aplica)
+
+    // Mostrar / Ocultar Histórico
+    if (seccionHistorico) {
+        if (valor === 'historico') {
+            seccionHistorico.classList.remove('d-none');
+            seccionPersonalizado.classList.add('d-none');
+
+        } else {
+            seccionHistorico.classList.add('d-none');
+            seccionPersonalizado.classList.remove('d-none');
+        }
+    }
+
+}
 </script>
 @endpush
 @endsection
