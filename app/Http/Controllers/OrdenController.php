@@ -1422,9 +1422,59 @@ class OrdenController extends BaseController
             ->values()
             ->toArray();
         
-        $esHistorico = $request->boolean('historico') || $request->has('historico_id') || $request->has('fecha_inicio') || $request->has('fecha');
+        $esHistorico = $request->tipo_periodo === 'historico';
         
-        dd($esHistorico);
+        if ($esHistorico) {
+            $query = \App\Models\ReporteHistorico::where('nombre_reporte', $nombreReporte);
+            //dd($nombreReporte, $fechaConsolidada, $turno, $query);
+            if ($request->filled('historico_id')) {
+                $query->where('id', $request->input('historico_id'));
+            } else {
+                $query->where('fecha', $fechaConsolidada)->where('turno', $turno);
+            }
+            
+            $reporteGuardado = $query->first(); 
+
+            if ($reporteGuardado) {
+                // Compatibilidad por si la columna se llama 'contenido' o 'datos'
+                $rawContent = $reporteGuardado->contenido ?? $reporteGuardado->datos;
+
+                if ($rawContent) {
+                    // 1. Convertir JSON a objetos stdClass estándar
+                    $dataObjetos = json_decode(json_encode($rawContent), true);
+                    $viewData = (array) $dataObjetos;
+
+                    // 2. Reconstruir Colecciones para claves que Blade itera o filtra
+                    $coleccionesRequeridas = ['agrupacion', 'unidades', 'tiposVehiculo', 'tiposOrden'];
+                    foreach ($coleccionesRequeridas as $key) {
+                        if (isset($viewData[$key])) {
+                            $items = is_array($viewData[$key]) ? $viewData[$key] : get_object_vars($viewData[$key]);
+                            $viewData[$key] = collect(array_values($items));
+                        } else {
+                            $viewData[$key] = collect([]);
+                        }
+                    }
+
+                    // 3. Inyectar variables de control para la vista
+                    $viewData['fechasDisponibles'] = $fechasDisponibles;
+                    $viewData['fechaConsolidada']  = $fechaConsolidada;
+                    $viewData['esHistorico']        = true;
+                    $viewData['tipoPeriodo']        = 'historico';
+
+                    // Si la petición es AJAX/Fetch, retorna solo el HTML parcial o renderizado
+                    if ($request->ajax() || $request->wantsJson()) {
+                        return view('orden.reporte_gerencial', $viewData)->render();
+                    }
+
+                    return view('orden.reporte_gerencial', $viewData);
+                }
+            }
+        } else {
+            // Si no es histórico, agregamos la fecha actual a las fechas disponibles
+            if (!in_array($fechaConsolidada, $fechasDisponibles)) {
+                $fechasDisponibles[] = $fechaConsolidada;
+            }
+        }
 
         // 4. Delegar el flujo (Histórico o En Vivo) al Trait unificado
         return $this->procesarReporte(
