@@ -1,4 +1,8 @@
 @extends('layouts.app')
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+
 @push('styles')
 <style>
 
@@ -132,35 +136,74 @@
             <i class="fa fa-printer-fill me-2"></i>Exportar Reporte
         </button>
     </div>
+
+    {{-- BARRA DE FILTRADO HISTÓRICO CON CALENDARIO Y TURNO --}}
+    <div class="card shadow-sm border-0 mb-4 no-print" style="max-width: 1000px; margin: 0 auto; border-radius: 12px;">
+        <div class="card-body p-3 bg-white rounded-3">
+            <form method="GET" action="{{ url()->current() }}" class="row g-2 align-items-center">
+                <div class="col-12 col-md-auto d-flex align-items-center">
+                    <span class="fw-bold text-secondary small"><i class="fas fa-filter text-primary me-1"></i> Consulta Histórica:</span>
+                </div>
+                
+                <div class="col-6 col-md-3">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-calendar-alt text-muted"></i></span>
+                        <input type="text" id="fecha-historica" name="fecha" class="form-control bg-white border-start-0" placeholder="Seleccionar Fecha" value="{{ request('fecha', $fechaSeleccionada ?? '') }}" readonly>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-clock text-muted"></i></span>
+                        <select name="turno" id="turno" class="form-select border-start-0">
+                            <option value="vespertino" {{ request('turno', $turnoSeleccionado ?? 'vespertino') == 'vespertino' ? 'selected' : '' }}>Turno Vespertino</option>
+                            <option value="matutino" {{ request('turno', $turnoSeleccionado ?? 'vespertino') == 'matutino' ? 'selected' : '' }}>Turno Matutino</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-auto ms-auto d-flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-primary px-3 fw-bold">
+                        <i class="fas fa-search me-1"></i> Buscar
+                    </button>
+                    
+                    @if(request()->has('fecha'))
+                        <a href="{{ url()->current() }}" class="btn btn-sm btn-outline-danger px-2" title="Volver al reporte en vivo">
+                            <i class="fas fa-times me-1"></i> Limpiar
+                        </a>
+                    @endif
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="statusMessage" class="text-center p-3 rounded-lg bg-yellow-100 text-yellow-800 hidden mb-4">
             Procesando...
     </div>
 
     <div class="report-master-card shadow-lg bg-white mx-auto p-0 printableArea" id="reporte-container" style="max-width: 1000px; border-radius: 15px; overflow: hidden;">
-       
-        
-<div class="row w-100 align-items-center bg-light p-0 m-0 border">
-                <div class="col-4 text-muted small">
-                    <i class="fas fa-clock me-1"></i> Última actualización: 
-                    <span id="last-sync-time" class="fw-bold">--:--:--</span>
-                </div>
-                <div class="col-4 text-muted small border-start">
-                    <i class="fas fa-hourglass-half me-1"></i> Próxima en: 
-                    <span id="countdown-timer" class="badge bg-dark">45s</span>
-                </div>
-                <div class="col-4 text-end">
-                    <button onclick="manualRefresh()" class="btn btn-sm btn-primary ms-2" id="btn-refresh">
-                        <i class="fas fa-sync-alt" id="refresh-icon"></i> Actualizar Ahora
-                    </button>
-                </div>
+    @if(empty($esHistorico))
+        <div class="row w-100 align-items-center bg-light p-0 m-0 border noPrint no-print">
+            <div class="col-4 text-muted small">
+                <i class="fas fa-clock me-1"></i> Última actualización: 
+                <span id="last-sync-time" class="fw-bold">--:--:--</span>
             </div>
-
-    </div>
-     <!-- Área donde se mostrará el canvas generado (opcional, para debug/visualización) -->
-        <div id="outputContainer" class="mt-8 pt-4 border-t border-gray-300">
+            <div class="col-4 text-muted small border-start">
+                <i class="fas fa-hourglass-half me-1"></i> Próxima en: 
+                <span id="countdown-timer" class="badge bg-dark">45s</span>
+            </div>
+            <div class="col-4 text-end">
+                <button onclick="manualRefresh()" class="btn btn-sm btn-primary ms-2" id="btn-refresh">
+                    <i class="fas fa-sync-alt" id="refresh-icon"></i> Actualizar Ahora
+                </button>
+            </div>
         </div>
-    
-</div>
+    @else
+        {{-- Banner indicativo opcional si es un registro pasado --}}
+        <div class="alert alert-warning text-center fw-bold py-2 mb-0 no-print border-0 rounded-0">
+            <i class="fas fa-history me-2"></i> Estás visualizando un reporte histórico estático.
+        </div>
+    @endif
 
 <style>
     .text-navy { color: #1a237e; }
@@ -174,6 +217,10 @@
 @push('scripts')
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+
 <script>
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     const REFRESH_SECONDS = 1800; // Tiempo entre actualizaciones
@@ -181,6 +228,17 @@
     let countdownInterval;
 document.addEventListener('DOMContentLoaded', function() {
     
+    // Inicializar Flatpickr permitiendo SOLO las fechas con reportes guardados
+    const fechasHabilitadas = @json($fechasDisponibles ?? []);
+
+    flatpickr("#fecha-historica", {
+        locale: "es",
+        dateFormat: "Y-m-d",
+        enable: fechasHabilitadas, // Solo permite seleccionar las fechas del array
+        defaultDate: "{{ request('fecha', $fechaSeleccionada ?? '') }}",
+        placeholder: "Seleccionar fecha",
+        noCalendar: false
+    });
    
     
     const printableArea = $("div.printableArea")[0]; 
@@ -450,37 +508,45 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
- async function updateDashboard() {
+    async function updateDashboard() {
         const icon = document.getElementById('refresh-icon');
         const btn = document.getElementById('btn-refresh');
         
         try {
             // Efecto visual de carga
-            icon.classList.add('fa-spin');
-            btn.disabled = true;
+            if (icon) icon.classList.add('fa-spin');
+            if (btn) btn.disabled = true;
 
-            const response = await fetch('{{ route("vehiculos.disponibilidad.refresh") }}');
+            // Anexar los parámetros GET de la URL actual (?fecha=...&turno=...)
+            const urlParams = window.location.search;
+            const endpoint = '{{ route("vehiculos.disponibilidad.refresh") }}' + urlParams;
+
+            const response = await fetch(endpoint);
             if (!response.ok) throw new Error('Error en servidor');
             
             const html = await response.text();
             
             // Inyectar HTML y re-renderizar gráficos
-            document.getElementById('reporte-container').innerHTML = html;
+            const container = document.getElementById('reporte-container');
+            if (container) container.innerHTML = html;
+            
             if (typeof renderCharts === "function") renderCharts();
 
             // Actualizar hora de éxito
             const ahora = new Date();
-            document.getElementById('last-sync-time').textContent = ahora.toLocaleTimeString();
+            const lastSync = document.getElementById('last-sync-time');
+            if (lastSync) lastSync.textContent = ahora.toLocaleTimeString();
             
             // Reiniciar el contador de tiempo
             resetCountdown();
 
         } catch (error) {
             console.error("Fallo en actualización:", error);
-            document.getElementById('last-sync-time').textContent = "Error";
+            const lastSync = document.getElementById('last-sync-time');
+            if (lastSync) lastSync.textContent = "Error";
         } finally {
-            icon.classList.remove('fa-spin');
-            btn.disabled = false;
+            if (icon) icon.classList.remove('fa-spin');
+            if (btn) btn.disabled = false;
         }
     }
 
@@ -532,7 +598,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // 4. INICIALIZACIÓN
     document.addEventListener('DOMContentLoaded', () => {
         // Primera carga de hora
-        document.getElementById('last-sync-time').textContent = new Date().toLocaleTimeString();
+        lastSyncTime = document.getElementById('last-sync-time');
+        if (lastSyncTime)
+        {
+            lastSyncTime.textContent = new Date().toLocaleTimeString();
+        }
         updateDashboard();
         // Cargar gráficos iniciales
         if (typeof renderCharts === "function") renderCharts();
