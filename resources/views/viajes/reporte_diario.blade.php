@@ -1,5 +1,9 @@
 @extends('layouts.app')
+
 @push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
+
 <style>
 
     .badge {
@@ -121,7 +125,11 @@
 }
 </style>
 @endpush
-
+@php
+    // Si $reporte o $stats vienen como objeto stdClass (caso histórico), los convierte a array asociativo
+    $reporte = is_object($reporte) ? json_decode(json_encode($reporte), true) : $reporte;
+    $stats   = is_object($stats)   ? json_decode(json_encode($stats), true)   : $stats;
+@endphp
 @section('content')
 <div class="container-fluid py-4" style="background-color: #f4f6f9; min-height: 100vh;">
     
@@ -145,28 +153,41 @@
     <div id="statusMessage" class="text-center p-3 rounded-lg bg-yellow-100 text-yellow-800 hidden mb-4">
             Procesando...
     </div>
-<div class="card shadow-sm mb-4 no-print border-0">
-        <div class="card-body bg-white rounded-3">
-            <form action="{{ url()->current() }}" method="GET" class="row align-items-end g-3">
-                <div class="col-md-3">
-                    <label for="fecha_inicio" class="form-label small fw-bold text-muted mb-1"><i class="fas fa-calendar-alt me-1"></i> Desde</label>
-                    <input type="date" id="fecha_inicio" name="fecha_inicio" class="form-control form-control-sm" 
-                           value="{{ request('fecha_inicio', \Carbon\Carbon::now()->format('Y-m-d')) }}" required>
+    {{-- BARRA SUPERIOR DE FILTRADO HISTÓRICO --}}
+    <div class="card shadow-sm border-0 mb-4 no-print" style="max-width: 1000px; margin: 0 auto; border-radius: 12px;">
+        <div class="card-body p-3 bg-white rounded-3">
+            <form method="GET" action="{{ url()->current() }}" class="row g-2 align-items-center">
+                <div class="col-12 col-md-auto d-flex align-items-center">
+                    <span class="fw-bold text-secondary small"><i class="fas fa-filter text-primary me-1"></i> Reporte Comercial Histórico:</span>
                 </div>
-                <div class="col-md-3">
-                    <label for="fecha_fin" class="form-label small fw-bold text-muted mb-1"><i class="fas fa-calendar-check me-1"></i> Hasta</label>
-                    <input type="date" id="fecha_fin" name="fecha_fin" class="form-control form-control-sm" 
-                           value="{{ request('fecha_fin', \Carbon\Carbon::now()->addDays(2)->format('Y-m-d')) }}" required>
+                
+                <div class="col-6 col-md-3">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-calendar-alt text-muted"></i></span>
+                        <input type="text" id="fecha-historica" name="fecha" class="form-control bg-white border-start-0" placeholder="Seleccionar Fecha" value="{{ request('fecha', $fecha ?? '') }}" readonly>
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <button type="submit" class="btn btn-dark btn-sm w-100 shadow-sm">
-                        <i class="fas fa-search me-1"></i> Generar Reporte
+
+                <div class="col-6 col-md-3">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-clock text-muted"></i></span>
+                        <select name="turno" id="turno" class="form-select border-start-0">
+                            <option value="vespertino" {{ request('turno', 'vespertino') == 'vespertino' ? 'selected' : '' }}>Turno Vespertino</option>
+                            <option value="matutino" {{ request('turno') == 'matutino' ? 'selected' : '' }}>Turno Matutino</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-auto ms-auto d-flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-primary px-3 fw-bold">
+                        <i class="fas fa-search me-1"></i> Consultar
                     </button>
-                </div>
-                <div class="col-md-3 text-end">
-                    <a href="{{ url()->current() }}" class="btn btn-outline-secondary btn-sm w-100">
-                        <i class="fas fa-undo me-1"></i> Limpiar Filtro
-                    </a>
+                    
+                    @if(request()->has('fecha'))
+                        <a href="{{ url()->current() }}" class="btn btn-sm btn-outline-danger px-2" title="Volver a los datos en vivo">
+                            <i class="fas fa-times me-1"></i> Limpiar
+                        </a>
+                    @endif
                 </div>
             </form>
         </div>
@@ -541,12 +562,23 @@
 @push('scripts')
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 <script>
     const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
 document.addEventListener('DOMContentLoaded', function() {
     
-   
+   const fechasHabilitadas = @json($fechasDisponibles ?? []);
+
+    flatpickr("#fecha-historica", {
+        locale: "es",
+        dateFormat: "Y-m-d",
+        enable: fechasHabilitadas,
+        defaultDate: "{{ request('fecha', '') }}",
+        placeholder: "Seleccionar fecha"
+    });
     
     const printableArea = $("div.printableArea")[0]; 
     const sendTelegramButton = document.querySelector('#sendTelegramButton');

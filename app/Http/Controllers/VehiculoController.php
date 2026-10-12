@@ -19,6 +19,7 @@ use App\Models\VehiculoFoto;
 use App\Models\TipoDocumento;
 use App\Models\HistorialGpsVehiculo;
 use Illuminate\Http\Request;
+use App\Traits\HasReportesHistoricos;
 use App\Services\VehiculoService;
 use App\Repositories\VehiculoRepository;
 use App\Http\Requests\VehiculoStoreRequest;
@@ -36,10 +37,13 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Schema;
 use App\Traits\GenerateAlerts;
 use App\Traits\PluralizaEnEspanol;
+use App\Models\ReporteHistorico;
 
 
 class VehiculoController extends BaseController
 {
+
+    use HasReportesHistoricos;
     protected $service;
     protected $repo;
 
@@ -711,137 +715,197 @@ class VehiculoController extends BaseController
     }
 
     public function reporteDisponibilidad(Request $request)
-{
-    $tokenValido = config('services.reporte.internal_token');
-    // Si no está logueado Y el token no coincide, entonces al login
-    if (!auth()->check() && $request->get('token') !== $tokenValido) {
-       // abort(403, 'Acceso no autorizado');
+    {
+        // 1. Validar autenticación / Token interno para Cron o Bot
+        $tokenValido = config('services.reporte.internal_token');
+        if (!auth()->check() && $request->get('token') !== $tokenValido) {
+            abort(403, 'Acceso no autorizado');
+        }
+
+        $nombreReporte = 'reporte_disponibilidad_flota';
+
+        // 1. Obtener lista de fechas únicas que existen en el histórico para el calendario
+        $fechasDisponibles = ReporteHistorico::where('nombre_reporte', $nombreReporte)
+            ->pluck('fecha')
+            ->map(fn($f) => Carbon::parse($f)->format('Y-m-d'))
+            ->unique()
+            ->values()
+            ->toArray();
+
+        // 2. Parámetros seleccionados (por defecto vespertino)
+        $fechaSeleccionada = $request->input('fecha');
+        $turnoSeleccionado = $request->input('turno', 'vespertino');
+
+        return view('vehiculo.reporte_disponibilidad', compact(
+            'fechasDisponibles',
+            'fechaSeleccionada',
+            'turnoSeleccionado'
+        ));
     }
-    $today = now();
-    $data = Vehiculo::miFlota()->with(['tipoVehiculo', 'cisternaAcoplada', 'ordenActiva'])->get();
 
-    $vehiculosEnRuta = $data->where('estatus', 2);
-    $enRuta = $vehiculosEnRuta->count();
+    public function refreshDisponibilidad(Request $request)
+    {
+        // 1. Determinar la fecha consolidada y el turno desde el Request
+        $fechaConsolidada = $request->input('fecha_inicio', $request->input('fecha', now()->format('Y-m-d')));
+        $turno = $request->input('turno', now()->hour < 13 ? 'matutino' : 'vespertino');
+        $nombreReporte = 'reporte_disponibilidad_flota';
 
-    $total = $data->count();
-    $operativosCount = $data->where('estatus', 1)->count();
-    
-    $cisternas= $data->where('tipo', 2);
-    $totalCisternas= $cisternas->count();
-    $camiones = $data->whereIn('tipo', [1,4,5]);
-    $chutos = $data->whereIn('tipo', [3]);
-    $totalCamiones= $camiones->count();
-    $totalChutos= $chutos->count();
+        // ====================================================================
+        // MODO HISTÓRICO: Lectura desde el JSON (Ruta AJAX / Partial)
+        // ====================================================================
+        $esHistorico = $request->boolean('historico') || $request->has('historico_id') || $request->has('fecha_inicio') || $request->has('fecha');
+        
+       if ($esHistorico) {
+            $query = ReporteHistorico::where('nombre_reporte', $nombreReporte);
+                  
+            if ($request->has('historico_id')) {
+                $query->where('id', $request->input('historico_id'));
+            } else {
+                $query->whereDate('fecha', $fechaConsolidada)->where('turno', $turno);
+            }
+            
+            $reporte = $query->first();
 
-    $fallaCount = $data->whereIn('estatus', [3,4,5])->count();
-    $porcentajeDisponibilidad = $total > 0 ? round(($operativosCount + $enRuta) / $total * 100) : 0;
-    $ligero=Vehiculo::misVehiculos()->with(['tipoVehiculo', 'ordenActiva'])->where('tipo', 6)->get();
-    $totalLivianos= $ligero->count();
-    
-    $cisternasFalla = $cisternas->where('estatus', '>', 2);
-    $camionesFalla = $camiones->where('estatus', '>', 2);
-    $chutosFalla = $chutos->where('estatus', '>', 2);
-    $camionetasFalla = $ligero->where('estatus', '>', 2);
-    $cisternasOperativas = $cisternas->where('estatus', 1);
-    $camionetasOperativas = $ligero->where('estatus', 1);
-    $camionesOperativos = $camiones->where('estatus', 1);
-    $chutosOperativos = $chutos->where('estatus', 1);
-    $chutosEnRuta = $chutos->where('estatus', 2);
-    $camionetasEnRuta = $ligero->where('estatus', 2);
-    $camionesEnRuta = $camiones->where('estatus', 2);
-    $cisternasEnRuta = $cisternas->where('estatus', 2);
+            if ($reporte && $reporte->contenido) {
+                // 1. CONVERSIÓN PROFUNDA: Convierte todos los arrays asociativos e hijos a stdClass (Objetos)
+                $dataObjetos = json_decode(json_encode($reporte->contenido), false);
+                $viewData = (array) $dataObjetos;
 
-   $today = Carbon::parse($today);
-   $queryViajesHoy = Viaje::whereDate('fecha_salida', now()->format('Y-m-d'));
+                // Claves que el parcial Blade espera como Colecciones de Laravel
+                $coleccionesRequeridas = [
+                    'cisternasFalla', 'camionesFalla', 'camionetasFalla', 'chutosFalla',
+                    'camionetasOperativas', 'chutosOperativos', 'camionesOperativos', 'camionesOperativas', 'cisternasOperativas',
+                    'chutosEnRuta', 'camionetasEnRuta', 'camionesEnRuta', 'cisternasEnRuta',
+                    'despachosHoy'
+                ];
 
-    // 2. Obtener el conteo de vehículos únicos (usando el nombre real de la columna: id_vehiculo)
-    $vehiculosEnUsoHoy = (clone $queryViajesHoy)->distinct()->count('vehiculo_id');
+                // 2. Reindexar los elementos y envolver la lista en una Colección
+                foreach ($coleccionesRequeridas as $key) {
+                    if (isset($viewData[$key])) {
+                        // Extrae los ítems (sea array u objeto por índices dispersos {"8":...})
+                        $items = is_array($viewData[$key]) ? $viewData[$key] : get_object_vars($viewData[$key]);
+                        $viewData[$key] = collect(array_values($items));
+                    } else {
+                        $viewData[$key] = collect([]);
+                    }
+                }
 
+                // 3. Manejo de la relación anidada despachos en $viaje->despachos
+                $viewData['despachosHoy'] = $viewData['despachosHoy']->map(function ($viaje) {
+                    if (isset($viaje->despachos)) {
+                        $despachos = is_array($viaje->despachos) ? $viaje->despachos : get_object_vars($viaje->despachos);
+                        $viaje->despachos = collect(array_values($despachos));
+                    }
+                    return $viaje;
+                });
 
-    // 3. Cálculo de la tasa de utilización
-    // Evitamos división por cero si no hay flota operativa configurada
-    $utilizacionFlota = $operativosCount > 0 
-        ? round(($vehiculosEnUsoHoy / $operativosCount) * 100, 1) 
-        : 0;
+                // Reconstruir objeto Carbon para $today
+                $viewData['today'] = isset($viewData['today']) 
+                    ? Carbon::parse($viewData['today']) 
+                    : Carbon::parse($fechaConsolidada);
 
-    // Obtenemos los viajes activos de esos vehículos
-    $despachosHoy = $queryViajesHoy->with(['vehiculo', 'chofer'])->get();
-    // ------------------------------------
-    
+                $viewData['esHistorico'] = true;
+                $viewData['dataV'] = $viewData;
 
-    return view('vehiculo.reporte_disponibilidad', compact(
-        'today', 'cisternasFalla', 'enRuta', 'totalCisternas','camionesFalla', 'despachosHoy', 
-        'camionetasFalla', 'camionetasOperativas', 'totalLivianos','totalCamiones', 'totalChutos',
-        'chutosFalla', 'chutosOperativos', 'camionesOperativos', 
-        'total', 'operativosCount', 'fallaCount', 'porcentajeDisponibilidad','cisternasOperativas','utilizacionFlota',
-        'chutosEnRuta', 'camionetasEnRuta', 'camionesEnRuta', 'cisternasEnRuta'
+                // Retorna la vista parcial renderizada en String
+                return view('vehiculo.partials._tabla_disponibilidad', $viewData)->render();
+            }
+        }
+        
 
-    ));
-}
+        // ====================================================================
+        // MODO NORMAL: Cálculo en Vivo
+        // ====================================================================
+        return $this->procesarReporte(
+            $request,
+            'vehiculo.partials._tabla_disponibilidad',
+            $nombreReporte,
+            $fechaConsolidada,
+            $turno,
+            function () use ($fechaConsolidada) {
 
-  public function refreshDisponibilidad()
-{
-    $today = now();
-    $data = Vehiculo::miFlota()->with(['tipoVehiculo', 'cisternaAcoplada', 'ordenActiva'])->get();
+                // --- CÁLCULO DE DATA EN VIVO ---
+                $today = Carbon::parse($fechaConsolidada);
+                $data = Vehiculo::miFlota()->with(['tipoVehiculo', 'cisternaAcoplada', 'ordenActiva'])->get();
 
-    $vehiculosEnRuta = $data->where('estatus', 2);
-    $enRuta = $vehiculosEnRuta->count();
+                $vehiculosEnRuta = $data->where('estatus', 2);
+                $enRuta = $vehiculosEnRuta->count();
 
-    $total = $data->count();
-    $operativosCount = $data->where('estatus', 1)->count();
-    
-    $cisternas= $data->where('tipo', 2);
-    $totalCisternas= $cisternas->count();
-    $camiones = $data->whereIn('tipoVehiculo.tipo', ['CAMION','CAMION CISTERNA']);
-    $chutos = $data->whereIn('tipoVehiculo.tipo', ['CHUTO']);
-    $totalCamiones= $camiones->count();
-    $totalChutos= $chutos->count();
+                $total = $data->count();
+                $operativosCount = $data->where('estatus', 1)->count();
+                
+                $cisternas = $data->where('tipo', 2);
+                $totalCisternas = $cisternas->count();
+                
+                $camiones = $data->whereIn('tipoVehiculo.tipo', ['CAMION', 'CAMION CISTERNA']);
+                $chutos = $data->whereIn('tipoVehiculo.tipo', ['CHUTO']);
+                
+                $totalCamiones = $camiones->count();
+                $totalChutos = $chutos->count();
 
-    $fallaCount = $data->whereIn('estatus', [3,4,5])->count();
-    $porcentajeDisponibilidad = $total > 0 ? round((($operativosCount + $enRuta) / $total) * 100) : 0;
-    $ligero=Vehiculo::misVehiculos()->with(['tipoVehiculo', 'ordenActiva'])->where('tipo', 6)->get();
-    $totalLivianos= $ligero->count();
-    
-    $cisternasFalla = $cisternas->where('estatus', '>', 2);
-    $camionesFalla = $camiones->where('estatus', '>', 2);
-    $chutosFalla = $chutos->where('estatus', '>', 2);
-    $camionetasFalla = $ligero->where('estatus', '>', 2);
-    $cisternasOperativas = $cisternas->where('estatus', 1);
-    $camionetasOperativas = $ligero->where('estatus', 1);
-    $camionesOperativos = $camiones->where('estatus', 1);
-    $chutosOperativos = $chutos->where('estatus', 1);
-    $chutosEnRuta = $chutos->where('estatus', 2);
-    $camionetasEnRuta = $ligero->where('estatus', 2);
-    $camionesEnRuta = $camiones->where('estatus', 2);
-    $cisternasEnRuta = $cisternas->where('estatus', 2);
+                $fallaCount = $data->whereIn('estatus', [3, 4, 5])->count();
+                $porcentajeDisponibilidad = $total > 0 ? round((($operativosCount + $enRuta) / $total) * 100) : 0;
+                
+                $ligero = Vehiculo::misVehiculos()->with(['tipoVehiculo', 'ordenActiva'])->where('tipo', 6)->get();
+                $totalLivianos = $ligero->count();
+                
+                // ->values() garantiza índices consecutivos [0, 1, 2...] en los JSONs que se guarden
+                $cisternasFalla       = $cisternas->where('estatus', '>', 2)->values();
+                $camionesFalla        = $camiones->where('estatus', '>', 2)->values();
+                $chutosFalla          = $chutos->where('estatus', '>', 2)->values();
+                $camionetasFalla      = $ligero->where('estatus', '>', 2)->values();
+                
+                $cisternasOperativas  = $cisternas->where('estatus', 1)->values();
+                $camionetasOperativas = $ligero->where('estatus', 1)->values();
+                $camionesOperativos   = $camiones->where('estatus', 1)->values();
+                $chutosOperativos     = $chutos->where('estatus', 1)->values();
+                
+                $chutosEnRuta         = $chutos->where('estatus', 2)->values();
+                $camionetasEnRuta     = $ligero->where('estatus', 2)->values();
+                $camionesEnRuta       = $camiones->where('estatus', 2)->values();
+                $cisternasEnRuta      = $cisternas->where('estatus', 2)->values();
 
-   $today = Carbon::parse($today);
-   $queryViajesHoy = Viaje::whereDate('fecha_salida', now()->format('Y-m-d'));
+                // Consulta parametrizada según la fecha evaluada
+                $queryViajesHoy = Viaje::whereDate('fecha_salida', $today->format('Y-m-d'));
+                $vehiculosEnUsoHoy = (clone $queryViajesHoy)->distinct()->count('vehiculo_id');
 
-    // 2. Obtener el conteo de vehículos únicos (usando el nombre real de la columna: id_vehiculo)
-    $vehiculosEnUsoHoy = (clone $queryViajesHoy)->distinct()->count('vehiculo_id');
+                $utilizacionFlota = $operativosCount > 0 
+                    ? round(($vehiculosEnUsoHoy / $operativosCount) * 100, 1) 
+                    : 0;
 
+                $despachosHoy = $queryViajesHoy->with(['vehiculo', 'chofer', 'cisternaAcoplada', 'despachos.cliente'])->get();
 
-    // 3. Cálculo de la tasa de utilización
-    // Evitamos división por cero si no hay flota operativa configurada
-    $utilizacionFlota = $operativosCount > 0 
-        ? round(($vehiculosEnUsoHoy / $operativosCount) * 100, 1) 
-        : 0;
-
-    // Obtenemos los viajes activos de esos vehículos
-    $despachosHoy = $queryViajesHoy->with(['vehiculo', 'chofer'])->get();
-    // ------------------------------------
-    
-
-    return view('vehiculo.partials._tabla_disponibilidad', compact(
-        'today', 'cisternasFalla', 'enRuta', 'totalCisternas','camionesFalla', 'despachosHoy', 
-        'camionetasFalla', 'camionetasOperativas', 'totalLivianos','totalCamiones', 'totalChutos',
-        'chutosFalla', 'chutosOperativos', 'camionesOperativos', 
-        'total', 'operativosCount', 'fallaCount', 'porcentajeDisponibilidad','cisternasOperativas','utilizacionFlota',
-        'chutosEnRuta', 'camionetasEnRuta', 'camionesEnRuta', 'cisternasEnRuta'
-
-    ))->render();
-}
+                return [
+                    'today'                    => $today,
+                    'cisternasFalla'           => $cisternasFalla,
+                    'enRuta'                   => $enRuta,
+                    'totalCisternas'           => $totalCisternas,
+                    'camionesFalla'            => $camionesFalla,
+                    'despachosHoy'             => $despachosHoy,
+                    'camionetasFalla'          => $camionetasFalla,
+                    'camionetasOperativas'     => $camionetasOperativas,
+                    'totalLivianos'            => $totalLivianos,
+                    'totalCamiones'            => $totalCamiones,
+                    'totalChutos'              => $totalChutos,
+                    'chutosFalla'              => $chutosFalla,
+                    'chutosOperativos'         => $chutosOperativos,
+                    'camionesOperativos'       => $camionesOperativos,
+                    'camionesOperativas'       => $camionesOperativos, // Alias para evitar descuadres de nombrado en blade
+                    'total'                    => $total,
+                    'operativosCount'          => $operativosCount,
+                    'fallaCount'               => $fallaCount,
+                    'porcentajeDisponibilidad' => $porcentajeDisponibilidad,
+                    'cisternasOperativas'      => $cisternasOperativas,
+                    'utilizacionFlota'         => $utilizacionFlota,
+                    'chutosEnRuta'             => $chutosEnRuta,
+                    'camionetasEnRuta'         => $camionetasEnRuta,
+                    'camionesEnRuta'           => $camionesEnRuta,
+                    'cisternasEnRuta'          => $cisternasEnRuta,
+                    'esHistorico'              => false
+                ];
+            }
+        )->render();
+    }
 
     /**
      * Procesa y guarda los vehículos del archivo cargado.

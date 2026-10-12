@@ -76,13 +76,14 @@ class SendReporteDiarioOperacionesCommand extends Command
         $this->info('Iniciando secuencia de reportes...');
         $tokenInterno = config('services.reporte.internal_token');
         $reporteService = new ReporteImagenService();
+        $turno = now()->hour < 13 ? 'matutino' : 'vespertino';
 
         foreach ($reportesAProcesar as $reporte) {
             try {
                 $this->info("Procesando: {$reporte['nombre_archivo']}...");
 
                 // 2. Construir URL del reporte con el token
-                $urlInterna = route($reporte['ruta_web']) . "?token=" . $tokenInterno;
+                $urlInterna = route($reporte['ruta_web']) . "?guardar_snapshot=true&turno=".$turno."&token=" . $tokenInterno;
                 
                 // 3. Construir URL de ScreenshotOne (Variables estandarizadas)
                 $accessKey = 'm7uxLbNHYl45Tg'; // Podrías mover esto al config o .env

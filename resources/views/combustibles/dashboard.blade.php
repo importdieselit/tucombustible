@@ -56,7 +56,7 @@
         </div>
         <div class="card-body bg-light">
             {{-- KPI CARDS RÁPIDOS --}}
-            <div class="row row-cols-1 row-cols-md-5 g-3 mb-4">
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-5 g-3 mb-4">
                 {{-- DIESEL --}}
                 <div class="col">
                     <div class="bg-white p-3 rounded border border-gray-300 shadow-sm h-100 border-start border-4 border-primary">

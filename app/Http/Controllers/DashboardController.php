@@ -32,6 +32,10 @@ class DashboardController extends Controller
             // 2. LÓGICA DEL CLIENTE (Perfil 3)
             3 => $this->cliente($user),
 
+            // 3. LÓGICA DEL COMBUSTIBLE (Perfil 21)
+            21 => redirect()->route('combustibles.dashboard'),
+
+            
             // 3. DASHBOARD PRINCIPAL / ADMINISTRATIVOS (Se excluyó el 4 de esta lista)
             default => in_array($perfilId, [1, 2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18])
                 ? redirect()->route('vehiculos.index')

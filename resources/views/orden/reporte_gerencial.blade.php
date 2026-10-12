@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @push('styles')
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
 <style>
     :root {
         --corp-navy: #1B365D;
@@ -58,7 +61,6 @@
     }   
 </style>
 @endpush
-
 @section('content')
 <div class="container-fluid py-4">
     <!-- CABECERA DE CONTROLES (NO IMPRIMIBLE) -->
@@ -86,7 +88,7 @@
            <!-- Formulario de Filtros del Reporte -->
             <form method="GET" action="{{ route('ordenes.reporte_gerencial') }}" class="row g-3 align-items-end mb-4 print-none">
                 
-                <!-- NUEVO: Selector Rápido de Periodo -->
+                <!-- Selector Rápido de Periodo -->
                 <div class="col-md-2">
                     <label for="tipo_periodo" class="form-label fw-bold small text-muted">Periodo</label>
                     <select name="tipo_periodo" id="tipo_periodo" class="form-select" onchange="toggleFechasPersonales(this.value)">
@@ -95,10 +97,33 @@
                         <option value="esta_quincena" {{ $tipoPeriodo == 'esta_quincena' ? 'selected' : '' }}>Esta Quincena</option>
                         <option value="esta_semana" {{ $tipoPeriodo == 'esta_semana' ? 'selected' : '' }}>Esta Semana</option>
                         <option value="personalizado" {{ $tipoPeriodo == 'personalizado' ? 'selected' : '' }}>Personalizado...</option>
+                        <option value="historico" {{ $tipoPeriodo == 'historico' ? 'selected' : '' }}>Reporte Histórico</option>
                     </select>
                 </div>
 
-                <!-- Fechas Personalizadas (Ocultas por defecto si no es personalizado) -->
+                <!-- Campos dinámicos para Reporte Histórico -->
+                <div id="seccion-historico" class="col-md-6 {{ $tipoPeriodo == 'historico' ? '' : 'd-none' }}">
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-light border-end-0"><i class="fas fa-calendar-alt text-muted"></i></span>
+                                <input type="text" id="fecha-historica" name="fecha" class="form-control bg-white border-start-0" placeholder="Seleccionar Fecha" value="{{ request('fecha', $fecha ?? '') }}" readonly>
+                            </div>
+                        </div>
+
+                        <div class="col-6">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-light border-end-0"><i class="fas fa-clock text-muted"></i></span>
+                                <select name="turno" id="turno" class="form-select border-start-0">
+                                    <option value="vespertino" {{ request('turno', 'vespertino') == 'vespertino' ? 'selected' : '' }}>Turno Vespertino</option>
+                                    <option value="matutino" {{ request('turno') == 'matutino' ? 'selected' : '' }}>Turno Matutino</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fechas Personalizadas -->
                 <div class="col-md-3 d-flex gap-2" id="bloque_fechas_personales" style="{{ $tipoPeriodo == 'personalizado' ? '' : 'display: none !important;' }}">
                     <div class="w-50">
                         <label class="form-label fw-bold small text-muted">Desde</label>
@@ -115,8 +140,10 @@
                     <label for="tipo_orden" class="form-label fw-bold small text-muted">Tipo de Orden</label>
                     <select name="tipo_orden" class="form-select">
                         <option value="">-- Todos --</option>
-                        @foreach($tiposOrden as $tipoO)
-                            <option value="{{ $tipoO }}" {{ request('tipo_orden') == $tipoO ? 'selected' : '' }}>{{ ucfirst($tipoO) }}</option>
+                        @foreach($tiposVehiculo ?? [] as $tipoO)
+                            <option value="{{ data_get($tipoO, 'tipo', $tipoO) }}" {{ request('tipo_orden') == data_get($tipoO, 'tipo', $tipoO) ? 'selected' : '' }}>
+                                {{ ucfirst(data_get($tipoO, 'tipo', $tipoO)) }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
@@ -125,13 +152,15 @@
                     <label for="tipo_vehiculo_id" class="form-label fw-bold small text-muted">Tipo Vehículo</label>
                     <select name="tipo_vehiculo_id" class="form-select">
                         <option value="">-- Todos --</option>
-                        @foreach($tiposVehiculo as $tipoV)
-                            <option value="{{ $tipoV->id }}" {{ request('tipo_vehiculo_id') == $tipoV->id ? 'selected' : '' }}>{{ $tipoV->tipo }}</option>
+                        @foreach($tiposVehiculo ?? [] as $tipoV)
+                            <option value="{{ data_get($tipoV, 'id') }}" {{ request('tipo_vehiculo_id') == data_get($tipoV, 'id') ? 'selected' : '' }}>
+                                {{ data_get($tipoV, 'tipo') }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
-
-                <!-- NUEVO: Selector de Agrupación (Unidad, etc.) -->
+                
+                <!-- Selector de Agrupación -->
                 <div class="col-md-2">
                     <label for="agrupar_por" class="form-label fw-bold small text-muted">Agrupar Tabla Por</label>
                     <select name="agrupar_por" class="form-select border-primary">
@@ -155,7 +184,6 @@
 
     <!-- ÁREA DEL REPORTE (IMPRIMIBLE) -->
     <div id="reporte-container" class="printableArea mx-auto" style="max-width: 1400px;">
-        
         <!-- ENCABEZADO DEL DOCUMENTO -->
         <div class="d-flex justify-content-between align-items-end border-bottom border-2 border-dark pb-3 mb-4">
             <div>
@@ -163,8 +191,13 @@
                 <span class="text-muted small fw-bold">DEPARTAMENTO DE MANTENIMIENTO DE FLOTA</span>
             </div>
             <div class="text-end">
+                @php
+                    $fInicio = data_get($reporte, 'periodo.inicio');
+                    $fFin = data_get($reporte, 'periodo.fin');
+                @endphp
                 <span class="text-dark px-3 py-2 fs-6 shadow-sm">
-                    Período: {{ \Carbon\Carbon::parse($reporte['periodo']['inicio'])->format('d/m/Y') }} AL {{ \Carbon\Carbon::parse($reporte['periodo']['fin'])->format('d/m/Y') }}
+                    Período: {{ $fInicio ? \Carbon\Carbon::parse($fInicio)->format('d/m/Y') : 'N/A' }} 
+                    AL {{ $fFin ? \Carbon\Carbon::parse($fFin)->format('d/m/Y') : 'N/A' }}
                 </span>
             </div>
         </div>
@@ -175,19 +208,19 @@
             <div class="col-md-4">
                 <div class="exec-card h-100 bg-navy text-white p-4" style="background-color: var(--corp-navy);">
                     <h6 class="text-uppercase text-white-50 fw-bold mb-1">Costo Total de Mantenimiento</h6>
-                    <div class="currency-lg text-white mb-3">${{ number_format($reporte['financiero']['total'], 2) }}</div>
+                    <div class="currency-lg text-white mb-3">${{ number_format(data_get($reporte, 'financiero.total', 0), 2) }}</div>
                     <div class="row text-center mt-auto border-top border-secondary pt-3">
                         <div class="col-4 border-end border-secondary">
                             <span class="d-block small text-white-50">Almacén</span>
-                            <span class="fw-bold">${{ number_format($reporte['financiero']['suministros'], 0) }}</span>
+                            <span class="fw-bold">${{ number_format(data_get($reporte, 'financiero.suministros', 0), 0) }}</span>
                         </div>
                         <div class="col-4 border-end border-secondary">
                             <span class="d-block small text-white-50">Compras</span>
-                            <span class="fw-bold">${{ number_format($reporte['financiero']['compras'], 0) }}</span>
+                            <span class="fw-bold">${{ number_format(data_get($reporte, 'financiero.compras', 0), 0) }}</span>
                         </div>
                         <div class="col-4">
                             <span class="d-block small text-white-50">Externos</span>
-                            <span class="fw-bold">${{ number_format($reporte['financiero']['externos'], 0) }}</span>
+                            <span class="fw-bold">${{ number_format(data_get($reporte, 'financiero.externos', 0), 0) }}</span>
                         </div>
                     </div>
                 </div>
@@ -199,21 +232,21 @@
                     <div class="col-md-4">
                         <div class="exec-card h-100 p-3 border-start border-4 border-primary">
                             <span class="text-muted small fw-bold text-uppercase d-block mb-1">Órdenes Generadas</span>
-                            <h2 class="fw-bold text-primary mb-0">{{ $reporte['kpis']['abiertas_hoy'] }}</h2>
+                            <h2 class="fw-bold text-primary mb-0">{{ data_get($reporte, 'kpis.abiertas_hoy', 0) }}</h2>
                             <small class="text-muted">En el período consultado</small>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="exec-card h-100 p-3 border-start border-4 border-success">
                             <span class="text-muted small fw-bold text-uppercase d-block mb-1">Órdenes Cerradas</span>
-                            <h2 class="fw-bold text-success mb-0">{{ $reporte['kpis']['cerradas_mes'] }}</h2>
+                            <h2 class="fw-bold text-success mb-0">{{ data_get($reporte, 'kpis.cerradas_mes', 0) }}</h2>
                             <small class="text-muted">Unidades operativas</small>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="exec-card h-100 p-3 border-start border-4 border-warning bg-warning bg-opacity-10">
                             <span class="text-dark small fw-bold text-uppercase d-block mb-1">Activas en Taller</span>
-                            <h2 class="fw-bold text-dark mb-0">{{ $reporte['kpis']['activas_totales'] }}</h2>
+                            <h2 class="fw-bold text-dark mb-0">{{ data_get($reporte, 'kpis.activas_totales', 0) }}</h2>
                             <small class="text-danger fw-bold"><i class="fas fa-exclamation-circle"></i> Flota inmovilizada actual</small>
                         </div>
                     </div>
@@ -254,8 +287,13 @@
                         <h6 class="card-title-corp"><i class="fas fa-cogs me-2"></i> Incidencias Frecuentes (Top 5)</h6>
                     </div>
                     <div class="card-body p-4">
-                        @php $maxCat = count($reporte['operativo']['por_categoria']) > 0 ? $reporte['operativo']['por_categoria']->first() : 1; @endphp
-                        @forelse($reporte['operativo']['por_categoria'] as $categoria => $cantidad)
+                        @php
+                        
+                            $porCategoria = collect(data_get($reporte, 'operativo.por_categoria', []));
+                             
+                            $maxCat = $porCategoria->isNotEmpty() ? $porCategoria->first() : 1;
+                        @endphp
+                        @forelse($porCategoria as $categoria => $cantidad)
                             @php $pct = ($cantidad / $maxCat) * 100; @endphp
                             <div class="mb-3">
                                 <div class="d-flex justify-content-between small mb-1">
@@ -280,8 +318,11 @@
                         <h6 class="card-title-corp"><i class="fas fa-users-cog me-2"></i> Productividad por Mecánico</h6>
                     </div>
                     <div class="card-body p-4">
-                        @php $maxMec = count($reporte['operativo']['por_mecanico']) > 0 ? $reporte['operativo']['por_mecanico']->first() : 1; @endphp
-                        @forelse($reporte['operativo']['por_mecanico'] as $mecanico => $trabajos)
+                        @php
+                            $porMecanico = collect(data_get($reporte, 'operativo.por_mecanico', []));
+                            $maxMec = $porMecanico->isNotEmpty() ? $porMecanico->first() : 1;
+                        @endphp
+                        @forelse($porMecanico as $mecanico => $trabajos)
                             @php $pctM = ($trabajos / $maxMec) * 100; @endphp
                             <div class="mb-3">
                                 <div class="d-flex justify-content-between small mb-1">
@@ -310,11 +351,12 @@
                             </div>
                             <div>
                                 <small class="text-danger fw-bold d-block text-uppercase mb-1">UNIDAD CRÍTICA (MÁS FALLAS)</small>
-                                @if($reporte['operativo']['unidad_top'])
-                                    <h5 class="mb-0 fw-bold text-dark">{{ $reporte['operativo']['unidad_top']['vehiculo'] }} 
-                                        <span class="small text-muted">({{ $reporte['operativo']['unidad_top']['placa'] }})</span>
+                                @php $unidadTop = data_get($reporte, 'operativo.unidad_top'); @endphp
+                                @if($unidadTop)
+                                    <h5 class="mb-0 fw-bold text-dark">{{ data_get($unidadTop, 'vehiculo') }} 
+                                        <span class="small text-muted">({{ data_get($unidadTop, 'placa') }})</span>
                                     </h5>
-                                    <span class="text-danger mt-1">{{ $reporte['operativo']['unidad_top']['cantidad'] }} Visitas al taller</span>
+                                    <span class="text-danger mt-1">{{ data_get($unidadTop, 'cantidad') }} Visitas al taller</span>
                                 @else
                                     <span class="text-muted small">Flota operando sin reincidencias severas.</span>
                                 @endif
@@ -329,28 +371,34 @@
                         </div>
                         <div class="card-body p-3 row text-center align-items-center">
                             <div class="col-4 border-end">
-                                <h4 class="fw-bold text-dark mb-0">{{ $reporte['almacen']['entradas'] }}</h4>
+                                <h4 class="fw-bold text-dark mb-0">{{ data_get($reporte, 'almacen.entradas', 0) }}</h4>
                                 <small class="text-muted d-block" style="font-size: 0.7rem;">INGRESOS</small>
                             </div>
                             <div class="col-4 border-end">
-                                <h4 class="fw-bold text-dark mb-0">{{ $reporte['almacen']['salidas'] }}</h4>
+                                <h4 class="fw-bold text-dark mb-0">{{ data_get($reporte, 'almacen.salidas', 0) }}</h4>
                                 <small class="text-muted d-block" style="font-size: 0.7rem;">SALIDAS</small>
                             </div>
                             <div class="col-4">
-                                <h4 class="fw-bold text-primary mb-0">{{ $reporte['almacen']['solicitados'] }}</h4>
+                                <h4 class="fw-bold text-primary mb-0">{{ data_get($reporte, 'almacen.solicitados', 0) }}</h4>
                                 <small class="text-muted d-block" style="font-size: 0.7rem;">PIEZAS INSTALADAS</small>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-@if($reporte['agrupar_por'] && $reporte['agrupacion']->isNotEmpty())
+@php
+    $agruparPor = data_get($reporte, 'agrupar_por');
+    $agrupacion = collect(data_get($reporte, 'agrupacion', []));
+@endphp
+
+@if($agruparPor && $agrupacion->isNotEmpty())
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-dark text-white fw-bold d-flex justify-content-between align-items-center">
             <span>
                 <i class="fas fa-chart-pie me-2"></i> 
-                Análisis Financiero por: <span class="text-uppercase text-warning">{{ str_replace('_', ' ', $reporte['agrupar_por']) }}</span>
+                Análisis Financiero por: <span class="text-uppercase text-warning">{{ str_replace('_', ' ', $agruparPor) }}</span>
             </span>
         </div>
         <div id="chart-agrupacion" style="width:100%; height:400px; margin-bottom: 30px;"></div>
@@ -376,24 +424,28 @@
                         $granTotal = 0;
                     @endphp
 
-                    @foreach($reporte['agrupacion'] as $grupo)
+                    @foreach($agrupacion as $grupo)
                         @php
-                            $granTotalOrdenes += $grupo['cantidad_ordenes'];
-                            $granTotalSuministros += $grupo['costo_suministros'];
-                            $granTotalCompras += $grupo['costo_compras'];
-                            $granTotalExternos += $grupo['costo_externos'];
-                            $granTotal += $grupo['costo_total'];
+                            $cantOrdenes = data_get($grupo, 'cantidad_ordenes', 0);
+                            $costoSuministros = data_get($grupo, 'costo_suministros', 0);
+                            $costoCompras = data_get($grupo, 'costo_compras', 0);
+                            $costoExternos = data_get($grupo, 'costo_externos', 0);
+                            $costoTotal = data_get($grupo, 'costo_total', 0);
+
+                            $granTotalOrdenes += $cantOrdenes;
+                            $granTotalSuministros += $costoSuministros;
+                            $granTotalCompras += $costoCompras;
+                            $granTotalExternos += $costoExternos;
+                            $granTotal += $costoTotal;
                         @endphp
                         <tr>
-                            <td class="text-start fw-bold text-primary">{{ $grupo['nombre'] }}</td>
-                            <td>
-                                <strong>{{ $grupo['cantidad_ordenes'] }}</strong>
-                            </td>
-                            <td class="text-muted small">{{ $grupo['trabajos_internos'] }}</td>
-                            <td class="text-success">${{ number_format($grupo['costo_suministros'], 2) }}</td>
-                            <td class="text-info">${{ number_format($grupo['costo_compras'], 2) }}</td>
-                            <td class="text-warning">${{ number_format($grupo['costo_externos'], 2) }}</td>
-                            <td class="bg-light fw-bold text-danger">${{ number_format($grupo['costo_total'], 2) }}</td>
+                            <td class="text-start fw-bold text-primary">{{ data_get($grupo, 'nombre') }}</td>
+                            <td><strong>{{ $cantOrdenes }}</strong></td>
+                            <td class="text-muted small">{{ data_get($grupo, 'trabajos_internos', 0) }}</td>
+                            <td class="text-success">${{ number_format($costoSuministros, 2) }}</td>
+                            <td class="text-info">${{ number_format($costoCompras, 2) }}</td>
+                            <td class="text-warning">${{ number_format($costoExternos, 2) }}</td>
+                            <td class="bg-light fw-bold text-danger">${{ number_format($costoTotal, 2) }}</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -413,7 +465,7 @@
     </div>
 @endif
 
-            <!-- BLOQUE 4: ANEXOS FINANCIEROS (Nivel de Auditoría) -->
+        <!-- BLOQUE 4: ANEXOS FINANCIEROS (Nivel de Auditoría) -->
         <div class="row g-4 mb-4 page-break-before mt-5">
             <div class="col-12">
                 <div class="exec-card">
@@ -426,8 +478,9 @@
                             <!-- Desglose de Compras Directas -->
                             <div class="accordion-item">
                                 <h2 class="accordion-header">
-                                    <button class="accordion-button collapsed fw-bold text-dark" type="button" >
-                                        Compras Directas Realizadas (Total: ${{ number_format($reporte['financiero']['compras'], 2) }})
+                                    <button class="accordion-button collapsed fw-bold text-dark" type="button">
+                                    
+                                        Compras Directas Realizadas (Total: ${{ number_format(data_get($reporte, 'financiero.compras', 0), 2) }})
                                     </button>
                                 </h2>
                                 <div id="collapseCompras" class="accordion-collapse">
@@ -444,14 +497,17 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    @forelse($reporte['desglose']['compras'] as $item)
+                                                    @forelse(data_get($reporte, 'desglose.compras', []) as $item)
+                                                        @php
+                                                            $cantAprobada = data_get($item, 'cantidad_aprobada', 0);
+                                                            $costoUnitAprobado = data_get($item, 'costo_unitario_aprobado', 0);
+                                                        @endphp
                                                         <tr>
-                                                            <!-- Ajusta los nombres de las propiedades ($item->...) según tu base de datos -->
-                                                            <td>{{ $item->compraBelong->id_orden ?? 'N/A' }}</td>
-                                                            <td>{{ $item->descripcion ?? 'Artículo sin descripción' }}</td>
-                                                            <td class="text-center">{{ $item->cantidad_aprobada }}</td>
-                                                            <td class="text-end">${{ number_format($item->costo_unitario_aprobado, 2) }}</td>
-                                                            <td class="text-end fw-bold">${{ number_format($item->cantidad_aprobada * $item->costo_unitario_aprobado, 2) }}</td>
+                                                            <td>{{ data_get($item, 'compraBelong.id_orden', data_get($item, 'id_orden', 'N/A')) }}</td>
+                                                            <td>{{ data_get($item, 'descripcion', 'Artículo sin descripción') }}</td>
+                                                            <td class="text-center">{{ $cantAprobada }}</td>
+                                                            <td class="text-end">${{ number_format($costoUnitAprobado, 2) }}</td>
+                                                            <td class="text-end fw-bold">${{ number_format($cantAprobada * $costoUnitAprobado, 2) }}</td>
                                                         </tr>
                                                     @empty
                                                         <tr><td colspan="5" class="text-center text-muted">No hay compras directas en este período.</td></tr>
@@ -467,10 +523,10 @@
                             <div class="accordion-item">
                                 <h2 class="accordion-header">
                                     <button class="accordion-button collapsed fw-bold text-dark" type="button">
-                                        Consumo de Inventario de Almacén (Total: ${{ number_format($reporte['financiero']['suministros'], 2) }})
+                                        Consumo de Inventario de Almacén (Total: ${{ number_format(data_get($reporte, 'financiero.suministros', 0), 2) }})
                                     </button>
                                 </h2>
-                                <div id="collapseAlmacen" class="accordion-collapse ">
+                                <div id="collapseAlmacen" class="accordion-collapse">
                                     <div class="accordion-body p-0">
                                         <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                                             <table class="table table-sm table-striped table-hover small mb-0">
@@ -483,12 +539,12 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    @forelse($reporte['desglose']['almacen'] as $item)
+                                                    @forelse(data_get($reporte, 'desglose.almacen', []) as $item)
                                                         <tr>
-                                                            <td>{{ $item->id_orden ?? 'N/A' }}</td>
-                                                            <td>{{ $item->repuesto ?? $item->descripcion ?? 'N/A' }}</td>
-                                                            <td class="text-center">{{ $item->cantidad }}</td>
-                                                            <td class="text-end fw-bold">${{ number_format($item->costo_total, 2) }}</td>
+                                                            <td>{{ data_get($item, 'id_orden', 'N/A') }}</td>
+                                                            <td>{{ data_get($item, 'repuesto', data_get($item, 'descripcion', 'N/A')) }}</td>
+                                                            <td class="text-center">{{ data_get($item, 'cantidad', 0) }}</td>
+                                                            <td class="text-end fw-bold">${{ number_format(data_get($item, 'costo_total', 0), 2) }}</td>
                                                         </tr>
                                                     @empty
                                                         <tr><td colspan="4" class="text-center text-muted">No hubo consumo de almacén en este período.</td></tr>
@@ -504,10 +560,10 @@
                             <div class="accordion-item">
                                 <h2 class="accordion-header">
                                     <button class="accordion-button collapsed fw-bold text-dark" type="button">
-                                        Trabajos Externos / Tercerizados (Total: ${{ number_format($reporte['financiero']['externos'], 2) }})
+                                        Trabajos Externos / Tercerizados (Total: ${{ number_format(data_get($reporte, 'financiero.externos', 0), 2) }})
                                     </button>
                                 </h2>
-                                <div id="collapseExternos" class="accordion-collapse" >
+                                <div id="collapseExternos" class="accordion-collapse">
                                     <div class="accordion-body p-0">
                                         <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
                                             <table class="table table-sm table-striped table-hover small mb-0">
@@ -520,12 +576,12 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    @forelse($reporte['desglose']['externos'] as $item)
+                                                    @forelse(data_get($reporte, 'desglose.externos', []) as $item)
                                                         <tr>
-                                                            <td>{{ $item->id_orden ?? 'N/A' }}</td>
-                                                            <td>{{ $item->proveedor->nombre  ?? 'No especificado' }}</td>
-                                                            <td>{{ $item->descripcion ?? 'N/A' }}</td>
-                                                            <td class="text-end fw-bold">${{ number_format($item->costo, 2) }}</td>
+                                                            <td>{{ data_get($item, 'id_orden', 'N/A') }}</td>
+                                                            <td>{{ data_get($item, 'proveedor.nombre', 'No especificado') }}</td>
+                                                            <td>{{ data_get($item, 'descripcion', 'N/A') }}</td>
+                                                            <td class="text-end fw-bold">${{ number_format(data_get($item, 'costo', 0), 2) }}</td>
                                                         </tr>
                                                     @empty
                                                         <tr><td colspan="4" class="text-center text-muted">No se registraron trabajos externos en este período.</td></tr>
@@ -554,6 +610,15 @@
 <script src="https://code.highcharts.com/highcharts.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+@php
+    $timelineData = data_get($reporte, 'timeline', [
+        'labels' => [], 
+        'abiertas' => [], 
+        'cerradas' => []
+    ]);
+@endphp
 <script>
     function toggleFechasPersonales(valor) {
         const bloqueFechas = document.getElementById('bloque_fechas_personales');
@@ -561,15 +626,28 @@
             bloqueFechas.style.setProperty('display', 'flex', 'important');
         } else {
             bloqueFechas.style.setProperty('display', 'none', 'important');
-            // Opcional: Limpiar las cajas de fecha si se ocultan
             document.querySelector('input[name="fecha_inicio"]').value = '';
             document.querySelector('input[name="fecha_fin"]').value = '';
         }
     }
+
 document.addEventListener('DOMContentLoaded', function() {
+
+    const fechasHabilitadas = @json($fechasDisponibles ?? []);
+
+    flatpickr("#fecha-historica", {
+        locale: "es",
+        dateFormat: "Y-m-d",
+        enable: fechasHabilitadas,
+        defaultDate: "{{ request('fecha', '') }}",
+        placeholder: "Seleccionar fecha"
+    });
+
+    toggleFechasPersonales(document.getElementById('tipo_periodo').value);
     
     // --- GRÁFICO 1: TENDENCIA (TIMELINE) ---
-    const timelineData = @json($reporte['timeline']);
+    // --- GRÁFICO 1: TENDENCIA (TIMELINE) ---
+    const timelineData = @json($timelineData);  
     Highcharts.chart('chart-timeline', {
         chart: { type: 'areaspline', backgroundColor: 'transparent', style: { fontFamily: 'inherit' } },
         title: { text: null },
@@ -579,14 +657,14 @@ document.addEventListener('DOMContentLoaded', function() {
             areaspline: { fillOpacity: 0.1, marker: { radius: 4 } }
         },
         series: [{
-            name: 'Abiertas)',
+            name: 'Abiertas',
             data: timelineData.abiertas,
-            color: '#d32f2f', // Rojo corporativo
+            color: '#d32f2f',
             lineColor: '#d32f2f'
         }, {
             name: 'Cerradas',
             data: timelineData.cerradas,
-            color: '#218f4c', // Verde corporativo
+            color: '#218f4c',
             lineColor: '#218f4c'
         }],
         credits: { enabled: false },
@@ -594,12 +672,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // --- GRÁFICO 2: DISTRIBUCIÓN POR TIPO (DONUT) ---
-    const dataTipos = @json($reporte['operativo']['por_tipo']);
+    const dataTipos = @json(data_get($reporte, 'operativo.por_tipo', []));
     const arrTipos = Object.keys(dataTipos).map(key => {
         let color = '#6c757d';
         let name = key.toUpperCase();
-        if(name.includes('PREVENTIVO')) color = '#0077C8'; // Azul
-        else if(name.includes('CORRECTIVO')) color = '#d32f2f'; // Rojo
+        if(name.includes('PREVENTIVO')) color = '#0077C8';
+        else if(name.includes('CORRECTIVO')) color = '#d32f2f';
         return { name: name, y: dataTipos[key], color: color };
     });
 
@@ -636,25 +714,21 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => statusMsg.classList.add('d-none'), 4000);
     }
 
-    // EXPORTAR: Utiliza el motor nativo (Ideal para PDF y paginación)
     document.getElementById('exportButton').addEventListener('click', function() {
         window.print();
     });
 
-    // CAPTURAR: Lógica inteligente para expandir acordeones antes de la foto
     document.getElementById('captureButton').addEventListener('click', async function() {
         const btn = this;
         btn.disabled = true;
         showStatus('Preparando captura, por favor espera...', 'info');
 
-        // 1. Forzar apertura visual de los acordeones para que html2canvas los vea
         const accordions = document.querySelectorAll('.accordion-collapse');
         accordions.forEach(acc => {
             acc.style.display = 'block'; 
             acc.style.height = 'auto';
         });
 
-        // Pequeña pausa para permitir que el DOM aplique los cambios visuales
         await new Promise(resolve => setTimeout(resolve, 300));
 
         try {
@@ -662,7 +736,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 scale: 2, 
                 useCORS: true, 
                 backgroundColor: '#ffffff',
-                // Aseguramos que capture toda la altura real expandida
                 windowHeight: printableArea.scrollHeight 
             });
             
@@ -675,7 +748,6 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error(e);
             showStatus('Error al generar la captura. Verifica los permisos del navegador.', 'danger');
         } finally {
-            // 2. Restaurar los acordeones a su estado original manejado por Bootstrap
             accordions.forEach(acc => {
                 acc.style.display = '';
                 acc.style.height = '';
@@ -684,17 +756,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    @if($reporte['agrupar_por'] && $reporte['agrupacion']->isNotEmpty())
-        // Recibimos los datos del backend y el nombre de la agrupación
-        const dataAgrupada = @json($reporte['agrupacion']->values()); 
-        const tituloAgrupacion = "{{ strtoupper(str_replace('_', ' ', $reporte['agrupar_por'])) }}";
+    @if($agruparPor &&$agrupacion->isNotEmpty())
+        const dataAgrupada = @json($agrupacion->values()); 
+        const tituloAgrupacion = "{{ strtoupper(str_replace('_', ' ', $agruparPor)) }}";
 
-        // Mapeamos los datos dinámicamente para los ejes del gráfico
         const labelsX = dataAgrupada.map(item => item.nombre);
-        const dataSuministros = dataAgrupada.map(item => parseFloat(item.costo_suministros));
-        const dataCompras = dataAgrupada.map(item => parseFloat(item.costo_compras));
-        const dataExternos = dataAgrupada.map(item => parseFloat(item.costo_externos));
-        const dataOrdenes = dataAgrupada.map(item => parseInt(item.cantidad_ordenes));
+        const dataSuministros = dataAgrupada.map(item => parseFloat(item.costo_suministros || 0));
+        const dataCompras = dataAgrupada.map(item => parseFloat(item.costo_compras || 0));
+        const dataExternos = dataAgrupada.map(item => parseFloat(item.costo_externos || 0));
+        const dataOrdenes = dataAgrupada.map(item => parseInt(item.cantidad_ordenes || 0));
 
         Highcharts.chart('chart-agrupacion', {
             chart: { type: 'column', backgroundColor: 'transparent', style: { fontFamily: 'inherit' } },
@@ -708,11 +778,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 labels: { style: { fontWeight: '600' } }
             },
             yAxis: [
-                { // Eje Y Primario (Izquierda - Dinero)
+                {
                     title: { text: 'Costo Total ($)', style: { color: '#333' } },
                     labels: { format: '${value}', style: { color: '#333' } }
                 },
-                { // Eje Y Secundario (Derecha - Órdenes)
+                {
                     title: { text: 'Cantidad de Órdenes', style: { color: '#d32f2f' } },
                     labels: { style: { color: '#d32f2f' } },
                     opposite: true
@@ -721,7 +791,7 @@ document.addEventListener('DOMContentLoaded', function() {
             tooltip: { shared: true },
             plotOptions: {
                 column: {
-                    stacking: 'normal', // Esto apila los costos para formar el "Costo Total" visualmente
+                    stacking: 'normal',
                     dataLabels: { enabled: false }
                 }
             },
@@ -730,29 +800,29 @@ document.addEventListener('DOMContentLoaded', function() {
                     name: 'Almacén',
                     type: 'column',
                     data: dataSuministros,
-                    color: '#218f4c', // Verde corp
+                    color: '#218f4c',
                     tooltip: { valuePrefix: '$', valueDecimals: 2 }
                 },
                 {
                     name: 'Compras Directas',
                     type: 'column',
                     data: dataCompras,
-                    color: '#0077C8', // Azul corp
+                    color: '#0077C8',
                     tooltip: { valuePrefix: '$', valueDecimals: 2 }
                 },
                 {
                     name: 'Externos',
                     type: 'column',
                     data: dataExternos,
-                    color: '#f39c12', // Naranja/Amarillo alerta
+                    color: '#f39c12',
                     tooltip: { valuePrefix: '$', valueDecimals: 2 }
                 },
                 {
                     name: 'Órdenes',
-                    type: 'spline', // Línea para contrastar con las barras
-                    yAxis: 1, // Se enlaza al eje secundario
+                    type: 'spline',
+                    yAxis: 1,
                     data: dataOrdenes,
-                    color: '#d32f2f', // Rojo corp
+                    color: '#d32f2f',
                     marker: { lineWidth: 2, lineColor: '#d32f2f', fillColor: 'white' },
                     tooltip: { valueSuffix: ' OT(s)' }
                 }
@@ -766,7 +836,6 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.disabled = true;
         showStatus('Generando imagen y enviando a WhatsApp...', 'info');
 
-        // 1. Expandir acordeones para capturar el reporte completo
         const accordions = document.querySelectorAll('.accordion-collapse');
         accordions.forEach(acc => {
             acc.style.display = 'block';
@@ -776,7 +845,6 @@ document.addEventListener('DOMContentLoaded', function() {
         await new Promise(resolve => setTimeout(resolve, 300));
 
         try {
-            // 2. Renderizar Canvas y obtener Base64
             const canvas = await html2canvas(printableArea, { 
                 scale: 2, 
                 useCORS: true, 
@@ -786,7 +854,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const base64Image = canvas.toDataURL('image/png');
 
-            // 3. Petición AJAX / Fetch al backend Laravel
             const response = await fetch("{{ route('ordenes.enviar_whatsapp') }}", {
                 method: 'POST',
                 headers: {
@@ -795,7 +862,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify({
                     imagen: base64Image,
-                    periodo: "{{ $reporte['periodo']['inicio'] }} al {{ $reporte['periodo']['fin'] }}"
+                    periodo: "{{ data_get($reporte, 'periodo.inicio') }} al {{ data_get($reporte, 'periodo.fin') }}"
                 })
             });
 
@@ -811,7 +878,6 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error WhatsApp:', error);
             showStatus('Ocurrió un error en la comunicación con el servidor.', 'danger');
         } finally {
-            // 4. Restaurar acordeones y habilitar botón
             accordions.forEach(acc => {
                 acc.style.display = '';
                 acc.style.height = '';
@@ -820,6 +886,21 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+function toggleFechasPersonales(valor) {
+    const seccionHistorico = document.getElementById('seccion-historico');
+    const seccionPersonalizado = document.getElementById('bloque_fechas_personales');
+
+    if (seccionHistorico) {
+        if (valor === 'historico') {
+            seccionHistorico.classList.remove('d-none');
+            seccionPersonalizado.classList.add('d-none');
+        } else {
+            seccionHistorico.classList.add('d-none');
+            seccionPersonalizado.classList.remove('d-none');
+        }
+    }
+}
 </script>
 @endpush
 @endsection
