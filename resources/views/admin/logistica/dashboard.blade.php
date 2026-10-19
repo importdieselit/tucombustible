@@ -217,6 +217,9 @@
                                                         <i class="fas fa-times-circle text-danger"></i>
                                                     </button>
                                                 @endif
+                                                <a href="{{ route('logistica.despachos.nota_entrega', $viaje->id) }}" target="_blank" class="btn btn-outline-dark btn-sm" title="Imprimir Nota de Entrega / BDN">
+                                                    <i class="fas fa-file-invoice"></i>
+                                                </a>
                                             </div>
                                         </td>
                                     </tr>

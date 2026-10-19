@@ -102,6 +102,32 @@ class LogisticaController extends Controller
         return view('admin.logistica.index', compact('viajes', 'pedidosPendientes', 'vehiculos'));
     }
 
+    public function imprimirNotaEntrega($id)
+    {
+        // Cargamos el despacho/viaje con sus relaciones (cliente, vehículo/bunker tanker, producto, etc.)
+        // Cargamos el viaje y todos sus despachos con sus respectivas relaciones
+       $viaje = Viaje::with([
+        'vehiculo',           // Bureta / Bunker Tanker
+        'chofer.persona',     // Capitán / Operador
+        'producto',           // Tipo de combustible
+        'despachos.cliente',  // Cliente del despacho
+        'despachos.buques',   // Buque receptor del despacho
+        'despachos.pedido'    // Pedido asociado
+    ])->findOrFail($id);
+
+        // Datos corporativos base (Inspirado en membrete Semanca / Proveedor)
+        $empresa = [
+            'nombre'    => 'Distribuidora de Combustible Impordiesel',
+            'rif'       => 'J-502307486',
+            'telefono'  => '+58 4242982588',
+            'email'     => 'operaciones@impordiesel.com.ve',
+            'direccion' => 'Av principal Boleita, Edificio Impordiesel, Piso 1, Caracas, Venezuela',
+            'logo'      =>  asset('img/logo1.png') // Ruta al logo de la empresa
+        ];
+
+        return view('admin.logistica.nota_entrega_print', compact('viaje', 'empresa'));
+    }
+
     /**
      * El "Constructor de Carga" dinámico
      */

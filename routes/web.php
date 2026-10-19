@@ -461,6 +461,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/sobreconsumo', [LogisticaController::class, 'sobreconsumo'])->name('sobreconsumo');
             Route::get('/crear/{tipo?}', [LogisticaController::class, 'create'])->name('create');
             Route::post('/guardar', [LogisticaController::class, 'store'])->name('store');
+            Route::get('/despachos/{id}/nota-entrega', [LogisticaController::class, 'imprimirNotaEntrega'])->name('despachos.nota_entrega');
 
             // --- Apartado "Compras" en Logística ---
             Route::prefix('compras')->name('compras.')->group(function () {
