@@ -87,18 +87,19 @@ class ViajeObserver
 
                     // LEDGER AUTOMÁTICO: Única fuente de verdad para el descuento de stock
                     $this->inventarioService->registrarSalidaFisicaDespacho($viaje);
+                    if (in_array((int) $viaje->tipo_planificacion, [1, 2], true)) {
+                        // 📱 ENVÍO DE WHATSAPP AUTOMÁTICO A CLIENTES Y A LA COORDINADORA
+                        $this->notificarDespachoEnRutaWhatsApp($viaje);
+                    }
                 });
 
                 // Solo aplicará para Planificaciones de MGO (1) o Diésel (2). Fletes (3) y Compras (4) quedan excluidos.
                 if (in_array((int) $viaje->tipo_planificacion, [1, 2], true)) {
                     $this->combustibleService->descontarCombustiblePlanificado(
-                        sedeId: $viaje->sede_id,
-                        litrosADescontar: $viaje->litros,
-                        viajeId: $viaje->id
+                         $viaje->sede_id,
+                         $viaje->litros,
+                         $viaje->id
                     );
-
-                    // 📱 ENVÍO DE WHATSAPP AUTOMÁTICO A CLIENTES Y A LA COORDINADORA
-                    $this->notificarDespachoEnRutaWhatsApp($viaje);
                 }
 
             // 2. TRANSICIÓN A "COMPLETADO" (Llegada / Descarga)
