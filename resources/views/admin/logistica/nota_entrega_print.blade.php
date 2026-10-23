@@ -46,7 +46,7 @@
             </span>
         </div>
         <button onclick="window.print()" class="btn btn-primary btn-sm fw-bold">
-            <i class="fas fa-print me-1"></i> Imprimir Notas de Entrega ({{ $viaje->despachos->count() }})
+            <i class="fas fa-print me-1"></i> Imprimir Notas de Entrega ({{ is_null($viaje->despachos) ? 0 : $viaje->despachos->count() }})
         </button>
     </div>
 

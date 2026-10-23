@@ -125,7 +125,7 @@ class LogisticaController extends Controller
             'logo'      =>  asset('img/logo1.png') // Ruta al logo de la empresa
         ];
 
-        return view('admin.logistica.nota_entrega_print', compact('despacho', 'empresa'));
+        return view('admin.logistica.nota_entrega_print', compact('viaje', 'empresa'));
     }
 
     /**
