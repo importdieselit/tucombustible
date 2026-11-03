@@ -797,7 +797,7 @@ class ClienteController extends Controller
                 $aliasUnico = "BDV-".$getCod."-" . $nombreAgencia;
 
                 $clienteData = [
-                    'nombre'              => 'BDV-' . $nombreAgencia,
+                    'nombre'              => 'BDV-' . $getCod . '-' . $nombreAgencia . " / ".$nombreEstado,
                     'alias'               => $aliasUnico,
                     'rif'                 => 'G-200099976', // RIF provisional estructurado si no viene explícito
                     'contacto'            => $contactoPersona ?: 'Sin Asignar',
