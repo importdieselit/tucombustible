@@ -14,6 +14,7 @@ use App\Services\GascoCupoService;
 use App\Models\{Estado, Ciudad};
 use App\Models\TipoCombustible;
 use Illuminate\Http\Request;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Illuminate\Support\Facades\{Redirect, Session, Auth, Log, Storage};
 use Illuminate\Support\Facades\DB;
 use \Illuminate\Validation\ValidationException;
@@ -441,5 +442,169 @@ class ClienteController extends Controller
 
         // VISTA CORREGIDA APUNTANDO AL MÓDULO CLIENTES
         return view('cliente.rastreo', compact('viaje', 'vehiculo', 'ultimoGps', 'datosDespachoCliente'));
+    }
+
+    public function import()
+    {
+        return view('clientes.importar');
+    }
+
+    public function storeImport(Request $request)
+    {
+        $request->validate([
+            'archivo_excel' => 'required|file|mimes:xlsx,xls,csv|max:10240', // Máx 10MB
+        ]);
+
+        $file = $request->file('archivo_excel');
+        
+        try {
+            $spreadsheet = IOFactory::load($file->getRealPath());
+            $sheet = $spreadsheet->getSheetByName('Directorio') ?? $spreadsheet->getActiveSheet();
+            $rows = $sheet->toArray(null, true, true, true);
+        } catch (\Exception $e) {
+            return back()->withErrors(['archivo_excel' => 'No se pudo leer el archivo Excel: ' . $e->getMessage()]);
+        }
+
+        $importados = 0;
+        $actualizados = 0;
+        $errores = [];
+        
+        // Encontrar la fila de cabecera donde está 'Cód.'
+        $headerRowIndex = null;
+        foreach ($rows as $index => $row) {
+            // Buscamos la fila que contiene la celda 'Cód.'
+            $valuesCell = array_values($row);
+            if (in_array('Cód.', $valuesCell) || in_array('Código', $valuesCell)) {
+                $headerRowIndex = $index;
+                break;
+            }
+        }
+
+        if (!$headerRowIndex) {
+            return back()->withErrors(['archivo_excel' => 'No se encontró la cabecera válida ("Cód.") en la hoja de Excel. Verifique que la estructura sea correcta.']);
+        }
+
+        // Extraer cabeceras y mapear índices por nombre de columna
+        $headers = $rows[$headerRowIndex];
+        $headerMap = array_flip(array_filter($headers));
+
+        // Procesar filas de datos a partir de la fila siguiente a la cabecera
+        for ($i = $headerRowIndex + 1; $i <= count($rows); $i++) {
+            $row = $rows[$i] ?? null;
+            if (!$row) continue;
+
+            // Mapear datos usando las columnas del Excel
+            $getCod = trim($row[$this->getColKey($headerMap, ['Cód.', 'Código'])] ?? '');
+            $nombreAgencia = 'BDV - '. trim($row[$this->getColKey($headerMap, ['Nombre de la Agencia'])] ?? '');
+            $tokenRegistro = 'RPQI19UURU';
+
+            // Si la fila está vacía en los campos clave, la saltamos
+            if (empty($getCod) && empty($nombreAgencia)) {
+                continue;
+            }
+
+            // Validación anti-errores por fila
+            if (empty($getCod)) {
+                $errores[] = "Fila {$i}: El código de agencia es obligatorio.";
+                continue;
+            }
+            if (empty($nombreAgencia)) {
+                $errores[] = "Fila {$i} (Cód: {$getCod}): El nombre de la agencia es obligatorio.";
+                continue;
+            }
+
+            try {
+                DB::beginTransaction();
+
+                // 1. Resolver Estado y Ciudad de forma dinámica
+                $nombreEstado = trim($row[$this->getColKey($headerMap, ['Estado'])] ?? 'Capital');
+                $nombreMunicipio = trim($row[$this->getColKey($headerMap, ['Municipio'])] ?? 'Caracas');
+
+                $estado = Estado::firstOrCreate(
+                    ['nombre' => $nombreEstado ?: 'Distrito Capital']
+                );
+
+                $ciudad = Ciudad::firstOrCreate(
+                    ['nombre' => $nombreMunicipio ?: 'Caracas', 'estado_id' => $estado->id]
+                );
+
+                // 2. Extraer datos de contacto del Gerente de Negocios
+                $contactoPersona = trim($row[$this->getColKey($headerMap, ['Gerente de Negocios (Oficina)'])] ?? '');
+                $dniPersona = trim($row[$this->getColKey($headerMap, ['C.I.'])] ?? '');
+                $telefonoPersona = trim($row[$this->getColKey($headerMap, ['Telefono Contacto Gerente'])] ?? '');
+                $emailPersona = trim($row[$this->getColKey($headerMap, ['Correo Eletronico Gerente'])] ?? '');
+                $direccion = trim($row[$this->getColKey($headerMap, ['Dirección'])] ?? '');
+                
+                // Capacidad / Cupo
+                $capacidad = floatval($row[$this->getColKey($headerMap, ['Capacidad de almacenamiento (LTS)'])] ?? 0);
+                $statusTexto = trim($row[$this->getColKey($headerMap, ['Status '])] ?? '');
+
+                // Mapear Status textual a constantes del modelo Cliente
+                $statusVal = Cliente::STATUS_APROBADO; // Por defecto aprobado si viene operativa
+                if (stripos($statusTexto, 'Inactivo') !== false) {
+                    $statusVal = Cliente::STATUS_INACTIVO;
+                } elseif (stripos($statusTexto, 'Registro') !== false) {
+                    $statusVal = Cliente::STATUS_EN_REGISTRO;
+                }
+
+                // 3. Crear o actualizar el registro del cliente usando el Cód. como parte del alias o identificador único
+                $aliasUnico = "AGENCIA-{$getCod}";
+
+                $clienteData = [
+                    'nombre'              => $nombreAgencia,
+                    'alias'               => $aliasUnico,
+                    'rif'                 => 'J-' . str_pad($getCod, 8, '0', STR_PAD_LEFT), // RIF provisional estructurado si no viene explícito
+                    'contacto'            => $contactoPersona ?: 'Sin Asignar',
+                    'telefono'            => $telefonoPersona ?: '04140000000',
+                    'dni'                 => $dniPersona ?: null,
+                    'estado_id'           => $estado->id,
+                    'ciudad_id'           => $ciudad->id,
+                    'email'               => filter_var($emailPersona, FILTER_VALIDATE_EMAIL) ? $emailPersona : "agencia{$getCod}@tucombustible.com",
+                    'direccion'           => $direccion ?: 'Dirección no especificada',
+                    'cupo'                => $capacidad,
+                    'status'              => $statusVal,
+                    'es_aliado_comercial' => true,
+                    'cliente_rapido'      => false,
+                    'registro_paso'       => Cliente::TOTAL_PASOS,
+                    'fecha_aprobacion'    => Carbon::now(),
+                ];
+
+                $cliente = Cliente::updateOrCreate(
+                    ['alias' => $aliasUnico],
+                    $clienteData
+                );
+
+                if ($cliente->wasRecentlyCreated) {
+                    $importados++;
+                } else {
+                    $actualizados++;
+                }
+
+                DB::commit();
+
+            } catch (\Exception $ex) {
+                DB::rollBack();
+                $errores[] = "Fila {$i} (Cód: {$getCod}): Error al procesar - " . $ex->getMessage();
+            }
+        }
+
+        return redirect()->route('clientes.import')
+            ->with('success', "Proceso completado con éxito. Nuevos importados: {$importados}, Actualizados: {$actualizados}.")
+            ->with('errores_importacion', $errores);
+    }
+
+    /**
+     * Helper para buscar la clave de la columna en el array de cabeceras de manera flexible.
+     */
+    private function getColKey(array $headerMap, array $possibleNames)
+    {
+        foreach ($possibleNames as $name) {
+            foreach ($headerMap as $headerText => $colIndex) {
+                if (stripos(trim($headerText), trim($name)) !== false) {
+                    return $colIndex;
+                }
+            }
+        }
+        return null;
     }
 }

@@ -12,11 +12,15 @@ use App\Models\Cliente;
 use App\Models\TipoCombustible;
 use App\Models\Pedido;
 use App\Models\Estado;
+use App\Models\Ciudad;
 use App\Models\ClienteDocumento;
 use App\Models\Viaje;
 use App\Models\DespachoViaje;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\{Redirect, Session, Log, Auth, Storage};
+use Carbon\Carbon;
+use Illuminate\Support\Facades\{Redirect, Session, Log, Auth, Storage, DB};
 
 class ClienteController extends Controller
 {
@@ -664,5 +668,196 @@ class ClienteController extends Controller
         }
 
         return redirect()->back()->with('success', 'Código QR eliminado correctamente.');
+    }
+
+    public function import()
+    {
+        return view('cliente.import');
+    }
+
+    public function storeImport(Request $request)
+    {
+        Log::info('Iniciando proceso de importación de clientes desde Excel.');
+        echo "Iniciando proceso de importación..."; // Línea de depuración
+        $request->validate([
+            'archivo_excel' => 'required|file|mimes:xlsx,xls,csv|max:10240', // Máx 10MB
+        ]);
+
+        $file = $request->file('archivo_excel');
+        echo "Archivo recibido: " . $file->getClientOriginalName(); // Línea de depuración
+
+        try {
+            echo "Intentando cargar el archivo Excel..."; // Línea de depuración
+            $spreadsheet = IOFactory::load($file->getRealPath());
+            $sheet = $spreadsheet->getSheetByName('Directorio') ?? $spreadsheet->getActiveSheet();
+            $rows = $sheet->toArray(null, true, true, true);
+            echo "Archivo Excel cargado con éxito. Filas obtenidas: " . count($rows); // Línea de depuración
+        } catch (\Exception $e) {
+            echo "Error al leer el archivo Excel: " . $e->getMessage(); // Línea de depuración
+            Log::error('Error al leer el archivo Excel: ' . $e->getMessage());
+            return back()->withErrors(['archivo_excel' => 'No se pudo leer el archivo Excel: ' . $e->getMessage()]);
+        }
+
+        $importados = 0;
+        $actualizados = 0;
+        $errores = [];
+        echo "Iniciando procesamiento de filas..."; // Línea de depuración
+        // Encontrar la fila de cabecera donde está 'Cód.'
+        $headerRowIndex = null;
+        foreach ($rows as $index => $row) {
+            echo "Procesando fila {$index}..."; // Línea de depuración
+            // Buscamos la fila que contiene la celda 'Cód.'
+            $valuesCell = array_values($row);
+            if (in_array('Cód.', $valuesCell) || in_array('Código', $valuesCell)) {
+                $headerRowIndex = $index;
+                break;
+            }
+        }
+        echo "Fila de cabecera encontrada en el índice: " . $headerRowIndex; // Línea de depuración
+
+        if (!$headerRowIndex) {
+            echo "No se encontró la cabecera válida ('Cód.' o 'Código') en la hoja de Excel."; // Línea de depuración
+            Log::error('No se encontró la cabecera válida ("Cód." o "Código") en la hoja de Excel.');
+            return back()->withErrors(['archivo_excel' => 'No se encontró la cabecera válida ("Cód." o "Código") en la hoja de Excel. Verifique que la estructura sea correcta.']);
+        }
+
+        echo "Cabecera válida encontrada. Procesando datos..."; // Línea de depuración
+        // Extraer cabeceras y mapear índices por nombre de columna
+        $headers = $rows[$headerRowIndex];
+        $headerMap = array_flip(array_filter($headers));
+        echo "Cabeceras mapeadas: " . json_encode($headerMap); // Línea de depuración
+        // Procesar filas de datos a partir de la fila siguiente a la cabecera
+        for ($i = $headerRowIndex + 1; $i <= count($rows); $i++) {
+            echo "Procesando fila de datos {$i}..."; // Línea de depuración
+            $row = $rows[$i] ?? null;
+            if (!$row) continue;
+            echo "Fila {$i} obtenida: " . json_encode($row); // Línea de depuración
+            // Mapear datos usando las columnas del Excel
+            $getCod = trim($row[$this->getColKey($headerMap, ['Cód.', 'Código'])] ?? '');
+            $nombreAgencia = trim($row[$this->getColKey($headerMap, ['Nombre'])] ?? '');
+
+            // Si la fila está vacía en los campos clave, la saltamos
+            if (empty($getCod) && empty($nombreAgencia)) {
+                echo "Fila {$i} está vacía en campos clave, se omite."; // Línea de depuración
+                continue;
+            }
+
+            // Validación anti-errores por fila
+            if (empty($getCod)) {
+                echo "Fila {$i}: El código de agencia es obligatorio."; // Línea de depuración
+                $errores[] = "Fila {$i}: El código de agencia es obligatorio.";
+                continue;
+            }
+            echo "Fila {$i}: Código de agencia: {$getCod}"; // Línea de depuración
+            if (empty($nombreAgencia)) {
+                echo "Fila {$i} (Cód: {$getCod}): El nombre de la agencia es obligatorio."; // Línea de depuración
+                $errores[] = "Fila {$i} (Cód: {$getCod}): El nombre de la agencia es obligatorio.";
+                continue;
+            }
+
+            try {
+                echo "Fila {$i} (Cód: {$getCod}): Iniciando transacción para crear/actualizar cliente."; // Línea de depuración
+                DB::beginTransaction();
+
+                // 1. Resolver Estado y Ciudad de forma dinámica
+                $nombreEstado = trim($row[$this->getColKey($headerMap, ['Estado'])] ?? 'Capital');
+                $nombreMunicipio = trim($row[$this->getColKey($headerMap, ['Municipio'])] ?? 'Caracas');
+
+                $estado = Estado::firstOrCreate(
+                    ['nombre' => $nombreEstado ?: 'Distrito Capital']
+                );
+
+                $ciudad = Ciudad::firstOrCreate(
+                    ['nombre' => $nombreMunicipio ?: 'Caracas', 'estado_id' => $estado->id]
+                );
+
+                // 2. Extraer datos de contacto del Gerente de Negocios
+                $contactoPersona = trim($row[$this->getColKey($headerMap, ['contacto'])] ?? '');
+                $dniPersona = trim($row[$this->getColKey($headerMap, ['dni'])] ?? '');
+                $telefonoPersona = trim($row[$this->getColKey($headerMap, ['telefono'])] ?? '');
+                $emailPersona = trim($row[$this->getColKey($headerMap, ['email'])] ?? '');
+                $direccion = trim($row[$this->getColKey($headerMap, ['direccion'])] ?? '');
+
+                $contactoAlt = trim($row[$this->getColKey($headerMap, ['contacto_alt'])] ?? '');
+                $telefonoAlt = trim($row[$this->getColKey($headerMap, ['telefono_alt'])] ?? '');
+                
+                // Capacidad / Cupo
+                $capacidad = floatval($row[$this->getColKey($headerMap, ['Capacidad'])] ?? 0);
+                $statusTexto = trim($row[$this->getColKey($headerMap, ['Status '])] ?? '');
+
+                // Mapear Status textual a constantes del modelo Cliente
+                $statusVal = Cliente::STATUS_APROBADO; // Por defecto aprobado si viene operativa
+                if (stripos($statusTexto, 'Inactivo') !== false) {
+                    $statusVal = Cliente::STATUS_INACTIVO;
+                } elseif (stripos($statusTexto, 'Registro') !== false) {
+                    $statusVal = Cliente::STATUS_EN_REGISTRO;
+                }
+
+                // 3. Crear o actualizar el registro del cliente usando el Cód. como parte del alias o identificador único
+                $aliasUnico = "BDV-".$getCod."-" . $nombreAgencia;
+
+                $clienteData = [
+                    'nombre'              => 'BDV-' . $nombreAgencia,
+                    'alias'               => $aliasUnico,
+                    'rif'                 => 'G-200099976', // RIF provisional estructurado si no viene explícito
+                    'contacto'            => $contactoPersona ?: 'Sin Asignar',
+                    'telefono'            => $telefonoPersona ?: '04140000000',
+                    'direccion_operativa' => $direccion ?: 'Dirección no especificada',
+                    'dni'                 => $dniPersona ?: null,
+                    'estado_id'           => $estado->id,
+                    'ciudad_id'           => $ciudad->id,
+                    'email'               => $emailPersona ,
+                    'direccion'           => $direccion ?: 'Dirección no especificada',
+                    'cupo'                => $capacidad,
+                    'status'              => $statusVal,
+                    'es_aliado_comercial' => false,
+                    'cliente_rapido'      => false,
+                    'parent'              => 394, // Asumimos que todos son clientes padres
+                    'registro_paso'       => Cliente::TOTAL_PASOS,
+                    'fecha_aprobacion'    => Carbon::now(),
+                    'contacto_alt'        => $contactoAlt ?: null,
+                    'telefono_alt'        => $telefonoAlt ?: null,
+                    'token_registro'      => 'RPQI19UURU'
+                ];
+
+                $cliente = Cliente::updateOrCreate(
+                    ['alias' => $aliasUnico],
+                    $clienteData
+                );
+
+                if ($cliente->wasRecentlyCreated) {
+                    $importados++;
+                } else {
+                    $actualizados++;
+                }
+
+                DB::commit();
+                echo "Fila {$i} (Cód: {$getCod}): Cliente procesado correctamente. ID: {$cliente->id}"; // Línea de depuración
+
+            } catch (\Exception $ex) {
+                echo "Fila {$i} (Cód: {$getCod}): Error al procesar - " . $ex->getMessage(); // Línea de depuración
+                Log::error("Error al procesar fila {$i} (Cód: {$getCod}): " . $ex->getMessage());
+                DB::rollBack();
+                $errores[] = "Fila {$i} (Cód: {$getCod}): Error al procesar - " . $ex->getMessage();
+            }
+        }
+        echo "Proceso de importación finalizado. Importados: {$importados}, Actualizados: {$actualizados}, Errores: " . count($errores); // Línea de depuración
+        Log::info("Proceso de importación finalizado. Importados: {$importados}, Actualizados: {$actualizados}, Errores: " . count($errores));
+       // return redirect()->route('cliente.import')->with('success', "Proceso completado con éxito. Nuevos importados: {$importados}, Actualizados: {$actualizados}.")->with('errores_importacion', $errores);
+    }
+
+    /**
+     * Helper para buscar la clave de la columna en el array de cabeceras de manera flexible.
+     */
+    private function getColKey(array $headerMap, array $possibleNames)
+    {
+        foreach ($possibleNames as $name) {
+            foreach ($headerMap as $headerText => $colIndex) {
+                if (stripos(trim($headerText), trim($name)) !== false) {
+                    return $colIndex;
+                }
+            }
+        }
+        return null;
     }
 }

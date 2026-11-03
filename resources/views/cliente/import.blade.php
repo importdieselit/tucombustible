@@ -22,11 +22,11 @@
                         </div>
                     @endif
                     
-                    <form action="{{ route('clientes.handleImport') }}" method="POST" enctype="multipart/form-data">
+                    <form action="{{ route('clientes.importStore') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         <div class="mb-3">
                             <label for="file" class="form-label">Selecciona el archivo CSV</label>
-                            <input class="form-control" type="file" id="file" name="file" required>
+                            <input class="form-control" type="file" id="archivo_excel" name="archivo_excel" required>
                             <div class="form-text">
                                 Formato: .csv o .txt. Tamaño máximo: 2MB.
                             </div>

@@ -147,7 +147,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/vehiculos/{id}/alertas-documentos', [VehiculoController::class, 'checkAlertasDocumentos']);
         Route::get('/vehiculos/import', [VehiculoController::class, 'importForm'])->name('vehiculos.import');
         Route::post('/vehiculos/import', [VehiculoController::class, 'importSave'])->name('vehiculos.import.save');
-        Route::get('clientes/import', [PortalClienteController::class, 'import'])->name('clientes.import');
+       // Route::get('clientes/import', [PortalClienteController::class, 'import'])->name('clientes.import');
         Route::post('clientes/handle', [PortalClienteController::class, 'handleImport'])->name('clientes.handleImport');
         Route::get('/usuarios/importar', [UserController::class, 'import'])->name('usuarios.importar');
         Route::post('/usuarios/importarP', [UserController::class, 'handleImport'])->name('usuarios.importarprocess');
@@ -482,9 +482,13 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/pedidos/{id}/rechazar', [PedidoAdminController::class, 'rechazar'])->name('rechazar');
         });
 
+       
+
         // Módulo Administración Clientes (Combustibles)
         Route::prefix('admin-clientes')->name('clientes.')->group(function () {
             Route::get('/', [AdminClienteController::class, 'index'])->name('index');
+            Route::get('/importar', [AdminClienteController::class, 'import'])->name('import');
+            Route::post('/importar', [AdminClienteController::class, 'storeImport'])->name('importStore');
             Route::get('/crear', [AdminClienteController::class, 'create'])->name('create');
             Route::post('/', [AdminClienteController::class, 'store'])->name('store');
             Route::get('/{id}/expediente', [AdminClienteController::class, 'show'])->name('show');
