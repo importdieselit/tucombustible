@@ -812,7 +812,7 @@ class ClienteController extends Controller
                     'status'              => $statusVal,
                     'es_aliado_comercial' => false,
                     'cliente_rapido'      => false,
-                    'parent'              => 394, // Asumimos que todos son clientes padres
+                    'parent'              => 705, // Asumimos que todos son clientes padres
                     'registro_paso'       => Cliente::TOTAL_PASOS,
                     'fecha_aprobacion'    => Carbon::now(),
                     'contacto_alt'        => $contactoAlt ?: null,
