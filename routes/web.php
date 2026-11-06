@@ -28,7 +28,7 @@ use App\Http\Controllers\{
     ChequeoDepositoController, CombustibleController, LlenadoCupoPrepagadoController, 
     TransaccionCombustibleController, ConsumoOperativoController, TrasegadoController, ReversoCombustibleController,
     MermasController, VehiculoPrecargadoController, AbastecimientoTanqueController, ParametroController,
-    ParametroManagerController, SalaControlController
+    ParametroManagerController, SalaControlController, CotizacionBunkeringController
 };
 
 /* --- Rutas Públicas y Monitores --- */
@@ -366,7 +366,7 @@ Route::middleware(['auth'])->group(function () {
             'pedidos'                     => PedidoController::class,
             'reportes'                    => ReporteController::class,
             'combustible'                 => MovimientoCombustibleController::class,
-            'pagos'                       => PagoController::class
+            'pagos'                       => PagoController::class,
         ]; 
 
         foreach ($resourceControllers as $prefix => $controller) {
@@ -374,6 +374,10 @@ Route::middleware(['auth'])->group(function () {
             Route::get($prefix . "/list", [$controller, 'list'])->name($name.'.list');
             Route::resource($prefix, $controller)->names($name);
         }
+        Route::post('cotizacionesbunkering/store', [CotizacionBunkeringController::class, 'store'])->name('cotizacionesBunkering.store');
+        Route::get('cotizacionesbunkering/show/{id}', [CotizacionBunkeringController::class, 'show'])->name('cotizaciones-bunkering.show');
+        Route::get('cotizacionesbunkering/index', [CotizacionBunkeringController::class, 'index'])->name('cotizaciones-bunkering.index');
+        Route::get('cotizacionesbunkering/create', [CotizacionBunkeringController::class, 'create'])->name('cotizaciones-bunkering.create');
 
         Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
         Route::get('/aforos', [AforoController::class, 'index'])->name('aforos.index');
