@@ -13,7 +13,7 @@ return new class extends Migration
             $table->decimal('volumen_litros', 14, 2)->after('toneladas_metricas');
             $table->decimal('precio_unitario_tm', 10, 2)->after('volumen_litros');
             $table->decimal('subtotal_producto', 14, 2)->after('precio_unitario_tm');
-            $table->decimal('delivery_cost', 14, 2)->nullable()->after('subtotal_producto');
+            $table->decimal('costo_delivery', 14, 2)->nullable()->after('subtotal_producto');
         });
     }
 
