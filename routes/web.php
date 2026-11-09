@@ -533,12 +533,12 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('admin/parametros')->name('parametros.')->group(function () {
 
             // Panel de Pestañas (Consumo y Edición del Usuario)
-            Route::get('/', [ParametroController::class, 'index'])->name('index');
-            Route::put('/update', [ParametroController::class, 'update'])->name('update');
+            Route::get('/', [ParametroManagerController::class, 'panelIndex'])->name('index');
+            Route::put('/update', [ParametroManagerController::class, 'update'])->name('update');
 
             // Builder / Manager (Creación y Gestión de Esquemas)
             Route::prefix('manager')->name('manager.')->group(function () {
-                Route::get('/', [ParametroManagerController::class, 'index'])->name('index');
+                Route::get('/', [ParametroManagerController::class, 'managerIndex'])->name('index');
                 Route::get('/create', [ParametroManagerController::class, 'create'])->name('create');
                 Route::post('/store', [ParametroManagerController::class, 'store'])->name('store');
                 Route::delete('/{parametro}', [ParametroManagerController::class, 'destroy'])->name('destroy');
