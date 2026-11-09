@@ -2,10 +2,19 @@
 
 @section('content')
 <div class="container-fluid px-4">
-    <h1 class="mt-4">Nueva Cotización Bunkering / STS</h1>
-    
-    <form action="{{ route('cotizacionesBunkering.store') }}" method="POST">
+    @php
+        $isEdit = isset($cotizacion) && $cotizacion->id;
+        // Si estamos editando, apuntamos a la ruta update y usamos PUT. Si no, a store.
+        $formAction = $isEdit ? route('cotizaciones-bunkering.update', $cotizacion->id) : route('cotizacionBunkering.store');
+    @endphp
+
+    <h1 class="mt-4">{{ $isEdit ? 'Editar Cotización Bunkering / STS' : 'Nueva Cotización Bunkering / STS' }}</h1>
+
+    <form action="{{ $formAction }}" method="POST">
         @csrf
+        @if($isEdit)
+            @method('PUT')
+        @endif
 
         <!-- Datos Generales y Selector de Costos -->
         <div class="card mb-4">
@@ -97,7 +106,7 @@
                             <tr>
                                 <th style="width: 30%;">PRODUCTO / PRODUCT</th>
                                 <th style="width: 15%;">VOLUMEN MT</th>
-                                <th style="width: 15%;">USD$ / TM (Ajustado)</th>
+                                <th style="width: 15%;">USD$ / MT (Ajustado)</th>
                                 <th style="width: 20%;">DELIVERY COST USD</th>
                                 <th style="width: 15%;">TOTAL COST USD</th>
                                 <th style="width: 5%;">Acción</th>
@@ -116,7 +125,7 @@
                                     <input type="text" name="productos[0][obs]" class="form-control mt-1" placeholder="Observación opcional del producto">
                                 </td>
                                 <td>
-                                    <input type="number" step="0.001" name="productos[0][tm]" class="form-control input-tm" placeholder="0.00" required>
+                                    <input type="number" step="1" name="productos[0][tm]" class="form-control input-tm" placeholder="0.00" required>
                                 </td>
                                 <td>
                                     <input type="number" step="0.01" name="productos[0][precio]" class="form-control input-precio" placeholder="0.00" required>
@@ -132,9 +141,9 @@
                             <!-- Fila Delivery Fee Renglón Separado 0 -->
                             <tr class="row-delivery bg-light" data-index="0">
                                 <td class="ps-4 text-muted fst-italic">
-                                    DELIVERY FEE
+                                    DELIVERY FEE <span class="fst-normal" name="productos[0][del_fee]"></span>
                                     <div class="campos-abiertos d-none mt-1">
-                                        <input type="number" step="0.01" name="productos[0][del_tm]" class="form-control form-control-sm input-del-tm mb-1" placeholder="Tarifa x TM">
+                                        <input type="number" step="0.01" name="productos[0][del_tm]" class="form-control form-control-sm input-del-tm mb-1" placeholder="Tarifa x MT">
                                         <input type="number" step="0.01" name="productos[0][del_comp]" class="form-control form-control-sm input-del-comp" placeholder="Tarifa Completa">
                                     </div>
                                 </td>
@@ -169,217 +178,261 @@
 </div>
 
 <script>
-let rowIndex = 1;
+    let rowIndex = document.querySelectorAll('.row-producto').length || 1;
 
-// Generar options de productos asegurando que se inyecten correctamente en JS
-let productosOptions = `<option value="">Seleccione...</option>@foreach($productos as $producto)<option value="{{ $producto->nombre }}" data-precio="{{ $producto->precio }}">{{ $producto->nombre }}</option>@endforeach`;
+    // Generar options de productos.
+    let productosOptions = `<option value="">Seleccione...</option>@foreach($productos as $producto)<option value="{{ $producto->nombre }}" data-precio="{{ $producto->precio }}">{{ $producto->nombre }}</option>@endforeach`;
 
-// Control de dependencias para Centro de Suministro -> Método de Despacho
-document.getElementById('centro_suministro').addEventListener('change', function() {
-    let selectedOption = this.options[this.selectedIndex];
-    let metodoDespachoSelect = document.getElementById('metodo_despacho');
-    
-    // Limpiar el select de método de despacho
-    metodoDespachoSelect.innerHTML = '<option value="">Seleccione método...</option>';
-    
-    if (!this.value) {
-        metodoDespachoSelect.setAttribute('disabled', 'disabled');
-        return;
+    // 1. OBTENER EL PORCENTAJE DEL SELECTOR
+    // Extraigo esto en una función limpia porque lo vas a necesitar en varios lugares
+    function getPorcentajeRecargo() {
+        let selectorVal = document.getElementById('selector_costos').value;
+        
+        if (selectorVal === '5') {
+            let customVal = parseFloat(document.getElementById('selector_costos_personalizado').value);
+            return isNaN(customVal) ? 0 : customVal;
+        }
+
+        let mapeo = {
+            '1': 30.0,
+            '2': 20.0,
+            '3': 10.0,
+            '4': 0.0
+        };
+        
+        return mapeo[selectorVal] || 0;
     }
 
-    // Habilitar el select
-    metodoDespachoSelect.removeAttribute('disabled');
-    
-    // Obtener los procedimientos permitidos desde el atributo data-procedimiento (ej: "TTS,STS,ALONGSITE")
-    let rawProcedimientos = selectedOption.getAttribute('data-procedimiento') || '';
-    
-    if (rawProcedimientos.trim() !== '') {
-        let procedimientosPermitidos = rawProcedimientos.split(',');
+    // 2. CONTROL DEL CENTRO DE SUMINISTRO (Esto lo tenías decente, lo mantengo igual)
+    document.getElementById('centro_suministro').addEventListener('change', function() {
+        let selectedOption = this.options[this.selectedIndex];
+        let metodoDespachoSelect = document.getElementById('metodo_despacho');
+        
+        metodoDespachoSelect.innerHTML = '<option value="">Seleccione método...</option>';
+        
+        if (!this.value) {
+            metodoDespachoSelect.setAttribute('disabled', 'disabled');
+            return;
+        }
 
-        // Mapeo opcional para mostrar nombres más amigables si lo deseas, o usar el valor directo de la BD
-        let labelsProcedimiento = {
-            'TTS': 'TRUCK TO SHIP (TTS)',
-            'STS': 'SHIP TO SHIP (STS)',
-            'ALONGSITE': 'ALONGSITE'
-        };
+        metodoDespachoSelect.removeAttribute('disabled');
+        let rawProcedimientos = selectedOption.getAttribute('data-procedimiento') || '';
+        
+        if (rawProcedimientos.trim() !== '') {
+            let procedimientosPermitidos = rawProcedimientos.split(',');
+            let labelsProcedimiento = {
+                'TTS': 'TRUCK TO SHIP (TTS)',
+                'STS': 'SHIP TO SHIP (STS)',
+                'ALONGSITE': 'ALONGSITE'
+            };
 
-        // Inyectar dinámicamente solo las opciones permitidas para este centro
-        procedimientosPermitidos.forEach(proc => {
-            let valorLimpio = proc.trim();
-            if (valorLimpio !== '') {
-                let textoMostrar = labelsProcedimiento[valorLimpio] || valorLimpio;
-                metodoDespachoSelect.innerHTML += `<option value="${valorLimpio}">${textoMostrar}</option>`;
+            procedimientosPermitidos.forEach(proc => {
+                let valorLimpio = proc.trim();
+                if (valorLimpio !== '') {
+                    let textoMostrar = labelsProcedimiento[valorLimpio] || valorLimpio;
+                    metodoDespachoSelect.innerHTML += `<option value="${valorLimpio}">${textoMostrar}</option>`;
+                }
+            });
+        }
+    });
+
+    // 3. CAMBIO EN EL SELECTOR DE COSTOS (Aquí está la magia)
+    document.getElementById('selector_costos').addEventListener('change', function() {
+        let customInput = document.getElementById('selector_costos_personalizado');
+        if (this.value === '5') {
+            customInput.classList.remove('d-none');
+        } else {
+            customInput.classList.add('d-none');
+            // No limpiamos el valor por si se arrepiente, mejor UX
+        }
+        
+        // Si cambian el porcentaje, HAY QUE RECALCULAR LOS PRECIOS BASE DE TODAS LAS FILAS VISUALMENTE
+        actualizarPreciosVisibles();
+        calcularTotales();
+    });
+
+    // Si cambian el valor personalizado, también recalcular
+    document.getElementById('selector_costos_personalizado').addEventListener('input', function() {
+        actualizarPreciosVisibles();
+        calcularTotales();
+    });
+
+    // Función para actualizar los inputs de precio según el porcentaje actual
+    function actualizarPreciosVisibles() {
+        let recargo = getPorcentajeRecargo();
+        let filas = document.querySelectorAll('.row-producto');
+        
+        filas.forEach(fila => {
+            let select = fila.querySelector('.select-producto');
+            let selectedOption = select.options[select.selectedIndex];
+            let precioBase = parseFloat(selectedOption.getAttribute('data-precio'));
+            
+            if (!isNaN(precioBase)) {
+                let inputPrecio = fila.querySelector('.input-precio');
+                let precioAjustado = precioBase * (1 + (recargo / 100));
+                
+                // Forzamos a 2 decimales para que no se vea feo
+                inputPrecio.value = precioAjustado.toFixed(2); 
             }
         });
     }
-});
 
-// Selector Costos personalizado toggle
-document.getElementById('selector_costos').addEventListener('change', function() {
-    let customInput = document.getElementById('selector_costos_personalizado');
-    if (this.value === '') {
-        customInput.classList.remove('d-none');
-    } else {
-        customInput.classList.add('d-none');
-        customInput.value = '';
-    }
-    calcularTotales();
-});
-
-// Agregar nueva fila de producto
-document.getElementById('btn-add-row').addEventListener('click', function() {
-    let tbody = document.querySelector('#tabla-productos tbody');
-    let html = `
-        <tr class="row-producto" data-index="${rowIndex}">
-            <td>
-                <select name="productos[${rowIndex}][tipo]" class="form-select select-producto" required>
-                    ${productosOptions}
-                </select>
-                <input type="text" name="productos[${rowIndex}][obs]" class="form-control mt-1" placeholder="Observación opcional del producto">
-            </td>
-            <td>
-                <input type="number" step="0.001" name="productos[${rowIndex}][tm]" class="form-control input-tm" placeholder="0.00" required>
-            </td>
-            <td>
-                <input type="number" step="0.01" name="productos[${rowIndex}][precio]" class="form-control input-precio" placeholder="0.00" required>
-            </td>
-            <td class="text-center align-middle">-</td>
-            <td>
-                <input type="text" class="form-control bg-light text-end fw-bold input-subtotal-prod" readonly value="$0,00">
-            </td>
-            <td class="text-center">
-                <button type="button" class="btn btn-danger btn-sm btn-delete"><i class="fas fa-trash"></i></button>
-            </td>
-        </tr>
-        <tr class="row-delivery bg-light" data-index="${rowIndex}">
-            <td class="ps-4 text-muted fst-italic">
-                DELIVERY FEE
-                <div class="campos-abiertos d-none mt-1">
-                    <input type="number" step="0.01" name="productos[${rowIndex}][del_tm]" class="form-control form-control-sm input-del-tm mb-1" placeholder="Tarifa x TM">
-                    <input type="number" step="0.01" name="productos[${rowIndex}][del_comp]" class="form-control form-control-sm input-del-comp" placeholder="Tarifa Completa">
-                </div>
-            </td>
-            <td class="text-center text-muted">-</td>
-            <td class="text-center text-muted">-</td>
-            <td class="text-center fw-bold text-warning input-delivery-rate">
-                $8.000
-            </td>
-            <td>
-                <input type="text" class="form-control bg-light text-end text-warning fw-bold input-delivery-monto" readonly value="$0,00">
-            </td>
-            <td></td>
-        </tr>
-    `;
-    tbody.insertAdjacentHTML('beforeend', html);
-    rowIndex++;
-});
-
-// Asignación automática de precio al seleccionar el producto (tanto estático como dinámico)
-document.addEventListener('change', function(e) {
-    if (e.target.classList.contains('select-producto')) {
-        let rowProd = e.target.closest('tr');
-        let idx = rowProd.dataset.index;
-        let rowDel = document.querySelector(`.row-delivery[data-index="${idx}"]`);
-        let selectedOption = e.target.options[e.target.selectedIndex];
-        let precioBase = selectedOption.getAttribute('data-precio');
-        
-        // Asignar precio por defecto del producto si existe
-        if (precioBase) {
-            rowProd.querySelector('.input-precio').value = precioBase;
-        }
-
-        let tipo = e.target.value;
-        let divAbiertos = rowDel.querySelector('.campos-abiertos');
-
-        if (tipo === 'VLSFO' || tipo === 'HSFO' || tipo === 'LSMGO') {
-            divAbiertos.classList.remove('d-none');
-        } else {
-            divAbiertos.classList.add('d-none');
-            rowDel.querySelector('.input-del-tm').value = '';
-            rowDel.querySelector('.input-del-comp').value = '';
-        }
-        calcularTotales();
-    }
-});
-
-document.addEventListener('input', function(e) {
-    if (e.target.matches('.input-tm, .input-precio, .input-del-tm, .input-del-comp, #selector_costos_personalizado') || e.target.id === 'selector_costos') {
-        calcularTotales();
-    }
-});
-
-document.addEventListener('click', function(e) {
-    if (e.target.closest('.btn-delete')) {
-        let rowProd = e.target.closest('tr');
-        let idx = rowProd.dataset.index;
-        let rowDel = document.querySelector(`.row-delivery[data-index="${idx}"]`);
-        rowProd.remove();
-        rowDel.remove();
-        calcularTotales();
-    }
-});
-
-function calcularTotales() {
-    let selectorVal = document.getElementById('selector_costos').value;
-    let pctSelector = 20.0; // por defecto
-
-    if (selectorVal === '') {
-        pctSelector = parseFloat(document.getElementById('selector_costos_personalizado').value) || 0;
-    } else {
-        let s = parseInt(selectorVal);
-        pctSelector = (s === 2) ? 15.0 : ((s === 4) ? 0.0 : 20.0);
-    }
-
-    let rowsProd = document.querySelectorAll('.row-producto');
-    let totalGeneral = 0;
-
-    rowsProd.forEach(rowProd => {
-        let idx = rowProd.dataset.index;
-        let rowDel = document.querySelector(`.row-delivery[data-index="${idx}"]`);
-
-        let tipo = rowProd.querySelector('.select-producto').value;
-        let tm = parseFloat(rowProd.querySelector('.input-tm').value) || 0;
-        let precioBase = parseFloat(rowProd.querySelector('.input-precio').value) || 0;
-
-        // El selector de costos aplica EXCLUSIVAMENTE al precio del producto
-        let precioAjustado = precioBase * (1 + (pctSelector / 100));
-        let subtotalProd = tm * precioAjustado;
-        rowProd.querySelector('.input-subtotal-prod').value = '$' + subtotalProd.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-
-        // El Delivery Fee es independiente y NO recibe el recargo del selector
-        let deliveryFinal = 0;
-        let rateLabel = '-';
-
-        if (tipo === 'VLSFO' || tipo === 'HSFO' || tipo === 'LSMGO') {
-            let delComp = parseFloat(rowDel.querySelector('.input-del-comp').value) || 0;
-            let delTm = parseFloat(rowDel.querySelector('.input-del-tm').value) || 0;
-
-            if (delComp > 0) {
-                deliveryFinal = delComp;
-                rateLabel = '$' + delComp.toLocaleString('de-DE', {minimumFractionDigits: 2});
-            } else if (delTm > 0) {
-                deliveryFinal = tm * delTm;
-                rateLabel = '$' + delTm.toLocaleString('de-DE', {minimumFractionDigits: 2}) + ' x TM';
-            }
-        } else {
-            if (tm > 0) {
-                if (tm < 890) {
-                    deliveryFinal = 8000.00;
-                    rateLabel = '$8.000';
-                } else {
-                    deliveryFinal = tm * 9.00;
-                    rateLabel = '$9 x TM';
-                }
-            }
-        }
-        
-        rowDel.querySelector('.input-delivery-rate').innerText = rateLabel;
-        rowDel.querySelector('.input-delivery-monto').value = '$' + deliveryFinal.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-
-        totalGeneral += (subtotalProd + deliveryFinal);
+    // 4. AGREGAR FILA (Lo tenías pasable, solo lo limpié un poco)
+    document.getElementById('btn-add-row').addEventListener('click', function() {
+        let tbody = document.querySelector('#tabla-productos tbody');
+        let html = `
+            <tr class="row-producto" data-index="${rowIndex}">
+                <td>
+                    <select name="productos[${rowIndex}][tipo]" class="form-select select-producto" required>
+                        ${productosOptions}
+                    </select>
+                    <input type="text" name="productos[${rowIndex}][obs]" class="form-control mt-1" placeholder="Observación opcional">
+                </td>
+                <td>
+                    <input type="number" step="1" name="productos[${rowIndex}][tm]" class="form-control input-tm" placeholder="0.00" required>
+                </td>
+                <td>
+                    <!-- Le ponemos readonly opcionalmente, si quieres que el usuario pueda sobrescribir el precio a mano, quítale el readonly -->
+                    <input type="number" step="0.01" name="productos[${rowIndex}][precio]" class="form-control input-precio" placeholder="0.00" required>
+                </td>
+                <td class="text-center align-middle">-</td>
+                <td>
+                    <input type="text" class="form-control bg-light text-end fw-bold input-subtotal-prod" readonly value="$0.00">
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-danger btn-sm btn-delete"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+            <tr class="row-delivery bg-light" data-index="${rowIndex}">
+                <td class="ps-4 text-muted fst-italic">
+                    DELIVERY FEE <span class="fst-normal label-del-fee" name="productos[${rowIndex}][del_fee]"></span>
+                    <div class="campos-abiertos d-none mt-1">
+                        <input type="number" step="0.01" name="productos[${rowIndex}][del_tm]" class="form-control form-control-sm input-del-tm mb-1" placeholder="Tarifa x MT">
+                        <input type="number" step="0.01" name="productos[${rowIndex}][del_comp]" class="form-control form-control-sm input-del-comp" placeholder="Tarifa Completa">
+                    </div>
+                </td>
+                <td class="text-center text-muted">-</td>
+                <td class="text-center text-muted">-</td>
+                <td class="text-center fw-bold text-warning input-delivery-rate">
+                    $0.00
+                </td>
+                <td>
+                    <input type="text" class="form-control bg-light text-end text-warning fw-bold input-delivery-monto" readonly value="$0.00">
+                </td>
+                <td></td>
+            </tr>
+        `;
+        tbody.insertAdjacentHTML('beforeend', html);
+        rowIndex++;
     });
 
-    document.getElementById('lbl-total-general').innerText = '$' + totalGeneral.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-}
+    // 5. EVENTOS DINÁMICOS EN LA TABLA
+    document.querySelector('#tabla-productos').addEventListener('change', function(e) {
+        if (e.target.classList.contains('select-producto')) {
+            let rowProd = e.target.closest('tr');
+            let idx = rowProd.dataset.index;
+            let rowDel = document.querySelector(`.row-delivery[data-index="${idx}"]`);
+            
+            let selectedOption = e.target.options[e.target.selectedIndex];
+            let precioBase = parseFloat(selectedOption.getAttribute('data-precio'));
+            
+            // Calcular el precio inflado de inmediato
+            if (!isNaN(precioBase)) {
+                let recargo = getPorcentajeRecargo();
+                let inputPrecio = rowProd.querySelector('.input-precio');
+                inputPrecio.value = (precioBase * (1 + (recargo / 100))).toFixed(2);
+            }
+
+            let tipo = selectedOption.value; // Ya no e.target.value, para estar seguros
+            let divAbiertos = rowDel.querySelector('.campos-abiertos');
+
+            // Esta validación estaba horrible antes. 
+            if (['VLSFO', 'HSFO', 'LSMGO'].some(term => tipo.includes(term))) {
+                divAbiertos.classList.remove('d-none');
+            } else {
+                divAbiertos.classList.add('d-none');
+                rowDel.querySelector('.input-del-tm').value = '';
+                rowDel.querySelector('.input-del-comp').value = '';
+            }
+            calcularTotales();
+        }
+    });
+
+    document.querySelector('#tabla-productos').addEventListener('input', function(e) {
+        if (e.target.matches('.input-tm, .input-precio, .input-del-tm, .input-del-comp')) {
+            calcularTotales();
+        }
+    });
+
+    document.querySelector('#tabla-productos').addEventListener('click', function(e) {
+        let btnDelete = e.target.closest('.btn-delete');
+        if (btnDelete) {
+            let rowProd = btnDelete.closest('tr');
+            let idx = rowProd.dataset.index;
+            let rowDel = document.querySelector(`.row-delivery[data-index="${idx}"]`);
+            rowProd.remove();
+            if(rowDel) rowDel.remove();
+            calcularTotales();
+        }
+    });
+
+    // 6. EL CÁLCULO PRINCIPAL
+    function calcularTotales() {
+        let rowsProd = document.querySelectorAll('.row-producto');
+        let totalGeneral = 0;
+
+        rowsProd.forEach(rowProd => {
+            let idx = rowProd.dataset.index;
+            let rowDel = document.querySelector(`.row-delivery[data-index="${idx}"]`);
+
+            let tm = parseFloat(rowProd.querySelector('.input-tm').value) || 0;
+            
+            // EL SECRETO: Ahora tomamos el precio DIRECTAMENTE del input, 
+            // porque ya se encargaron las otras funciones de inflarlo visualmente.
+            let precioAjustadoVisualmente = parseFloat(rowProd.querySelector('.input-precio').value) || 0;
+            
+            let subtotalProd = tm * precioAjustadoVisualmente;
+            
+            rowProd.querySelector('.input-subtotal-prod').value = '$' + subtotalProd.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+            // Calculando Delivery Fee (Idéntico a tu lógica, solo limpié el desorden)
+            let deliveryFinal = 0;
+            let rateLabel = '-';
+            let selectProd = rowProd.querySelector('.select-producto');
+            let tipo = selectProd.options[selectProd.selectedIndex].value;
+
+            if (['VLSFO', 'HSFO', 'LSMGO'].some(term => tipo.includes(term))) {
+                let delComp = parseFloat(rowDel.querySelector('.input-del-comp').value) || 0;
+                let delTm = parseFloat(rowDel.querySelector('.input-del-tm').value) || 0;
+
+                if (delComp > 0) {
+                    deliveryFinal = delComp;
+                    rateLabel = '$' + delComp.toLocaleString('en-US', {minimumFractionDigits: 2});
+                } else if (delTm > 0) {
+                    deliveryFinal = tm * delTm;
+                    rateLabel = '$' + delTm.toLocaleString('en-US', {minimumFractionDigits: 2});
+                }
+            } else {
+                if (tm > 0) {
+                    if (tm < 890) {
+                        deliveryFinal = 8000.00;
+                        rateLabel = '$8,000.00';
+                        rowDel.querySelector('[name="productos[' + idx + '][del_fee]"]').innerText = '';
+                    } else {
+                        deliveryFinal = tm * 9.00;
+                        rowDel.querySelector('[name="productos[' + idx + '][del_fee]"]').innerText = '$9xMT';
+                        rateLabel = '$9.00';
+                    }
+                }
+            }
+            
+            rowDel.querySelector('.input-delivery-rate').innerText = rateLabel;
+            rowDel.querySelector('.input-delivery-monto').value = '$' + deliveryFinal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+            totalGeneral += (subtotalProd + deliveryFinal);
+        });
+
+        document.getElementById('lbl-total-general').innerText = '$' + totalGeneral.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
 </script>
 @endsection

@@ -28,7 +28,7 @@ use App\Http\Controllers\{
     ChequeoDepositoController, CombustibleController, LlenadoCupoPrepagadoController, 
     TransaccionCombustibleController, ConsumoOperativoController, TrasegadoController, ReversoCombustibleController,
     MermasController, VehiculoPrecargadoController, AbastecimientoTanqueController, ParametroController,
-    ParametroManagerController, SalaControlController, CotizacionBunkeringController
+    ParametroManagerController, SalaControlController, CotizacionBunkeringController,ProductoMatrizController
 };
 
 /* --- Rutas Públicas y Monitores --- */
@@ -378,10 +378,15 @@ Route::middleware(['auth'])->group(function () {
         Route::get('cotizacionesbunkering/show/{id}', [CotizacionBunkeringController::class, 'show'])->name('cotizaciones-bunkering.show');
         Route::get('cotizacionesbunkering/index', [CotizacionBunkeringController::class, 'index'])->name('cotizaciones-bunkering.index');
         Route::get('cotizacionesbunkering/create', [CotizacionBunkeringController::class, 'create'])->name('cotizaciones-bunkering.create');
+        Route::get('cotizacionesbunkering/edit/{id}', [CotizacionBunkeringController::class, 'edit'])->name('cotizaciones-bunkering.edit');
+        Route::put('cotizacionesbunkering/update/{id}', [CotizacionBunkeringController::class, 'update'])->name('cotizaciones-bunkering.update');
 
         Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
         Route::get('/aforos', [AforoController::class, 'index'])->name('aforos.index');
         Route::get('/search', [SearchController::class, 'query'])->name('search');
+
+        Route::get('/productos/matriz', [ProductoMatrizController::class, 'index'])->name('productos.matriz');
+        Route::post('/productos/matriz', [ProductoMatrizController::class, 'updateBulk'])->name('productos.matriz.update');
 
         // Módulo de Combustibles
         Route::prefix('combustibles')->name('combustibles.')->group(function () {
