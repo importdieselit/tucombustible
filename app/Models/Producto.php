@@ -15,9 +15,15 @@ class Producto extends Model
         'descripcion',
         'precio',
         'litros_tm',
-        'cz',
         'stock',
         'stock_minimo',
+        'categoria_iso',
+        'densidad',
+        'viscosidad',
+        'azufre',
+        'ctz',
+        'proveedor',
+        'aplicacion'
     ];
 
     public $timestamps = true;

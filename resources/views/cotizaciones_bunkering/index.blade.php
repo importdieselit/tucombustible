@@ -1,4 +1,21 @@
 @extends('layouts.app')
+@push('styles')
+
+<style>
+    /* Ocultar barra de scroll en navegadores webkit para que el banner se vea limpio, 
+       pero permitiendo el desplazamiento horizontal (swipe en móviles, scroll de mouse en PC) */
+    #banner::-webkit-scrollbar {
+        height: 6px;
+    }
+    #banner::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    #banner::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1;
+        border-radius: 10px;
+    }
+</style>
+@endpush
 
 @section('content')
 <div class="container-fluid px-4">
@@ -26,7 +43,38 @@
             <span class="badge bg-secondary">{{ $cotizaciones->total() }} Registros</span>
         </div>
         <div class="card-body">
-            
+            <div class="row w-100 flex-nowrap overflow-auto pb-3 pt-2" id="banner" style="scrollbar-width: thin; scroll-behavior: smooth;">
+    @foreach ($productos as $producto)
+        <div class="col-12 col-md-4 col-lg-3 mb-2">
+            <!-- La Card -->
+            <div class="card shadow-sm border-0 h-100" style="min-width: 260px; border-radius: 12px; background: linear-gradient(145deg, #ffffff, #f3f4f6);">
+                <div class="card-body p-3 text-center d-flex flex-column justify-content-center">
+                    
+                    <!-- Nombre del Producto -->
+                    <h6 class="card-title mb-1 fw-bold text-dark text-uppercase text-truncate" title="{{ $producto->nombre }}">
+                        {{ $producto->nombre }}
+                          <small class="text-muted text-truncate" style="font-size: 0.8rem;">
+                        ({{ $producto->proveedor ?? 'Sin Proveedor' }})
+                        </small>
+                    
+                    </h6>
+                    <!-- Línea separadora sutil -->
+                    <div class="w-75 mx-auto border-bottom mb-1"></div>
+                    
+                    <!-- Precio -->
+                    <div class="mt-auto">
+                        <span class="fs-5 fw-bolder text-primary">
+                            <!-- Formateamos el número para que no parezca que lo hizo un practicante -->
+                            ${{ number_format($producto->precio, 2, ',', '.') }}
+                        </span>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    @endforeach
+</div>
+
             <!-- Tabla de Registros -->
             <div class="table-responsive">
                 <table class="table table-hover table-bordered align-middle">
@@ -88,6 +136,9 @@
                                 <td class="text-center">
                                     <a href="{{ route('cotizaciones-bunkering.show', $cotizacion->id) }}" class="btn btn-outline-primary btn-sm" title="Ver / Imprimir">
                                         <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{{ route('cotizaciones-bunkering.edit', $cotizacion->id) }}" class="btn btn-outline-warning btn-sm" title="Editar">
+                                        <i class="fas fa-edit"></i>
                                     </a>
                                 </td>
                             </tr>

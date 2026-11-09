@@ -15,7 +15,8 @@ class CotizacionBunkeringController extends Controller
     public function index()
     {
         $cotizaciones = CotizacionBunkering::with('detalles')->orderBy('created_at', 'desc')->paginate(15);
-        return view('cotizaciones_bunkering.index', compact('cotizaciones'));
+        $productos = Producto::where('ctz', true)->orderBy('nombre')->get();
+        return view('cotizaciones_bunkering.index', compact('cotizaciones', 'productos'));
     }
 
     public function create()
@@ -151,4 +152,42 @@ class CotizacionBunkeringController extends Controller
         $cotizacion = CotizacionBunkering::with('detalles')->findOrFail($id);
         return view('cotizaciones_bunkering.show', compact('cotizacion'));
     }
+    
+    public function edit($id)
+    {
+        $cotizacion = CotizacionBunkering::with('detalles')->findOrFail($id);
+        $centrosSuministro = CentroSuministro::all();
+        $productos = Producto::where('ctz', true)->orderBy('nombre')->get();
+        return view('cotizaciones_bunkering.create', compact('cotizacion', 'productos', 'centrosSuministro'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $cotizacion = CotizacionBunkering::with('detalles')->findOrFail($id);
+
+        $validated = $request->validate([
+            'nombre_buque'         => 'required|string|max:255',
+            'bandera_buque'        => 'nullable|string|max:100',
+            'imo_buque'            => 'nullable|string|max:50',
+            'pagador'              => 'nullable|string|max:255',
+            'selector_costos'      => 'required|integer|in:1,2,3,4,5',
+            'punto_entrega'        => 'required|string|max:255',
+            'centro_suministro'     => 'nullable|string|max:255',
+            'vendedor'             => 'nullable|string|max:255',
+            'metodo_despacho'      => 'nullable|string|max:100',
+            'agencia_naviera'      => 'nullable|string|max:255',
+            'fecha_entrega'        => 'nullable|date',
+            'observaciones'        => 'nullable|string',
+            // Matriz dinámica de productos
+            'productos'            => 'required|array|min:1',
+            'productos.*.tipo'     => 'required|string',
+            'productos.*.obs'      => 'nullable|string|max:255',
+            'productos.*.tm'       => 'required|numeric|min:0.001',
+            'productos.*.precio'   => 'required|numeric|min:0',
+            'productos.*.del_tm'   => 'nullable|numeric|min:0',
+            'productos.*.del_comp' => 'nullable|numeric|min:0',
+        ]);
+
+    }
+
 }
