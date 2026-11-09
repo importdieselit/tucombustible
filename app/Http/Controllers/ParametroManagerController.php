@@ -9,9 +9,66 @@ use Illuminate\Support\Facades\DB;
 
 class ParametroManagerController extends Controller
 {
-    public function index()
+    // =====================================================================
+    // 1. PANEL DE CONSUMO (El que usa el usuario normal)
+    // Rutas: GET /admin/parametros y PUT /admin/parametros/update
+    // =====================================================================
+
+    public function panelIndex()
     {
+        // Traemos solo los activos y los agrupamos por la columna 'grupo'
+        $parametrosAgrupados = Parametro::where('activo', 1)
+                                        ->orderBy('grupo')
+                                        ->orderBy('clave')
+                                        ->get()
+                                        ->groupBy('grupo');
+
+        if ($parametrosAgrupados->isEmpty()) {
+            $parametrosAgrupados = collect([]);
+        }
+
+        // Esta va a la vista de consumo: index.blade.php
+        return view('admin.parametros.index', compact('parametrosAgrupados'));
+    }
+
+    public function update(Request $request)    
+    {
+        $request->validate([
+            'parametros' => 'required|array',
+        ]);
+
+        $data = $request->input('parametros');
+        
+        DB::beginTransaction();
+        try {
+            foreach ($data as $id => $nuevoContenido) {
+                $parametro = Parametro::find($id);
+                if ($parametro) {
+                    $valorActual = $parametro->valor;
+                    $valorActual['content'] = $nuevoContenido;
+                    $parametro->valor = $valorActual;
+                    $parametro->save();
+                }
+            }
+            DB::commit();
+            return redirect()->back()->with('success', 'Configuración actualizada exitosamente.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Error al guardar: ' . $e->getMessage());
+        }
+    }
+
+    // =====================================================================
+    // 2. BUILDER / MANAGER (El que usa el SuperAdmin para crear esquemas)
+    // Rutas: GET /admin/parametros/manager, GET .../create, POST .../store, etc.
+    // =====================================================================
+
+    public function managerIndex()
+    {
+        // Aquí NO se agrupa. Se mandan todos planos para la tabla del Manager.
         $parametros = Parametro::orderBy('grupo')->orderBy('clave')->get();
+        
+        // Esta va a la vista del Manager: manager/index.blade.php
         return view('admin.parametros.manager.index', compact('parametros'));
     }
 
@@ -51,7 +108,7 @@ class ParametroManagerController extends Controller
             'descripcion' => $request->descripcion,
             'valor' => [
                 'schema' => $schema,
-                'content' => null // Listo para ser llenado por el usuario
+                'content' => null 
             ],
             'activo' => true
         ]);
@@ -80,7 +137,6 @@ class ParametroManagerController extends Controller
         return collect(DB::select('SHOW TABLES'))->map(function ($tabla) {
             return array_values((array)$tabla)[0];
         })->filter(function($tabla) {
-            // Ignorar tablas base de Laravel
             return !in_array($tabla, ['migrations', 'failed_jobs', 'personal_access_tokens', 'password_resets', 'users']);
         });
     }

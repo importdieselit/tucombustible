@@ -5,7 +5,7 @@
     @php
         $isEdit = isset($cotizacion) && $cotizacion->id;
         // Si estamos editando, apuntamos a la ruta update y usamos PUT. Si no, a store.
-        $formAction = $isEdit ? route('cotizaciones-bunkering.update', $cotizacion->id) : route('cotizacionBunkering.store');
+        $formAction = $isEdit ? route('cotizaciones-bunkering.update', $cotizacion->id) : route('cotizacionesBunkering.store');
     @endphp
 
     <h1 class="mt-4">{{ $isEdit ? 'Editar Cotización Bunkering / STS' : 'Nueva Cotización Bunkering / STS' }}</h1>
@@ -77,6 +77,7 @@
                             <label class="form-label">Método de Entrega</label>
                             <select name="metodo_despacho" id="metodo_despacho" class="form-control" disabled required>
                                 <option value="">Primero seleccione un centro...</option>
+
                             </select>
                     </div>
                     <div class="col-md-4">
@@ -179,6 +180,8 @@
 
 <script>
     let rowIndex = document.querySelectorAll('.row-producto').length || 1;
+    const CONFIG_DELIVERY = @json($configDelivery);
+    const MATRIZ_CENTROS = @json($matrizCentros);
 
     // Generar options de productos.
     let productosOptions = `<option value="">Seleccione...</option>@foreach($productos as $producto)<option value="{{ $producto->nombre }}" data-precio="{{ $producto->precio }}">{{ $producto->nombre }}</option>@endforeach`;
@@ -204,36 +207,53 @@
     }
 
     // 2. CONTROL DEL CENTRO DE SUMINISTRO (Esto lo tenías decente, lo mantengo igual)
-    document.getElementById('centro_suministro').addEventListener('change', function() {
+   document.getElementById('centro_suministro').addEventListener('change', function() {
         let selectedOption = this.options[this.selectedIndex];
         let metodoDespachoSelect = document.getElementById('metodo_despacho');
         
         metodoDespachoSelect.innerHTML = '<option value="">Seleccione método...</option>';
         
         if (!this.value) {
-            metodoDespachoSelect.setAttribute('disabled', 'disabled');
+            metodoDespachoSelect.setAttribute('disabled', 'disabled'); 
             return;
         }
-
-        metodoDespachoSelect.removeAttribute('disabled');
-        let rawProcedimientos = selectedOption.getAttribute('data-procedimiento') || '';
         
-        if (rawProcedimientos.trim() !== '') {
-            let procedimientosPermitidos = rawProcedimientos.split(',');
-            let labelsProcedimiento = {
-                'TTS': 'TRUCK TO SHIP (TTS)',
-                'STS': 'SHIP TO SHIP (STS)',
-                'ALONGSITE': 'ALONGSITE'
-            };
-
-            procedimientosPermitidos.forEach(proc => {
-                let valorLimpio = proc.trim();
-                if (valorLimpio !== '') {
-                    let textoMostrar = labelsProcedimiento[valorLimpio] || valorLimpio;
-                    metodoDespachoSelect.innerHTML += `<option value="${valorLimpio}">${textoMostrar}</option>`;
-                }
+        metodoDespachoSelect.removeAttribute('disabled');
+        
+        // Obtenemos los métodos que existen en el sistema
+        let metodosDinamicos = {};
+        if (CONFIG_DELIVERY.metodos_despacho) {
+            CONFIG_DELIVERY.metodos_despacho.forEach(m => {
+                metodosDinamicos[m.codigo] = m.etiqueta;
             });
         }
+
+        // Buscamos si este centro de suministro específico tiene métodos marcados en nuestra matriz
+        let centroNombre = this.value; // Usamos el nombre, que es lo que manda el select
+        let metodosPermitidos = [];
+
+        if (MATRIZ_CENTROS && MATRIZ_CENTROS[centroNombre]) {
+            // Recorremos los checkboxes guardados para este centro
+            for (let codigoMetodo in MATRIZ_CENTROS[centroNombre]) {
+                if (MATRIZ_CENTROS[centroNombre][codigoMetodo] == "1") {
+                    metodosPermitidos.push(codigoMetodo);
+                }
+            }
+        }
+
+        // EL REQUISITO QUE PEDISTE: Si no hay NADA marcado para este centro (o la matriz no existe),
+        // mostramos TODOS los métodos por defecto.
+        if (metodosPermitidos.length === 0) {
+            metodosPermitidos = Object.keys(metodosDinamicos);
+        }
+
+        // Inyectamos las opciones filtradas al select
+        metodosPermitidos.forEach(codigo => {
+            // Si el código existe en nuestros métodos dinámicos, lo pintamos
+            if (metodosDinamicos[codigo]) {
+                metodoDespachoSelect.innerHTML += `<option value="${codigo}">${metodosDinamicos[codigo]}</option>`;
+            }
+        });
     });
 
     // 3. CAMBIO EN EL SELECTOR DE COSTOS (Aquí está la magia)
@@ -399,7 +419,7 @@
             let deliveryFinal = 0;
             let rateLabel = '-';
             let selectProd = rowProd.querySelector('.select-producto');
-            let tipo = selectProd.options[selectProd.selectedIndex].value;
+            let tipo = selectedOption.value;
 
             if (['VLSFO', 'HSFO', 'LSMGO'].some(term => tipo.includes(term))) {
                 let delComp = parseFloat(rowDel.querySelector('.input-del-comp').value) || 0;
@@ -409,19 +429,24 @@
                     deliveryFinal = delComp;
                     rateLabel = '$' + delComp.toLocaleString('en-US', {minimumFractionDigits: 2});
                 } else if (delTm > 0) {
-                    deliveryFinal = tm * delTm;
+                    deliveryFinal = mtReales * delTm;
                     rateLabel = '$' + delTm.toLocaleString('en-US', {minimumFractionDigits: 2});
                 }
             } else {
-                if (tm > 0) {
-                    if (tm < 890) {
-                        deliveryFinal = 8000.00;
-                        rateLabel = '$8,000.00';
-                        rowDel.querySelector('[name="productos[' + idx + '][del_fee]"]').innerText = '';
+                if (mtReales > 0) {
+                    // --- AQUÍ APLICAMOS LA MAGIA DE LA BASE DE DATOS ---
+                    let umbral = parseFloat(CONFIG_DELIVERY.umbral_minimo_mt) || 890;
+                    let tarifaPlana = parseFloat(CONFIG_DELIVERY.tarifa_plana_minima) || 8000;
+                    let tarifaPorMt = parseFloat(CONFIG_DELIVERY.tarifa_por_mt) || 9;
+
+                    if (mtReales < umbral) {
+                        deliveryFinal = tarifaPlana;
+                        rateLabel = '$' + tarifaPlana.toLocaleString('en-US', {minimumFractionDigits: 2});
+                        rowDel.querySelector('.label-del-fee').innerText = '';
                     } else {
-                        deliveryFinal = tm * 9.00;
-                        rowDel.querySelector('[name="productos[' + idx + '][del_fee]"]').innerText = '$9xMT';
-                        rateLabel = '$9.00';
+                        deliveryFinal = mtReales * tarifaPorMt;
+                        rowDel.querySelector('.label-del-fee').innerText = '$' + tarifaPorMt + 'xMT';
+                        rateLabel = '$' + tarifaPorMt.toLocaleString('en-US', {minimumFractionDigits: 2});
                     }
                 }
             }

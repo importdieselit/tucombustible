@@ -9,21 +9,36 @@ use App\Models\Producto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\Parametro;
 
 class CotizacionBunkeringController extends Controller
 {
     public function index()
     {
         $cotizaciones = CotizacionBunkering::with('detalles')->orderBy('created_at', 'desc')->paginate(15);
-        $productos = Producto::where('ctz', true)->orderBy('nombre')->get();
+        $productos = Producto::where('ctz', true)->orderBy('proveedor')->get();
         return view('cotizaciones_bunkering.index', compact('cotizaciones', 'productos'));
     }
 
     public function create()
     {
         $centrosSuministro = CentroSuministro::all();
-        $productos = Producto::where('ctz', true)->orderBy('nombre')->get();
-        return view('cotizaciones_bunkering.create', compact('productos', 'centrosSuministro'));
+        $productos = Producto::where('ctz', true)->orderBy('proveedor')->get();
+        $paramDelivery = Parametro::where('clave', 'DELIVERY_BUNKERING_TARIFAS')->first();
+        $metodosDespacho = Parametro::where('clave', 'DELIVERY_METODOS_DESPACHO')->first();
+        $paramMatriz = \App\Models\Parametro::where('clave', 'ENLACE_CENTROS_METODOS')->first();
+        $matrizCentros = $paramMatriz ? $paramMatriz->contenido : [];
+        $configDelivery = $paramDelivery ? $paramDelivery->contenido : [
+            'umbral_minimo_mt' => 890,
+            'tarifa_plana_minima' => 8000,
+            'tarifa_por_mt' => 9,
+        ];
+        $configDelivery['metodos_despacho'] = $metodosDespacho ? $metodosDespacho->contenido : [
+            ['codigo' => 'TTS', 'etiqueta' => 'TRUCK TO SHIP (TTS)'],
+            ['codigo' => 'STS', 'etiqueta' => 'SHIP TO SHIP (STS)'],
+            ['codigo' => 'ALONGSITE', 'etiqueta' => 'ALONGSITE']
+        ];
+        return view('cotizaciones_bunkering.create', compact('productos', 'centrosSuministro', 'configDelivery', 'matrizCentros'));
     }
 
     public function store(Request $request)
@@ -158,7 +173,21 @@ class CotizacionBunkeringController extends Controller
         $cotizacion = CotizacionBunkering::with('detalles')->findOrFail($id);
         $centrosSuministro = CentroSuministro::all();
         $productos = Producto::where('ctz', true)->orderBy('nombre')->get();
-        return view('cotizaciones_bunkering.create', compact('cotizacion', 'productos', 'centrosSuministro'));
+        $paramMatriz = \App\Models\Parametro::where('clave', 'ENLACE_CENTROS_METODOS')->first();
+        $matrizCentros = $paramMatriz ? $paramMatriz->contenido : [];
+        $paramDelivery = Parametro::where('clave', 'DELIVERY_BUNKERING')->first();
+        $metodosDespacho = Parametro::where('clave', 'DELIVERY_BUNKERING_METODOS')->first();
+        $configDelivery = $paramDelivery ? $paramDelivery->contenido : [
+            'umbral_minimo_mt' => 890,
+            'tarifa_plana_minima' => 8000,
+            'tarifa_por_mt' => 9,
+        ];
+        $configDelivery['metodos_despacho'] = $metodosDespacho ? $metodosDespacho->contenido : [
+            ['codigo' => 'TTS', 'etiqueta' => 'TRUCK TO SHIP (TTS)'],
+            ['codigo' => 'STS', 'etiqueta' => 'SHIP TO SHIP (STS)'],
+            ['codigo' => 'ALONGSITE', 'etiqueta' => 'ALONGSITE']
+        ];
+        return view('cotizaciones_bunkering.create', compact('cotizacion', 'productos', 'centrosSuministro', 'configDelivery', 'matrizCentros'));
     }
 
     public function update(Request $request, $id)
