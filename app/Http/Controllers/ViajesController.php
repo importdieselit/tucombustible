@@ -401,9 +401,12 @@ class ViajesController extends Controller
     public function printGuiaDistribucion($viajeId)
     {
         // Asegurarse de cargar las relaciones necesarias (despachos, cliente, vehículo, conductor)
-        $viaje = Viaje::with(['despachos.cliente', 'vehiculo', 'chofer.persona'])
+        $viaje = Viaje::with(['despachos.cliente', 'vehiculo', 'chofer.persona','producto'])
             ->findOrFail($viajeId);
+        
+        
         $guia = Guia::where('viaje_id', $viajeId)->with('cliente','buqueDet')->first();
+        
         if(!$guia){ 
             $guia = new Guia();
             $guia->numero_guia = Guia::max('numero_guia') + 1;
@@ -419,16 +422,30 @@ class ViajesController extends Controller
             $guia->conductor = $viaje->chofer ? $viaje->chofer->persona->nombre : 'N/A';
             $guia->cedula = $viaje->chofer ? $viaje->chofer->persona->dni : 'N/A';
             $guia->cantidad = $viaje->despachos->sum('litros');
-            $guia->producto = 'MARINE GASOIL M.G.O'; // Ajustar según el producto real
+            $guia->producto = $viaje->producto->nombre ?? 'MARINE GASOIL M.G.O'; // Ajustar según el producto real
             $guia->cliente_id = $viaje->despachos->first()->cliente_id ?? null;
             $guia->save();
         }
-        // Si no hay despachos, o si la data es insuficiente, puedes redirigir o mostrar un error
-        if ($viaje->despachos->isEmpty()) {
-            abort(404, 'El viaje no tiene despachos asociados.');
+
+        // 1. Calculamos el total consolidado de litros del viaje
+        $totalLitrosConsolidado = $guia->cantidad > 0 ? $guia->cantidad : $viaje->despachos->sum('litros');
+
+        // 2. Calculamos las Toneladas Métricas (TM) usando dinámicamente la función del modelo Producto
+        if ($viaje->producto) {
+            // Utiliza el método de conversión del modelo (ej: divide los litros entre los litros_tm del producto)
+            $totalTmConsolidado = round($viaje->producto->tmPorLitros($totalLitrosConsolidado), 2);
+        } else {
+            // Fallback de seguridad por si el viaje no tuviera un producto vinculado
+            $totalTmConsolidado = round($totalLitrosConsolidado * 0.85 / 1000, 2);
         }
 
-        return view('combustible.guia', compact('viaje', 'guia'));
+        // Si no hay despachos, o si la data es insuficiente, puedes redirigir o mostrar un error
+        if ($viaje->despachos->isEmpty()) {
+            dd('El viaje no tiene despachos asociados.');
+            abort(404, 'El viaje no tiene despachos asociados.');
+        }
+        
+        return view('cotizaciones_bunkering.gestion', compact('viaje', 'guia', 'totalTmConsolidado', 'totalLitrosConsolidado'));
     }
 
     /**

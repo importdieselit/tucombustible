@@ -15,6 +15,7 @@ class Perfil extends Model
         'nombre',
         'descripcion',
         'activo',
+        'ruta_inicio',
     ];
 
     protected $casts = [

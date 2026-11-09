@@ -1,0 +1,33 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class AddImoBanderaToGuias extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::table('guias', function (Blueprint $table) {
+            $table->string('imo')->nullable()->after('buque');
+            $table->string('bandera')->nullable()->after('imo');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::table('guias', function (Blueprint $table) {
+            $table->dropColumn(['imo', 'bandera']);
+        });
+    }
+}

@@ -75,7 +75,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Rutas operativas generales protegidas con el Middleware Dinámico
-    Route::middleware(['can.access:read'])->group(function () {
+    Route::middleware(['can.access'])->group(function () {
 
         Route::get('/marcas/get-modelos', [MarcaController::class, 'getModelos'])->name('marcas.getModelos');
         Route::get('/vehiculos/inspeccion/{vehiculo_id}/{tipo}', [InspeccionController::class, 'create'])->name('inspeccion.create');

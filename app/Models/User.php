@@ -88,41 +88,36 @@ class User extends Authenticatable
 
     public function canAccess(string $action, int $moduleId): bool
     {
-
-         $profileId = $this->id_perfil ?? null; 
-
-        if ($profileId) {
-            $hasProfileAccess = DB::table('permiso_perfil')
-                                  ->where('id_perfil', $profileId)
-                                  ->where('id_modulo', $moduleId)
-                                  ->where($action, 1)
-                                  ->exists();
-            
-            if ($hasProfileAccess) {
-                return true; // Si el permiso está en el perfil base, es TRUE.
-            }
-        }
-        // 1. Verificar Permiso Asignado DIRECTAMENTE (tabla 'accesos')
-        // La tabla 'accesos' es tu tabla de Permisos Específicos por Usuario.
-        
-        $hasDirectAccess = DB::table('accesos')
-                            ->where('id_usuario', $this->id)
-                            ->where('id_modulo', $moduleId)
-                            ->where($action, 1) // Verifica si la columna 'read'/'update'/etc. es true (1)
-                            ->exists();
-
-        if ($hasDirectAccess) {
-            return true; // Si el permiso específico está en la tabla 'accesos', SE SUMA y es TRUE.
+        // 1. El súper usuario (ID 1) es el dueño del sistema. Pasa directo.
+        // Cero consultas a la base de datos, cero registros necesarios en 'permiso_perfil'.
+        if ($this->id_perfil === 1) {
+            return true; 
         }
 
-        // 2. Verificar Permiso Base del Perfil (Asumiremos que tienes una tabla para esto)
-        // Ejemplo: `permisos_perfiles` tiene 'id_perfil', 'id_modulo', 'read', 'update', etc.
-        
-        // Obtener el ID del perfil base del usuario (asumiendo que $this->id_perfil existe)
-       
+        // Si ni siquiera tiene perfil, para afuera.
+        if (!$this->id_perfil) {
+            return false;
+        }
 
-        // 3. Ningún permiso encontrado
-        return false;
+        // 2. Verificar Permiso del Perfil Base
+        // Si lo encuentra, retorna true y corta la ejecución (ahorrando la siguiente consulta)
+        $hasProfileAccess = DB::table('permiso_perfil')
+            ->where('id_perfil', $this->id_perfil)
+            ->where('id_modulo', $moduleId)
+            ->where($action, 1)
+            ->exists();
+
+        if ($hasProfileAccess) {
+            return true;
+        }
+
+        // 3. Verificar Permiso Directo (Específico del usuario en 'accesos')
+        // Si llegó hasta aquí, solo retorna el resultado de esta última validación
+        return DB::table('accesos')
+            ->where('id_usuario', $this->id)
+            ->where('id_modulo', $moduleId)
+            ->where($action, 1)
+            ->exists();
     }
 
 

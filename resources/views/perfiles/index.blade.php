@@ -81,6 +81,18 @@
                         <label class="form-label">Descripción</label>
                         <textarea name="descripcion" id="perfilDesc" class="form-control" rows="3"></textarea>
                     </div>
+                    <div class="mb-3">
+                        <label for="ruta_inicio">Ruta de Inicio (Nombre de la ruta, ej: vehiculos.index)</label>
+                        <input type="text" name="ruta_inicio" id="ruta_inicio" class="form-control" 
+                            value="{{ old('ruta_inicio', $perfil->ruta_inicio ?? '') }}" 
+                            placeholder="Dejar en blanco para ir al Dashboard">
+                        @error('ruta_inicio')
+                            <span class="text-danger">{{ $message }}</span>
+                        @enderror
+                        <small class="form-text text-muted">
+                            Ingresa el nombre de la ruta de Laravel. Si se deja en blanco o es inválida, el usuario irá a 'dashboard'.
+                        </small>
+                    </div>
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" name="activo" id="perfilActivo" value="1" checked>
                         <label class="form-check-label" for="perfilActivo">Perfil Activo</label>
@@ -170,6 +182,7 @@
             document.getElementById('perfilNombre').value = perfil.nombre;
             document.getElementById('perfilDesc').value = perfil.descripcion || '';
             document.getElementById('perfilActivo').checked = perfil.activo;
+            document.getElementById('ruta_inicio').value = perfil.ruta_inicio || '';
         } else {
             // Modo Creación
             title.textContent = 'Nuevo Perfil';

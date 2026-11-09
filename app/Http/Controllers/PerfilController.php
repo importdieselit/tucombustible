@@ -77,7 +77,8 @@ class PerfilController extends BaseController
         $validatedData = $request->validate([
             'nombre' => 'required|string|max:255|unique:perfiles,nombre',
             'descripcion' => 'nullable|string',
-            'activo' => 'boolean'
+            'activo' => 'boolean',
+            'ruta_inicio' => 'nullable|string|max:255', // Validamos el nuevo campo
         ]);
 
         $this->model->create($validatedData);
@@ -100,7 +101,8 @@ class PerfilController extends BaseController
         $validatedData = $request->validate([
             'nombre' => 'required|string|max:255|unique:perfiles,nombre,' . $item->id,
             'descripcion' => 'nullable|string',
-            'activo' => 'boolean'
+            'activo' => 'boolean',
+            'ruta_inicio' => 'nullable|string|max:255',
         ]);
 
         $item->update($validatedData);
