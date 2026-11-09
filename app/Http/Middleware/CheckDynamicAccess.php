@@ -12,14 +12,8 @@ class CheckDynamicAccess
 {
     /**
      * Intercepta la petición para validar permisos dinámicos por módulo y acción.
-     *
-     * @param Request $request
-     * @param Closure $next
-     * @param string $action Acción a evaluar: read, create, update, delete
-     * @param int|null $explicitModuleId ID explícito si se pasa desde el web.php
-     * @return mixed
      */
-    public function handle(Request $request, Closure $next, string $action = 'read', ?int $explicitModuleId = null): Response
+    public function handle(Request $request, Closure $next, ?string $explicitAction = null, ?int $explicitModuleId = null): Response
     {
         $user = Auth::user();
 
@@ -27,32 +21,35 @@ class CheckDynamicAccess
             return redirect()->route('login');
         }
 
-        // Si el usuario es Super Admin (ej. ID de perfil 1/2 o flag), bypass directo para no romper soporte
-        if (method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin()) {
+        // El Super Admin pasa como rey.
+        if ($user->id_perfil === 1 || (method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin())) {
             return $next($request);
         }
 
-        // 1. Resolver el ID del módulo
+        // 1. Resolver el ID del módulo (Dinámico o Explícito)
         $moduleId = $explicitModuleId ?? $this->resolveModuleIdFromRoute($request);
 
-        // 2. Si la ruta NO pertenece a un módulo en la BD, se permite el paso por defecto
+        // Si la ruta no está mapeada en ningún módulo, asumimos que es de acceso libre para autenticados
         if (!$moduleId) {
             return $next($request);
         }
 
-        // 3. Evaluar permisos mediante el método canAccess del modelo User
+        // 2. Resolver la acción (read, create, update, delete)
+        $action = $explicitAction ?? $this->resolveActionFromRoute($request);
+
+        // 3. Evaluar permisos usando TU función canAccess optimizada
         if (method_exists($user, 'canAccess') && !$user->canAccess($action, $moduleId)) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'No tiene permisos para realizar esta acción.'], 403);
+                return response()->json(['message' => 'No tienes permisos para realizar esta acción ('.$action.').'], 403);
             }
-            abort(403, 'No tiene permisos para realizar esta acción en este módulo.');
+            abort(403, 'No tienes permisos para realizar esta acción ('.$action.') en este módulo.');
         }
 
         return $next($request);
     }
 
     /**
-     * Resuelve el ID del módulo basado en el nombre de la ruta o prefijos.
+     * Resuelve el ID del módulo buscando en la BD.
      */
     private function resolveModuleIdFromRoute(Request $request): ?int
     {
@@ -61,19 +58,49 @@ class CheckDynamicAccess
             return null;
         }
 
-        // A. Búsqueda exacta por coincidencia de ruta registrada en la BD
+        // A. Búsqueda exacta
         $modulo = DB::table('modulos')->where('ruta', $routeName)->first(['id']);
         if ($modulo) {
             return (int) $modulo->id;
         }
 
-        // B. Búsqueda por prefijo (ej: si la ruta es 'vehiculos.updatev', busca 'vehiculos.%')
+        // B. Búsqueda por prefijo (vehiculos.index -> vehiculos)
         $prefix = explode('.', $routeName)[0];
         $moduloPadre = DB::table('modulos')
-            ->where('ruta', 'LIKE', $prefix . '.%')
-            ->orWhere('ruta', $prefix)
+            ->where(function($query) use ($prefix) {
+                $query->where('ruta', 'LIKE', $prefix . '.%')
+                      ->orWhere('ruta', $prefix);
+            })
             ->first(['id']);
 
         return $moduloPadre ? (int) $moduloPadre->id : null;
+    }
+
+    /**
+     * Resuelve la acción basándose en el método HTTP y el nombre de la ruta.
+     * Esto te salva de que un usuario con solo lectura te borre la base de datos.
+     */
+    private function resolveActionFromRoute(Request $request): string
+    {
+        $routeName = $request->route() ? $request->route()->getName() : '';
+        
+        // Inferir por la terminación del nombre de la ruta
+        if (str_ends_with($routeName, '.create') || str_ends_with($routeName, '.store') || str_ends_with($routeName, '.guardar')) {
+            return 'create';
+        }
+        if (str_ends_with($routeName, '.edit') || str_ends_with($routeName, '.update') || str_ends_with($routeName, '.actualizar')) {
+            return 'update';
+        }
+        if (str_ends_with($routeName, '.destroy') || str_ends_with($routeName, '.eliminar')) {
+            return 'delete';
+        }
+
+        // Fallback al método HTTP si el nombre de la ruta es raro
+        return match ($request->getMethod()) {
+            'POST' => 'create',
+            'PUT', 'PATCH' => 'update',
+            'DELETE' => 'delete',
+            default => 'read',
+        };
     }
 }

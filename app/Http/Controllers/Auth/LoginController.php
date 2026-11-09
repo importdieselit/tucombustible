@@ -93,22 +93,16 @@ class LoginController extends Controller
     {
          $request->session()->regenerate();
 
-        return match ((int)$user->id_perfil) {
+       // Obtenemos el perfil del usuario a través de la relación
+        $perfil = $user->perfil;
 
-            1,2,5,6,7,8,9,10,11,12,13,14,15,16,17,18
-                => redirect()->route('vehiculos.index'),
+        // Validamos si el perfil existe, si tiene una ruta configurada y si dicha ruta existe en Laravel
+        if ($perfil && !empty($perfil->ruta_inicio) && \Illuminate\Support\Facades\Route::has($perfil->ruta_inicio)) {
+            return redirect()->route($perfil->ruta_inicio);
+        }
 
-            3
-                => redirect()->route('portal.clientes.index'),
-
-            4
-                => redirect()->route('inspecciones.index'),
-            21
-                => redirect()->route('combustibles.dashboard'),
-
-            default
-                => abort(403)
-        };
+        // Si es nulo, está vacío o la ruta no existe, lo mandamos al dashboard como pediste
+        return redirect()->route('dashboard.admin');
     }
 
 
