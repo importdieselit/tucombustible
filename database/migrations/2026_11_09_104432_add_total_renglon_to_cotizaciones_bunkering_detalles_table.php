@@ -13,7 +13,7 @@ class AddTotalRenglonToCotizacionesBunkeringDetallesTable extends Migration
      */
     public function up()
     {
-        Schema::table('cotizaciones_bunkering_detalles', function (Blueprint $table) {
+        Schema::table('cotizacion_bunkering_detalles', function (Blueprint $table) {
             $table->decimal('total_renglon', 14, 2)->nullable()->after('costo_delivery'); // Agrega la columna total_renglon después de costo_delivery
         });
     }
@@ -25,7 +25,7 @@ class AddTotalRenglonToCotizacionesBunkeringDetallesTable extends Migration
      */
     public function down()
     {
-        Schema::table('cotizaciones_bunkering_detalles', function (Blueprint $table) {
+        Schema::table('cotizacion_bunkering_detalles', function (Blueprint $table) {
             $table->dropColumn('total_renglon'); // Elimina la columna total_renglon
         });
     }
