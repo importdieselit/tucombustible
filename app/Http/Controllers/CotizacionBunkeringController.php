@@ -41,40 +41,41 @@ class CotizacionBunkeringController extends Controller
         return view('cotizaciones_bunkering.create', compact('productos', 'centrosSuministro', 'configDelivery', 'matrizCentros'));
     }
 
-    public function store(Request $request)
+   public function store(Request $request)
     {
-        $validated =$request->validate([
+        $validated = $request->validate([
             'nombre_buque'         => 'required|string|max:255',
             'bandera_buque'        => 'nullable|string|max:100',
             'imo_buque'            => 'nullable|string|max:50',
             'pagador'              => 'nullable|string|max:255',
             'selector_costos'      => 'required|integer|in:1,2,3,4,5',
             'punto_entrega'        => 'required|string|max:255',
-            'centro_suministro'     => 'nullable|string|max:255',
+            'centro_suministro'    => 'nullable|string|max:255',
             'vendedor'             => 'nullable|string|max:255',
             'metodo_despacho'      => 'nullable|string|max:100',
             'agencia_naviera'      => 'nullable|string|max:255',
             'fecha_entrega'        => 'nullable|date',
             'observaciones'        => 'nullable|string',
             'selector_costos_personalizado' => 'nullable|numeric|min:0|max:100',
+            
             // Matriz dinámica de productos
             'productos'            => 'required|array|min:1',
             'productos.*.tipo'     => 'required|string',
+            'productos.*.unidad'   => 'required|string|in:MT,LT,GL,DR', // ¡VITAL! Validar la unidad
             'productos.*.obs'      => 'nullable|string|max:255',
-            'productos.*.tm'       => 'required|numeric|min:0.001',
+            'productos.*.tm'       => 'required|numeric|min:0.001', // Esto ahora es la Cantidad Solicitada
             'productos.*.precio'   => 'required|numeric|min:0',
             'productos.*.del_tm'   => 'nullable|numeric|min:0',
             'productos.*.del_comp' => 'nullable|numeric|min:0',
         ]);
-        log::info('Datos validados para la cotización: ', $validated);
+
+        Log::info('Datos validados para la cotización: ', $validated);
 
         DB::beginTransaction();
         try {
-            log::info('Iniciando transacción para guardar la cotización.');
             $numeroPedido = CotizacionBunkering::generarNumeroPedido();
-            log::info('Número de pedido generado: ' . $numeroPedido);
             $selectorCostos = (int)$validated['selector_costos'];
-            // Costo 1: +30%, Costo 2: +20%, Costo 3: +10%, Costo 4: 0%, Costo 5: Personalizado
+            
             $pctSelector = match ($selectorCostos) {
                 1 => 30.00,
                 2 => 20.00,
@@ -82,7 +83,6 @@ class CotizacionBunkeringController extends Controller
                 4 => 0.00,
                 5 => isset($validated['selector_costos_personalizado']) ? (float)$validated['selector_costos_personalizado'] : 0.00,
             };
-            log::info('Porcentaje de recargo aplicado según selector de costos: ' . $pctSelector . '%');
             $pctTotalAjuste = $pctSelector;
 
             $subtotalGeneral = 0;
@@ -90,42 +90,58 @@ class CotizacionBunkeringController extends Controller
             $totalGeneral = 0;
             $detallesParaGuardar = [];
 
-            foreach ($validated['productos'] as $prod) {$tipo = $prod['tipo'];$tm = (float) $prod['tm'];$precio = (float) $prod['precio'];$delTm = isset($prod['del_tm']) ? (float)$prod['del_tm'] : null;
+            foreach ($validated['productos'] as $prod) {
+                $tipo = $prod['tipo'];
+                $unidad = $prod['unidad'] ?? 'MT'; 
+                $cantidadIngresada = (float) $prod['tm']; 
+                $precioIngresado = (float) $prod['precio']; 
+                
+                $delTm = isset($prod['del_tm']) ? (float)$prod['del_tm'] : null;
                 $delComp = isset($prod['del_comp']) ? (float)$prod['del_comp'] : null;
 
-                // Litros (Densidad @15°C = 0.8500)
-                $litros = ($tm * 1000) / 0.8500;  // Subtotal Producto
-                $subtotalProd = $tm * $precio;
+                // 1. Obtener la densidad real del producto
+                $productoDb = Producto::where('nombre', $tipo)->first();
+                $litrosPorTm = $productoDb && $productoDb->litros_tm ? (float) $productoDb->litros_tm : 1000.0;
 
-                // Delivery Fee Base individual
-                $deliveryFinal = CotizacionBunkeringDetalle::calcularDeliveryRenglon($tipo,$tm, $delTm,$delComp);
+                // 2. Factores de conversión hacia Litros
+                $factores = [
+                    'MT' => $litrosPorTm,
+                    'LT' => 1.0,
+                    'GL' => 3.78541,
+                    'DR' => 200.0
+                ];
+                $factor = $factores[$unidad] ?? $litrosPorTm;
+
+                // 3. Cálculos de equivalencias absolutas
+                $litrosTotales = $cantidadIngresada * $factor;
+                $tmReales = $litrosTotales / $litrosPorTm;
+
+                // 4. Cálculos Financieros
+                $subtotalProd = $cantidadIngresada * $precioIngresado;
                 
-                // Recargos (Selector + Extra + Monto Fijo)
+                // OJO: El Delivery se calcula usando las Toneladas Métricas Reales ($tmReales)
+                $deliveryFinal = CotizacionBunkeringDetalle::calcularDeliveryRenglon($tipo, $tmReales, $delTm, $delComp);
+                
                 $recargoMonto = ($subtotalProd * ($pctTotalAjuste / 100));
-                
-                $totalRenglon = $subtotalProd+ $recargoMonto +$deliveryFinal;
+                $totalRenglon = $subtotalProd + $recargoMonto + $deliveryFinal;
 
-                $subtotalGeneral +=$subtotalProd;
-                $deliveryGeneral +=$deliveryFinal;
-                $totalGeneral +=$totalRenglon;
+                $subtotalGeneral += $subtotalProd;
+                $deliveryGeneral += $deliveryFinal;
+                $totalGeneral += $totalRenglon;
 
                 $detallesParaGuardar[] = [
                     'tipo_producto'            => $tipo,
-                    'toneladas_metricas'       => $tm,
-                    'volumen_litros'           => $litros,
-                    'precio_unitario_tm'       => $precio,
+                    'unidad'                   => $unidad,
+                    'cantidad_solicitada'      => $cantidadIngresada,
+                    'toneladas_metricas'       => $tmReales,
+                    'volumen_litros'           => $litrosTotales,
+                    'precio_unitario_tm'       => $precioIngresado,
                     'subtotal_producto'        => $subtotalProd,
-                    'costo_delivery_base'      => $deliveryFinal,
-                    'recargo_nivel_monto'      => $recargoMonto,
                     'costo_delivery'           => $deliveryFinal,
-                    'delivery_costo_tm'        => $delTm,
-                    'delivery_tarifa_completa' => $delComp,
                     'total_renglon'            => $totalRenglon,
                 ];
-
-                log::info('Detalle del producto procesado: ', end($detallesParaGuardar));
             }
-            log::info('Totales calculados: Subtotal General = ' . $subtotalGeneral . ', Delivery General = ' . $deliveryGeneral . ', Total General = ' . $totalGeneral);
+
             $cotizacion = CotizacionBunkering::create([
                 'numero_pedido'         => $numeroPedido,
                 'nombre_buque'          => $validated['nombre_buque'],
@@ -144,20 +160,18 @@ class CotizacionBunkeringController extends Controller
                 'costo_delivery'        => $deliveryGeneral,
                 'total_general'         => $totalGeneral,
             ]);
-            Log::info('Cotización creada con ID: ' . $cotizacion->id . ' y N° de Pedido: ' . $numeroPedido);
-            foreach ($detallesParaGuardar as$det) {
-                log::info('Guardando detalle del producto: ', $det);
+
+            foreach ($detallesParaGuardar as $det) {
                 $cotizacion->detalles()->create($det);
             }
 
             DB::commit();
-            log::info('Transacción completada exitosamente para la cotización con N° de Pedido: ' . $numeroPedido);
             return redirect()->route('cotizaciones-bunkering.show', $cotizacion->id)
                 ->with('success', 'Cotización generada exitosamente con N° de Pedido: ' . $numeroPedido);
 
         } catch (\Exception $e) {
-            Log::error('Error al guardar la cotización: ' . $e->getMessage());
             DB::rollBack();
+            Log::error('Error al guardar la cotización: ' . $e->getMessage());
             return back()->withInput()->withErrors(['error' => 'Error al guardar la cotización: ' . $e->getMessage()]);
         }
     }
@@ -201,15 +215,18 @@ class CotizacionBunkeringController extends Controller
             'pagador'              => 'nullable|string|max:255',
             'selector_costos'      => 'required|integer|in:1,2,3,4,5',
             'punto_entrega'        => 'required|string|max:255',
-            'centro_suministro'     => 'nullable|string|max:255',
+            'centro_suministro'    => 'nullable|string|max:255',
             'vendedor'             => 'nullable|string|max:255',
             'metodo_despacho'      => 'nullable|string|max:100',
             'agencia_naviera'      => 'nullable|string|max:255',
             'fecha_entrega'        => 'nullable|date',
             'observaciones'        => 'nullable|string',
+            'selector_costos_personalizado' => 'nullable|numeric|min:0|max:100',
+            
             // Matriz dinámica de productos
             'productos'            => 'required|array|min:1',
             'productos.*.tipo'     => 'required|string',
+            'productos.*.unidad'   => 'required|string|in:MT,LT,GL,DR', // Misma validación estricta
             'productos.*.obs'      => 'nullable|string|max:255',
             'productos.*.tm'       => 'required|numeric|min:0.001',
             'productos.*.precio'   => 'required|numeric|min:0',
@@ -217,6 +234,109 @@ class CotizacionBunkeringController extends Controller
             'productos.*.del_comp' => 'nullable|numeric|min:0',
         ]);
 
+        DB::beginTransaction();
+        try {
+            $selectorCostos = (int)$validated['selector_costos'];
+            
+            $pctSelector = match ($selectorCostos) {
+                1 => 30.00,
+                2 => 20.00,
+                3 => 10.00,
+                4 => 0.00,
+                5 => isset($validated['selector_costos_personalizado']) ? (float)$validated['selector_costos_personalizado'] : 0.00,
+            };
+            $pctTotalAjuste = $pctSelector;
+
+            $subtotalGeneral = 0;
+            $deliveryGeneral = 0;
+            $totalGeneral = 0;
+            $detallesParaGuardar = [];
+
+            foreach ($validated['productos'] as $prod) {
+                $tipo = $prod['tipo'];
+                $unidad = $prod['unidad'] ?? 'MT'; 
+                $cantidadIngresada = (float) $prod['tm']; 
+                $precioIngresado = (float) $prod['precio']; 
+                
+                $delTm = isset($prod['del_tm']) ? (float)$prod['del_tm'] : null;
+                $delComp = isset($prod['del_comp']) ? (float)$prod['del_comp'] : null;
+
+                $productoDb = Producto::where('nombre', $tipo)->first();
+                $litrosPorTm = $productoDb && $productoDb->litros_tm ? (float) $productoDb->litros_tm : 1000.0;
+
+                $factores = [
+                    'MT' => $litrosPorTm,
+                    'LT' => 1.0,
+                    'GL' => 3.78541,
+                    'DR' => 200.0
+                ];
+                $factor = $factores[$unidad] ?? $litrosPorTm;
+
+                $litrosTotales = $cantidadIngresada * $factor;
+                $tmReales = $litrosTotales / $litrosPorTm;
+
+                $subtotalProd = $cantidadIngresada * $precioIngresado;
+                
+                $deliveryFinal = CotizacionBunkeringDetalle::calcularDeliveryRenglon($tipo, $tmReales, $delTm, $delComp);
+                
+                $recargoMonto = ($subtotalProd * ($pctTotalAjuste / 100));
+                $totalRenglon = $subtotalProd + $recargoMonto + $deliveryFinal;
+
+                $subtotalGeneral += $subtotalProd;
+                $deliveryGeneral += $deliveryFinal;
+                $totalGeneral += $totalRenglon;
+
+                $detallesParaGuardar[] = [
+                    'tipo_producto'            => $tipo,
+                    'unidad'                   => $unidad,
+                    'cantidad_solicitada'      => $cantidadIngresada,
+                    'toneladas_metricas'       => $tmReales,
+                    'volumen_litros'           => $litrosTotales,
+                    'precio_unitario_tm'       => $precioIngresado,
+                    'subtotal_producto'        => $subtotalProd,
+                    'costo_delivery_base'      => $deliveryFinal,
+                    'recargo_nivel_monto'      => $recargoMonto,
+                    'costo_delivery'           => $deliveryFinal,
+                    'delivery_costo_tm'        => $delTm,
+                    'delivery_tarifa_completa' => $delComp,
+                    'total_renglon'            => $totalRenglon,
+                ];
+            }
+
+            // Actualizamos la cabecera
+            $cotizacion->update([
+                'nombre_buque'          => $validated['nombre_buque'],
+                'bandera_buque'         => $validated['bandera_buque'] ?? null,
+                'imo_buque'             => $validated['imo_buque'] ?? null,
+                'pagador'               => $validated['pagador'] ?? null,
+                'punto_entrega'         => $validated['punto_entrega'],
+                'vendedor'              => $validated['vendedor'] ?? null,
+                'metodo_despacho'       => $validated['metodo_despacho'] ?? null,
+                'centro_suministro'     => $validated['centro_suministro'] ?? null,
+                'agencia_naviera'       => $validated['agencia_naviera'] ?? null,
+                'fecha_entrega'         => $validated['fecha_entrega'] ?? null,
+                'observaciones'         => $validated['observaciones'] ?? null,
+                
+                'costo_delivery'        => $deliveryGeneral,
+                'total_general'         => $totalGeneral,
+            ]);
+
+            // Eliminamos los detalles viejos y guardamos los nuevos (Método Sync destructivo y seguro)
+            $cotizacion->detalles()->delete();
+            
+            foreach ($detallesParaGuardar as $det) {
+                $cotizacion->detalles()->create($det);
+            }
+
+            DB::commit();
+            return redirect()->route('cotizaciones-bunkering.show', $cotizacion->id)
+                ->with('success', 'Cotización actualizada exitosamente.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al actualizar la cotización: ' . $e->getMessage());
+            return back()->withInput()->withErrors(['error' => 'Error al actualizar la cotización: ' . $e->getMessage()]);
+        }
     }
 
 }

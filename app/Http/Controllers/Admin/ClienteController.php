@@ -761,7 +761,7 @@ class ClienteController extends Controller
 
                 // 1. Resolver Estado y Ciudad de forma dinámica
                 $nombreEstado = trim($row[$this->getColKey($headerMap, ['Estado'])] ?? 'Capital');
-                $nombreMunicipio = trim($row[$this->getColKey($headerMap, ['Municipio'])] ?? 'Caracas');
+                $nombreMunicipio = trim($row[$this->getColKey($headerMap, ['Municipio'])] ?? '');
 
                 $estado = Estado::firstOrCreate(
                     ['nombre' => $nombreEstado ?: 'Distrito Capital']

@@ -28,7 +28,8 @@ use App\Http\Controllers\{
     ChequeoDepositoController, CombustibleController, LlenadoCupoPrepagadoController, 
     TransaccionCombustibleController, ConsumoOperativoController, TrasegadoController, ReversoCombustibleController,
     MermasController, VehiculoPrecargadoController, AbastecimientoTanqueController, ParametroController,
-    ParametroManagerController, SalaControlController, CotizacionBunkeringController,ProductoMatrizController
+    ParametroManagerController, SalaControlController, CotizacionBunkeringController,ProductoMatrizController,
+    PrecioBunkerHistoricoController
 };
 
 /* --- Rutas Públicas y Monitores --- */
@@ -489,6 +490,13 @@ Route::middleware(['auth'])->group(function () {
             Route::put('/{id}/actualizar', [LogisticaController::class, 'update'])->name('update');
             Route::post('/{id}/cancelar', [LogisticaController::class, 'cancelar'])->name('cancelar');
             Route::post('/pedidos/{id}/rechazar', [PedidoAdminController::class, 'rechazar'])->name('rechazar');
+        });
+
+        Route::prefix('admin/bunker-historico')->name('bunker_historico.')->group(function () {
+            Route::get('/', [PrecioBunkerHistoricoController::class, 'index'])->name('index');
+            Route::get('/datos', [PrecioBunkerHistoricoController::class, 'obtenerDatos'])->name('datos');
+            Route::post('/ejecutar-scraper', [PrecioBunkerHistoricoController::class, 'ejecutarScraperManualmente'])->name('ejecutar_scraper');
+            Route::post('/sincronizar', [PrecioBunkerHistoricoController::class, 'sincronizarProducto'])->name('sincronizar');
         });
 
        
