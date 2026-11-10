@@ -24,6 +24,9 @@
             <h1 class="m-0">Cotizaciones Bunkering & STS</h1>
             <p class="text-muted small m-0">Historial de cotizaciones emitidas y seguimiento de pedidos</p>
         </div>
+        <a href="{{ route('bunker_historico.index') }}" class="btn btn-primary btn-lg">
+            <i class="fas fa-plus-circle me-1"></i> Cosultar Precios de Productos 
+        </a>
         <a href="{{ route('cotizaciones-bunkering.create') }}" class="btn btn-primary btn-lg">
             <i class="fas fa-plus-circle me-1"></i> Nueva Cotización
         </a>
