@@ -29,6 +29,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('queue:work --stop-when-empty')->everyMinute()->withoutOverlapping();
 
         $schedule->command('summary:daily-report')->dailyAt('00:00');
+        $schedule->command('bunker:sync')->dailyAt('07:00');
         $schedule->command('cupos:reset')->monthlyOn(1, '00:00');
         $schedule->command('cupos:capturar-sobreconsumo')->monthlyOn(1, '00:05');
        $schedule->command('check:varillaje-horario')->dailyAt('08:30')->appendOutputTo(storage_path('logs/reportes_automaticos.log'));
