@@ -1,6 +1,5 @@
 @extends('layouts.app')
 
-
 @section('content')
 <style>
 @media print {
@@ -125,10 +124,10 @@
         <table class="table table-bordered mb-4 align-middle" style="border: 2px solid #000;">
             <thead class="text-center" style="border-bottom: 2px solid #000; background-color: #e9ecef;">
                 <tr>
-                    <th style="width: 35%; border: 1px solid #000;">PRODUCTO / PRODUCT</th>
-                    <th style="width: 15%; border: 1px solid #000;">VOLUMEN MT</th>
-                    <th style="width: 15%; border: 1px solid #000;">USD$ / TM</th>
-                    <th style="width: 15%; border: 1px solid #000;">DELIVERY COST USD</th>
+                    <th style="width: 30%; border: 1px solid #000;">PRODUCTO / PRODUCT</th>
+                    <th style="width: 20%; border: 1px solid #000;">VOLUMEN / CANTIDAD</th>
+                    <th style="width: 15%; border: 1px solid #000;">USD$ UNIT.</th>
+                    <th style="width: 15%; border: 1px solid #000;">DELIVERY COST</th>
                     <th style="width: 20%; border: 1px solid #000;">TOTAL COST USD</th>
                 </tr>
             </thead>
@@ -142,7 +141,13 @@
                                 <small class="d-block text-muted fst-italic text-capitalize fw-normal">({{ $detalle->obs }})</small>
                             @endif
                         </td>
-                        <td class="text-center fw-semibold" style="border: 1px solid #000;">{{ number_format($detalle->toneladas_metricas, 3, ',', '.') }}</td>
+                        <td class="text-center" style="border: 1px solid #000;">
+                            <span class="d-block fw-bold fs-6">{{ number_format($detalle->cantidad_solicitada ?? $detalle->toneladas_metricas, 2, ',', '.') }} {{ $detalle->unidad ?? 'MT' }}</span>
+                            @if(($detalle->unidad ?? 'MT') !== 'MT')
+                                <small class="d-none text-muted" style="font-size: 0.75rem;">(Eqv: {{ number_format($detalle->toneladas_metricas, 2, ',', '.') }} MT)</small>
+                            @endif
+                            <small class="d-none text-secondary" style="font-size: 0.75rem;">Vol: {{ number_format($detalle->volumen_litros, 2, ',', '.') }} Lts</small>
+                        </td>
                         <td class="text-end fw-semibold" style="border: 1px solid #000;">${{ number_format($detalle->precio_unitario_tm, 2, ',', '.') }}</td>
                         <td class="text-center" style="border: 1px solid #000;">-</td>
                         <td class="text-end fw-bold" style="border: 1px solid #000;">${{ number_format($detalle->subtotal_producto, 2, ',', '.') }}</td>
@@ -158,12 +163,12 @@
                                 @if($detalle->delivery_tarifa_completa > 0)
                                     ${{ number_format($detalle->delivery_tarifa_completa, 2, ',', '.') }}
                                 @elseif($detalle->delivery_costo_tm > 0)
-                                    ${{ number_format($detalle->delivery_costo_tm, 2, ',', '.') }} x TM
+                                    ${{ number_format($detalle->delivery_costo_tm, 2, ',', '.') }} x MT
                                 @else
                                     $0,00
                                 @endif
                             @else
-                                {{ $detalle->toneladas_metricas < 890 ? '$8.000' : '$9 x TM' }}
+                                {{ $detalle->toneladas_metricas < 890 ? '$8.000' : '$9 x MT' }}
                             @endif
                         </td>
                         <td class="text-end fw-bold text-dark" style="border: 1px solid #000;">${{ number_format($detalle->costo_delivery, 2, ',', '.') }}</td>

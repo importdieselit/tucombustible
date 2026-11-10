@@ -14,6 +14,8 @@ class CotizacionBunkeringDetalle extends Model
     protected $fillable = [
         'cotizacion_id',
         'tipo_producto',
+        'unidad',               // NUEVO: MT, LT, GL, DR
+        'cantidad_solicitada',  // NUEVO: El valor exacto ingresado en esa unidad
         'toneladas_metricas',
         'volumen_litros',
         'precio_unitario_tm',

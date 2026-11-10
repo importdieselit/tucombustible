@@ -20,7 +20,9 @@
         "livewire/livewire": "^2.12",
         "maatwebsite/excel": "^3.1",
         "orangehill/iseed": "^3.7",
-        "spatie/browsershot": "^3.61"
+        "spatie/browsershot": "^3.61",
+        "symfony/css-selector": "^7.4",
+        "symfony/dom-crawler": "^7.4"
     },
     "require-dev": {
         "facade/ignition": "^2.5",
