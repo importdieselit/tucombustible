@@ -13,29 +13,45 @@ class PrecioBunkerHistoricoController extends Controller
     // 1. Carga la vista principal (Cáscara HTML)
     public function index()
     {
-        return view('admin.bunker-historico.index');
+        $productos = Producto::where('ctz', true)->orderBy('proveedor')->get();
+        return view('admin.bunker-historico.index', compact('productos'));
     }
 
-   public function obtenerDatos(Request $request)
+    public function obtenerDatos(Request $request)
     {
-        // 1. Paginamos solo las fechas distintas (10 fechas por página está bien)
+        // 1. Paginamos solo las fechas distintas (10 fechas por página)
         $fechasPaginadas = PrecioBunkerHistorico::select('fecha')
             ->distinct()
             ->orderBy('fecha', 'desc')
             ->paginate(10);
 
-        // 2. Buscamos todos los registros de esas fechas
-        $registros = PrecioBunkerHistorico::whereIn('fecha', $fechasPaginadas->pluck('fecha'))
-            ->orderBy('combustible', 'asc')
-            ->get()
-            ->groupBy('fecha');
+        // 2. Buscamos todos los registros de esas fechas (quitamos el orderBy de SQL)
+        $registros = PrecioBunkerHistorico::whereIn('fecha', $fechasPaginadas->pluck('fecha'))->get();
 
-        // 3. Formateamos el JSON para que JS no tenga que pensar
+        // 3. Definimos nuestro orden personalizado (Mapeo de prioridades)
+        // NOTA: Incluyo 'HSFO' en la posición 1 por si Ship & Bunker lo envía con ese nombre en lugar de IFO 380
+        $ordenPrioridad = [
+            'MGO'     => 1,
+            'IFO 380' => 2,
+            'IFO380'  => 2,
+            'HSFO'    => 2,
+            'VLSFO'   => 3,
+            'LSMGO'   => 4
+        ];
+
+        // 4. Ordenamos la colección en memoria y luego agrupamos por fecha
+        $registrosAgrupados = $registros->sortBy(function ($registro) use ($ordenPrioridad) {
+            // Si el combustible existe en nuestro arreglo, usa su número. Si no, le asigna 99 para mandarlo al final.
+            return $ordenPrioridad[$registro->combustible] ?? 99;
+        })->groupBy('fecha');
+
+        // 5. Formateamos el JSON para que JS no tenga que pensar
         $dataTransformada = [];
         foreach ($fechasPaginadas as $item) {
+            // Usamos ->values() para resetear las llaves del arreglo después de ordenar
             $dataTransformada[] = [
-                'fecha' => $item->fecha,
-                'combustibles' => $registros->get($item->fecha)
+                'fecha' => Carbon::parse($item->fecha)->format('d/m/Y'),
+                'combustibles' => $registrosAgrupados->get($item->fecha)->values()
             ];
         }
 
@@ -47,7 +63,7 @@ class PrecioBunkerHistoricoController extends Controller
                 'last_page' => $fechasPaginadas->lastPage(),
                 'data' => $dataTransformada
             ],
-            'ultima_fecha' => $fechaMasReciente
+            'ultima_fecha' => carbon::parse($fechaMasReciente)->format('d/m/Y')
         ]);
     }
 
@@ -71,6 +87,8 @@ class PrecioBunkerHistoricoController extends Controller
 
             return response()->json([
                 'success' => true,
+                'producto' => $producto->nombre,
+                'precio' => $registro->precio,
                 'message' => "{$producto->nombre} actualizado: de $" . number_format($precioAnterior, 2) . " a $" . number_format($registro->precio, 2)
             ]);
         }

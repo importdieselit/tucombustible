@@ -22,6 +22,38 @@
     <div id="alert-container"></div>
 
     <div class="card shadow-sm border-0 rounded-3 mb-4">
+        
+        <div class="row w-100 flex-nowrap">
+           <div class="col-10 bg-white text-dark">
+                <h5 class="m-0 fw-bold">Mis Productos </h5>
+            </div>
+        </div>
+        <div class="row w-100 flex-nowrap overflow-auto p-0" id="banner" style="scrollbar-width: thin; scroll-behavior: smooth;">
+
+            @foreach ($productos as $producto)
+            
+                <div class="col-12 col-md-4 col-lg-3 mb-2">
+                    <!-- La Card -->
+                    <div class="card border-0 h-100" style="min-width: 260px; border-radius: 5px; ">
+                        <div class="card-body p-1 text-center d-flex flex-column justify-content-center">
+                            
+                            <!-- Nombre del Producto -->
+                            <h6 class="card-title mb-1 fw-bold text-dark text-uppercase text-truncate" title="{{ $producto->nombre }}">
+                                {{ $producto->nombre }}
+                                <small class="text-muted text-truncate" style="font-size: 0.8rem;">
+                                ({{ $producto->proveedor ?? 'Sin Proveedor' }})
+                                </small>
+                                 <span id="precio-{{ $producto->nombre }}" class="fs-5 ml-2 fw-bolder text-primary">
+                                    <!-- Formateamos el número para que no parezca que lo hizo un practicante -->
+                                    ${{ number_format($producto->precio, 2, ',', '.') }}
+                                </span>
+                            </h6>
+
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
         <div class="card-body p-0">
             <div class="table-responsive position-relative">
                 
@@ -34,6 +66,9 @@
 
                <table class="table table-hover align-middle mb-0">
                     <thead class="table-dark">
+                        <tr>
+                            <th class="text-center" colspan="2" style="width: 10%;">Historico Precios Internacionales</th>
+                        </tr>
                         <tr>
                             <th class="ps-4" style="width: 15%;">Fecha</th>
                             <th>Precios y Sincronización</th>
@@ -55,6 +90,7 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM cargado, iniciando carga de histórico...');
         cargarHistorico(1); // Carga la primera página al entrar
     });
 
@@ -101,7 +137,7 @@
                             <span class="badge bg-primary fs-6">${item.combustible}</span>
                             <span class="fw-bold fs-5 text-dark ms-auto">$${parseFloat(item.precio).toFixed(2)}</span>
                             <button class="btn btn-sm ${btnClass} py-1 px-2 btn-sync" data-id="${item.id}" onclick="sincronizarPrecio(this)">
-                                ${btnText}
+                                <i class="fas fa-sync-alt"></i> Sync
                             </button>
                         </div>
                     `;
@@ -171,8 +207,10 @@
         .then(response => response.json().then(data => ({status: response.status, body: data})))
         .then(res => {
             if (res.status === 200 && res.body.success) {
+                console.log('Sincronización exitosa:', res.body);
                 mostrarAlerta(res.body.message, 'success');
                 // Efecto visual de éxito
+                document.getElementById(`precio-${res.body.producto}`).textContent = `$${res.body.precio}`;
                 buttonElement.innerHTML = '<i class="fas fa-check"></i> ¡Listo!';
                 buttonElement.classList.replace('btn-outline-secondary', 'btn-success');
             } else {
