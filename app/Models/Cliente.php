@@ -40,6 +40,7 @@ class Cliente extends Model
         'fecha_aprobacion',
         'telegram_id',
         'cliente_rapido',
+        'qr_gasco'
     ];
 
     protected $casts = [
