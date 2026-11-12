@@ -371,7 +371,7 @@ class SyncGascoQrs extends Command
             }
 
             $this->newLine();
-            usleep(250000); 
+            usleep(500000); 
         }
     }
 
