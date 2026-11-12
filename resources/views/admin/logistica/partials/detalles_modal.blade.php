@@ -189,14 +189,14 @@
                                     </td>
                                 @endif
                                 <td class="text-center fw-black text-dark fs-6">
-                                    @php
-                                        $clienteId = $detalle->cliente_id ?? ($detalle->cliente->id ?? null);
+                                    @ph$clienteId = $detalle->cliente_id ?? ($detalle->cliente->id ?? null);
                                         $qrPath = $clienteId ? 'clientes/qr/' . $clienteId . '.png' : null;
-                                        $existeQr = $qrPath && \Illuminate\Support\Facades\Storage::disk('public')->exists($qrPath);
+                                        $existeQr = $qrPath && \Illuminate\Support\Facades\Stop
+                                        rage::disk('public')->exists($qrPath);
                                     @endphp
 
-                                    @if($existeQr)
-                                        <img src="{{ asset('storage/' . $qrPath) }}" alt="QR Cliente" style=" width: 10cm;">
+                                    @if(!is_null($detalle->cliente->qr_gasco))
+                                        {!! QrCode::size(10)->generate($detalle->cliente->qr_gasco) !!}
                                     @else
                                         <span class="text-muted small fw-normal">No posee QR registrado</span>
                                     @endif
