@@ -189,12 +189,6 @@
                                     </td>
                                 @endif
                                 <td class="text-center fw-black text-dark fs-6">
-                                    @ph$clienteId = $detalle->cliente_id ?? ($detalle->cliente->id ?? null);
-                                        $qrPath = $clienteId ? 'clientes/qr/' . $clienteId . '.png' : null;
-                                        $existeQr = $qrPath && \Illuminate\Support\Facades\Stop
-                                        rage::disk('public')->exists($qrPath);
-                                    @endphp
-
                                     @if(!is_null($detalle->cliente->qr_gasco))
                                         {!! QrCode::size(10)->generate($detalle->cliente->qr_gasco) !!}
                                     @else
