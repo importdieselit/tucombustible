@@ -121,7 +121,7 @@ class SyncGascoQrs extends Command
         foreach ($registros as $registro) {
             $idRegistro = $registro['id'];
             $branchCode = $registro['branchCode'];
-            $assignedLiters = $registro['assignedLiters'];
+            $assignedLiters = $registro['assignedLiters'] ?? 0;
             $businessName = $registro['businessName'];
 
             $qrBranchCode = str_replace('-', ':', $branchCode); 
