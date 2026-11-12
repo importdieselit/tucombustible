@@ -190,7 +190,7 @@
                                 @endif
                                 <td class="text-center fw-black text-dark fs-6">
                                     @if(!is_null($detalle->cliente->qr_gasco))
-                                        {!! QrCode::size(10)->generate($detalle->cliente->qr_gasco) !!}
+                                        {!! QrCode::size(70)->generate($detalle->cliente->qr_gasco) !!}
                                     @else
                                         <span class="text-muted small fw-normal">No posee QR registrado</span>
                                     @endif
