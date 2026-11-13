@@ -508,7 +508,7 @@ class ViajesController extends Controller
     {
         // Se carga todo el tabulador para la edición en línea
         $tabulador = TabuladorViatico::orderBy('destino')->get();
-        $parametro = Parametro::where('clave','TARIFAS_VIATICOS')->get();
+        $parametro = Parametro::where('clave','TARIFAS_VIATICOS')->first();
         $parametros = json_decode($parametro->content, true);
          
          // Convertir valores numéricos a float
