@@ -78,6 +78,7 @@ Route::get('search/autocomplete', [SearchController::class, 'handle'])->name('ap
 
     // Actualización de datos de guía en el viaje
     Route::put('viajes/{viajeId}/update-guia-data', [ViajesController::class, 'updateGuiaData']);
+    Route::get('/ia/configuracion', [IntegracionIAController::class, 'getConfiguracion']);
     
     Route::get('/admin/reportes/combustible-dashboard', [CombustibleController::class, 'consultaGeneral']);
 

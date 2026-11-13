@@ -86,6 +86,22 @@ class IntegracionIAController extends Controller
         };
     }
 
+    public function getConfiguracion()
+    {
+        // 1. Traemos las herramientas activas
+        $tools = \App\Models\IaTool::where('is_active', true)->get();
+
+        // 2. Traemos TODA la configuración en formato llave => valor
+        // Esto convertirá la tabla en algo como: ['model_name' => 'gpt...', 'temperature' => '0.2']
+        $settings = \App\Models\IaSetting::pluck('value', 'key')->toArray();
+
+        return response()->json([
+            'success' => true,
+            'settings' => $settings,
+            'tools' => $tools
+        ]);
+    }
+
     public function identificarPorTelegram(Request $request)
     {
         $telegramId = $request->input('telegramId');
