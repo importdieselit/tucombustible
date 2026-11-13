@@ -29,7 +29,7 @@ use App\Http\Controllers\{
     TransaccionCombustibleController, ConsumoOperativoController, TrasegadoController, ReversoCombustibleController,
     MermasController, VehiculoPrecargadoController, AbastecimientoTanqueController, ParametroController,
     ParametroManagerController, SalaControlController, CotizacionBunkeringController,ProductoMatrizController,
-    PrecioBunkerHistoricoController
+    PrecioBunkerHistoricoController, IaAdminController
 };
 
 /* --- Rutas Públicas y Monitores --- */
@@ -497,6 +497,16 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/datos', [PrecioBunkerHistoricoController::class, 'obtenerDatos'])->name('datos');
             Route::post('/ejecutar-scraper', [PrecioBunkerHistoricoController::class, 'ejecutarScraperManualmente'])->name('ejecutar_scraper');
             Route::post('/sincronizar', [PrecioBunkerHistoricoController::class, 'sincronizarProducto'])->name('sincronizar');
+        });
+
+        Route::prefix('admin/ia')->group(function () {
+            Route::get('/configuracion', [IaAdminController::class, 'index'])->name('admin.ia.index');
+            Route::post('/settings/update', [IaAdminController::class, 'updateSettings'])->name('admin.ia.settings.update');
+            
+            // Rutas para gestionar herramientas (CRUD básico)
+            Route::post('/tools', [IaAdminController::class, 'storeTool'])->name('admin.ia.tools.store');
+            Route::put('/tools/{id}', [IaAdminController::class, 'updateTool'])->name('admin.ia.tools.update');
+            Route::patch('/tools/{id}/toggle', [IaAdminController::class, 'toggleTool'])->name('admin.ia.tools.toggle');
         });
 
        
