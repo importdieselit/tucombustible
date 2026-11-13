@@ -30,6 +30,7 @@ use App\Http\Controllers\Apis\SearchController;
 use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\Api\ApkUpdateController;
 use App\Http\Controllers\InventarioController;
+use App\Http\Controllers\CombustibleController;
 
 
 
@@ -77,6 +78,8 @@ Route::get('search/autocomplete', [SearchController::class, 'handle'])->name('ap
 
     // Actualización de datos de guía en el viaje
     Route::put('viajes/{viajeId}/update-guia-data', [ViajesController::class, 'updateGuiaData']);
+    
+    Route::get('/admin/reportes/combustible-dashboard', [CombustibleController::class, 'consultaGeneral']);
 
 // Rutas protegidas por autenticación
 Route::middleware('auth:sanctum')->group(function () {
@@ -114,6 +117,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admin/reportes/clientes', [AdminController::class, 'getReporteClientes']);
     Route::get('/admin/reportes/depositos', [AdminController::class, 'getReporteDepositos']);
     Route::get('/admin/reportes/consumo', [AdminController::class, 'getReporteConsumo']);
+    
     
     // Reportes Generales (Super Admin)
     Route::post('/admin/reportes/general', [ReportesController::class, 'generarReporteGeneral']);
