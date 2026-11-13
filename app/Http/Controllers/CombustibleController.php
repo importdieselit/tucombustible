@@ -17,6 +17,10 @@ class CombustibleController extends Controller
         $this->combustibleService = $combustibleService;
     }
 
+    public function consultaGeneral(){
+           return response()->json($this->combustibleService->obtenerMetricasDashboard());
+    }
+
     public function index(Request $request)
     {
         try {
