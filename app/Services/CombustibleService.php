@@ -403,6 +403,7 @@ class CombustibleService
             ->where('tipo_combustible_id', $idDiesel)
             ->when($sedeId, fn($q) => $q->where('id_sede', $sedeId))
             ->sum('nivel_actual_litros') ?? 0;
+        
 
         $tanquesMgo = DB::table('depositos')
             ->where('tipo_combustible_id', $idMgo)
