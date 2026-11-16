@@ -82,6 +82,9 @@ Route::get('search/autocomplete', [SearchController::class, 'handle'])->name('ap
     
     Route::get('/admin/reportes/combustible-dashboard', [CombustibleController::class, 'consultaGeneral']);
 
+    Route::get('/viajes/planificacion/{api?}', [ViajesController::class, 'getCalendarioApi']);
+
+
 // Rutas protegidas por autenticación
 Route::middleware('auth:sanctum')->group(function () {
     // Auth
@@ -319,7 +322,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     
     // Viajes - Calendario (Solo Super Admin)
-    Route::get('/viajes/calendario/{api?}', [ViajesController::class, 'getCalendarioApi']);
+    Route::get('/viajes/calendario', [ViajesController::class, 'getCalendarioApi']);
 
     //Route::get('/vehiculos/{vehiculo}/historial', [HistorialMantenimientoController::class, 'showByVehiculo'])->name('vehiculos.historial');
     Route::get('clientes/search', [ClienteController::class, 'search'])->name('api.clientes.search');
