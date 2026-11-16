@@ -728,7 +728,7 @@ public function update(Request $request, $id)
     /**
      * API: Obtener datos del calendario de viajes (para Flutter)
      */
-    public function getCalendarioApi(Request $request)
+    public function getCalendarioApi(Request $request,$api=false)
     {
         try {
             // Consulta con las relaciones necesarias
@@ -737,6 +737,11 @@ public function update(Request $request, $id)
             // Filtrar por rango de fechas si se proporciona
             if ($request->has('fecha_inicio')) {
                 $query->whereDate('fecha_salida', '>=', $request->fecha_inicio);
+            }else{
+                if($api){
+                    $query->whereDate('fecha_salida', '>=' ,date('Y-m-d'));
+            
+                }
             }
             
             if ($request->has('fecha_fin')) {
