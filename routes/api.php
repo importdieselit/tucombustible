@@ -319,7 +319,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     
     // Viajes - Calendario (Solo Super Admin)
-    Route::get('/viajes/calendario', [ViajesController::class, 'getCalendarioApi']);
+    Route::get('/viajes/calendario/{api?}', [ViajesController::class, 'getCalendarioApi']);
 
     //Route::get('/vehiculos/{vehiculo}/historial', [HistorialMantenimientoController::class, 'showByVehiculo'])->name('vehiculos.historial');
     Route::get('clientes/search', [ClienteController::class, 'search'])->name('api.clientes.search');
