@@ -27,6 +27,9 @@
         <a href="{{ route('bunker_historico.index') }}" class="btn btn-primary btn-lg">
             <i class="fas fa-plus-circle me-1"></i> Cosultar Precios de Productos 
         </a>
+        <a href="https://shipandbunker.com/prices" class="btn btn-primary btn-lg">
+            <i class="fas fa-plus-web me-1"></i> Ir a Ship&Bunker 
+        </a>
         <a href="{{ route('cotizaciones-bunkering.create') }}" class="btn btn-primary btn-lg">
             <i class="fas fa-plus-circle me-1"></i> Nueva Cotización
         </a>
