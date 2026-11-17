@@ -13,7 +13,7 @@ class AddGoogleAccessTokenGoogleRefreshTokenToUser extends Migration
      */
     public function up()    
     {
-        Schema::table('user', function (Blueprint $table) {
+        Schema::table('users', function (Blueprint $table) {
             $table->text('google_access_token')->nullable();
             $table->text('google_refesh_token')->nullable();
         });
@@ -26,7 +26,7 @@ class AddGoogleAccessTokenGoogleRefreshTokenToUser extends Migration
      */
     public function down()
     {
-        Schema::table('user', function (Blueprint $table) {
+        Schema::table('users', function (Blueprint $table) {
             $table->dropColumn('google_access_token');
             $table->dropColumn('google_refesh_token');
 
