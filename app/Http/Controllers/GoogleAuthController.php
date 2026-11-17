@@ -13,8 +13,8 @@ class GoogleAuthController extends Controller
     public function redirectToGoogle()
     {
         $client = new Client();
-        $client->setClientId(env('GOOGLE_CLIENT_ID'));
-        $client->setClientSecret(env('GOOGLE_CLIENT_SECRET'));
+        $client->setClientId(config('services.google.client_id'));
+        $client->setClientSecret(config('services.google.client_secret'));
         $client->setRedirectUri(env('APP_URL') . '/auth/google/callback');
         
         // PERMISOS QUE VAS A EXIGIR (Agrega los de Drive y Calendar si quieres)
@@ -32,7 +32,7 @@ class GoogleAuthController extends Controller
     public function handleGoogleCallback(Request $request)
     {
         $client = new Client();
-        $client->setClientId(env('GOOGLE_CLIENT_ID'));
+        $client->setClientId(config('services.google.client_id'));
         // ... configuras igual que arriba ...
 
         // Cambias el código temporal que te dio Google por los Tokens de verdad
