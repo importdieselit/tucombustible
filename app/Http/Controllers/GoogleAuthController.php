@@ -56,6 +56,6 @@ class GoogleAuthController extends Controller
         }
         $user->save();
 
-        return redirect('/dashboard')->with('success', 'Cuenta de Google enlazada. C.O.R.E. ahora vigila tu alma.');
+        return redirect()->route('dashboard')->with('success', 'Cuenta de Google enlazada. C.O.R.E. ahora vigila tu alma.');
     }
 }
