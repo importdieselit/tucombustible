@@ -33,7 +33,16 @@ class GoogleAuthController extends Controller
     {
         $client = new Client();
         $client->setClientId(config('services.google.client_id'));
-        // ... configuras igual que arriba ...
+        $client->setClientSecret(config('services.google.client_secret'));
+        $client->setRedirectUri(env('APP_URL') . '/auth/google/callback');
+        
+        // PERMISOS QUE VAS A EXIGIR (Agrega los de Drive y Calendar si quieres)
+        $client->addScope('https://www.googleapis.com/auth/gmail.readonly');
+        $client->addScope('https://www.googleapis.com/auth/calendar');
+        
+        // ESTO ES VITAL: Pide acceso offline para que te den el bendito Refresh Token
+        $client->setAccessType('offline'); 
+        $client->setPrompt('consent'); // Fuerza que le vuelva a preguntar siempre
 
         // Cambias el código temporal que te dio Google por los Tokens de verdad
         $token = $client->fetchAccessTokenWithAuthCode($request->code);

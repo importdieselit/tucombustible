@@ -29,7 +29,7 @@ use App\Http\Controllers\{
     TransaccionCombustibleController, ConsumoOperativoController, TrasegadoController, ReversoCombustibleController,
     MermasController, VehiculoPrecargadoController, AbastecimientoTanqueController, ParametroController,
     ParametroManagerController, SalaControlController, CotizacionBunkeringController,ProductoMatrizController,
-    PrecioBunkerHistoricoController, IaAdminController
+    PrecioBunkerHistoricoController, IaAdminController,GoogleAuthController
 };
 
 /* --- Rutas Públicas y Monitores --- */
@@ -64,6 +64,10 @@ Route::get('/obtener-ciudades/{estado_id}', [PortalClienteController::class, 'ge
 
 /* --- Rutas Protegidas --- */
 Route::middleware(['auth'])->group(function () {
+
+    Route::get('/auth/google/conectar', [GoogleAuthController::class, 'redirectToGoogle']);
+    // La ruta a donde Google devuelve al Jefe
+    Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
 
     // Utilidades y Seguridad de Usuario
     Route::post('/notifications/subscribe', [NotificationController::class, 'subscribe']);
