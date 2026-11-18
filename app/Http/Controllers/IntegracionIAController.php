@@ -13,6 +13,8 @@ use App\Models\Conductor;
 use App\Models\Pedido;
 use App\Models\Deposito;
 use App\Models\Aforo;
+use Google\Client;
+use Google\Service\Gmail;
 
 class IntegracionIAController extends Controller
 {
@@ -538,4 +540,107 @@ class IntegracionIAController extends Controller
             ]);
         }
 }
+
+    private function getGmailService() 
+    {
+        // CUIDADO AQUÍ: Como la IA llama a tu API, no hay "usuario logueado" por sesión web.
+        // Tienes que buscar al Jefe directo en la base de datos. Asumimos que el Jefe es el ID 1.
+        $user = User::find(1); 
+        
+        if (!$user || !$user->google_access_token) {
+            throw new \Exception("El Director no ha vinculado su cuenta de Google.");
+        }
+
+        $client = new Client();
+        $client->setClientId(env('GOOGLE_CLIENT_ID'));
+        $client->setClientSecret(env('GOOGLE_CLIENT_SECRET'));
+        
+        // Decodificar el token que guardaste en la BD
+        $token = json_decode($user->google_access_token, true);
+        $client->setAccessToken($token);
+
+        // ==============================================================
+        // EL TRUCO SALVAVIDAS: Si el token expiró (dura 1 hora), lo revivimos
+        // ==============================================================
+        if ($client->isAccessTokenExpired()) {
+            if (!$user->google_refresh_token) {
+                throw new \Exception("El token expiró y no hay Refresh Token. El Director debe volver a iniciar sesión.");
+            }
+            // Pedimos uno nuevo a Google usando la llave maestra
+            $client->fetchAccessTokenWithRefreshToken($user->google_refresh_token);
+            
+            // Guardamos el nuevo token en la base de datos para la próxima
+            $user->google_access_token = json_encode($client->getAccessToken());
+            $user->save();
+        }
+
+        return new Gmail($client);
+    }
+    
+    public function leerCorreos(Request $request)
+    {
+        try {
+            $service = $this->getGmailService();
+            $accion = $request->input('accion');
+            
+            // Armamos el filtro que le mandaremos a Google
+            $queryGmail = '';
+            if ($accion === 'no_leidos_hoy') {
+                $queryGmail = 'is:unread newer_than:1d';
+            } elseif ($accion === 'buscar') {
+                $queryGmail = $request->input('query');
+            }
+
+            // Si la IA solo quiere listar o contar
+            if (in_array($accion, ['no_leidos_hoy', 'buscar', 'contar_no_leidos'])) {
+                $resultados = $service->users_messages->listUsersMessages('me', [
+                    'q' => $queryGmail,
+                    'maxResults' => 10 // NO PIDAS MÁS O TE QUEDAS SIN TOKENS
+                ]);
+
+                $mensajes = $resultados->getMessages();
+                
+                if ($accion === 'contar_no_leidos') {
+                    return response()->json(['cantidad' => count($mensajes ?? [])]);
+                }
+
+                if (!$mensajes) return response()->json(['data' => 'No hay correos que coincidan.']);
+
+                $listaBonita = [];
+                foreach ($mensajes as $msg) {
+                    // Obtenemos solo los metadatos (asunto, remitente, extracto)
+                    $detalle = $service->users_messages->get('me', $msg->getId(), ['format' => 'metadata']);
+                    $headers = $detalle->getPayload()->getHeaders();
+                    
+                    $asunto = 'Sin Asunto';
+                    $remitente = 'Desconocido';
+                    
+                    foreach ($headers as $header) {
+                        if ($header->getName() === 'Subject') $asunto = $header->getValue();
+                        if ($header->getName() === 'From') $remitente = $header->getValue();
+                    }
+
+                    $listaBonita[] = [
+                        'id' => $msg->getId(), // Vital para que la IA sepa a qué responder
+                        'de' => $remitente,
+                        'asunto' => $asunto,
+                        'resumen' => $detalle->getSnippet() // Un texto corto sin HTML
+                    ];
+                }
+                return response()->json(['correos' => $listaBonita]);
+            }
+
+            // Si la IA quiere leer un correo ESPECÍFICO completo
+            if ($accion === 'leer_detalle') {
+                $msgId = $request->input('mensaje_id');
+                $detalle = $service->users_messages->get('me', $msgId, ['format' => 'full']);
+                // Aquí extraes el cuerpo. Es un dolor porque viene en Base64UrlEncoded, 
+                // búscate un tutorial de cómo decodificar "Gmail API PHP Body base64".
+                return response()->json(['cuerpo' => '...cuerpo decodificado aquí...']);
+            }
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()]);
+        }
+    }
 }
