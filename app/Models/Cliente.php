@@ -40,13 +40,15 @@ class Cliente extends Model
         'fecha_aprobacion',
         'telegram_id',
         'cliente_rapido',
-        'qr_gasco'
+        'qr_gasco',
+        'notificar'
     ];
 
     protected $casts = [
         'fecha_aprobacion' => 'datetime',
         'es_aliado_comercial' => 'boolean',
         'cliente_rapido' => 'boolean',
+        'notificar' => 'boolean'
     ];
 
     // -------------------------------------------------------
