@@ -138,42 +138,66 @@ class UserController extends BaseController
     public function store(Request $request)
     {
         if (!auth()->user()->canAccess('create', $this->moduloIdUsuarios)) {
+
             abort(403, 'No tiene permiso para crear usuarios.');
         }
+       
+        $request->merge([
+            'es_chofer' => $request->has('es_chofer')
+                ? filter_var($request->input('es_chofer'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)
+                : false,
+        ]);
 
-        // Validaciones base y condicionales para choferes
-        $validated = $request->validate([
+        $rules = [
             // Datos de Persona / Usuario
             'nombre'                         => 'required|string|max:255',
+            'name'                           => 'required|string|max:255',
             'dni'                            => 'required|string|max:50|unique:personas,dni',
             'email'                          => 'required|email|unique:users,email',
             'password'                       => 'required|min:8',
-            'id_perfil'                      => 'required|exists:perfiles,id',
+            'perfil'                         => 'required|exists:perfiles,id',
             'id_sede'                        => 'nullable|integer',
             'cargo_id'                       => 'nullable|exists:cargo,id',
             'telefono'                       => 'nullable|string|max:20',
-            
+
             // Checkbox de Chofer o validación condicional
             'es_chofer'                      => 'nullable|boolean',
-            'licencia_numero'                => 'required_if:es_chofer,1|nullable|string|max:100',
-            'licencia_vencimiento'           => 'required_if:es_chofer,1|nullable|date',
+            'licencia_numero'                => 'nullable|string|max:100',
+            'licencia_vencimiento'           => 'nullable|date',
             'tipo_licencia'                  => 'nullable|string|max:50',
             'documento_vialidad_numero'      => 'nullable|string|max:100',
             'documento_vialidad_vencimiento' => 'nullable|date',
             'certificado_medico'             => 'nullable|string|max:100',
             'certificado_medico_vencimiento' => 'nullable|date',
-            
+
             // Archivos adjuntos para choferes
             'foto'                           => 'nullable|image|max:2048',
             'soporte_licencia'               => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
             'soporte_certificado'            => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
             'soporte_documento'              => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
-        ]);
+        ];
 
+        $validator = Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            Log::warning('Validación fallida al crear usuario', [
+                'errors' => $validator->errors()->toArray(),
+                'input'  => $request->except(['password', '_token']),
+            ]);
+
+            return back()
+                ->withErrors($validator)
+                ->withInput()
+                ->with('error', $validator->errors()->first());
+        }
+
+        $validated = $validator->validated();
+       
         DB::beginTransaction();
 
         try {
             // 1. Crear Registro en 'personas'
+            echo "guardando persona----";
             $persona = Persona::create([
                 'nombre'        => $request->input('nombre'),
                 'dni'           => $request->input('dni'),
@@ -190,19 +214,21 @@ class UserController extends BaseController
             ]);
 
             // 2. Crear Registro en 'users' (asociado al id_persona)
+            echo "guardando usuario----";
             $user = User::create([
                 'name'       => $request->input('name', $request->input('nombre')),
                 'email'      => $request->input('email'),
                 'password'   => Hash::make($request->input('password')),
-                'id_perfil'  => $request->input('id_perfil'),
+                'id_perfil'  => $request->input('perfil'),
                 'id_persona' => $persona->id,
                 'id_sede'    => $request->input('id_sede'),
-                'cliente_id' => $request->input('id_cliente'),
+                'cliente_id' => 348,
                 'status'     => 1,
             ]);
 
             // 3. Crear Registro en 'personal' (Si aplica cargo o sede)
             if ($request->filled('cargo_id') || $request->filled('id_sede')) {
+                echo "guardando personal----";
                 Personal::create([
                     'id_persona' => $persona->id,
                     'id_usuario' => $user->id,
@@ -242,17 +268,18 @@ class UserController extends BaseController
                 if ($request->hasFile('soporte_documento')) {
                     $choferData['soporte_documento'] = $request->file('soporte_documento')->store('choferes/documentos', 'public');
                 }
-
+                echo "guardando chofer----";
                 Chofer::create($choferData);
             }
 
             DB::commit();
-
+           
             Session::flash('success', 'Usuario y registros asociados creados exitosamente.');
-            return Redirect::route('usuarios.index');
+            return Redirect::route('usuarios.index-adm');
 
         } catch (\Exception $e) {
             DB::rollBack();
+            dd('Error al registrar el usuario: ' . $e->getMessage() );
             Session::flash('error', 'Error al registrar el usuario: ' . $e->getMessage());
             return Redirect::back()->withInput();
         }
