@@ -82,7 +82,7 @@ Route::get('search/autocomplete', [SearchController::class, 'handle'])->name('ap
     
     Route::get('/admin/reportes/combustible-dashboard', [CombustibleController::class, 'consultaGeneral']);
 
-    Route::get('/viajes/planificacion1/{api?}', [ViajesController::class, 'getCalendarioApi']);
+    Route::get('/viajes/planificacion/{api?}', [ViajesController::class, 'getCalendarioApi']);
 
 
 // Rutas protegidas por autenticación

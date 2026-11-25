@@ -182,40 +182,42 @@ class ViajeObserver
                 $clienteNombreMayus = mb_strtoupper($cliente->nombre);
 
                 // --- 1.1 NOTIFICAR AL CONTACTO PRINCIPAL ---
-                if ($this->esNombreValido($cliente->contacto)) {
-                    $telPrincipal = $this->limpiarYValidarTelefono($cliente->telefono);
-                    if ($telPrincipal) {
-                        $contactoPrincipalMayus = mb_strtoupper($cliente->contacto);
-                        
-                        $mensajePrincipal = "🚀 *IMPORDIESEL - DESPACHO EN RUTA*\n\n" .
-                            "Estimado/a *{$contactoPrincipalMayus}* ({$clienteNombreMayus}),\n" .
-                            "Le informamos que su despacho de *{$tipoTexto}* ya se encuentra *EN RUTA* hacia su destino.\n\n" .
-                            "• *Volumen Asignado:* {$litrosFmt} Litros de {$tipoTexto}\n" .
-                            "• *Placa de Unidad de Transporte:* {$vehiculoInfo}\n" .
-                            "• *Chofer:* {$choferNombre}\n" .
-                            ($ayudanteNombre ? "• *Ayudante:* {$ayudanteNombre}\n" : "") . "\n" .
-                            "¡Gracias por confiar en nosotros!";
+                if($cliente->notificar==true){
+                    if ($this->esNombreValido($cliente->contacto)) {
+                        $telPrincipal = $this->limpiarYValidarTelefono($cliente->telefono);
+                        if ($telPrincipal) {
+                            $contactoPrincipalMayus = mb_strtoupper($cliente->contacto);
+                            
+                            $mensajePrincipal = "🚀 *IMPORDIESEL - DESPACHO EN RUTA*\n\n" .
+                                "Estimado/a *{$contactoPrincipalMayus}* ({$clienteNombreMayus}),\n" .
+                                "Le informamos que su despacho de *{$tipoTexto}* ya se encuentra *EN RUTA* hacia su destino.\n\n" .
+                                "• *Volumen Asignado:* {$litrosFmt} Litros de {$tipoTexto}\n" .
+                                "• *Placa de Unidad de Transporte:* {$vehiculoInfo}\n" .
+                                "• *Chofer:* {$choferNombre}\n" .
+                                ($ayudanteNombre ? "• *Ayudante:* {$ayudanteNombre}\n" : "") . "\n" .
+                                "¡Gracias por confiar en nosotros!";
 
-                        $this->whatsappService->enviarMensaje($mensajePrincipal, $telPrincipal);
+                            $this->whatsappService->enviarMensaje($mensajePrincipal, $telPrincipal);
+                        }
                     }
-                }
 
-                // --- 1.2 NOTIFICAR AL CONTACTO ALTERNATIVO ---
-                if ($this->esNombreValido($cliente->contacto_alt)) {
-                    $telAlt = $this->limpiarYValidarTelefono($cliente->telefono_alt);
-                    if ($telAlt) {
-                        $contactoAltMayus = mb_strtoupper($cliente->contacto_alt);
-                        
-                        $mensajeAlternativo = "🚀 *IMPORDIESEL - DESPACHO EN RUTA*\n\n" .
-                            "Estimado/a *{$contactoAltMayus}* ({$clienteNombreMayus}),\n" .
-                            "Le informamos que su despacho de *{$tipoTexto}* ya se encuentra *EN RUTA* hacia su destino.\n\n" .
-                            "• *Volumen Asignado:* {$litrosFmt} Litros de {$tipoTexto}\n" .
-                            "• *Placa de Unidad de Transporte:* {$vehiculoInfo}\n" .
-                            "• *Chofer:* {$choferNombre}\n" .
-                            ($ayudanteNombre ? "• *Ayudante:* {$ayudanteNombre}\n" : "") . "\n" .
-                            "¡Gracias por confiar en nosotros!";
+                    // --- 1.2 NOTIFICAR AL CONTACTO ALTERNATIVO ---
+                    if ($this->esNombreValido($cliente->contacto_alt)) {
+                        $telAlt = $this->limpiarYValidarTelefono($cliente->telefono_alt);
+                        if ($telAlt) {
+                            $contactoAltMayus = mb_strtoupper($cliente->contacto_alt);
+                            
+                            $mensajeAlternativo = "🚀 *IMPORDIESEL - DESPACHO EN RUTA*\n\n" .
+                                "Estimado/a *{$contactoAltMayus}* ({$clienteNombreMayus}),\n" .
+                                "Le informamos que su despacho de *{$tipoTexto}* ya se encuentra *EN RUTA* hacia su destino.\n\n" .
+                                "• *Volumen Asignado:* {$litrosFmt} Litros de {$tipoTexto}\n" .
+                                "• *Placa de Unidad de Transporte:* {$vehiculoInfo}\n" .
+                                "• *Chofer:* {$choferNombre}\n" .
+                                ($ayudanteNombre ? "• *Ayudante:* {$ayudanteNombre}\n" : "") . "\n" .
+                                "¡Gracias por confiar en nosotros!";
 
-                        $this->whatsappService->enviarMensaje($mensajeAlternativo, $telAlt);
+                            $this->whatsappService->enviarMensaje($mensajeAlternativo, $telAlt);
+                        }
                     }
                 }
 
