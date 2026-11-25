@@ -25,6 +25,7 @@
             <div class="tab-content" id="userTabContent">
                 <!-- TAB 1: DATOS DE USUARIO, PERSONA Y CHOFER -->
                 <div class="tab-pane fade show active" id="datos" role="tabpanel">
+                    {{ isset($item) ? route('usuarios.update', $item->id) : route('usuarios.store') }}
                     <form action="{{ isset($item) ? route('usuarios.update', $item->id) : route('usuarios.store') }}" method="POST" enctype="multipart/form-data">
                         @csrf
                         @if(isset($item)) @method('PUT') @endif
